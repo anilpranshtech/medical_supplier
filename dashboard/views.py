@@ -8,7 +8,16 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
 from .models import DoctorProfile, MedicalSupplierProfile, CorporateProfile
 from django.contrib import messages
+from django.views.generic import TemplateView
 
+
+class HomeView(TemplateView):
+    template_name = 'dashboard/home.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['user'] = self.request.user
+        return context
 
 
 class CustomLoginView(LoginView):
@@ -16,16 +25,7 @@ class CustomLoginView(LoginView):
     template_name = 'dashboard/login.html' 
 
     def get_success_url(self):
-        return reverse_lazy('/')
-
-
- 
-   
-
-
-
-def home(request):
-    return HttpResponse("Hello from home")
+        return reverse_lazy('home')
 
 
 class RegistrationView(View):
@@ -67,7 +67,7 @@ class RegistrationView(View):
                 user.delete()
                 return render(request, self.template_name, {'error': "Invalid user type."})
 
-            return redirect('home')
+            return redirect('login')
 
         except Exception as e:
             messages.error(request, f"An error occurred: {e}")

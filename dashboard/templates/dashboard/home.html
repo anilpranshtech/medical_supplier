@@ -1,0 +1,17 @@
+<html>
+<head>
+    <title>Home</title>
+</head>
+<body>
+    {% if user.is_authenticated %}
+        <div class="user-greeting">
+            Welcome, {{ user.username }}<br>
+            Welcome, {{ user.email }}
+        </div>
+    {% endif %}
+</body>
+</html>
+
+
+
+
