@@ -132,3 +132,6 @@ dmypy.json
 /adminv2/__pycache__
 *.pyc
 /adminv2/__pycache__
+*.xml
+*.iml
+*.ignore
