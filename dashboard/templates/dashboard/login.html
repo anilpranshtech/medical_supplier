@@ -1,0 +1,311 @@
+{% block content %}
+<div class="login-container">
+    <div class="login-header">
+        <h1>Sign in to Storely</h1>
+       
+    </div>
+
+    <button class="google-login-btn">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 8px;">
+            <path d="M17.64 9.2045C17.64 8.5663 17.5827 7.95268 17.4764 7.36359H9V10.8449H13.8436C13.635 11.9699 13.0009 12.9231 12.0477 13.5613V15.8194H14.9564C16.6582 14.2526 17.64 11.9454 17.64 9.2045Z" fill="#4285F4"/>
+            <path d="M9 18C11.43 18 13.4673 17.1941 14.9564 15.8195L12.0477 13.5614C11.2418 14.1014 10.2109 14.4204 9 14.4204C6.65591 14.4204 4.67182 12.8372 3.96409 10.71H0.957275V13.0418C2.43818 15.9831 5.48182 18 9 18Z" fill="#34A853"/>
+            <path d="M3.96409 10.71C3.78409 10.17 3.68182 9.59317 3.68182 9C3.68182 8.40683 3.78409 7.83 3.96409 7.29V4.95818H0.957273C0.347727 6.17318 0 7.54773 0 9C0 10.4523 0.347727 11.8268 0.957273 13.0418L3.96409 10.71Z" fill="#FBBC05"/>
+            <path d="M9 3.57955C10.3214 3.57955 11.5077 4.03364 12.4405 4.92545L15.0218 2.34409C13.4632 0.891818 11.4259 0 9 0C5.48182 0 2.43818 2.01682 0.957275 4.95818L3.96409 7.29C4.67182 5.16273 6.65591 3.57955 9 3.57955Z" fill="#EA4335"/>
+        </svg>
+        Sign in with Google
+    </button>
+
+    <div class="or-divider">
+        <span class="or-line"></span>
+        <span class="or-text">OR</span>
+        <span class="or-line"></span>
+    </div>
+
+    <form method="post" class="login-form">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="id_username">Email</label>
+            <input type="text" name="username" id="id_username" placeholder="Your email" class="input-field">
+        </div>
+        
+        <div class="form-group">
+            <label for="id_password">Password</label>
+            <div class="password-input-container">
+                <input type="password" name="password" id="id_password" placeholder="Your password" class="input-field">
+                <button type="button" class="toggle-password" aria-label="Toggle password visibility">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 4.375C3.75 4.375 1.25 10 1.25 10C1.25 10 3.75 15.625 10 15.625C16.25 15.625 18.75 10 18.75 10C18.75 10 16.25 4.375 10 4.375Z" stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M10 13.125C11.7259 13.125 13.125 11.7259 13.125 10C13.125 8.27411 11.7259 6.875 10 6.875C8.27411 6.875 6.875 8.27411 6.875 10C6.875 11.7259 8.27411 13.125 10 13.125Z" stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        
+        <div class="form-options">
+            <div class="remember-me">
+                <input type="checkbox" id="remember-me" class="checkbox">
+                <label for="remember-me">Remember me</label>
+            </div>
+            <a href="#" class="forgot-password">Forgot Password?</a>
+        </div>
+        
+        <button type="submit" class="login-btn">Continue</button>
+    </form>
+
+    <div class="signup-link">
+        Don't have an account? <a href="#" class="signup">Sign Up</a>
+    </div>
+</div>
+
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+    
+    body {
+        background-color: #f8f9fa;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        padding: 20px;
+    }
+    
+    .login-container {
+        background-color: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        padding: 40px;
+        width: 100%;
+        max-width: 420px;
+    }
+    
+    .login-header {
+        text-align: center;
+        margin-bottom: 32px;
+    }
+    
+    .login-header h1 {
+        color: #101828;
+        margin: 0 0 12px 0;
+        font-size: 30px;
+        font-weight: 600;
+        line-height: 38px;
+    }
+   
+    .google-login-btn {
+        width: 100%;
+        background-color: white;
+        color: #344054;
+        border: 1px solid #D0D5DD;
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 24px;
+        transition: all 0.2s ease;
+        box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+    }
+    
+    .google-login-btn:hover {
+        background-color: #F9FAFB;
+        border-color: #98A2B3;
+    }
+    
+    .or-divider {
+        display: flex;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+    
+    .or-line {
+        flex: 1;
+        height: 1px;
+        background-color: #EAECF0;
+    }
+    
+    .or-text {
+        padding: 0 12px;
+        color: #98A2B3;
+        font-size: 14px;
+        font-weight: 500;
+    }
+    
+    .form-group {
+        margin-bottom: 24px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #344054;
+        font-size: 14px;
+        font-weight: 500;
+    }
+    
+    .password-input-container {
+        position: relative;
+    }
+    
+    .input-field {
+        width: 100%;
+        padding: 8px 16px;
+        border: 1px solid #D0D5DD;
+        border-radius: 8px;
+        font-size: 16px;
+        color: #101828;
+        transition: border 0.2s ease;
+        background-color: #ffffff;
+        box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+    }
+    
+    .input-field:focus {
+        outline: none;
+        border-color: #84CAFF;
+        box-shadow: 0 0 0 4px rgba(164, 202, 254, 0.3);
+    }
+    
+    .input-field::placeholder {
+        color: #98A2B3;
+    }
+    
+    .toggle-password {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #98A2B3;
+    }
+    
+    .toggle-password:hover {
+        color: #667085;
+    }
+    
+    .toggle-password svg {
+        width: 18px;
+        height: 18px;
+    }
+    
+    .form-options {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+    
+    .remember-me {
+        display: flex;
+        align-items: center;
+    }
+    
+    .checkbox {
+        width: 16px;
+        height: 16px;
+        border: 1px solid #D0D5DD;
+        border-radius: 4px;
+        margin-right: 8px;
+        cursor: pointer;
+        accent-color: #1570EF;
+    }
+    
+    .remember-me label {
+        color: #344054;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+    }
+    
+    .forgot-password {
+        color: #1570EF;
+        font-size: 14px;
+        font-weight: 500;
+        text-decoration: none;
+        transition: color 0.2s ease;
+    }
+    
+    .forgot-password:hover {
+        color: #0e5bc7;
+        text-decoration: underline;
+    }
+    
+    .login-btn {
+        width: 100%;
+        background-color: #1570EF;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 8px 20px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+    }
+    
+    .login-btn:hover {
+        background-color: #0e5bc7;
+    }
+    
+    .signup-link {
+        text-align: center;
+        margin-top: 32px;
+        color: #475467;
+        font-size: 16px;
+        font-weight: 400;
+    }
+    
+    .signup-link a.signup {
+        color: #1570EF;
+        text-decoration: none;
+        font-weight: 600;
+        transition: color 0.2s ease;
+    }
+    
+    .signup-link a.signup:hover {
+        color: #0e5bc7;
+        text-decoration: underline;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const togglePassword = document.querySelector('.toggle-password');
+        const passwordInput = document.getElementById('id_password');
+        
+        togglePassword.addEventListener('click', function() {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+            // Toggle the eye icon
+            const svg = this.querySelector('svg');
+            if (type === 'text') {
+                svg.innerHTML = `
+                    <path d="M10 4.375C3.75 4.375 1.25 10 1.25 10C1.25 10 3.75 15.625 10 15.625C16.25 15.625 18.75 10 18.75 10C18.75 10 16.25 4.375 10 4.375Z" stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2.5 2.5L17.5 17.5" stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M7.975 7.975C7.37083 8.57917 7.08333 9.375 7.08333 10C7.08333 11.7259 8.47411 13.125 10 13.125C10.625 13.125 11.4208 12.8375 12.025 12.2333" stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                `;
+            } else {
+                svg.innerHTML = `
+                    <path d="M10 4.375C3.75 4.375 1.25 10 1.25 10C1.25 10 3.75 15.625 10 15.625C16.25 15.625 18.75 10 18.75 10C18.75 10 16.25 4.375 10 4.375Z" stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M10 13.125C11.7259 13.125 13.125 11.7259 13.125 10C13.125 8.27411 11.7259 6.875 10 6.875C8.27411 6.875 6.875 8.27411 6.875 10C6.875 11.7259 8.27411 13.125 10 13.125Z" stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                `;
+            }
+        });
+    });
+</script>
+{% endblock %}
