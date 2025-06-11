@@ -12,7 +12,7 @@ class DoctorProfile(models.Model):
     phone_number = models.CharField(max_length=30, null=True, blank=True)
     speciality = models.CharField(max_length=100, null=True, blank=True)
     medical_license_number = models.CharField(max_length=100, null=True, blank=True)
-    license_enviry_date = models.DateField(null=True, blank=True)
+    license_expiry_date = models.DateField(null=True, blank=True)
     experience_years = models.CharField(max_length=3, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
@@ -24,6 +24,7 @@ class DoctorProfile(models.Model):
 
 class MedicalSupplierProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+    profile_picture = models.ImageField(upload_to='profile_pics/', null=True, blank=True)
     workplace = models.CharField(max_length=100, null=True, blank=True)
     nationality = models.CharField(max_length=100, null=True, blank=True)
     residency = models.CharField(max_length=100, null=True, blank=True)

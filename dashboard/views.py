@@ -9,6 +9,7 @@ from django.contrib.auth.models import User
 from .models import DoctorProfile, MedicalSupplierProfile, CorporateProfile
 from django.contrib import messages
 from django.views.generic import TemplateView
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 
 class HomeView(TemplateView):
@@ -73,3 +74,46 @@ class RegistrationView(View):
             messages.error(request, f"An error occurred: {e}")
             return render(request, self.template_name, {'error': str(e)})
 
+
+class UserProfileView(LoginRequiredMixin, TemplateView):
+    template_name = 'dashboard/profile.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+
+        profile = None
+        profile_type = None
+
+        if hasattr(user, 'doctorprofile'):
+            profile = user.doctorprofile
+            profile_type = 'doctor'
+        elif hasattr(user, 'medicalsupplierprofile'):
+            profile = user.medicalsupplierprofile
+            profile_type = 'supplier'
+        elif hasattr(user, 'corporateprofile'):
+            profile = user.corporateprofile
+            profile_type = 'corporate'
+
+        context['user'] = user
+        context['profile'] = profile
+        context['profile_type'] = profile_type
+        return context
+
+
+class UploadProfilePictureView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        profile = None
+
+        if hasattr(request.user, 'doctorprofile'):
+            profile = request.user.doctorprofile
+        elif hasattr(request.user, 'medicalsupplierprofile'):
+            profile = request.user.medicalsupplierprofile
+        elif hasattr(request.user, 'corporateprofile'):
+            profile = request.user.corporateprofile
+
+        if profile and 'profile_picture' in request.FILES:
+            profile.profile_picture = request.FILES['profile_picture']
+            profile.save()
+
+        return redirect('profile')

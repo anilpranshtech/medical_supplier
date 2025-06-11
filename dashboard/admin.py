@@ -10,7 +10,7 @@ class DoctorProfileAdmin(admin.ModelAdmin):
 
 @admin.register(MedicalSupplierProfile)
 class MedicalSupplierProfileAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'workplace', 'nationality')
+    list_display = ('id', 'profile_picture', 'user', 'workplace', 'nationality', 'created_at')
 
 
 @admin.register(CorporateProfile)
