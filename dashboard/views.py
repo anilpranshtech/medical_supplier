@@ -10,6 +10,9 @@ from .models import DoctorProfile, MedicalSupplierProfile, CorporateProfile
 from django.contrib import messages
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.hashers import make_password
+from .models import RetailProfile, WholesaleBuyerProfile, SupplierProfile
+import requests
 
 
 class HomeView(TemplateView):
@@ -73,8 +76,7 @@ class RegistrationView(View):
         except Exception as e:
             messages.error(request, f"An error occurred: {e}")
             return render(request, self.template_name, {'error': str(e)})
-
-
+        
 class UserProfileView(LoginRequiredMixin, TemplateView):
     template_name = 'dashboard/profile.html'
 

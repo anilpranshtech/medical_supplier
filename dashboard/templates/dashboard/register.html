@@ -7,13 +7,13 @@
     <title>User Registration</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-          .page-bg {
+        .page-bg {
             background-image: url('https://storely-nextjs.keenthemes.com//media/images/2600x1200/bg-10.png');
-          }
-          .dark .page-bg {
+        }
+        .dark .page-bg {
             background-image: url('https://storely-nextjs.keenthemes.com//media/images/2600x1200/bg-10-dark.png');
-          }
-         .google-login-btn {
+        }
+        .google-login-btn {
             width: 100%;
             background-color: white;
             color: #344054;
@@ -30,46 +30,65 @@
             transition: all 0.2s ease;
             box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
         }
-
         .google-login-btn:hover {
             background-color: #F9FAFB;
             border-color: #98A2B3;
         }
-                .or-divider {
+        .or-divider {
             display: flex;
             align-items: center;
             margin-bottom: 24px;
         }
-
-
-            .or-text {
+        .or-text {
             padding: 0 12px;
             color: #98A2B3;
             font-size: 14px;
             font-weight: 500;
         }
-             .or-line {
+        .or-line {
             flex: 1;
             height: 1px;
             background-color: #EAECF0;
         }
+        .role-toggle-btn {
+            padding: 6px 20px;
+            width: 440px;
+            border: 1px solid #1570EF;
+            border-radius: 8px;
+            background-color: white;
+            color: #1570EF;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .role-toggle-btn.active {
+            background-color: #1570EF;
+            color: white;
+        }
+        .buyer-options {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 16px;
+            font-weight: 500;
+            font-size: 17px;
+            color: #344054;
+        }
     </style>
-
 </head>
 <body class="antialiased flex h-full text-base bg-background">
 <div class="flex flex-col items-center justify-center grow bg-center bg-no-repeat bg-opacity-10 page-bg">
     <div class="flex flex-col items-stretch text-card-foreground rounded-xl bg-white/90 backdrop-blur-sm border border-gray-200 shadow-sm w-full max-w-[500px] dark:bg-gray-900/90 dark:border-gray-700">
         <div class="grow p-8">
             <h1 class="text-2xl font-semibold tracking-tight text-center">Create Your Account</h1>
-                <button class="google-login-btn" fdprocessedid="vk5sk" style="margin-top: 8px;">
-                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 8px;" href="#">
-                        <path d="M17.64 9.2045C17.64 8.5663 17.5827 7.95268 17.4764 7.36359H9V10.8449H13.8436C13.635 11.9699 13.0009 12.9231 12.0477 13.5613V15.8194H14.9564C16.6582 14.2526 17.64 11.9454 17.64 9.2045Z" fill="#4285F4"></path>
-                        <path d="M9 18C11.43 18 13.4673 17.1941 14.9564 15.8195L12.0477 13.5614C11.2418 14.1014 10.2109 14.4204 9 14.4204C6.65591 14.4204 4.67182 12.8372 3.96409 10.71H0.957275V13.0418C2.43818 15.9831 5.48182 18 9 18Z" fill="#34A853"></path>
-                        <path d="M3.96409 10.71C3.78409 10.17 3.68182 9.59317 3.68182 9C3.68182 8.40683 3.78409 7.83 3.96409 7.29V4.95818H0.957273C0.347727 6.17318 0 7.54773 0 9C0 10.4523 0.347727 11.8268 0.957273 13.0418L3.96409 10.71Z" fill="#FBBC05"></path>
-                        <path d="M9 3.57955C10.3214 3.57955 11.5077 4.03364 12.4405 4.92545L15.0218 2.34409C13.4632 0.891818 11.4259 0 9 0C5.48182 0 2.43818 2.01682 0.957275 4.95818L3.96409 7.29C4.67182 5.16273 6.65591 3.57955 9 3.57955Z" fill="#EA4335"></path>
-                    </svg>
-                            Sign in with Google
-                </button>
+            <button class="google-login-btn">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 8px;">
+                    <path d="..." fill="#4285F4"></path>
+                 
+                </svg>
+                Sign in with Google
+            </button>
+
             <form method="post" class="block w-full space-y-5">
                 {% csrf_token %}
                 <div class="or-divider">
@@ -78,55 +97,131 @@
                     <span class="or-line"></span>
                 </div>
 
+              
+                <input type="hidden" name="user_type" id="userTypeField">
+                <div class="role-toggle mb-4">
+                    <button type="button" id="supplierBtn" class="role-toggle-btn">Supplier</button>
+                </div>
+
+                <div id="buyerOptions" class="buyer-options">
+                    <label><input type="radio" name="buyer_type" value="retailer" checked> Retailer</label>
+                    <label><input type="radio" name="buyer_type" value="wholesaler"> Wholesaler</label>
+                </div>
+
+                <!-- Common Fields -->
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">User Type</label>
-                        <select id="user_type" name="user_type" required class="user-type w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white">
-                            <option value="">Select user type</option> 
-                            <option value="doctor">Doctor</option>
-                            <option value="supplier">Supplier</option>
-                            <option value="corporate">Corporate</option>
-                        </select>
+                        <label class="block text-sm font-medium mb-1">First Name</label>
+                        <input type="text" name="first_name" required class="w-full px-3 py-2 border rounded-md">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">First Name</label>
-                        <input type="text" name="first_name" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white" placeholder="Your first name" required>
+                        <label class="block text-sm font-medium mb-1">Last Name</label>
+                        <input type="text" name="last_name" required class="w-full px-3 py-2 border rounded-md">
                     </div>
-
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Last Name</label>
-                        <input type="text" name="last_name" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white" placeholder="Your last name" required>
+                        <label class="block text-sm font-medium mb-1">Email</label>
+                        <input type="email" name="email" required class="w-full px-3 py-2 border rounded-md">
                     </div>
-
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
-                        <input type="email" name="email" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white" placeholder="Email" required>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
-                        <div class="relative">
-                            <input type="password" name="password" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white" placeholder="Password" required>
-                            <button type="button" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
-                                    <circle cx="12" cy="12" r="3"></circle>
-                                </svg>
-                            </button>
-                        </div>
+                        <label class="block text-sm font-medium mb-1">Password</label>
+                        <input type="password" name="password" required class="w-full px-3 py-2 border rounded-md">
                     </div>
                 </div>
 
-                <button type="submit" class="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <!-- Retailer Fields -->
+          <div id="retailerFields" class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium mb-1">Age</label>
+              <input type="number" name="age" class="w-full px-3 py-2 border rounded-md">
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">Medical Needs</label>
+              <input type="text" name="medical_needs" class="w-full px-3 py-2 border rounded-md">
+            </div>
+          </div>
+
+          <!-- Wholesaler Fields -->
+          <div id="wholesalerFields" class="space-y-4 hidden">
+            <div>
+              <label class="block text-sm font-medium mb-1">Company Name</label>
+              <input type="text" name="company_name" class="w-full px-3 py-2 border rounded-md">
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">GST Number</label>
+              <input type="text" name="gst_number" class="w-full px-3 py-2 border rounded-md">
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">Department</label>
+              <input type="text" name="department" class="w-full px-3 py-2 border rounded-md">
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">Purchase Capacity</label>
+              <input type="text" name="purchase_capacity" class="w-full px-3 py-2 border rounded-md">
+            </div>
+          </div>
+
+          <!-- Supplier Fields -->
+          <div id="supplierFields" class="space-y-4 hidden">
+            <div>
+              <label class="block text-sm font-medium mb-1">Company Name</label>
+              <input type="text" name="company_name" class="w-full px-3 py-2 border rounded-md">
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">License Number</label>
+              <input type="text" name="license_number" class="w-full px-3 py-2 border rounded-md">
+            </div>
+          </div>
+
+           <button type="submit" class="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                     Create Account
                 </button>
-
-                <div class="text-sm text-center text-gray-600 dark:text-gray-400">
-                    Already have an account? <a href="{% url 'login' %}" class="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400">Sign in</a>
+                <div class="text-sm text-center text-gray-600">
+                    Already have an account? <a href="{% url 'login' %}" class="text-blue-600 hover:underline">Sign in</a>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const supplierBtn = document.getElementById('supplierBtn');
+        const buyerOptions = document.getElementById('buyerOptions');
+        const userTypeField = document.getElementById('userTypeField');
+        const radios = document.querySelectorAll('input[name="buyer_type"]');
+
+        const retailerFields = document.getElementById('retailerFields');
+        const wholesalerFields = document.getElementById('wholesalerFields');
+        const supplierFields = document.getElementById('supplierFields');
+
+        
+        userTypeField.value = 'retailer';
+        retailerFields.style.display = 'block';
+
+        radios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                supplierBtn.classList.remove('active');
+                buyerOptions.style.display = 'flex';
+                userTypeField.value = radio.value;
+
+           
+                retailerFields.style.display = radio.value === 'retailer' ? 'block' : 'none';
+                wholesalerFields.style.display = radio.value === 'wholesaler' ? 'block' : 'none';
+                supplierFields.style.display = 'none';
+            });
+        });
+
+        supplierBtn.addEventListener('click', () => {
+            supplierBtn.classList.add('active');
+            buyerOptions.style.display = 'none';
+            userTypeField.value = 'supplier';
+
+           
+            retailerFields.style.display = 'none';
+            wholesalerFields.style.display = 'none';
+            supplierFields.style.display = 'block';
+        });
+    });
+</script>
 </body>
-</html>
+</html> 

@@ -1,17 +1,99 @@
-<html>
-<head>
-    <title>Home</title>
-</head>
-<body>
-    {% if user.is_authenticated %}
-        <div class="user-greeting">
-            Welcome, {{ user.username }}<br>
-            Welcome, {{ user.email }}
+{% load static %}
+{% block content %}
+
+<h2 style="font-size: 22px; margin: 30px 0 10px 20px;">Special Offers
+    <a href="#" style="float: right; font-size: 14px; margin-right: 20px; color: #007bff; text-decoration: none;">See All →</a>
+</h2>
+
+<div style="display: flex; gap: 20px; padding: 0 20px;">
+    <!-- Medicine Card 1 (Large) -->
+    <div style="flex: 2; background: #f9f9f9; border-radius: 16px; padding: 20px; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <div style="background: red; color: white; display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; margin-bottom: 10px;">SAVE 25%</div>
+            <h3 style="margin: 0; font-size: 22px;">Paracetamol 500mg</h3>
+            <p style="margin: 5px 0 15px; color: #666;">Effective relief from fever, body pain & cold symptoms.</p>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <button style="background: black; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 14px; display: flex; align-items: center; gap: 5px; cursor: pointer;">🛒 Add to Cart</button>
+                <span style="font-weight: bold; font-size: 16px;">$3.99</span>
+            </div>
         </div>
-    {% endif %}
-</body>
-</html>
+        <img src="{% static 'images/Paracetamol.jpg' %}" alt="Paracetamol" style="height: 130px; ">
+    </div>
 
+    <!-- Medicine Card 2 -->
+    <div style="flex: 1; background: #f9f9f9; border-radius: 16px; padding: 20px; text-align: center;">
+        <div style="background: red; color: white; display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold;">SAVE 25%</div>
+        <h4 style="margin: 10px 0 5px;">Cough Syrup - 100ml</h4>
+        <button style="border: 1px solid #ccc; padding: 6px 12px; border-radius: 6px; background: white; cursor: pointer;">🛒 Add to Cart</button>
+        <div style="margin: 10px 0; font-weight: bold;">$5.49</div>
+        <img src="{% static 'images/CoughSyrup.jpg' %}" alt="Cough Syrup" style="height: 120px; ">
+    </div>
 
+    <!-- Medicine Card 3 -->
+    <div style="flex: 1; background: #f9f9f9; border-radius: 16px; padding: 20px; text-align: center;">
+        <div style="background: red; color: white; display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold;">SAVE 25%</div>
+        <h4 style="margin: 10px 0 5px;">Vitamin C Tablets</h4>
+        <button style="border: 1px solid #ccc; padding: 6px 12px; border-radius: 6px; background: white; cursor: pointer;">🛒 Add to Cart</button>
+        <div style="margin: 10px 0; font-weight: bold;">$7.25</div>
+        <img src="{% static 'images/Vitaminc.jpg' %}" alt="Vitamin C" style="height: 120px; ">
+    </div>
+</div>
+<div style="display: flex; justify-content: space-between; align-items: center; margin: 30px 20px 10px;">
+    <h2 style="font-size: 26px; font-weight: bold;">New Arrivals</h2>
+    <a href="#" style="font-size: 14px; color: #007bff; text-decoration: none;">See All <span>&#x2192;</span></a>
+</div>
 
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; padding: 20px;">
+    <!-- Medicine 1 -->
+    <div style="height: 400px; padding: 15px; border: 1px solid #eee; border-radius: 16px; background: #fff; display: flex; flex-direction: column; justify-content: space-between;">
+        <div style="background-color: #f9f9f9; border-radius: 12px; display: flex; justify-content: center; align-items: center; height: 250px; margin-bottom: 15px; padding: 10px;">
+            <img src="{% static 'images/dolo.jpg' %}" alt="Dolo 650" style="max-height: 230px; max-width: 100%; object-fit: contain;">
+        </div>
+        <div style="font-weight: 600; font-size: 16px; margin-bottom: 10px; min-height: 48px;">Dolo 650 (Paracetamol)</div>
+        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 15px;">
+            <div style="background-color: #ffc107; color: #fff; padding: 4px 10px; border-radius: 20px; font-size: 13px; display: inline-flex; align-items: center; gap: 5px;">★ 4.9</div>
+            <div style="font-weight: 600; color: #333; margin-left: 42%;">₹32.00</div>
+            <div style="display: inline-flex; align-items: center; border: 1px solid #ccc; padding: 5px 12px; border-radius: 20px; font-size: 14px; cursor: pointer; background-color: #fff;">🛒 Add</div>
+        </div>
+    </div>
 
+    <!-- Medicine 2 -->
+    <div style="height: 400px; padding: 15px; border: 1px solid #eee; border-radius: 16px; background: #fff; display: flex; flex-direction: column; justify-content: space-between;">
+        <div style="background-color: #f9f9f9; border-radius: 12px; display: flex; justify-content: center; align-items: center; height: 250px; margin-bottom: 15px; padding: 10px;">
+            <img src="{% static 'images/pantocid.jpg' %}" alt="Pantocid" style="max-height: 230px; max-width: 100%; object-fit: contain;">
+        </div>
+        <div style="font-weight: 600; font-size: 16px; margin-bottom: 10px; min-height: 48px;">Azithral 500mg Tablets</div>
+        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 15px;">
+            <div style="background-color: #ffc107; color: #fff; padding: 4px 10px; border-radius: 20px; font-size: 13px; display: inline-flex; align-items: center; gap: 5px;">★ 4.7</div>
+            <div style="font-weight: 600; color: #333; margin-left: 42%;">₹75.00</div>
+            <div style="display: inline-flex; align-items: center; border: 1px solid #ccc; padding: 5px 12px; border-radius: 20px; font-size: 14px; cursor: pointer; background-color: #fff;">🛒 Add</div>
+        </div>
+    </div>
+
+    <!-- Medicine 3 -->
+    <div style="height: 400px; padding: 15px; border: 1px solid #eee; border-radius: 16px; background: #fff; display: flex; flex-direction: column; justify-content: space-between;">
+        <div style="background-color: #f9f9f9; border-radius: 12px; display: flex; justify-content: center; align-items: center; height: 250px; margin-bottom: 15px; padding: 10px;">
+            <img src="{% static 'images/crocin.jpg' %}" alt="Crocin" style="max-height: 230px; max-width: 100%; object-fit: contain;">
+        </div>
+        <div style="font-weight: 600; font-size: 16px; margin-bottom: 10px; min-height: 48px;">Pantocid 40mg (Pantoprazole)</div>
+        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 15px;">
+            <div style="background-color: #ffc107; color: #fff; padding: 4px 10px; border-radius: 20px; font-size: 13px; display: inline-flex; align-items: center; gap: 5px;">★ 4.5</div>
+            <div style="font-weight: 600; color: #333; margin-left: 42%;">₹58.00</div>
+            <div style="display: inline-flex; align-items: center; border: 1px solid #ccc; padding: 5px 12px; border-radius: 20px; font-size: 14px; cursor: pointer; background-color: #fff;">🛒 Add</div>
+        </div>
+    </div>
+
+    <!-- Medicine 4 -->
+    <div style="height: 400px; padding: 15px; border: 1px solid #eee; border-radius: 16px; background: #fff; display: flex; flex-direction: column; justify-content: space-between;">
+        <div style="background-color: #f9f9f9; border-radius: 12px; display: flex; justify-content: center; align-items: center; height: 250px; margin-bottom: 15px; padding: 10px;">
+            <img src="{% static 'images/azithral.jpg' %}" alt="Azithral"  style="max-height: 230px; max-width: 100%; object-fit: contain;">
+        </div>
+        <div style="font-weight: 600; font-size: 16px; margin-bottom: 10px; min-height: 48px;">Crocin Advance Tablets</div>
+        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 15px;">
+            <div style="background-color: #ffc107; color: #fff; padding: 4px 10px; border-radius: 20px; font-size: 13px; display: inline-flex; align-items: center; gap: 5px;">★ 4.8</div>
+            <div style="font-weight: 600; color: #333; margin-left: 42%;">₹49.00</div>
+            <div style="display: inline-flex; align-items: center; border: 1px solid #ccc; padding: 5px 12px; border-radius: 20px; font-size: 14px; cursor: pointer; background-color: #fff;">🛒 Add</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
