@@ -61,3 +61,25 @@ class CorporateProfile(models.Model):
         verbose_name = "Corporate Profile"
         verbose_name_plural = "Corporate Profiles"
         ordering = ['-created_at']
+
+
+class RetailProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    age = models.IntegerField(null=True, blank=True)
+    medical_needs = models.TextField(blank=True)
+
+
+class WholesaleBuyerProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    company_name = models.CharField(max_length=255)
+    gst_number = models.CharField(max_length=50)
+    department = models.CharField(max_length=100)
+    purchase_capacity = models.IntegerField(help_text="Monthly purchase capacity")
+
+
+class SupplierProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    company_name = models.CharField(max_length=255)
+    license_number = models.CharField(max_length=100)
+    # supply_categories = models.ManyToManyField('MedicalCategory')
+    is_verified = models.BooleanField(default=False)
