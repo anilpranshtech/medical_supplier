@@ -14,26 +14,28 @@
             background-image: url('https://storely-nextjs.keenthemes.com//media/images/2600x1200/bg-10-dark.png');
         }
         .google-login-btn {
-            width: 100%;
-            background-color: white;
-            color: #344054;
-            border: 1px solid #D0D5DD;
-            border-radius: 8px;
-            padding: 12px 16px;
-            font-size: 16px;
-            font-weight: 500;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 24px;
-            transition: all 0.2s ease;
-            box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
-        }
-        .google-login-btn:hover {
-            background-color: #F9FAFB;
-            border-color: #98A2B3;
-        }
+        width: 100%;
+        background-color: white;
+        color: #344054;
+        border: 1px solid #D0D5DD;
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 24px;
+        transition: all 0.2s ease;
+        box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+    }
+    
+    .google-login-btn:hover {
+        background-color: #F9FAFB;
+        border-color: #98A2B3;
+    }
+    
         .or-divider {
             display: flex;
             align-items: center;
@@ -50,21 +52,22 @@
             height: 1px;
             background-color: #EAECF0;
         }
-        .role-toggle-btn {
-            padding: 6px 20px;
-            width: 440px;
-            border: 1px solid #1570EF;
-            border-radius: 8px;
-            background-color: white;
-            color: #1570EF;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        .role-toggle-btn.active {
+         .role-toggle-btn {
+           display: block;            
+           width: 100%;
+           text-align: center;       
+           font-size: 19px;          
+           font-weight: 600;          
+           color: #1570EF;           
+           text-decoration: none;     
+           cursor: pointer;
+           padding: 12px 0;            
+           transition: all 0.2s ease;
+        } 
+        /* .role-toggle-btn.active {
             background-color: #1570EF;
             color: white;
-        }
+        } */
         .buyer-options {
             display: flex;
             justify-content: center;
@@ -74,6 +77,22 @@
             font-size: 17px;
             color: #344054;
         }
+         input[type="text"]:hover,
+    input[type="email"]:hover,
+    input[type="password"]:hover,
+    input[type="number"]:hover {
+        border-color: #1570EF;
+        outline: none;
+    }
+
+    input[type="text"]:focus,
+    input[type="email"]:focus,
+    input[type="password"]:focus,
+    input[type="number"]:focus {
+        border-color: #1570EF;
+        box-shadow: 0 0 0 1px #1570EF;
+        outline: none;
+    }
     </style>
 </head>
 <body class="antialiased flex h-full text-base bg-background">
@@ -81,102 +100,97 @@
     <div class="flex flex-col items-stretch text-card-foreground rounded-xl bg-white/90 backdrop-blur-sm border border-gray-200 shadow-sm w-full max-w-[500px] dark:bg-gray-900/90 dark:border-gray-700">
         <div class="grow p-8">
             <h1 class="text-2xl font-semibold tracking-tight text-center">Create Your Account</h1>
-            <button class="google-login-btn">
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 8px;">
-                    <path d="..." fill="#4285F4"></path>
-                 
-                </svg>
-                Sign in with Google
-            </button>
-
             <form method="post" class="block w-full space-y-5">
                 {% csrf_token %}
+
+                <!-- Google Login Button -->
+                <button class="google-login-btn">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 8px;">
+            <path d="M17.64 9.2045C17.64 8.5663 17.5827 7.95268 17.4764 7.36359H9V10.8449H13.8436C13.635 11.9699 13.0009 12.9231 12.0477 13.5613V15.8194H14.9564C16.6582 14.2526 17.64 11.9454 17.64 9.2045Z" fill="#4285F4"/>
+            <path d="M9 18C11.43 18 13.4673 17.1941 14.9564 15.8195L12.0477 13.5614C11.2418 14.1014 10.2109 14.4204 9 14.4204C6.65591 14.4204 4.67182 12.8372 3.96409 10.71H0.957275V13.0418C2.43818 15.9831 5.48182 18 9 18Z" fill="#34A853"/>
+            <path d="M3.96409 10.71C3.78409 10.17 3.68182 9.59317 3.68182 9C3.68182 8.40683 3.78409 7.83 3.96409 7.29V4.95818H0.957273C0.347727 6.17318 0 7.54773 0 9C0 10.4523 0.347727 11.8268 0.957273 13.0418L3.96409 10.71Z" fill="#FBBC05"/>
+            <path d="M9 3.57955C10.3214 3.57955 11.5077 4.03364 12.4405 4.92545L15.0218 2.34409C13.4632 0.891818 11.4259 0 9 0C5.48182 0 2.43818 2.01682 0.957275 4.95818L3.96409 7.29C4.67182 5.16273 6.65591 3.57955 9 3.57955Z" fill="#EA4335"/>
+        </svg>
+        Sign in with Google
+    </button>
+
+                <!-- OR divider -->
                 <div class="or-divider">
                     <span class="or-line"></span>
                     <span class="or-text">OR</span>
                     <span class="or-line"></span>
                 </div>
 
-              
-                <input type="hidden" name="user_type" id="userTypeField">
-                <div class="role-toggle mb-4">
-                    <button type="button" id="supplierBtn" class="role-toggle-btn">Supplier</button>
+                <!-- Hidden User Type Field -->
+                <input type="hidden" name="user_type" id="user_type_input" value="buyer">
+
+                <!-- Step 1 Fields -->
+                <div id="step1Fields" class="space-y-4">
+                    <div class="role-toggle mb-3">
+    <a href="#" id="supplierBtn" class="role-toggle-btn text-center inline-block">Become Supplier?</a>
+</div>
+
+
+                    <!-- Buyer Options -->
+                    <div id="buyerOptions" class="buyer-options">
+                        <label><input type="radio" name="buyer_type" value="retailer" checked> Retailer</label>
+                        <label><input type="radio" name="buyer_type" value="wholesaler"> Wholesaler</label>
+                    </div>
+
+                    <!-- Common Fields -->
+                    <div><label>First Name</label><input type="text" name="first_name" class="w-full px-3 py-2 border rounded-md" required></div>
+                    <div><label>Last Name</label><input type="text" name="last_name" class="w-full px-3 py-2 border rounded-md" required></div>
+                    <div><label>Email</label><input type="email" name="email" class="w-full px-3 py-2 border rounded-md" required></div>
+                    <div><label>Password</label><input type="password" name="password" class="w-full px-3 py-2 border rounded-md" required></div>
+
+                    <button type="button" id="nextBtn" class="w-full py-2.5 text-white bg-blue-600 rounded-md">Continue</button>
                 </div>
 
-                <div id="buyerOptions" class="buyer-options">
-                    <label><input type="radio" name="buyer_type" value="retailer" checked> Retailer</label>
-                    <label><input type="radio" name="buyer_type" value="wholesaler"> Wholesaler</label>
+                <!-- Step 2 Fields -->
+                <div id="step2Fields" class="space-y-4 hidden mt-4">
+                   <!-- Retailer Fields -->
+<div id="retailFields" class="user-fields hidden" style="margin-top: 1rem;">
+    <label style="display:block; margin-bottom: 0.25rem;">Age</label>
+    <input type="number" name="age" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:0.375rem; margin-bottom:1rem;">
+
+    <label style="display:block; margin-bottom: 0.25rem;">Medical Needs</label>
+    <input type="text" name="medical_needs" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:0.375rem; margin-bottom:1rem;">
+</div>
+
+<!-- Wholesaler Fields -->
+<div id="wholesalerFields" class="user-fields hidden" style="margin-top: 1rem;">
+    <label style="display:block; margin-bottom: 0.25rem;">Company Name</label>
+    <input type="text" name="company_name" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:0.375rem; margin-bottom:1rem;">
+
+    <label style="display:block; margin-bottom: 0.25rem;">GST Number</label>
+    <input type="text" name="gst_number" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:0.375rem; margin-bottom:1rem;">
+
+    <label style="display:block; margin-bottom: 0.25rem;">Department</label>
+    <input type="text" name="department" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:0.375rem; margin-bottom:1rem;">
+
+    <label style="display:block; margin-bottom: 0.25rem;">Purchase Capacity</label>
+    <input type="text" name="purchase_capacity" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:0.375rem; margin-bottom:1rem;">
+</div>
+
+<!-- Supplier Fields -->
+<div id="supplierFields" class="user-fields hidden" style="margin-top: 1rem;">
+    <label style="display:block; margin-bottom: 0.25rem;">Company Name</label>
+    <input type="text" name="supplier_company_name" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:0.375rem; margin-bottom:1rem;">
+
+    <label style="display:block; margin-bottom: 0.25rem;">License Number</label>
+    <input type="text" name="license_number" style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:0.375rem; margin-bottom:1rem;">
+</div>
+
+                    <!-- Back and Create -->
+                    <div class="flex gap-4">
+                        <button type="button" id="backBtn" class="w-full py-2.5 bg-gray-300 rounded-md">Back</button>
+                        <button type="submit" class="w-full py-2.5 bg-blue-600 text-white rounded-md">Create Account</button>
+                    </div>
                 </div>
 
-                <!-- Common Fields -->
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium mb-1">First Name</label>
-                        <input type="text" name="first_name" required class="w-full px-3 py-2 border rounded-md">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Last Name</label>
-                        <input type="text" name="last_name" required class="w-full px-3 py-2 border rounded-md">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Email</label>
-                        <input type="email" name="email" required class="w-full px-3 py-2 border rounded-md">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Password</label>
-                        <input type="password" name="password" required class="w-full px-3 py-2 border rounded-md">
-                    </div>
-                </div>
-
-                <!-- Retailer Fields -->
-          <div id="retailerFields" class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium mb-1">Age</label>
-              <input type="number" name="age" class="w-full px-3 py-2 border rounded-md">
-            </div>
-            <div>
-              <label class="block text-sm font-medium mb-1">Medical Needs</label>
-              <input type="text" name="medical_needs" class="w-full px-3 py-2 border rounded-md">
-            </div>
-          </div>
-
-          <!-- Wholesaler Fields -->
-          <div id="wholesalerFields" class="space-y-4 hidden">
-            <div>
-              <label class="block text-sm font-medium mb-1">Company Name</label>
-              <input type="text" name="company_name" class="w-full px-3 py-2 border rounded-md">
-            </div>
-            <div>
-              <label class="block text-sm font-medium mb-1">GST Number</label>
-              <input type="text" name="gst_number" class="w-full px-3 py-2 border rounded-md">
-            </div>
-            <div>
-              <label class="block text-sm font-medium mb-1">Department</label>
-              <input type="text" name="department" class="w-full px-3 py-2 border rounded-md">
-            </div>
-            <div>
-              <label class="block text-sm font-medium mb-1">Purchase Capacity</label>
-              <input type="text" name="purchase_capacity" class="w-full px-3 py-2 border rounded-md">
-            </div>
-          </div>
-
-          <!-- Supplier Fields -->
-          <div id="supplierFields" class="space-y-4 hidden">
-            <div>
-              <label class="block text-sm font-medium mb-1">Company Name</label>
-              <input type="text" name="company_name" class="w-full px-3 py-2 border rounded-md">
-            </div>
-            <div>
-              <label class="block text-sm font-medium mb-1">License Number</label>
-              <input type="text" name="license_number" class="w-full px-3 py-2 border rounded-md">
-            </div>
-          </div>
-
-           <button type="submit" class="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                    Create Account
-                </button>
-                <div class="text-sm text-center text-gray-600">
-                    Already have an account? <a href="{% url 'login' %}" class="text-blue-600 hover:underline">Sign in</a>
+                <div class="text-center text-sm text-gray-600 mt-2">
+                    Already have an account?
+                    <a href="{% url 'login' %}" class="text-blue-600 hover:underline">Sign in</a>
                 </div>
             </form>
         </div>
@@ -184,44 +198,56 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const supplierBtn = document.getElementById('supplierBtn');
-        const buyerOptions = document.getElementById('buyerOptions');
-        const userTypeField = document.getElementById('userTypeField');
-        const radios = document.querySelectorAll('input[name="buyer_type"]');
+    const supplierBtn = document.getElementById("supplierBtn");
+    const buyerOptions = document.getElementById("buyerOptions");
+    const userTypeInput = document.getElementById("user_type_input");
 
-        const retailerFields = document.getElementById('retailerFields');
-        const wholesalerFields = document.getElementById('wholesalerFields');
-        const supplierFields = document.getElementById('supplierFields');
+    const nextBtn = document.getElementById("nextBtn");
+    const backBtn = document.getElementById("backBtn");
 
-        
-        userTypeField.value = 'retailer';
-        retailerFields.style.display = 'block';
+    const step1 = document.getElementById("step1Fields");
+    const step2 = document.getElementById("step2Fields");
 
-        radios.forEach(radio => {
-            radio.addEventListener('change', () => {
-                supplierBtn.classList.remove('active');
-                buyerOptions.style.display = 'flex';
-                userTypeField.value = radio.value;
+    const retailFields = document.getElementById("retailFields");
+    const wholesalerFields = document.getElementById("wholesalerFields");
+    const supplierFields = document.getElementById("supplierFields");
 
-           
-                retailerFields.style.display = radio.value === 'retailer' ? 'block' : 'none';
-                wholesalerFields.style.display = radio.value === 'wholesaler' ? 'block' : 'none';
-                supplierFields.style.display = 'none';
-            });
-        });
+    let isSupplier = false;
 
-        supplierBtn.addEventListener('click', () => {
-            supplierBtn.classList.add('active');
-            buyerOptions.style.display = 'none';
-            userTypeField.value = 'supplier';
+    supplierBtn.addEventListener("click", () => {
+        isSupplier = !isSupplier;
+        supplierBtn.classList.toggle("active");
+        buyerOptions.classList.toggle("hidden");
 
-           
-            retailerFields.style.display = 'none';
-            wholesalerFields.style.display = 'none';
-            supplierFields.style.display = 'block';
-        });
+       
+        userTypeInput.value = isSupplier ? "supplier" : "buyer";
+    });
+
+    nextBtn.addEventListener("click", () => {
+        step1.classList.add("hidden");
+        step2.classList.remove("hidden");
+
+        if (isSupplier) {
+            supplierFields.classList.remove("hidden");
+            retailFields.classList.add("hidden");
+            wholesalerFields.classList.add("hidden");
+        } else {
+            const buyerType = document.querySelector('input[name="buyer_type"]:checked')?.value;
+            if (buyerType === "retailer") {
+                retailFields.classList.remove("hidden");
+                wholesalerFields.classList.add("hidden");
+            } else {
+                wholesalerFields.classList.remove("hidden");
+                retailFields.classList.add("hidden");
+            }
+            supplierFields.classList.add("hidden");
+        }
+    });
+
+    backBtn.addEventListener("click", () => {
+        step2.classList.add("hidden");
+        step1.classList.remove("hidden");
     });
 </script>
 </body>
-</html> 
+</html>

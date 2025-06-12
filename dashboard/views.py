@@ -12,7 +12,9 @@ from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.hashers import make_password
 from .models import RetailProfile, WholesaleBuyerProfile, SupplierProfile
-import requests
+from django.contrib.auth import authenticate, login
+from django.views.generic.edit import FormView
+
 
 
 class HomeView(TemplateView):
@@ -24,13 +26,45 @@ class HomeView(TemplateView):
         return context
 
 
-class CustomLoginView(LoginView):
+class CustomLoginView(FormView):
     form_class = EmailOnlyLoginForm
-    template_name = 'dashboard/login.html' 
+    template_name = 'dashboard/login.html'
+    
+    def form_valid(self, form):
+        email = form.cleaned_data['username'] 
+        password = form.cleaned_data['password']
+        user_type = self.request.POST.get('user_type') 
+        buyer_type = self.request.POST.get('buyer_type') 
+        
 
+        user = authenticate(username=email, password=password)
+        
+        if user is not None:
+            if user_type == 'supplier':
+                if not hasattr(user, 'supplierprofile'):
+                    form.add_error(None, "This account is not registered as a supplier.")
+                    return self.form_invalid(form)
+            elif user_type == 'buyer':
+                if buyer_type == 'retailer' and not hasattr(user, 'retailprofile'):
+                    form.add_error(None, "This account is not registered as a retailer.")
+                    return self.form_invalid(form)
+                elif buyer_type == 'wholesaler' and not hasattr(user, 'wholesalebuyerprofile'):
+                    form.add_error(None, "This account is not registered as a wholesaler.")
+                    return self.form_invalid(form)
+
+            login(self.request, user)
+            if user_type == 'supplier':
+                self.request.session['user_role'] = 'supplier'
+            else:
+                self.request.session['user_role'] = buyer_type 
+            
+            return redirect(self.get_success_url())
+        else:
+            form.add_error(None, "Invalid email or password.")
+            return self.form_invalid(form)
+    
     def get_success_url(self):
         return reverse_lazy('home')
-
 
 class RegistrationView(View):
     template_name = "dashboard/register.html"
@@ -43,7 +77,8 @@ class RegistrationView(View):
         last_name = request.POST.get('last_name')
         email = request.POST.get('email')
         password = request.POST.get('password')
-        user_type = request.POST.get('user_type')
+        user_type = request.POST.get('user_type')  
+        buyer_type = request.POST.get('buyer_type')
 
         try:
             user = User.objects.create_user(
@@ -54,28 +89,56 @@ class RegistrationView(View):
                 last_name=last_name
             )
 
-            if user_type == 'doctor':
-                DoctorProfile.objects.create(user=user)
-                messages.success(request, "Doctor user created. Please update your profile.")
+            # Supplier
+            if user_type == 'supplier':
+                company_name = request.POST.get('supplier_company_name')
+                license_number = request.POST.get('license_number')
+                SupplierProfile.objects.create(
+                    user=user,
+                    company_name=company_name,
+                    license_number=license_number
+                )
+                messages.success(request, "Supplier account created successfully.")
 
-            elif user_type == 'supplier':
-                MedicalSupplierProfile.objects.create(user=user)
-                messages.success(request, "Supplier user created. Please update your profile.")
+            # Retail buyer
+            elif buyer_type == 'retailer':
+                try:
+                    age = int(request.POST.get('age') or 0)
+                except ValueError:
+                    age = 0
+                medical_needs = request.POST.get('medical_needs') or ''
+                RetailProfile.objects.create(
+                    user=user,
+                    age=age,
+                    medical_needs=medical_needs
+                )
+                messages.success(request, "Retailer user created. Please update your profile.")
 
-            elif user_type == 'corporate':
-                CorporateProfile.objects.create(user=user)
-                messages.success(request, "Corporate user created. Please update your profile.")
+            # Wholesale buyer
+            elif user_type == 'wholesale' or buyer_type == 'wholesaler':
+                company_name = request.POST.get('company_name')
+                gst_number = request.POST.get('gst_number')
+                department = request.POST.get('department')
+                purchase_capacity = request.POST.get('purchase_capacity')
+                WholesaleBuyerProfile.objects.create(
+                    user=user,
+                    company_name=company_name,
+                    gst_number=gst_number,
+                    department=department,
+                    purchase_capacity=purchase_capacity
+                )
+                messages.success(request, "Wholesaler account created successfully.")
 
             else:
                 messages.error(request, "Invalid user type.")
                 user.delete()
-                return render(request, self.template_name, {'error': "Invalid user type."})
+                return render(request, self.template_name)
 
             return redirect('login')
 
         except Exception as e:
             messages.error(request, f"An error occurred: {e}")
-            return render(request, self.template_name, {'error': str(e)})
+            return render(request, self.template_name)
         
 class UserProfileView(LoginRequiredMixin, TemplateView):
     template_name = 'dashboard/profile.html'

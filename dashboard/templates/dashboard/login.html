@@ -28,12 +28,13 @@
     .login-header {
         text-align: center;
         margin-bottom: 32px;
+      
     }
     
     .login-header h1 {
         color: #101828;
         margin: 0 0 12px 0;
-        font-size: 30px;
+        font-size: 26px;
         font-weight: 600;
         line-height: 38px;
     }
@@ -259,7 +260,7 @@
 
 <div class="login-container">
     <div class="login-header">
-        <h1>Sign in to Storely</h1>
+        <h1>Sign in to Health Equipment </h1>
        
     </div>
 
@@ -281,6 +282,7 @@
 
     <form method="post" class="login-form">
         {% csrf_token %}
+        <input type="hidden" id="user_type" name="user_type" value="buyer">
 
          <!-- Buyer/Supplier Toggle Buttons -->
 <div class="role-toggle">
@@ -361,22 +363,20 @@
 const buyerBtn = document.getElementById('buyerBtn');
 const supplierBtn = document.getElementById('supplierBtn');
 const buyerOptions = document.getElementById('buyerOptions');
+const userTypeInput = document.getElementById('user_type');
 
 buyerBtn.addEventListener('click', () => {
     buyerBtn.classList.add('active');
     supplierBtn.classList.remove('active');
     buyerOptions.style.display = 'flex';
+    userTypeInput.value = 'buyer';
 });
 
 supplierBtn.addEventListener('click', () => {
     supplierBtn.classList.add('active');
     buyerBtn.classList.remove('active');
     buyerOptions.style.display = 'none';
+    userTypeInput.value = 'supplier';
 });
-
-document.addEventListener('DOMContentLoaded', () => {
-    buyerBtn.click(); 
-});
-
 </script>
 {% endblock %}
