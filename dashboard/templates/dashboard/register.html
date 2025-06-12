@@ -129,6 +129,15 @@
         justify-content: center;
         height: 100%; 
     }
+    .input-error {
+        border-color: #FDA29B !important;
+    }
+    .error-message {
+        color: #F04438;
+        font-size: 12px;
+        margin-top: 4px;
+        display: none;
+    }
     </style>
 </head>
 <body class="antialiased flex h-full text-base bg-background">
@@ -174,13 +183,26 @@
                     </div>
 
                     <!-- Common Fields -->
-                    <div><label>First Name</label><input type="text" name="first_name" class="w-full px-3 py-2 border rounded-md" placeholder="Your firstname" required></div>
-                    <div><label>Last Name</label><input type="text" name="last_name" class="w-full px-3 py-2 border rounded-md" placeholder="Your lastname"required></div>
-                    <div><label>Email</label><input type="email" name="email" class="w-full px-3 py-2 border rounded-md" required placeholder="Your email"></div>
+                    <div>
+                        <label>First Name</label>
+                        <input type="text" name="first_name" id="first_name" class="w-full px-3 py-2 border rounded-md" placeholder="Your firstname" required>
+                        <div class="error-message" id="first_name_error">Please enter your first name</div>
+                    </div>
+                    <div>
+                        <label>Last Name</label>
+                        <input type="text" name="last_name" id="last_name" class="w-full px-3 py-2 border rounded-md" placeholder="Your lastname" required>
+                        <div class="error-message" id="last_name_error">Please enter your last name</div>
+                    </div>
+                    <div>
+                        <label>Email</label>
+                        <input type="email" name="email" id="email" class="w-full px-3 py-2 border rounded-md" required placeholder="Your email">
+                        <div class="error-message" id="email_error">Please enter a valid email address</div>
+                    </div>
                    <div class="form-group">
             <label for="id_password">Password</label>
             <div class="password-input-container">
-                <input type="password" name="password" id="id_password" placeholder="Your password" class="input-field">
+                <input type="password" name="password" id="password" placeholder="Your password" class="input-field" required>
+                <div class="error-message" id="password_error">Please enter a password</div>
                 <button type="button" class="toggle-password" aria-label="Toggle password visibility">
                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M10 4.375C3.75 4.375 1.25 10 1.25 10C1.25 10 3.75 15.625 10 15.625C16.25 15.625 18.75 10 18.75 10C18.75 10 16.25 4.375 10 4.375Z" stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -259,6 +281,18 @@
     const wholesalerFields = document.getElementById("wholesalerFields");
     const supplierFields = document.getElementById("supplierFields");
 
+    // Form fields
+    const firstNameInput = document.getElementById("first_name");
+    const lastNameInput = document.getElementById("last_name");
+    const emailInput = document.getElementById("email");
+    const passwordInput = document.getElementById("password");
+
+    // Error messages
+    const firstNameError = document.getElementById("first_name_error");
+    const lastNameError = document.getElementById("last_name_error");
+    const emailError = document.getElementById("email_error");
+    const passwordError = document.getElementById("password_error");
+
     let isSupplier = false;
 
     supplierBtn.addEventListener("click", () => {
@@ -271,23 +305,67 @@
     });
 
     nextBtn.addEventListener("click", () => {
-        step1.classList.add("hidden");
-        step2.classList.remove("hidden");
+        let isValid = true;
+        
+        // Reset error states
+        firstNameInput.classList.remove("input-error");
+        lastNameInput.classList.remove("input-error");
+        emailInput.classList.remove("input-error");
+        passwordInput.classList.remove("input-error");
+        firstNameError.style.display = "none";
+        lastNameError.style.display = "none";
+        emailError.style.display = "none";
+        passwordError.style.display = "none";
 
-        if (isSupplier) {
-            supplierFields.classList.remove("hidden");
-            retailFields.classList.add("hidden");
-            wholesalerFields.classList.add("hidden");
-        } else {
-            const buyerType = document.querySelector('input[name="buyer_type"]:checked')?.value;
-            if (buyerType === "retailer") {
-                retailFields.classList.remove("hidden");
+        // Validate first name
+        if (!firstNameInput.value.trim()) {
+            firstNameInput.classList.add("input-error");
+            firstNameError.style.display = "block";
+            isValid = false;
+        }
+
+        // Validate last name
+        if (!lastNameInput.value.trim()) {
+            lastNameInput.classList.add("input-error");
+            lastNameError.style.display = "block";
+            isValid = false;
+        }
+
+        // Validate email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailInput.value.trim() || !emailRegex.test(emailInput.value)) {
+            emailInput.classList.add("input-error");
+            emailError.style.display = "block";
+            isValid = false;
+        }
+
+        // Validate password
+        if (!passwordInput.value.trim()) {
+            passwordInput.classList.add("input-error");
+            passwordError.style.display = "block";
+            isValid = false;
+        }
+
+        // Only proceed if all fields are valid
+        if (isValid) {
+            step1.classList.add("hidden");
+            step2.classList.remove("hidden");
+
+            if (isSupplier) {
+                supplierFields.classList.remove("hidden");
+                retailFields.classList.add("hidden");
                 wholesalerFields.classList.add("hidden");
             } else {
-                wholesalerFields.classList.remove("hidden");
-                retailFields.classList.add("hidden");
+                const buyerType = document.querySelector('input[name="buyer_type"]:checked')?.value;
+                if (buyerType === "retailer") {
+                    retailFields.classList.remove("hidden");
+                    wholesalerFields.classList.add("hidden");
+                } else {
+                    wholesalerFields.classList.remove("hidden");
+                    retailFields.classList.add("hidden");
+                }
+                supplierFields.classList.add("hidden");
             }
-            supplierFields.classList.add("hidden");
         }
     });
 
@@ -295,10 +373,11 @@
         step2.classList.add("hidden");
         step1.classList.remove("hidden");
     });
+    
     // password
     document.addEventListener('DOMContentLoaded', function() {
         const togglePassword = document.querySelector('.toggle-password');
-        const passwordInput = document.getElementById('id_password');
+        const passwordInput = document.getElementById('password');
         
         togglePassword.addEventListener('click', function() {
             const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
