@@ -4,14 +4,14 @@
     <title>Profile</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        .profile-card {
-            max-width: 600px;
-            margin: 50px auto;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-        }
-            .upload-avatar-wrapper {
+    .profile-card {
+        max-width: 600px;
+        margin: 50px auto;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+    .upload-avatar-wrapper {
         width: 120px;
         height: 120px;
         border-radius: 50%;
@@ -55,7 +55,6 @@
                 <div class="text-center mb-4">
                     <form method="post" enctype="multipart/form-data" action="{% url 'upload_profile_picture' %}">
                         {% csrf_token %}
-
                         <label for="profile_picture_input">
                             <div class="upload-avatar-wrapper"
                                  style="
@@ -73,157 +72,63 @@
                     </form>
                 </div>
             {% endif %}
-
             <h4 class="card-title text-center mb-4">Welcome, {{ user.first_name }} {{ user.last_name }}</h4>
             <p class="text-center"><strong>Email:</strong> {{ user.email }}</p>
             <hr>
-            {% if profile_type == 'doctor' %}
-                <h5 class="mb-3">Doctor Profile</h5>
-                <div class="row">
-                    <div class="col-md-6 mb-2">
-                        <strong>Current Position:</strong>
-                        <p class="text-muted">{{ profile.current_position }}</p>
-                    </div>
-                    <div class="col-md-6 mb-2">
-                        <strong>Workplace:</strong>
-                        <p class="text-muted">{{ profile.workplace }}</p>
-                    </div>
-                    <div class="col-md-6 mb-2">
-                        <strong>Nationality:</strong>
-                        <p class="text-muted">{{ profile.nationality }}</p>
-                    </div>
-                    <div class="col-md-6 mb-2">
-                        <strong>Residency:</strong>
-                        <p class="text-muted">{{ profile.residency }}</p>
-                    </div>
-                    <div class="col-md-6 mb-2">
-                        <strong>Country Code:</strong>
-                        <p class="text-muted">{{ profile.country_code }}</p>
-                    </div>
-                    <div class="col-md-6 mb-2">
-                        <strong>Phone Number:</strong>
-                        <p class="text-muted">{{ profile.phone_number }}</p>
-                    </div>
-                    <div class="col-md-6 mb-2">
-                        <strong>Speciality:</strong>
-                        <p class="text-muted">{{ profile.speciality }}</p>
-                    </div>
-                    <div class="col-md-6 mb-2">
-                        <strong>Medical License Number:</strong>
-                        <p class="text-muted">{{ profile.medical_license_number }}</p>
-                    </div>
-                    <div class="col-md-6 mb-2">
-                        <strong>License Expiry Date:</strong>
-                        <p class="text-muted">{{ profile.license_expiry_date }}</p>
-                    </div>
-                    <div class="col-md-6 mb-2">
-                        <strong>Experience Years:</strong>
-                        <p class="text-muted">{{ profile.experience_years }}</p>
-                    </div>
-                </div>
-
-
-            {% elif profile_type == 'supplier' %}
-                <h5 class="mb-3">Medical Supplier Profile</h5>
-                <div class="row">
-                    <div class="col-md-6 mb-2">
-                        <strong>Workplace:</strong>
-                        <p class="text-muted">{{ profile.workplace }}</p>
-                    </div>
-                    <div class="col-md-6 mb-2">
-                        <strong>Nationality:</strong>
-                        <p class="text-muted">{{ profile.nationality }}</p>
-                    </div>
-
-                    <div class="col-md-6 mb-2">
-                        <strong>Residency:</strong>
-                        <p class="text-muted">{{ profile.residency }}</p>
-                    </div>
-                    <div class="col-md-6 mb-2">
-                        <strong>Phone Details:</strong>
-                        <p class="text-muted">{{ profile.phone_details }}</p>
-                    </div>
-
-                    <div class="col-md-6 mb-2">
-                        <strong>Business License Number:</strong>
-                        <p class="text-muted">{{ profile.business_license_number }}</p>
-                    </div>
-                    <div class="col-md-6 mb-2">
-                        <strong>Company:</strong>
-                        <p class="text-muted">{{ profile.company_name }}</p>
-                    </div>
-
-                    <div class="col-md-6 mb-2">
-                        <strong>Years in Operation:</strong>
-                        <p class="text-muted">{{ profile.years_in_operation }}</p>
-                    </div>
-                    <div class="col-md-6 mb-2">
-                        <strong>Warehouse Locations:</strong>
-                        <p class="text-muted">{{ profile.warehouse_locations }}</p>
-                    </div>
-
-                    <div class="col-md-6 mb-2">
-                        <strong>Product Specialization:</strong>
-                        <p class="text-muted">{{ profile.product_specialization }}</p>
-                    </div>
-                    <div class="col-md-6 mb-2">
-                        <strong>Product Categories:</strong>
-                        <p class="text-muted">{{ profile.product_categories }}</p>
-                    </div>
-                </div>
-
-            {% elif profile_type == 'corporate' %}
-                <h5 class="mb-3">Corporate Profile</h5>
+            {% if profile_type == 'supplier' %}
+                <h5 class="mb-3">Supplier Profile</h5>
                 <div class="row">
                     <div class="col-md-6 mb-2">
                         <strong>Company Name:</strong>
                         <p class="text-muted">{{ profile.company_name }}</p>
                     </div>
                     <div class="col-md-6 mb-2">
+                        <strong>License Number:</strong>
+                        <p class="text-muted">{{ profile.license_number }}</p>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <strong>Is Verified:</strong>
+                        <p class="text-muted">{{ profile.is_verified }}</p>
+                    </div>
+                </div>
+            {% elif profile_type == 'retailer' %}
+                <h5 class="mb-3">Retailer Profile</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-2">
+                        <strong>Age:</strong>
+                        <p class="text-muted">{{ profile.age }}</p>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <strong>Medical Needs:</strong>
+                        <p class="text-muted">{{ profile.medical_needs }}</p>
+                    </div>
+                </div>
+
+            {% elif profile_type == 'wholesaler' %}
+                <h5 class="mb-3">Wholesaler Profile</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-2">
+                        <strong>Company Name:</strong>
+                        <p class="text-muted">{{ profile.company_name }}</p>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <strong>GST Number:</strong>
+                        <p class="text-muted">{{ profile.gst_number }}</p>
+                    </div>
+                    <div class="col-md-6 mb-2">
                         <strong>Department:</strong>
                         <p class="text-muted">{{ profile.department }}</p>
                     </div>
                     <div class="col-md-6 mb-2">
-                        <strong>Phone:</strong>
-                        <p class="text-muted">{{ profile.phone }}</p>
-                    </div>
-                    <div class="col-md-6 mb-2">
-                        <strong>Industry Type:</strong>
-                        <p class="text-muted">{{ profile.industry_type }}</p>
-                    </div>
-                    <div class="col-md-6 mb-2">
-                        <strong>Company Website:</strong>
-                        <p class="text-muted">{{ profile.company_website }}</p>
-                    </div>
-                    <div class="col-md-6 mb-2">
-                        <strong>Registration Number:</strong>
-                        <p class="text-muted">{{ profile.registration_number }}</p>
-                    </div>
-                    <div class="col-md-6 mb-2">
-                        <strong>Billing Address:</strong>
-                        <p class="text-muted">{{ profile.billing_address }}</p>
-                    </div>
-                    <div class="col-md-6 mb-2">
-                        <strong>Shipping Address:</strong>
-                        <p class="text-muted">{{ profile.shipping_address }}</p>
-                    </div>
-                    <div class="col-md-6 mb-2">
-                        <strong>Contact Name:</strong>
-                        <p class="text-muted">{{ profile.contact_name }}</p>
-                    </div>
-                    <div class="col-md-6 mb-2">
-                        <strong>Contact Role:</strong>
-                        <p class="text-muted">{{ profile.contact_role }}</p>
+                        <strong>Purchase capacity:</strong>
+                        <p class="text-muted">{{ profile.purchase_capacity }}</p>
                     </div>
                 </div>
-
             {% else %}
                 <p class="text-danger">No profile found.</p>
             {% endif %}
         </div>
     </div>
 </div>
-
-
 </body>
 </html>

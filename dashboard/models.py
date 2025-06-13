@@ -65,12 +65,14 @@ class CorporateProfile(models.Model):
 
 class RetailProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+    profile_picture = models.ImageField(upload_to='profile_pics/', null=True, blank=True)
     age = models.IntegerField(null=True, blank=True)
     medical_needs = models.TextField(blank=True)
 
 
 class WholesaleBuyerProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+    profile_picture = models.ImageField(upload_to='profile_pics/', null=True, blank=True)
     company_name = models.CharField(max_length=255)
     gst_number = models.CharField(max_length=50)
     department = models.CharField(max_length=100)
@@ -79,6 +81,7 @@ class WholesaleBuyerProfile(models.Model):
 
 class SupplierProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+    profile_picture = models.ImageField(upload_to='profile_pics/', null=True, blank=True)
     company_name = models.CharField(max_length=255)
     license_number = models.CharField(max_length=100)
     is_verified = models.BooleanField(default=False)

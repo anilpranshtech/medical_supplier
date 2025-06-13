@@ -150,15 +150,15 @@ class UserProfileView(LoginRequiredMixin, TemplateView):
         profile = None
         profile_type = None
 
-        if hasattr(user, 'doctorprofile'):
-            profile = user.doctorprofile
-            profile_type = 'doctor'
-        elif hasattr(user, 'medicalsupplierprofile'):
-            profile = user.medicalsupplierprofile
+        if hasattr(user, 'supplierprofile'):
+            profile = user.supplierprofile
             profile_type = 'supplier'
-        elif hasattr(user, 'corporateprofile'):
-            profile = user.corporateprofile
-            profile_type = 'corporate'
+        elif hasattr(user, 'retailprofile'):
+            profile = user.retailprofile
+            profile_type = 'retailer'
+        elif hasattr(user, 'wholesalebuyerprofile'):
+            profile = user.wholesalebuyerprofile
+            profile_type = 'wholesaler'
 
         context['user'] = user
         context['profile'] = profile
@@ -170,12 +170,12 @@ class UploadProfilePictureView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         profile = None
 
-        if hasattr(request.user, 'doctorprofile'):
-            profile = request.user.doctorprofile
-        elif hasattr(request.user, 'medicalsupplierprofile'):
-            profile = request.user.medicalsupplierprofile
-        elif hasattr(request.user, 'corporateprofile'):
-            profile = request.user.corporateprofile
+        if hasattr(request.user, 'supplierprofile'):
+            profile = request.user.supplierprofile
+        elif hasattr(request.user, 'retailprofile'):
+            profile = request.user.retailprofile
+        elif hasattr(request.user, 'wholesalebuyerprofile'):
+            profile = request.user.wholesalebuyerprofile
 
         if profile and 'profile_picture' in request.FILES:
             profile.profile_picture = request.FILES['profile_picture']
