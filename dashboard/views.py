@@ -65,7 +65,7 @@ class CustomLoginView(FormView):
     
     def get_success_url(self):
         return reverse_lazy('home')
-
+import requests
 class RegistrationView(View):
     template_name = "dashboard/register.html"
 
@@ -73,6 +73,23 @@ class RegistrationView(View):
         return render(request, self.template_name)
 
     def post(self, request):
+
+    
+        recaptcha_response = request.POST.get('g-recaptcha-response')
+        recaptcha_secret = '6LdTHV8rAAAAAIgLr2wdtdtWExTS6xJpUpD8qEzh' 
+
+        recaptcha_result = requests.post(
+            'https://www.google.com/recaptcha/api/siteverify',
+            data={
+                'secret': recaptcha_secret,
+                'response': recaptcha_response
+            }
+        ).json()
+
+        if not recaptcha_result.get('success'):
+            messages.error(request, 'Invalid reCAPTCHA. Please try again.')
+            return render(request, self.template_name)
+        
         first_name = request.POST.get('first_name')
         last_name = request.POST.get('last_name')
         email = request.POST.get('email')
