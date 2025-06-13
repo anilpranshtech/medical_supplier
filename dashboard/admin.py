@@ -20,14 +20,14 @@ class CorporateProfileAdmin(admin.ModelAdmin):
 
 @admin.register(RetailProfile)
 class RetailProfileAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'age', 'medical_needs')
+    list_display = ('id', 'user', 'profile_picture', 'age', 'medical_needs')
 
 
 @admin.register(WholesaleBuyerProfile)
 class WholesaleBuyerProfileAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'company_name', 'gst_number', 'department', 'purchase_capacity')
+    list_display = ('id', 'user', 'profile_picture', 'company_name', 'gst_number', 'department', 'purchase_capacity')
 
 
 @admin.register(SupplierProfile)
 class SupplierProfileAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'company_name', 'license_number', 'is_verified')
+    list_display = ('id', 'user', 'profile_picture', 'company_name', 'license_number', 'is_verified')
