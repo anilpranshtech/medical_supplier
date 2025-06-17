@@ -60,3 +60,9 @@ class AddcategoryView(View):
 class CategoryView(View):
     def get(self, request):
         return render(request, 'adminv2/categories.html')  
+
+class AdminloginView(View):
+    def get(self, request):
+        return render(request, 'adminv2/sign-in.html')
+
+    
