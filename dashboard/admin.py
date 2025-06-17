@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from dashboard.models import DoctorProfile, MedicalSupplierProfile, CorporateProfile, RetailProfile, WholesaleBuyerProfile, SupplierProfile
+from dashboard.models import DoctorProfile, MedicalSupplierProfile, CorporateProfile, RetailProfile, WholesaleBuyerProfile, SupplierProfile, Product,ProductImage
 
 
 @admin.register(DoctorProfile)
@@ -31,3 +31,11 @@ class WholesaleBuyerProfileAdmin(admin.ModelAdmin):
 @admin.register(SupplierProfile)
 class SupplierProfileAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'profile_picture', 'company_name', 'license_number', 'is_verified')
+
+@admin.register(Product)
+class ProductProfileAdmin(admin.ModelAdmin):
+    list_display = ('name', 'description', 'price')
+
+@admin.register(ProductImage)
+class ProductImagesAdmin(admin.ModelAdmin):
+    list_display = ('image',)

@@ -16,3 +16,4 @@ class EmailOnlyLoginForm(AuthenticationForm):
             return user.username  
         except User.DoesNotExist:
             raise ValidationError("No account found with this email")
+        

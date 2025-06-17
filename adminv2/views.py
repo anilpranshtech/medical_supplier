@@ -1,5 +1,7 @@
 from django.views import View
-from django.shortcuts import render
+from django.shortcuts import render,redirect
+from django.contrib import messages
+from dashboard.models import Product
 
 class ProductsView(View):
     def get(self, request):
@@ -12,10 +14,44 @@ class EditproductsView(View):
 class EditcategoryView(View):
     def get(self, request):
         return render(request, 'adminv2/edit-category.html')
-    
+
 class AddproductsView(View):
     def get(self, request):
         return render(request, 'adminv2/add-product.html')
+
+    def post(self, request):
+        print('{}{}{}{}{}{}{}{}')
+        name = request.POST.get('product_name')
+        description = request.POST.get('product_description')
+        price = request.POST.get('price')
+
+
+        print(name,description,price,';:::::')
+
+        try:
+            price = float(price)
+        except (TypeError, ValueError):
+            messages.error(request, "Please enter a valid number for price.")
+            return render(request, 'adminv2/add-product.html')
+
+
+        if not name or not description:
+            messages.error(request, "All fields are required.")
+            return render(request, 'adminv2/add-product.html')
+
+        try:
+            Product.objects.create(
+                name=name,
+                description=description,
+                price=price
+            )
+            messages.success(request, "Product added successfully!")
+            return redirect('add_product') 
+        except Exception as e:
+            messages.error(request, f"Failed to save product: {e}")
+            return render(request, 'adminv2/add-product.html')
+
+
 
 class AddcategoryView(View):
     def get(self, request):
