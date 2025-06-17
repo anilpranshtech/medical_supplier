@@ -46,7 +46,7 @@ class AddproductsView(View):
                 price=price
             )
             messages.success(request, "Product added successfully!")
-            return redirect('add_product') 
+            return redirect('adminv2:add_product') 
         except Exception as e:
             messages.error(request, f"Failed to save product: {e}")
             return render(request, 'adminv2/add-product.html')
