@@ -3,6 +3,11 @@ from django.shortcuts import render,redirect
 from django.contrib import messages
 from dashboard.models import Product
 
+
+class HomeView(View):
+    def get(self, request):
+        return render(request, 'adminv2/base.html')
+
 class ProductsView(View):
     def get(self, request):
         return render(request, 'adminv2/products.html')
@@ -20,13 +25,11 @@ class AddproductsView(View):
         return render(request, 'adminv2/add-product.html')
 
     def post(self, request):
-        print('{}{}{}{}{}{}{}{}')
         name = request.POST.get('product_name')
         description = request.POST.get('product_description')
         price = request.POST.get('price')
 
 
-        print(name,description,price,';:::::')
 
         try:
             price = float(price)
