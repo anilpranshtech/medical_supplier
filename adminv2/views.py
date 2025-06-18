@@ -74,4 +74,6 @@ class AdminloginView(View):
     def get(self, request):
         return render(request, 'adminv2/sign-in.html')
 
-    
+class UserProfileView(View):
+    def get(self, request):
+        return render(request, 'adminv2/user-profile.html')
