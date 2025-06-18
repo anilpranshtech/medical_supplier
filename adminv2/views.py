@@ -2,11 +2,17 @@ from django.views import View
 from django.shortcuts import render,redirect
 from django.contrib import messages
 from dashboard.models import Product
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 
-
-class HomeView(View):
+class HomeView(LoginRequiredMixin, UserPassesTestMixin, View):
+    login_url = 'adminv2:admin_login'
     def get(self, request):
         return render(request, 'adminv2/base.html')
+    
+    def test_func(self):
+        return self.request.user.is_superuser
+    
+    
 
 class ProductsView(View):
     def get(self, request):
