@@ -47,8 +47,7 @@
                                 <select class="form-select form-select-solid" data-control="select2"
                                     data-hide-search="true" data-placeholder="Status"
                                     data-kt-ecommerce-product-filter="status">
-                                    <option></option>
-                                    <option value="all">All</option>
+                                    <option selected value="all">All</option>
                                     <option value="published">Published</option>
                                     <option value="scheduled">Scheduled</option>
                                     <option value="inactive">Inactive</option>
@@ -118,7 +117,7 @@
         <span class="fw-bold">{{ product.id|stringformat:"07d" }}</span>
     </td>
     <td class="text-end pe-0">
-        <span class="fw-bold ms-3">{{ product.price }}</span>
+        <span class="fw-bold ms-3"><span>&#8377;</span>{{ product.price }}</span>
     </td>
     <td class="text-end pe-0">
         {{ product.description|truncatechars:30 }}
@@ -174,9 +173,6 @@
     <!--end::Content wrapper-->
 </div>
 <!--end:::Main-->
-
-
-
 
 {% endblock %}
 
