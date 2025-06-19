@@ -7,6 +7,8 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse   
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.hashers import check_password
 
 class HomeView(LoginRequiredMixin, UserPassesTestMixin, View):
     login_url = 'adminv2:admin_login'
@@ -162,3 +164,46 @@ class UserProfileView(View):
 class UserOverView(View):
     def get(self, request):
         return render(request, 'adminv2/overview.html')
+class AdminSettingView(View):
+    def get(self, request):
+     
+        return render(request, 'adminv2/settings.html')
+
+class AdminSettingView(View):
+    def get(self, request):
+        return render(request, 'adminv2/settings.html')
+
+    def post(self, request):
+        if 'fname' in request.POST:
+            fname = request.POST.get('fname')
+            lname = request.POST.get('lname')
+            email = request.POST.get('aemail')
+           
+            user = request.user
+            user.first_name = fname
+            user.last_name = lname
+            user.email = email
+            user.save()
+
+            messages.success(request, "Profile updated successfully!")
+            return redirect('adminv2:profile_setting')
+
+        elif 'currentpassword' in request.POST:
+            current = request.POST.get('currentpassword')
+            new = request.POST.get('newpassword')
+            confirm = request.POST.get('confirmpassword')
+            user = request.user
+
+            if not check_password(current, user.password):
+                messages.error(request, "Current password is incorrect.")
+            elif new != confirm:
+                messages.error(request, "New passwords do not match.")
+            elif len(new) < 8:
+                messages.error(request, "Password must be at least 8 characters.")
+            else:
+                user.set_password(new)
+                user.save()
+                update_session_auth_hash(request, user) 
+                messages.success(request, "Password updated successfully.")
+
+            return redirect('adminv2:profile_setting')
