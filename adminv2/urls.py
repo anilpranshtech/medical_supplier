@@ -3,7 +3,7 @@ from .views import HomeView,ProductsView,EditcategoryView,EditproductsView,Categ
 
 app_name = 'adminv2'
 urlpatterns = [
-    path('admin_v2/', HomeView.as_view(), name='dashboard'),
+    path('admin_v2/', HomeView.as_view(), name='admin_v2'),
     path('products/', ProductsView.as_view(), name='products_list'),
     path('products/edit/<int:pk>/', EditproductsView.as_view(), name='edit_product'),
     path('products/delete/<int:pk>/', DeleteProductView.as_view(), name='delete_product'),
