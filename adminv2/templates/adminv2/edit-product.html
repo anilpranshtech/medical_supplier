@@ -1378,7 +1378,8 @@
         <!--begin::Content container-->
         <div id="kt_app_content_container" class="app-container  container-fluid ">
             <!--begin::Form-->
-<form id="kt_ecommerce_add_product_form" class="form d-flex flex-column flex-lg-row" data-kt-redirect="products.html">
+<form  class="form d-flex flex-column flex-lg-row" method="POST"   enctype="multipart/form-data">
+	 {% csrf_token %}
     <!--begin::Aside column-->
     <div class="d-flex flex-column gap-7 gap-lg-10 w-100 w-lg-300px mb-7 me-lg-10">
         <!--begin::Thumbnail settings-->
@@ -1399,7 +1400,15 @@
                 
         <div class="image-input image-input-empty image-input-outline image-input-placeholder mb-3" data-kt-image-input="true">
             <!--begin::Preview existing avatar-->
-                            <div class="image-input-wrapper w-150px h-150px" style="background-image: url(/static/adminv2/media/stock/ecommerce/78.png)"></div>
+                        {% if product_image %}
+        <div class="image-input-wrapper w-150px h-150px"
+             style="background-image: url('{{ product_image.image.url }}')">
+        </div>
+    {% else %}
+        <div class="image-input-wrapper w-150px h-150px"
+             style="background-image: url('/static/adminv2/media/stock/ecommerce/78.png')">
+        </div>
+    {% endif %}
                         <!--end::Preview existing avatar-->
 
             <!--begin::Label-->
@@ -1663,10 +1672,8 @@
         <div class="mb-10 fv-row">
             <!--begin::Label-->
             <label class="required form-label">Product Name</label>
-            <!--end::Label-->
-
-            <!--begin::Input-->
-                        <input type="text" name="product_name" class="form-control mb-2" placeholder="Product name" value="Sample product" />
+            <input type="text" name="product_name" class="form-control mb-2"
+                   value="{{ product.name }}" placeholder="Product name">
             <!--end::Input-->
 
             <!--begin::Description-->
@@ -1679,10 +1686,11 @@
         <div>
             <!--begin::Label-->
             <label class="form-label">Description</label>
+            <textarea name="description" class="form-control mb-2" rows="4">{{ product.description }}</textarea><br>
             <!--end::Label-->
 
             <!--begin::Editor-->
-            <div id="kt_ecommerce_add_product_description" name="kt_ecommerce_add_product_description" class="min-h-200px mb-2"></div>
+           
             <!--end::Editor-->
 
             <!--begin::Description-->
@@ -1750,10 +1758,8 @@
         <div class="mb-10 fv-row">
             <!--begin::Label-->
             <label class="required form-label">Base Price</label>
-            <!--end::Label-->
-
-            <!--begin::Input-->
-            <input type="text" name="price" class="form-control mb-2" placeholder="Product price" value="199.99" />
+            <input type="text" name="price" class="form-control mb-2"
+                   value="{{ product.price }}" placeholder="Product price">
             <!--end::Input-->
 
             <!--begin::Description-->
@@ -2867,13 +2873,12 @@
 
             <!--begin::Button-->
             <button type="submit" id="kt_ecommerce_add_product_submit" class="btn btn-primary">
-                <span class="indicator-label">
-                    Save Changes
-                </span>
-                <span class="indicator-progress">
-                    Please wait... <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
-                </span>
-            </button>
+        <span class="indicator-label">Save Changes</span>
+        <span class="indicator-progress">
+            Please wait... <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+        </span>
+    </button>
+</form>
             <!--end::Button-->
         </div>
     </div>
@@ -12879,6 +12884,7 @@
                         <!--end::Custom Javascript-->
                 <!--end::Javascript-->
     </body>
+	
     <!--end::Body-->
 
 <!-- Mirrored from preview.keenthemes.com/metronic8/demo58/apps/ecommerce/catalog/edit-product.html by HTTrack Website Copier/3.x [XR&CO'2014], Thu, 12 Jun 2025 13:16:30 GMT -->

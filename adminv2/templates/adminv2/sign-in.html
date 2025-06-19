@@ -109,10 +109,19 @@ License: For each use you must have a valid license purchased only from above li
                 <div class="d-flex flex-center flex-column flex-lg-row-fluid">
                     <!--begin::Wrapper-->
                     <div class="w-lg-500px p-10">
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-danger">{{ message }}</div>
+    {% endfor %}
+{% endif %}
 
                         <!--begin::Form-->
-                        <form class="form w-100" novalidate="novalidate" id="kt_sign_in_form"
-                            data-kt-redirect-url="/metronic8/demo58/index.html" action="#">
+                        <form class="form w-100"  method="POST"  data-kt-redirect-url="/metronic8/demo58/index.html" action="{% url 'adminv2:admin_login'%}">
+    
+                                             {% csrf_token %}
+
+
+
                             <!--begin::Heading-->
                             <div class="text-center mb-11">
                                 <!--begin::Title-->

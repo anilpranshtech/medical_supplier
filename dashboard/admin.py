@@ -34,8 +34,8 @@ class SupplierProfileAdmin(admin.ModelAdmin):
 
 @admin.register(Product)
 class ProductProfileAdmin(admin.ModelAdmin):
-    list_display = ('name', 'description', 'price')
+    list_display = ('id','name', 'description', 'price')
 
 @admin.register(ProductImage)
 class ProductImagesAdmin(admin.ModelAdmin):
-    list_display = ('image',)
+    list_display = ('id','image',)

@@ -3135,7 +3135,7 @@ License: For each use you must have a valid license purchased only from above li
 							<!--begin::Content container-->
 							<div id="kt_app_content_container" class="app-container  container-fluid ">
 								<!--begin::Form-->
-								<form class="form d-flex flex-column flex-lg-row" method = "POST" action="{% url 'adminv2:add_product' %}">
+								<form class="form d-flex flex-column flex-lg-row" method = "POST" action="{% url 'adminv2:add_product' %}" enctype="multipart/form-data">
 									 {% csrf_token %}
 									<!--begin::Aside column-->
 									<div class="d-flex flex-column gap-7 gap-lg-10 w-100 w-lg-300px mb-7 me-lg-10">
@@ -3457,11 +3457,9 @@ License: For each use you must have a valid license purchased only from above li
 																<textarea name="product_description"
 																	class="form-control mb-2"
 																	placeholder="Product description"
-																	required></textarea>
+																	required></textarea><br>
 																<!--begin::Editor-->
-																<div id="kt_ecommerce_add_product_description"
-																	name="kt_ecommerce_add_product_description"
-																	class="min-h-200px mb-2"></div>
+																
 																<!--end::Editor-->
 
 																<!--begin::Description-->
