@@ -1,417 +1,158 @@
-  <!--begin::Sidebar-->
-  <div id="kt_app_sidebar" class="app-sidebar " data-kt-drawer="true" data-kt-drawer-name="app-sidebar"
-  data-kt-drawer-activate="{default: true, lg: false}" data-kt-drawer-overlay="true"
-  data-kt-drawer-width="auto" data-kt-drawer-direction="start"
-  data-kt-drawer-toggle="#kt_app_sidebar_mobile_toggle">
+<div id="kt_app_sidebar" class="app-sidebar " data-kt-drawer="true" data-kt-drawer-name="app-sidebar" data-kt-drawer-activate="{default: true, lg: false}"
+     data-kt-drawer-overlay="true" data-kt-drawer-width="auto" data-kt-drawer-direction="start" data-kt-drawer-toggle="#kt_app_sidebar_mobile_toggle">
 
-  <!--begin::Primary menu-->
-  <div id="kt_aside_menu_wrapper"
-      class="app-sidebar-menu flex-grow-1 hover-scroll-y scroll-lg-ps my-5 pt-8" data-kt-scroll="true"
-      data-kt-scroll-height="auto"
-      data-kt-scroll-dependencies="#kt_app_sidebar_logo, #kt_app_sidebar_footer"
-      data-kt-scroll-wrappers="#kt_app_sidebar_menu" data-kt-scroll-offset="5px">
-      <!--begin::Menu-->
-      <div id="kt_aside_menu" class="
-menu 
-menu-rounded 
-menu-column 
-menu-title-gray-600 
-menu-state-primary 
-menu-state-icon-primary 
-menu-state-bullet-primary 
-menu-arrow-gray-500 
-fw-semibold 
-fs-6
-" data-kt-menu="true">
-          <!--begin:Menu item-->
-          <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}"
-              data-kt-menu-placement="right-start" class="menu-item py-2"><!--begin:Menu link--><span
-                  class="menu-link menu-center"><span class="menu-icon me-0"><i
-                          class="fas fa-home fs-1"></i></span></span><!--end:Menu link--><!--begin:Menu sub-->
+    <div id="kt_aside_menu_wrapper"
+          class="app-sidebar-menu flex-grow-1 hover-scroll-y scroll-lg-ps my-5 pt-8" data-kt-scroll="true" data-kt-scroll-height="auto"
+         data-kt-scroll-dependencies="#kt_app_sidebar_logo, #kt_app_sidebar_footer" data-kt-scroll-wrappers="#kt_app_sidebar_menu" data-kt-scroll-offset="5px">
+
+       <div id="kt_aside_menu" class="menu menu-rounded menu-column menu-title-gray-600 menu-state-primary menu-state-icon-primary
+            menu-state-bullet-primary  menu-arrow-gray-500 fw-semibold fs-6" data-kt-menu="true">
+
+
+            <!-- Home -->
+          <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="right-start" class="menu-item py-2">
+              <span class="menu-link menu-center">
+                  <span class="menu-icon me-0">
+                      <i class="fas fa-home fs-1"></i>
+                  </span>
+              </span>
+
               <div class="menu-sub menu-sub-dropdown px-2 py-4 w-250px mh-75 overflow-auto">
-                  <!--begin:Menu item-->
-                  <div class="menu-item"><!--begin:Menu content-->
-                      <div class="menu-content "><span
-                              class="menu-section fs-5 fw-bolder ps-1 py-1">Home</span></div>
-                      <!--end:Menu content-->
-                  </div><!--end:Menu item--><!--begin:Menu item-->
-                  <div class="menu-item"><!--begin:Menu link--><a class="menu-link"
-                          href="https://preview.keenthemes.com/metronic8/demo58/index.html"><span
-                              class="menu-bullet"><span class="bullet bullet-dot"></span></span><span
-                              class="menu-title">Sales/Orders</span></a><!--end:Menu link--></div>
-                  <!--end:Menu item--><!--begin:Menu item-->
-                  <div class="menu-item"><!--begin:Menu link--><a class="menu-link"
-                          href="https://preview.keenthemes.com/metronic8/demo58/dashboards/ecommerce.html"><span
-                              class="menu-bullet"><span class="bullet bullet-dot"></span></span><span
-                              class="menu-title">Quotations</span></a><!--end:Menu link--></div>
-                  <!--end:Menu item--><!--begin:Menu item-->
-                  
-                  
-                  <!--end:Menu item--><!--begin:Menu item-->
-                 
-                  <!--end:Menu item-->
-                  <div class="menu-inner flex-column collapse "
-                      id="kt_app_sidebar_menu_dashboards_collapse"><!--begin:Menu item-->
-                      <div class="menu-item"><!--begin:Menu link--><a class="menu-link"
-                              href="https://preview.keenthemes.com/metronic8/demo58/dashboards/bidding.html"><span
-                                  class="menu-bullet"><span
-                                      class="bullet bullet-dot"></span></span><span
-                                  class="menu-title">Bidding</span></a><!--end:Menu link--></div>
-                      <!--end:Menu item--><!--begin:Menu item-->
-                      <div class="menu-item"><!--begin:Menu link--><a class="menu-link"
-                              href="https://preview.keenthemes.com/metronic8/demo58/dashboards/pos.html"><span
-                                  class="menu-bullet"><span
-                                      class="bullet bullet-dot"></span></span><span
-                                  class="menu-title">POS System</span></a><!--end:Menu link--></div>
-                      <!--end:Menu item--><!--begin:Menu item-->
-                      <div class="menu-item"><!--begin:Menu link--><a class="menu-link"
-                              href="https://preview.keenthemes.com/metronic8/demo58/dashboards/call-center.html"><span
-                                  class="menu-bullet"><span
-                                      class="bullet bullet-dot"></span></span><span
-                                  class="menu-title">Call Center</span></a><!--end:Menu link--></div>
-                      <!--end:Menu item--><!--begin:Menu item-->
-                      <div class="menu-item"><!--begin:Menu link--><a class="menu-link"
-                              href="https://preview.keenthemes.com/metronic8/demo58/dashboards/logistics.html"><span
-                                  class="menu-bullet"><span
-                                      class="bullet bullet-dot"></span></span><span
-                                  class="menu-title">Logistics</span></a><!--end:Menu link--></div>
-                      <!--end:Menu item--><!--begin:Menu item-->
-                      <div class="menu-item"><!--begin:Menu link--><a class="menu-link"
-                              href="https://preview.keenthemes.com/metronic8/demo58/dashboards/website-analytics.html"><span
-                                  class="menu-bullet"><span
-                                      class="bullet bullet-dot"></span></span><span
-                                  class="menu-title">Website Analytics</span></a><!--end:Menu link-->
-                      </div><!--end:Menu item--><!--begin:Menu item-->
-                      <div class="menu-item"><!--begin:Menu link--><a class="menu-link"
-                              href="https://preview.keenthemes.com/metronic8/demo58/dashboards/finance-performance.html"><span
-                                  class="menu-bullet"><span
-                                      class="bullet bullet-dot"></span></span><span
-                                  class="menu-title">Finance
-                                  Performance</span></a><!--end:Menu link--></div>
-                      <!--end:Menu item--><!--begin:Menu item-->
-                      <div class="menu-item"><!--begin:Menu link--><a class="menu-link"
-                              href="https://preview.keenthemes.com/metronic8/demo58/dashboards/store-analytics.html"><span
-                                  class="menu-bullet"><span
-                                      class="bullet bullet-dot"></span></span><span
-                                  class="menu-title">Store Analytics</span></a><!--end:Menu link-->
-                      </div><!--end:Menu item--><!--begin:Menu item-->
-                      <div class="menu-item"><!--begin:Menu link--><a class="menu-link"
-                              href="https://preview.keenthemes.com/metronic8/demo58/dashboards/social.html"><span
-                                  class="menu-bullet"><span
-                                      class="bullet bullet-dot"></span></span><span
-                                  class="menu-title">Social</span></a><!--end:Menu link--></div>
-                      <!--end:Menu item--><!--begin:Menu item-->
-                      <div class="menu-item"><!--begin:Menu link--><a class="menu-link"
-                              href="https://preview.keenthemes.com/metronic8/demo58/dashboards/delivery.html"><span
-                                  class="menu-bullet"><span
-                                      class="bullet bullet-dot"></span></span><span
-                                  class="menu-title">Delivery</span></a><!--end:Menu link--></div>
-                      <!--end:Menu item--><!--begin:Menu item-->
-                      <div class="menu-item"><!--begin:Menu link--><a class="menu-link"
-                              href="https://preview.keenthemes.com/metronic8/demo58/dashboards/crypto.html"><span
-                                  class="menu-bullet"><span
-                                      class="bullet bullet-dot"></span></span><span
-                                  class="menu-title">Crypto</span></a><!--end:Menu link--></div>
-                      <!--end:Menu item--><!--begin:Menu item-->
-                      <div class="menu-item"><!--begin:Menu link--><a class="menu-link"
-                              href="https://preview.keenthemes.com/metronic8/demo58/dashboards/school.html"><span
-                                  class="menu-bullet"><span
-                                      class="bullet bullet-dot"></span></span><span
-                                  class="menu-title">School</span></a><!--end:Menu link--></div>
-                      <!--end:Menu item--><!--begin:Menu item-->
-                      <div class="menu-item"><!--begin:Menu link--><a class="menu-link"
-                              href="https://preview.keenthemes.com/metronic8/demo58/dashboards/podcast.html"><span
-                                  class="menu-bullet"><span
-                                      class="bullet bullet-dot"></span></span><span
-                                  class="menu-title">Podcast</span></a><!--end:Menu link--></div>
-                      <!--end:Menu item--><!--begin:Menu item-->
-                      <div class="menu-item"><!--begin:Menu link--><a class="menu-link"
-                              href="https://preview.keenthemes.com/metronic8/demo58/landing.html"><span
-                                  class="menu-bullet"><span
-                                      class="bullet bullet-dot"></span></span><span
-                                  class="menu-title">Landing</span></a><!--end:Menu link--></div>
-                      <!--end:Menu item-->
+                   <div class="menu-item">
+                      <div class="menu-content ">
+                          <span class="menu-section fs-5 fw-bolder ps-1 py-1">
+                              Home
+                          </span>
+                      </div>
+
+                  </div>
+
+                  <div class="menu-item">
+                      <a class="menu-link" href=" ">
+                          <span class="menu-bullet">
+                              <span class="bullet bullet-dot"> </span>
+                          </span>
+
+                          <span class="menu-title">
+                              Sales/Orders
+                          </span>
+                      </a>
                   </div>
                  
-              </div><!--end:Menu sub-->
-          </div><!--end:Menu item--><!--begin:Menu item-->
-          <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}"
-              data-kt-menu-placement="right-start" class="menu-item py-2"><!--begin:Menu link--><span
-                  class="menu-link menu-center"><span class="menu-icon me-0"><i
-                          class="fas fa-bell fs-1"></i></span></span><!--end:Menu link--><!--begin:Menu sub-->
-              <div
-                  class="menu-sub menu-sub-dropdown menu-sub-indention px-2 py-4 w-250px mh-75 overflow-auto">
-                  <!--begin:Menu item-->
-                  <div class="menu-item"><!--begin:Menu content-->
-                      <div class="menu-content "><span
-                              class="menu-section fs-5 fw-bolder ps-1 py-1">Pages</span></div>
-                      <!--end:Menu content-->
-                  </div><!--end:Menu item--><!--begin:Menu item-->
+              </div>
+
+          </div>
+
+          <!-- Pages  -->
+          <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="right-start" class="menu-item py-2">
+              <span class="menu-link menu-center">
+                  <span class="menu-icon me-0">
+                      <i class="fas fa-bell fs-1"></i>
+                  </span>
+              </span>
+
+              <div class="menu-sub menu-sub-dropdown menu-sub-indention px-2 py-4 w-250px mh-75 overflow-auto">
+                   <div class="menu-item">
+                      <div class="menu-content ">
+                          <span class="menu-section fs-5 fw-bolder ps-1 py-1">Pages
+                          </span>
+                      </div>
+
+                  </div>
                   <div data-kt-menu-trigger="click" class="menu-item menu-accordion">
-                      <!--begin:Menu link--><span class="menu-link"><span class="menu-bullet"><span
-                                  class="bullet bullet-dot"></span></span><span
-                              class="menu-title">User Profile</span><span
-                              class="menu-arrow"></span></span><!--end:Menu link--><!--begin:Menu sub-->
-                      <div class="menu-sub menu-sub-accordion"><!--begin:Menu item-->
-                          <div class="menu-item"><!--begin:Menu link--><a class="menu-link"
-                                  href="{% url 'adminv2:overview_list' %}"><span
-                                      class="menu-bullet"><span
-                                          class="bullet bullet-dot"></span></span><span
-                                      class="menu-title">Overview</span></a><!--end:Menu link--></div>
-                          <!--end:Menu item--><!--begin:Menu item-->
-                          <div class="menu-item"><!--begin:Menu link--><a class="menu-link"
-                                  href="https://preview.keenthemes.com/metronic8/demo58/pages/user-profile/activity.html"><span
-                                      class="menu-bullet"><span
-                                          class="bullet bullet-dot"></span></span><span
-                                      class="menu-title">Activity</span></a><!--end:Menu link--></div>
-                          <!--end:Menu item-->
-                      </div><!--end:Menu sub-->
-                  </div><!--end:Menu item--><!--begin:Menu item-->
-                  <div data-kt-menu-trigger="click" class="menu-item menu-accordion">
-                      <!--begin:Menu link--><span class="menu-link"><span class="menu-bullet"><span
-                                  class="bullet bullet-dot"></span></span><span
-                              class="menu-title">Account</span><span
-                              class="menu-arrow"></span></span><!--end:Menu link--><!--begin:Menu sub-->
-                      <div class="menu-sub menu-sub-accordion"><!--begin:Menu item-->
-                          <div class="menu-item"><!--begin:Menu link--><a class="menu-link"
-                                  href="{% url 'adminv2:overview_list' %}"><span
-                                      class="menu-bullet"><span
-                                          class="bullet bullet-dot"></span></span><span
-                                      class="menu-title">Overview</span></a><!--end:Menu link--></div>
-                          <!--end:Menu item--><!--begin:Menu item-->
-                          <div class="menu-item"><!--begin:Menu link--><a class="menu-link"
-                                  href="{% url 'adminv2:profile_setting' %}"><span
-                                      class="menu-bullet"><span
-                                          class="bullet bullet-dot"></span></span><span
-                                      class="menu-title">Settings</span></a><!--end:Menu link--></div>
-                          <!--end:Menu item--><!--begin:Menu item-->
-                          <div class="menu-item"><!--begin:Menu link--><a class="menu-link"
-                                  href="https://preview.keenthemes.com/metronic8/demo58/account/security.html"><span
-                                      class="menu-bullet"><span
-                                          class="bullet bullet-dot"></span></span><span
-                                      class="menu-title">Security</span></a><!--end:Menu link--></div>
-                          <!--end:Menu item--><!--begin:Menu item-->
-                          <div class="menu-item"><!--begin:Menu link--><a class="menu-link"
-                                  href="https://preview.keenthemes.com/metronic8/demo58/account/activity.html"><span
-                                      class="menu-bullet"><span
-                                          class="bullet bullet-dot"></span></span><span
-                                      class="menu-title">Activity</span></a><!--end:Menu link--></div>
-                          <!--end:Menu item--><!--begin:Menu item-->
-                          <div class="menu-item"><!--begin:Menu link--><a class="menu-link"
-                                  href="https://preview.keenthemes.com/metronic8/demo58/account/billing.html"><span
-                                      class="menu-bullet"><span
-                                          class="bullet bullet-dot"></span></span><span
-                                      class="menu-title">Billing</span></a><!--end:Menu link--></div>
-                          <!--end:Menu item--><!--begin:Menu item-->
-                          <div class="menu-item"><!--begin:Menu link--><a class="menu-link"
-                                  href="https://preview.keenthemes.com/metronic8/demo58/account/statements.html"><span
-                                      class="menu-bullet"><span
-                                          class="bullet bullet-dot"></span></span><span
-                                      class="menu-title">Statements</span></a><!--end:Menu link-->
-                          </div><!--end:Menu item--><!--begin:Menu item-->
-                          <div class="menu-item"><!--begin:Menu link--><a class="menu-link"
-                                  href="https://preview.keenthemes.com/metronic8/demo58/account/referrals.html"><span
-                                      class="menu-bullet"><span
-                                          class="bullet bullet-dot"></span></span><span
-                                      class="menu-title">Referrals</span></a><!--end:Menu link-->
-                          </div><!--end:Menu item--><!--begin:Menu item-->
-                          <div class="menu-item"><!--begin:Menu link--><a class="menu-link"
-                                  href="https://preview.keenthemes.com/metronic8/demo58/account/api-keys.html"><span
-                                      class="menu-bullet"><span
-                                          class="bullet bullet-dot"></span></span><span
-                                      class="menu-title">API Keys</span></a><!--end:Menu link--></div>
-                          <!--end:Menu item--><!--begin:Menu item-->
-                          <div class="menu-item"><!--begin:Menu link--><a class="menu-link"
-                                  href="https://preview.keenthemes.com/metronic8/demo58/account/logs.html"><span
-                                      class="menu-bullet"><span
-                                          class="bullet bullet-dot"></span></span><span
-                                      class="menu-title">Logs</span></a><!--end:Menu link--></div>
-                          <!--end:Menu item-->
-                      </div><!--end:Menu sub-->
-                  </div><!--end:Menu item--><!--begin:Menu item-->
+                       <span class="menu-link">
+                           <span class="menu-bullet">
+                               <span
+                                  class="bullet bullet-dot">
+
+                               </span>
+                           </span>
+                           <span
+                              class="menu-title">User Profile
+                           </span>
+                           <span class="menu-arrow">
+
+                           </span>
+                       </span>
+
+                      <div class="menu-sub menu-sub-accordion">
+                           <div class="menu-item">
+                               <a class="menu-link" href="{% url 'adminv2:overview_list' %}">
+                                  <span class="menu-bullet">
+                                      <span class="bullet bullet-dot"></span>
+                                  </span>
+                                   <span class="menu-title">Overview</span>
+                              </a>
+                          </div>
+
+                      </div>
+                  </div>
+
                   
                
-              </div><!--end:Menu sub-->
-          </div><!--end:Menu item-->
-          <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}"
-              data-kt-menu-placement="right-start" class="menu-item here show py-2">
-              <!--begin:Menu link--><span class="menu-link menu-center"><span
-                      class="menu-icon me-0"><i
-                          class="fas fa-cubes fs-1"></i></span></span><!--end:Menu link--><!--begin:Menu sub-->
-              <div
-                  class="menu-sub menu-sub-dropdown menu-sub-indention px-2 py-4 w-250px mh-75 overflow-auto">
-                  <!--begin:Menu item-->
-                  <div class="menu-item"><!--begin:Menu content-->
-                      <div class="menu-content "><span
-                              class="menu-section fs-5 fw-bolder ps-1 py-1">Products</span></div>
-                      <!--end:Menu content-->
-                  </div><!--end:Menu item--><!--begin:Menu item-->
-                  <!--begin:Menu item-->
-                  <!--begin:Menu sub-->
-                      <div class="menu-sub menu-sub-accordion"><!--begin:Menu item-->
-                          <div data-kt-menu-trigger="click"
-                              class="menu-item here show menu-accordion"><!--begin:Menu link--><span
-                                  class="menu-link"><span class="menu-bullet"><span
-                                          class="bullet bullet-dot"></span></span><span
-                                      class="menu-title">Catalog</span><span
-                                      class="menu-arrow"></span></span><!--end:Menu link--><!--begin:Menu sub-->
-                              <div class="menu-sub menu-sub-accordion"><!--begin:Menu item-->
-                                  <div class="menu-item"><!--begin:Menu link--><a
-                                          class="menu-link active" href="{% url 'adminv2:products_list' %}"><span
-                                              class="menu-bullet"><span
-                                                  class="bullet bullet-dot"></span></span><span
-                                              class="menu-title">Products</span></a><!--end:Menu link-->
-                                  </div><!--end:Menu item--><!--begin:Menu item-->
-                                  <div class="menu-item"><!--begin:Menu link--><a class="menu-link"
-                                          href="categories.html"><span class="menu-bullet"><span
-                                                  class="bullet bullet-dot"></span></span><span
-                                              class="menu-title">Categories</span></a><!--end:Menu link-->
-                                  </div><!--end:Menu item--><!--begin:Menu item-->
-                                  <div class="menu-item"><!--begin:Menu link--><a class="menu-link"
-                                          href="add-product.html"><span class="menu-bullet"><span
-                                                  class="bullet bullet-dot"></span></span><span
-                                              class="menu-title">Add
-                                              Product</span></a><!--end:Menu link--></div>
-                                  <!--end:Menu item--><!--begin:Menu item-->
-                                  <div class="menu-item"><!--begin:Menu link--><a class="menu-link"
-                                          href="edit-product.html"><span
-                                              class="menu-bullet"><span
-                                                  class="bullet bullet-dot"></span></span><span
-                                              class="menu-title">Edit
-                                              Product</span></a><!--end:Menu link--></div>
-                                  <!--end:Menu item--><!--begin:Menu item-->
-                                  <div class="menu-item"><!--begin:Menu link--><a class="menu-link"
-                                          href="add-category.html"><span class="menu-bullet"><span
-                                                  class="bullet bullet-dot"></span></span><span
-                                              class="menu-title">Add
-                                              Category</span></a><!--end:Menu link--></div>
-                                  <!--end:Menu item--><!--begin:Menu item-->
-                                  <div class="menu-item"><!--begin:Menu link--><a class="menu-link"
-                                          href="edit-category.html"><span class="menu-bullet"><span
-                                                  class="bullet bullet-dot"></span></span><span
-                                              class="menu-title">Edit
-                                              Category</span></a><!--end:Menu link--></div>
-                                  <!--end:Menu item-->
-                              </div><!--end:Menu sub-->
-                          </div><!--end:Menu item--><!--begin:Menu item-->
-                          <div data-kt-menu-trigger="click" class="menu-item menu-accordion">
-                              <!--begin:Menu link--><span class="menu-link"><span
-                                      class="menu-bullet"><span
-                                          class="bullet bullet-dot"></span></span><span
-                                      class="menu-title">Sales</span><span
-                                      class="menu-arrow"></span></span><!--end:Menu link--><!--begin:Menu sub-->
-                              <div class="menu-sub menu-sub-accordion"><!--begin:Menu item-->
-                                  <div class="menu-item"><!--begin:Menu link--><a class="menu-link"
-                                          href="https://preview.keenthemes.com/metronic8/demo58/apps/ecommerce/sales/listing.html"><span
-                                              class="menu-bullet"><span
-                                                  class="bullet bullet-dot"></span></span><span
-                                              class="menu-title">Orders
-                                              Listing</span></a><!--end:Menu link--></div>
-                                  <!--end:Menu item--><!--begin:Menu item-->
-                                  <div class="menu-item"><!--begin:Menu link--><a class="menu-link"
-                                          href="https://preview.keenthemes.com/metronic8/demo58/apps/ecommerce/sales/details.html"><span
-                                              class="menu-bullet"><span
-                                                  class="bullet bullet-dot"></span></span><span
-                                              class="menu-title">Order
-                                              Details</span></a><!--end:Menu link--></div>
-                                  <!--end:Menu item--><!--begin:Menu item-->
-                                  <div class="menu-item"><!--begin:Menu link--><a class="menu-link"
-                                          href="https://preview.keenthemes.com/metronic8/demo58/apps/ecommerce/sales/add-order.html"><span
-                                              class="menu-bullet"><span
-                                                  class="bullet bullet-dot"></span></span><span
-                                              class="menu-title">Add
-                                              Order</span></a><!--end:Menu link--></div>
-                                  <!--end:Menu item--><!--begin:Menu item-->
-                                  <div class="menu-item"><!--begin:Menu link--><a class="menu-link"
-                                          href="https://preview.keenthemes.com/metronic8/demo58/apps/ecommerce/sales/edit-order.html"><span
-                                              class="menu-bullet"><span
-                                                  class="bullet bullet-dot"></span></span><span
-                                              class="menu-title">Edit
-                                              Order</span></a><!--end:Menu link--></div>
-                                  <!--end:Menu item-->
-                              </div><!--end:Menu sub-->
-                          </div><!--end:Menu item--><!--begin:Menu item-->
-                          <div data-kt-menu-trigger="click" class="menu-item menu-accordion">
-                              <!--begin:Menu link--><span class="menu-link"><span
-                                      class="menu-bullet"><span
-                                          class="bullet bullet-dot"></span></span><span
-                                      class="menu-title">Customers</span><span
-                                      class="menu-arrow"></span></span><!--end:Menu link--><!--begin:Menu sub-->
-                              <div class="menu-sub menu-sub-accordion"><!--begin:Menu item-->
-                                  <div class="menu-item"><!--begin:Menu link--><a class="menu-link"
-                                          href="https://preview.keenthemes.com/metronic8/demo58/apps/ecommerce/customers/listing.html"><span
-                                              class="menu-bullet"><span
-                                                  class="bullet bullet-dot"></span></span><span
-                                              class="menu-title">Customer
-                                              Listing</span></a><!--end:Menu link--></div>
-                                  <!--end:Menu item--><!--begin:Menu item-->
-                                  <div class="menu-item"><!--begin:Menu link--><a class="menu-link"
-                                          href="https://preview.keenthemes.com/metronic8/demo58/apps/ecommerce/customers/details.html"><span
-                                              class="menu-bullet"><span
-                                                  class="bullet bullet-dot"></span></span><span
-                                              class="menu-title">Customer
-                                              Details</span></a><!--end:Menu link--></div>
-                                  <!--end:Menu item-->
-                              </div><!--end:Menu sub-->
-                          </div><!--end:Menu item--><!--begin:Menu item-->
-                          <div data-kt-menu-trigger="click" class="menu-item menu-accordion">
-                              <!--begin:Menu link--><span class="menu-link"><span
-                                      class="menu-bullet"><span
-                                          class="bullet bullet-dot"></span></span><span
-                                      class="menu-title">Reports</span><span
-                                      class="menu-arrow"></span></span><!--end:Menu link--><!--begin:Menu sub-->
-                              <div class="menu-sub menu-sub-accordion"><!--begin:Menu item-->
-                                  <div class="menu-item"><!--begin:Menu link--><a class="menu-link"
-                                          href="https://preview.keenthemes.com/metronic8/demo58/apps/ecommerce/reports/view.html"><span
-                                              class="menu-bullet"><span
-                                                  class="bullet bullet-dot"></span></span><span
-                                              class="menu-title">Products
-                                              Viewed</span></a><!--end:Menu link--></div>
-                                  <!--end:Menu item--><!--begin:Menu item-->
-                                  <div class="menu-item"><!--begin:Menu link--><a class="menu-link"
-                                          href="https://preview.keenthemes.com/metronic8/demo58/apps/ecommerce/reports/sales.html"><span
-                                              class="menu-bullet"><span
-                                                  class="bullet bullet-dot"></span></span><span
-                                              class="menu-title">Sales</span></a><!--end:Menu link-->
-                                  </div><!--end:Menu item--><!--begin:Menu item-->
-                                  <div class="menu-item"><!--begin:Menu link--><a class="menu-link"
-                                          href="https://preview.keenthemes.com/metronic8/demo58/apps/ecommerce/reports/returns.html"><span
-                                              class="menu-bullet"><span
-                                                  class="bullet bullet-dot"></span></span><span
-                                              class="menu-title">Returns</span></a><!--end:Menu link-->
-                                  </div><!--end:Menu item--><!--begin:Menu item-->
-                                  <div class="menu-item"><!--begin:Menu link--><a class="menu-link"
-                                          href="https://preview.keenthemes.com/metronic8/demo58/apps/ecommerce/reports/customer-orders.html"><span
-                                              class="menu-bullet"><span
-                                                  class="bullet bullet-dot"></span></span><span
-                                              class="menu-title">Customer
-                                              Orders</span></a><!--end:Menu link--></div>
-                                  <!--end:Menu item--><!--begin:Menu item-->
-                                  <div class="menu-item"><!--begin:Menu link--><a class="menu-link"
-                                          href="https://preview.keenthemes.com/metronic8/demo58/apps/ecommerce/reports/shipping.html"><span
-                                              class="menu-bullet"><span
-                                                  class="bullet bullet-dot"></span></span><span
-                                              class="menu-title">Shipping</span></a><!--end:Menu link-->
-                                  </div><!--end:Menu item-->
-                              </div><!--end:Menu sub-->
-                          </div><!--end:Menu item--><!--begin:Menu item-->
-                          <div class="menu-item"><!--begin:Menu link--><a class="menu-link"
-                                  href="https://preview.keenthemes.com/metronic8/demo58/apps/ecommerce/settings.html"><span
-                                      class="menu-bullet"><span
-                                          class="bullet bullet-dot"></span></span><span
-                                      class="menu-title">Settings</span></a><!--end:Menu link--></div>
-                          <!--end:Menu item-->
-                      </div><!--end:Menu sub-->
-                 <!--begin:Menu item-->
-                 
-              </div><!--end:Menu sub-->
-          </div><!--end:Menu item-->
+              </div>
+          </div>
+
+          <!-- Products  -->
+          <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="right-start" class="menu-item here show py-2">
+               <span class="menu-link menu-center">
+                  <span class="menu-icon me-0">
+                      <i class="fas fa-cubes fs-1"></i>
+                  </span>
+              </span>
+
+              <div class="menu-sub menu-sub-dropdown menu-sub-indention px-2 py-4 w-250px mh-75 overflow-auto">
+                   <div class="menu-item">
+                      <div class="menu-content ">
+                          <span class="menu-section fs-5 fw-bolder ps-1 py-1">Products</span>
+                      </div>
+
+                   </div>
+
+
+                  <div class="menu-sub menu-sub-accordion">
+
+                      <div data-kt-menu-trigger="click" class="menu-item here show menu-accordion">
+                          <span class="menu-link">
+                              <span class="menu-bullet">
+                                  <span class="bullet bullet-dot"></span>
+                              </span>
+
+                              <span class="menu-title">Catalog</span>
+                              <span class="menu-arrow"> </span>
+                          </span>
+
+                          <div class="menu-sub menu-sub-accordion">
+                              <div class="menu-item">
+                                  <a class="menu-link active" href="{% url 'adminv2:products_list' %}">
+                                      <span class="menu-bullet">
+                                          <span class="bullet bullet-dot"></span>
+                                      </span>
+                                      <span class="menu-title">Products</span>
+                                  </a>
+                              </div>
+
+                              <div class="menu-item">
+                                  <a class="menu-link" href="{% url 'adminv2:add_product' %}">
+                                      <span class="menu-bullet">
+                                          <span class="bullet bullet-dot"> </span>
+                                      </span>
+                                      <span class="menu-title">Add Product</span>
+                                  </a>
+                              </div>
+
+                          </div>
+
+                      </div>
+                  </div>
+
+              </div>
+          </div>
+
       </div>
-      <!--end::Menu-->
-  </div>
-  <!--end::Primary menu-->
-  <!--begin::Footer-->
-  <div class="d-flex flex-column flex-center pb-4 pb-lg-8" id="kt_app_sidebar_footer">
+   </div>
+
+    <div class="d-flex flex-column flex-center pb-4 pb-lg-8" id="kt_app_sidebar_footer">
 
       <!--begin::Menu toggle-->
       <a href="#" class="btn btn-icon btn-active-color-primary"
@@ -463,6 +204,4 @@ fs-6
       <!--end::Menu-->
 
   </div>
-  <!--end::Footer-->
-</div>
-<!--end::Sidebar-->
+ </div>

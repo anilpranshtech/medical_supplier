@@ -4,13 +4,19 @@ from .views import *
 app_name = 'adminv2'
 urlpatterns = [
     path('admin_v2/', HomeView.as_view(), name='admin_v2'),
+
+    # Products
     path('products/', ProductsView.as_view(), name='products_list'),
+    path('products/add/', AddproductsView.as_view(), name='add_product'),
     path('products/edit/<int:pk>/', EditproductsView.as_view(), name='edit_product'),
     path('products/delete/<int:pk>/', DeleteProductView.as_view(), name='delete_product'),
+
+    # Category Add
+    path('category/add/', AddcategoryView.as_view(), name='add_category'),
     path('category/edit/', EditcategoryView.as_view(), name='edit_category'),
     path('category/', CategoryView.as_view(), name='categories_list'),
-    path('category/add/', AddcategoryView.as_view(), name='add_category'),
-    path('products/add/', AddproductsView.as_view(), name='add_product'),
+
+
     path('categories/create/', CreateProductCategoryView.as_view(), name='create_category'),
 
 

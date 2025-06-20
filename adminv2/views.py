@@ -32,19 +32,37 @@ class ProductsView(LoginRequiredMixin, UserPassesTestMixin,View):
         return self.request.user.is_superuser
     
 class EditproductsView(LoginRequiredMixin, UserPassesTestMixin,View):
+    template = 'adminv2/edit-product.html'
+
     def get(self, request, pk):
         product = get_object_or_404(Product, pk=pk)
-        product_image = ProductImage.objects.filter(product=product).first()  
-        return render(request, 'adminv2/edit-product.html', {
+        product_image = ProductImage.objects.filter(product=product).first()
+        categories = ProductCategory.objects.all()
+        product_category = product.category
+        product_quantity = product.quantity
+        context = {
             'product': product,
-            'product_image': product_image
-        })
+            'product_image': product_image,
+            'categories': categories,
+            'product_category': product_category,
+            'product_quantity': product_quantity,
+        }
+        return render(request, self.template, context)
 
     def post(self, request, pk):
         product = get_object_or_404(Product, pk=pk)
         product.name = request.POST.get('product_name')
         product.description = request.POST.get('description')
         product.price = request.POST.get('price')
+        product.quantity = request.POST.get('product_quantity')
+
+        category_id = request.POST.get('category')
+        if category_id:
+            try:
+                product.category = ProductCategory.objects.get(pk=category_id)
+            except ProductCategory.DoesNotExist:
+                product.category = None
+
         product.save()
 
         if 'avatar' in request.FILES:
