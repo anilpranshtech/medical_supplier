@@ -120,7 +120,36 @@ class ProductImage(models.Model):
         ordering = ['-created_at']
 
 
+class Orders(models.Model):
 
+    ORDER_STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('processing', 'Processing'),
+        ('shipped', 'Shipped'),
+        ('delivered', 'Delivered'),
+        ('delivering', 'Delivering'),
+        ('cancelled', 'Cancelled'),
+        ('refunded', 'Refunded'),
+        ('failed', 'Failed')
+    ]
+
+    order_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders_placed')
+    order_to = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders_received')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.IntegerField(default=1)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(max_length=20, choices=ORDER_STATUS_CHOICES, default='pending')
+
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Order"
+        verbose_name_plural = "Orders"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Order #{self.pk} - {self.product.name} x {self.quantity}"
 
 
 
