@@ -165,24 +165,17 @@
 							<div class="card-body pt-0">
 								<!--begin::Input group-->
 								<!--begin::Label-->
-								<label class="form-label">Categories</label>
+								<label class="form-label required">Categories</label>
 								<!--end::Label-->
 
 								<!--begin::Select2-->
-								<select class="form-select mb-2" data-control="select2"
-									data-placeholder="Select an option" data-allow-clear="true"
-									multiple="multiple">
+								<select class="form-select mb-2" name="category" data-control="select2"
+									data-placeholder="Select an option" data-allow-clear="true" required>
 									<option></option>
-									<option value="Computers">Computers</option>
-									<option value="Watches">Watches</option>
-									<option value="Headphones">Headphones</option>
-									<option value="Footwear">Footwear</option>
-									<option value="Cameras">Cameras</option>
-									<option value="Shirts">Shirts</option>
-									<option value="Household">Household</option>
-									<option value="Handbags">Handbags</option>
-									<option value="Wines">Wines</option>
-									<option value="Sandals">Sandals</option>
+									{% for cat in categories %}
+										<option value="{{cat.id }}">{{cat.name}}</option>
+									{% endfor %}
+
 								</select>
 								<!--end::Select2-->
 
@@ -192,10 +185,12 @@
 								<!--end::Input group-->
 
 								<!--begin::Button-->
-								<a href="add-category.html" class="btn btn-light-primary btn-sm mb-10">
+								<button type="button" class="btn btn-light-primary btn-sm mb-10" data-bs-toggle="modal" data-bs-target="#createCategoryModal">
 									<i class="fas fa-plus fs-2 text-primary"></i> Create new category
-								</a>
+								</button>
 								<!--end::Button-->
+
+
 
 							</div>
 							<!--end::Card body-->
@@ -246,7 +241,7 @@
 
 										<!--begin::Card body-->
 										<div class="card-body pt-0">
-											<!--begin::Input group-->
+
 											<div class="mb-10 fv-row">
 												<!--begin::Label-->
 												<label class="required form-label">Product Name</label>
@@ -263,26 +258,29 @@
 													and recommended to be unique.</div>
 												<!--end::Description-->
 											</div>
-											<!--end::Input group-->
 
-											<!--begin::Input group-->
+
+
 											<div>
 												<!--begin::Label-->
 												<label class="form-label">Description</label>
 												<textarea name="product_description"
-													class="form-control mb-2"
+													class="form-control "
 													placeholder="Product description"
 													required></textarea><br>
-												<!--begin::Editor-->
-												
-												<!--end::Editor-->
-
-												<!--begin::Description-->
-												<div class="text-muted fs-7">Set a description to the
-													product for better visibility.</div>
-												<!--end::Description-->
 											</div>
-											<!--end::Input group-->
+
+
+											<div class="mb-10 mt-4 fv-row">
+												<label class="form-label required">Quantity</label>
+
+												<input type="number" name="product_quantity"
+													class="form-control mb-2" placeholder="Enter available quantity"
+													value="" min="0" required />
+
+												<div class="text-muted fs-7">Specify how many items are available in stock.</div>
+											</div>
+
 										</div>
 										<!--end::Card header-->
 									</div>
@@ -916,6 +914,32 @@
 
 </div>
 <!--end:::Main-->
+
+
+<div class="modal fade" id="createCategoryModal" tabindex="-1" aria-labelledby="createCategoryModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<form method="post" action="{% url 'adminv2:create_category' %}">
+			{% csrf_token %}
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="createCategoryModalLabel">Add New Category</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<!-- Input Field -->
+					<div class="mb-3">
+						<label for="category_name" class="form-label required">Category Name</label>
+						<input type="text" class="form-control form-control-solid" name="name" id="category_name" placeholder="Enter category name" required>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+					<button type="submit" class="btn btn-primary">Add Category</button>
+				</div>
+			</div>
+		</form>
+	</div>
+</div>
 
 {% endblock %}
 

@@ -1,7 +1,7 @@
 from django.views import View
 from django.shortcuts import render,redirect
 from django.contrib import messages
-from dashboard.models import Product,ProductImage
+from dashboard.models import Product, ProductImage, ProductCategory
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
@@ -19,6 +19,7 @@ class HomeView(LoginRequiredMixin, UserPassesTestMixin, View):
         return self.request.user.is_superuser
     
 class ProductsView(LoginRequiredMixin, UserPassesTestMixin,View):
+    template = 'adminv2/products.html'
     def get(self, request):
         products = Product.objects.all()
 
@@ -26,7 +27,7 @@ class ProductsView(LoginRequiredMixin, UserPassesTestMixin,View):
             image = ProductImage.objects.filter(product=product).first()
             product.image_url = image.image.url if image else '/static/adminv2/media/stock/ecommerce/placeholder.png'
 
-        return render(request, 'adminv2/products.html', {'products': products})
+        return render(request, self.template, {'products': products})
     def test_func(self):
         return self.request.user.is_superuser
     
@@ -75,31 +76,65 @@ class EditcategoryView(LoginRequiredMixin, UserPassesTestMixin,View):
     def test_func(self):
         return self.request.user.is_superuser
 
+class CreateProductCategoryView(View):
+    def post(self, request):
+        name = request.POST.get('name')
+        if not name:
+            messages.error(request, "Category name is required.")
+            return redirect('adminv2:add_product')
+
+        if ProductCategory.objects.filter(name__iexact=name).exists():
+            messages.warning(request, "This category already exists.")
+            return redirect('adminv2:add_product')
+
+        ProductCategory.objects.create(name=name)
+        messages.success(request, f"Category '{name}' created successfully.")
+        return redirect('adminv2:add_product')
+
+
 class AddproductsView(LoginRequiredMixin, UserPassesTestMixin,View):
+    template = 'adminv2/add-product.html'
+
     def get(self, request):
-        return render(request, 'adminv2/add-product.html')
+        categories = ProductCategory.objects.all()
+
+        context = {
+            'categories': categories
+        }
+        return render(request, self.template, context)
 
     def post(self, request):
         name = request.POST.get('product_name')
         description = request.POST.get('product_description')
         price = request.POST.get('price')
-        avatar = request.FILES.get('avatar')  
+        avatar = request.FILES.get('avatar')
+        category_id = request.POST.get('category')
+        product_quantity = request.POST.get('product_quantity', 0)
+
 
         try:
             price = float(price)
         except (TypeError, ValueError):
             messages.error(request, "Please enter a valid number for price.")
-            return render(request, 'adminv2/add-product.html')
+            return render(request, self.template)
 
         if not name or not description:
             messages.error(request, "All fields are required.")
-            return render(request, 'adminv2/add-product.html')
+            return render(request, self.template)
+
+        try:
+            category = ProductCategory.objects.get(id=category_id)
+        except Exception as e:
+            category = None
+
 
         try:
             product = Product.objects.create(
                 name=name,
                 description=description,
-                price=price
+                price=price,
+                category=category,
+                quantity=product_quantity
             )
             if avatar:
                 ProductImage.objects.create(
@@ -108,19 +143,21 @@ class AddproductsView(LoginRequiredMixin, UserPassesTestMixin,View):
                 )
 
             messages.success(request, "Product added successfully!")
-            return redirect('adminv2:add_product')
+            return redirect('adminv2:products_list')
 
         except Exception as e:
             messages.error(request, f"Failed to save product: {e}")
-            return render(request, 'adminv2/add-product.html')
+            return render(request, self.template)
         
     def test_func(self):
         return self.request.user.is_superuser
 
 
-class AddcategoryView(LoginRequiredMixin, UserPassesTestMixin,View):
+class AddcategoryView(LoginRequiredMixin, UserPassesTestMixin, View):
+    template = 'adminv2/add-category.html'
+
     def get(self, request):
-        return render(request, 'adminv2/add-category.html')
+        return render(request, self.template)
     
     def test_func(self):
         return self.request.user.is_superuser

@@ -1,6 +1,7 @@
 from django.contrib import admin
 
-from dashboard.models import DoctorProfile, MedicalSupplierProfile, CorporateProfile, RetailProfile, WholesaleBuyerProfile, SupplierProfile, Product,ProductImage
+from dashboard.models import DoctorProfile, MedicalSupplierProfile, CorporateProfile, RetailProfile, \
+    WholesaleBuyerProfile, SupplierProfile, Product, ProductImage, ProductCategory
 
 
 @admin.register(DoctorProfile)
@@ -39,3 +40,5 @@ class ProductProfileAdmin(admin.ModelAdmin):
 @admin.register(ProductImage)
 class ProductImagesAdmin(admin.ModelAdmin):
     list_display = ('id','image',)
+
+admin.site.register(ProductCategory)
