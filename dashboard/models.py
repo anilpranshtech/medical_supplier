@@ -123,7 +123,7 @@ class Product(models.Model):
     # Basic Info
     name = models.CharField(max_length=255)
     brand = models.ForeignKey(Brand, on_delete=models.SET_NULL, null=True, blank=True)
-    product_from = models.CharField(max_length=100, help_text="Country of origin")
+    product_from = models.CharField(max_length=100, null=True, blank=True, help_text="Country of origin")
     description = models.TextField(blank=True)
     keywords = models.CharField(max_length=255, help_text="Comma-separated keywords", blank=True)
 
@@ -177,7 +177,7 @@ class Product(models.Model):
     warranty = models.CharField(max_length=20, choices=[('none', 'None'), ('1yr', '1 Year'), ('2yr', '2 Years')], default='none')
 
     created_by = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     def __str__(self):
         return self.name
