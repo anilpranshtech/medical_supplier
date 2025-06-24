@@ -36,10 +36,12 @@ class SupplierProfileAdmin(admin.ModelAdmin):
 class ProductProfileAdmin(admin.ModelAdmin):
     list_display = ('id','name', 'description', 'price')
 
-@admin.register(ProductImage)
-class ProductImagesAdmin(admin.ModelAdmin):
-    list_display = ('id','image',)
-
+admin.site.register(ProductImage)
 admin.site.register(ProductCategory)
+admin.site.register( ProductSubCategory)
+admin.site.register(ProductLastCategory)
+admin.site.register(Brand)
+
+
 
 admin.site.register(Orders)

@@ -2,6 +2,13 @@
 {% load static %}
 
 {% block content %}
+<style>
+    #fullPageLoader {
+        transition: opacity 0.3s ease;
+    }
+</style>
+
+<link href="https://cdn.jsdelivr.net/npm/nouislider@15.7.0/dist/nouislider.min.css" rel="stylesheet">
 {% if messages %}
     {% for message in messages %}
         <script>
@@ -10,514 +17,703 @@
     {% endfor %}
 {% endif %}
 <!--begin::Main-->
-<div class="app-main flex-column flex-row-fluid " id="kt_app_main">
- 	<div class="d-flex flex-column flex-column-fluid">
-
- 		<div id="kt_app_content" class="app-content  flex-column-fluid ">
-
- 			<div id="kt_app_content_container" class="app-container  container-fluid ">
- 				<form class="form d-flex flex-column flex-lg-row" method = "POST" action="{% url 'adminv2:add_product' %}" enctype="multipart/form-data">
-					 {% csrf_token %}
-
-					<!--	Left side portion  -->
-					<div class="d-flex flex-column gap-7 gap-lg-10 w-100 w-lg-300px mb-7 me-lg-10">
-
-						<!--	Thumbnail	-->
- 						<div class="card card-flush py-4">
-							<!--begin::Card header-->
-							<div class="card-header">
-								<!--begin::Card title-->
-								<div class="card-title">
-									<h2>Thumbnail</h2>
-								</div>
- 							</div>
-
- 							<div class="card-body text-center pt-0">
-
-								<style>
-									.image-input-placeholder {
-										background-image: url('https://preview.keenthemes.com/metronic8/demo58/assets/media/svg/files/blank-image.svg');
-									}
-
-									[data-bs-theme="dark"] .image-input-placeholder {
-										background-image: url('https://preview.keenthemes.com/metronic8/demo58/assets/media/svg/files/blank-image-dark.svg');
-									}
-								</style>
-								<!--end::Image input placeholder-->
-
-								<div class="image-input image-input-empty image-input-outline image-input-placeholder mb-3"
-									data-kt-image-input="true">
- 									<div class="image-input-wrapper w-150px h-150px"></div>
-
- 									<label
-										class="btn btn-icon btn-circle btn-active-color-primary w-25px h-25px bg-body shadow"
-										data-kt-image-input-action="change" data-bs-toggle="tooltip"
-										title="Change avatar">
-										<i class="fas fa-pen fs-7 text-primary"></i>
- 										<input type="file" name="avatar" accept=".png, .jpg, .jpeg" />
-										<input type="hidden" name="avatar_remove" />
- 									</label>
-
- 									<span
-										class="btn btn-icon btn-circle btn-active-color-primary w-25px h-25px bg-body shadow"
-										data-kt-image-input-action="cancel" data-bs-toggle="tooltip"
-										title="Cancel avatar">
-										<i class="ki-outline ki-cross fs-2"></i> </span>
-
- 									<span
-										class="btn btn-icon btn-circle btn-active-color-primary w-25px h-25px bg-body shadow"
-										data-kt-image-input-action="remove" data-bs-toggle="tooltip"
-										title="Remove avatar">
-										<i class="ki-outline ki-cross fs-2"></i> </span>
- 								</div>
-								<!--end::Image input-->
-
-								<!--begin::Description-->
-								<div class="text-muted fs-7">Set the product thumbnail image. Only
-									*.png, *.jpg and *.jpeg image files are accepted</div>
-								<!--end::Description-->
-							</div>
-							<!--end::Card body-->
-						</div>
-
-						<!-- Status  -->
-						<div class="card card-flush py-4">
- 							<div class="card-header">
- 								<div class="card-title">
-									<h2>Status</h2>
-								</div>
-
- 								<div class="card-toolbar">
-									<div class="rounded-circle bg-success w-15px h-15px"
-										id="kt_ecommerce_add_product_status"></div>
-								</div>
- 							</div>
-
- 							<div class="card-body pt-0">
- 								<select class="form-select mb-2" data-control="select2"
-									data-hide-search="true" data-placeholder="Select an option"
-									id="kt_ecommerce_add_product_status_select">
-									<option></option>
-									<option value="published" selected>Published</option>
-									<option value="draft">Draft</option>
-									<option value="scheduled">Scheduled</option>
-									<option value="inactive">Inactive</option>
-								</select>
-
- 								<div class="text-muted fs-7">Set the product status.</div>
-
- 								<div class="d-none mt-10">
-									<label for="kt_ecommerce_add_product_status_datepicker"
-										class="form-label">Select publishing date and time</label>
-									<input class="form-control"
-										id="kt_ecommerce_add_product_status_datepicker"
-										placeholder="Pick date & time" />
-								</div>
- 							</div>
- 						</div>
-
-						<!-- Categories -->
-						<div class="card card-flush py-4">
- 							<div class="card-header">
- 								<div class="card-title">
-									<h2>Product Details</h2>
-								</div>
- 							</div>
-
-							<div class="card-body pt-0">
-								<label class="form-label required">Categories</label>
-								<select class="form-select mb-2" name="category" data-control="select2"
-									data-placeholder="Select an option" data-allow-clear="true" required>
-									<option></option>
-									{% for cat in categories %}
-										<option value="{{cat.id }}">{{cat.name}}</option>
-									{% endfor %}
-
-								</select>
-
-								<div class="text-muted fs-7 mb-7">Add product to a category.</div>
-
-								<button type="button" class="btn btn-light-primary btn-sm mb-10" data-bs-toggle="modal" data-bs-target="#createCategoryModal">
-									<i class="fas fa-plus fs-2 text-primary"></i> Create new category
-								</button>
-
-							</div>
- 						</div>
-						
-					</div>
-
-					<!-- Right side form  -->
-					<div class="d-flex flex-column flex-row-fluid gap-7 gap-lg-10">
- 						<ul class="nav nav-custom nav-tabs nav-line-tabs nav-line-tabs-2x border-0 fs-4 fw-semibold mb-n2 d-none">
- 							<li class="nav-item">
-								<a class="nav-link text-active-primary pb-4 active" data-bs-toggle="tab"
-									href="#kt_ecommerce_add_product_general">General</a>
-							</li>
-
- 							<li class="nav-item">
-								<a class="nav-link text-active-primary pb-4" data-bs-toggle="tab"
-									href="#kt_ecommerce_add_product_advanced">Advanced</a>
-							</li>
-
-						</ul>
-
-						<div class="tab-content">
- 							<div class="tab-pane fade show active" id="kt_ecommerce_add_product_general"
-								role="tab-panel">
-								<div class="d-flex flex-column gap-7 gap-lg-10">
-
-									<!-- General	-->
- 									<div class="card card-flush py-4">
- 										<div class="card-header">
-											<div class="card-title">
-												<h2>General</h2>
-											</div>
-										</div>
-
-										<div class="card-body pt-0">
-
-											<div class="mb-10 fv-row">
-												<!--begin::Label-->
-												<label class="required form-label">Product Name</label>
-												<!--end::Label-->
-
-												<!--begin::Input-->
-												<input type="text" name="product_name"
-													class="form-control mb-2" placeholder="Product name"
-													value="" />
-												<!--end::Input-->
-
-												<!--begin::Description-->
-												<div class="text-muted fs-7">A product name is required
-													and recommended to be unique.</div>
-												<!--end::Description-->
-											</div>
-
-											<div>
- 												<label class="form-label">Description</label>
-												<textarea name="product_description"
-													class="form-control "
-													placeholder="Product description" ></textarea><br>
-											</div>
-
-
-											<div class="mb-10 mt-4 fv-row">
-												<label class="form-label required">Quantity</label>
-
-												<input type="number" name="product_quantity"
-													class="form-control mb-2" placeholder="Enter available quantity"
-													value="" min="0" required />
-
-												<div class="text-muted fs-7">Specify how many items are available in stock.</div>
-											</div>
-
-										</div>
- 									</div>
-
-									<!-- Pricing -->
- 									<div class="card card-flush py-4">
- 										<div class="card-header">
-											<div class="card-title">
-												<h2>Pricing</h2>
-											</div>
-										</div>
-
-										<!--begin::Card body-->
-										<div class="card-body pt-0">
-											<!--begin::Input group-->
-											<div class="mb-10 fv-row">
-												<!--begin::Label-->
-												<label class="required form-label">Base Price</label>
-												<!--end::Label-->
-
-												<!--begin::Input-->
-												<input type="text" name="price"
-													class="form-control mb-2"
-													placeholder="Product price" value="" />
-												<!--end::Input-->
-
-												<!--begin::Description-->
-												<div class="text-muted fs-7">Set the product price.
-												</div>
-												<!--end::Description-->
-											</div>
-											<!--end::Input group-->
-
-											<!--begin::Input group-->
-											<div class="fv-row mb-10">
-												<!--begin::Label-->
-												<label class="fs-6 fw-semibold mb-2">
-													Discount Type
-
-
-													<span class="ms-1" data-bs-toggle="tooltip"
-														title="Select a discount type that will be applied to this product">
-														<i
-															class="fas fa-info-circle text-gray-500 fs-6"></i></span>
-												</label>
-												<!--End::Label-->
-
-												<!--begin::Row-->
-												<div class="row row-cols-1 row-cols-md-3 row-cols-lg-1 row-cols-xl-3 g-9"
-													data-kt-buttons="true"
-													data-kt-buttons-target="[data-kt-button='true']">
-													<!--begin::Col-->
-													<div class="col">
-														<!--begin::Option-->
-														<label
-															class="btn btn-outline btn-outline-dashed btn-active-light-primary active d-flex text-start p-6"
-															data-kt-button="true">
-															<!--begin::Radio-->
-															<span
-																class="form-check form-check-custom form-check-solid form-check-sm align-items-start mt-1">
-																<input class="form-check-input"
-																	type="radio" name="discount_option"
-																	value="1" checked="checked" />
-															</span>
-															<!--end::Radio-->
-
-															<!--begin::Info-->
-															<span class="ms-5">
-																<span
-																	class="fs-4 fw-bold text-gray-800 d-block">No
-																	Discount</span>
-															</span>
-															<!--end::Info-->
-														</label>
-														<!--end::Option-->
-													</div>
-													<!--end::Col-->
-
-													<!--begin::Col-->
-													<div class="col">
-														<!--begin::Option-->
-														<label
-															class="btn btn-outline btn-outline-dashed btn-active-light-primary  d-flex text-start p-6"
-															data-kt-button="true">
-															<!--begin::Radio-->
-															<span
-																class="form-check form-check-custom form-check-solid form-check-sm align-items-start mt-1">
-																<input class="form-check-input"
-																	type="radio" name="discount_option"
-																	value="2" />
-															</span>
-															<!--end::Radio-->
-
-															<!--begin::Info-->
-															<span class="ms-5">
-																<span
-																	class="fs-4 fw-bold text-gray-800 d-block">Percentage
-																	%</span>
-															</span>
-															<!--end::Info-->
-														</label>
-														<!--end::Option-->
-													</div>
-													<!--end::Col-->
-
-													<!--begin::Col-->
-													<div class="col">
-														<!--begin::Option-->
-														<label
-															class="btn btn-outline btn-outline-dashed btn-active-light-primary d-flex text-start p-6"
-															data-kt-button="true">
-															<!--begin::Radio-->
-															<span
-																class="form-check form-check-custom form-check-solid form-check-sm align-items-start mt-1">
-																<input class="form-check-input"
-																	type="radio" name="discount_option"
-																	value="3" />
-															</span>
-															<!--end::Radio-->
-
-															<!--begin::Info-->
-															<span class="ms-5">
-																<span
-																	class="fs-4 fw-bold text-gray-800 d-block">Fixed
-																	Price</span>
-															</span>
-															<!--end::Info-->
-														</label>
-														<!--end::Option-->
-													</div>
-													<!--end::Col-->
-												</div>
-												<!--end::Row-->
-											</div>
-											<!--end::Input group-->
-
-											<!--begin::Input group-->
-											<div class="d-none mb-10 fv-row"
-												id="kt_ecommerce_add_product_discount_percentage">
-												<!--begin::Label-->
-												<label class="form-label">Set Discount
-													Percentage</label>
-												<!--end::Label-->
-
-												<!--begin::Slider-->
-												<div class="d-flex flex-column text-center mb-5">
-													<div
-														class="d-flex align-items-start justify-content-center mb-7">
-														<span class="fw-bold fs-3x"
-															id="kt_ecommerce_add_product_discount_label">0</span>
-														<span class="fw-bold fs-4 mt-1 ms-2">%</span>
-													</div>
-													<div id="kt_ecommerce_add_product_discount_slider"
-														class="noUi-sm"></div>
-												</div>
-												<!--end::Slider-->
-
-												<!--begin::Description-->
-												<div class="text-muted fs-7">Set a percentage discount
-													to be applied on this product.</div>
-												<!--end::Description-->
-											</div>
-											<!--end::Input group-->
-
-											<!--begin::Input group-->
-											<div class="d-none mb-10 fv-row"
-												id="kt_ecommerce_add_product_discount_fixed">
-												<!--begin::Label-->
-												<label class="form-label">Fixed Discounted Price</label>
-												<!--end::Label-->
-
-												<!--begin::Input-->
-												<input type="text" name="dicsounted_price"
-													class="form-control mb-2"
-													placeholder="Discounted price" />
-												<!--end::Input-->
-
-												<!--begin::Description-->
-												<div class="text-muted fs-7">Set the discounted product
-													price. The product will be reduced at the determined
-													fixed price</div>
-												<!--end::Description-->
-											</div>
-											<!--end::Input group-->
-
-											<!--begin::Tax-->
-											<div class="d-flex flex-wrap gap-5 d-none">
-												<!--begin::Input group-->
-												<div class="fv-row w-100 flex-md-root">
-													<!--begin::Label-->
-													<label class="required form-label">Tax Class</label>
-													<!--end::Label-->
-
-													<!--begin::Select2-->
-													<select class="form-select mb-2" name="tax"
-														data-control="select2" data-hide-search="true"
-														data-placeholder="Select an option">
-														<option></option>
-														<option value="0">Tax Free</option>
-														<option value="1">Taxable Goods</option>
-														<option value="2">Downloadable Product</option>
-													</select>
-													<!--end::Select2-->
-
-													<!--begin::Description-->
-													<div class="text-muted fs-7">Set the product tax
-														class.</div>
-													<!--end::Description-->
-												</div>
-												<!--end::Input group-->
-
-												<!--begin::Input group-->
-												<div class="fv-row w-100 flex-md-root">
-													<!--begin::Label-->
-													<label class="form-label">VAT Amount (%)</label>
-													<!--end::Label-->
-
-													<!--begin::Input-->
-													<input type="text" class="form-control mb-2"
-														value="" />
-													<!--end::Input-->
-
-													<!--begin::Description-->
-													<div class="text-muted fs-7">Set the product VAT
-														about.</div>
-													<!--end::Description-->
-												</div>
-												<!--end::Input group-->
-											</div>
-											<!--end:Tax-->
-										</div>
-										<!--end::Card header-->
-									</div>
- 								</div>
-							</div>
-
-							{% comment %}<div class="tab-pane fade" id="kt_ecommerce_add_product_advanced"
-								role="tab-panel">
-								<div class="d-flex flex-column gap-7 gap-lg-10">
-
- 									<div class="card card-flush py-4">
- 										<div class="card-header">
-											<div class="card-title">
-												<h2>Inventory</h2>
-											</div>
-										</div>
-
-									</div>
-
-								</div>
-							</div>{% endcomment %}
-
-						</div>
-
-						<div class="d-flex justify-content-end">
- 							<a href="{% url 'adminv2:products_list' %}" id="kt_ecommerce_add_product_cancel"
-								class="btn btn-light me-5">
-								Cancel
-							</a>
-
- 							<button type="submit"
-								class="btn btn-primary">
-								<span class="indicator-label">
-									Save Changes
-								</span>
-								<span class="indicator-progress">
-									Please wait... <span
-										class="spinner-border spinner-border-sm align-middle ms-2"></span>
-								</span>
-							</button>
- 						</div>
-					</div>
- 				</form>
- 			</div>
- 		</div>
-
-	</div>
-
+<div class="app-main flex-column flex-row-fluid" id="kt_app_main">
+    <div class="d-flex flex-column flex-column-fluid">
+        <div id="kt_app_content" class="app-content flex-column-fluid">
+            <div id="kt_app_content_container" class="app-container container-fluid">
+                <form class="form d-flex flex-column flex-lg-row" method="POST" action="{% url 'adminv2:add_product' %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <!-- Left Side Container (Fixed Width) -->
+                    <div class="d-flex flex-column gap-7 gap-lg-10 w-100 w-lg-300px mb-7 me-lg-10">
+                        <!-- Thumbnail + Gallery Card -->
+<div class="card card-flush py-4">
+    <div class="card-header">
+        <div class="card-title">
+            <h2>Thumbnail & Gallery</h2>
+        </div>
+    </div>
+    <div class="card-body text-center pt-0">
+        <style>
+            .image-input-placeholder {
+                background-image: url('https://preview.keenthemes.com/metronic8/demo58/assets/media/svg/files/blank-image.svg');
+            }
+
+            [data-bs-theme="dark"] .image-input-placeholder {
+                background-image: url('https://preview.keenthemes.com/metronic8/demo58/assets/media/svg/files/blank-image-dark.svg');
+            }
+        </style>
+
+        <!-- Main Thumbnail Upload -->
+        <div class="image-input image-input-empty image-input-outline image-input-placeholder mb-3" data-kt-image-input="true">
+            <div class="image-input-wrapper w-150px h-150px"></div>
+
+            <label class="btn btn-icon btn-circle btn-active-color-primary w-25px h-25px bg-body shadow"
+                data-kt-image-input-action="change" data-bs-toggle="tooltip" title="Change avatar">
+                <i class="fas fa-pen fs-7 text-primary"></i>
+                <input type="file" name="main_image" accept=".png, .jpg, .jpeg" required />
+                <input type="hidden" name="main_image_remove" />
+            </label>
+
+            <span class="btn btn-icon btn-circle btn-active-color-primary w-25px h-25px bg-body shadow"
+                data-kt-image-input-action="cancel" data-bs-toggle="tooltip" title="Cancel avatar">
+                <i class="ki-outline ki-cross fs-2"></i>
+            </span>
+
+            <span class="btn btn-icon btn-circle btn-active-color-primary w-25px h-25px bg-body shadow"
+                data-kt-image-input-action="remove" data-bs-toggle="tooltip" title="Remove avatar">
+                <i class="ki-outline ki-cross fs-2"></i>
+            </span>
+        </div>
+
+        <div class="text-muted fs-7 mb-4">Upload the main thumbnail image. Only *.png, *.jpg and *.jpeg image files are accepted</div>
+
+        <!-- Gallery Images Upload -->
+        <label class="form-label fw-bold">Gallery Images</label>
+        <input type="file" name="gallery_images" multiple accept=".png, .jpg, .jpeg" class="form-control mb-3" />
+        <div class="text-muted fs-7">You can upload multiple gallery images for the product</div>
+    </div>
 </div>
 
-<!-- Model for add category -->
+                        <!-- Status Card -->
+                        <div class="card card-flush py-4">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    <h2>Status</h2>
+                                </div>
+                                <div class="card-toolbar">
+                                    <div class="rounded-circle bg-success w-15px h-15px" id="kt_ecommerce_add_product_status"></div>
+                                </div>
+                            </div>
+                            <div class="card-body pt-0">
+                                <select class="form-select mb-2" data-control="select2" data-hide-search="true" data-placeholder="Select an option" id="kt_ecommerce_add_product_status_select" name="is_active">
+                                    <option></option>
+                                    <option value="True" {% if is_active == 'True' %}selected{% endif %}>Published</option>
+                                    <option value="False" {% if is_active == 'False' %}selected{% endif %}>Draft</option>
+                                </select>
+                                <div class="text-muted fs-7">Set the product status.</div>
+                                <div class="d-none mt-10">
+                                    <label for="kt_ecommerce_add_product_status_datepicker" class="form-label">Select publishing date and time</label>
+                                    <input class="form-control" id="kt_ecommerce_add_product_status_datepicker" placeholder="Pick date & time" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Categories Card -->
+                        <div class="card card-flush py-4">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    <h2>Product Details</h2>
+                                </div>
+                            </div>
+                            <div class="card-body pt-0">
+                                <label class="form-label required">Categories</label>
+                                <select class="form-select mb-2" name="category" data-control="select2" data-placeholder="Select an option" data-allow-clear="true" required>
+                                    <option></option>
+                                    {% for cat in categories %}
+                                        <option value="{{cat.id }}" {% if category_id|stringformat:"s" == cat.id|stringformat:"s" %}selected{% endif %}>{{cat.name}}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="text-muted fs-7 mb-7">Add product to a category.</div>
+                                <button type="button" class="btn btn-light-primary btn-sm mb-10" data-bs-toggle="modal" data-bs-target="#createCategoryModal">
+                                    <i class="fas fa-plus fs-2 text-primary"></i> Create new category
+                                </button>
+                                
+                                <label class="form-label">Sub-Categories</label>
+                                <select class="form-select mb-2" name="sub_category" id="subcategory_select" data-control="select2" data-placeholder="Select an option" data-allow-clear="true">
+                                    <option value="">Select a Sub-Category</option>
+                                    {% if selected_sub_category %}
+                                        <option value="{{ selected_sub_category }}" selected>{{ selected_sub_category_name }}</option>
+                                    {% endif %}
+                                </select>
+                                <div class="text-muted fs-7 mb-7">Add product to a sub-category.</div>
+                                <button type="button" class="btn btn-light-primary btn-sm mb-10" data-bs-toggle="modal" data-bs-target="#createSubCategoryModal">
+                                    <i class="fas fa-plus fs-2 text-primary"></i> Create new sub-category
+                                </button>
+
+                                <label class="form-label">Last Categories</label>
+                                <select class="form-select mb-2" name="last_category" id="lastcategory_select" data-control="select2" data-placeholder="Select an option" data-allow-clear="true">
+                                    <option value="">Select a Last Category</option>
+                                    {% if selected_last_category %}
+                                        <option value="{{ selected_last_category }}" selected>{{ selected_last_category_name }}</option>
+                                    {% endif %}
+                                </select>
+                                <div class="text-muted fs-7 mb-7">Add product to a last category.</div>
+                                <button type="button" class="btn btn-light-primary btn-sm mb-10" data-bs-toggle="modal" data-bs-target="#createLastCategoryModal">
+                                    <i class="fas fa-plus fs-2 text-primary"></i> Create new last category
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Pricing Card  -->
+                        <div class="card card-flush py-4">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    <h2>Pricing</h2>
+                                </div>
+                            </div>
+                            <div class="card-body pt-0">
+                                <div class="mb-10 fv-row">
+                                    <label class="required form-label">Base Price</label>
+                                    <input type="text" name="price" class="form-control mb-2" placeholder="Product price" value="{{ price|default:'' }}" required />
+                                    <div class="text-muted fs-7">Set the product price.</div>
+                                </div>
+                                
+                                <div class="fv-row mb-10">
+                                    
+                                    <div class="row row-cols-1 row-cols-md-3 row-cols-lg-1 row-cols-xl-3 g-9" data-kt-buttons="true" data-kt-buttons-target="[data-kt-button='true']">
+                                        <div class="col">
+                                            
+                                        </div>
+                                        <div class="col">
+                                           
+                                        </div>
+                                        <div class="col">
+                                            
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-none mb-10 fv-row" id="kt_ecommerce_add_product_discount_percentage">
+                                    <label class="form-label">Set Discount Percentage</label>
+                                    <div class="d-flex flex-column text-center mb-5">
+                                        <div class="d-flex align-items-start justify-content-center mb-7">
+                                            <span class="fw-bold fs-3x" id="kt_ecommerce_add_product_discount_label">0</span>
+                                            <span class="fw-bold fs-4 mt-1 ms-2">%</span>
+                                        </div>
+                                        <div id="kt_ecommerce_add_product_discount_slider" class="noUi-sm"></div>
+                                    </div>
+                                    <div class="text-muted fs-7">Set a percentage discount to be applied on this product.</div>
+                                </div>
+                                
+                                <div class="d-none mb-10 fv-row" id="kt_ecommerce_add_product_discount_fixed">
+                                    <label class="form-label">Fixed Discounted Price</label>
+                                    <input type="text" name="dicsounted_price" class="form-control mb-2" placeholder="Discounted price" />
+                                    <div class="text-muted fs-7">Set the discounted product price. The product will be reduced at the determined fixed price</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+<!-- General information -->
+                    <div class="d-flex flex-column flex-row-fluid gap-7 gap-lg-10">
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card card-flush py-4">
+                <div class="card-header">
+                    <div class="card-title">
+                        <h2>General Information</h2>
+                    </div>
+                </div>
+                <div class="card-body pt-0">
+                    <div class="mb-10 fv-row">
+                        <label class="required form-label">Product Name</label>
+                        <input type="text" name="product_name" class="form-control mb-2" placeholder="Product name" value="{{ product_name }}" required />
+                        <div class="text-muted fs-7">A product name is required and recommended to be unique.</div>
+                    </div>
+
+                    <div>
+                        <label class="form-label">Description</label>
+                        <textarea name="product_description" class="form-control" placeholder="Product description">{{ product_description|default:'' }}</textarea><br>
+                    </div>
+
+                    <div class="mb-10 mt-4 fv-row">
+                        <label class="form-label required">Quantity</label>
+                        <input type="number" name="product_quantity" class="form-control mb-2" placeholder="Enter available quantity" value="{{ product_quantity }}" min="0" required />
+                        <div class="text-muted fs-7">Specify how many items are available in stock.</div>
+                    </div>
+
+                    <div class="mb-10 mt-4 fv-row">
+                        <label class="form-label">Brand</label>
+                        <input type="text" name="brand" class="form-control" placeholder="Enter brand" />
+                        <div class="text-muted fs-7">Enter the product brand (new or existing).</div>
+                    </div>
+
+                    <div class="mb-10 mt-4 fv-row">
+                        <label class="form-label">Product From</label>
+                        <input type="text" name="product_from" class="form-control mb-2" placeholder="e.g., India, China" value="{{ product_from }}" />
+                        <div class="text-muted fs-7">Country of origin.</div>
+                    </div>
+                    <div class="mb-10 mt-4 fv-row">
+                        <label class="form-label">Selling Countries</label>
+                        <input type="text" name="selling_countries" class="form-control mb-2" placeholder="e.g., India, USA, UK" value="{{ selling_countries|default:'' }}" />
+                        <div class="text-muted fs-7">Comma-separated country names (e.g., India, USA, UK).</div>
+                    </div>
+
+
+                    <div class="mb-10 mt-4 fv-row">
+                        <label class="form-label">Warranty</label>
+                        <select class="form-select mb-2" name="warranty" data-control="select2" data-hide-search="true" data-placeholder="Select a warranty option">
+                            <option value="none" {% if warranty == 'none' %}selected{% endif %}>None</option>
+                            <option value="1yr" {% if warranty == '1yr' %}selected{% endif %}>1 Year</option>
+                            <option value="2yr" {% if warranty == '2yr' %}selected{% endif %}>2 Years</option>
+                        </select>
+                        <div class="text-muted fs-7">Select the product warranty.</div>
+                    </div>
+
+                    <div class="mb-10 mt-4 fv-row">
+                        <label class="form-label">Condition</label>
+                        <select class="form-select mb-2" name="condition" data-control="select2" data-hide-search="true" data-placeholder="Select a condition">
+                            <option value="new" {% if condition == 'new' %}selected{% endif %}>New</option>
+                            <option value="used" {% if condition == 'used' %}selected{% endif %}>Used</option>
+                        </select>
+                        <div class="text-muted fs-7">Set the product condition.</div>
+                    </div>
+
+                    <div class="mb-10 mt-4 fv-row">
+                        <label class="form-label">Return Time Limit (Days)</label>
+                        <input type="number" name="return_time_limit" class="form-control mb-2" placeholder="Enter return time limit in days" value="{{ return_time_limit }}" min="0" />
+                        <div class="text-muted fs-7">Number of days for product return.</div>
+                    </div>
+
+                    <div class="mb-10 mt-4 fv-row">
+                        <label class="form-label">Delivery Time (Days)</label>
+                        <input type="number" name="delivery_time" class="form-control mb-2" placeholder="Enter estimated delivery time in days" value="{{ delivery_time }}" min="0" />
+                        <div class="text-muted fs-7">Estimated delivery time in days.</div>
+                    </div>
+                    <div class="mb-10 mt-4 fv-row">
+                        <label class="form-label">Manufacture Date</label>
+                        <input type="date" name="manufacture_date" class="form-control mb-2" placeholder="Select manufacture date" value="{{ manufacture_date }}" />
+                        <div class="text-muted fs-7">Date of manufacture.</div>
+                    </div>
+
+                    <div class="mb-10 mt-4 fv-row">
+                        <label class="form-label">Expiry Date</label>
+                        <input type="date" name="expiry_date" class="form-control mb-2" placeholder="Select expiry date" value="{{ expiry_date }}" />
+                        <div class="text-muted fs-7">Date of expiry.</div>
+                    </div>
+                </div>
+            </div>
+<!-- pricing -->
+            <div class="card card-flush py-4 mt-7"> <div class="card-header">
+                    <div class="card-title">
+                        <h2>Pricing</h2>
+                    </div>
+                </div>
+                <div class="card-body pt-0">
+                  
+
+                    <div class="fv-row mb-10">
+                        <label class="fs-6 fw-semibold mb-2">
+                            Discount Type
+                            <span class="ms-1" data-bs-toggle="tooltip" title="Select a discount type that will be applied to this product">
+                                <i class="fas fa-info-circle text-gray-500 fs-6"></i>
+                            </span>
+                        </label>
+                        <div class="row row-cols-1 row-cols-md-3 row-cols-lg-1 row-cols-xl-3 g-9" data-kt-buttons="true" data-kt-buttons-target="[data-kt-button='true']">
+                            <div class="col">
+                                <label class="btn btn-outline btn-outline-dashed btn-active-light-primary d-flex text-start p-6" data-kt-button="true">
+                                          <span class="form-check form-check-custom form-check-solid form-check-sm align-items-start mt-1">
+                                    <input class="form-check-input" type="radio" name="discount_option" value="1" />
+                                            </span>
+                                         <span class="ms-5">
+                                               <span class="fs-4 fw-bold text-gray-800 d-block">No Discount</span>
+                                                    </span>
+                                               </label>
+                                                 </div>
+                                               <div class="col">
+                                         <label class="btn btn-outline btn-outline-dashed btn-active-light-primary active d-flex text-start p-6" data-kt-button="true">
+                                <span class="form-check form-check-custom form-check-solid form-check-sm align-items-start mt-1">
+                                 <input class="form-check-input" type="radio" name="discount_option" value="2" checked="checked" />
+                              </span>
+                                 <span class="ms-5">
+                                <span class="fs-4 fw-bold text-gray-800 d-block">Percentage %</span>
+                                  </span>
+                                       </label>
+                            </div>
+                            <div class="col">
+                                <label class="btn btn-outline btn-outline-dashed btn-active-light-primary d-flex text-start p-6" data-kt-button="true">
+                                    <span class="form-check form-check-custom form-check-solid form-check-sm align-items-start mt-1">
+                                        <input class="form-check-input" type="radio" name="discount_option" value="3" />
+                                    </span>
+                                    <span class="ms-5">
+                                        <span class="fs-4 fw-bold text-gray-800 d-block">Fixed Price</span>
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-none mb-10 fv-row" id="kt_ecommerce_add_product_discount_percentage">
+                        <label class="form-label">Set Discount Percentage</label>
+                        <div class="d-flex flex-column text-center mb-5">
+                            <div class="d-flex align-items-start justify-content-center mb-7">
+                                <span class="fw-bold fs-3x" id="kt_ecommerce_add_product_discount_label">0</span>
+                                <span class="fw-bold fs-4 mt-1 ms-2">%</span>
+                            </div>
+                            <div id="kt_ecommerce_add_product_discount_slider" class="noUi-sm"></div>
+                        </div>
+                        <div class="text-muted fs-7">Set a percentage discount to be applied on this product.</div>
+                    </div>
+
+                    <div class="d-none mb-10 fv-row" id="kt_ecommerce_add_product_discount_fixed">
+                        <label class="form-label">Fixed Discounted Price</label>
+                        <input type="text" name="dicsounted_price" class="form-control mb-2" placeholder="Discounted price" />
+                        <div class="text-muted fs-7">Set the discounted product price. The product will be reduced at the determined fixed price</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+<!-- Additional information -->
+        <div class="col-lg-6">
+            <div class="card card-flush py-4">
+                <div class="card-header">
+                    <div class="card-title">
+                        <h2>Additional Details</h2>
+                    </div>
+                </div>
+                <div class="card-body pt-0">
+                    <div class="mb-10 mt-4 fv-row">
+                        <label class="form-label">Weight</label>
+                        <input type="number" name="weight" class="form-control mb-2" placeholder="Enter product weight" value="{{ weight }}" min="0" step="0.01" />
+                        <div class="text-muted fs-7">Product weight.</div>
+                    </div>
+
+                    <div class="mb-10 mt-4 fv-row">
+                        <label class="form-label">Weight Unit</label>
+                        <select class="form-select mb-2" name="weight_unit" data-control="select2" data-hide-search="true" data-placeholder="Select weight unit">
+                            <option value="gm" {% if weight_unit == 'gm' %}selected{% endif %}>Gram</option>
+                            <option value="kg" {% if weight_unit == 'kg' %}selected{% endif %}>Kilogram</option>
+                            <option value="cm" {% if weight_unit == 'cm' %}selected{% endif %}>Centimeter</option>
+                            <option value="ltr" {% if weight_unit == 'ltr' %}selected{% endif %}>Liter</option>
+                        </select>
+                        <div class="text-muted fs-7">Unit of product weight.</div>
+                    </div>
+
+
+                    <div class="mb-10 mt-4 fv-row">
+                        <label class="form-label">Commission Percentage</label>
+                        <input type="number" name="commission_percentage" class="form-control mb-2" placeholder="Enter commission percentage" value="{{ commission_percentage }}" min="0" max="100" step="0.01" />
+                        <div class="text-muted fs-7">Commission percentage for the product.</div>
+                    </div>
+
+                    <div class="mb-10 mt-4 fv-row">
+                        <label class="form-label">Barcode</label>
+                        <input type="text" name="barcode" class="form-control mb-2" placeholder="Enter barcode" value="{{ barcode }}" />
+                        <div class="text-muted fs-7">Product barcode.</div>
+                    </div>
+                    <div class="mb-10 mt-4 fv-row">
+                        <label class="form-label">Keywords</label>
+                        <input type="text" name="keywords" class="form-control mb-2" placeholder="Comma-separated keywords" value="{{ keywords }}" />
+                        <div class="text-muted fs-7">Comma-separated keywords for product search.</div>
+                    </div>
+
+                    <div class="mb-10 mt-4 fv-row">
+                        <label class="form-label">Brochure</label>
+                        <input type="file" name="brochure" class="form-control mb-2" accept=".pdf, .doc, .docx" />
+                        <div class="text-muted fs-7">Upload product brochure (PDF, DOC).</div>
+                    </div>
+
+                    <div class="mb-10 mt-4 fv-row">
+                        <label class="form-label">Supplier SKU</label>
+                        <input type="text" name="supplier_sku" class="form-control mb-2" placeholder="Enter supplier SKU" value="{{ supplier_sku }}" />
+                        <div class="text-muted fs-7">Supplier Stock Keeping Unit.</div>
+                    </div>
+
+                    <div class="mb-10 mt-4 fv-row">
+                        <label class="form-label">Pcs Per Unit</label>
+                        <input type="number" name="pcs_per_unit" class="form-control mb-2" placeholder="Enter pieces per unit" value="{{ pcs_per_unit }}" min="1" />
+                        <div class="text-muted fs-7">Number of pieces in one unit of the product.</div>
+                    </div>
+
+                    <div class="mb-10 mt-4 fv-row">
+                        <label class="form-label">Min Order Qty</label>
+                        <input type="number" name="min_order_qty" class="form-control mb-2" placeholder="Enter minimum order quantity" value="{{ min_order_qty }}" min="1" />
+                        <div class="text-muted fs-7">Minimum quantity required for an order.</div>
+                    </div>
+
+                    <div class="mb-10 mt-4 fv-row">
+                        <label class="form-label">Low Stock Alert</label>
+                        <input type="number" name="low_stock_alert" class="form-control mb-2" placeholder="Enter low stock alert level" value="{{ low_stock_alert }}" min="0" />
+                        <div class="text-muted fs-7">Alert when stock falls below this level.</div>
+                    </div>
+
+                    <div class="mb-10 mt-4 fv-row">
+                        <label class="form-label">Expiration Days</label>
+                        <input type="number" name="expiration_days" class="form-control mb-2" placeholder="Enter expiration days" value="{{ expiration_days }}" min="0" />
+                        <div class="text-muted fs-7">Number of days until product expires.</div>
+                    </div>
+
+                    <div class="mb-10 mt-4 fv-row">
+                        <label class="form-label">Tag</label>
+                        <select class="form-select mb-2" name="tag" data-control="select2" data-hide-search="true" data-placeholder="Select a tag">
+                            <option value="none" {% if tag == 'none' %}selected{% endif %}>None</option>
+                            <option value="recent" {% if tag == 'recent' %}selected{% endif %}>Recently Arrived</option>
+                            <option value="popular" {% if tag == 'popular' %}selected{% endif %}>Most Wanted</option>
+                        </select>
+                        <div class="text-muted fs-7">Assign a tag to the product.</div>
+                    </div>
+
+                    <div class="mb-10 mt-4 fv-row">
+                        <label class="form-label">Offer Percentage</label>
+                        <input type="number" name="offer_percentage" class="form-control mb-2" placeholder="Enter offer percentage" value="{{ offer_percentage }}" min="0" max="100" step="0.01" />
+                        <div class="text-muted fs-7">Percentage discount for the product.</div>
+                    </div>
+
+                    <div class="mb-10 mt-4 fv-row">
+                        <label class="form-label">Offer Start</label>
+                        <input type="date" name="offer_start" class="form-control mb-2" placeholder="Select offer start date" value="{{ offer_start }}" />
+                        <div class="text-muted fs-7">Date when the offer starts.</div>
+                    </div>
+
+                    <div class="mb-10 mt-4 fv-row">
+                        <label class="form-label">Offer End</label>
+                        <input type="date" name="offer_end" class="form-control mb-2" placeholder="Select offer end date" value="{{ offer_end }}" />
+                        <div class="text-muted fs-7">Date when the offer ends.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-end">
+        <a href="{% url 'adminv2:products_list' %}" id="kt_ecommerce_add_product_cancel" class="btn btn-light me-5">
+            Cancel
+        </a>
+        <button type="submit" class="btn btn-primary">
+            <span class="indicator-label">Save Changes</span>
+            <span class="indicator-progress">
+                Please wait... <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+            </span>
+        </button>
+    </div>
+</div>
+<div id="fullPageLoader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+    background-color: rgba(255, 255, 255, 0.7); z-index: 9999; justify-content: center; align-items: center;">
+    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+</div>
+<!-- Category forms -->
 <div class="modal fade" id="createCategoryModal" tabindex="-1" aria-labelledby="createCategoryModalLabel" aria-hidden="true">
-	<div class="modal-dialog">
-		<form method="post" action="{% url 'adminv2:create_category' %}">
-			{% csrf_token %}
-			<div class="modal-content">
-				<div class="modal-header">
-					<h5 class="modal-title" id="createCategoryModalLabel">Add New Category</h5>
-					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-				</div>
-				<div class="modal-body">
-					<!-- Input Field -->
-					<div class="mb-3">
-						<label for="category_name" class="form-label required">Category Name</label>
-						<input type="text" class="form-control form-control-solid" name="name" id="category_name" placeholder="Enter category name" required>
-					</div>
-				</div>
-				<div class="modal-footer">
-					<button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-					<button type="submit" class="btn btn-primary">Add Category</button>
-				</div>
-			</div>
-		</form>
-	</div>
+    <div class="modal-dialog">
+        <form method="post" action="{% url 'adminv2:create_category' %}">
+            {% csrf_token %}
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createCategoryModalLabel">Add New Category</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="category_name" class="form-label required">Category Name</label>
+                        <input type="text" class="form-control form-control-solid" name="name" id="category_name" placeholder="Enter category name" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Category</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="createSubCategoryModal" tabindex="-1" aria-labelledby="createSubCategoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createSubCategoryModalLabel">Create New Sub-Category</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{% url 'adminv2:create_subcategory' %}" method="post"> {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="subcategory_name" class="form-label">Sub-Category Name</label>
+                        <input type="text" class="form-control" id="subcategory_name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="parent_category" class="form-label">Parent Category</label>
+                        <select class="form-select" id="parent_category" name="category" required>
+                            <option value="">Select a Category</option>
+                            {% for cat in categories %}
+                                <option value="{{ cat.id }}">{{ cat.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Create Sub-Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="createLastCategoryModal" tabindex="-1" aria-labelledby="createLastCategoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createLastCategoryModalLabel">Create New Last Category</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{% url 'adminv2:create_lastcategory' %}" method="post"> {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="lastcategory_name" class="form-label">Last Category Name</label>
+                        <input type="text" class="form-control" id="lastcategory_name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="parent_subcategory" class="form-label">Parent Sub-Category</label>
+                        <select class="form-select" id="parent_subcategory" name="sub_category" required>
+                            <option value="">Select a Sub-Category</option>
+                            {% for subcat in subcategories %}
+                                <option value="{{ subcat.id }}">{{ subcat.name }} ({{ subcat.category.name }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Create Last Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 {% endblock %}
 
 {% block page_only_scripts %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function () {
+
+   //subcategory
+    $('select[name="category"]').on('change', function () {
+        let categoryId = $(this).val();
+        if (categoryId) {
+            $.ajax({
+                url: "{% url 'adminv2:get_subcategories' %}",
+                data: {
+                    'category_id': categoryId
+                },
+                success: function (data) {
+                    let options = '<option value="">Select a Sub-Category</option>';
+                    data.forEach(function (item) {
+                        options += `<option value="${item.id}">${item.name}</option>`;
+                    });
+                    $('#subcategory_select').html(options).trigger('change');
+                    $('#lastcategory_select').html('<option value="">Select a Last Category</option>').trigger('change');  // Clear last categories
+                }
+            });
+        } else {
+            $('#subcategory_select').html('<option value="">Select a Sub-Category</option>').trigger('change');
+            $('#lastcategory_select').html('<option value="">Select a Last Category</option>').trigger('change');
+        }
+    });
+
+   //lastcategory
+    $('#subcategory_select').on('change', function () {
+        let subCatId = $(this).val();
+        if (subCatId) {
+            $.ajax({
+                url: "{% url 'adminv2:get_lastcategories' %}",
+                data: {
+                    'sub_id': subCatId
+                },
+                success: function (data) {
+                    let options = '<option value="">Select a Last Category</option>';
+                    data.forEach(function (item) {
+                        options += `<option value="${item.id}">${item.name}</option>`;
+                    });
+                    $('#lastcategory_select').html(options).trigger('change');
+                }
+            });
+        } else {
+            $('#lastcategory_select').html('<option value="">Select a Last Category</option>').trigger('change');
+        }
+    });
+
+});
+//percentage
+document.addEventListener('DOMContentLoaded', function () {
+    // Show the percentage input by default
+    document.getElementById('kt_ecommerce_add_product_discount_percentage').classList.remove('d-none');
+	});
+  document.addEventListener('DOMContentLoaded', function () {
+        const radios = document.querySelectorAll('input[name="discount_option"]');
+        const percentageSection = document.getElementById('kt_ecommerce_add_product_discount_percentage');
+        const fixedSection = document.getElementById('kt_ecommerce_add_product_discount_fixed');
+        const discountLabel = document.getElementById('kt_ecommerce_add_product_discount_label');
+        const sliderElement = document.getElementById('kt_ecommerce_add_product_discount_slider');
+
+        noUiSlider.create(sliderElement, {
+            start: 0,
+            step: 1,
+            connect: [true, false],
+            range: {
+                'min': 0,
+                'max': 100
+            }
+        });
+
+  
+        sliderElement.noUiSlider.on('update', function (values, handle) {
+            discountLabel.textContent = Math.round(values[handle]);
+        });
+
+        radios.forEach(function (radio) {
+            radio.addEventListener('change', function () {
+                if (this.value === '1') {
+                    percentageSection.classList.add('d-none');
+                    fixedSection.classList.add('d-none');
+                } else if (this.value === '2') {
+                    percentageSection.classList.remove('d-none');
+                    fixedSection.classList.add('d-none');
+                } else if (this.value === '3') {
+                    percentageSection.classList.add('d-none');
+                    fixedSection.classList.remove('d-none');
+                }
+            });
+        });
+
+        document.querySelector('input[name="discount_option"]:checked').dispatchEvent(new Event('change'));
+    });
+
+ document.addEventListener("DOMContentLoaded", function () {
+        const form = document.querySelector("form");
+        const loader = document.getElementById("fullPageLoader");
+
+        if (form && loader) {
+            form.addEventListener("submit", function () {
+                loader.style.display = "flex";  // Show full-page loader
+            });
+        }
+    });
+</script>
 
 {% endblock page_only_scripts %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

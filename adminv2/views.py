@@ -1,7 +1,7 @@
 from django.views import View
 from django.shortcuts import render,redirect
 from django.contrib import messages
-from dashboard.models import Product, ProductImage, ProductCategory
+from dashboard.models import *
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
@@ -9,6 +9,10 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse   
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.hashers import check_password
+from datetime import date # Import date for date conversion
+from django.db import IntegrityError
+from django.utils.dateparse import parse_date
+
 
 class HomeView(LoginRequiredMixin, UserPassesTestMixin, View):
     login_url = 'adminv2:admin_login'
@@ -28,6 +32,165 @@ class ProductsView(LoginRequiredMixin, UserPassesTestMixin,View):
             product.image_url = image.image.url if image else '/static/adminv2/media/stock/ecommerce/placeholder.png'
 
         return render(request, self.template, {'products': products})
+    def test_func(self):
+        return self.request.user.is_superuser
+    
+class AddproductsView(LoginRequiredMixin, UserPassesTestMixin, View):
+    template = 'adminv2/add-product.html'
+
+    def get(self, request):
+        context = {
+            'categories': ProductCategory.objects.all(),
+            'subcategories': ProductSubCategory.objects.all(),
+            'lastcategories': ProductLastCategory.objects.all(),
+        }
+        return render(request, self.template, context)
+
+    def post(self, request):
+        data = request.POST
+        files = request.FILES
+
+        name = data.get('product_name')
+        description = data.get('product_description')
+        selling_countries = data.get('selling_countries')
+        price = self._parse_float(data.get('price'), "Price")
+        stock_quantity = self._parse_int(data.get('product_quantity'), "Quantity", min_value=0)
+        commission = self._parse_float(data.get('commission_percentage'), "Commission %", 0, 100)
+        offer_percentage = self._parse_float(data.get('offer_percentage'), "Offer %", 0, 100)
+        pcs_per_unit = self._parse_int(data.get('pcs_per_unit'), "Pcs/Unit", min_value=1)
+        min_order_qty = self._parse_int(data.get('min_order_qty'), "Min Order Qty", min_value=1)
+        low_stock_alert = self._parse_int(data.get('low_stock_alert'), "Low Stock", min_value=0)
+        expiration_days = self._parse_int(data.get('expiration_days'), "Expiration Days", min_value=0, required=False)
+        return_time = self._parse_int(data.get('return_time_limit'), "Return Time", min_value=0, required=False)
+        delivery_time = self._parse_int(data.get('delivery_time'), "Delivery Time", min_value=0, required=False)
+        weight = self._parse_float(data.get('weight'), "Weight", min_value=0, required=False)
+
+        manufacture_date = self._parse_date(data.get('manufacture_date'), "Manufacture Date")
+        expiry_date = self._parse_date(data.get('expiry_date'), "Expiry Date")
+        offer_start = self._parse_date(data.get('offer_start'), "Offer Start")
+        offer_end = self._parse_date(data.get('offer_end'), "Offer End")
+
+        if offer_start and offer_end and offer_end < offer_start:
+            messages.error(request, "Offer end date cannot be before start date.")
+
+        if not name:
+            messages.error(request, "Product name is required.")
+        if not description:
+            messages.error(request, "Product description is required.")
+        if price is None:
+            messages.error(request, "Valid price is required.")
+
+        if messages.get_messages(request):
+            return self._render_form_with_context(request, data)
+
+        brand_name = data.get('brand')
+        brand = None
+        if brand_name:
+            brand, _ = Brand.objects.get_or_create(name=brand_name)
+
+        try:
+            product = Product.objects.create(
+                name=name,
+                description=description,
+                price=price,
+                stock_quantity=stock_quantity,
+                brand=brand,
+                category=self._get_object(ProductCategory, data.get('category')),
+                sub_category=self._get_object(ProductSubCategory, data.get('sub_category')),
+                last_category=self._get_object(ProductLastCategory, data.get('last_category')),
+                product_from=data.get('product_from'),
+                warranty=data.get('warranty'),
+                condition=data.get('condition'),
+                manufacture_date=manufacture_date,
+                expiry_date=expiry_date,
+                weight=weight,
+                selling_countries=selling_countries,
+
+                weight_unit=data.get('weight_unit'),
+                barcode=data.get('barcode'),
+                commission_percentage=commission,
+                return_time_limit=return_time,
+                delivery_time=delivery_time,
+                keywords=data.get('keywords'),
+                brochure=files.get('brochure'),
+                supplier_sku=data.get('supplier_sku'),
+                pcs_per_unit=pcs_per_unit,
+                min_order_qty=min_order_qty,
+                low_stock_alert=low_stock_alert,
+                expiration_days=expiration_days,
+                tag=data.get('tag'),
+                offer_percentage=offer_percentage,
+                offer_start=offer_start,
+                offer_end=offer_end,
+                is_active=(data.get('is_active') == 'True'),
+                offer_active=(offer_percentage and offer_start and offer_end and offer_start <= date.today() <= offer_end)
+            )
+
+            main_image = files.get('main_image')
+            if main_image:
+                ProductImage.objects.create(product=product, image=main_image, is_main=True)
+
+            gallery_images = files.getlist('gallery_images')
+            for img in gallery_images:
+                ProductImage.objects.create(product=product, image=img, is_main=False)
+
+            messages.success(request, "Product added successfully.")
+            return redirect('adminv2:products_list')
+
+        except IntegrityError as e:
+            messages.error(request, f"Integrity error: {e}")
+        except Exception as e:
+            messages.error(request, f"Error: {e}")
+
+        return self._render_form_with_context(request, data)
+
+    def _parse_float(self, val, field, min_value=None, max_value=None, required=True):
+        try:
+            f = float(val)
+            if (min_value is not None and f < min_value) or (max_value is not None and f > max_value):
+                raise ValueError
+            return f
+        except:
+            if required or val:
+                messages.error(self.request, f"Invalid {field}.")
+            return None
+
+    def _parse_int(self, val, field, min_value=None, required=True):
+        try:
+            i = int(val)
+            if min_value is not None and i < min_value:
+                raise ValueError
+            return i
+        except:
+            if required or val:
+                messages.error(self.request, f"Invalid {field}.")
+            return None
+
+    def _parse_date(self, val, field):
+        try:
+            return parse_date(val)
+        except:
+            if val:
+                messages.error(self.request, f"Invalid {field}. Format must be YYYY-MM-DD.")
+            return None
+
+    def _get_object(self, model, pk):
+        if not pk:
+            return None
+        try:
+            return model.objects.get(id=pk)
+        except model.DoesNotExist:
+            messages.error(self.request, f"{model.__name__} not found.")
+            return None
+
+    def _render_form_with_context(self, request, data):
+        return render(request, self.template, {
+            'categories': ProductCategory.objects.all(),
+            'subcategories': ProductSubCategory.objects.all(),
+            'lastcategories': ProductLastCategory.objects.all(),
+            **data.dict()
+        })
+
     def test_func(self):
         return self.request.user.is_superuser
     
@@ -88,12 +251,6 @@ class DeleteProductView(LoginRequiredMixin, UserPassesTestMixin,View):
     def test_func(self):
         return self.request.user.is_superuser
 
-class EditcategoryView(LoginRequiredMixin, UserPassesTestMixin,View):
-    def get(self, request):
-        return render(request, 'adminv2/edit-category.html')
-    def test_func(self):
-        return self.request.user.is_superuser
-
 class CreateProductCategoryView(View):
     def post(self, request):
         name = request.POST.get('name')
@@ -109,83 +266,53 @@ class CreateProductCategoryView(View):
         messages.success(request, f"Category '{name}' created successfully.")
         return redirect('adminv2:add_product')
 
-
-class AddproductsView(LoginRequiredMixin, UserPassesTestMixin,View):
-    template = 'adminv2/add-product.html'
-
-    def get(self, request):
-        categories = ProductCategory.objects.all()
-
-        context = {
-            'categories': categories
-        }
-        return render(request, self.template, context)
-
+class CreateProductSubCategoryView(View):
     def post(self, request):
-        name = request.POST.get('product_name')
-        description = request.POST.get('product_description')
-        price = request.POST.get('price')
-        avatar = request.FILES.get('avatar')
+        name = request.POST.get('name')
         category_id = request.POST.get('category')
-        product_quantity = request.POST.get('product_quantity', 0)
-
-
-        try:
-            price = float(price)
-        except (TypeError, ValueError):
-            messages.error(request, "Please enter a valid number for price.")
-            return render(request, self.template)
-
-        if not name or not description:
-            messages.error(request, "All fields are required.")
-            return render(request, self.template)
-
-        try:
-            category = ProductCategory.objects.get(id=category_id)
-        except Exception as e:
-            category = None
-
-
-        try:
-            product = Product.objects.create(
+        if not name or not category_id:
+            messages.error(request, "Sub-category name and parent category are required.")
+        elif ProductSubCategory.objects.filter(name__iexact=name).exists():
+            messages.warning(request, "This sub-category already exists.")
+        else:
+            ProductSubCategory.objects.create(
                 name=name,
-                description=description,
-                price=price,
-                category=category,
-                quantity=product_quantity
+                category_id=category_id
             )
-            if avatar:
-                ProductImage.objects.create(
-                    product=product,
-                    image=avatar
-                )
-
-            messages.success(request, "Product added successfully!")
-            return redirect('adminv2:products_list')
-
-        except Exception as e:
-            messages.error(request, f"Failed to save product: {e}")
-            return render(request, self.template)
-        
-    def test_func(self):
-        return self.request.user.is_superuser
-
-
-class AddcategoryView(LoginRequiredMixin, UserPassesTestMixin, View):
-    template = 'adminv2/add-category.html'
-
-    def get(self, request):
-        return render(request, self.template)
+            messages.success(request, f"Sub-category '{name}' created successfully.")
+        return redirect('adminv2:add_product')
     
-    def test_func(self):
-        return self.request.user.is_superuser
-
-class CategoryView(LoginRequiredMixin, UserPassesTestMixin,View):
-    def get(self, request):
-        return render(request, 'adminv2/categories.html')  
+class CreateProductLastCategoryView(View):
+    def post(self, request):
+        name = request.POST.get('name')
+        sub_category_id = request.POST.get('sub_category')
+        if not name or not sub_category_id:
+            messages.error(request, "Last category name and parent sub-category are required.")
+        elif ProductLastCategory.objects.filter(name__iexact=name).exists():
+            messages.warning(request, "This last category already exists.")
+        else:
+            ProductLastCategory.objects.create(
+                name=name,
+                sub_category_id=sub_category_id
+            )
+            messages.success(request, f"Last category '{name}' created successfully.")
+        return redirect('adminv2:add_product')
     
-    def test_func(self):
-        return self.request.user.is_superuser
+class GetSubcategoriesView(View):
+    def get(self, request, *args, **kwargs):
+        category_id = request.GET.get('category_id')
+        if category_id:
+            subcats = ProductSubCategory.objects.filter(category_id=category_id).values('id', 'name')
+            return JsonResponse(list(subcats), safe=False)
+        return JsonResponse([], safe=False)
+
+class GetLastCategoriesView(View):
+    def get(self, request, *args, **kwargs):
+        sub_id = request.GET.get('sub_id')
+        if sub_id:
+            lastcats = ProductLastCategory.objects.filter(sub_category_id=sub_id).values('id', 'name')
+            return JsonResponse(list(lastcats), safe=False)
+        return JsonResponse([], safe=False)
 
 class AdminloginView(View):
     def get(self, request):
@@ -211,7 +338,6 @@ class AdminloginView(View):
             messages.error(request, "User with this email does not exist.")
 
         return render(request, 'adminv2/sign-in.html')
-
 
 class UserProfileView(View):
     def get(self, request):
