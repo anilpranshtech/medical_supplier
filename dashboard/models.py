@@ -231,8 +231,39 @@ class Orders(models.Model):
     def __str__(self):
         return f"Order #{self.pk} - {self.product.name} x {self.quantity}"
 
+class WishlistProduct(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='wishlists')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='wishlisted_by')
+    quantity = models.PositiveIntegerField(default=1)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'product')
+        ordering = ['-created_at']
+        verbose_name = 'Wishlist Item'
+        verbose_name_plural = 'Wishlist Items'
+
+    def __str__(self):
+        return f"{self.user} - {self.product.name}"
 
 
+class CartProduct(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='cart_items')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='cart_items')
+    quantity = models.PositiveIntegerField(default=1)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'product')
+        ordering = ['-created_at']
+        verbose_name = 'Cart Item'
+        verbose_name_plural = 'Cart Items'
+
+    def __str__(self):
+        return f"{self.quantity} x {self.product.name} for {self.user}"
+
+    def get_total_price(self):
+        return self.quantity * self.product.price
 
 
 

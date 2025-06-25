@@ -9,7 +9,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse   
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.hashers import check_password
-from datetime import date # Import date for date conversion
+from datetime import date, timezone, datetime  # Import date for date conversion
 from django.db import IntegrityError
 from django.utils.dateparse import parse_date
 
@@ -386,3 +386,56 @@ class AdminSettingView(View):
                 messages.success(request, "Password updated successfully.")
 
             return redirect('adminv2:profile_setting')
+
+class WishlistProductView(LoginRequiredMixin,View):
+    template = 'adminv2/wishlist_product.html'
+
+    def get(self,request, *args,**kwargs):
+
+        wishlist = WishlistProduct.objects.all()
+
+        context = {
+            'wishlist_product': wishlist
+        }
+
+        return render(self.request, self.template, context)
+
+    def post(self, request, *args, **kwargs):
+        mode = self.request.POST.get('mode')
+        product_id = self.request.POST.get('product_id')
+
+        if mode == 'add-to-card':
+            try:
+                item = get_object_or_404(WishlistProduct, id=product_id)
+
+                CartProduct.objects.create(
+                    user=item.user,
+                    product=item.product,
+                    quantity=item.quantity,
+                    created_at=datetime.now()
+                )
+
+                item.delete()
+
+                messages.success(request, "Added to card")
+                return redirect('adminv2:wishlist_products_list')
+
+            except Exception as e:
+                print("Exception as e ----", e)
+                messages.error(request, "Faild to Add in cart, please try again")
+                return redirect('adminv2:wishlist_products_list')
+
+        if mode == 'remove-wishlist':
+            try:
+                item = get_object_or_404(WishlistProduct, id=product_id)
+                item.delete()
+
+                messages.success(request, "Removed from Wishlist")
+                return redirect('adminv2:wishlist_products_list')
+
+            except Exception as e:
+                messages.error(request, "Faild to remove, please try again")
+                return redirect('adminv2:wishlist_products_list')
+
+
+

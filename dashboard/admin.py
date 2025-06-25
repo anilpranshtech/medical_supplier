@@ -45,3 +45,11 @@ admin.site.register(Brand)
 
 
 admin.site.register(Orders)
+
+@admin.register(WishlistProduct)
+class ProductProfileAdmin(admin.ModelAdmin):
+    list_display = ('user', 'product', 'quantity', 'created_at')
+
+@admin.register(CartProduct)
+class ProductProfileAdmin(admin.ModelAdmin):
+    list_display = ('user', 'product', 'quantity', 'created_at')

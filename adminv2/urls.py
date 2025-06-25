@@ -18,6 +18,8 @@ urlpatterns = [
     path('ajax/get-subcategories/', GetSubcategoriesView.as_view(), name='get_subcategories'),
     path('ajax/get-lastcategories/', GetLastCategoriesView.as_view(), name='get_lastcategories'),
 
+    # Wishlist
+    path('wishlist/products', WishlistProductView.as_view(), name='wishlist_products_list'),
 
     path('adminv2/login/', AdminloginView.as_view(), name='admin_login'),
     path('user-profile/', UserProfileView.as_view(), name='user_profile'),
