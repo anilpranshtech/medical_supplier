@@ -57,15 +57,16 @@
 
                      <div class="card-body pt-0">
 
-                         <table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_ecommerce_products_table">
+                         <table class="table align-middle table-row-dashed fs-6 gy-5"  >
                             <thead>
                                 <tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
                                     <th class="text-start min-w-150px ps-5">Product</th>
                                     <th class="text-center min-w-100px">Category</th>
+                                    <th class="text-center min-w-100px">Sub Category</th>
+                                    <th class="text-center min-w-100px">Last Category</th>
                                     <th class="text-center min-w-100px">Price</th>
                                     <th class="text-center min-w-70px">Qty</th>
                                     <th class="text-center min-w-100px">Details</th>
-                                    <th class="text-center min-w-100px">Ratings</th>
                                     <th class="text-center min-w-100px">Status</th>
                                     <th class="text-center min-w-70px">Actions</th>
                                 </tr>
@@ -97,24 +98,27 @@
                                         </td>
 
                                         <td class="text-center pe-0">
-                                            <span class="fw-bold ms-3"><span>&#8377;</span>{{ product.price }}</span>
+                                            <span class="fw-bold"> {% if product.sub_category.name %}{{ product.sub_category.name }} {% else %} --- {% endif %}</span>
                                         </td>
+
                                         <td class="text-center pe-0">
-                                            <span class="fw-bold ms-3"> {% if product.quantity %}{{product.quantity}} {% else %} Not available{% endif %}</span>
+                                            <span class="fw-bold"> {% if product.last_category.name %}{{ product.last_category.name }} {% else %} --- {% endif %}</span>
+                                        </td>
+
+                                        <td class="text-center pe-0">
+                                            <span class="text-success">  {{ product.price }} </span>
+                                        </td>
+
+                                        <td class="text-center pe-0">
+                                            {% if product.stock_quantity %}
+                                            <span class="text-primary">{{product.stock_quantity}} </span>
+                                            {% else %}
+                                              <span class="text-danger">  Not available </span>
+                                            {% endif %}
                                         </td>
 
                                         <td class="text-center pe-0">
                                             {{ product.description|truncatechars:30 }}
-                                        </td>
-
-                                        <td class="text-center pe-0">
-                                            <div class="rating justify-content-center">
-                                                {% for i in "12345" %}
-                                                    <div class="rating-label {% if forloop.counter <= 4 %}checked{% endif %}">
-                                                        <i class="far fa-star fs-6"></i>
-                                                    </div>
-                                                {% endfor %}
-                                            </div>
                                         </td>
 
                                         <td class="text-center pe-0">

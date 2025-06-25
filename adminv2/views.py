@@ -202,7 +202,7 @@ class EditproductsView(LoginRequiredMixin, UserPassesTestMixin,View):
         product_image = ProductImage.objects.filter(product=product).first()
         categories = ProductCategory.objects.all()
         product_category = product.category
-        product_quantity = product.quantity
+        product_quantity = product.stock_quantity
         context = {
             'product': product,
             'product_image': product_image,
@@ -217,7 +217,7 @@ class EditproductsView(LoginRequiredMixin, UserPassesTestMixin,View):
         product.name = request.POST.get('product_name')
         product.description = request.POST.get('description')
         product.price = request.POST.get('price')
-        product.quantity = request.POST.get('product_quantity')
+        product.stock_quantity = request.POST.get('product_quantity')
 
         category_id = request.POST.get('category')
         if category_id:
@@ -279,6 +279,7 @@ class CreateProductSubCategoryView(View):
                 name=name,
                 category_id=category_id
             )
+
             messages.success(request, f"Sub-category '{name}' created successfully.")
         return redirect('adminv2:add_product')
     
@@ -345,10 +346,7 @@ class UserProfileView(View):
 class UserOverView(View):
     def get(self, request):
         return render(request, 'adminv2/overview.html')
-class AdminSettingView(View):
-    def get(self, request):
-     
-        return render(request, 'adminv2/settings.html')
+
 
 class AdminSettingView(View):
     def get(self, request):
