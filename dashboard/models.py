@@ -115,29 +115,17 @@ class Brand(models.Model):
 
 
 class Product(models.Model):
-    # Category hierarchy
     category = models.ForeignKey(ProductCategory, on_delete=models.SET_NULL, null=True)
     sub_category = models.ForeignKey(ProductSubCategory, on_delete=models.SET_NULL, null=True)
     last_category = models.ForeignKey(ProductLastCategory, on_delete=models.SET_NULL, null=True)
-
-    # Basic Info
     name = models.CharField(max_length=255)
     brand = models.ForeignKey(Brand, on_delete=models.SET_NULL, null=True, blank=True)
     product_from = models.CharField(max_length=100, null=True, blank=True, help_text="Country of origin")
     description = models.TextField(blank=True)
     keywords = models.CharField(max_length=255, help_text="Comma-separated keywords", blank=True)
-
-    # Countries sold in
     all_countries = models.BooleanField(default=False)
     selling_countries = models.CharField(max_length=1000, blank=True,help_text="Comma-separated country names (e.g., India, USA, UK)")
-
-
-    # Uploads
     brochure = models.FileField(upload_to='product_brochures/', null=True, blank=True)
-
-    # Images handled separately (see below)
-
-    # B2B / Pricing
     supplier_sku = models.CharField(max_length=100, blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     commission_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0.0)
@@ -145,37 +133,25 @@ class Product(models.Model):
     weight_unit = models.CharField(max_length=10, choices=[('gm', 'Gram'), ('kg', 'Kilogram'), ('cm', 'Centimeter'), ('ltr', 'Liter')], default='gm')
     stock_quantity = models.IntegerField(default=0)
     pcs_per_unit = models.IntegerField(default=1)
-
-    # Purchase options
     show_add_to_cart = models.BooleanField(default=False)
     show_rfq = models.BooleanField(default=False)
-
     min_order_qty = models.IntegerField(default=1)
     low_stock_alert = models.IntegerField(default=5)
-
-    # Dates
     return_time_limit = models.PositiveIntegerField(help_text="Days", null=True, blank=True)
     delivery_time = models.PositiveIntegerField(help_text="Days", null=True, blank=True)
     expiry_date = models.DateField(null=True, blank=True)
     manufacture_date = models.DateField(null=True, blank=True)
     expiration_days = models.PositiveIntegerField(null=True, blank=True)
-
-    # Barcode & Offers
     barcode = models.CharField(max_length=100, blank=True)
     offer_percentage = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     offer_start = models.DateField(null=True, blank=True)
     offer_end = models.DateField(null=True, blank=True)
     offer_active = models.BooleanField(default=False)
-
-    # Admin status
     is_active = models.BooleanField(default=False)
     ask_admin_to_publish = models.BooleanField(default=False)
-
-    # Product status
     condition = models.CharField(max_length=20, choices=[('new', 'New'), ('used', 'Used')], default='new')
     tag = models.CharField(max_length=30, choices=[('recent', 'Recently Arrived'), ('popular', 'Most Wanted'), ('none', 'None')], default='none')
     warranty = models.CharField(max_length=20, choices=[('none', 'None'), ('1yr', '1 Year'), ('2yr', '2 Years')], default='none')
-
     created_by = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
