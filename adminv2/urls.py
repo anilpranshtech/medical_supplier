@@ -29,8 +29,11 @@ urlpatterns = [
 
 
     path('adminv2/login/', AdminloginView.as_view(), name='admin_login'),
+
+    # user profile
     path('user-profile/', UserProfileView.as_view(), name='user_profile'),
     path('overview/', UserOverView.as_view(), name='overview_list'),
     path('settings/', AdminSettingView.as_view(), name='profile_setting'),
-    
+    path('company/details', CompanyDetailsView.as_view(), name='company_details'),
+
 ]
