@@ -1,0 +1,507 @@
+{% load static %}
+
+<style>
+    .kt-menu-dropdown {
+        display: none;
+    }
+    .group:hover .kt-menu-dropdown {
+        display: block !important;
+    }
+    .kt-menu-item[data-kt-menu-item-toggle="dropdown"] .kt-menu-dropdown {
+        position: absolute;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.375rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        z-index: 50;
+    }
+    @media (max-width: 1024px) {
+        .kt-menu-item[data-kt-menu-item-toggle="dropdown"] .kt-menu-dropdown {
+            position: static;
+            display: none;
+            width: 100%;
+        }
+        .kt-menu-item[data-kt-menu-item-toggle="dropdown"].active .kt-menu-dropdown {
+            display: block;
+        }
+    }
+</style>
+
+<div class="w-full bg-background dark:bg-gray-900 border-b border-border z-20 fixed top-0">
+    <!-- Top Header -->
+    <header class="flex items-center justify-between h-[70px] px-4 lg:px-6 transition-[height] shrink-0 in-data-[sticky-header=on]:pe-[var(--removed-body-scroll-bar-size,0px)] pl-5">
+        <!-- Header Left: Logo -->
+        <div class="flex items-center gap-5 pl-5">
+            <a href="https://keenthemes.com/metronic/tailwind/demo10/index.html">
+                <img class="size-8"
+                     src="https://keenthemes.com/static/metronic/tailwind/dist/assets/media/app/mini-logo-circle-success.svg"
+                     alt="Logo"/>
+            </a> Medical-Suppliments
+        </div>
+
+        <!-- Header Right: Actions and User Profile -->
+        <div class="flex items-center gap-5">
+
+            <!-- Search Button -->
+            <button class="kt-btn kt-btn-icon kt-btn-secondary text-white rounded-full size-8 flex items-center justify-center"
+                    data-kt-modal-toggle="#search_modal">
+                <i class="ki-filled ki-magnifier"></i>
+            </button>
+
+            <!-- Notifications Button -->
+            <button class="kt-btn kt-btn-ghost kt-btn-icon size-8 hover:bg-background hover:[&_i]:text-primary"
+                    data-kt-drawer-toggle="#notifications_drawer">
+                <i class="ki-filled ki-notification-status text-lg"></i>
+            </button>
+
+            <!-- User Profile Dropdown -->
+            <div class="relative group" data-kt-dropdown="true" data-kt-dropdown-offset="10px, 10px"
+                 data-kt-dropdown-offset-rtl="-20px, 10px" data-kt-dropdown-placement="bottom-end"
+                 data-kt-dropdown-trigger="click">
+                <div class="cursor-pointer" data-kt-dropdown-toggle="true">
+                    <img alt="User Avatar" class="size-9 rounded-full border-2 border-mono/25"
+                         src="{% static 'metronic/tailwind/dist/assets/media/avatars/gray/5.png' %}"/>
+                </div>
+                <div class="kt-dropdown-menu w-[250px] bg-background dark:bg-gray-800 border border-border rounded-lg shadow-lg py-2 z-10 hidden group-[data-kt-dropdown-toggle='true']:block"
+                     data-kt-dropdown-menu="true">
+                    <div class="flex items-center justify-between px-2.5 py-1.5 gap-1.5">
+                        <div class="flex items-center gap-2">
+                            <img alt="User Avatar" class="size-9 rounded-full border-2 border-green-500"
+                                 src="{% static 'metronic/tailwind/dist/assets/media/avatars/300-2.png' %}"/>
+                            <div class="flex flex-col gap-1.5">
+                                <span class="text-sm text-foreground font-semibold">Cody Fisher</span>
+                                <a class="text-xs text-secondary-foreground hover:text-primary font-medium"
+                                   href="https://keenthemes.com/metronic/tailwind/demo10/account/home/get-started">
+                                    c.fisher@gmail.com
+                                </a>
+                            </div>
+                        </div>
+                        <span class="kt-badge kt-badge-sm kt-badge-primary kt-badge-outline">Pro</span>
+                    </div>
+                    <ul class="kt-dropdown-menu-sub">
+                        <li>
+                            <div class="kt-dropdown-menu-separator border-t border-border my-1"></div>
+                        </li>
+                        <li>
+                            <a class="kt-dropdown-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary"
+                               href="https://keenthemes.com/metronic/tailwind/demo10/account/home/user-profile">
+                                <i class="ki-filled ki-profile-circle"></i> My Profile
+                            </a>
+                        </li>
+                        <li class="relative group" data-kt-dropdown="true" data-kt-dropdown-placement="right-start"
+                            data-kt-dropdown-trigger="hover">
+                            <button class="kt-dropdown-menu-toggle flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-secondary"
+                                    data-kt-dropdown-toggle="true">
+                                <i class="ki-filled ki-setting-2"></i> My Account
+                                <span class="kt-dropdown-menu-indicator ml-auto">
+                                        <i class="ki-filled ki-right text-xs"></i>
+                                    </span>
+                            </button>
+                            <div class="kt-dropdown-menu w-[220px] bg-background dark:bg-gray-800 border border-border rounded-lg shadow-lg py-2 hidden absolute left-full top-0 ml-1 group-hover:block"
+                                 data-kt-dropdown-menu="true">
+                                <ul class="kt-dropdown-menu-sub">
+                                    <li>
+                                        <a class="kt-dropdown-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary"
+                                           href="https://keenthemes.com/metronic/tailwind/demo10/account/home/user-profile">
+                                            <i class="ki-filled ki-some-files"></i> My Profile
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="kt-dropdown-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary"
+                                           href="#">
+                                            <i class="ki-filled ki-icon"></i> Billing
+                                            <span class="ml-auto" data-kt-tooltip="true"
+                                                  data-kt-tooltip-placement="top">
+                                                    <i class="ki-filled ki-information-2 text-base text-muted-foreground"></i>
+                                                    <span class="kt-tooltip">Payment and subscription info</span>
+                                                </span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="kt-dropdown-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary"
+                                           href="https://keenthemes.com/metronic/tailwind/demo10/account/security/overview">
+                                            <i class="ki-filled ki-medal-star"></i> Security
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <div class="kt-dropdown-menu-separator border-t border-border my-1"></div>
+                                    </li>
+                                    <li>
+                                        <a class="kt-dropdown-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary"
+                                           href="https://keenthemes.com/metronic/tailwind/demo10/account/security/overview">
+                                            <i class="ki-filled ki-shield-tick"></i> Notifications
+                                            <input checked class="ml-auto kt-switch" name="check" type="checkbox"
+                                                   value="1"/>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="kt-dropdown-menu-separator border-t border-border my-1"></div>
+                        </li>
+                    </ul>
+                    <div class="px-2.5 pt-1.5 mb-2.5 flex flex-col gap-3.5">
+                        <div class="flex items-center justify-between">
+                                <span class="flex items-center gap-2">
+                                    <i class="ki-filled ki-moon text-base text-muted-foreground"></i>
+                                    <span class="font-medium text-2sm">Dark Mode</span>
+                                </span>
+                            <input class="kt-switch" data-kt-theme-switch-state="dark"
+                                   data-kt-theme-switch-toggle="true" name="check" type="checkbox" value="1"/>
+                        </div>
+                        <a class="kt-btn kt-btn-outline justify-center w-full"
+                           href="https://keenthemes.com/metronic/tailwind/demo10/authentication/classic/sign-in">
+                            Log out
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Logout Button -->
+            <a class="kt-btn kt-btn-ghost kt-btn-icon size-8 hover:bg-background hover:[&_i]:text-primary"
+               href="https://keenthemes.com/metronic/tailwind/demo10/authentication/classic/sign-in">
+                <i class="ki-filled ki-exit-right"></i>
+            </a>
+        </div>
+    </header>
+
+    <!-- Bottom Header -->
+    <header class="flex items-center h-[80px] px-4 lg:px-6 transition-[height] shrink-0 in-data-[sticky-header=on]:pe-[var(--removed-body-scroll-bar-size,0px)]">
+        <div class="container flex justify-center items-center gap-3.5 mb-4">
+            <div class="flex items-center gap-10">
+                <!-- Home Link -->
+                <a class="flex items-center gap-2 px-4 py-2 hover:bg-secondary" href="#">
+                    <i class="ki-filled ki-home"></i>
+                    <span class="text-sm text-foreground hover:text-mono">Home</span>
+                </a>
+
+                <!-- Search Results Dropdown -->
+                <div class="kt-menu-item relative group" data-kt-menu-item-toggle="dropdown"
+                     data-kt-menu-item-trigger="hover">
+                    <a class="kt-menu-link gap-2 px-4 py-2 hover:bg-secondary" href="search-results-grid.html">
+                        <i class="ki-filled ki-magnifier"></i>
+                        <span class="text-sm text-foreground hover:text-mono">Search Results</span>
+                    </a>
+                    <div class="kt-menu-dropdown absolute w-48 bg-background dark:bg-gray-800 border border-border rounded-lg shadow-lg py-2 z-10 hidden group-hover:block mt-5 py-5">
+                        <div class="kt-menu-item">
+                            <a class="kt-menu-link px-4 py-2 hover:bg-secondary" href="search-results-grid.html">
+                                <i class="ki-filled ki-grid"></i>
+                                <span class="text-sm text-foreground hover:text-mono">Search Results - Grid</span>
+                            </a>
+                        </div>
+                        <div class="kt-menu-item">
+                            <a class="kt-menu-link px-4 py-2 hover:bg-secondary" href="search-results-list.html">
+                                <i class="ki-filled ki-list"></i>
+                                <span class="text-sm text-foreground hover:text-mono">Search Results - List</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Overlays Dropdown -->
+                <div class="kt-menu-item relative group" data-kt-menu-item-toggle="dropdown"
+                     data-kt-menu-item-trigger="hover">
+                    <a class="kt-menu-link gap-2 px-4 py-2 hover:bg-secondary" href="#">
+                        <i class="ki-filled ki-layer"></i>
+                        <span class="text-sm text-foreground hover:text-mono">Overlays</span>
+                    </a>
+                    <div class="kt-menu-dropdown absolute w-48 bg-background dark:bg-gray-800 border border-border rounded-lg shadow-lg py-2 z-10 hidden group-hover:block mt-5 py-5">
+                        <div class="kt-menu-item">
+                            <a class="kt-menu-link px-4 py-2 hover:bg-secondary" href="product-details.html">
+                                <i class="ki-filled ki-information"></i>
+                                <span class="text-sm text-foreground hover:text-mono">Product Details</span>
+                            </a>
+                        </div>
+                        <div class="kt-menu-item">
+                            <a class="kt-menu-link px-4 py-2 hover:bg-secondary" href="shopping-cart.html">
+                                <i class="ki-filled ki-basket"></i>
+                                <span class="text-sm text-foreground hover:text-mono">Shopping Cart</span>
+                            </a>
+                        </div>
+                        <div class="kt-menu-item">
+                            <a class="kt-menu-link px-4 py-2 hover:bg-secondary" href="wishlist.html">
+                                <i class="ki-filled ki-heart"></i>
+                                <span class="text-sm text-foreground hover:text-mono">Wishlist</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Checkout Dropdown -->
+                <div class="kt-menu-item relative group" data-kt-menu-item-toggle="dropdown"
+                     data-kt-menu-item-trigger="hover">
+                    <a class="kt-menu-link gap-2 px-4 py-2 hover:bg-secondary" href="#">
+                        <i class="ki-filled ki-wallet"></i>
+                        <span class="text-sm text-foreground hover:text-mono">Checkout</span>
+                    </a>
+                    <div class="kt-menu-dropdown absolute w-48 bg-background dark:bg-gray-800 border border-border rounded-lg shadow-lg py-2 z-10 hidden group-hover:block mt-5 py-5">
+                        <div class="kt-menu-item">
+                            <a class="kt-menu-link px-4 py-2 hover:bg-secondary" href="checkout/order-summary.html">
+                                <i class="ki-filled ki-notepad"></i>
+                                <span class="text-sm text-foreground hover:text-mono">Order Summary</span>
+                            </a>
+                        </div>
+                        <div class="kt-menu-item">
+                            <a class="kt-menu-link px-4 py-2 hover:bg-secondary" href="checkout/shipping-info.html">
+                                <i class="ki-filled ki-delivery"></i>
+                                <span class="text-sm text-foreground hover:text-mono">Shipping Info</span>
+                            </a>
+                        </div>
+                        <div class="kt-menu-item">
+                            <a class="kt-menu-link px-4 py-2 hover:bg-secondary"
+                               href="checkout/payment-method.html">
+                                <i class="ki-filled ki-credit-card"></i>
+                                <span class="text-sm text-foreground hover:text-mono">Payment Method</span>
+                            </a>
+                        </div>
+                        <div class="kt-menu-item">
+                            <a class="kt-menu-link px-4 py-2 hover:bg-secondary" href="checkout/order-placed.html">
+                                <i class="ki-filled ki-check-circle"></i>
+                                <span class="text-sm text-foreground hover:text-mono">Order Placed</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- My Orders -->
+                <div class="kt-menu-item relative">
+                    <a class="kt-menu-link gap-2 px-4 py-2 hover:bg-secondary" href="my-orders.html">
+                        <i class="ki-filled ki-package"></i>
+                        <span class="text-sm text-foreground hover:text-mono">My Orders</span>
+                    </a>
+                </div>
+
+                <!-- Order Receipt -->
+                <div class="kt-menu-item relative">
+                    <a class="kt-menu-link gap-2 px-4 py-2 hover:bg-secondary" href="order-receipt.html">
+                        <i class="ki-filled ki-receipt"></i>
+                        <span class="text-sm text-foreground hover:text-mono">Order Receipt</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Notifications Drawer -->
+    <div class="hidden kt-drawer kt-drawer-end card flex-col max-w-[90%] w-[450px] top-5 bottom-5 end-5 rounded-xl border border-border"
+         data-kt-drawer="true" data-kt-drawer-container="body" id="notifications_drawer">
+        <div class="flex items-center justify-between gap-2.5 text-sm text-mono font-semibold px-5 py-2.5 border-b border-b-border"
+             id="notifications_header">
+            Notifications
+            <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-dim shrink-0" data-kt-drawer-dismiss="true">
+                <i class="ki-filled ki-cross"></i>
+            </button>
+        </div>
+        <div class="kt-tabs kt-tabs-line justify-between px-5 mb-2" data-kt-tabs="true" id="notifications_tabs">
+            <div class="flex items-center gap-5">
+                <button class="kt-tab-toggle py-3 active" data-kt-tab-toggle="#notifications_tab_all">All</button>
+                <button class="kt-tab-toggle py-3 relative" data-kt-tab-toggle="#notifications_tab_inbox">
+                    Inbox
+                    <span class="rounded-full bg-green-500 size-[5px] absolute top-2 rtl:start-0 end-0 transform translate-y-1/2 translate-x-full"></span>
+                </button>
+                <button class="kt-tab-toggle py-3" data-kt-tab-toggle="#notifications_tab_team">Team</button>
+                <button class="kt-tab-toggle py-3" data-kt-tab-toggle="#notifications_tab_following">Following
+                </button>
+            </div>
+            <div class="kt-menu" data-kt-menu="true">
+                <div class="kt-menu-item" data-kt-menu-item-offset="0,10px" data-kt-menu-item-placement="bottom-end"
+                     data-kt-menu-item-placement-rtl="bottom-start" data-kt-menu-item-toggle="dropdown"
+                     data-kt-menu-item-trigger="click|lg:hover">
+                    <button class="kt-menu-toggle kt-btn kt-btn-icon kt-btn-ghost">
+                        <i class="ki-filled ki-setting-2"></i>
+                    </button>
+                    <div class="kt-menu-dropdown kt-menu-default w-full max-w-[175px]" data-kt-menu-dismiss="true">
+                        <div class="kt-menu-item">
+                            <a class="kt-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary" href="#">
+                                <i class="ki-filled ki-document"></i>
+                                <span class="kt-menu-title">View</span>
+                            </a>
+                        </div>
+                        <div class="kt-menu-item" data-kt-menu-item-offset="-15px, 0"
+                             data-kt-menu-item-placement="right-start" data-kt-menu-item-toggle="dropdown"
+                             data-kt-menu-item-trigger="click|lg:hover">
+                            <div class="kt-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary">
+                                <i class="ki-filled ki-notification-status"></i>
+                                <span class="kt-menu-title">Export</span>
+                                <span class="kt-menu-arrow">
+                                        <i class="ki-filled ki-right text-xs rtl:transform rtl:rotate-180"></i>
+                                    </span>
+                            </div>
+                            <div class="kt-menu-dropdown kt-menu-default w-full max-w-[175px]">
+                                <div class="kt-menu-item">
+                                    <a class="kt-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary"
+                                       href="https://keenthemes.com/metronic/tailwind/demo10/account/home/settings-sidebar">
+                                        <i class="ki-filled ki-sms"></i>
+                                        <span class="kt-menu-title">Email</span>
+                                    </a>
+                                </div>
+                                <div class="kt-menu-item">
+                                    <a class="kt-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary"
+                                       href="https://keenthemes.com/metronic/tailwind/demo10/account/home/settings-sidebar">
+                                        <i class="ki-filled ki-message-notify"></i>
+                                        <span class="kt-menu-title">SMS</span>
+                                    </a>
+                                </div>
+                                <div class="kt-menu-item">
+                                    <a class="kt-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary"
+                                       href="https://keenthemes.com/metronic/tailwind/demo10/account/home/settings-sidebar">
+                                        <i class="ki-filled ki-notification-status"></i>
+                                        <span class="kt-menu-title">Push</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="kt-menu-item">
+                            <a class="kt-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary" href="#">
+                                <i class="ki-filled ki-pencil"></i>
+                                <span class="kt-menu-title">Edit</span>
+                            </a>
+                        </div>
+                        <div class="kt-menu-item">
+                            <a class="kt-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary" href="#">
+                                <i class="ki-filled ki-trash"></i>
+                                <span class="kt-menu-title">Delete</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="grow flex flex-col" id="notifications_tab_all">
+            <div class="grow kt-scrollable-y-auto" data-kt-scrollable="true"
+                 data-kt-scrollable-dependencies="#header" data-kt-scrollable-max-height="auto"
+                 data-kt-scrollable-offset="150px">
+                <div class="grow flex flex-col gap-5 pt-3 pb-4 divider-y divider-border">
+                    <div class="flex grow gap-2.5 px-5">
+                        <div class="kt-avatar size-8">
+                            <div class="kt-avatar-image">
+                                <img alt="avatar"
+                                     src="{% static 'metronic/tailwind/dist/assets/media/avatars/300-4.png' %}"/>
+                            </div>
+                            <div class="kt-avatar-indicator -end-2 -bottom-2">
+                                <div class="kt-avatar-status kt-avatar-status-online size-2.5"></div>
+                            </div>
+                        </div>
+                        <div class="flex flex-col gap-3.5">
+                            <div class="flex flex-col gap-1">
+                                <div class="text-sm font-medium">
+                                    <a class="hover:text-primary text-mono font-semibold" href="#">Joe Lincoln</a>
+                                    <span class="text-secondary-foreground"> mentioned you in </span>
+                                    <a class="hover:text-primary text-primary" href="#">Latest Trends</a>
+                                    <span class="text-secondary-foreground"> topic</span>
+                                </div>
+                                <span class="flex items-center text-xs font-medium text-muted-foreground">
+                                        18 mins ago
+                                        <span class="rounded-full size-1 bg-mono/30 mx-1.5"></span>
+                                        Web Design 2024
+                                    </span>
+                            </div>
+                            <div class="kt-card shadow-none flex flex-col gap-2.5 p-3.5 rounded-lg bg-muted/70">
+                                <div class="text-sm font-semibold text-secondary-foreground mb-px">
+                                    <a class="hover:text-primary text-mono font-semibold" href="#">@Cody</a>
+                                    <span class="text-secondary-foreground font-medium">
+                                            For an expert opinion, check out what Mike has to say on this topic!
+                                        </span>
+                                </div>
+                                <div class="kt-input">
+                                    <input placeholder="Reply" type="text" value=""/>
+                                    <button class="kt-btn kt-btn-ghost kt-btn-icon size-6 -me-1.5">
+                                        <i class="ki-filled ki-picture"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="border-b border-b-border"></div>
+            <div class="grid grid-cols-2 p-5 gap-2.5" id="notifications_all_footer">
+                <button class="kt-btn kt-btn-outline justify-center">Archive all</button>
+                <button class="kt-btn kt-btn-outline justify-center">Mark all as read</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Dropdown menu initialization
+        const menuItems = document.querySelectorAll('[data-kt-menu-item-toggle="dropdown"]');
+        menuItems.forEach(item => {
+            const trigger = item.querySelector('[data-kt-menu-item-trigger]') || item;
+            const dropdown = item.querySelector('.kt-menu-dropdown');
+
+            if (dropdown) {
+                // Hover trigger for desktop
+                if (item.dataset.ktMenuItemTrigger && item.dataset.ktMenuItemTrigger.includes('hover')) {
+                    item.addEventListener('mouseenter', () => {
+                        dropdown.style.display = 'block';
+                    });
+                    item.addEventListener('mouseleave', () => {
+                        dropdown.style.display = 'none';
+                    });
+                }
+
+                // Click trigger for mobile
+                trigger.addEventListener('click', (e) => {
+                    if (window.innerWidth < 1024) {
+                        e.preventDefault();
+                        dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+                        item.classList.toggle('active');
+                    }
+                });
+            }
+        });
+
+        // User profile dropdown
+        const userDropdown = document.querySelector('[data-kt-dropdown="true"]');
+        if (userDropdown) {
+            const toggle = userDropdown.querySelector('[data-kt-dropdown-toggle="true"]');
+            const menu = userDropdown.querySelector('.kt-dropdown-menu');
+            toggle.addEventListener('click', () => {
+                menu.classList.toggle('hidden');
+            });
+        }
+
+        // Notifications drawer
+        const notificationsToggle = document.querySelector('[data-kt-drawer-toggle="#notifications_drawer"]');
+        const notificationsDrawer = document.querySelector('#notifications_drawer');
+        if (notificationsToggle && notificationsDrawer) {
+            notificationsToggle.addEventListener('click', () => {
+                notificationsDrawer.classList.toggle('hidden');
+            });
+            const dismissButtons = notificationsDrawer.querySelectorAll('[data-kt-drawer-dismiss="true"]');
+            dismissButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    notificationsDrawer.classList.add('hidden');
+                });
+            });
+        }
+
+        // Tabs initialization
+        document.querySelectorAll('[data-kt-tabs="true"]').forEach(tabs => {
+            const tabToggles = tabs.querySelectorAll('[data-kt-tab-toggle]');
+            tabToggles.forEach(toggle => {
+                toggle.addEventListener('click', () => {
+                    tabToggles.forEach(t => t.classList.remove('active'));
+                    toggle.classList.add('active');
+                    const tabContents = tabs.querySelectorAll('.grow');
+                    tabContents.forEach(content => content.classList.add('hidden'));
+                    const target = document.querySelector(toggle.dataset.ktTabToggle);
+                    if (target) target.classList.remove('hidden');
+                });
+            });
+        });
+
+        // Close dropdowns on outside click
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('[data-kt-menu-item-toggle="dropdown"]') && !e.target.closest('[data-kt-dropdown="true"]')) {
+                document.querySelectorAll('.kt-menu-dropdown, .kt-dropdown-menu').forEach(dropdown => {
+                    dropdown.style.display = 'none';
+                });
+                menuItems.forEach(item => item.classList.remove('active'));
+            }
+        });
+    });
+</script>
