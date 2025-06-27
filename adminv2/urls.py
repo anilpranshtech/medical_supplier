@@ -22,9 +22,18 @@ urlpatterns = [
     # Wishlist
     path('wishlist/products', WishlistProductView.as_view(), name='wishlist_products_list'),
 
+    # Cart
+    path('cart/products', CartProductsView.as_view(), name='cart_product_list'),
+    path("cart/update-quantity/", UpdateCartQuantityView.as_view(), name="update_cart_quantity"),
+    path("cart/delete-item/", DeleteCartItemView.as_view(), name="delete_cart_item"),
+
+
     path('adminv2/login/', AdminloginView.as_view(), name='admin_login'),
+
+    # user profile
     path('user-profile/', UserProfileView.as_view(), name='user_profile'),
     path('overview/', UserOverView.as_view(), name='overview_list'),
     path('settings/', AdminSettingView.as_view(), name='profile_setting'),
-    
+    path('company/details', CompanyDetailsView.as_view(), name='company_details'),
+
 ]

@@ -153,6 +153,16 @@
                                   </a>
                               </div>
 
+                              <div class="menu-item">
+                                  <a class="menu-link {% if request.resolver_match.url_name == 'cart_product_list' %}active{% endif %}"
+                                     href="{% url 'adminv2:cart_product_list' %}">
+                                      <span class="menu-bullet">
+                                          <span class="bullet bullet-dot"> </span>
+                                      </span>
+                                      <span class="menu-title">Cart</span>
+                                  </a>
+                              </div>
+
                           </div>
 
                       </div>

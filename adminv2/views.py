@@ -1,12 +1,17 @@
+import json
+
+from django.utils.decorators import method_decorator
 from django.views import View
 from django.shortcuts import render,redirect
 from django.contrib import messages
+from django.views.decorators.csrf import csrf_exempt
+
 from dashboard.models import *
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.shortcuts import render, get_object_or_404, redirect
-from django.http import JsonResponse   
+from django.http import JsonResponse, HttpResponseServerError
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.hashers import check_password
 from datetime import date, timezone, datetime  # Import date for date conversion
@@ -18,7 +23,7 @@ from django.utils.dateparse import parse_date
 class HomeView(LoginRequiredMixin, UserPassesTestMixin, View):
     login_url = 'adminv2:admin_login'
     def get(self, request):
-        return render(request, 'adminv2/base.html')
+        return render(request, 'adminv2/home.html')
     
     def test_func(self):
         return self.request.user.is_superuser
@@ -346,10 +351,14 @@ class DeleteProductImageView(LoginRequiredMixin, UserPassesTestMixin, View):
     
 class DeleteProductView(LoginRequiredMixin, UserPassesTestMixin,View):
     def post(self, request, pk):
-        product = get_object_or_404(Product, pk=pk)
-        product.delete()
-        return JsonResponse({'success': True})
-    
+        try:
+            product = get_object_or_404(Product, pk=pk)
+            product.delete()
+            messages.success(request, "Product deleted successfully")
+            return JsonResponse({'success': True})
+        except Exception as e:
+            messages.error(request, "Faild to delect product.")
+            return JsonResponse({'success': False})
     def test_func(self):
         return self.request.user.is_superuser
 
@@ -490,10 +499,56 @@ class AdminSettingView(View):
 
             return redirect('adminv2:profile_setting')
 
+class CompanyDetailsView(LoginRequiredMixin, View):
+    template = "adminv2/company_details.html"
+
+    def get(self, request, *args, **kwargd):
+        user = request.user
+
+        profile = SupplierProfile.objects.get(user=user)
+
+        print('--- Profile ---', profile)
+        print('--- Profile company name  ---', profile.company_name)
+        print('--- Profile license number  ---', profile.license_number)
+        context = {
+            "company_name": profile.company_name,
+            "license_number": profile.license_number
+        }
+
+        return render(request, self.template, context)
+
+    def post(self, request, *args, **kwargs):
+        try:
+            company_name = request.POST.get('company_name')
+            license_number = request.POST.get('license_number')
+
+            print("--- company name --- ", company_name)
+            print("--- license number --- ", license_number)
+
+            user = request.user
+
+            # Get or create the SupplierProfile for the user
+            profile, created = SupplierProfile.objects.get_or_create(user=user)
+
+            profile.company_name = company_name
+            profile.license_number = license_number
+            profile.save()
+
+            messages.success(
+                request,
+                "Details created successfully" if created else "Details updated successfully"
+            )
+            return redirect("adminv2:company_details")
+
+        except Exception as e:
+            print("Exception in saving profile:", e)
+            messages.error(request, "Failed to update company details. Please try again.")
+            return redirect("adminv2:company_details")
+
 class WishlistProductView(LoginRequiredMixin,View):
     template = 'adminv2/wishlist_product.html'
 
-    def get(self,request, *args,**kwargs):
+    def get(self, request, *args, **kwargs):
 
         wishlist = WishlistProduct.objects.all()
 
@@ -510,22 +565,28 @@ class WishlistProductView(LoginRequiredMixin,View):
         if mode == 'add-to-card':
             try:
                 item = get_object_or_404(WishlistProduct, id=product_id)
+                user = item.user
+                product = item.product
 
-                CartProduct.objects.create(
-                    user=item.user,
-                    product=item.product,
-                    quantity=item.quantity,
-                    created_at=datetime.now()
+                cart_item, created = CartProduct.objects.get_or_create(
+                    user=user,
+                    product=product,
+                    defaults={'quantity': item.quantity, 'created_at': datetime.now()}
                 )
 
-                item.delete()
+                if not created:
+                    # If already exists, update the quantity
+                    cart_item.quantity += item.quantity
+                    cart_item.save()
 
-                messages.success(request, "Added to card")
+                item.delete()  # remove from wishlist
+
+                messages.success(request, "Added to cart" if created else "Updated quantity in cart")
                 return redirect('adminv2:wishlist_products_list')
 
             except Exception as e:
                 print("Exception as e ----", e)
-                messages.error(request, "Faild to Add in cart, please try again")
+                messages.error(request, "Failed to add to cart, please try again")
                 return redirect('adminv2:wishlist_products_list')
 
         if mode == 'remove-wishlist':
@@ -540,5 +601,61 @@ class WishlistProductView(LoginRequiredMixin,View):
                 messages.error(request, "Faild to remove, please try again")
                 return redirect('adminv2:wishlist_products_list')
 
+class CartProductsView(LoginRequiredMixin, View):
+    template = "adminv2/cart_product.html"
 
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        try:
+            products = CartProduct.objects.filter(user=user).order_by('-created_at')
+            total = sum([p.get_total_price() for p in products])
+            items_total = len(products)
+            context = {
+                'products': products,
+                'cart_total': total,
+                'items_total': items_total
+            }
+            return render(request, self.template, context)
+        except Exception as e:
+            print("Exception in CartProductsView:", e)
+            return HttpResponseServerError("Something went wrong loading your cart.")
 
+@method_decorator(csrf_exempt, name='dispatch')
+class UpdateCartQuantityView(LoginRequiredMixin, View):
+    def post(self, request):
+        data = json.loads(request.body)
+        product_id = data.get("product_id")
+        quantity = int(data.get("quantity", 1))
+
+        cart_item = CartProduct.objects.get(id=product_id, user=request.user)
+        cart_item.quantity = quantity
+        cart_item.save()
+
+        # Calculate updated values
+        item_total = round(cart_item.get_total_price(), 2)
+        cart_total = sum([item.get_total_price() for item in CartProduct.objects.filter(user=request.user)])
+
+        return JsonResponse({
+            "item_total": f"{item_total:.2f}",
+            "cart_total": f"{cart_total:.2f}"
+        })
+
+@method_decorator(csrf_exempt, name='dispatch')
+class DeleteCartItemView(LoginRequiredMixin, View):
+    def post(self, request):
+        data = json.loads(request.body)
+        product_id = data.get("product_id")
+
+        try:
+            cart_item = CartProduct.objects.get(id=product_id, user=request.user)
+            cart_item.delete()
+
+            cart_total = sum([item.get_total_price() for item in CartProduct.objects.filter(user=request.user)])
+
+            return JsonResponse({
+                "success": True,
+                "cart_total": f"{cart_total:.2f}"
+            })
+
+        except CartProduct.DoesNotExist:
+            return JsonResponse({"success": False, "message": "Item not found"}, status=404)

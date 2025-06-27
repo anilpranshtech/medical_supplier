@@ -1,0 +1,217 @@
+{% extends 'adminv2/base.html' %}
+{% load static %}
+
+{% block content %}
+
+<!--begin::Main-->
+<div class="app-main flex-column flex-row-fluid" id="kt_app_main">
+    <div class="d-flex flex-column flex-column-fluid">
+        <!--begin::Content-->
+        <div id="kt_app_content" class="app-content flex-column-fluid">
+            <div id="kt_app_content_container" class="app-container container-fluid">
+
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} mb-7">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+
+                <div class="row">
+                    <!-- Cart Product Column -->
+                    <div class="col-12 col-lg-8">
+                        <div class="card card-flush mb-5">
+                            <div class="card-header align-items-center">
+                                <h2>Shopping Cart</h2>
+                            </div>
+                            <hr class="mx-5 mt-0 ">
+                            <div class="card-body pt-0">
+                                <table class="table align-middle table-row-dashed fs-6 gy-5">
+                                    <thead>
+                                        <tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
+                                            <th class="text-start min-w-150px ps-5">Product</th>
+                                            <th class="text-center min-w-150px ps-5">QTY</th>
+                                            <th class="text-center min-w-100px">Price</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="fw-semibold text-gray-600">
+                                        {% for product in products %}
+                                            <tr>
+                                                <td class="text-start">
+                                                    <div class="d-flex">
+                                                        <a href="#" class="symbol symbol-50px">
+                                                            <span class="symbol-label" style="background-image:url('{{ product.product.image_url }}');"></span>
+                                                        </a>
+                                                        <div class="ms-5">
+                                                            <a href="{% url 'adminv2:edit_product' product.id %}"
+                                                               class="text-gray-800 text-hover-primary fs-5 fw-bold"
+                                                               data-kt-ecommerce-product-filter="product_name">{{ product.product.name }}</a>
+                                                        </div>
+                                                    </div>
+                                                </td>
+
+                                                <td class="text-center pe-0">
+                                                    <div class="input-group justify-content-center" style="max-width: 120px; margin: auto;">
+                                                        <button class="btn btn-sm btn-light minus-btn" data-id="{{ product.id }}">−</button>
+
+                                                        <input type="text" class="form-control text-center text-primary qty-input" data-id="{{ product.id }}" value="{{ product.quantity }}" readonly>
+
+                                                        <button class="btn btn-sm btn-light plus-btn" data-id="{{ product.id }}">+</button>
+                                                    </div>
+                                                </td>
+
+                                                <td class="text-center pe-0">
+                                                    <span class="text-success item-total" id="item-total-{{ product.id }}">
+                                                        ${{ product.get_total_price }}
+                                                    </span>
+                                                </td>
+                                            </tr>
+
+
+
+                                        {% empty %}
+                                            <tr>
+                                                <td colspan="2" class="text-center">No products available in Cart</td>
+                                            </tr>
+                                        {% endfor %}
+
+
+                                    </tbody>
+                                </table>
+                                {% if products %}
+                                <hr class="mx-5 mt-0 ">
+                                    <div class="d-flex justify-content-end me-8">
+                                        <div class="fw-bold fs-5">
+                                            Cart Total: <span id="cart-total" class="text-success">${{ cart_total|floatformat:2 }}</span>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cart Summary Column -->
+                    <div class="col-12 col-lg-4">
+                        <div class="card card-flush">
+                            <div class="card-header align-items-center">
+                                <h3>Cart Summary</h3>
+                            </div>
+                            <hr class="mx-5 mt-0">
+                            <div class="card-body">
+                                 {% if products %}
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="fw-semibold">Items</span>
+                                        <span class="text-primary fw-bold">{{items_total}}</span>
+                                    </div>
+
+
+                                     <div class="d-flex justify-content-between fw-bold fs-5 mt-4 border-top pt-3">
+                                        <span>Total</span>
+                                        <span id="cart-total-summary" class="text-success">${{ cart_total|floatformat:2 }}</span>
+                                    </div>
+
+                                    <div class="mt-5 text-center" >
+                                        <a href="#" class="btn btn-sm bg-primary text-white">Checkout</a>
+                                    </div>
+
+                                 {% else %}
+                                    <p>No items in cart to summarize.</p>
+                                {% endif %}
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+{% endblock %}
+
+{% block page_only_scripts %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    function updateTotal(productId, newQty) {
+        fetch("{% url 'adminv2:update_cart_quantity' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token }}"
+            },
+            body: JSON.stringify({
+                product_id: productId,
+                quantity: newQty
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.querySelector(`#item-total-${productId}`).innerText = `$${data.item_total}`;
+            document.querySelector("#cart-total").innerText = `$${data.cart_total}`;
+            document.querySelector("#cart-total-summary").innerText = `$${data.cart_total}`;
+        });
+    }
+
+    document.querySelectorAll(".plus-btn").forEach(button => {
+        button.addEventListener("click", () => {
+            const id = button.getAttribute("data-id");
+            const input = document.querySelector(`.qty-input[data-id="${id}"]`);
+            let qty = parseInt(input.value);
+            qty += 1;
+            input.value = qty;
+            updateTotal(id, qty);
+        });
+    });
+
+    document.querySelectorAll(".minus-btn").forEach(button => {
+        button.addEventListener("click", () => {
+            const id = button.getAttribute("data-id");
+            const input = document.querySelector(`.qty-input[data-id="${id}"]`);
+            let qty = parseInt(input.value);
+
+            if (qty > 1) {
+                qty -= 1;
+                input.value = qty;
+                updateTotal(id, qty);
+            } else {
+                // Auto-remove without confirmation
+                fetch("{% url 'adminv2:delete_cart_item' %}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": "{{ csrf_token }}"
+                    },
+                    body: JSON.stringify({
+                        product_id: id
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const row = button.closest("tr");
+                    if (row) row.remove();
+
+                    document.querySelector("#cart-total").innerText = `$${data.cart_total}`;
+                    document.querySelector("#cart-total-summary").innerText = `$${data.cart_total}`;
+
+                    // Optional: If no rows left, show "empty cart" message
+                    const tableBody = document.querySelector("tbody");
+                    if (tableBody.children.length === 0) {
+                        tableBody.innerHTML = `
+                            <tr>
+                                <td colspan="3" class="text-center">No products available in Cart</td>
+                            </tr>`;
+                    }
+                    location.reload()
+                });
+            }
+        });
+    });
+
+});
+</script>
+
+{% endblock page_only_scripts %}

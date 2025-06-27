@@ -2,14 +2,6 @@
 {% load static %}
 
 {% block content %}
-{% if messages %}
-    {% for message in messages %}
-        <script>
-            alert("{{ message|escapejs }}");
-        </script>
-    {% endfor %}
-{% endif %}
-
 
 <!--begin::Main-->
 <div class="app-main flex-column flex-row-fluid " id="kt_app_main">
@@ -212,13 +204,17 @@ $(document).ready(function () {
                 success: function (response) {
                     if (response.success) {
                         row.remove();
+                        location.reload();
                     } else {
-                        alert("Failed to delete the product.");
+                        //alert("Failed to delete the product.");
+                        location.reload();
                     }
                 },
                 error: function () {
-                    alert("Server error. Please try again.");
+                    //alert("Server error. Please try again.");
+                    location.reload();
                 }
+
             });
         }
     });
