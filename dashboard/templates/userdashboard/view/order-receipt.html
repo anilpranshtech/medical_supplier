@@ -1,0 +1,252 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="kt-container-fixed mt-5 py-5" style="max-width: var(--custom-container-width, 85%);">
+    <div class="flex flex-col items-stretch gap-7 mt-5 py-5">
+        <main class="grow" role="content">
+            <!-- Container -->
+            <div class="kt-container-fixed">
+                <div class="py-10">
+                    <div class="kt-card px-0 w-full max-w-[800px] mx-auto overflow-hidden">
+                        <div class="h-[8px]"
+                             style="background:linear-gradient(90deg,#D618A3 0%,#1951E0 32.67%,#12C79C 67.17%,#DFBB19 100%)">
+                        </div>
+                        <div class="py-10 mb-5 ps-6 pe-3 me-3 text-center space-y-5" id="order_receipt_body">
+                            <div class="flex flex-col items-center gap-3 mb-5 lg:mb-9">
+                                <a class="dark:hidden" href="/metronic/tailwind/demo10/">
+                                    <img class="default-logo h-[22px]"
+                                         src="/static/metronic/tailwind/dist/assets/media/app/default-logo.svg">
+
+                                </a>
+                                <a class="hidden dark:block" href="/metronic/tailwind/demo10/">
+                                    <img class="default-logo h-[22px]"
+                                         src="/static/metronic/tailwind/dist/assets/media/app/default-logo-dark.svg">
+
+                                </a>
+                                <h3 class="text-2xl text-dark font-semibold mt-6">
+                                    Order Confirmation
+                                </h3>
+                                <span class="text-sm text-secondary-foreground font-medium">
+             Thank you! Your order
+             <span class="text-sm text-dark font-semibold">
+              #X319330-S24
+             </span>
+             is confirmed and being processed.
+            </span>
+                            </div>
+                            <div class="space-y-5 lg:pb-5">
+                                <div class="kt-card">
+                                    <div class="kt-card-content flex items-center flex-wrap justify-between gap-4.5 p-2 pe-5">
+                                        <div class="flex items-center gap-3.5">
+                                            <div class="kt-card flex items-center justify-center bg-accent/50 h-[70px] w-[90px] shadow-none">
+                                                <img alt="img" class="cursor-pointer h-[70px]"
+                                                     data-kt-drawer-toggle="#drawers_shop_product_details"
+                                                     src="/static/metronic/tailwind/dist/assets/media/store/client/600x600/11.png">
+                                            </div>
+                                            <div class="flex flex-col gap-1">
+                                                <a class="hover:text-primary text-sm font-medium text-mono leading-5.5"
+                                                   data-kt-drawer-toggle="#drawers_shop_product_details" href="#">
+                                                    Cloud Shift Lightweight Runner Pro Edition
+                                                </a>
+                                                <div class="flex items-center gap-1.5">
+                 <span class="text-xs font-normal text-secondary-foreground uppercase">
+                  sku:
+                  <span class="text-xs font-medium text-foreground">
+                   BT-A1-YLW-8
+                  </span>
+                 </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="flex flex-col gap-1.5">
+               <span class="text-xs font-normal text-secondary-foreground text-end">
+                1&nbsp;x
+               </span>
+                                            <div class="flex items-center flex-wrap gap-1.5">
+                <span class="text-sm font-normal text-secondary-foreground line-through">
+                </span>
+                                                <span class="text-sm font-semibold text-mono">
+                 $120.00
+                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="kt-card">
+                                    <div class="kt-card-content flex items-center flex-wrap justify-between gap-4.5 p-2 pe-5">
+                                        <div class="flex items-center gap-3.5">
+                                            <div class="kt-card flex items-center justify-center bg-accent/50 h-[70px] w-[90px] shadow-none">
+                                                <img alt="img" class="cursor-pointer h-[70px]"
+                                                     data-kt-drawer-toggle="#drawers_shop_product_details"
+                                                     src="/static/metronic/tailwind/dist/assets/media/store/client/600x600/12.png">
+                                            </div>
+                                            <div class="flex flex-col gap-1">
+                                                <a class="hover:text-primary text-sm font-medium text-mono leading-5.5"
+                                                   data-kt-drawer-toggle="#drawers_shop_product_details" href="#">
+                                                    Titan Edge High Impact Stability Lightweight..
+                                                </a>
+                                                <div class="flex items-center gap-1.5">
+                 <span class="text-xs font-normal text-secondary-foreground uppercase">
+                  sku:
+                  <span class="text-xs font-medium text-foreground">
+                   SNK-888-RED-42
+                  </span>
+                 </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="flex flex-col gap-1.5">
+               <span class="text-xs font-normal text-secondary-foreground text-end">
+                1&nbsp;x
+               </span>
+                                            <div class="flex items-center flex-wrap gap-1.5">
+                <span class="text-sm font-normal text-secondary-foreground line-through">
+                </span>
+                                                <span class="text-sm font-semibold text-mono">
+                 $99.00
+                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="kt-card">
+                                    <div class="kt-card-content flex items-center flex-wrap justify-between gap-4.5 p-2 pe-5">
+                                        <div class="flex items-center gap-3.5">
+                                            <div class="kt-card flex items-center justify-center bg-accent/50 h-[70px] w-[90px] shadow-none">
+                                                <img alt="img" class="cursor-pointer h-[70px]"
+                                                     data-kt-drawer-toggle="#drawers_shop_product_details"
+                                                     src="/static/metronic/tailwind/dist/assets/media/store/client/600x600/13.png">
+                                            </div>
+                                            <div class="flex flex-col gap-1">
+                                                <a class="hover:text-primary text-sm font-medium text-mono leading-5.5"
+                                                   data-kt-drawer-toggle="#drawers_shop_product_details" href="#">
+                                                    Cloud Shift Lightweight Runner Pro Edition
+                                                </a>
+                                                <div class="flex items-center gap-1.5">
+                 <span class="text-xs font-normal text-secondary-foreground uppercase">
+                  sku:
+                  <span class="text-xs font-medium text-foreground">
+                   SD-999-TAN-38
+                  </span>
+                 </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="flex flex-col gap-1.5">
+               <span class="text-xs font-normal text-secondary-foreground text-end">
+                1&nbsp;x
+               </span>
+                                            <div class="flex items-center flex-wrap gap-1.5">
+                <span class="text-sm font-normal text-secondary-foreground line-through">
+                </span>
+                                                <span class="text-sm font-semibold text-mono">
+                 $120.00
+                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="kt-card">
+                                    <div class="kt-card-content flex items-center flex-wrap justify-between gap-4.5 p-2 pe-5">
+                                        <div class="flex items-center gap-3.5">
+                                            <div class="kt-card flex items-center justify-center bg-accent/50 h-[70px] w-[90px] shadow-none">
+                                                <img alt="img" class="cursor-pointer h-[70px]"
+                                                     data-kt-drawer-toggle="#drawers_shop_product_details"
+                                                     src="/static/metronic/tailwind/dist/assets/media/store/client/600x600/15.png">
+                                            </div>
+                                            <div class="flex flex-col gap-1">
+                                                <a class="hover:text-primary text-sm font-medium text-mono leading-5.5"
+                                                   data-kt-drawer-toggle="#drawers_shop_product_details" href="#">
+                                                    Cloud Shift Lightweight Runner Pro Edition
+                                                </a>
+                                                <div class="flex items-center gap-1.5">
+                 <span class="text-xs font-normal text-secondary-foreground uppercase">
+                  sku:
+                  <span class="text-xs font-medium text-foreground">
+                   SD-Z9-BRN-39
+                  </span>
+                 </span>
+                                                    <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">
+                  save 25%
+                 </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="flex flex-col gap-1.5">
+               <span class="text-xs font-normal text-secondary-foreground text-end">
+                1&nbsp;x
+               </span>
+                                            <div class="flex items-center flex-wrap gap-1.5">
+                <span class="text-sm font-normal text-secondary-foreground line-through">
+                 $179.00
+                </span>
+                                                <span class="text-sm font-semibold text-mono">
+                 $149.00
+                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="kt-card bg-muted/70 text-start px-5 lg:px-7 py-4 shadow-none">
+                                <div class="flex justify-start gap-9">
+                                    <div class="flex flex-col gap-1.5">
+              <span class="text-sm font-normal text-secondary-foreground">
+               Order placed
+              </span>
+                                        <span class="text-sm font-medium text-dark">
+               26 June, 2025 ID
+              </span>
+                                    </div>
+                                    <div class="flex flex-col gap-1.5">
+              <span class="text-sm font-normal text-secondary-foreground">
+               Total
+              </span>
+                                        <span class="text-sm font-medium text-dark">
+               $512.60
+              </span>
+                                    </div>
+                                    <div class="flex flex-col gap-1.5">
+              <span class="text-sm font-normal text-secondary-foreground">
+               Ship to
+              </span>
+                                        <span class="text-sm font-medium text-dark">
+               Jeroen van Dijk
+              </span>
+                                    </div>
+                                    <div class="flex flex-col gap-1.5">
+              <span class="text-sm font-normal text-secondary-foreground">
+               Estimated Delivery
+              </span>
+                                        <span class="text-sm font-medium text-dark">
+               07 July, 2025
+              </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <a class="kt-btn kt-btn-outline lg:mt-5"
+                               href="{% url 'dashboard:my_orders' %}">
+                                <i class="ki-filled ki-questionnaire-tablet">
+                                </i>
+                                My Orders
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <style>
+                    body {
+                   background-color: #F9F9F9;
+               }
+
+               .dark body {
+                   background-color: var(--color-muted-foreground);
+               }
+                </style>
+            </div>
+            <!-- End of Container -->
+        </main>
+    </div>
+</div>
+
+{% endblock content %}

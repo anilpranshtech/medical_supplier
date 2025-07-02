@@ -45,7 +45,6 @@
     <link href="{% static 'adminv2/plugins/global/plugins.bundle.css' %}" rel="stylesheet" type="text/css" />
     <link href="{% static 'adminv2/css/style.bundle.css' %}" rel="stylesheet" type="text/css" />
 
-    {% block extra_css_start %}{% endblock extra_css_start %}
 
 
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-52YZ3XGZJ6"></script>
@@ -458,46 +457,20 @@
         <div class="app-wrapper  flex-column flex-row-fluid " id="kt_app_wrapper">
             {% include 'adminv2/sidebar.html' %}
 
-            {% if messages %}
-                {% for message in messages %}
-                    {% if message.tags == 'error' %}
-                        <div class="alert alert-danger alert-dismissible fade show mt-2 me-8" role="alert">
-                            {{ message }}
-                            <button type="button" class="btn-close btn-close-black" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    {% elif message.tags == 'success' %}
-                        <div class="alert alert-success alert-dismissible fade show mt-2 me-8" role="alert">
-                            {{ message }}
-                            <button type="button" class="btn-close btn-close-black" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    {% elif message.tags == 'info' or message.tags == 'warning' %}
-                        <div class="alert alert-warning alert-dismissible fade show mt-2 me-8" role="alert">
-                            {{ message }}
-                            <button type="button" class="btn-close btn-close-black" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    {% else %}
-                        <div class="alert alert-secondary alert-dismissible fade show mt-2 me-8" role="alert">
-                            {{ message }}
-                            <button type="button" class="btn-close btn-close-black" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    {% endif %}
-                {% endfor %}
-            {% endif %}
-
             {% block content %}
 
             <div id="kt_app_content_container" class="app-container  container-fluid ">
-
-                 {% comment %}<div class="row g-5 g-xl-10">
+                <!--begin::Row-->
+                <div class="row g-5 g-xl-10">
                     <!--begin::Col-->
                     <div class="col-xl-8 mb-xl-10">
                         <!--begin::Row-->
-                       <div class="row g-5 g-xl-10">
+                        <div class="row g-5 g-xl-10">
                             <!--begin::Col-->
                             <div class="col-lg-6 mb-xl-10">
                                 <!--begin::Chart Widget 47-->
 
-                               <div class="card card-flush "
+                                <div class="card card-flush "
                                     style="background: linear-gradient(180deg, #1858FD 0%, #1652EA 100%); box-shadow: 0px 14px 40px 0px rgba(24, 85, 243, 0.20);">
                                     <!--begin::Header-->
                                     <div class="card-header align-items-center pt-6">
@@ -649,7 +622,6 @@
                             <!--end::Col-->
                         </div>
                         <!--end::Row-->
-
 
                         <!--begin::Row-->
                         <div class="row gx-5 gx-xl-10">
@@ -1095,14 +1067,15 @@
 
 
                 </div>
-
-                {% endcomment %}
+                <!--end::Row-->
             </div>
 
             {% endblock %}
             <div id="kt_app_footer" class="app-footer ">
 
-                <div class="app-container  container-fluid d-flex flex-column flex-md-row flex-center flex-md-stack py-3 ">
+
+                <div
+                    class="app-container  container-fluid d-flex flex-column flex-md-row flex-center flex-md-stack py-3 ">
 
                     <div class="text-gray-900 order-2 order-md-1">
                         <span class="text-muted fw-semibold me-1">2025&copy;</span>

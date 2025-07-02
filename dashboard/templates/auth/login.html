@@ -1,0 +1,647 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="description" content="Sign in to Health Equipment Store"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta property="og:locale" content="en_US"/>
+    <meta property="og:type" content="article"/>
+    <meta property="og:title" content="Health Equipment Store - Sign In"/>
+    <meta property="og:url" content="{% url 'login' %}"/>
+    <meta property="og:site_name" content="Health Equipment Store"/>
+    <link rel="canonical" href="{% url 'login' %}"/>
+    <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}"/>
+
+    <!-- Fonts -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700"/>
+
+    <!-- Metronic Styles -->
+    <link href="{% static 'metronic/plugins/global/plugins.bundle.css' %}" rel="stylesheet" type="text/css"/>
+    <link href="{% static 'metronic/css/style.bundle.css' %}" rel="stylesheet" type="text/css"/>
+
+    <!-- Custom Styles -->
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --card-bg: #f9f9f9;
+            --text-color: #333333;
+            --secondary-text: #666666;
+            --border-color: #eeeeee;
+            --accent-color: #1570EF;
+            --sale-bg: #ff0000;
+            --rating-bg: #ffc107;
+            --button-bg: #ffffff;
+            --button-border: #cccccc;
+            --button-text: #333333;
+            --shadow-color: rgba(0, 0, 0, 0.04);
+            --scrolltop-bg: #1a1a1a;
+            --scrolltop-icon: #ffffff;
+        }
+
+        [data-bs-theme="dark"] {
+            --bg-color: #1a1a1a;
+            --card-bg: #2c2c2c;
+            --text-color: #ffffff;
+            --secondary-text: #aaaaaa;
+            --border-color: #444444;
+            --accent-color: #4da8ff;
+            --sale-bg: #cc0000;
+            --rating-bg: #cc9900;
+            --button-bg: #333333;
+            --button-border: #555555;
+            --button-text: #ffffff;
+            --shadow-color: rgba(0, 0, 0, 0.2);
+            --scrolltop-bg: #ffffff;
+            --scrolltop-icon: #1a1a1a;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Inter', Arial, sans-serif;
+        }
+
+        .theme-toggle-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .menu-sub-dropdown {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+        }
+
+        .menu-link:hover {
+            background-color: var(--button-bg);
+        }
+
+        .scrolltop {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 46px;
+            height: 46px;
+            background-color: var(--scrolltop-bg);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            z-index: 1000;
+            box-shadow: 0 2px 8px var(--shadow-color);
+        }
+
+        .scrolltop.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .scrolltop:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        .scrolltop i {
+            color: var(--scrolltop-icon);
+            font-size: 1.5rem;
+        }
+
+        .auth-container {
+            background-color: var(--bg-color);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px var(--shadow-color);
+            padding: 40px;
+            width: 100%;
+            max-width: 500px;
+            margin: auto;
+        }
+
+        .auth-header h1 {
+            color: var(--text-color);
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .auth-header .subtitle {
+            color: var(--secondary-text);
+            font-weight: 500;
+            margin-bottom: 2rem;
+        }
+
+        .social-login-btn {
+            width: 100%;
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            border: 1px solid var(--button-border);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 2px var(--shadow-color);
+        }
+
+        .social-login-btn:hover {
+            background-color: var(--button-border);
+        }
+
+        .social-login-btn img {
+            margin-right: 0.75rem;
+            height: 1.25rem;
+        }
+
+        .separator {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 1.5rem 0;
+        }
+
+        .separator-line {
+            flex: 1;
+            height: 1px;
+            background-color: var(--border-color);
+        }
+
+        .separator-text {
+            padding: 0 1rem;
+            color: var(--secondary-text);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--button-border);
+            border-radius: 8px;
+            font-size: 1rem;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            transition: border 0.2s ease;
+            box-shadow: 0 1px 2px var(--shadow-color);
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 4px rgba(164, 202, 254, 0.3);
+        }
+
+        .input-field::placeholder {
+            color: var(--secondary-text);
+        }
+
+        .password-input-container {
+            position: relative;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.25rem;
+            display: flex;
+            align-items: center;
+            color: var(--secondary-text);
+        }
+
+        .toggle-password:hover {
+            color: var(--text-color);
+        }
+
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+        }
+
+        .checkbox {
+            width: 1rem;
+            height: 1rem;
+            border: 1px solid var(--button-border);
+            border-radius: 4px;
+            margin-right: 0.5rem;
+            cursor: pointer;
+            accent-color: var(--accent-color);
+        }
+
+        .forgot-password {
+            color: var(--accent-color);
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-decoration: none;
+        }
+
+        .forgot-password:hover {
+            text-decoration: underline;
+        }
+
+        .submit-btn {
+            width: 100%;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            box-shadow: 0 1px 2px var(--shadow-color);
+        }
+
+        .submit-btn:hover {
+            background-color: #0e5bc7;
+        }
+
+        .signup-link {
+            text-align: center;
+            margin-top: 2rem;
+            color: var(--secondary-text);
+            font-size: 1rem;
+            font-weight: 400;
+        }
+
+        .signup-link a {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .signup-link a:hover {
+            text-decoration: underline;
+        }
+
+        .role-toggle {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .role-toggle-btn {
+            padding: 0.375rem 1.25rem;
+            width: 150px;
+            border: 1px solid var(--accent-color);
+            border-radius: 8px;
+            background-color: var(--button-bg);
+            color: var(--accent-color);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .role-toggle-btn.active {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        .buyer-options {
+            display: flex;
+            justify-content: center;
+            gap: 1.25rem;
+            margin-bottom: 1rem;
+            font-weight: 500;
+            font-size: 1.0625rem;
+            color: var(--text-color);
+        }
+
+        .auth-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 2rem;
+            padding: 0 0.625rem;
+        }
+
+        .footer-links a {
+            color: var(--accent-color);
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-decoration: none;
+        }
+
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body id="kt_body" class="app-blank">
+    <!-- Theme Mode Setup -->
+    <script>
+        var defaultThemeMode = "light";
+        var themeMode;
+        if (document.documentElement) {
+            if (document.documentElement.hasAttribute("data-bs-theme-mode")) {
+                themeMode = document.documentElement.getAttribute("data-bs-theme-mode");
+            } else {
+                if (localStorage.getItem("data-bs-theme") !== null) {
+                    themeMode = localStorage.getItem("data-bs-theme");
+                } else {
+                    themeMode = defaultThemeMode;
+                }
+            }
+            if (themeMode === "system") {
+                themeMode = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+            }
+            document.documentElement.setAttribute("data-bs-theme", themeMode);
+        }
+    </script>
+
+    <!-- Theme Toggle Button -->
+    <div class="theme-toggle-btn">
+        <button class="btn btn-flex btn-link btn-color-gray-700 btn-active-color-primary rotate fs-base" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end" data-kt-menu-offset="0px, 0px">
+            <span class="menu-icon" data-kt-element="icon">
+                <i class="bi bi-brightness-high fs-2"></i>
+            </span>
+            <span class="me-1">Theme</span>
+            <span class="d-flex flex-center rotate-180">
+                <i class="ki-outline ki-down fs-5 text-muted m-0"></i>
+            </span>
+        </button>
+        <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-title-gray-700 menu-icon-gray-500 menu-active-bg menu-state-color fw-semibold py-4 fs-base w-150px" data-kt-menu="true" data-kt-element="theme-mode-menu">
+            <div class="menu-item px-3 my-0">
+                <a href="#" class="menu-link px-3 py-2" data-kt-element="mode" data-kt-value="light">
+                    <span class="menu-icon" data-kt-element="icon">
+                        <i class="bi bi-brightness-high fs-2"></i>
+                    </span>
+                    <span class="menu-title">Light</span>
+                </a>
+            </div>
+            <div class="menu-item px-3 my-0">
+                <a href="#" class="menu-link px-3 py-2" data-kt-element="mode" data-kt-value="dark">
+                    <span class="menu-icon" data-kt-element="icon">
+                        <i class="bi bi-moon-stars fs-2"></i>
+                    </span>
+                    <span class="menu-title">Dark</span>
+                </a>
+            </div>
+            <div class="menu-item px-3 my-0">
+                <a href="#" class="menu-link px-3 py-2" data-kt-element="mode" data-kt-value="system">
+                    <span class="menu-icon" data-kt-element="icon">
+                        <i class="bi bi-pc-display fs-2"></i>
+                    </span>
+                    <span class="menu-title">System</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scrolltop Button -->
+    <div id="kt_scrolltop" class="scrolltop" data-kt-scrolltop="true">
+        <i class="bi bi-arrow-up"></i>
+    </div>
+
+    <!-- Authentication - Sign-in -->
+    <div class="d-flex flex-column flex-lg-row flex-column-fluid">
+        <!-- Body -->
+        <div class="d-flex flex-column flex-lg-row-fluid w-lg-50 p-10 order-2 order-lg-1">
+            <!-- Form -->
+            <div class="d-flex flex-center flex-column flex-lg-row-fluid">
+                <!-- Wrapper -->
+                <div class="auth-container">
+                    <!-- Form -->
+                    <form class="form w-100" novalidate="novalidate" id="kt_sign_in_form" data-kt-redirect-url="{% url 'home' %}" method="post" action="{% url 'login' %}">
+                        {% csrf_token %}
+                        <input type="hidden" id="user_type" name="user_type" value="buyer">
+
+                        <!-- Heading -->
+                        <div class="auth-header text-center mb-11">
+                            <h1 class="text-gray-900 fw-bolder mb-3">Sign In</h1>
+                            <div class="text-gray-500 fw-semibold fs-6">Your Social Campaigns</div>
+                        </div>
+
+                        <!-- Role Toggle -->
+                        <div class="role-toggle">
+                            <button type="button" id="buyerBtn" class="role-toggle-btn active">Buyer</button>
+                            <button type="button" id="supplierBtn" class="role-toggle-btn">Supplier</button>
+                        </div>
+
+                        <!-- Buyer Options -->
+                        <div id="buyerOptions" class="buyer-options">
+                            <label><input type="radio" name="buyer_type" value="retailer" checked> Retailer</label>
+                            <label><input type="radio" name="buyer_type" value="wholesaler"> Wholesaler</label>
+                        </div>
+
+                        <!-- Login Options -->
+                        <div class="row g-3 mb-9">
+                            <div class="col-md-6">
+                                <a href="#" class="social-login-btn">
+                                    <img alt="Logo" src="{% static 'assets/media/svg/brand-logos/google-icon.svg' %}" class="h-15px me-3"/>
+                                    Sign in with Google
+                                </a>
+                            </div>
+                            <div class="col-md-6">
+                                <a href="#" class="social-login-btn">
+                                    <img alt="Logo" src="{% static 'assets/media/svg/brand-logos/apple-black.svg' %}" class="theme-light-show h-15px me-3"/>
+                                    <img alt="Logo" src="{% static 'assets/media/svg/brand-logos/apple-black-dark.svg' %}" class="theme-dark-show h-15px me-3"/>
+                                    Sign in with Apple
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Separator -->
+                        <div class="separator separator-content my-14">
+                            <span class="w-125px text-gray-500 fw-semibold fs-7">Or with email</span>
+                        </div>
+
+                        <!-- Input Group: Email -->
+                        <div class="fv-row mb-8">
+                            <label for="id_username" class="form-group">Email</label>
+                            <input type="text" placeholder="Email" name="username" autocomplete="off" class="input-field" id="id_username"/>
+                        </div>
+
+                        <!-- Input Group: Password -->
+                        <div class="fv-row mb-3">
+                            <label for="id_password" class="form-group">Password</label>
+                            <div class="password-input-container">
+                                <input type="password" placeholder="Password" name="password" autocomplete="off" class="input-field" id="id_password"/>
+                                <button type="button" class="toggle-password" aria-label="Toggle password visibility">
+                                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M10 4.375C3.75 4.375 1.25 10 1.25 10C1.25 10 3.75 15.625 10 15.625C16.25 15.625 18.75 10 18.75 10C18.75 10 16.25 4.375 10 4.375Z" stroke="var(--secondary-text)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M10 13.125C11.7259 13.125 13.125 11.7259 13.125 10C13.125 8.27411 11.7259 6.875 10 6.875C8.27411 6.875 6.875 8.27411 6.875 10C6.875 11.7259 8.27411 13.125 10 13.125Z" stroke="var(--secondary-text)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Wrapper: Options -->
+                        <div class="form-options fs-base fw-semibold mb-8">
+                            <div class="remember-me">
+                                <input type="checkbox" id="remember-me" class="checkbox"/>
+                                <label for="remember-me">Remember me</label>
+                            </div>
+                            <a href="#" class="forgot-password">Forgot Password?</a>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid mb-10">
+                            <button type="submit" id="kt_sign_in_submit" class="submit-btn">
+                                <span class="indicator-label">Sign In</span>
+                                <span class="indicator-progress">
+                                    Please wait... <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+                                </span>
+                            </button>
+                        </div>
+
+                        <!-- Sign Up Link -->
+                        <div class="signup-link">
+                            Not a Member yet? <a href="{% url 'register' %}" class="signup">Sign up</a>
+                        </div>
+                    </form>
+
+                    <!-- Footer -->
+                    <div class="auth-footer">
+                        <div class="footer-links">
+                            <a href="#" target="_blank">Terms</a>
+                            <a href="#" target="_blank">Plans</a>
+                            <a href="#" target="_blank">Contact Us</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Aside -->
+        <div class="d-flex flex-lg-row-fluid w-lg-50 bgi-size-cover bgi-position-center order-1 order-lg-2" style="background-image: url({% static 'assets/media/misc/auth-bg.png' %})">
+            <div class="d-flex flex-column flex-center py-7 py-lg-15 px-5 px-md-15 w-100">
+                <a href="{% url 'home' %}" class="mb-0 mb-lg-12">
+                    <img alt="Logo" src="{% static 'assets/media/logos/custom-1.png' %}" class="h-60px h-lg-75px"/>
+                </a>
+                <img class="d-none d-lg-block mx-auto w-275px w-md-50 w-xl-500px mb-10 mb-lg-20" src="{% static 'assets/media/misc/auth-screens.png' %}" alt=""/>
+                <h1 class="d-none d-lg-block text-white fs-2qx fw-bolder text-center mb-7">
+                    Fast, Efficient and Productive
+                </h1>
+                <div class="d-none d-lg-block text-white fs-base text-center">
+                    In this kind of post, <a href="#" class="opacity-75-hover text-warning fw-bold me-1">the blogger</a>
+                    introduces a person they’ve interviewed <br/> and provides some background information about
+                    <a href="#" class="opacity-75-hover text-warning fw-bold me-1">the interviewee</a>
+                    and their <br/> work following this is a transcript of the interview.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="{% static 'metronic/plugins/global/plugins.bundle.js' %}"></script>
+    <script src="{% static 'metronic/js/scripts.bundle.js' %}"></script>
+    <script src="{% static 'metronic/js/custom/authentication/sign-in/general.js' %}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Theme Mode
+            const themeMenuItems = document.querySelectorAll('[data-kt-element="mode"]');
+            themeMenuItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const mode = this.getAttribute('data-kt-value');
+                    localStorage.setItem('data-bs-theme', mode);
+                    if (mode === 'system') {
+                        const systemMode = window.matchMedia("(prefers-color-scheme: dark)").matches ? 'dark' : 'light';
+                        document.documentElement.setAttribute('data-bs-theme', systemMode);
+                    } else {
+                        document.documentElement.setAttribute('data-bs-theme', mode);
+                    }
+                });
+            });
+
+            // Scrolltop
+            const scrollTop = document.getElementById('kt_scrolltop');
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > 300) {
+                    scrollTop.classList.add('active');
+                } else {
+                    scrollTop.classList.remove('active');
+                }
+            });
+
+            scrollTop.addEventListener('click', function() {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+
+            // Password Toggle
+            const togglePassword = document.querySelector('.toggle-password');
+            const passwordInput = document.getElementById('id_password');
+            togglePassword.addEventListener('click', function() {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                const svg = this.querySelector('svg');
+                if (type === 'text') {
+                    svg.innerHTML = `
+                        <path d="M10 4.375C3.75 4.375 1.25 10 1.25 10C1.25 10 3.75 15.625 10 15.625C16.25 15.625 18.75 10 18.75 10C18.75 10 16.25 4.375 10 4.375Z" stroke="var(--secondary-text)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2.5 2.5L17.5 17.5" stroke="var(--secondary-text)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M7.975 7.975C7.37083 8.57917 7.08333 9.375 7.08333 10C7.08333 11.7259 8.47411 13.125 10 13.125C10.625 13.125 11.4208 12.8375 12.025 12.2333" stroke="var(--secondary-text)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    `;
+                } else {
+                    svg.innerHTML = `
+                        <path d="M10 4.375C3.75 4.375 1.25 10 1.25 10C1.25 10 3.75 15.625 10 15.625C16.25 15.625 18.75 10 18.75 10C18.75 10 16.25 4.375 10 4.375Z" stroke="var(--secondary-text)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M10 13.125C11.7259 13.125 13.125 11.7259 13.125 10C13.125 8.27411 11.7259 6.875 10 6.875C8.27411 6.875 6.875 8.27411 6.875 10C6.875 11.7259 8.27411 13.125 10 13.125Z" stroke="var(--secondary-text)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    `;
+                }
+            });
+
+            // Role Toggle
+            const buyerBtn = document.getElementById('buyerBtn');
+            const supplierBtn = document.getElementById('supplierBtn');
+            const buyerOptions = document.getElementById('buyerOptions');
+            const userTypeInput = document.getElementById('user_type');
+            buyerBtn.addEventListener('click', () => {
+                buyerBtn.classList.add('active');
+                supplierBtn.classList.remove('active');
+                buyerOptions.style.display = 'flex';
+                userTypeInput.value = 'buyer';
+            });
+            supplierBtn.addEventListener('click', () => {
+                supplierBtn.classList.add('active');
+                buyerBtn.classList.remove('active');
+                buyerOptions.style.display = 'none';
+                userTypeInput.value = 'supplier';
+            });
+
+            // Form Submission
+            const form = document.getElementById('kt_sign_in_form');
+            const submitButton = document.getElementById('kt_sign_in_submit');
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                submitButton.setAttribute('data-kt-indicator', 'on');
+                submitButton.disabled = true;
+                setTimeout(function() {
+                    submitButton.removeAttribute('data-kt-indicator');
+                    submitButton.disabled = false;
+                    form.submit();
+                }, 2000);
+            });
+        });
+    </script>
+</body>
+</html>

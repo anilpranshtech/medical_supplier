@@ -1,0 +1,260 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block content %}
+<title>Wishlist</title>
+<style>
+    .kt-wishlist-icon {
+        display: none; /* hide wishlist toggle icon */
+    }
+    .wishlist-item-img {
+        object-fit: cover;
+        border-radius: 4px;
+    }
+    .kt-modal {
+        transition: opacity 0.3s;
+    }
+    .kt-modal.hidden {
+        opacity: 0;
+        pointer-events: none;
+    }
+    @media (max-width: 640px) {
+        .wishlist-item-img {
+            width: 48px;
+            height: 48px;
+        }
+        .kt-card-content img {
+            max-height: 120px;
+        }
+    }
+</style>
+
+<div class="kt-container-fixed mt-5 py-5" style="max-width: var(--custom-container-width, 90%);">
+    <div class="flex items-center justify-between mt-5 py-5">
+        <h1 class="text-lg font-medium text-mono">Your Wishlist</h1>
+        <button class="kt-btn kt-btn-primary kt-btn-sm" id="wishlist-clear">Clear Wishlist</button>
+    </div>
+    <div id="wishlist-items" class="flex flex-col gap-4 mb-2">
+        <!-- Wishlist items will be dynamically inserted here -->
+    </div>
+    <div id="wishlist-empty" class="hidden text-center text-sm text-foreground py-5">
+        Your wishlist is empty.
+    </div>
+</div>
+
+<!-- begin: Product Details Modal -->
+<div class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" data-kt-modal="true" id="modal_shop_product_details">
+    <div class="kt-card w-full max-w-[500px] rounded-xl border border-border bg-background">
+        <div class="kt-card-header px-5 flex items-center justify-between">
+            <h3 class="kt-card-title">Product Details</h3>
+            <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" data-kt-modal-dismiss="true">
+                <i class="ki-filled ki-cross text-base"></i>
+            </button>
+        </div>
+        <div class="kt-card-content flex flex-col space-y-3 p-5 kt-scrollable-y-auto">
+            <div class="kt-card relative items-center justify-center bg-accent/50 mb-6.5 h-[280px] shadow-none">
+                <span class="kt-badge kt-badge-destructive kt-badge-sm absolute top-4 end-4 uppercase product-discount hidden"></span>
+                <img alt="" class="w-[250px] h-[250px] object-cover product-image" />
+            </div>
+            <span class="text-base font-medium text-mono product-name"></span>
+            <span class="text-sm font-normal text-foreground block mb-7 product-description"></span>
+            <div class="flex flex-col gap-2.5">
+                <div class="flex items-center gap-2.5">
+                    <span class="text-xs font-normal text-foreground min-w-14">SKU</span>
+                    <span class="text-xs font-medium text-foreground product-sku"></span>
+                </div>
+                <div class="flex items-center gap-2.5">
+                    <span class="text-xs font-normal text-foreground min-w-14">Category</span>
+                    <span class="text-xs font-medium text-foreground product-category"></span>
+                </div>
+                <div class="flex items-center gap-2.5">
+                    <span class="text-xs font-normal text-foreground min-w-14">Rating</span>
+                    <div class="kt-rating product-rating"></div>
+                </div>
+                <div class="flex items-center gap-2.5">
+                    <span class="text-xs font-normal text-foreground min-w-14">More Info</span>
+                    <span class="text-xs font-normal text-foreground product-more-info"></span>
+                </div>
+            </div>
+            <div class="flex items-center justify-end gap-2">
+                <span class="text-base font-normal text-secondary-foreground line-through product-original-price hidden"></span>
+                <span class="text-lg font-medium text-mono product-price"></span>
+            </div>
+        </div>
+        <div class="kt-card-footer px-5 py-4 flex flex-col sm:flex-row gap-3 sm:justify-between items-center border-t border-border">
+            <button class="kt-btn kt-btn-primary w-full sm:w-auto flex items-center justify-center gap-2"
+                    data-kt-drawer-toggle="#drawers_shop_cart">
+                <i class="ki-filled ki-handcart"></i>
+                Add to Cart
+            </button>
+        </div>
+    </div>
+</div>
+<!-- end: Product Details Modal -->
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    let wishlist = [];
+    try {
+        const storedWishlist = localStorage.getItem('wishlist');
+        if (storedWishlist) {
+            wishlist = JSON.parse(storedWishlist);
+            console.log('Loaded wishlist:', wishlist); // Debug log
+        } else {
+            console.log('No wishlist found in localStorage');
+        }
+    } catch (e) {
+        console.error('Error parsing wishlist from localStorage:', e);
+        localStorage.setItem('wishlist', JSON.stringify([]));
+    }
+
+    function safeParseJSON(data) {
+        try {
+            return JSON.parse(data);
+        } catch (e) {
+            console.error('Invalid JSON data:', data, e);
+            return null;
+        }
+    }
+
+    function updateWishlistUI() {
+        const wishlistContainer = document.querySelector('#wishlist-items');
+        const emptyMessage = document.querySelector('#wishlist-empty');
+        if (!wishlistContainer || !emptyMessage) {
+            console.error('Wishlist container or empty message not found');
+            return;
+        }
+
+        wishlistContainer.innerHTML = '';
+
+        if (wishlist.length === 0) {
+            emptyMessage.classList.remove('hidden');
+            return;
+        }
+
+        emptyMessage.classList.add('hidden');
+
+        wishlist.forEach(item => {
+            const product = safeParseJSON(item);
+            if (!product) {
+                console.warn('Skipping invalid product:', item);
+                return;
+            }
+
+            const wishlistItem = document.createElement('div');
+            wishlistItem.classList.add('kt-card');
+            wishlistItem.setAttribute('data-product', JSON.stringify(product));
+            wishlistItem.innerHTML = `
+                <div class="kt-card-content flex items-center gap-4 p-4 border border-border rounded-lg shadow-sm">
+                    <img src="${product.image || ''}" alt="${product.name || 'Product'}" class="wishlist-item-img w-20 h-20 object-cover rounded-md cursor-pointer" data-kt-modal-toggle="#modal_shop_product_details" />
+                    <div class="flex-1">
+                        <h3 class="text-sm font-medium text-mono cursor-pointer hover:text-primary mb-1" data-kt-modal-toggle="#modal_shop_product_details">${product.name || 'Unnamed Product'}</h3>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs line-through text-secondary-foreground ${product.original_price ? '' : 'hidden'}">${product.original_price || ''}</span>
+                            <span class="text-sm font-semibold text-mono">${product.price || 'N/A'}</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col items-end gap-2">
+                        <button class="kt-btn kt-btn-outline kt-btn-sm" data-kt-drawer-toggle="#drawers_shop_cart">
+                            <i class="ki-filled ki-handcart mr-1"></i> Add
+                        </button>
+                        <button class="kt-btn kt-btn-icon kt-btn-ghost text-red-500 hover:text-red-700" data-remove-sku="${product.sku || ''}" title="Remove">
+                            <i class="ki-filled ki-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            wishlistContainer.appendChild(wishlistItem);
+        });
+
+        bindWishlistAndModalEvents();
+    }
+
+    function bindWishlistAndModalEvents() {
+        document.querySelectorAll('[data-remove-sku]').forEach(button => {
+            button.addEventListener('click', function () {
+                const sku = button.getAttribute('data-remove-sku');
+                if (sku) {
+                    wishlist = wishlist.filter(item => {
+                        const p = safeParseJSON(item);
+                        return p && p.sku !== sku;
+                    });
+                    localStorage.setItem('wishlist', JSON.stringify(wishlist));
+                    updateWishlistUI();
+                } else {
+                    console.warn('No SKU found for removal');
+                }
+            });
+        });
+
+        document.querySelectorAll('[data-kt-modal-toggle="#modal_shop_product_details"]').forEach(element => {
+            element.addEventListener('click', function (e) {
+                e.preventDefault();
+                const card = element.closest('.kt-card');
+                if (!card) {
+                    console.warn('No parent card found for modal trigger');
+                    return;
+                }
+                const product = safeParseJSON(card.getAttribute('data-product'));
+                if (!product) {
+                    console.error('Invalid product data:', card.getAttribute('data-product'));
+                    return;
+                }
+
+                const modal = document.querySelector('#modal_shop_product_details');
+                modal.querySelector('.product-name').textContent = product.name || '';
+                modal.querySelector('.product-image').src = product.image || '';
+                modal.querySelector('.product-description').textContent = product.description || '';
+                modal.querySelector('.product-sku').textContent = product.sku || '';
+                modal.querySelector('.product-category').textContent = product.category || '';
+                modal.querySelector('.product-more-info').textContent = product.more_info || '';
+                modal.querySelector('.product-price').textContent = product.price || '';
+
+                const originalPrice = modal.querySelector('.product-original-price');
+                const discountBadge = modal.querySelector('.product-discount');
+                if (product.original_price && product.discount) {
+                    originalPrice.textContent = product.original_price;
+                    originalPrice.classList.remove('hidden');
+                    discountBadge.textContent = product.discount;
+                    discountBadge.classList.remove('hidden');
+                } else {
+                    originalPrice.classList.add('hidden');
+                    discountBadge.classList.add('hidden');
+                }
+
+                const ratingContainer = modal.querySelector('.product-rating');
+                ratingContainer.innerHTML = '';
+                const rating = parseFloat(product.rating) || 0;
+                for (let i = 1; i <= 5; i++) {
+                    const star = document.createElement('i');
+                    star.classList.add('ki-solid', i <= rating ? 'ki-star' : 'ki-star-outline', 'text-sm');
+                    ratingContainer.appendChild(star);
+                }
+
+                modal.classList.remove('hidden');
+            });
+        });
+    }
+
+    document.querySelectorAll('[data-kt-modal-dismiss="true"]').forEach(button => {
+        button.addEventListener('click', function () {
+            const modal = button.closest('.kt-modal');
+            if (modal) modal.classList.add('hidden');
+        });
+    });
+
+    const clearWishlistButton = document.querySelector('#wishlist-clear');
+    if (clearWishlistButton) {
+        clearWishlistButton.addEventListener('click', () => {
+            wishlist = [];
+            localStorage.setItem('wishlist', JSON.stringify([]));
+            updateWishlistUI();
+        });
+    } else {
+        console.error('Clear wishlist button not found');
+    }
+
+    updateWishlistUI();
+});
+</script>
+{% endblock %}

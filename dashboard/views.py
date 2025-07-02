@@ -1,5 +1,5 @@
 from django.http import HttpResponse
-from django.shortcuts import render,redirect
+from django.shortcuts import render, redirect
 from django.contrib.auth.views import LoginView
 from django.urls import reverse_lazy
 from .forms import EmailOnlyLoginForm
@@ -16,29 +16,64 @@ from django.contrib.auth import authenticate, login
 from django.views.generic.edit import FormView
 
 
-
 class HomeView(TemplateView):
     template_name = 'dashboard/home.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['user'] = self.request.user
+        context['brands'] = [
+            ('Nike', '1'), ('Adidas', '2'), ('Puma', '3'), ('New Balance', '4'),
+            ('Converse', '5'), ('Reebok', '6'), ('Skechers', '7')
+        ]
+        context['new_arrivals'] = [
+            {'name': 'Cloud Shift Lightweight Runner Pro Edition', 'img_num': '8', 'rating': '5.0', 'price': '$99.00'},
+            {'name': 'Wave Strike Dynamic Boost Sneaker', 'img_num': '9', 'rating': '4.7', 'price': '$120.00'},
+            {'name': 'Titan Edge High Impact Stability Lightweight Trainers', 'img_num': '5', 'rating': '3.5',
+             'price': '$65.99'},
+            {'name': 'Velocity Boost Xtreme High Shock Absorbers', 'img_num': '10', 'rating': '4.9', 'price': '$110.00'}
+        ]
+        context['popular_sneakers'] = [
+            {'name': 'Cloud Shift Lightweight Runner Pro Edition', 'img_num': '11', 'rating': '5.0', 'price': '$99.00'},
+            {'name': 'Titan Edge High Impact Stability Lightweight Trainers', 'img_num': '12', 'rating': '3.5',
+             'price': '$65.99'},
+            {'name': 'Wave Strike Dynamic Boost Sneaker', 'img_num': '13', 'rating': '4.7', 'price': '$120.00'},
+            {'name': 'Velocity Boost Xtreme High Shock Absorbers', 'img_num': '14', 'rating': '4.9', 'price': '$110.00'}
+        ]
+        context['deals'] = [
+            {'name': 'Cloud Shift Lightweight Runner Pro Edition', 'img_num': '3', 'rating': '5.0', 'price': '$99.00',
+             'original_price': '$140.00'},
+            {'name': 'Titan Edge High Impact Stability Lightweight Trainers', 'img_num': '4', 'rating': '3.5',
+             'price': '$46.00', 'original_price': '$110.00'},
+            {'name': 'Wave Strike Dynamic Boost Sneaker', 'img_num': '15', 'rating': '4.7', 'price': '$140.00',
+             'original_price': '$179.00'},
+            {'name': 'Velocity Boost Xtreme High Shock Absorbers', 'img_num': '2', 'rating': '4.9', 'price': '$315.00',
+             'original_price': '$280.00'}
+        ]
+        context['features'] = [
+            {'title': 'Free Delivery', 'description': 'No extra shipping costs', 'icon': 'delivery-time',
+             'icon_color': 'primary', 'stroke_color': 'primary', 'fill_color': 'primary'},
+            {'title': '24/7 Support', 'description': 'Help anytime, anywhere', 'icon': 'messages',
+             'icon_color': 'green', 'stroke_color': 'success', 'fill_color': 'success'},
+            {'title': 'Discounts', 'description': 'Save big on top deals', 'icon': 'discount', 'icon_color': 'violet',
+             'stroke_color': 'info', 'fill_color': 'info'},
+            {'title': 'Money-Back', 'description': 'Full refund, no risk', 'icon': 'credit-cart',
+             'icon_color': 'yellow', 'stroke_color': 'yellow', 'fill_color': 'warning'}
+        ]
         return context
 
 
 class CustomLoginView(FormView):
     form_class = EmailOnlyLoginForm
-    template_name = 'dashboard/login.html'
-    
+    template_name = 'auth/login.html'
+
     def form_valid(self, form):
-        email = form.cleaned_data['username'] 
+        email = form.cleaned_data['username']
         password = form.cleaned_data['password']
-        user_type = self.request.POST.get('user_type') 
-        buyer_type = self.request.POST.get('buyer_type') 
-        
+        user_type = self.request.POST.get('user_type')
+        buyer_type = self.request.POST.get('buyer_type')
 
         user = authenticate(username=email, password=password)
-        
+
         if user is not None:
             if user_type == 'supplier':
                 if not hasattr(user, 'supplierprofile'):
@@ -56,27 +91,30 @@ class CustomLoginView(FormView):
             if user_type == 'supplier':
                 self.request.session['user_role'] = 'supplier'
             else:
-                self.request.session['user_role'] = buyer_type 
-            
+                self.request.session['user_role'] = buyer_type
+
             return redirect(self.get_success_url())
         else:
             form.add_error(None, "Invalid email or password.")
             return self.form_invalid(form)
-    
+
     def get_success_url(self):
         return reverse_lazy('home')
+
+
 import requests
+
+
 class RegistrationView(View):
-    template_name = "dashboard/register.html"
+    template_name = "auth/signup.html"
 
     def get(self, request):
         return render(request, self.template_name)
 
     def post(self, request):
 
-    
         recaptcha_response = request.POST.get('g-recaptcha-response')
-        recaptcha_secret = '6LdTHV8rAAAAAIgLr2wdtdtWExTS6xJpUpD8qEzh' 
+        recaptcha_secret = '6LdTHV8rAAAAAIgLr2wdtdtWExTS6xJpUpD8qEzh'
 
         recaptcha_result = requests.post(
             'https://www.google.com/recaptcha/api/siteverify',
@@ -89,12 +127,12 @@ class RegistrationView(View):
         if not recaptcha_result.get('success'):
             messages.error(request, 'Invalid reCAPTCHA. Please try again.')
             return render(request, self.template_name)
-        
+
         first_name = request.POST.get('first_name')
         last_name = request.POST.get('last_name')
         email = request.POST.get('email')
         password = request.POST.get('password')
-        user_type = request.POST.get('user_type')  
+        user_type = request.POST.get('user_type')
         buyer_type = request.POST.get('buyer_type')
 
         try:
@@ -156,7 +194,8 @@ class RegistrationView(View):
         except Exception as e:
             messages.error(request, f"An error occurred: {e}")
             return render(request, self.template_name)
-        
+
+
 class UserProfileView(LoginRequiredMixin, TemplateView):
     template_name = 'dashboard/profile.html'
 
@@ -199,3 +238,48 @@ class UploadProfilePictureView(LoginRequiredMixin, View):
             profile.save()
 
         return redirect('profile')
+
+
+# ------------------------------------------------------------------------------------------------------------------------
+class SearchResultsGridView(TemplateView):
+    template_name = 'userdashboard/view/search-results-grid.html'
+
+
+class SearchResultsListView(TemplateView):
+    template_name = 'userdashboard/view/search-results-list.html'
+
+
+class ProductDetailsView(TemplateView):
+    template_name = 'userdashboard/view/product-details.html'
+
+
+class ShoppingCartView(TemplateView):
+    template_name = 'userdashboard/view/shopping-cart.html'
+
+
+class WishlistView(TemplateView):
+    template_name = 'userdashboard/view/wishlist.html'
+
+
+class OrderSummaryView(TemplateView):
+    template_name = 'userdashboard/view/order-summary.html'
+
+
+class ShippingInfoView(TemplateView):
+    template_name = 'userdashboard/view/shipping-info.html'
+
+
+class PaymentMethodView(TemplateView):
+    template_name = 'userdashboard/view/payment-method.html'
+
+
+class OrderPlacedView(TemplateView):
+    template_name = 'userdashboard/view/order-placed.html'
+
+
+class MyOrdersView(TemplateView):
+    template_name = 'userdashboard/view/my-orders.html'
+
+
+class OrderReceiptView(TemplateView):
+    template_name = 'userdashboard/view/order-receipt.html'

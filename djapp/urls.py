@@ -22,8 +22,8 @@ import os
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('dashboard.urls')),
-    path('',include('adminv2.urls')),
+    path('', include('dashboard.urls', namespace='dashboard')),
+    path('', include('adminv2.urls', namespace='adminv2')),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=os.path.join(settings.BASE_DIR, 'static'))

@@ -1,0 +1,468 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="kt-container-fixed mt-5 py-5" style="max-width: var(--custom-container-width, 85%);">
+    <div class="flex flex-col items-stretch gap-7 mt-5 py-5">
+        <main class="grow" role="content">
+            <!-- Container -->
+            <div class="kt-container-fixed">
+                <div class="flex items-center justify-center flex-wrap lg:flex-nowrap gap-8 lg:gap-1.5 pt-5 mb-12">
+                    <!-- Step Button -->
+                    <div class="text-2sm leading-none relative flex items-center gap-1.5 px-3 h-8.5 rounded-full border border-border text-foreground [&_.kt-step-icon]:text-muted-foreground bg-muted/30">
+                        <!-- Completed -->
+                        <i class="ki-solid ki-check-circle text-green-500 absolute -top-1 -end-1 text-base"></i>
+                        <!-- Icon -->
+                        <span class="kt-step-icon">
+                            <i class="ki-filled ki-subtitle text-base"></i>
+                        </span>
+                        <!-- Step Title -->
+                        Order Summary
+                    </div>
+                    <div class="hidden lg:block w-12 h-px border-t border-dashed border-zinc-300 dark:border-zinc-600"></div>
+                    <!-- Step Button -->
+                    <div class="text-2sm leading-none relative flex items-center gap-1.5 px-3 h-8.5 rounded-full border font-medium border-primary/10 bg-primary/10 text-primary [&_.kt-step-icon]:text-primary">
+                        <!-- Icon -->
+                        <span class="kt-step-icon">
+                            <i class="ki-filled ki-delivery text-base"></i>
+                        </span>
+                        <!-- Step Title -->
+                        Shipping Info
+                    </div>
+                    <div class="hidden lg:block w-12 h-px border-t border-dashed border-zinc-300 dark:border-zinc-600"></div>
+                    <!-- Step Button -->
+                    <div class="text-2sm leading-none relative flex items-center gap-1.5 px-3 h-8.5 rounded-full border border-border text-foreground [&_.kt-step-icon]:text-muted-foreground">
+                        <!-- Icon -->
+                        <span class="kt-step-icon">
+                            <i class="ki-filled ki-two-credit-cart text-base"></i>
+                        </span>
+                        <!-- Step Title -->
+                        Payment Method
+                    </div>
+                    <div class="hidden lg:block w-12 h-px border-t border-dashed border-zinc-300 dark:border-zinc-600"></div>
+                    <!-- Step Button -->
+                    <div class="text-2sm leading-none relative flex items-center gap-1.5 px-3 h-8.5 rounded-full border border-border text-foreground [&_.kt-step-icon]:text-muted-foreground">
+                        <!-- Icon -->
+                        <span class="kt-step-icon">
+                            <i class="ki-filled ki-cheque text-base"></i>
+                        </span>
+                        <!-- Step Title -->
+                        Order Placed
+                    </div>
+                </div>
+            </div>
+            <!-- End of Container -->
+            <!-- Container -->
+            <div class="kt-container-fixed">
+                <!-- begin: grid -->
+                <div class="grid xl:grid-cols-3 gap-5 lg:gap-9 mb-5 lg:mb-10">
+                    <div class="lg:col-span-2 space-y-5">
+                        <div class="grid sm:grid-cols-2 gap-5" id="address-list">
+                            <!-- begin: Card -->
+                            <div class="kt-card" data-address='{
+                                "name": "Jeroen van Dijk",
+                                "street": "Keizersgracht 172",
+                                "city_postcode": "1016 DW, Amsterdam",
+                                "country": "Netherlands",
+                                "phone": "+31612345678",
+                                "title": "Jeroen’s Home"
+                            }'>
+                                <div class="kt-card-header px-5">
+                                    <h3 class="kt-card-title">
+                                        Jeroen’s Home
+                                    </h3>
+                                    <span class="kt-badge kt-badge-outline kt-badge-success">
+                                        Ship here
+                                    </span>
+                                </div>
+                                <div class="kt-card-content px-5 space-y-4">
+                                    <div class="flex flex-col gap-1.5">
+                                        <span class="text-2sm font-semibold text-mono mb-1.5">
+                                            Jeroen van Dijk
+                                        </span>
+                                        <div class="flex flex-col gap-2 text-2sm font-normal text-mono">
+                                            <span>Keizersgracht 172</span>
+                                            <span>1016 DW, Amsterdam</span>
+                                            <span>Netherlands</span>
+                                            <span>Phone number: +31612345678</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex justify-between items-center min-h-8.5">
+                                        <div class="flex items-center gap-5">
+                                            <a class="kt-link kt-link-underlined kt-link-dashed" href="#" data-kt-action="edit">Edit</a>
+                                            <a class="kt-link kt-link-underlined kt-link-dashed" href="#" data-kt-action="remove">Remove</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- end: Card -->
+                            <!-- begin: Card -->
+                            <div class="kt-card" data-address='{
+                                "name": "Sophie de Vries",
+                                "street": "Laan van Meerdervoort 88",
+                                "city_postcode": "2517 AN, Den Haag",
+                                "country": "Netherlands",
+                                "phone": "+31687654321",
+                                "title": "Sophie’s Office"
+                            }'>
+                                <div class="kt-card-header px-5">
+                                    <h3 class="kt-card-title">
+                                        Sophie’s Office
+                                    </h3>
+                                </div>
+                                <div class="kt-card-content px-5 space-y-4">
+                                    <div class="flex flex-col gap-1.5">
+                                        <span class="text-2sm font-semibold text-mono mb-1.5">
+                                            Sophie de Vries
+                                        </span>
+                                        <div class="flex flex-col gap-2 text-2sm font-normal text-mono">
+                                            <span>Laan van Meerdervoort 88</span>
+                                            <span>2517 AN, Den Haag</span>
+                                            <span>Netherlands</span>
+                                            <span>Phone number: +31687654321</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex justify-between items-center min-h-8.5">
+                                        <div class="flex items-center gap-5">
+                                            <a class="kt-link kt-link-underlined kt-link-dashed" href="#" data-kt-action="edit">Edit</a>
+                                            <a class="kt-link kt-link-underlined kt-link-dashed" href="#" data-kt-action="remove">Remove</a>
+                                        </div>
+                                        <button class="kt-btn kt-btn-outline kt-btn-sm" data-kt-action="select">Select Address</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- end: Card -->
+                            <!-- begin: Card -->
+                            <div class="kt-card" data-address='{
+                                "name": "Jeroen van Dijk",
+                                "street": "Keizersgracht 172",
+                                "city_postcode": "1016 DW, Amsterdam",
+                                "country": "Netherlands",
+                                "phone": "+31612345678",
+                                "title": "Jeroen’s Home"
+                            }'>
+                                <div class="kt-card-header px-5">
+                                    <h3 class="kt-card-title">
+                                        Jeroen’s Home
+                                    </h3>
+                                </div>
+                                <div class="kt-card-content px-5 space-y-4">
+                                    <div class="flex flex-col gap-1.5">
+                                        <span class="text-2sm font-semibold text-mono mb-1.5">
+                                            Jeroen van Dijk
+                                        </span>
+                                        <div class="flex flex-col gap-2 text-2sm font-normal text-mono">
+                                            <span>Keizersgracht 172</span>
+                                            <span>1016 DW, Amsterdam</span>
+                                            <span>Netherlands</span>
+                                            <span>Phone number: +31612345678</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex justify-between items-center min-h-8.5">
+                                        <div class="flex items-center gap-5">
+                                            <a class="kt-link kt-link-underlined kt-link-dashed" href="#" data-kt-action="edit">Edit</a>
+                                            <a class="kt-link kt-link-underlined kt-link-dashed" href="#" data-kt-action="remove">Remove</a>
+                                        </div>
+                                        <button class="kt-btn kt-btn-outline kt-btn-sm" data-kt-action="select">Select Address</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- end: Card -->
+                            <!-- begin: Card -->
+                            <div class="kt-card" data-address='{
+                                "name": "Emma van den Berg",
+                                "street": "Vondelstreet 45",
+                                "city_postcode": "1054 GE, Amsterdam",
+                                "country": "Netherlands",
+                                "phone": "+31623456789",
+                                "title": "Emma’s Apartment"
+                            }'>
+                                <div class="kt-card-header px-5">
+                                    <h3 class="kt-card-title">
+                                        Emma’s Apartment
+                                    </h3>
+                                </div>
+                                <div class="kt-card-content px-5 space-y-4">
+                                    <div class="flex flex-col gap-1.5">
+                                        <span class="text-2sm font-semibold text-mono mb-1.5">
+                                            Emma van den Berg
+                                        </span>
+                                        <div class="flex flex-col gap-2 text-2sm font-normal text-mono">
+                                            <span>Vondelstreet 45</span>
+                                            <span>1054 GE, Amsterdam</span>
+                                            <span>Netherlands</span>
+                                            <span>Phone number: +31623456789</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex justify-between items-center min-h-8.5">
+                                        <div class="flex items-center gap-5">
+                                            <a class="kt-link kt-link-underlined kt-link-dashed" href="#" data-kt-action="edit">Edit</a>
+                                            <a class="kt-link kt-link-underlined kt-link-dashed" href="#" data-kt-action="remove">Remove</a>
+                                        </div>
+                                        <button class="kt-btn kt-btn-outline kt-btn-sm" data-kt-action="select">Select Address</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- end: Card -->
+                        </div>
+                        <div class="flex justify-end items-center flex-wrap gap-3">
+                            <button class="kt-btn kt-btn-outline" data-kt-modal-toggle="#modal_add_address">Add New Address</button>
+                            <a class="kt-btn kt-btn-outline" href="{% url 'dashboard:order_summary' %}">
+                                <i class="ki-filled ki-black-left text-base"></i>
+                                Order Summary
+                            </a>
+                            <a class="kt-btn kt-btn-primary" href="{% url 'dashboard:payment_method' %}">
+                                Payment Method
+                                <i class="ki-filled ki-black-right text-base"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-1">
+                        <div class="space-y-5">
+                            <!-- begin: Card -->
+                            <div class="kt-card bg-accent/50">
+                                <div class="kt-card-header px-5">
+                                    <h3 class="kt-card-title">
+                                        Order Summary
+                                    </h3>
+                                </div>
+                                <div class="kt-card-content px-0 py-5 space-y-2">
+                                    <div class="flex flex-col px-5">
+                                        <span class="text-sm font-medium text-mono mb-1.5">
+                                            Shipping to Jeroen’s Home
+                                        </span>
+                                        <div class="flex flex-col gap-1 text-xs font-normal text-secondary-foreground">
+                                            <span>Jeroen van Dijk</span>
+                                            <span>Keizersgracht 172</span>
+                                            <span>1016 DW, Amsterdam</span>
+                                            <span>Netherlands</span>
+                                        </div>
+                                    </div>
+                                    <div class="border-b border-border mb-4 mt-5"></div>
+                                    <span class="text-sm font-medium block text-mono mb-3.5 px-5">
+                                        Price Details
+                                    </span>
+                                    <div class="flex justify-between items-center px-5">
+                                        <span class="text-sm font-normal text-secondary-foreground">
+                                            Subtotal
+                                        </span>
+                                        <span class="text-sm font-medium text-mono">
+                                            $7.78
+                                        </span>
+                                    </div>
+                                    <div class="flex justify-between items-center px-5">
+                                        <span class="text-sm font-normal text-secondary-foreground">
+                                            Shipping
+                                        </span>
+                                        <span class="text-sm font-medium text-mono">
+                                            $0.00
+                                        </span>
+                                    </div>
+                                    <div class="flex justify-between items-center px-5">
+                                        <span class="text-sm font-normal text-secondary-foreground">
+                                            VAT
+                                        </span>
+                                        <span class="text-sm font-medium text-mono">
+                                            $0.00
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="kt-card-footer flex justify-between items-center px-5">
+                                    <span class="text-sm font-normal text-secondary-foreground">
+                                        Total
+                                    </span>
+                                    <span class="text-base font-semibold text-mono">
+                                        $7.78
+                                    </span>
+                                </div>
+                            </div>
+                            <!-- end: Card -->
+                        </div>
+                    </div>
+                </div>
+                <!-- end: grid -->
+            </div>
+            <!-- End of Container -->
+            <!-- begin: Add Address Modal -->
+            <div class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" data-kt-modal="true" id="modal_add_address">
+                <div class="kt-card w-full max-w-[500px] rounded-xl border border-border bg-background" style="float:right">
+                    <div class="kt-card-header px-5 flex items-center justify-between">
+                        <h3 class="kt-card-title">Add New Address</h3>
+                        <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" data-kt-modal-dismiss="true">
+                            <i class="ki-filled ki-cross text-base"></i>
+                        </button>
+                    </div>
+                    <div class="kt-card-content flex flex-col space-y-3 p-5 kt-scrollable-y-auto">
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-2sm font-semibold text-mono">Address Title</label>
+                            <input type="text" id="address-title" class="kt-input" placeholder="e.g., Home, Office" required>
+                        </div>
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-2sm font-semibold text-mono">Full Name</label>
+                            <input type="text" id="address-name" class="kt-input" placeholder="Full Name" required>
+                        </div>
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-2sm font-semibold text-mono">Street Address</label>
+                            <input type="text" id="address-street" class="kt-input" placeholder="Street Address" required>
+                        </div>
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-2sm font-semibold text-mono">City, Postcode</label>
+                            <input type="text" id="address-city-postcode" class="kt-input" placeholder="City, Postcode" required>
+                        </div>
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-2sm font-semibold text-mono">Country</label>
+                            <input type="text" id="address-country" class="kt-input" placeholder="Country" required>
+                        </div>
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-2sm font-semibold text-mono">Phone Number</label>
+                            <input type="tel" id="address-phone" class="kt-input" placeholder="+1234567890" required>
+                        </div>
+                    </div>
+                    <div class="kt-card-footer px-5 flex justify-end gap-3">
+                        <button class="kt-btn kt-btn-outline" data-kt-modal-dismiss="true">Cancel</button>
+                        <button class="kt-btn kt-btn-primary" id="save-address">Save Address</button>
+                    </div>
+                </div>
+            </div>
+            <!-- end: Add Address Modal -->
+        </main>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const modal = document.querySelector('#modal_add_address');
+    const modalTriggers = document.querySelectorAll('[data-kt-modal-toggle="#modal_add_address"]');
+    const modalDismiss = modal.querySelectorAll('[data-kt-modal-dismiss="true"]');
+    const saveAddressBtn = document.querySelector('#save-address');
+    const addressList = document.querySelector('#address-list');
+    const orderSummary = document.querySelector('.kt-card.bg-accent\\/50 .kt-card-content .flex.flex-col.px-5');
+
+    // Open modal
+    modalTriggers.forEach(trigger => {
+        trigger.addEventListener('click', function (e) {
+            e.preventDefault();
+            modal.classList.remove('hidden');
+        });
+    });
+
+    // Close modal
+    modalDismiss.forEach(dismiss => {
+        dismiss.addEventListener('click', function () {
+            modal.classList.add('hidden');
+            // Clear input fields
+            modal.querySelectorAll('input').forEach(input => input.value = '');
+        });
+    });
+
+    // Close modal when clicking outside
+    modal.addEventListener('click', function (e) {
+        if (e.target === modal) {
+            modal.classList.add('hidden');
+            modal.querySelectorAll('input').forEach(input => input.value = '');
+        }
+    });
+
+    // Save new address
+    saveAddressBtn.addEventListener('click', function () {
+        const title = document.querySelector('#address-title').value.trim();
+        const name = document.querySelector('#address-name').value.trim();
+        const street = document.querySelector('#address-street').value.trim();
+        const cityPostcode = document.querySelector('#address-city-postcode').value.trim();
+        const country = document.querySelector('#address-country').value.trim();
+        const phone = document.querySelector('#address-phone').value.trim();
+
+        // Validate inputs
+        if (!title || !name || !street || !cityPostcode || !country || !phone) {
+            alert('Please fill in all fields.');
+            return;
+        }
+
+        // Create new address card
+        const newAddress = {
+            name,
+            street,
+            city_postcode: cityPostcode,
+            country,
+            phone,
+            title
+        };
+
+        const addressCard = document.createElement('div');
+        addressCard.className = 'kt-card';
+        addressCard.setAttribute('data-address', JSON.stringify(newAddress));
+        addressCard.innerHTML = `
+            <div class="kt-card-header px-5">
+                <h3 class="kt-card-title">${title}</h3>
+            </div>
+            <div class="kt-card-content px-5 space-y-4">
+                <div class="flex flex-col gap-1.5">
+                    <span class="text-2sm font-semibold text-mono mb-1.5">${name}</span>
+                    <div class="flex flex-col gap-2 text-2sm font-normal text-mono">
+                        <span>${street}</span>
+                        <span>${cityPostcode}</span>
+                        <span>${country}</span>
+                        <span>Phone number: ${phone}</span>
+                    </div>
+                </div>
+                <div class="flex justify-between items-center min-h-8.5">
+                    <div class="flex items-center gap-5">
+                        <a class="kt-link kt-link-underlined kt-link-dashed" href="#" data-kt-action="edit">Edit</a>
+                        <a class="kt-link kt-link-underlined kt-link-dashed" href="#" data-kt-action="remove">Remove</a>
+                    </div>
+                    <button class="kt-btn kt-btn-outline kt-btn-sm" data-kt-action="select">Select Address</button>
+                </div>
+            </div>
+        `;
+        addressList.appendChild(addressCard);
+
+        // Close modal and clear inputs
+        modal.classList.add('hidden');
+        modal.querySelectorAll('input').forEach(input => input.value = '');
+
+        // Add select address functionality
+        addressCard.querySelector('[data-kt-action="select"]').addEventListener('click', function () {
+            // Remove "Ship here" badge from all cards
+            document.querySelectorAll('.kt-card .kt-badge-success').forEach(badge => badge.remove());
+            // Add "Ship here" badge to selected card
+            const header = addressCard.querySelector('.kt-card-header');
+            header.insertAdjacentHTML('beforeend', '<span class="kt-badge kt-badge-outline kt-badge-success">Ship here</span>');
+            // Update order summary shipping address
+            orderSummary.innerHTML = `
+                <span class="text-sm font-medium text-mono mb-1.5">Shipping to ${title}</span>
+                <div class="flex flex-col gap-1 text-xs font-normal text-secondary-foreground">
+                    <span>${name}</span>
+                    <span>${street}</span>
+                    <span>${cityPostcode}</span>
+                    <span>${country}</span>
+                </div>
+            `;
+        });
+    });
+
+    // Handle existing select address buttons
+    document.querySelectorAll('[data-kt-action="select"]').forEach(button => {
+        button.addEventListener('click', function () {
+            const card = button.closest('.kt-card');
+            const addressData = JSON.parse(card.dataset.address);
+            // Remove "Ship here" badge from all cards
+            document.querySelectorAll('.kt-card .kt-badge-success').forEach(badge => badge.remove());
+            // Add "Ship here" badge to selected card
+            const header = card.querySelector('.kt-card-header');
+            header.insertAdjacentHTML('beforeend', '<span class="kt-badge kt-badge-outline kt-badge-success">Ship here</span>');
+            // Update order summary shipping address
+            orderSummary.innerHTML = `
+                <span class="text-sm font-medium text-mono mb-1.5">Shipping to ${addressData.title}</span>
+                <div class="flex flex-col gap-1 text-xs font-normal text-secondary-foreground">
+                    <span>${addressData.name}</span>
+                    <span>${addressData.street}</span>
+                    <span>${addressData.city_postcode}</span>
+                    <span>${addressData.country}</span>
+                </div>
+            `;
+        });
+    });
+});
+</script>
+
+{% endblock content %}

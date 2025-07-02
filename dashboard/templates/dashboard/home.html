@@ -1,1058 +1,1052 @@
-<!DOCTYPE html>
+{% extends "pages/base.html" %}
 {% load static %}
-<html class="h-full" data-kt-theme="true" data-kt-theme-mode="light" dir="ltr" lang="en">
 
-<!-- Mirrored from keenthemes.com/metronic/tailwind/demo10/store-client/home by HTTrack Website Copier/3.x [XR&CO'2014], Wed, 25 Jun 2025 09:13:20 GMT -->
-<!-- Added by HTTrack -->
-<meta http-equiv="content-type" content="text/html;charset=utf-8"/><!-- /Added by HTTrack -->
-<head>
-    <title>
-        Medical-Supplier
-    </title>
-    <meta charset="utf-8"/>
-    <meta content="follow, index" name="robots"/>
-    <link href="home.html" rel="canonical"/>
-    <meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport"/>
-    <meta content="Home with store client management, powered by Tailwind CSS" name="description"/>
-    <meta content="@keenthemes" name="twitter:site"/>
-    <meta content="@keenthemes" name="twitter:creator"/>
-    <meta content="summary_large_image" name="twitter:card"/>
-    <meta content="Metronic - Tailwind CSS Home" name="twitter:title"/>
-    <meta content="Home with store client management, powered by Tailwind CSS" name="twitter:description"/>
-    <meta content="/static/metronic/tailwind/dist/assets/media/app/og-image.png" name="twitter:image"/>
-    <meta content="https://keenthemes.com/metronic/tailwind/demo10/store-client/home" property="og:url"/>
-    <meta content="en_US" property="og:locale"/>
-    <meta content="website" property="og:type"/>
-    <meta content="@keenthemes" property="og:site_name"/>
-    <meta content="Metronic - Tailwind CSS Home" property="og:title"/>
-    <meta content="Home with store client management, powered by Tailwind CSS" property="og:description"/>
-    <meta content="/static/metronic/tailwind/dist/assets/media/app/og-image.png" property="og:image"/>
-    <link href="../../../../static/metronic/tailwind/dist/assets/media/app/apple-touch-icon.png" rel="apple-touch-icon"
-          sizes="180x180"/>
-    <link href="../../../../static/metronic/tailwind/dist/assets/media/app/favicon-32x32.png" rel="icon" sizes="32x32"
-          type="image/png"/>
-    <link href="../../../../static/metronic/tailwind/dist/assets/media/app/favicon-16x16.png" rel="icon" sizes="16x16"
-          type="image/png"/>
-    <link href="https://keenthemes.com/static/metronic/tailwind/dist/assets/media/app/favicon.ico" rel="shortcut icon"/>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
-    <link href="../../../../static/metronic/tailwind/dist/assets/vendors/apexcharts/apexcharts.css" rel="stylesheet"/>
-    <link href="../../../../static/metronic/tailwind/dist/assets/vendors/keenicons/styles.bundle.css" rel="stylesheet"/>
-    <link href="../../../../static/metronic/tailwind/dist/assets/css/styles.css" rel="stylesheet"/>
-    <!-- Google tag (gtag.js) -->
-    <script async="" src="https://www.googletagmanager.com/gtag/js?id=G-52YZ3XGZJ6">
-    </script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-       function gtag(){dataLayer.push(arguments);}
-       gtag('js', new Date());
-
-       gtag('config', 'G-52YZ3XGZJ6');
-    </script>
-</head>
-<body class="antialiased flex h-full text-base text-foreground bg-background [--header-height:60px] [--sidebar-width:270px] lg:overflow-hidden bg-mono dark:bg-background">
-<!-- Theme Mode -->
-<script>
-    const defaultThemeMode = 'light'; // light|dark|system
-             let themeMode;
-
-             if (document.documentElement) {
-                 if (localStorage.getItem('kt-theme')) {
-                     themeMode = localStorage.getItem('kt-theme');
-                 } else if (
-                     document.documentElement.hasAttribute('data-kt-theme-mode')
-                 ) {
-                     themeMode =
-                         document.documentElement.getAttribute('data-kt-theme-mode');
-                 } else {
-                     themeMode = defaultThemeMode;
-                 }
-
-                 if (themeMode === 'system') {
-                     themeMode = window.matchMedia('(prefers-color-scheme: dark)').matches
-                         ? 'dark'
-                         : 'light';
-                 }
-
-                 document.documentElement.classList.add(themeMode);
-             }
-</script>
-<!-- End of Theme Mode -->
-<!-- Page -->
-<!-- Base -->
-<div class="flex grow">
-    <!-- Header -->
-    <header class="flex lg:hidden items-center fixed z-10 top-0 start-0 end-0 shrink-0 bg-mono dark:bg-background h-(--header-height)"
-            id="header">
-        <!-- Container -->
-        <div class="kt-container-fixed flex items-center justify-between flex-wrap gap-3">
-            <a href="https://keenthemes.com/metronic/tailwind/demo10/">
-                <img class="size-[34px]"
-                     src="https://keenthemes.com/static/metronic/tailwind/dist/assets/media/app/mini-logo-circle-success.svg"/>
-            </a>
-            <button class="kt-btn kt-btn-icon kt-btn-dim hover:text-white -me-2" data-kt-drawer-toggle="#sidebar">
-                <i class="ki-filled ki-menu">
-                </i>
-            </button>
-        </div>
-        <!-- End of Container -->
-    </header>
-    <!-- End of Header -->
-    <!-- Wrapper -->
-    <div class="flex flex-col lg:flex-row grow pt-(--header-height) lg:pt-0">
-        <!-- Sidebar -->
-        <!--begin::Header-->
-        {% include "dashboard/pages/header.html" %}
-        <!--end::Header-->
-        <!-- Main -->
-        <div class="flex flex-col grow lg:rounded-l-xl bg-background border border-input">
-            <div class="flex flex-col grow kt-scrollable-y-auto lg:[--kt-scrollbar-width:auto] pt-5"
-                 id="scrollable_content">
-                <main class="grow" role="content">
-                    <!-- Toolbar -->
-                    <div class="pb-5">
-                        <!-- Container -->
-                        <div class="kt-container-fixed flex items-center justify-between flex-wrap gap-3">
-                            <div class="flex flex-col flex-wrap gap-1">
-                                <h1 class="font-medium text-lg text-mono">
-                                    Home
-                                </h1>
-                                <div class="flex items-center gap-1 text-sm font-normal">
-                                    <a class="text-secondary-foreground hover:text-primary"
-                                       href="https://keenthemes.com/metronic/tailwind/demo10/">
-                                        Home
-                                    </a>
-                                    <span class="text-muted-foreground text-sm">
-            /
-           </span>
-                                    <span class="text-secondary-foreground">
-            Store - Client
-           </span>
-                                    <span class="text-muted-foreground text-sm">
-            /
-           </span>
-                                    <span class="text-mono">
-            Home
-           </span>
-                                </div>
-                            </div>
-                            <div class="flex items-center flex-wrap gap-1.5 lg:gap-2.5">
-                                <!-- User -->
-                                <div class="shrink-0" data-kt-dropdown="true" data-kt-dropdown-offset="10px, 10px"
-                                     data-kt-dropdown-offset-rtl="-20px, 10px" data-kt-dropdown-placement="bottom-end"
-                                     data-kt-dropdown-placement-rtl="bottom-start" data-kt-dropdown-trigger="click">
-                                    <button class="kt-btn kt-btn-icon kt-btn-ghost size-9 relative rounded-full hover:bg-primary/10 [&amp;.active]:bg-primary/10 hover:[&amp;_i]:text-primary [&amp;.active]:[&amp;_i]:text-primary"
-                                            data-kt-dropdown-toggle="true">
-                                        <i class="ki-filled ki-profile-circle text-xl">
-                                        </i>
-                                    </button>
-                                    <div class="kt-dropdown-menu w-[250px]" data-kt-dropdown-menu="true">
-                                        <div class="flex items-center justify-between px-2.5 py-1.5 gap-1.5">
-                                            <div class="flex items-center gap-2">
-                                                <img alt=""
-                                                     class="size-9 shrink-0 rounded-full border-2 border-green-500"
-                                                     src="../../../../static/metronic/tailwind/dist/assets/media/avatars/300-2.png"/>
-                                                <div class="flex flex-col gap-1.5">
-               <span class="text-sm text-foreground font-semibold leading-none">
-                Cody Fisher
-               </span>
-                                                    <a class="text-xs text-secondary-foreground hover:text-primary font-medium leading-none"
-                                                       href="https://keenthemes.com/metronic/tailwind/demo10/account/home/get-started">
-                                                        c.fisher@gmail.com
-                                                    </a>
-                                                </div>
-                                            </div>
-                                            <span class="kt-badge kt-badge-sm kt-badge-primary kt-badge-outline">
-              Pro
-             </span>
-                                        </div>
-                                        <ul class="kt-dropdown-menu-sub">
-                                            <li>
-                                                <div class="kt-dropdown-menu-separator">
-                                                </div>
-                                            </li>
-                                            <li>
-                                                <a class="kt-dropdown-menu-link"
-                                                   href="https://keenthemes.com/metronic/tailwind/demo10/public-profile/profiles/default">
-                                                    <i class="ki-filled ki-badge">
-                                                    </i>
-                                                    Public Profile
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a class="kt-dropdown-menu-link"
-                                                   href="https://keenthemes.com/metronic/tailwind/demo10/account/home/user-profile">
-                                                    <i class="ki-filled ki-profile-circle">
-                                                    </i>
-                                                    My Profile
-                                                </a>
-                                            </li>
-                                            <li data-kt-dropdown="true" data-kt-dropdown-placement="right-start"
-                                                data-kt-dropdown-trigger="hover">
-                                                <button class="kt-dropdown-menu-toggle" data-kt-dropdown-toggle="true">
-                                                    <i class="ki-filled ki-setting-2">
-                                                    </i>
-                                                    My Account
-                                                    <span class="kt-dropdown-menu-indicator">
-                <i class="ki-filled ki-right text-xs">
-                </i>
-               </span>
-                                                </button>
-                                                <div class="kt-dropdown-menu w-[220px]" data-kt-dropdown-menu="true">
-                                                    <ul class="kt-dropdown-menu-sub">
-                                                        <li>
-                                                            <a class="kt-dropdown-menu-link"
-                                                               href="https://keenthemes.com/metronic/tailwind/demo10/account/home/get-started">
-                                                                <i class="ki-filled ki-coffee">
-                                                                </i>
-                                                                Get Started
-                                                            </a>
-                                                        </li>
-                                                        <li>
-                                                            <a class="kt-dropdown-menu-link"
-                                                               href="https://keenthemes.com/metronic/tailwind/demo10/account/home/user-profile">
-                                                                <i class="ki-filled ki-some-files">
-                                                                </i>
-                                                                My Profile
-                                                            </a>
-                                                        </li>
-                                                        <li>
-                                                            <a class="kt-dropdown-menu-link" href="#">
-                  <span class="flex items-center gap-2">
-                   <i class="ki-filled ki-icon">
-                   </i>
-                   Billing
-                  </span>
-                                                                <span class="ms-auto inline-flex items-center"
-                                                                      data-kt-tooltip="true"
-                                                                      data-kt-tooltip-placement="top">
-                   <i class="ki-filled ki-information-2 text-base text-muted-foreground">
-                   </i>
-                   <span class="kt-tooltip" data-kt-tooltip-content="true">
-                    Payment and subscription info
-                   </span>
-                  </span>
-                                                            </a>
-                                                        </li>
-                                                        <li>
-                                                            <a class="kt-dropdown-menu-link"
-                                                               href="https://keenthemes.com/metronic/tailwind/demo10/account/security/overview">
-                                                                <i class="ki-filled ki-medal-star">
-                                                                </i>
-                                                                Security
-                                                            </a>
-                                                        </li>
-                                                        <li>
-                                                            <a class="kt-dropdown-menu-link"
-                                                               href="https://keenthemes.com/metronic/tailwind/demo10/account/members/teams">
-                                                                <i class="ki-filled ki-setting">
-                                                                </i>
-                                                                Members &amp; Roles
-                                                            </a>
-                                                        </li>
-                                                        <li>
-                                                            <a class="kt-dropdown-menu-link"
-                                                               href="https://keenthemes.com/metronic/tailwind/demo10/account/integrations">
-                                                                <i class="ki-filled ki-switch">
-                                                                </i>
-                                                                Integrations
-                                                            </a>
-                                                        </li>
-                                                        <li>
-                                                            <div class="kt-dropdown-menu-separator">
-                                                            </div>
-                                                        </li>
-                                                        <li>
-                                                            <a class="kt-dropdown-menu-link"
-                                                               href="https://keenthemes.com/metronic/tailwind/demo10/account/security/overview">
-                  <span class="flex items-center gap-2">
-                   <i class="ki-filled ki-shield-tick">
-                   </i>
-                   Notifications
-                  </span>
-                                                                <input checked="" class="ms-auto kt-switch" name="check"
-                                                                       type="checkbox" value="1"/>
-                                                            </a>
-                                                        </li>
-                                                    </ul>
-                                                </div>
-                                            </li>
-                                            <li>
-                                                <a class="kt-dropdown-menu-link" href="https://devs.keenthemes.com/">
-                                                    <i class="ki-filled ki-message-programming">
-                                                    </i>
-                                                    Dev Forum
-                                                </a>
-                                            </li>
-                                            <li data-kt-dropdown="true" data-kt-dropdown-placement="right-start"
-                                                data-kt-dropdown-trigger="hover">
-                                                <button class="kt-dropdown-menu-toggle py-1"
-                                                        data-kt-dropdown-toggle="true">
-               <span class="flex items-center gap-2">
-                <i class="ki-filled ki-icon">
-                </i>
-                Language
-               </span>
-                                                    <span class="ms-auto kt-badge kt-badge-stroke shrink-0">
-                English
-                <img alt="" class="inline-block size-3.5 rounded-full"
-                     src="https://keenthemes.com/static/metronic/tailwind/dist/assets/media/flags/united-states.svg"/>
-               </span>
-                                                </button>
-                                                <div class="kt-dropdown-menu w-[180px]" data-kt-dropdown-menu="true">
-                                                    <ul class="kt-dropdown-menu-sub">
-                                                        <li class="active">
-                                                            <a class="kt-dropdown-menu-link"
-                                                               href="homee3ae.html?dir=ltr">
-                  <span class="flex items-center gap-2">
-                   <img alt="" class="inline-block size-4 rounded-full"
-                        src="https://keenthemes.com/static/metronic/tailwind/dist/assets/media/flags/united-states.svg"/>
-                   <span class="kt-menu-title">
-                    English
-                   </span>
-                  </span>
-                                                                <i class="ki-solid ki-check-circle ms-auto text-green-500 text-base">
-                                                                </i>
-                                                            </a>
-                                                        </li>
-                                                        <li class="">
-                                                            <a class="kt-dropdown-menu-link"
-                                                               href="home347d.html?dir=rtl">
-                  <span class="flex items-center gap-2">
-                   <img alt="" class="inline-block size-4 rounded-full"
-                        src="https://keenthemes.com/static/metronic/tailwind/dist/assets/media/flags/saudi-arabia.svg"/>
-                   <span class="kt-menu-title">
-                    Arabic(Saudi)
-                   </span>
-                  </span>
-                                                            </a>
-                                                        </li>
-                                                        <li class="">
-                                                            <a class="kt-dropdown-menu-link"
-                                                               href="homee3ae.html?dir=ltr">
-                  <span class="flex items-center gap-2">
-                   <img alt="" class="inline-block size-4 rounded-full"
-                        src="https://keenthemes.com/static/metronic/tailwind/dist/assets/media/flags/spain.svg"/>
-                   <span class="kt-menu-title">
-                    Spanish
-                   </span>
-                  </span>
-                                                            </a>
-                                                        </li>
-                                                        <li class="">
-                                                            <a class="kt-dropdown-menu-link"
-                                                               href="homee3ae.html?dir=ltr">
-                  <span class="flex items-center gap-2">
-                   <img alt="" class="inline-block size-4 rounded-full"
-                        src="https://keenthemes.com/static/metronic/tailwind/dist/assets/media/flags/germany.svg"/>
-                   <span class="kt-menu-title">
-                    German
-                   </span>
-                  </span>
-                                                            </a>
-                                                        </li>
-                                                        <li class="">
-                                                            <a class="kt-dropdown-menu-link"
-                                                               href="homee3ae.html?dir=ltr">
-                  <span class="flex items-center gap-2">
-                   <img alt="" class="inline-block size-4 rounded-full"
-                        src="https://keenthemes.com/static/metronic/tailwind/dist/assets/media/flags/japan.svg"/>
-                   <span class="kt-menu-title">
-                    Japanese
-                   </span>
-                  </span>
-                                                            </a>
-                                                        </li>
-                                                    </ul>
-                                                </div>
-                                            </li>
-                                            <li>
-                                                <div class="kt-dropdown-menu-separator">
-                                                </div>
-                                            </li>
-                                        </ul>
-                                        <div class="px-2.5 pt-1.5 mb-2.5 flex flex-col gap-3.5">
-                                            <div class="flex items-center gap-2 justify-between">
-              <span class="flex items-center gap-2">
-               <i class="ki-filled ki-moon text-base text-muted-foreground">
-               </i>
-               <span class="font-medium text-2sm">
-                Dark Mode
-               </span>
-              </span>
-                                                <input class="kt-switch" data-kt-theme-switch-state="dark"
-                                                       data-kt-theme-switch-toggle="true" name="check" type="checkbox"
-                                                       value="1"/>
-                                            </div>
-                                            <a class="kt-btn kt-btn-outline justify-center w-full"
-                                               href="https://keenthemes.com/metronic/tailwind/demo10/authentication/classic/sign-in">
-                                                Log out
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- End of User -->
-                                <!--Wishlist-->
-                                <button class="kt-btn kt-btn-icon kt-btn-ghost size-9 rounded-full hover:bg-primary/10 [&amp;.active]:bg-primary/10 hover:[&amp;_i]:text-primary [&amp;.active]:[&amp;_i]:text-primary"
-                                        data-kt-drawer-toggle="#drawers_shop_wishlist">
-                                    <i class="ki-filled ki-heart text-xl">
-                                    </i>
-                                </button>
-                                <!--Product Wishlist-->
-                                <div class="hidden kt-drawer kt-drawer-end card flex-col max-w-[90%] w-[600px] top-5 bottom-5 end-5 rounded-xl border border-border"
-                                     data-kt-drawer="true" data-kt-drawer-container="body" id="drawers_shop_wishlist">
-                                    <div class="kt-card-header px-5">
-                                        <h3 class="kt-card-title">
-                                            Wishlist
-                                        </h3>
-                                        <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0"
-                                                data-kt-drawer-dismiss="true">
-                                            <i class="ki-filled ki-cross text-base">
-                                            </i>
-                                        </button>
-                                    </div>
-                                    <div class="kt-card-content space-y-5 p-5 kt-scrollable-y-auto">
-                                        <div class="kt-card">
-                                            <div class="kt-card-content p-2 pe-5 flex sm:items-center justify-between gap-3.5">
-                                                <div class="kt-card flex items-center justify-center bg-accent/50 h-[70px] w-[90px] shrink-0 shadow-none">
-                                                    <img alt="img" class="h-[70px]"
-                                                         src="../../../../static/metronic/tailwind/dist/assets/media/store/client/600x600/11.png"/>
-                                                </div>
-                                                <div class="flex flex-col gap-2 w-full">
-                                                    <div class="flex items-center flex-wrap justify-between gap-2.5 -mt-1">
-                                                        <a class="hover:text-primary text-sm font-medium text-mono leading-5.5"
-                                                           href="#">
-                                                            Cloud Shift Lightweight Runner Pro Edition
-                                                        </a>
-                                                    </div>
-                                                    <div class="flex items-center flex-wrap justify-between gap-3">
-                                                        <div class="flex items-center flex-wrap gap-3">
-                 <span class="kt-badge kt-badge-warning kt-badge-sm rounded-full gap-1">
-                  <i class="ki-solid ki-star text-white -mt-0.5">
-                  </i>
-                  5.0
-                 </span>
-                                                            <span class="text-xs font-normal text-secondary-foreground">
-                  Brand:
-                  <span class="text-xs font-medium text-foreground">
-                   Nike
-                  </span>
-                 </span>
-                                                        </div>
-                                                        <div class="flex items-center flex-wrap gap-2.5">
-                 <span class="text-sm font-medium text-mono">
-                  $120.00
-                 </span>
-                                                            <button class="kt-btn kt-btn-outline kt-btn-sm shrink-0">
-                                                                <i class="ki-filled ki-handcart">
-                                                                </i>
-                                                                Add
-                                                            </button>
-                                                            <button class="kt-btn kt-btn-icon kt-btn-outline kt-btn-sm">
-                                                                <i class="ki-filled ki-trash">
-                                                                </i>
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="kt-card">
-                                            <div class="kt-card-content p-2 pe-5 flex sm:items-center justify-between gap-3.5">
-                                                <div class="kt-card flex items-center justify-center bg-accent/50 h-[70px] w-[90px] shrink-0 shadow-none">
-                                                    <img alt="img" class="h-[70px]"
-                                                         src="../../../../static/metronic/tailwind/dist/assets/media/store/client/600x600/12.png"/>
-                                                </div>
-                                                <div class="flex flex-col gap-2 w-full">
-                                                    <div class="flex items-center flex-wrap justify-between gap-2.5 -mt-1">
-                                                        <a class="hover:text-primary text-sm font-medium text-mono leading-5.5"
-                                                           href="#">
-                                                            Titan Edge High Impact Stability Lightweight..
-                                                        </a>
-                                                    </div>
-                                                    <div class="flex items-center flex-wrap justify-between gap-3">
-                                                        <div class="flex items-center flex-wrap gap-3">
-                 <span class="kt-badge kt-badge-warning kt-badge-sm rounded-full gap-1">
-                  <i class="ki-solid ki-star text-white -mt-0.5">
-                  </i>
-                  3.9
-                 </span>
-                                                            <span class="text-xs font-normal text-secondary-foreground">
-                  Brand:
-                  <span class="text-xs font-medium text-foreground">
-                   Puma
-                  </span>
-                 </span>
-                                                        </div>
-                                                        <div class="flex items-center flex-wrap gap-2.5">
-                 <span class="text-sm font-medium text-mono">
-                  $99.00
-                 </span>
-                                                            <button class="kt-btn kt-btn-outline kt-btn-sm shrink-0">
-                                                                <i class="ki-filled ki-handcart">
-                                                                </i>
-                                                                Add
-                                                            </button>
-                                                            <button class="kt-btn kt-btn-icon kt-btn-outline kt-btn-sm">
-                                                                <i class="ki-filled ki-trash">
-                                                                </i>
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="kt-card">
-                                            <div class="kt-card-content p-2 pe-5 flex sm:items-center justify-between gap-3.5">
-                                                <div class="kt-card flex items-center justify-center bg-accent/50 h-[70px] w-[90px] shrink-0 shadow-none">
-                                                    <img alt="img" class="h-[70px]"
-                                                         src="../../../../static/metronic/tailwind/dist/assets/media/store/client/600x600/13.png"/>
-                                                </div>
-                                                <div class="flex flex-col gap-2 w-full">
-                                                    <div class="flex items-center flex-wrap justify-between gap-2.5 -mt-1">
-                                                        <a class="hover:text-primary text-sm font-medium text-mono leading-5.5"
-                                                           href="#">
-                                                            Wave Strike Dynamic Boost Sneaker
-                                                        </a>
-                                                        <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase shrink-0">
-                 save 25%
-                </span>
-                                                    </div>
-                                                    <div class="flex items-center flex-wrap justify-between gap-3">
-                                                        <div class="flex items-center flex-wrap gap-3">
-                 <span class="kt-badge kt-badge-warning kt-badge-sm rounded-full gap-1">
-                  <i class="ki-solid ki-star text-white -mt-0.5">
-                  </i>
-                  4.6
-                 </span>
-                                                            <span class="text-xs font-normal text-secondary-foreground">
-                  Brand:
-                  <span class="text-xs font-medium text-foreground">
-                   Campers
-                  </span>
-                 </span>
-                                                        </div>
-                                                        <div class="flex items-center flex-wrap gap-2.5">
-                 <span class="text-xs font-normal text-secondary-foreground line-through">
-                  {item.label}
-                 </span>
-                                                            <span class="text-sm font-medium text-mono">
-                  $144.00
-                 </span>
-                                                            <button class="kt-btn kt-btn-outline kt-btn-sm shrink-0">
-                                                                <i class="ki-filled ki-handcart">
-                                                                </i>
-                                                                Add
-                                                            </button>
-                                                            <button class="kt-btn kt-btn-icon kt-btn-outline kt-btn-sm">
-                                                                <i class="ki-filled ki-trash">
-                                                                </i>
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="kt-card">
-                                            <div class="kt-card-content p-2 pe-5 flex sm:items-center justify-between gap-3.5">
-                                                <div class="kt-card flex items-center justify-center bg-accent/50 h-[70px] w-[90px] shrink-0 shadow-none">
-                                                    <img alt="img" class="h-[70px]"
-                                                         src="../../../../static/metronic/tailwind/dist/assets/media/store/client/600x600/15.png"/>
-                                                </div>
-                                                <div class="flex flex-col gap-2 w-full">
-                                                    <div class="flex items-center flex-wrap justify-between gap-2.5 -mt-1">
-                                                        <a class="hover:text-primary text-sm font-medium text-mono leading-5.5"
-                                                           href="#">
-                                                            Cloud Shift Lightweight Runner Pro Edition
-                                                        </a>
-                                                    </div>
-                                                    <div class="flex items-center flex-wrap justify-between gap-3">
-                                                        <div class="flex items-center flex-wrap gap-3">
-                 <span class="kt-badge kt-badge-warning kt-badge-sm rounded-full gap-1">
-                  <i class="ki-solid ki-star text-white -mt-0.5">
-                  </i>
-                  4.2
-                 </span>
-                                                            <span class="text-xs font-normal text-secondary-foreground">
-                  Brand:
-                  <span class="text-xs font-medium text-foreground">
-                   Puma
-                  </span>
-                 </span>
-                                                        </div>
-                                                        <div class="flex items-center flex-wrap gap-2.5">
-                 <span class="text-xs font-normal text-secondary-foreground line-through">
-                  {item.label}
-                 </span>
-                                                            <span class="text-sm font-medium text-mono">
-                  $230.00
-                 </span>
-                                                            <button class="kt-btn kt-btn-outline kt-btn-sm shrink-0">
-                                                                <i class="ki-filled ki-handcart">
-                                                                </i>
-                                                                Add
-                                                            </button>
-                                                            <button class="kt-btn kt-btn-icon kt-btn-outline kt-btn-sm">
-                                                                <i class="ki-filled ki-trash">
-                                                                </i>
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="kt-card-footer px-5">
-                                        <button class="kt-btn kt-btn-outline grow">
-                                            Remove all
-                                        </button>
-                                    </div>
-                                </div>
-                                <!--End of Wishlist Drawer-->
-                                <!--End of Wishlist-->
-                                <!--Cart-->
-                                <div class="flex items-center gap-2">
-                                    <button class="kt-btn kt-btn-icon kt-btn-ghost size-9 relative rounded-full hover:bg-primary/10 [&amp;.active]:bg-primary/10 hover:[&amp;_i]:text-primary [&amp;.active]:[&amp;_i]:text-primary"
-                                            data-kt-drawer-toggle="#drawers_shop_cart">
-                                        <i class="ki-filled ki-handcart text-xl">
-                                        </i>
-                                        <span class="kt-badge kt-badge-xs kt-badge-success rounded-full absolute -end-1 -top-0.5">
-             7
-            </span>
-                                    </button>
-                                    <!--Cart Drawer-->
-                                    <div class="hidden kt-drawer kt-drawer-end card flex-col max-w-[90%] w-[600px] top-5 bottom-5 end-5 rounded-xl border border-border"
-                                         data-kt-drawer="true" data-kt-drawer-container="body" id="drawers_shop_cart">
-                                        <div class="kt-card-header px-5">
-                                            <h3 class="kt-card-title">
-                                                Cart
-                                            </h3>
-                                            <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0"
-                                                    data-kt-drawer-dismiss="true">
-                                                <i class="ki-filled ki-cross text-base">
-                                                </i>
-                                            </button>
-                                        </div>
-                                        <div class="kt-card-content space-y-5 p-5 kt-scrollable-y-auto">
-                                            <div class="kt-card">
-                                                <div class="kt-card-content p-2 pe-5 flex items-center flex-wrap w-full justify-between gap-3.5">
-                                                    <div class="flex md:items-center gap-4">
-                                                        <div class="kt-card flex items-center justify-center bg-accent/50 h-[70px] w-[90px] shadow-none">
-                                                            <img alt="img" class="h-[70px]"
-                                                                 src="../../../../static/metronic/tailwind/dist/assets/media/store/client/600x600/11.png"/>
-                                                        </div>
-                                                        <div class="flex flex-col sm:justify-end gap-2.5 -mt-1">
-                                                            <a class="hover:text-primary text-sm font-medium text-mono leading-5.5"
-                                                               href="#">
-                                                                Cloud Shift Lightweight Runner Pro Edition
-                                                            </a>
-                                                            <div class="flex items-center gap-2">
-                  <span class="text-xs font-normal text-secondary-foreground">
-                   SKU:
-                   <span class="text-xs font-medium text-foreground">
-                    BT-A1-YLW-8
-                   </span>
-                  </span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex sm:justify-end flex-col gap-3">
-                                                        <div class="flex items-center sm:justify-end gap-2">
-                                                            <select class="kt-select kt-select-sm w-[60px] bg-background"
-                                                                    data-kt-select="true"
-                                                                    data-kt-select-dropdown-container="body"
-                                                                    name="kt-select">
-                                                                <option selected="" value="1">
-                                                                    1
-                                                                </option>
-                                                                <option value="2">
-                                                                    3
-                                                                </option>
-                                                                <option value="3">
-                                                                    6
-                                                                </option>
-                                                                <option value="4">
-                                                                    9
-                                                                </option>
-                                                            </select>
-                                                            <button class="kt-btn kt-btn-icon kt-btn-outline kt-btn-sm">
-                                                                <i class="ki-filled ki-trash">
-                                                                </i>
-                                                            </button>
-                                                        </div>
-                                                        <div class="flex items-center sm:justify-end gap-3">
-                 <span class="text-sm font-semibold text-mono">
-                  $120.00
-                 </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="kt-card">
-                                                <div class="kt-card-content p-2 pe-5 flex items-center flex-wrap w-full justify-between gap-3.5">
-                                                    <div class="flex md:items-center gap-4">
-                                                        <div class="kt-card flex items-center justify-center bg-accent/50 h-[70px] w-[90px] shadow-none">
-                                                            <img alt="img" class="h-[70px]"
-                                                                 src="../../../../static/metronic/tailwind/dist/assets/media/store/client/600x600/12.png"/>
-                                                        </div>
-                                                        <div class="flex flex-col sm:justify-end gap-2.5 -mt-1">
-                                                            <a class="hover:text-primary text-sm font-medium text-mono leading-5.5"
-                                                               href="#">
-                                                                Titan Edge High Impact Stability Lightweight..
-                                                            </a>
-                                                            <div class="flex items-center gap-2">
-                  <span class="text-xs font-normal text-secondary-foreground">
-                   SKU:
-                   <span class="text-xs font-medium text-foreground">
-                    SNK-888-RED-42
-                   </span>
-                  </span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex sm:justify-end flex-col gap-3">
-                                                        <div class="flex items-center sm:justify-end gap-2">
-                                                            <select class="kt-select kt-select-sm w-[60px] bg-background"
-                                                                    data-kt-select="true"
-                                                                    data-kt-select-dropdown-container="body"
-                                                                    name="kt-select">
-                                                                <option selected="" value="1">
-                                                                    1
-                                                                </option>
-                                                                <option value="2">
-                                                                    3
-                                                                </option>
-                                                                <option value="3">
-                                                                    6
-                                                                </option>
-                                                                <option value="4">
-                                                                    9
-                                                                </option>
-                                                            </select>
-                                                            <button class="kt-btn kt-btn-icon kt-btn-outline kt-btn-sm">
-                                                                <i class="ki-filled ki-trash">
-                                                                </i>
-                                                            </button>
-                                                        </div>
-                                                        <div class="flex items-center sm:justify-end gap-3">
-                 <span class="text-sm font-semibold text-mono">
-                  $99.00
-                 </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="kt-card">
-                                                <div class="kt-card-content p-2 pe-5 flex items-center flex-wrap w-full justify-between gap-3.5">
-                                                    <div class="flex md:items-center gap-4">
-                                                        <div class="kt-card flex items-center justify-center bg-accent/50 h-[70px] w-[90px] shadow-none">
-                                                            <img alt="img" class="h-[70px]"
-                                                                 src="../../../../static/metronic/tailwind/dist/assets/media/store/client/600x600/13.png"/>
-                                                        </div>
-                                                        <div class="flex flex-col sm:justify-end gap-2.5 -mt-1">
-                                                            <a class="hover:text-primary text-sm font-medium text-mono leading-5.5"
-                                                               href="#">
-                                                                Cloud Shift Lightweight Runner Pro Edition
-                                                            </a>
-                                                            <div class="flex items-center gap-2">
-                  <span class="text-xs font-normal text-secondary-foreground">
-                   SKU:
-                   <span class="text-xs font-medium text-foreground">
-                    SD-999-TAN-38
-                   </span>
-                  </span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex sm:justify-end flex-col gap-3">
-                                                        <div class="flex items-center sm:justify-end gap-2">
-                                                            <select class="kt-select kt-select-sm w-[60px] bg-background"
-                                                                    data-kt-select="true"
-                                                                    data-kt-select-dropdown-container="body"
-                                                                    name="kt-select">
-                                                                <option selected="" value="1">
-                                                                    1
-                                                                </option>
-                                                                <option value="2">
-                                                                    3
-                                                                </option>
-                                                                <option value="3">
-                                                                    6
-                                                                </option>
-                                                                <option value="4">
-                                                                    9
-                                                                </option>
-                                                            </select>
-                                                            <button class="kt-btn kt-btn-icon kt-btn-outline kt-btn-sm">
-                                                                <i class="ki-filled ki-trash">
-                                                                </i>
-                                                            </button>
-                                                        </div>
-                                                        <div class="flex items-center sm:justify-end gap-3">
-                 <span class="text-sm font-semibold text-mono">
-                  $120.00
-                 </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="kt-card">
-                                                <div class="kt-card-content p-2 pe-5 flex items-center flex-wrap w-full justify-between gap-3.5">
-                                                    <div class="flex md:items-center gap-4">
-                                                        <div class="kt-card flex items-center justify-center bg-accent/50 h-[70px] w-[90px] shadow-none">
-                                                            <img alt="img" class="h-[70px]"
-                                                                 src="../../../../static/metronic/tailwind/dist/assets/media/store/client/600x600/15.png"/>
-                                                        </div>
-                                                        <div class="flex flex-col sm:justify-end gap-2.5 -mt-1">
-                                                            <a class="hover:text-primary text-sm font-medium text-mono leading-5.5"
-                                                               href="#">
-                                                                Wave Strike Dynamic Boost Sneaker
-                                                            </a>
-                                                            <div class="flex items-center gap-2">
-                  <span class="text-xs font-normal text-secondary-foreground">
-                   SKU:
-                   <span class="text-xs font-medium text-foreground">
-                    BT-444-BRN-7
-                   </span>
-                  </span>
-                                                                <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">
-                   save 25%
-                  </span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex sm:justify-end flex-col gap-3">
-                                                        <div class="flex items-center sm:justify-end gap-2">
-                                                            <select class="kt-select kt-select-sm w-[60px] bg-background"
-                                                                    data-kt-select="true"
-                                                                    data-kt-select-dropdown-container="body"
-                                                                    name="kt-select">
-                                                                <option selected="" value="1">
-                                                                    1
-                                                                </option>
-                                                                <option value="2">
-                                                                    3
-                                                                </option>
-                                                                <option value="3">
-                                                                    6
-                                                                </option>
-                                                                <option value="4">
-                                                                    9
-                                                                </option>
-                                                            </select>
-                                                            <button class="kt-btn kt-btn-icon kt-btn-outline kt-btn-sm">
-                                                                <i class="ki-filled ki-trash">
-                                                                </i>
-                                                            </button>
-                                                        </div>
-                                                        <div class="flex items-center sm:justify-end gap-3">
-                 <span class="text-sm font-normal text-secondary-foreground line-through">
-                  $179.00
-                 </span>
-                                                            <span class="text-sm font-semibold text-mono">
-                  $144.00
-                 </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="flex items-center justify-end border-none rounded-md bg-accent/50 gap-5 py-2 px-3 !mt-[30px]">
-              <span class="text-sm font-medium text-mono">
-               Total
-              </span>
-                                                <span class="text-sm font-semibold text-mono">
-               $492.00
-              </span>
-                                            </div>
-                                        </div>
-                                        <div class="kt-card-footer p-5 flex gap-3">
-                                            <button class="kt-btn kt-btn-outline">
-                                                Clear Cart
-                                            </button>
-                                            <button class="kt-btn kt-btn-primary grow">
-                                                <i class="ki-filled ki-handcart">
-                                                </i>
-                                                Checkout
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <!--End of Cart Drawer-->
-                                    <div class="flex flex-col">
-            <span class="text-xs font-medium text-secondary-foreground">
-             Total
-            </span>
-                                        <span class="text-xs font-medium text-mono">
-             $94.56
-            </span>
-                                    </div>
-                                </div>
-                                <!--End of Cart-->
-                                <!--Product Details Drawer-->
-                                <div class="hidden kt-drawer kt-drawer-end kt-card flex-col max-w-[90%] w-[520px] top-5 bottom-5 end-5 rounded-xl border border-border"
-                                     data-kt-drawer="true" data-kt-drawer-container="body"
-                                     id="drawers_shop_product_details">
-                                    <div class="kt-card-header px-5">
-                                        <h3 class="kt-card-title">
-                                            Product Details
-                                        </h3>
-                                        <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0"
-                                                data-kt-drawer-dismiss="true">
-                                            <i class="ki-filled ki-cross text-base">
-                                            </i>
-                                        </button>
-                                    </div>
-                                    <div class="kt-card-content flex flex-col space-y-3 p-5 kt-scrollable-y-auto">
-                                        <div class="kt-card relative items-center justify-center bg-accent/50 mb-6.5 h-[280px] shadow-none">
-             <span class="kt-badge kt-badge-destructive kt-badge-sm absolute top-4 end-4 uppercase">
-              save 40%
-             </span>
-                                            <img alt="" class="size-80"
-                                                 src="../../../../static/metronic/tailwind/dist/assets/media/store/client/600x600/1.png"/>
-                                            <div class="kt-card absolute items-center justify-center bg-background w-[75px] h-[45px] overflow-hidden rounded-sm bottom-4 end-4">
-                                                <img alt="" class="dark:hidden"
-                                                     src="https://keenthemes.com/static/metronic/tailwind/dist/assets/media/brand-logos/nike-light.svg"/>
-                                                <img alt="" class="hidden dark:block"
-                                                     src="https://keenthemes.com/static/metronic/tailwind/dist/assets/media/brand-logos/nike-dark.svg"/>
-                                            </div>
-                                        </div>
-                                        <span class="text-base font-medium text-mono">
-             Cloud Shift Lightweight Runner Pro Edition
-            </span>
-                                        <span class="text-sm font-normal text-foreground block mb-7">
-             Lightweight and stylish, these sneakers offer all-day comfort with breathable mesh,
-      cushioned soles, and a durable grip. Perfect for casual wear, workouts,
-      or daily adventures. Available in multiple colors and sizes.
-            </span>
-                                        <div class="flex flex-col gap-2.5 lg:mb-11">
-                                            <div class="flex items-center gap-2.5">
-              <span class="text-xs font-normal text-foreground min-w-14 xl:min-w-24 shrink-0">
-               Avaibilaty
-              </span>
-                                                <div>
-               <span class="kt-badge kt-badge-success kt-badge-sm">
-                In Stock
-               </span>
-                                                </div>
-                                            </div>
-                                            <div class="flex items-center gap-2.5">
-              <span class="text-xs font-normal text-foreground min-w-14 xl:min-w-24 shrink-0">
-               SKU
-              </span>
-                                                <div>
-               <span class="text-xs font-medium text-foreground">
-                SH-001-BLK-42
-               </span>
-                                                </div>
-                                            </div>
-                                            <div class="flex items-center gap-2.5">
-              <span class="text-xs font-normal text-foreground min-w-14 xl:min-w-24 shrink-0">
-               Category
-              </span>
-                                                <div>
-               <span class="text-xs font-medium text-foreground">
-                Sneakers
-               </span>
-                                                </div>
-                                            </div>
-                                            <div class="flex items-center gap-2.5">
-              <span class="text-xs font-normal text-foreground min-w-14 xl:min-w-24 shrink-0">
-               Rating
-              </span>
-                                                <div>
-                                                    <div class="kt-rating">
-                                                        <div class="kt-rating-label checked">
-                                                            <i class="kt-rating-on ki-solid ki-star text-base leading-none">
-                                                            </i>
-                                                            <i class="kt-rating-off ki-outline ki-star text-base leading-none">
-                                                            </i>
-                                                        </div>
-                                                        <div class="kt-rating-label checked">
-                                                            <i class="kt-rating-on ki-solid ki-star text-base leading-none">
-                                                            </i>
-                                                            <i class="kt-rating-off ki-outline ki-star text-base leading-none">
-                                                            </i>
-                                                        </div>
-                                                        <div class="kt-rating-label checked">
-                                                            <i class="kt-rating-on ki-solid ki-star text-base leading-none">
-                                                            </i>
-                                                            <i class="kt-rating-off ki-outline ki-star text-base leading-none">
-                                                            </i>
-                                                        </div>
-                                                        <div class="kt-rating-label checked">
-                                                            <i class="kt-rating-on ki-solid ki-star text-base leading-none">
-                                                            </i>
-                                                            <i class="kt-rating-off ki-outline ki-star text-base leading-none">
-                                                            </i>
-                                                        </div>
-                                                        <div class="kt-rating-label checked">
-                                                            <i class="kt-rating-on ki-solid ki-star text-base leading-none">
-                                                            </i>
-                                                            <i class="kt-rating-off ki-outline ki-star text-base leading-none">
-                                                            </i>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="flex items-center gap-2.5">
-              <span class="text-xs font-normal text-foreground min-w-14 xl:min-w-24 shrink-0">
-               Mor Info
-              </span>
-                                                <div>
-               <span class="text-xs font-normal text-foreground">
-                10g powder, powder measure &amp; water dispensing bottle (empty)
-               </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-center justify-end gap-2">
-             <span class="text-base font-normal text-secondary-foreground line-through">
-              $140.00
-             </span>
-                                            <span class="text-lg font-medium text-mono">
-              $99.00
-             </span>
-                                        </div>
-                                    </div>
-                                    <div class="kt-card-footer px-5">
-                                        <button class="kt-btn kt-btn-primary grow">
-                                            <i class="ki-filled ki-handcart">
-                                            </i>
-                                            Add to Cart
-                                        </button>
-                                    </div>
-                                </div>
-                                <!--End of Product Details Drawer-->
-                            </div>
-                        </div>
-                        <!-- End of Container -->
+{% block content %}
+<title>Medical Supplies</title>
+<style>
+    /* Ensure images scale properly on mobile */
+    .kt-card img {
+        max-width: 100%;
+        height: auto;
+    }
+    /* Style for active wishlist heart icon */
+    .kt-wishlist-icon.active i.ki-filled.ki-heart {
+        color: #ff0000; /* Red color for active wishlist item */
+    }
+</style>
+<div class="kt-container-fixed mt-5 py-5" style="max-width: var(--custom-container-width, 90%);">
+    <div class="grid grid-cols-1 gap-6 mt-5 py-5">
+        <!-- begin: Featured Products -->
+        <div class="grid sm:grid-cols-4 xl:grid-cols-7 gap-5 mb-2">
+            <div class="kt-card" data-product='{
+                "name": "Sterile Bandages",
+                "image": "{% static ' metronic
+            /tailwind/dist/assets/media/medical/600x600/bandages.png' %}",
+            "description": "High-quality sterile bandages for wound protection. Waterproof and breathable, ideal for
+            minor cuts and abrasions.",
+            "sku": "MED-BND-001",
+            "category": "Wound Care",
+            "rating": 4.8,
+            "price": "$1.80",
+            "original_price": "",
+            "discount": "",
+            "more_info": "Pack of 50, latex-free, individually wrapped."
+            }'>
+            <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
+                <div class="mb-2.5">
+                    <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[250px] mb-4 shadow-none">
+                        <img alt="Bandages" class="h-[180px] shrink-0 cursor-pointer"
+                             data-kt-modal-toggle="#modal_shop_product_details"
+                             src="{% static 'metronic/tailwind/dist/assets/media/medical/600x600/bandages.png' %}">
                     </div>
-                    <!-- End of Toolbar -->
-                    <!-- Container -->
-                    <div class="kt-container-fixed max-w-full mt-5">
-
-                        <!-- begin: Content -->
-                        {% block content %}
-
-                        {% endblock content %}
-                        <!-- end: Content -->
-                    </div>
-                    <!-- End of Container -->
-                </main>
+                    <a class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block"
+                       data-kt-modal-toggle="#modal_shop_product_details" href="#">
+                        Bandages
+                    </a>
+                </div>
+                <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
+                    <div class="text-xs font-normal text-secondary-foreground">Price Range: $0.60 - $1.80</div>
+                </div>
             </div>
         </div>
-        <!-- End of Main -->
+        <div class="kt-card" data-product='{
+                "name": "Disposable Syringes (10-Pack)",
+                "image": "{% static ' metronic
+        /tailwind/dist/assets/media/medical/600x600/syringes.png' %}",
+        "description": "Sterile disposable syringes for precise medical administration. Suitable for clinical and home
+        use.",
+        "sku": "MED-SYR-002",
+        "category": "Injection",
+        "rating": 3.5,
+        "price": "$0.60",
+        "original_price": "",
+        "discount": "",
+        "more_info": "10ml capacity, single-use, includes needles."
+        }'>
+        <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
+            <div class="mb-2.5">
+                <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[250px] mb-4 shadow-none">
+                    <img alt="Syringes" class="h-[180px] shrink-0 cursor-pointer"
+                         data-kt-modal-toggle="#modal_shop_product_details"
+                         src="{% static 'metronic/tailwind/dist/assets/media/medical/600x600/syringes.png' %}">
+                </div>
+                <a class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block"
+                   data-kt-modal-toggle="#modal_shop_product_details" href="#">
+                    Syringes
+                </a>
+            </div>
+            <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
+                <div class="text-xs font-normal text-secondary-foreground">Price Range: $0.12 - $0.60</div>
+            </div>
+        </div>
     </div>
-    <!-- End of Wrapper -->
+    <div class="kt-card" data-product='{
+                "name": "Stethoscope",
+                "image": "{% static ' metronic
+    /tailwind/dist/assets/media/medical/600x600/stethoscope.png' %}",
+    "description": "High-quality stethoscope for accurate heart and lung sound monitoring. Lightweight and durable.",
+    "sku": "MED-STH-003",
+    "category": "Diagnostics",
+    "rating": 4.5,
+    "price": "$24.00",
+    "original_price": "",
+    "discount": "",
+    "more_info": "Dual-head, includes ear tips and diaphragm."
+    }'>
+    <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
+        <div class="mb-2.5">
+            <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[250px] mb-4 shadow-none">
+                <img alt="Stethoscope" class="h-[180px] shrink-0 cursor-pointer"
+                     data-kt-modal-toggle="#modal_shop_product_details"
+                     src="{% static 'metronic/tailwind/dist/assets/media/medical/600x600/stethoscope.png' %}">
+            </div>
+            <a class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block"
+               data-kt-modal-toggle="#modal_shop_product_details" href="#">
+                Stethoscope
+            </a>
+        </div>
+        <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
+            <div class="text-xs font-normal text-secondary-foreground">Price Range: $6.00 - $24.00</div>
+        </div>
+    </div>
 </div>
-<!-- End of Base -->
-<!-- Scripts -->
-<script src="../../../../static/metronic/tailwind/dist/assets/js/core.bundle.js">
-</script>
-<script src="../../../../static/metronic/tailwind/dist/assets/vendors/ktui/ktui.min.js">
-</script>
-<script src="../../../../static/metronic/tailwind/dist/assets/vendors/apexcharts/apexcharts.min.js">
-</script>
-<!-- End of Scripts -->
-</body>
+<div class="kt-card" data-product='{
+                "name": "Digital Thermometer",
+                "image": "{% static ' metronic/tailwind/dist/assets/media/medical/600x600/thermometer.png' %}",
+"description": "Fast and accurate digital thermometer for oral or underarm use. Easy-to-read display, suitable for all ages.",
+"sku": "MED-THM-004",
+"category": "Diagnostics",
+"rating": 3.2,
+"price": "$12.00",
+"original_price": "",
+"discount": "",
+"more_info": "Water-resistant, includes battery and storage case."
+}'>
+<div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
+    <div class="mb-2.5">
+        <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[250px] mb-4 shadow-none">
+            <img alt="Thermometer" class="h-[180] shrink-0 cursor-pointer"
+                 data-kt-modal-toggle="#modal_shop_product_details"
+                 src="{% static 'metronic/tailwind/dist/assets/media/medical/600x600/thermometer.png' %}">
+        </div>
+        <a class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block"
+           data-kt-modal-toggle="#modal_shop_product_details" href="#">
+            Thermometer
+        </a>
+    </div>
+    <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
+        <div class="text-xs font-normal text-secondary-foreground">Price Range: $2.40 - $12.00</div>
+    </div>
+</div>
+</div>
+<div class="kt-card" data-product='{
+                "name": "Nitrile Gloves",
+                "image": "{% static ' metronic/tailwind/dist/assets/media/medical/600x600/gloves.png' %}",
+"description": "Latex-free nitrile gloves for medical use. High puncture resistance and comfort.",
+"sku": "MED-GLV-005",
+"category": "Protective Gear",
+"rating": 4.0,
+"price": "$3.60",
+"original_price": "",
+"discount": "",
+"more_info": "Pack of 100, powder-free, blue."
+}'>
+<div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
+    <div class="mb-2.5">
+        <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[250px] mb-4 shadow-none">
+            <img alt="Gloves" class="h-[180px] shrink-0 cursor-pointer"
+                 data-kt-modal-toggle="#modal_shop_product_details"
+                 src="{% static 'metronic/tailwind/dist/assets/media/medical/600x600/gloves.png' %}">
+        </div>
+        <a class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block"
+           data-kt-modal-toggle="#modal_shop_product_details" href="#">
+            Gloves
+        </a>
+    </div>
+    <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
+        <div class="text-xs font-normal text-secondary-foreground">Price Range: $1.20 - $3.60</div>
+    </div>
+</div>
+</div>
+<div class="kt-card" data-product='{
+                "name": "Face Masks (50-Pack)",
+                "image": "{% static ' metronic/tailwind/dist/assets/media/medical/600x600/face-masks.png' %}",
+"description": "Disposable 3-ply face masks for protection against dust and germs. Comfortable ear loops.",
+"sku": "MED-MSK-006",
+"category": "Protective Gear",
+"rating": 4.2,
+"price": "$2.40",
+"original_price": "",
+"discount": "",
+"more_info": "Non-woven fabric, 95% filtration efficiency."
+}'>
+<div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
+    <div class="mb-2.5">
+        <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[250px] mb-4 shadow-none">
+            <img alt="Face Masks" class="h-[180px] shrink-0 cursor-pointer"
+                 data-kt-modal-toggle="#modal_shop_product_details"
+                 src="{% static 'metronic/tailwind/dist/assets/media/medical/600x600/face-masks.png' %}">
+        </div>
+        <a class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block"
+           data-kt-modal-toggle="#modal_shop_product_details" href="#">
+            Face Masks
+        </a>
+    </div>
+    <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
+        <div class="text-xs font-normal text-secondary-foreground">Price Range: $0.60 - $2.40</div>
+    </div>
+</div>
+</div>
+<div class="kt-card" data-product='{
+                "name": "Hand Sanitizer Gel",
+                "image": "{% static ' metronic/tailwind/dist/assets/media/medical/600x600/sanitizer.png' %}",
+"description": "Alcohol-based hand sanitizer gel for effective germ protection. Mommisturizing formula, suitable for frequent use.",
+"sku": "MED-SAN-007",
+"category": "Hygiene",
+"rating": 4.9,
+"price": "$6.00",
+"original_price": "",
+"discount": "",
+"more_info": "500ml bottle, 70% alcohol content."
+}'>
+<div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
+    <div class="mb-2.5">
+        <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[250px] mb-4 shadow-none">
+            <img alt="Sanitizer" class="h-[180px] shrink-0 cursor-pointer"
+                 data-kt-modal-toggle="#modal_shop_product_details"
+                 src="{% static 'metronic/tailwind/dist/assets/media/medical/600x600/sanitizer.png' %}">
+        </div>
+        <a class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block"
+           data-kt-modal-toggle="#modal_shop_product_details" href="#">
+            Sanitizer
+        </a>
+    </div>
+    <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
+        <div class="text-xs font-normal text-secondary-foreground">Price Range: $1.20 - $6.00</div>
+    </div>
+</div>
+</div>
+</div>
+<!-- end: Featured Products -->
+<!-- begin: Special Offers -->
+<div class="space-y-5">
+    <div class="flex items-center justify-between gap-4">
+        <span class="text-lg font-medium text-mono">Special Offers</span>
+        <a class="kt-link" href="#">See All <i class="ki-filled ki-right text-xs"></i></a>
+    </div>
+    <div class="grid xl:grid-cols-2 gap-5 mb-2">
+        <div class="lg:col-span-1">
+            <div class="kt-card h-full bg-violet-50 border-violet-200 dark:border-violet-950 dark:bg-violet-950/30"
+                 data-product='{
+                            "name": "Vitamin D Supplements",
+                            "image": "{% static 'metronic/tailwind/dist/assets/media/medical/600x600/vitamin-d.png' %}",
+            "description": "Boost your immunity with high-potency Vitamin D capsules.",
+            "sku": "MED-VIT-008",
+            "category": "Supplements",
+            "rating": 4.6,
+            "price": "$0.30",
+            "original_price": "$0.40",
+            "discount": "save 25%",
+            "more_info": "60 capsules, 1000 IU per capsule."
+            }'>
+            <div class="kt-card-content flex items-center flex-wrap sm:flex-nowrap justify-between gap-5 lg:gap-9 lg:px-7.5 p-5">
+                <div class="flex flex-col">
+                    <div class="mb-3">
+                        <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">save 25%</span>
+                    </div>
+                    <h3 class="text-[26px] font-semibold text-mono mb-1">Vitamin D Supplements</h3>
+                    <span class="text-sm font-normal text-foreground mb-5 leading-5.5">Boost your immunity with high-potency Vitamin D capsules</span>
+                    <div class="flex items-center gap-4">
+                        <button class="kt-btn kt-btn-mono kt-btn-sm" data-kt-drawer-toggle="#drawers_shop_cart">Add to
+                            Cart <i class="ki-filled ki-handcart"></i></button>
+                        <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm"
+                                data-kt-wishlist-toggle="true">
+                            <i class="ki-filled ki-heart text-base"></i>
+                        </button>
+                        <span class="text-base font-semibold text-mono">$0.30</span>
+                    </div>
+                </div>
+                <img alt="Vitamin D" class="size-48"
+                     src="{% static 'metronic/tailwind/dist/assets/media/medical/600x600/vitamin-d.png' %}"
+                     data-kt-modal-toggle="#modal_shop_product_details">
+            </div>
+        </div>
+    </div>
+    <div class="lg:col-span-1">
+        <div class="grid sm:grid-cols-2 gap-5 items-stretch">
+            <div class="kt-card h-full bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-950"
+                 data-product='{
+                                "name": "Antiseptic Wipes",
+                                "image": "{% static 'metronic/tailwind/dist/assets/media/medical/600x600/antiseptic-wipes.png' %}",
+            "description": "Convenient antiseptic wipes for quick wound cleaning and disinfection.",
+            "sku": "MED-WIP-009",
+            "category": "Wound Care",
+            "rating": 4.3,
+            "price": "$0.16",
+            "original_price": "$0.21",
+            "discount": "save 25%",
+            "more_info": "Pack of 100, individually wrapped."
+            }'>
+            <div class="kt-card-content flex flex-col items-center justify-center px-5 pb-0">
+                <div class="mb-3.5">
+                    <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">save 25%</span>
+                </div>
+                <span class="text-base font-medium text-mono mb-3">Antiseptic Wipes</span>
+                <div class="flex items-center gap-2.5 mb-2.5">
+                    <button class="kt-btn kt-btn-outline kt-btn-sm" data-kt-drawer-toggle="#drawers_shop_cart">Add to
+                        Cart <i class="ki-filled ki-handcart"></i></button>
+                    <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm"
+                            data-kt-wishlist-toggle="true">
+                        <i class="ki-filled ki-heart text-base"></i>
+                    </button>
+                </div>
+                <span class="text-sm font-medium text-mono">$0.16</span>
+                <img alt="Antiseptic Wipes" class="size-48"
+                     src="{% static 'metronic/tailwind/dist/assets/media/medical/600x600/antiseptic-wipes.png' %}"
+                     data-kt-modal-toggle="#modal_shop_product_details">
+            </div>
+        </div>
+        <div class="kt-card h-full bg-primary/10 border-primary/10" data-product='{
+                                "name": "Blood Pressure Monitor",
+                                "image": "{% static 'metronic/tailwind/dist/assets/media/medical/600x600/blood-pressure-monitor.png' %}",
+        "description": "Accurate blood pressure monitor for home use. Easy-to-read digital display.",
+        "sku": "MED-BPM-010",
+        "category": "Diagnostics",
+        "rating": 4.7,
+        "price": "$0.60",
+        "original_price": "$0.80",
+        "discount": "save 25%",
+        "more_info": "Includes cuff, battery-operated."
+        }'>
+        <div class="kt-card-content flex flex-col items-center justify-center px-5 pb-0">
+            <div class="mb-3.5">
+                <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">save 25%</span>
+            </div>
+            <span class="text-base font-medium text-mono mb-3">Blood Pressure Monitor</span>
+            <div class="flex items-center gap-2.5 mb-2.5">
+                <button class="kt-btn kt-btn-outline kt-btn-sm" data-kt-drawer-toggle="#drawers_shop_cart">Add to Cart
+                    <i class="ki-filled ki-handcart"></i></button>
+                <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm"
+                        data-kt-wishlist-toggle="true">
+                    <i class="ki-filled ki-heart text-base"></i>
+                </button>
+            </div>
+            <span class="text-sm font-medium text-mono">$0.60</span>
+            <img alt="Blood Pressure Monitor" class="size-48"
+                 src="{% static 'metronic/tailwind/dist/assets/media/medical/600x600/blood-pressure-monitor.png' %}"
+                 data-kt-modal-toggle="#modal_shop_product_details">
+        </div>
+    </div>
+</div>
+</div>
+</div>
+<!-- end: Special Offers -->
+<!-- begin: New Arrivals -->
+<div class="space-y-4">
+    <div class="flex items-center justify-between gap-4">
+        <span class="text-lg font-medium text-mono">New Arrivals</span>
+        <a class="kt-link" href="#">See All <i class="ki-filled ki-right text-xs"></i></a>
+    </div>
+    <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-2">
+        <div class="kt-card" data-product='{
+                    "name": "Pulse Oximeter Pro",
+                    "image": "{% static 'metronic/tailwind/dist/assets/media/medical/600x600/pulse-oximeter.png' %}",
+        "description": "Portable pulse oximeter for accurate oxygen saturation and pulse rate monitoring.",
+        "sku": "MED-PXO-011",
+        "category": "Diagnostics",
+        "rating": 5.0,
+        "price": "$0.36",
+        "original_price": "",
+        "discount": "",
+        "more_info": "OLED display, includes batteries."
+        }'>
+        <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
+            <div class="mb-2.5">
+                <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[250px] mb-4 shadow-none">
+                    <img alt="Pulse Oximeter" class="h-[180px] shrink-0 cursor-pointer"
+                         data-kt-modal-toggle="#modal_shop_product_details"
+                         src="{% static 'metronic/tailwind/dist/assets/media/medical/600x600/pulse-oximeter.png' %}">
+                    <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
+                            data-kt-wishlist-toggle="true">
+                        <i class="ki-filled ki-heart text-base"></i>
+                    </button>
+                </div>
+                <a class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block"
+                   data-kt-modal-toggle="#modal_shop_product_details" href="#">
+                    Pulse Oximeter Pro
+                </a>
+            </div>
+            <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
+                    <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1"><i
+                            class="ki-solid ki-star text-white -mt-0.5"></i> 5.0</span>
+                <div class="flex items-center flex-wrap gap-1.5">
+                    <span class="text-sm font-medium text-mono">$0.36</span>
+                    <button class="kt-btn kt-btn-outline kt-btn-sm ms-1" data-kt-drawer-toggle="#drawers_shop_cart">Add
+                        <i class="ki-filled ki-handcart"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="kt-card" data-product='{
+                    "name": "Infrared Thermometer",
+                    "image": "{% static 'metronic/tailwind/dist/assets/media/medical/600x600/infrared-thermometer.png' %}",
+    "description": "Non-contact infrared thermometer for quick and accurate temperature readings.",
+    "sku": "MED-ITH-012",
+    "category": "Diagnostics",
+    "rating": 4.7,
+    "price": "$0.48",
+    "original_price": "",
+    "discount": "",
+    "more_info": "LCD display, measures in Celsius and Fahrenheit."
+    }'>
+    <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
+        <div class="mb-2.5">
+            <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[250px] mb-4 shadow-none">
+                <img alt="Infrared Thermometer" class="h-[180px] shrink-0 cursor-pointer"
+                     data-kt-modal-toggle="#modal_shop_product_details"
+                     src="{% static 'metronic/tailwind/dist/assets/media/medical/600x600/infrared-thermometer.png' %}">
+                <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
+                        data-kt-wishlist-toggle="true">
+                    <i class="ki-filled ki-heart text-base"></i>
+                </button>
+            </div>
+            <a class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block"
+               data-kt-modal-toggle="#modal_shop_product_details" href="#">
+                Infrared Thermometer
+            </a>
+        </div>
+        <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
+                    <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1"><i
+                            class="ki-solid ki-star text-white -mt-0.5"></i> 4.7</span>
+            <div class="flex items-center flex-wrap gap-1.5">
+                <span class="text-sm font-medium text-mono">$0.48</span>
+                <button class="kt-btn kt-btn-outline kt-btn-sm ms-1" data-kt-drawer-toggle="#drawers_shop_cart">Add <i
+                        class="ki-filled ki-handcart"></i></button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="kt-card" data-product='{
+                    "name": "Nitrile Medical Gloves",
+                    "image": "{% static 'metronic/tailwind/dist/assets/media/medical/600x600/medical-gloves.png' %}",
+"description": "Durable nitrile gloves for medical and general use. Latex-free and comfortable.",
+"sku": "MED-MGL-013",
+"category": "Protective Gear",
+"rating": 3.5,
+"price": "$0.19",
+"original_price": "",
+"discount": "",
+"more_info": "Pack of 100, powder-free, medium size."
+}'>
+<div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
+    <div class="mb-2.5">
+        <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[250px] mb-4 shadow-none">
+            <img alt="Medical Gloves" class="h-[180px] shrink-0 cursor-pointer"
+                 data-kt-modal-toggle="#modal_shop_product_details"
+                 src="{% static 'metronic/tailwind/dist/assets/media/medical/600x600/medical-gloves.png' %}">
+            <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
+                    data-kt-wishlist-toggle="true">
+                <i class="ki-filled ki-heart text-base"></i>
+            </button>
+        </div>
+        <a class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block"
+           data-kt-modal-toggle="#modal_shop_product_details" href="#">
+            Nitrile Medical Gloves
+        </a>
+    </div>
+    <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
+                    <span class="kt-badge kt-badge-warning kt-badge-sm rounded-full gap-1"><i
+                            class="ki-solid ki-star text-white -mt-0.5"></i> 3.5</span>
+        <div class="flex items-center flex-wrap gap-1.5">
+            <span class="text-sm font-medium text-mono">$0.19</span>
+            <button class="kt-btn kt-btn-outline kt-btn-sm ms-1" data-kt-drawer-toggle="#drawers_shop_cart">Add <i
+                    class="ki-filled ki-handcart"></i></button>
+        </div>
+    </div>
+</div>
+</div>
+<div class="kt-card" data-product='{
+                    "name": "Protective Face Shields",
+                    "image": "{% static 'metronic/tailwind/dist/assets/media/medical/600x600/face-shields.png' %}",
+"description": "Clear protective face shields for enhanced safety. Adjustable and reusable.",
+"sku": "MED-FSH-014",
+"category": "Protective Gear",
+"rating": 4.9,
+"price": "$0.28",
+"original_price": "",
+"discount": "",
+"more_info": "Anti-fog coating, adjustable headband."
+}'>
+<div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
+    <div class="mb-2.5">
+        <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[250px] mb-4 shadow-none">
+            <img alt="Face Shields" class="h-[180px] shrink-0 cursor-pointer"
+                 data-kt-modal-toggle="#modal_shop_product_details"
+                 src="{% static 'metronic/tailwind/dist/assets/media/medical/600x600/face-shields.png' %}">
+            <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
+                    data-kt-wishlist-toggle="true">
+                <i class="ki-filled ki-heart text-base"></i>
+            </button>
+        </div>
+        <a class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block"
+           data-kt-modal-toggle="#modal_shop_product_details" href="#">
+            Protective Face Shields
+        </a>
+    </div>
+    <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
+                    <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1"><i
+                            class="ki-solid ki-star text-white -mt-0.5"></i> 4.9</span>
+        <div class="flex items-center flex-wrap gap-1.5">
+            <span class="text-sm font-medium text-mono">$0.28</span>
+            <button class="kt-btn kt-btn-outline kt-btn-sm ms-1" data-kt-drawer-toggle="#drawers_shop_cart">Add <i
+                    class="ki-filled ki-handcart"></i></button>
+        </div>
+    </div>
+</div>
+</div>
+</div>
+</div>
+<!-- end: New Arrivals -->
+<!-- begin: Popular Medical Supplies -->
+<div class="space-y-4">
+    <div class="flex items-center justify-between gap-4">
+        <span class="text-lg font-medium text-mono">Popular Medical Supplies</span>
+        <a class="kt-link" href="#">See All <i class="ki-filled ki-right text-xs"></i></a>
+    </div>
+    <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-2">
+        <div class="kt-card" data-product='{
+                    "name": "Surgical Masks (50-Pack)",
+                    "image": "{% static 'metronic/tailwind/dist/assets/media/medical/600x600/surgical-masks.png' %}",
+        "description": "High-quality surgical masks with 3-ply protection. Ideal for medical and general use.",
+        "sku": "MED-SMK-015",
+        "category": "Protective Gear",
+        "rating": 5.0,
+        "price": "$0.24",
+        "original_price": "",
+        "discount": "",
+        "more_info": "99% bacterial filtration efficiency, disposable."
+        }'>
+        <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
+            <div class="mb-2.5">
+                <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[250px] mb-4 shadow-none">
+                    <img alt="Surgical Masks" class="h-[100px] shrink-0 cursor-pointer"
+                         data-kt-modal-toggle="#modal_shop_product_details"
+                         src="{% static 'metronic/tailwind/dist/assets/media/medical/600x600/surgical-masks.png' %}">
+                    <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
+                            data-kt-wishlist-toggle="true">
+                        <i class="ki-filled ki-heart text-base"></i>
+                    </button>
+                </div>
+                <a class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block"
+                   data-kt-modal-toggle="#modal_shop_product_details" href="#">
+                    Surgical Masks (50-Pack)
+                </a>
+            </div>
+            <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
+                    <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1"><i
+                            class="ki-solid ki-star text-white -mt-0.5"></i> 5.0</span>
+                <div class="flex items-center flex-wrap gap-1.5">
+                    <span class="text-sm font-medium text-mono">$0.24</span>
+                    <button class="kt-btn kt-btn-outline kt-btn-sm ms-1" data-kt-drawer-toggle="#drawers_shop_cart">Add
+                        <i class="ki-filled ki-handcart"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="kt-card" data-product='{
+                    "name": "Hand Sanitizer Gel",
+                    "image": "{% static 'metronic/tailwind/dist/assets/media/medical/600x600/hand-sanitizer.png' %}",
+    "description": "Effective hand sanitizer gel with 70% alcohol. Moisturizing and quick-drying.",
+    "sku": "MED-HSG-016",
+    "category": "Hygiene",
+    "rating": 3.5,
+    "price": "$0.12",
+    "original_price": "",
+    "discount": "",
+    "more_info": "100ml bottle, portable size."
+    }'>
+    <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
+        <div class="mb-2.5">
+            <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[250px] mb-4 shadow-none">
+                <img alt="Hand Sanitizer" class="h-[180px] shrink-0 cursor-pointer"
+                     data-kt-modal-toggle="#modal_shop_product_details"
+                     src="{% static 'metronic/tailwind/dist/assets/media/medical/600x600/hand-sanitizer.png' %}">
+                <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
+                        data-kt-wishlist-toggle="true">
+                    <i class="ki-filled ki-heart text-base"></i>
+                </button>
+            </div>
+            <a class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block"
+               data-kt-modal-toggle="#modal_shop_product_details" href="#">
+                Hand Sanitizer Gel
+            </a>
+        </div>
+        <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
+                    <span class="kt-badge kt-badge-warning kt-badge-sm rounded-full gap-1"><i
+                            class="ki-solid ki-star text-white -mt-0.5"></i> 3.5</span>
+            <div class="flex items-center flex-wrap gap-1.5">
+                <span class="text-sm font-medium text-mono">$0.12</span>
+                <button class="kt-btn kt-btn-outline kt-btn-sm ms-1" data-kt-drawer-toggle="#drawers_shop_cart">Add <i
+                        class="ki-filled ki-handcart"></i></button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="kt-card" data-product='{
+                    "name": "Compact First Aid Kit",
+                    "image": "{% static 'metronic/tailwind/dist/assets/media/medical/600x600/first-aid-kit.png' %}",
+"description": "Portable first aid kit with essential medical supplies for emergencies.",
+"sku": "MED-FAK-017",
+"category": "Emergency",
+"rating": 4.7,
+"price": "$0.42",
+"original_price": "",
+"discount": "",
+"more_info": "Includes bandages, antiseptic wipes, and scissors."
+}'>
+<div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
+    <div class="mb-2.5">
+        <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[250px] mb-4 shadow-none">
+            <img alt="First Aid Kit" class="h-[180px] shrink-0 cursor-pointer"
+                 data-kt-modal-toggle="#modal_shop_product_details"
+                 src="{% static 'metronic/tailwind/dist/assets/media/medical/600x600/first-aid-kit.png' %}">
+            <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
+                    data-kt-wishlist-toggle="true">
+                <i class="ki-filled ki-heart text-base"></i>
+            </button>
+        </div>
+        <a class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block"
+           data-kt-modal-toggle="#modal_shop_product_details" href="#">
+            Compact First Aid Kit
+        </a>
+    </div>
+    <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
+                    <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1"><i
+                            class="ki-solid ki-star text-white -mt-0.5"></i> 4.7</span>
+        <div class="flex items-center flex-wrap gap-1.5">
+            <span class="text-sm font-medium text-mono">$0.42</span>
+            <button class="kt-btn kt-btn-outline kt-btn-sm ms-1" data-kt-drawer-toggle="#drawers_shop_cart">Add <i
+                    class="ki-filled ki-handcart"></i></button>
+        </div>
+    </div>
+</div>
+</div>
+<div class="kt-card" data-product='{
+                    "name": "Vitamin C Tablets",
+                    "image": "{% static 'metronic/tailwind/dist/assets/media/medical/600x600/vitamin-c.png' %}",
+"description": "High-potency Vitamin C tablets to support immune health.",
+"sku": "MED-VCT-018",
+"category": "Supplements",
+"rating": 4.9,
+"price": "$0.18",
+"original_price": "",
+"discount": "",
+"more_info": "100 tablets, 500mg per tablet."
+}'>
+<div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
+    <div class="mb-2.5">
+        <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[250px] mb-4 shadow-none">
+            <img alt="Vitamin C" class="h-[180px] shrink-0 cursor-pointer"
+                 data-kt-modal-toggle="#modal_shop_product_details"
+                 src="{% static 'metronic/tailwind/dist/assets/media/medical/600x600/vitamin-c.png' %}">
+            <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
+                    data-kt-wishlist-toggle="true">
+                <i class="ki-filled ki-heart text-base"></i>
+            </button>
+        </div>
+        <a class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block"
+           data-kt-modal-toggle="#modal_shop_product_details" href="#">
+            Vitamin C Tablets
+        </a>
+    </div>
+    <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
+                    <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1"><i
+                            class="ki-solid ki-star text-white -mt-0.5"></i> 4.9</span>
+        <div class="flex items-center flex-wrap gap-1.5">
+            <span class="text-sm font-medium text-mono">$0.18</span>
+            <button class="kt-btn kt-btn-outline kt-btn-sm ms-1" data-kt-drawer-toggle="#drawers_shop_cart">Add <i
+                    class="ki-filled ki-handcart"></i></button>
+        </div>
+    </div>
+</div>
+</div>
+</div>
+</div>
+<!-- end: Popular Medical Supplies -->
+<!-- begin: Limited-Time Deals -->
+<div class="space-y-4">
+    <div class="flex items-center justify-between gap-4">
+        <span class="text-lg font-medium text-mono">Limited-Time Deals</span>
+        <a class="kt-btn kt-btn-sm kt-btn-ghost kt-btn-primary" href="#">See All <i class="ki-filled ki-right"></i></a>
+    </div>
+    <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-2">
+        <!-- Sterile Medical Bandages -->
+        <div class="kt-card" data-product='...'>
+            <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
+                <div class="mb-2.5">
+                    <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[250px] mb-4 shadow-none">
+                        <img alt="Medical Bandages" class="h-[180px] shrink-0 cursor-pointer"
+                             data-kt-modal-toggle="#modal_shop_product_details"
+                             src="{% static 'metronic/tailwind/dist/assets/media/medical/600x600/medical-bandages.png' %}">
+                        <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
+                                data-kt-wishlist-toggle="true">
+                            <i class="ki-filled ki-heart text-base"></i>
+                        </button>
+                    </div>
+                    <a class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block"
+                       data-kt-modal-toggle="#modal_shop_product_details" href="#">
+                        <div class="flex items-center gap-2">
+                            <span>Sterile Medical Bandages</span>
+                            <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">save 40%</span>
+                        </div>
+                    </a>
+                </div>
+                <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
+                <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1">
+                    <i class="ki-solid ki-star text-white -mt-0.5"></i> 5.0
+                </span>
+                    <div class="flex items-center flex-wrap gap-1.5">
+                        <span class="text-xs font-normal text-secondary-foreground line-through pt-[1px]">$0.30</span>
+                        <span class="text-sm font-medium text-mono">$0.18</span>
+                        <button class="kt-btn kt-btn-outline kt-btn-sm ms-1" data-kt-drawer-toggle="#drawers_shop_cart">
+                            Add <i class="ki-filled ki-handcart"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-<!-- Mirrored from keenthemes.com/metronic/tailwind/demo10/store-client/home by HTTrack Website Copier/3.x [XR&CO'2014], Wed, 25 Jun 2025 09:13:42 GMT -->
-</html>
+        <!-- Disinfectant Spray -->
+        <div class="kt-card" data-product='...'>
+            <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
+                <div class="mb-2.5">
+                    <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[250px] mb-4 shadow-none">
+                        <img alt="Disinfectant Spray" class="h-[180px] shrink-0 cursor-pointer"
+                             data-kt-modal-toggle="#modal_shop_product_details"
+                             src="{% static 'metronic/tailwind/dist/assets/media/medical/600x600/disinfectant-spray.png' %}">
+                        <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
+                                data-kt-wishlist-toggle="true">
+                            <i class="ki-filled ki-heart text-base"></i>
+                        </button>
+                    </div>
+                    <a class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block"
+                       data-kt-modal-toggle="#modal_shop_product_details" href="#">
+                        <div class="flex items-center gap-2">
+                            <span>Disinfectant Spray</span>
+                            <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">save 40%</span>
+                        </div>
+                    </a>
+                </div>
+                <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
+                <span class="kt-badge kt-badge-warning kt-badge-sm rounded-full gap-1">
+                    <i class="ki-solid ki-star text-white -mt-0.5"></i> 3.5
+                </span>
+                    <div class="flex items-center flex-wrap gap-1.5">
+                        <span class="text-xs font-normal text-secondary-foreground line-through pt-[1px]">$0.24</span>
+                        <span class="text-sm font-medium text-mono">$0.14</span>
+                        <button class="kt-btn kt-btn-outline kt-btn-sm ms-1" data-kt-drawer-toggle="#drawers_shop_cart">
+                            Add <i class="ki-filled ki-handcart"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sterile Syringes -->
+        <div class="kt-card" data-product='...'>
+            <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
+                <div class="mb-2.5">
+                    <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[250px] mb-4 shadow-none">
+                        <img alt="Medical Syringes" class="h-[180px] shrink-0 cursor-pointer"
+                             data-kt-modal-toggle="#modal_shop_product_details"
+                             src="{% static 'metronic/tailwind/dist/assets/media/medical/600x600/medical-syringes.png' %}">
+                        <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
+                                data-kt-wishlist-toggle="true">
+                            <i class="ki-filled ki-heart text-base"></i>
+                        </button>
+                    </div>
+                    <a class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block"
+                       data-kt-modal-toggle="#modal_shop_product_details" href="#">
+                        <div class="flex items-center gap-2">
+                            <span>Sterile Syringes (10-Pack)</span>
+                            <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">save 40%</span>
+                        </div>
+                    </a>
+                </div>
+                <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
+                <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1">
+                    <i class="ki-solid ki-star text-white -mt-0.5"></i> 4.7
+                </span>
+                    <div class="flex items-center flex-wrap gap-1.5">
+                        <span class="text-xs font-normal text-secondary-foreground line-through pt-[1px]">$0.36</span>
+                        <span class="text-sm font-medium text-mono">$0.22</span>
+                        <button class="kt-btn kt-btn-outline kt-btn-sm ms-1" data-kt-drawer-toggle="#drawers_shop_cart">
+                            Add <i class="ki-filled ki-handcart"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Medical Adhesive Tape -->
+        <div class="kt-card" data-product='...'>
+            <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
+                <div class="mb-2.5">
+                    <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[250px] mb-4 shadow-none">
+                        <img alt="Medical Tape" class="h-[180px] shrink-0 cursor-pointer"
+                             data-kt-modal-toggle="#modal_shop_product_details"
+                             src="{% static 'metronic/tailwind/dist/assets/media/medical/600x600/medical-tape.png' %}">
+                        <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
+                                data-kt-wishlist-toggle="true">
+                            <i class="ki-filled ki-heart text-base"></i>
+                        </button>
+                    </div>
+                    <a class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block"
+                       data-kt-modal-toggle="#modal_shop_product_details" href="#">
+                        <div class="flex items-center gap-2">
+                            <span>Medical Adhesive Tape</span>
+                            <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">save 40%</span>
+                        </div>
+                    </a>
+                </div>
+                <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
+                <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1">
+                    <i class="ki-solid ki-star text-white -mt-0.5"></i> 4.9
+                </span>
+                    <div class="flex items-center flex-wrap gap-1.5">
+                        <span class="text-xs font-normal text-secondary-foreground line-through pt-[1px]">$0.16</span>
+                        <span class="text-sm font-medium text-mono">$0.10</span>
+                        <button class="kt-btn kt-btn-outline kt-btn-sm ms-1" data-kt-drawer-toggle="#drawers_shop_cart">
+                            Add <i class="ki-filled ki-handcart"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+<!-- end: Limited-Time Deals -->
+<!-- begin: Benefits -->
+<div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-2">
+    <div class="kt-card">
+        <div class="kt-card-content flex items-center gap-3.5 px-5">
+            <div class="relative size-[50px] shrink-0">
+                <svg class="w-full h-full stroke-primary/10 fill-primary-soft" fill="none" height="48"
+                     viewBox="0 0 44 48" width="44" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M16 2.4641C19.7128 0.320509 24.2872 0.320508 28 2.4641L37.6506 8.0359C41.3634 10.1795 43.6506 14.141 43.6506 18.4282V29.5718C43.6506 33.859 41.3634 37.8205 37.6506 39.9641L28 45.5359C24.2872 47.6795 19.7128 47.6795 16 45.5359L6.34937 39.9641C2.63655 37.8205 0.349365 33.859 0.349365 29.5718V18.4282C0.349365 14.141 2.63655 10.1795 6.34937 8.0359L16 2.4641Z"
+                          fill=""></path>
+                    <path d="M16.25 2.89711C19.8081 0.842838 24.1919 0.842837 27.75 2.89711L37.4006 8.46891C40.9587 10.5232 43.1506 14.3196 43.1506 18.4282V29.5718C43.1506 33.6804 40.9587 37.4768 37.4006 39.5311L27.75 45.1029C24.1919 47.1572 19.8081 47.1572 16.25 45.1029L6.59937 39.5311C3.04125 37.4768 0.849365 33.6803 0.849365 29.5718V18.4282C0.849365 14.3196 3.04125 10.5232 6.59937 8.46891L16.25 2.89711Z"
+                          stroke=""></path>
+                </svg>
+                <div class="absolute leading-none start-2/4 top-2/4 -translate-y-2/4 -translate-x-2/4 rtl:translate-x-2/4">
+                    <i class="ki-filled ki-delivery-time text-xl ps-px text-primary"></i>
+                </div>
+            </div>
+            <div class="flex flex-col">
+                <a class="hover:text-primary text-md font-medium text-mono" href="#">Free Delivery</a>
+                <span class="text-xs font-normal text-secondary-foreground">No extra shipping costs</span>
+            </div>
+        </div>
+    </div>
+    <div class="kt-card">
+        <div class="kt-card-content flex items-center gap-3.5 px-5">
+            <div class="relative size-[50px] shrink-0">
+                <svg class="w-full h-full stroke-success-transparent fill-success-soft" fill="none" height="48"
+                     viewBox="0 0 44 48" width="44" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M16 2.4641C19.7128 0.320509 24.2872 0.320508 28 2.4641L37.6506 8.0359C41.3634 10.1795 43.6506 14.141 43.6506 18.4282V29.5718C43.6506 33.859 41.3634 37.8205 37.6506 39.9641L28 45.5359C24.2872 47.6795 19.7128 47.6795 16 45.5359L6.34937 39.9641C2.63655 37.8205 0.349365 33.859 0.349365 29.5718V18.4282C0.349365 14.141 2.63655 10.1795 6.34937 8.0359L16 2.4641Z"
+                          fill=""></path>
+                    <path d="M16.25 2.89711C19.8081 0.842838 24.1919 0.842837 27.75 2.89711L37.4006 8.46891C40.9587 10.5232 43.1506 14.3196 43.1506 18.4282V29.5718C43.1506 33.6804 40.9587 37.4768 37.4006 39.5311L27.75 45.1029C24.1919 47.1572 19.8081 47.1572 16.25 45.1029L6.59937 39.5311C3.04125 37.4768 0.849365 33.6803 0.849365 29.5718V18.4282C0.849365 14.3196 3.04125 10.5232 6.59937 8.46891L16.25 2.89711Z"
+                          stroke=""></path>
+                </svg>
+                <div class="absolute leading-none start-2/4 top-2/4 -translate-y-2/4 -translate-x-2/4 rtl:translate-x-2/4">
+                    <i class="ki-filled ki-messages text-xl ps-px text-green-500"></i>
+                </div>
+            </div>
+            <div class="flex flex-col">
+                <a class="hover:text-primary text-md font-medium text-mono" href="#">24/7 Support</a>
+                <span class="text-xs font-normal text-secondary-foreground">Help anytime, anywhere</span>
+            </div>
+        </div>
+    </div>
+    <div class="kt-card">
+        <div class="kt-card-content flex items-center gap-3.5 px-5">
+            <div class="relative size-[50px] shrink-0">
+                <svg class="w-full h-full stroke-info-transparent fill-info-soft" fill="none" height="48"
+                     viewBox="0 0 44 48" width="44" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M16 2.4641C19.7128 0.320509 24.2872 0.320508 28 2.4641L37.6506 8.0359C41.3634 10.1795 43.6506 14.141 43.6506 18.4282V29.5718C43.6506 33.859 41.3634 37.8205 37.6506 39.9641L28 45.5359C24.2872 47.6795 19.7128 47.6795 16 45.5359L6.34937 39.9641C2.63655 37.8205 0.349365 33.859 0.349365 29.5718V18.4282C0.349365 14.141 2.63655 10.1795 6.34937 8.0359L16 2.4641Z"
+                          fill=""></path>
+                    <path d="M16.25 2.89711C19.8081 0.842838 24.1919 0.842837 27.75 2.89711L37.4006 8.46891C40.9587 10.5232 43.1506 14.3196 43.1506 18.4282V29.5718C43.1506 33.6804 40.9587 37.4768 37.4006 39.5311L27.75 45.1029C24.1919 47.1572 19.8081 47.1572 16.25 45.1029L6.59937 39.5311C3.04125 37.4768 0.849365 33.6803 0.849365 29.5718V18.4282C0.849365 14.3196 3.04125 10.5232 6.59937 8.46891L16.25 2.89711Z"
+                          stroke=""></path>
+                </svg>
+                <div class="absolute leading-none start-2/4 top-2/4 -translate-y-2/4 -translate-x-2/4 rtl:translate-x-2/4">
+                    <i class="ki-filled ki-discount text-xl ps-px text-violet-500"></i>
+                </div>
+            </div>
+            <div class="flex flex-col">
+                <a class="hover:text-primary text-md font-medium text-mono" href="#">Discounts</a>
+                <span class="text-xs font-normal text-secondary-foreground">Save big on top deals</span>
+            </div>
+        </div>
+    </div>
+    <div class="kt-card">
+        <div class="kt-card-content flex items-center gap-3.5 px-5">
+            <div class="relative size-[50px] shrink-0">
+                <svg class="w-full h-full stroke-yellow-100 fill-warning-soft" fill="none" height="48"
+                     viewBox="0 0 44 48" width="44" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M16 2.4641C19.7128 0.320509 24.2872 0.320508 28 2.4641L37.6506 8.0359C41.3634 10.1795 43.6506 14.141 43.6506 18.4282V29.5718C43.6506 33.859 41.3634 37.8205 37.6506 39.9641L28 45.5359C24.2872 47.6795 19.7128 47.6795 16 45.5359L6.34937 39.9641C2.63655 37.8205 0.349365 33.859 0.349365 29.5718V18.4282C0.349365 14.141 2.63655 10.1795 6.34937 8.0359L16 2.4641Z"
+                          fill=""></path>
+                    <path d="M16.25 2.89711C19.8081 0.842838 24.1919 0.842837 27.75 2.89711L37.4006 8.46891C40.9587 10.5232 43.1506 14.3196 43.1506 18.4282V29.5718C43.1506 33.6804 40.9587 37.4768 37.4006 39.5311L27.75 45.1029C24.1919 47.1572 19.8081 47.1572 16.25 45.1029L6.59937 39.5311C3.04125 37.4768 0.849365 33.6803 0.849365 29.5718V18.4282C0.849365 14.3196 3.04125 10.5232 6.59937 8.46891L16.25 2.89711Z"
+                          stroke=""></path>
+                </svg>
+                <div class="absolute leading-none start-2/4 top-2/4 -translate-y-2/4 -translate-x-2/4 rtl:translate-x-2/4">
+                    <i class="ki-filled ki-credit-cart text-xl ps-px text-yellow-500"></i>
+                </div>
+            </div>
+            <div class="flex flex-col">
+                <a class="hover:text-primary text-md font-medium text-mono" href="#">Money-Back</a>
+                <span class="text-xs font-normal text-secondary-foreground">Full refund, no risk</span>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- end: Benefits -->
+<!-- begin: Product Details Modal -->
+<div class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+     data-kt-modal="true" id="modal_shop_product_details">
+    <div class="kt-card w-full max-w-[500px] h-full rounded-xl border border-border bg-background" style="float:right">
+        <div class="kt-card-header px-5 flex items-center justify-between">
+            <h3 class="kt-card-title">Product Details</h3>
+            <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" data-kt-modal-dismiss="true">
+                <i class="ki-filled ki-cross text-base"></i>
+            </button>
+        </div>
+        <div class="kt-card-content flex flex-col space-y-3 p-5 kt-scrollable-y-auto">
+            <div class="kt-card relative items-center justify-center bg-accent/50 mb-6.5 h-[280px] shadow-none">
+                <span class="kt-badge kt-badge-destructive kt-badge-sm absolute top-4 end-4 uppercase product-discount hidden"></span>
+                <img alt="" class="w-[250px] h-[250px] object-cover product-image"/>
+            </div>
+            <span class="text-base font-medium text-mono product-name"></span>
+            <span class="text-sm font-normal text-foreground block mb-7 product-description"></span>
+            <div class="flex flex-col gap-2.5">
+                <div class="flex items-center gap-2.5">
+                    <span class="text-xs font-normal text-foreground min-w-14">SKU</span>
+                    <span class="text-xs font-medium text-foreground product-sku"></span>
+                </div>
+                <div class="flex items-center gap-2.5">
+                    <span class="text-xs font-normal text-foreground min-w-14">Category</span>
+                    <span class="text-xs font-medium text-foreground product-category"></span>
+                </div>
+                <div class="flex items-center gap-2.5">
+                    <span class="text-xs font-normal text-foreground min-w-14">Rating</span>
+                    <div class="kt-rating product-rating"></div>
+                </div>
+                <div class="flex items-center gap-2.5">
+                    <span class="text-xs font-normal text-foreground min-w-14">More Info</span>
+                    <span class="text-xs font-normal text-foreground product-more-info"></span>
+                </div>
+            </div>
+            <div class="flex items-center justify-end gap-2">
+                <span class="text-base font-normal text-secondary-foreground line-through product-original-price hidden"></span>
+                <span class="text-lg font-medium text-mono product-price"></span>
+            </div>
+        </div>
+        <div class="kt-card-footer px-5">
+            <button class="kt-btn kt-btn-primary grow" data-kt-drawer-toggle="#drawers_shop_cart">
+                <i class="ki-filled ki-handcart"></i> Add to Cart
+            </button>
+        </div>
+    </div>
+</div>
+<!-- end: Product Details Modal -->
+<!-- begin: JavaScript -->
+<script>
+    // Product details modal
+    document.querySelectorAll('[data-kt-modal-toggle="#modal_shop_product_details"]').forEach(element => {
+        element.addEventListener('click', function (e) {
+            e.preventDefault();
+            const card = this.closest('.kt-card');
+            if (!card) {
+                console.warn('Parent .kt-card not found for modal toggle');
+                return;
+            }
+            const productData = card.getAttribute('data-product');
+            const product = safeParseJSON(productData);
+            if (!product) return;
+
+            const modal = document.querySelector('#modal_shop_product_details');
+            if (!modal) {
+                console.error('Product details modal not found');
+                return;
+            }
+
+            // Populate modal fields
+            modal.querySelector('.product-name').textContent = product.name;
+            modal.querySelector('.product-image').src = product.image;
+            modal.querySelector('.product-image').alt = product.name;
+            modal.querySelector('.product-description').textContent = product.description;
+            modal.querySelector('.product-sku').textContent = product.sku;
+            modal.querySelector('.product-category').textContent = product.category;
+            modal.querySelector('.product-price').textContent = product.price;
+            modal.querySelector('.product-more-info').textContent = product.more_info;
+
+            // Handle discount and original price
+            const discountBadge = modal.querySelector('.product-discount');
+            const originalPrice = modal.querySelector('.product-original-price');
+            if (product.discount) {
+                discountBadge.textContent = product.discount;
+                discountBadge.classList.remove('hidden');
+                originalPrice.textContent = product.original_price;
+                originalPrice.classList.remove('hidden');
+            } else {
+                discountBadge.classList.add('hidden');
+                originalPrice.classList.add('hidden');
+            }
+
+            // Populate rating
+            const ratingContainer = modal.querySelector('.product-rating');
+            ratingContainer.innerHTML = '';
+            const rating = parseFloat(product.rating);
+            for (let i = 1; i <= 5; i++) {
+                const star = document.createElement('i');
+                star.classList.add('ki-solid', 'ki-star', 'text-sm');
+                if (i <= Math.floor(rating)) {
+                    star.classList.add('text-yellow-500');
+                } else if (i === Math.ceil(rating) && rating % 1 !== 0) {
+                    star.classList.add('text-yellow-500');
+                    star.style.clipPath = 'inset(0 50% 0 0)';
+                } else {
+                    star.classList.add('text-gray-300');
+                }
+                ratingContainer.appendChild(star);
+            }
+
+            // Show modal
+            modal.classList.remove('hidden');
+        });
+    });
+
+    // Modal dismiss
+    document.querySelectorAll('[data-kt-modal-dismiss="true"]').forEach(button => {
+        button.addEventListener('click', function () {
+            const modal = this.closest('.kt-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+        });
+    });
+
+    // Drawer toggle
+    document.querySelectorAll('[data-kt-drawer-toggle]').forEach(button => {
+        button.addEventListener('click', function () {
+            const drawerId = this.getAttribute('data-kt-drawer-toggle');
+            const drawer = document.querySelector(drawerId);
+            if (drawer) {
+                drawer.classList.toggle('hidden');
+            }
+        });
+    });
+});
+</script>
+<!-- end: JavaScript -->
+{% endblock %}

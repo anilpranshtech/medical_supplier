@@ -1,0 +1,141 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="kt-container-fixed mt-5 py-5" style="max-width: var(--custom-container-width, 85%);">
+    <div class="flex flex-col items-stretch gap-7 mt-5 py-5">
+        <main class="grow" role="content">
+            <!-- Container -->
+            <div class="kt-container-fixed">
+                <!-- begin: grid -->
+                <div class="grid xl:grid-cols-1 gap-5 lg:gap-9">
+                    <!-- begin: Card -->
+                    <div class="lg:col-span-1">
+                        <div class="kt-card">
+                            <div class="kt-card-header justify-start bg-muted/70 gap-9 h-auto py-5">
+                                <div class="flex flex-col gap-1.5">
+                                    <span class="text-xs font-normal text-secondary-foreground">Order ID</span>
+                                    <span class="text-sm font-medium text-mono">X319330-S24</span>
+                                </div>
+                                <div class="flex flex-col gap-1.5">
+                                    <span class="text-xs font-normal text-secondary-foreground">Order placed</span>
+                                    <span class="text-sm font-medium text-mono">26 June, 2025</span>
+                                </div>
+                                <div class="flex flex-col gap-1.5">
+                                    <span class="text-xs font-normal text-secondary-foreground">Total</span>
+                                    <span class="text-sm font-medium text-mono">$7.78</span>
+                                </div>
+                                <div class="flex flex-col gap-1.5">
+                                    <span class="text-xs font-normal text-secondary-foreground">Ship to</span>
+                                    <span class="text-sm font-medium text-mono">Jeroen van Dijk</span>
+                                </div>
+                                <div class="flex flex-col gap-1.5">
+                                    <span class="text-xs font-normal text-secondary-foreground">Estimated Delivery</span>
+                                    <span class="text-sm font-medium text-mono">07 July, 2025</span>
+                                </div>
+                            </div>
+                            <div class="kt-card-content p-5 lg:p-7.5 space-y-5">
+                                <div class="kt-card">
+                                    <div class="kt-card-content flex items-center flex-wrap justify-between gap-4.5 p-2 pe-5">
+                                        <div class="flex items-center gap-3.5">
+                                            <div class="kt-card flex items-center justify-center bg-accent/50 h-[70px] w-[90px] shadow-none">
+                                                <img alt="Sterile Bandages" class="cursor-pointer h-[70px]" data-kt-drawer-toggle="#drawers_shop_product_details" src="{% static 'metronic/tailwind/dist/assets/media/medical/600x600/medical-bandages.png' %}" onerror="this.src='{% static 'metronic/tailwind/dist/assets/media/store/client/600x600/placeholder.png' %}'">
+                                            </div>
+                                            <div class="flex flex-col gap-1">
+                                                <a class="hover:text-primary text-sm font-medium text-mono leading-5.5" data-kt-drawer-toggle="#drawers_shop_product_details" href="#">Sterile Bandages (2 Packs)</a>
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="text-xs font-normal text-secondary-foreground uppercase">
+                                                        sku: <span class="text-xs font-medium text-foreground">MED-BAND-001</span>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="flex flex-col gap-1.5">
+                                            <span class="text-xs font-normal text-secondary-foreground text-end">2 x</span>
+                                            <div class="flex items-center flex-wrap gap-1.5">
+                                                <span class="text-sm font-semibold text-mono">$3.60</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="kt-card">
+                                    <div class="kt-card-content flex items-center flex-wrap justify-between gap-4.5 p-2 pe-5">
+                                        <div class="flex items-center gap-3.5">
+                                            <div class="kt-card flex items-center justify-center bg-accent/50 h-[70px] w-[90px] shadow-none">
+                                                <img alt="Disposable Syringes" class="cursor-pointer h-[70px]" data-kt-drawer-toggle="#drawers_shop_product_details" src="{% static 'metronic/tailwind/dist/assets/media/medical/600x600/medical-syringes.png' %}" onerror="this.src='{% static 'metronic/tailwind/dist/assets/media/store/client/600x600/placeholder.png' %}'">
+                                            </div>
+                                            <div class="flex flex-col gap-1">
+                                                <a class="hover:text-primary text-sm font-medium text-mono leading-5.5" data-kt-drawer-toggle="#drawers_shop_product_details" href="#">Disposable Syringes (1 Pack)</a>
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="text-xs font-normal text-secondary-foreground uppercase">
+                                                        sku: <span class="text-xs font-medium text-foreground">MED-SYR-001</span>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="flex flex-col gap-1.5">
+                                            <span class="text-xs font-normal text-secondary-foreground text-end">1 x</span>
+                                            <div class="flex items-center flex-wrap gap-1.5">
+                                                <span class="text-sm font-semibold text-mono">$1.20</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="kt-card">
+                                    <div class="kt-card-content flex items-center flex-wrap justify-between gap-4.5 p-2 pe-5">
+                                        <div class="flex items-center gap-3.5">
+                                            <div class="kt-card flex items-center justify-center bg-accent/50 h-[70px] w-[90px] shadow-none">
+                                                <img alt="Digital Thermometer" class="cursor-pointer h-[70px]" data-kt-drawer-toggle="#drawers_shop_product_details" src="{% static 'metronic/tailwind/dist/assets/media/medical/600x600/thermometer.png' %}" onerror="this.src='{% static 'metronic/tailwind/dist/assets/media/store/client/600x600/placeholder.png' %}'">
+                                            </div>
+                                            <div class="flex flex-col gap-1">
+                                                <a class="hover:text-primary text-sm font-medium text-mono leading-5.5" data-kt-drawer-toggle="#drawers_shop_product_details" href="#">Digital Thermometer</a>
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="text-xs font-normal text-secondary-foreground uppercase">
+                                                        sku: <span class="text-xs font-medium text-foreground">MED-THERM-001</span>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="flex flex-col gap-1.5">
+                                            <span class="text-xs font-normal text-secondary-foreground text-end">1 x</span>
+                                            <div class="flex items-center flex-wrap gap-1.5">
+                                                <span class="text-sm font-semibold text-mono">$2.38</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="kt-card">
+                                    <div class="kt-card-content flex items-center flex-wrap justify-between gap-4.5 p-2 pe-5">
+                                        <div class="flex items-center gap-3.5">
+                                            <div class="kt-card flex items-center justify-center bg-accent/50 h-[70px] w-[90px] shadow-none">
+                                                <img alt="Hand Sanitizer Gel" class="cursor-pointer h-[70px]" data-kt-drawer-toggle="#drawers_shop_product_details" src="{% static 'metronic/tailwind/dist/assets/media/medical/600x600/hand-sanitizer.png' %}" onerror="this.src='{% static 'metronic/tailwind/dist/assets/media/store/client/600x600/placeholder.png' %}'">
+                                            </div>
+                                            <div class="flex flex-col gap-1">
+                                                <a class="hover:text-primary text-sm font-medium text-mono leading-5.5" data-kt-drawer-toggle="#drawers_shop_product_details" href="#">Hand Sanitizer Gel</a>
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="text-xs font-normal text-secondary-foreground uppercase">
+                                                        sku: <span class="text-xs font-medium text-foreground">MED-SAN-001</span>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="flex flex-col gap-1.5">
+                                            <span class="text-xs font-normal text-secondary-foreground text-end">1 x</span>
+                                            <div class="flex items-center flex-wrap gap-1.5">
+                                                <span class="text-sm font-semibold text-mono">$0.60</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- end: Card -->
+                </div>
+                <!-- end: grid -->
+            </div>
+            <!-- End of Container -->
+        </main>
+    </div>
+</div>
+{% endblock content %}

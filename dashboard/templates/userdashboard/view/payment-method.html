@@ -1,0 +1,387 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="kt-container-fixed mt-5 py-5" style="max-width: var(--custom-container-width, 85%);">
+    <div class="flex flex-col items-stretch gap-7 mt-5 py-5">
+        <main class="grow" role="content">
+            <!-- Container -->
+            <div class="kt-container-fixed">
+                <div class="flex items-center justify-center flex-wrap lg:flex-nowrap gap-8 lg:gap-1.5 pt-5 mb-12">
+                    <!-- Step Button -->
+                    <div class="text-2sm leading-none relative flex items-center gap-1.5 px-3 h-8.5 rounded-full border border-border text-foreground [&_.kt-step-icon]:text-muted-foreground bg-muted/30">
+                        <!-- Completed -->
+                        <i class="ki-solid ki-check-circle text-green-500 absolute -top-1 -end-1 text-base"></i>
+                        <!-- Icon -->
+                        <span class="kt-step-icon">
+                            <i class="ki-filled ki-subtitle text-base"></i>
+                        </span>
+                        <!-- Step Title -->
+                        Order Summary
+                    </div>
+                    <div class="hidden lg:block w-12 h-px border-t border-dashed border-zinc-300 dark:border-zinc-600"></div>
+                    <!-- Step Button -->
+                    <div class="text-2sm leading-none relative flex items-center gap-1.5 px-3 h-8.5 rounded-full border border-border text-foreground [&_.kt-step-icon]:text-muted-foreground bg-muted/30">
+                        <!-- Completed -->
+                        <i class="ki-solid ki-check-circle text-green-500 absolute -top-1 -end-1 text-base"></i>
+                        <!-- Icon -->
+                        <span class="kt-step-icon">
+                            <i class="ki-filled ki-delivery text-base"></i>
+                        </span>
+                        <!-- Step Title -->
+                        Shipping Info
+                    </div>
+                    <div class="hidden lg:block w-12 h-px border-t border-dashed border-zinc-300 dark:border-zinc-600"></div>
+                    <!-- Step Button -->
+                    <div class="text-2sm leading-none relative flex items-center gap-1.5 px-3 h-8.5 rounded-full border font-medium border-primary/10 bg-primary/10 text-primary [&_.kt-step-icon]:text-primary">
+                        <!-- Icon -->
+                        <span class="kt-step-icon">
+                            <i class="ki-filled ki-two-credit-cart text-base"></i>
+                        </span>
+                        <!-- Step Title -->
+                        Payment Method
+                    </div>
+                    <div class="hidden lg:block w-12 h-px border-t border-dashed border-zinc-300 dark:border-zinc-600"></div>
+                    <!-- Step Button -->
+                    <div class="text-2sm leading-none relative flex items-center gap-1.5 px-3 h-8.5 rounded-full border border-border text-foreground [&_.kt-step-icon]:text-muted-foreground">
+                        <!-- Icon -->
+                        <span class="kt-step-icon">
+                            <i class="ki-filled ki-cheque text-base"></i>
+                        </span>
+                        <!-- Step Title -->
+                        Order Placed
+                    </div>
+                </div>
+            </div>
+            <!-- End of Container -->
+            <!-- Container -->
+            <div class="kt-container-fixed">
+                <!-- begin: grid -->
+                <div class="grid xl:grid-cols-3 gap-5 lg:gap-9 mb-5 lg:mb-10">
+                    <div class="lg:col-span-2 space-y-5">
+                        <div class="grid sm:grid-cols-2 gap-5" id="payment-list">
+                            <!-- begin: Card -->
+                            <div class="kt-card" data-payment='{
+                                "type": "Cash on Delivery",
+                                "title": "Cash on Delivery",
+                                "name": "",
+                                "details": "Pay upon delivery",
+                                "icon": "/static/metronic/tailwind/dist/assets/media/icons/money.svg"
+                            }'>
+                                <div class="kt-card-header px-5">
+                                    <h3 class="kt-card-title">Cash on Delivery</h3>
+                                </div>
+                                <div class="kt-card-content px-5 space-y-5">
+                                    <div class="flex items-center gap-3">
+                                        <img alt="Cash on Delivery" class="size-12" src="{% static 'metronic/tailwind/dist/assets/media/brand-logos/cash.svg' %}">
+                                        <div class="flex flex-col gap-0.5">
+                                            <span class="text-xs font-normal text-mono">Pay upon delivery</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <div class="flex items-center gap-5">
+                                        </div>
+                                        <button class="kt-btn kt-btn-outline kt-btn-sm" data-kt-action="select">Select Payment</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- end: Card -->
+                            <!-- begin: Card -->
+                            <div class="kt-card" data-payment='{
+                                "type": "Stripe",
+                                "title": "Stripe Card",
+                                "name": "Default User",
+                                "details": "Ending XXXX Expires on MM/YYYY",
+                                "icon": "/static/metronic/tailwind/dist/assets/media/brand-logos/stripe.svg"
+                            }'>
+                                <div class="kt-card-header px-5">
+                                    <h3 class="kt-card-title">Stripe Card</h3>
+                                </div>
+                                <div class="kt-card-content px-5 space-y-5">
+                                    <div class="flex items-center gap-3">
+                                        <img alt="Stripe" class="size-10" src="{% static 'metronic/tailwind/dist/assets/media/brand-logos/stripe.svg' %}">
+                                        <div class="flex flex-col gap-0.5">
+                                            <span class="text-xs font-semibold text-mono">Default User</span>
+                                            <span class="text-xs font-normal text-mono">Ending XXXX Expires on MM/YYYY</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <div class="flex items-center gap-5">
+                                            <a class="kt-link kt-link-underlined kt-link-dashed" href="#" data-kt-action="edit">Edit</a>
+                                            <a class="kt-link kt-link-underlined kt-link-dashed" href="#" data-kt-action="remove">Remove</a>
+                                        </div>
+                                        <button class="kt-btn kt-btn-outline kt-btn-sm" data-kt-action="select">Select Payment</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- end: Card -->
+                            <!-- begin: Card -->
+                            <div class="kt-card" data-payment='{
+                                "type": "Razorpay",
+                                "title": "Razorpay Card",
+                                "name": "Default User",
+                                "details": "Ending XXXX Expires on MM/YYYY",
+                                "icon": "/static/metronic/tailwind/dist/assets/media/brand-logos/razorpay.svg"
+                            }'>
+                                <div class="kt-card-header px-5">
+                                    <h3 class="kt-card-title">Razorpay Card</h3>
+                                </div>
+                                <div class="kt-card-content px-5 space-y-5">
+                                    <div class="flex items-center gap-3">
+                                        <img alt="Razorpay" class="size-11" src="{% static 'metronic/tailwind/dist/assets/media/brand-logos/razorpay.svg' %}">
+                                        <div class="flex flex-col gap-0.5">
+                                            <span class="text-xs font-semibold text-mono">Default User</span>
+                                            <span class="text-xs font-normal text-mono">Ending XXXX Expires on MM/YYYY</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <div class="flex items-center gap-5">
+                                            <a class="kt-link kt-link-underlined kt-link-dashed" href="#" data-kt-action="edit">Edit</a>
+                                            <a class="kt-link kt-link-underlined kt-link-dashed" href="#" data-kt-action="remove">Remove</a>
+                                        </div>
+                                        <button class="kt-btn kt-btn-outline kt-btn-sm" data-kt-action="select">Select Payment</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- end: Card -->
+                        </div>
+                        <div class="flex justify-end items-center flex-wrap gap-3">
+                            <button class="kt-btn kt-btn-outline" data-kt-modal-toggle="#modal_add_payment">Add New Payment Method</button>
+                            <a class="kt-btn kt-btn-outline" href="{% url 'dashboard:shipping_info' %}">
+                                <i class="ki-filled ki-black-left text-base"></i>
+                                Shipping Info
+                            </a>
+                            <a class="kt-btn kt-btn-primary" href="{% url 'dashboard:order_placed' %}">
+                                Place Order
+                                <i class="ki-filled ki-mouse-square text-base"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-1">
+                        <div class="space-y-5">
+                            <!-- begin: Card -->
+                            <div class="kt-card bg-accent/50">
+                                <div class="kt-card-header px-5">
+                                    <h3 class="kt-card-title">Order Summary</h3>
+                                </div>
+                                <div class="kt-card-content px-0 py-5 space-y-2">
+                                    <div class="flex flex-col px-5" id="order-summary-payment">
+                                        <span class="text-sm font-medium text-mono mb-1.5">Paying with Jeroen’s Visa</span>
+                                        <div class="flex flex-col gap-1 text-xs font-normal text-secondary-foreground">
+                                            <span>Jeroen van Dijk</span>
+                                            <span>Ending 3604 Expires on 12/2026</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex flex-col px-5">
+                                        <span class="text-sm font-medium text-mono mb-1.5">Shipping to Jeroen’s Home</span>
+                                        <div class="flex flex-col gap-1 text-xs font-normal text-secondary-foreground">
+                                            <span>Jeroen van Dijk</span>
+                                            <span>Keizersgracht 172</span>
+                                            <span>1016 DW, Amsterdam</span>
+                                            <span>Netherlands</span>
+                                        </div>
+                                    </div>
+                                    <div class="border-b border-border mb-4 mt-5"></div>
+                                    <span class="text-sm font-medium block text-mono mb-3.5 px-5">Price Details</span>
+                                    <div class="flex justify-between items-center px-5">
+                                        <span class="text-sm font-normal text-secondary-foreground">Subtotal</span>
+                                        <span class="text-sm font-medium text-mono">$7.78</span>
+                                    </div>
+                                    <div class="flex justify-between items-center px-5">
+                                        <span class="text-sm font-normal text-secondary-foreground">Shipping</span>
+                                        <span class="text-sm font-medium text-mono">$0.00</span>
+                                    </div>
+                                    <div class="flex justify-between items-center px-5">
+                                        <span class="text-sm font-normal text-secondary-foreground">VAT</span>
+                                        <span class="text-sm font-medium text-mono">$0.00</span>
+                                    </div>
+                                </div>
+                                <div class="kt-card-footer flex justify-between items-center px-5">
+                                    <span class="text-sm font-normal text-secondary-foreground">Total</span>
+                                    <span class="text-base font-semibold text-mono">$7.78</span>
+                                </div>
+                            </div>
+                            <!-- end: Card -->
+                        </div>
+                    </div>
+                </div>
+                <!-- end: grid -->
+            </div>
+            <!-- End of Container -->
+            <!-- begin: Add Payment Modal -->
+            <div class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" data-kt-modal="true" id="modal_add_payment">
+                <div class="kt-card w-full max-w-[500px] rounded-xl border border-border bg-background" style="float:right">
+                    <div class="kt-card-header px-5 flex items-center justify-between">
+                        <h3 class="kt-card-title">Add New Payment Method</h3>
+                        <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" data-kt-modal-dismiss="true">
+                            <i class="ki-filled ki-cross text-base"></i>
+                        </button>
+                    </div>
+                    <div class="kt-card-content flex flex-col space-y-3 p-5 kt-scrollable-y-auto">
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-2sm font-semibold text-mono">Payment Type</label>
+                            <select id="payment-type" class="kt-input" required>
+                                <option value="Stripe">Stripe</option>
+                                <option value="Razorpay">Razorpay</option>
+                            </select>
+                        </div>
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-2sm font-semibold text-mono">Cardholder Name</label>
+                            <input type="text" id="payment-name" class="kt-input" placeholder="Cardholder Name" required>
+                        </div>
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-2sm font-semibold text-mono">Card Number</label>
+                            <input type="text" id="payment-number" class="kt-input" placeholder="XXXX XXXX XXXX XXXX" required>
+                        </div>
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-2sm font-semibold text-mono">Expiry Date</label>
+                            <input type="text" id="payment-expiry" class="kt-input" placeholder="MM/YYYY" required>
+                        </div>
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-2sm font-semibold text-mono">CVV</label>
+                            <input type="text" id="payment-cvv" class="kt-input" placeholder="CVV" required>
+                        </div>
+                    </div>
+                    <div class="kt-card-footer px-5 flex justify-end gap-3">
+                        <button class="kt-btn kt-btn-outline" data-kt-modal-dismiss="true">Cancel</button>
+                        <button class="kt-btn kt-btn-primary" id="save-payment">Save Payment</button>
+                    </div>
+                </div>
+            </div>
+            <!-- end: Add Payment Modal -->
+        </main>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const modal = document.querySelector('#modal_add_payment');
+    const modalTriggers = document.querySelectorAll('[data-kt-modal-toggle="#modal_add_payment"]');
+    const modalDismiss = modal.querySelectorAll('[data-kt-modal-dismiss="true"]');
+    const savePaymentBtn = document.querySelector('#save-payment');
+    const paymentList = document.querySelector('#payment-list');
+    const orderSummaryPayment = document.querySelector('#order-summary-payment');
+
+    // Open modal
+    modalTriggers.forEach(trigger => {
+        trigger.addEventListener('click', function (e) {
+            e.preventDefault();
+            modal.classList.remove('hidden');
+        });
+    });
+
+    // Close modal
+    modalDismiss.forEach(dismiss => {
+        dismiss.addEventListener('click', function () {
+            modal.classList.add('hidden');
+            modal.querySelectorAll('input, select').forEach(input => input.value = '');
+        });
+    });
+
+    // Close modal when clicking outside
+    modal.addEventListener('click', function (e) {
+        if (e.target === modal) {
+            modal.classList.add('hidden');
+            modal.querySelectorAll('input, select').forEach(input => input.value = '');
+        }
+    });
+
+    // Save new payment method
+    savePaymentBtn.addEventListener('click', function () {
+        const type = document.querySelector('#payment-type').value;
+        const name = document.querySelector('#payment-name').value.trim();
+        const number = document.querySelector('#payment-number').value.trim();
+        const expiry = document.querySelector('#payment-expiry').value.trim();
+        const cvv = document.querySelector('#payment-cvv').value.trim();
+
+        // Validate inputs
+        if (!type || !name || !number || !expiry || !cvv) {
+            alert('Please fill in all fields.');
+            return;
+        }
+
+        // Mask card number
+        const lastFour = number.slice(-4);
+        const details = `Ending ${lastFour} Expires on ${expiry}`;
+
+        // Create new payment card
+        const newPayment = {
+            type,
+            title: `${name}’s ${type}`,
+            name,
+            details,
+            icon: `/static/metronic/tailwind/dist/assets/media/brand-logos/${type.toLowerCase()}.svg`
+        };
+
+        const paymentCard = document.createElement('div');
+        paymentCard.className = 'kt-card';
+        paymentCard.setAttribute('data-payment', JSON.stringify(newPayment));
+        paymentCard.innerHTML = `
+            <div class="kt-card-header px-5">
+                <h3 class="kt-card-title">${newPayment.title}</h3>
+            </div>
+            <div class="kt-card-content px-5 space-y-5">
+                <div class="flex items-center gap-3">
+                    <img alt="${type}" class="size-12" src="${newPayment.icon}">
+                    <div class="flex flex-col gap-0.5">
+                        <span class="text-xs font-semibold text-mono">${name}</span>
+                        <span class="text-xs font-normal text-mono">${details}</span>
+                    </div>
+                </div>
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-5">
+                        <a class="kt-link kt-link-underlined kt-link-dashed" href="#" data-kt-action="edit">Edit</a>
+                        <a class="kt-link kt-link-underlined kt-link-dashed" href="#" data-kt-action="remove">Remove</a>
+                    </div>
+                    <button class="kt-btn kt-btn-outline kt-btn-sm" data-kt-action="select">Select Payment</button>
+                </div>
+            </div>
+        `;
+        paymentList.appendChild(paymentCard);
+
+        // Close modal and clear inputs
+        modal.classList.add('hidden');
+        modal.querySelectorAll('input, select').forEach(input => input.value = '');
+
+        // Add select payment functionality
+        paymentCard.querySelector('[data-kt-action="select"]').addEventListener('click', function () {
+            // Remove "Pay with this" badge from all cards
+            document.querySelectorAll('.kt-card .kt-badge-success').forEach(badge => badge.remove());
+            // Add "Pay with this" badge to selected card
+            const header = paymentCard.querySelector('.kt-card-header');
+            header.insertAdjacentHTML('beforeend', '<span class="kt-badge kt-badge-outline kt-badge-success">Pay with this</span>');
+            // Update order summary payment method
+            orderSummaryPayment.innerHTML = `
+                <span class="text-sm font-medium text-mono mb-1.5">Paying with ${newPayment.title}</span>
+                <div class="flex flex-col gap-1 text-xs font-normal text-secondary-foreground">
+                    <span>${newPayment.name}</span>
+                    <span>${newPayment.details}</span>
+                </div>
+            `;
+        });
+    });
+
+    // Handle existing select payment buttons
+    document.querySelectorAll('[data-kt-action="select"]').forEach(button => {
+        button.addEventListener('click', function () {
+            const card = button.closest('.kt-card');
+            const paymentData = JSON.parse(card.dataset.payment);
+            // Remove "Pay with this" badge from all cards
+            document.querySelectorAll('.kt-card .kt-badge-success').forEach(badge => badge.remove());
+            // Add "Pay with this" badge to selected card
+            const header = card.querySelector('.kt-card-header');
+            header.insertAdjacentHTML('beforeend', '<span class="kt-badge kt-badge-outline kt-badge-success">Pay with this</span>');
+            // Update order summary payment method
+            orderSummaryPayment.innerHTML = `
+                <span class="text-sm font-medium text-mono mb-1.5">Paying with ${paymentData.title}</span>
+                <div class="flex flex-col gap-1 text-xs font-normal text-secondary-foreground">
+                    <span>${paymentData.name}</span>
+                    <span>${paymentData.details}</span>
+                </div>
+            `;
+        });
+    });
+});
+</script>
+
+{% endblock content %}
