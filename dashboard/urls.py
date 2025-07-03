@@ -26,4 +26,7 @@ urlpatterns = [
     path('my-orders/', views.MyOrdersView.as_view(), name='my_orders'),
     path('order-receipt/', views.OrderReceiptView.as_view(), name='order_receipt'),
 
+    # user profile
+    path('user-profile/', views.UserProfile.as_view(), name='user_profile'),
+
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -88,11 +88,13 @@ class DeleteProductView(LoginRequiredMixin, UserPassesTestMixin,View):
     def test_func(self):
         return self.request.user.is_superuser
 
+
 class EditcategoryView(LoginRequiredMixin, UserPassesTestMixin,View):
     def get(self, request):
         return render(request, 'adminv2/edit-category.html')
     def test_func(self):
         return self.request.user.is_superuser
+
 
 class CreateProductCategoryView(View):
     def post(self, request):
@@ -180,12 +182,14 @@ class AddcategoryView(LoginRequiredMixin, UserPassesTestMixin, View):
     def test_func(self):
         return self.request.user.is_superuser
 
+
 class CategoryView(LoginRequiredMixin, UserPassesTestMixin,View):
     def get(self, request):
         return render(request, 'adminv2/categories.html')  
     
     def test_func(self):
         return self.request.user.is_superuser
+
 
 class AdminloginView(View):
     def get(self, request):
@@ -216,13 +220,18 @@ class AdminloginView(View):
 class UserProfileView(View):
     def get(self, request):
         return render(request, 'adminv2/user-profile.html')
+
+
 class UserOverView(View):
     def get(self, request):
         return render(request, 'adminv2/overview.html')
+
+
 class AdminSettingView(View):
     def get(self, request):
      
         return render(request, 'adminv2/settings.html')
+
 
 class AdminSettingView(View):
     def get(self, request):

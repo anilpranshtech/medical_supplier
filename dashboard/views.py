@@ -283,3 +283,7 @@ class MyOrdersView(TemplateView):
 
 class OrderReceiptView(TemplateView):
     template_name = 'userdashboard/view/order-receipt.html'
+
+
+class UserProfile(TemplateView):
+    template_name = 'pages/user_profile.html'
