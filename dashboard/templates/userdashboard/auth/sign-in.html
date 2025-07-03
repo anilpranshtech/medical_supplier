@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+{% load static %}
+<html class="h-full dark" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sign In</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="{% static 'metronic/tailwind/dist/assets/css/styles.css' %}" rel="stylesheet">
+</head>
+<body class="antialiased flex h-full text-base text-foreground bg-background">
+<div class="flex items-center justify-center grow bg-center bg-no-repeat page-bg">
+    <div class="kt-card max-w-[370px] w-full">
+        <form method="post" class="kt-card-content flex flex-col gap-5 p-10" id="sign_in_form">
+            {% csrf_token %}
+
+            <div class="text-center mb-2.5">
+                <h3 class="text-lg font-medium text-mono leading-none mb-2.5">Sign In</h3>
+                <div class="flex items-center justify-center font-medium">
+                    <span class="text-sm text-secondary-foreground me-1.5">Need an account?</span>
+                    <a class="text-sm link" href="{% url 'dashboard:user_signup' %}">Sign up</a>
+                </div>
+            </div>
+
+            <!-- Show error messages -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="text-red-500 text-sm">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="flex flex-col gap-1">
+                <label class="kt-form-label font-normal text-mono">Email</label>
+                <input name="user_email" class="kt-input" placeholder="email@email.com" type="text" required>
+            </div>
+
+            <div class="flex flex-col gap-1">
+                <div class="flex items-center justify-between gap-1">
+                    <label class="kt-form-label font-normal text-mono">Password</label>
+                    <a class="text-sm kt-link shrink-0" href="{% url 'dashboard:password_reset' %}">
+                        Forgot Password?
+                    </a>
+                </div>
+                <div class="kt-input" data-kt-toggle-password="true" data-kt-toggle-password-initialized="true">
+                    <input name="user_password" placeholder="Enter Password" type="password" required>
+                    <button class="kt-btn kt-btn-sm kt-btn-ghost kt-btn-icon bg-transparent! -me-1.5"
+                            data-kt-toggle-password-trigger="true" type="button">
+                        <span class="kt-toggle-password-active:hidden">
+                            <i class="ki-filled ki-eye text-muted-foreground"></i>
+                        </span>
+                        <span class="hidden kt-toggle-password-active:block">
+                            <i class="ki-filled ki-eye-slash text-muted-foreground"></i>
+                        </span>
+                    </button>
+                </div>
+            </div>
+
+            <label class="kt-label">
+                <input class="kt-checkbox kt-checkbox-sm" name="remember" type="checkbox" value="1">
+                <span class="kt-checkbox-label">Remember me</span>
+            </label>
+
+            <button type="submit" class="kt-btn kt-btn-primary flex justify-center grow">Sign In</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

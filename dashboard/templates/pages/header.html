@@ -311,7 +311,7 @@
                                    data-kt-theme-switch-toggle="true" name="check" type="checkbox" value="1"/>
                         </div>
                         <a class="kt-btn kt-btn-outline justify-center w-full"
-                           href="https://keenthemes.com/metronic/tailwind/demo10/authentication/classic/sign-in">Log
+                           href="{% url 'dashboard:user_signin' %}">Log
                             out</a>
                     </div>
                 </div>
@@ -319,7 +319,7 @@
 
             <!-- Logout Button -->
             <a class="kt-btn kt-btn-ghost kt-btn-icon size-8 hover:bg-background hover:[&_i]:text-primary"
-               href="https://keenthemes.com/metronic/tailwind/demo10/authentication/classic/sign-in">
+               href="{% url 'dashboard:user_signin' %}">
                 <i class="ki-filled ki-exit-right"></i>
             </a>
         </div>

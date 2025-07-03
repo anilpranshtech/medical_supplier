@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+{% load static %}
+<html class="h-full dark" lang="en">
+<head>
+    <title>Sign Up</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="{% static 'metronic/tailwind/dist/assets/css/styles.css' %}" rel="stylesheet">
+</head>
+<body class="antialiased flex h-full bg-background text-base text-foreground">
+
+<div class="flex items-center justify-center grow bg-center bg-no-repeat page-bg">
+    <div class="kt-card max-w-[370px] w-full">
+        <form method="post" class="kt-card-content flex flex-col gap-5 p-10" id="sign_up_form">
+            {% csrf_token %}
+            <div class="text-center mb-2.5">
+                <h3 class="text-lg font-medium text-mono mb-2.5">Sign up</h3>
+                <div class="text-sm">
+                    Already have an account? <a href="{% url 'dashboard:user_signin' %}" class="link">Sign In</a>
+                </div>
+            </div>
+
+            <!-- Email -->
+            <div class="flex flex-col gap-1">
+                <label class="kt-form-label text-mono">Email</label>
+                <input class="kt-input" name="user_email" placeholder="email@email.com" type="text">
+            </div>
+
+            <!-- Password -->
+            <div class="flex flex-col gap-1">
+                <label class="kt-form-label text-mono">Password</label>
+                <input class="kt-input" name="user_password" placeholder="Enter Password" type="password">
+            </div>
+
+            <!-- Confirm Password -->
+            <div class="flex flex-col gap-1">
+                <label class="kt-form-label text-mono">Confirm Password</label>
+                <input class="kt-input" name="confirm_password" placeholder="Re-enter Password" type="password">
+            </div>
+
+            <!-- Mobile Number -->
+            <div class="flex flex-col gap-1">
+                <label class="kt-form-label text-mono">Mobile Number</label>
+                <input type="text" name="phone" class="kt-input" placeholder="Phone Number" required>
+            </div>
+
+            <label class="kt-checkbox-group">
+                <input class="kt-checkbox kt-checkbox-sm" name="check" type="checkbox" required>
+                <span class="kt-checkbox-label">
+                    I accept <a class="text-sm link" href="#">Terms & Conditions</a>
+                </span>
+            </label>
+
+            <button type="submit" class="kt-btn kt-btn-primary flex justify-center grow">
+                Send OTP
+            </button>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>

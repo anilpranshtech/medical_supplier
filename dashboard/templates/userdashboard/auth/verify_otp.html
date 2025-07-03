@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+{% load static %}
+{% load static %}
+<html class="h-full dark" lang="en">
+<head>
+    <title>Verify OTP</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="{% static 'metronic/tailwind/dist/assets/css/styles.css' %}" rel="stylesheet">
+</head>
+<body class="antialiased flex h-full bg-background text-base text-foreground">
+
+<div class="flex items-center justify-center grow bg-center bg-no-repeat page-bg">
+    <div class="kt-card max-w-[370px] w-full">
+        <form method="post" class="kt-card-content flex flex-col gap-5 p-10" id="otp_form">
+            {% csrf_token %}
+            <div class="text-center mb-2.5">
+                <h3 class="text-lg font-medium text-mono mb-2.5">Verify OTP</h3>
+                <div class="text-sm text-secondary-foreground">
+                    Enter the OTP sent to your mobile number.
+                </div>
+            </div>
+
+            <!-- OTP Input -->
+            <div class="flex flex-col gap-1">
+                <label class="kt-form-label text-mono">OTP</label>
+                <input class="kt-input" name="otp" placeholder="123456" type="text" required>
+            </div>
+
+            <button type="submit" class="kt-btn kt-btn-primary flex justify-center grow">
+                Verify
+            </button>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>
