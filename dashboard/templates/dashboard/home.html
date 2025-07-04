@@ -235,278 +235,109 @@
         <a class="kt-link" href="#">See All <i class="ki-filled ki-right text-xs"></i></a>
     </div>
     <div class="grid xl:grid-cols-2 gap-5 mb-2">
-        <div class="lg:col-span-1">
-            <div class="kt-card h-full bg-violet-50 border-violet-200 dark:border-violet-950 dark:bg-violet-950/30"
-                 data-product='{
-                            "name": "Vitamin D Supplements",
-                            "image": "{% static 'metronic/tailwind/dist/assets/media/medical/600x600/vitamin-d.png' %}",
-            "description": "Boost your immunity with high-potency Vitamin D capsules.",
-            "sku": "MED-VIT-008",
-            "category": "Supplements",
-            "rating": 4.6,
-            "price": "$0.30",
-            "original_price": "$0.40",
-            "discount": "save 25%",
-            "more_info": "60 capsules, 1000 IU per capsule."
-            }'>
-            <div class="kt-card-content flex items-center flex-wrap sm:flex-nowrap justify-between gap-5 lg:gap-9 lg:px-7.5 p-5">
-                <div class="flex flex-col">
-                    <div class="mb-3">
-                        <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">save 25%</span>
-                    </div>
-                    <h3 class="text-[26px] font-semibold text-mono mb-1">Vitamin D Supplements</h3>
-                    <span class="text-sm font-normal text-foreground mb-5 leading-5.5">Boost your immunity with high-potency Vitamin D capsules</span>
-                    <div class="flex items-center gap-4">
-                        <button class="kt-btn kt-btn-mono kt-btn-sm" data-kt-drawer-toggle="#drawers_shop_cart">Add to
-                            Cart <i class="ki-filled ki-handcart"></i></button>
-                        <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm"
-                                data-kt-wishlist-toggle="true">
-                            <i class="ki-filled ki-heart text-base"></i>
-                        </button>
-                        <span class="text-base font-semibold text-mono">$0.30</span>
+
+        {% for product in special_offers %}
+            {% if forloop.first %}
+                <!-- Main highlighted product -->
+                <div class="lg:col-span-1">
+                    <div class="kt-card h-full bg-violet-50 border-violet-200 dark:border-violet-950 dark:bg-violet-950/30">
+                        <div class="kt-card-content flex items-center flex-wrap sm:flex-nowrap justify-between gap-5 lg:gap-9 lg:px-7.5 p-5">
+                            <div class="flex flex-col">
+                                <div class="mb-3">
+                                    <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">save {{ product.offer_percentage }}%</span>
+                                </div>
+                                <h3 class="text-[26px] font-semibold text-mono mb-1">{{ product.name }}</h3>
+                                <span class="text-sm font-normal text-foreground mb-5 leading-5.5">{{ product.description }}</span>
+                                <div class="flex items-center gap-4">
+                                    <button class="kt-btn kt-btn-mono kt-btn-sm" data-kt-drawer-toggle="#drawers_shop_cart">
+                                        Add to Cart <i class="ki-filled ki-handcart"></i>
+                                    </button>
+                                    <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm" data-kt-wishlist-toggle="true">
+                                        <i class="ki-filled ki-heart text-base"></i>
+                                    </button>
+                                    <span class="text-base font-semibold text-mono">${{ product.price }}</span>
+                                </div>
+                            </div>
+                            <img alt="{{ product.name }}" class="size-48" src="{{ product.main_image }}" data-kt-modal-toggle="#modal_shop_product_details">
+                        </div>
                     </div>
                 </div>
-                <img alt="Vitamin D" class="size-48"
-                     src="{% static 'metronic/tailwind/dist/assets/media/medical/600x600/vitamin-d.png' %}"
-                     data-kt-modal-toggle="#modal_shop_product_details">
-            </div>
-        </div>
-    </div>
-    <div class="lg:col-span-1">
-        <div class="grid sm:grid-cols-2 gap-5 items-stretch">
-            <div class="kt-card h-full bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-950"
-                 data-product='{
-                                "name": "Antiseptic Wipes",
-                                "image": "{% static 'metronic/tailwind/dist/assets/media/medical/600x600/antiseptic-wipes.png' %}",
-            "description": "Convenient antiseptic wipes for quick wound cleaning and disinfection.",
-            "sku": "MED-WIP-009",
-            "category": "Wound Care",
-            "rating": 4.3,
-            "price": "$0.16",
-            "original_price": "$0.21",
-            "discount": "save 25%",
-            "more_info": "Pack of 100, individually wrapped."
-            }'>
-            <div class="kt-card-content flex flex-col items-center justify-center px-5 pb-0">
-                <div class="mb-3.5">
-                    <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">save 25%</span>
+                <div class="lg:col-span-1">
+                    <div class="grid sm:grid-cols-2 gap-5 items-stretch">
+            {% else %}
+                        <!-- Secondary offers -->
+                        <div class="kt-card h-full bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-950">
+                            <div class="kt-card-content flex flex-col items-center justify-center px-5 pb-0">
+                                <div class="mb-3.5">
+                                    <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">save {{ product.offer_percentage }}%</span>
+                                </div>
+                                <span class="text-base font-medium text-mono mb-3">{{ product.name }}</span>
+                                <div class="flex items-center gap-2.5 mb-2.5">
+                                    <button class="kt-btn kt-btn-outline kt-btn-sm" data-kt-drawer-toggle="#drawers_shop_cart">
+                                        Add to Cart <i class="ki-filled ki-handcart"></i>
+                                    </button>
+                                    <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm" data-kt-wishlist-toggle="true">
+                                        <i class="ki-filled ki-heart text-base"></i>
+                                    </button>
+                                </div>
+                                <span class="text-sm font-medium text-mono">${{ product.price }}</span>
+                                <img alt="{{ product.name }}" class="size-48" src="{{ product.main_image }}" data-kt-modal-toggle="#modal_shop_product_details">
+                            </div>
+                        </div>
+            {% endif %}
+        {% endfor %}
+                    </div>
                 </div>
-                <span class="text-base font-medium text-mono mb-3">Antiseptic Wipes</span>
-                <div class="flex items-center gap-2.5 mb-2.5">
-                    <button class="kt-btn kt-btn-outline kt-btn-sm" data-kt-drawer-toggle="#drawers_shop_cart">Add to
-                        Cart <i class="ki-filled ki-handcart"></i></button>
-                    <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm"
-                            data-kt-wishlist-toggle="true">
-                        <i class="ki-filled ki-heart text-base"></i>
-                    </button>
-                </div>
-                <span class="text-sm font-medium text-mono">$0.16</span>
-                <img alt="Antiseptic Wipes" class="size-48"
-                     src="{% static 'metronic/tailwind/dist/assets/media/medical/600x600/antiseptic-wipes.png' %}"
-                     data-kt-modal-toggle="#modal_shop_product_details">
-            </div>
-        </div>
-        <div class="kt-card h-full bg-primary/10 border-primary/10" data-product='{
-                                "name": "Blood Pressure Monitor",
-                                "image": "{% static 'metronic/tailwind/dist/assets/media/medical/600x600/blood-pressure-monitor.png' %}",
-        "description": "Accurate blood pressure monitor for home use. Easy-to-read digital display.",
-        "sku": "MED-BPM-010",
-        "category": "Diagnostics",
-        "rating": 4.7,
-        "price": "$0.60",
-        "original_price": "$0.80",
-        "discount": "save 25%",
-        "more_info": "Includes cuff, battery-operated."
-        }'>
-        <div class="kt-card-content flex flex-col items-center justify-center px-5 pb-0">
-            <div class="mb-3.5">
-                <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">save 25%</span>
-            </div>
-            <span class="text-base font-medium text-mono mb-3">Blood Pressure Monitor</span>
-            <div class="flex items-center gap-2.5 mb-2.5">
-                <button class="kt-btn kt-btn-outline kt-btn-sm" data-kt-drawer-toggle="#drawers_shop_cart">Add to Cart
-                    <i class="ki-filled ki-handcart"></i></button>
-                <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm"
-                        data-kt-wishlist-toggle="true">
-                    <i class="ki-filled ki-heart text-base"></i>
-                </button>
-            </div>
-            <span class="text-sm font-medium text-mono">$0.60</span>
-            <img alt="Blood Pressure Monitor" class="size-48"
-                 src="{% static 'metronic/tailwind/dist/assets/media/medical/600x600/blood-pressure-monitor.png' %}"
-                 data-kt-modal-toggle="#modal_shop_product_details">
-        </div>
     </div>
-</div>
-</div>
 </div>
 <!-- end: Special Offers -->
+
 <!-- begin: New Arrivals -->
 <div class="space-y-4">
     <div class="flex items-center justify-between gap-4">
         <span class="text-lg font-medium text-mono">New Arrivals</span>
         <a class="kt-link" href="#">See All <i class="ki-filled ki-right text-xs"></i></a>
     </div>
+
     <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-2">
-        <div class="kt-card" data-product='{
-                    "name": "Pulse Oximeter Pro",
-                    "image": "{% static 'metronic/tailwind/dist/assets/media/medical/600x600/pulse-oximeter.png' %}",
-        "description": "Portable pulse oximeter for accurate oxygen saturation and pulse rate monitoring.",
-        "sku": "MED-PXO-011",
-        "category": "Diagnostics",
-        "rating": 5.0,
-        "price": "$0.36",
-        "original_price": "",
-        "discount": "",
-        "more_info": "OLED display, includes batteries."
-        }'>
-        <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
-            <div class="mb-2.5">
-                <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[250px] mb-4 shadow-none">
-                    <img alt="Pulse Oximeter" class="h-[180px] shrink-0 cursor-pointer"
-                         data-kt-modal-toggle="#modal_shop_product_details"
-                         src="{% static 'metronic/tailwind/dist/assets/media/medical/600x600/pulse-oximeter.png' %}">
-                    <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
-                            data-kt-wishlist-toggle="true">
-                        <i class="ki-filled ki-heart text-base"></i>
-                    </button>
+        {% for product in recent_products %}
+        <div class="kt-card">
+            <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
+                <div class="mb-2.5">
+                    <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[250px] mb-4 shadow-none">
+                        <img alt="{{ product.name }}" class="h-[180px] shrink-0 cursor-pointer"
+                             data-kt-modal-toggle="#modal_shop_product_details"
+                             src="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}">
+                        <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
+                                data-kt-wishlist-toggle="true">
+                            <i class="ki-filled ki-heart text-base"></i>
+                        </button>
+                    </div>
+                    <a class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block"
+                       data-kt-modal-toggle="#modal_shop_product_details" href="#">
+                        {{ product.name }}
+                    </a>
                 </div>
-                <a class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block"
-                   data-kt-modal-toggle="#modal_shop_product_details" href="#">
-                    Pulse Oximeter Pro
-                </a>
-            </div>
-            <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
-                    <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1"><i
-                            class="ki-solid ki-star text-white -mt-0.5"></i> 5.0</span>
-                <div class="flex items-center flex-wrap gap-1.5">
-                    <span class="text-sm font-medium text-mono">$0.36</span>
-                    <button class="kt-btn kt-btn-outline kt-btn-sm ms-1" data-kt-drawer-toggle="#drawers_shop_cart">Add
-                        <i class="ki-filled ki-handcart"></i></button>
+                <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
+                    <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1">
+                        <i class="ki-solid ki-star text-white -mt-0.5"></i>
+                        {{ product.rating|default:"4.5" }}
+                    </span>
+                    <div class="flex items-center flex-wrap gap-1.5">
+                        <span class="text-sm font-medium text-mono">${{ product.price }}</span>
+                        <button class="kt-btn kt-btn-outline kt-btn-sm ms-1" data-kt-drawer-toggle="#drawers_shop_cart">
+                            Add <i class="ki-filled ki-handcart"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
+        {% endfor %}
     </div>
-    <div class="kt-card" data-product='{
-                    "name": "Infrared Thermometer",
-                    "image": "{% static 'metronic/tailwind/dist/assets/media/medical/600x600/infrared-thermometer.png' %}",
-    "description": "Non-contact infrared thermometer for quick and accurate temperature readings.",
-    "sku": "MED-ITH-012",
-    "category": "Diagnostics",
-    "rating": 4.7,
-    "price": "$0.48",
-    "original_price": "",
-    "discount": "",
-    "more_info": "LCD display, measures in Celsius and Fahrenheit."
-    }'>
-    <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
-        <div class="mb-2.5">
-            <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[250px] mb-4 shadow-none">
-                <img alt="Infrared Thermometer" class="h-[180px] shrink-0 cursor-pointer"
-                     data-kt-modal-toggle="#modal_shop_product_details"
-                     src="{% static 'metronic/tailwind/dist/assets/media/medical/600x600/infrared-thermometer.png' %}">
-                <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
-                        data-kt-wishlist-toggle="true">
-                    <i class="ki-filled ki-heart text-base"></i>
-                </button>
-            </div>
-            <a class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block"
-               data-kt-modal-toggle="#modal_shop_product_details" href="#">
-                Infrared Thermometer
-            </a>
-        </div>
-        <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
-                    <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1"><i
-                            class="ki-solid ki-star text-white -mt-0.5"></i> 4.7</span>
-            <div class="flex items-center flex-wrap gap-1.5">
-                <span class="text-sm font-medium text-mono">$0.48</span>
-                <button class="kt-btn kt-btn-outline kt-btn-sm ms-1" data-kt-drawer-toggle="#drawers_shop_cart">Add <i
-                        class="ki-filled ki-handcart"></i></button>
-            </div>
-        </div>
-    </div>
-</div>
-<div class="kt-card" data-product='{
-                    "name": "Nitrile Medical Gloves",
-                    "image": "{% static 'metronic/tailwind/dist/assets/media/medical/600x600/medical-gloves.png' %}",
-"description": "Durable nitrile gloves for medical and general use. Latex-free and comfortable.",
-"sku": "MED-MGL-013",
-"category": "Protective Gear",
-"rating": 3.5,
-"price": "$0.19",
-"original_price": "",
-"discount": "",
-"more_info": "Pack of 100, powder-free, medium size."
-}'>
-<div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
-    <div class="mb-2.5">
-        <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[250px] mb-4 shadow-none">
-            <img alt="Medical Gloves" class="h-[180px] shrink-0 cursor-pointer"
-                 data-kt-modal-toggle="#modal_shop_product_details"
-                 src="{% static 'metronic/tailwind/dist/assets/media/medical/600x600/medical-gloves.png' %}">
-            <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
-                    data-kt-wishlist-toggle="true">
-                <i class="ki-filled ki-heart text-base"></i>
-            </button>
-        </div>
-        <a class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block"
-           data-kt-modal-toggle="#modal_shop_product_details" href="#">
-            Nitrile Medical Gloves
-        </a>
-    </div>
-    <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
-                    <span class="kt-badge kt-badge-warning kt-badge-sm rounded-full gap-1"><i
-                            class="ki-solid ki-star text-white -mt-0.5"></i> 3.5</span>
-        <div class="flex items-center flex-wrap gap-1.5">
-            <span class="text-sm font-medium text-mono">$0.19</span>
-            <button class="kt-btn kt-btn-outline kt-btn-sm ms-1" data-kt-drawer-toggle="#drawers_shop_cart">Add <i
-                    class="ki-filled ki-handcart"></i></button>
-        </div>
-    </div>
-</div>
-</div>
-<div class="kt-card" data-product='{
-                    "name": "Protective Face Shields",
-                    "image": "{% static 'metronic/tailwind/dist/assets/media/medical/600x600/face-shields.png' %}",
-"description": "Clear protective face shields for enhanced safety. Adjustable and reusable.",
-"sku": "MED-FSH-014",
-"category": "Protective Gear",
-"rating": 4.9,
-"price": "$0.28",
-"original_price": "",
-"discount": "",
-"more_info": "Anti-fog coating, adjustable headband."
-}'>
-<div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
-    <div class="mb-2.5">
-        <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[250px] mb-4 shadow-none">
-            <img alt="Face Shields" class="h-[180px] shrink-0 cursor-pointer"
-                 data-kt-modal-toggle="#modal_shop_product_details"
-                 src="{% static 'metronic/tailwind/dist/assets/media/medical/600x600/face-shields.png' %}">
-            <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
-                    data-kt-wishlist-toggle="true">
-                <i class="ki-filled ki-heart text-base"></i>
-            </button>
-        </div>
-        <a class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block"
-           data-kt-modal-toggle="#modal_shop_product_details" href="#">
-            Protective Face Shields
-        </a>
-    </div>
-    <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
-                    <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1"><i
-                            class="ki-solid ki-star text-white -mt-0.5"></i> 4.9</span>
-        <div class="flex items-center flex-wrap gap-1.5">
-            <span class="text-sm font-medium text-mono">$0.28</span>
-            <button class="kt-btn kt-btn-outline kt-btn-sm ms-1" data-kt-drawer-toggle="#drawers_shop_cart">Add <i
-                    class="ki-filled ki-handcart"></i></button>
-        </div>
-    </div>
-</div>
-</div>
-</div>
 </div>
 <!-- end: New Arrivals -->
+
+<!-- begin: Popular Medical Supplies -->
 <!-- begin: Popular Medical Supplies -->
 <div class="space-y-4">
     <div class="flex items-center justify-between gap-4">
@@ -514,165 +345,44 @@
         <a class="kt-link" href="#">See All <i class="ki-filled ki-right text-xs"></i></a>
     </div>
     <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-2">
-        <div class="kt-card" data-product='{
-                    "name": "Surgical Masks (50-Pack)",
-                    "image": "{% static 'metronic/tailwind/dist/assets/media/medical/600x600/surgical-masks.png' %}",
-        "description": "High-quality surgical masks with 3-ply protection. Ideal for medical and general use.",
-        "sku": "MED-SMK-015",
-        "category": "Protective Gear",
-        "rating": 5.0,
-        "price": "$0.24",
-        "original_price": "",
-        "discount": "",
-        "more_info": "99% bacterial filtration efficiency, disposable."
-        }'>
-        <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
-            <div class="mb-2.5">
-                <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[250px] mb-4 shadow-none">
-                    <img alt="Surgical Masks" class="h-[100px] shrink-0 cursor-pointer"
-                         data-kt-modal-toggle="#modal_shop_product_details"
-                         src="{% static 'metronic/tailwind/dist/assets/media/medical/600x600/surgical-masks.png' %}">
-                    <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
-                            data-kt-wishlist-toggle="true">
-                        <i class="ki-filled ki-heart text-base"></i>
-                    </button>
+        {% for product in popular_products %}
+        <div class="kt-card">
+            <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
+                <div class="mb-2.5">
+                    <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[250px] mb-4 shadow-none">
+                        <img alt="{{ product.name }}" class="h-[180px] shrink-0 cursor-pointer"
+                             data-kt-modal-toggle="#modal_shop_product_details"
+                             src="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}">
+                        <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
+                                data-kt-wishlist-toggle="true">
+                            <i class="ki-filled ki-heart text-base"></i>
+                        </button>
+                    </div>
+                    <a class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block"
+                       data-kt-modal-toggle="#modal_shop_product_details" href="#">
+                        {{ product.name }}
+                    </a>
                 </div>
-                <a class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block"
-                   data-kt-modal-toggle="#modal_shop_product_details" href="#">
-                    Surgical Masks (50-Pack)
-                </a>
-            </div>
-            <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
-                    <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1"><i
-                            class="ki-solid ki-star text-white -mt-0.5"></i> 5.0</span>
-                <div class="flex items-center flex-wrap gap-1.5">
-                    <span class="text-sm font-medium text-mono">$0.24</span>
-                    <button class="kt-btn kt-btn-outline kt-btn-sm ms-1" data-kt-drawer-toggle="#drawers_shop_cart">Add
-                        <i class="ki-filled ki-handcart"></i></button>
+                <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
+                    <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1">
+                        <i class="ki-solid ki-star text-white -mt-0.5"></i>
+                        {{ product.rating|default:"4.5" }}
+                    </span>
+                    <div class="flex items-center flex-wrap gap-1.5">
+                        <span class="text-sm font-medium text-mono">${{ product.price }}</span>
+                        <button class="kt-btn kt-btn-outline kt-btn-sm ms-1" data-kt-drawer-toggle="#drawers_shop_cart">
+                            Add <i class="ki-filled ki-handcart"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
+        {% endfor %}
     </div>
-    <div class="kt-card" data-product='{
-                    "name": "Hand Sanitizer Gel",
-                    "image": "{% static 'metronic/tailwind/dist/assets/media/medical/600x600/hand-sanitizer.png' %}",
-    "description": "Effective hand sanitizer gel with 70% alcohol. Moisturizing and quick-drying.",
-    "sku": "MED-HSG-016",
-    "category": "Hygiene",
-    "rating": 3.5,
-    "price": "$0.12",
-    "original_price": "",
-    "discount": "",
-    "more_info": "100ml bottle, portable size."
-    }'>
-    <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
-        <div class="mb-2.5">
-            <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[250px] mb-4 shadow-none">
-                <img alt="Hand Sanitizer" class="h-[180px] shrink-0 cursor-pointer"
-                     data-kt-modal-toggle="#modal_shop_product_details"
-                     src="{% static 'metronic/tailwind/dist/assets/media/medical/600x600/hand-sanitizer.png' %}">
-                <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
-                        data-kt-wishlist-toggle="true">
-                    <i class="ki-filled ki-heart text-base"></i>
-                </button>
-            </div>
-            <a class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block"
-               data-kt-modal-toggle="#modal_shop_product_details" href="#">
-                Hand Sanitizer Gel
-            </a>
-        </div>
-        <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
-                    <span class="kt-badge kt-badge-warning kt-badge-sm rounded-full gap-1"><i
-                            class="ki-solid ki-star text-white -mt-0.5"></i> 3.5</span>
-            <div class="flex items-center flex-wrap gap-1.5">
-                <span class="text-sm font-medium text-mono">$0.12</span>
-                <button class="kt-btn kt-btn-outline kt-btn-sm ms-1" data-kt-drawer-toggle="#drawers_shop_cart">Add <i
-                        class="ki-filled ki-handcart"></i></button>
-            </div>
-        </div>
-    </div>
-</div>
-<div class="kt-card" data-product='{
-                    "name": "Compact First Aid Kit",
-                    "image": "{% static 'metronic/tailwind/dist/assets/media/medical/600x600/first-aid-kit.png' %}",
-"description": "Portable first aid kit with essential medical supplies for emergencies.",
-"sku": "MED-FAK-017",
-"category": "Emergency",
-"rating": 4.7,
-"price": "$0.42",
-"original_price": "",
-"discount": "",
-"more_info": "Includes bandages, antiseptic wipes, and scissors."
-}'>
-<div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
-    <div class="mb-2.5">
-        <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[250px] mb-4 shadow-none">
-            <img alt="First Aid Kit" class="h-[180px] shrink-0 cursor-pointer"
-                 data-kt-modal-toggle="#modal_shop_product_details"
-                 src="{% static 'metronic/tailwind/dist/assets/media/medical/600x600/first-aid-kit.png' %}">
-            <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
-                    data-kt-wishlist-toggle="true">
-                <i class="ki-filled ki-heart text-base"></i>
-            </button>
-        </div>
-        <a class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block"
-           data-kt-modal-toggle="#modal_shop_product_details" href="#">
-            Compact First Aid Kit
-        </a>
-    </div>
-    <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
-                    <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1"><i
-                            class="ki-solid ki-star text-white -mt-0.5"></i> 4.7</span>
-        <div class="flex items-center flex-wrap gap-1.5">
-            <span class="text-sm font-medium text-mono">$0.42</span>
-            <button class="kt-btn kt-btn-outline kt-btn-sm ms-1" data-kt-drawer-toggle="#drawers_shop_cart">Add <i
-                    class="ki-filled ki-handcart"></i></button>
-        </div>
-    </div>
-</div>
-</div>
-<div class="kt-card" data-product='{
-                    "name": "Vitamin C Tablets",
-                    "image": "{% static 'metronic/tailwind/dist/assets/media/medical/600x600/vitamin-c.png' %}",
-"description": "High-potency Vitamin C tablets to support immune health.",
-"sku": "MED-VCT-018",
-"category": "Supplements",
-"rating": 4.9,
-"price": "$0.18",
-"original_price": "",
-"discount": "",
-"more_info": "100 tablets, 500mg per tablet."
-}'>
-<div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
-    <div class="mb-2.5">
-        <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[250px] mb-4 shadow-none">
-            <img alt="Vitamin C" class="h-[180px] shrink-0 cursor-pointer"
-                 data-kt-modal-toggle="#modal_shop_product_details"
-                 src="{% static 'metronic/tailwind/dist/assets/media/medical/600x600/vitamin-c.png' %}">
-            <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
-                    data-kt-wishlist-toggle="true">
-                <i class="ki-filled ki-heart text-base"></i>
-            </button>
-        </div>
-        <a class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block"
-           data-kt-modal-toggle="#modal_shop_product_details" href="#">
-            Vitamin C Tablets
-        </a>
-    </div>
-    <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
-                    <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1"><i
-                            class="ki-solid ki-star text-white -mt-0.5"></i> 4.9</span>
-        <div class="flex items-center flex-wrap gap-1.5">
-            <span class="text-sm font-medium text-mono">$0.18</span>
-            <button class="kt-btn kt-btn-outline kt-btn-sm ms-1" data-kt-drawer-toggle="#drawers_shop_cart">Add <i
-                    class="ki-filled ki-handcart"></i></button>
-        </div>
-    </div>
-</div>
-</div>
-</div>
 </div>
 <!-- end: Popular Medical Supplies -->
+
+
 <!-- begin: Limited-Time Deals -->
 <div class="space-y-4">
     <div class="flex items-center justify-between gap-4">
@@ -680,14 +390,14 @@
         <a class="kt-btn kt-btn-sm kt-btn-ghost kt-btn-primary" href="#">See All <i class="ki-filled ki-right"></i></a>
     </div>
     <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-2">
-        <!-- Sterile Medical Bandages -->
-        <div class="kt-card" data-product='...'>
+        {% for product in limited_products %}
+        <div class="kt-card">
             <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
                 <div class="mb-2.5">
                     <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[250px] mb-4 shadow-none">
-                        <img alt="Medical Bandages" class="h-[180px] shrink-0 cursor-pointer"
+                        <img alt="{{ product.name }}" class="h-[180px] shrink-0 cursor-pointer"
                              data-kt-modal-toggle="#modal_shop_product_details"
-                             src="{% static 'metronic/tailwind/dist/assets/media/medical/600x600/medical-bandages.png' %}">
+                             src="{{ product.main_image }}">
                         <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
                                 data-kt-wishlist-toggle="true">
                             <i class="ki-filled ki-heart text-base"></i>
@@ -696,18 +406,26 @@
                     <a class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block"
                        data-kt-modal-toggle="#modal_shop_product_details" href="#">
                         <div class="flex items-center gap-2">
-                            <span>Sterile Medical Bandages</span>
-                            <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">save 40%</span>
+                            <span>{{ product.name }}</span>
+                            {% if product.offer_percentage %}
+                            <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">
+                                Save {{ product.offer_percentage }}%
+                            </span>
+                            {% endif %}
                         </div>
                     </a>
                 </div>
                 <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
-                <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1">
-                    <i class="ki-solid ki-star text-white -mt-0.5"></i> 5.0
-                </span>
+                    <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1">
+                        <i class="ki-solid ki-star text-white -mt-0.5"></i> {{ product.rating|default:4.5 }}
+                    </span>
                     <div class="flex items-center flex-wrap gap-1.5">
-                        <span class="text-xs font-normal text-secondary-foreground line-through pt-[1px]">$0.30</span>
-                        <span class="text-sm font-medium text-mono">$0.18</span>
+                        {% if product.original_price %}
+                        <span class="text-xs font-normal text-secondary-foreground line-through pt-[1px]">
+                            ${{ product.original_price }}
+                        </span>
+                        {% endif %}
+                        <span class="text-sm font-medium text-mono">${{ product.price }}</span>
                         <button class="kt-btn kt-btn-outline kt-btn-sm ms-1" data-kt-drawer-toggle="#drawers_shop_cart">
                             Add <i class="ki-filled ki-handcart"></i>
                         </button>
@@ -715,118 +433,11 @@
                 </div>
             </div>
         </div>
-
-        <!-- Disinfectant Spray -->
-        <div class="kt-card" data-product='...'>
-            <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
-                <div class="mb-2.5">
-                    <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[250px] mb-4 shadow-none">
-                        <img alt="Disinfectant Spray" class="h-[180px] shrink-0 cursor-pointer"
-                             data-kt-modal-toggle="#modal_shop_product_details"
-                             src="{% static 'metronic/tailwind/dist/assets/media/medical/600x600/disinfectant-spray.png' %}">
-                        <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
-                                data-kt-wishlist-toggle="true">
-                            <i class="ki-filled ki-heart text-base"></i>
-                        </button>
-                    </div>
-                    <a class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block"
-                       data-kt-modal-toggle="#modal_shop_product_details" href="#">
-                        <div class="flex items-center gap-2">
-                            <span>Disinfectant Spray</span>
-                            <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">save 40%</span>
-                        </div>
-                    </a>
-                </div>
-                <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
-                <span class="kt-badge kt-badge-warning kt-badge-sm rounded-full gap-1">
-                    <i class="ki-solid ki-star text-white -mt-0.5"></i> 3.5
-                </span>
-                    <div class="flex items-center flex-wrap gap-1.5">
-                        <span class="text-xs font-normal text-secondary-foreground line-through pt-[1px]">$0.24</span>
-                        <span class="text-sm font-medium text-mono">$0.14</span>
-                        <button class="kt-btn kt-btn-outline kt-btn-sm ms-1" data-kt-drawer-toggle="#drawers_shop_cart">
-                            Add <i class="ki-filled ki-handcart"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Sterile Syringes -->
-        <div class="kt-card" data-product='...'>
-            <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
-                <div class="mb-2.5">
-                    <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[250px] mb-4 shadow-none">
-                        <img alt="Medical Syringes" class="h-[180px] shrink-0 cursor-pointer"
-                             data-kt-modal-toggle="#modal_shop_product_details"
-                             src="{% static 'metronic/tailwind/dist/assets/media/medical/600x600/medical-syringes.png' %}">
-                        <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
-                                data-kt-wishlist-toggle="true">
-                            <i class="ki-filled ki-heart text-base"></i>
-                        </button>
-                    </div>
-                    <a class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block"
-                       data-kt-modal-toggle="#modal_shop_product_details" href="#">
-                        <div class="flex items-center gap-2">
-                            <span>Sterile Syringes (10-Pack)</span>
-                            <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">save 40%</span>
-                        </div>
-                    </a>
-                </div>
-                <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
-                <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1">
-                    <i class="ki-solid ki-star text-white -mt-0.5"></i> 4.7
-                </span>
-                    <div class="flex items-center flex-wrap gap-1.5">
-                        <span class="text-xs font-normal text-secondary-foreground line-through pt-[1px]">$0.36</span>
-                        <span class="text-sm font-medium text-mono">$0.22</span>
-                        <button class="kt-btn kt-btn-outline kt-btn-sm ms-1" data-kt-drawer-toggle="#drawers_shop_cart">
-                            Add <i class="ki-filled ki-handcart"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Medical Adhesive Tape -->
-        <div class="kt-card" data-product='...'>
-            <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
-                <div class="mb-2.5">
-                    <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[250px] mb-4 shadow-none">
-                        <img alt="Medical Tape" class="h-[180px] shrink-0 cursor-pointer"
-                             data-kt-modal-toggle="#modal_shop_product_details"
-                             src="{% static 'metronic/tailwind/dist/assets/media/medical/600x600/medical-tape.png' %}">
-                        <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
-                                data-kt-wishlist-toggle="true">
-                            <i class="ki-filled ki-heart text-base"></i>
-                        </button>
-                    </div>
-                    <a class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block"
-                       data-kt-modal-toggle="#modal_shop_product_details" href="#">
-                        <div class="flex items-center gap-2">
-                            <span>Medical Adhesive Tape</span>
-                            <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">save 40%</span>
-                        </div>
-                    </a>
-                </div>
-                <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
-                <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1">
-                    <i class="ki-solid ki-star text-white -mt-0.5"></i> 4.9
-                </span>
-                    <div class="flex items-center flex-wrap gap-1.5">
-                        <span class="text-xs font-normal text-secondary-foreground line-through pt-[1px]">$0.16</span>
-                        <span class="text-sm font-medium text-mono">$0.10</span>
-                        <button class="kt-btn kt-btn-outline kt-btn-sm ms-1" data-kt-drawer-toggle="#drawers_shop_cart">
-                            Add <i class="ki-filled ki-handcart"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+        {% endfor %}
     </div>
-
 </div>
 <!-- end: Limited-Time Deals -->
+
 <!-- begin: Benefits -->
 <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-2">
     <div class="kt-card">
