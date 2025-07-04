@@ -138,12 +138,3 @@ RECAPTCHA_PUBLIC_KEY = '6LdTHV8rAAAAAM_YfllvwXXOezA124fFTlQXO3Tb'
 RECAPTCHA_PRIVATE_KEY = '6LdTHV8rAAAAAIgLr2wdtdtWExTS6xJpUpD8qEzh'
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'smtp.gmail.com'
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = 'pranshtechnewjoinee@gmail.com'
-# EMAIL_HOST_PASSWORD = 'bfqnbshgitaikkqh'
-# DEFAULT_FROM_EMAIL = 'info@medicalsupplier.com'
-# EMAIL_CC = 'info@textdrip.com'
