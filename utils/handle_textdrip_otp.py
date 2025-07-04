@@ -1,6 +1,17 @@
 import requests
 
 def send_phone_otp(input_value, token):
+    """
+    Sends an email OTP using the TextDrip API.
+
+    Args:
+        input_value (str): The input value (e.g., phone number).
+        input_type (str): The type of input (e.g., "mobile").
+        token (str): The authorization token.
+
+    Returns:
+        dict: The API response as a dictionary.
+    """
     url = 'https://api.textdrip.com/api/v1/email-otp'
     headers = {
         'Authorization': f'Bearer {token}',
@@ -25,6 +36,18 @@ def send_phone_otp(input_value, token):
 
 
 def verify_mobile_otp(api_url, token, mobile_number, otp):
+    """
+    Verifies an OTP using the TextDrip API.
+
+    Args:
+        api_url (str): The API endpoint.
+        token (str): The authorization token.
+        mobile_number (str): The mobile number associated with the OTP.
+        otp (str): The OTP to verify.
+
+    Returns:
+        dict: The API response as a dictionary or an error message.
+    """
     headers = {
         'Authorization': f'Bearer {token}',
         'Accept': 'application/json',
@@ -37,9 +60,9 @@ def verify_mobile_otp(api_url, token, mobile_number, otp):
     }
     try:
         response = requests.post(api_url, headers=headers, json=payload)
-        print("VERIFICATION REQUEST:", payload)
-        print("VERIFICATION RESPONSE:", response.json())
-        response.raise_for_status()
+        print(payload)
+        response.raise_for_status()  # Raise an exception for HTTP errors
         return response.json()
     except requests.exceptions.RequestException as e:
         return {"error": str(e)}
+

@@ -7,15 +7,49 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="{% static 'metronic/tailwind/dist/assets/css/styles.css' %}" rel="stylesheet">
+    <style>
+        .password-container {
+            position: relative;
+        }
+        .eye-icon {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #6b7280;
+        }
+        .strength-bar {
+            height: 5px;
+            border-radius: 3px;
+            margin-top: 4px;
+            transition: all 0.3s ease;
+        }
+        .strength-weak { background-color: #ef4444; width: 33%; }
+        .strength-medium { background-color: #f59e0b; width: 66%; }
+        .strength-strong { background-color: #22c55e; width: 100%; }
+        .match-status { font-size: 0.875rem; margin-top: 4px; }
+        .match { color: #22c55e; }
+        .no-match { color: #ef4444; }
+        .page-bg {
+            background-image: url("{% static 'images/medical_bg.png' %}");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        .kt-card {
+            background-color: rgba(20, 20, 20, 0.9); /* Semi-transparent black background */
+        }
+    </style>
 </head>
 <body class="antialiased flex h-full bg-background text-base text-foreground">
 
 <div class="flex items-center justify-center grow bg-center bg-no-repeat page-bg">
-    <div class="kt-card max-w-[370px] w-full">
+    <div class="kt-card max-w-[500px] w-full">
         <form method="post" class="kt-card-content flex flex-col gap-5 p-10" id="sign_up_form">
             {% csrf_token %}
             <div class="text-center mb-2.5">
-                <h3 class="text-lg font-medium text-mono mb-2.5">Sign up</h3>
+                <h3 class="text-lg font-medium text-mono mb-2.5">Sign Up</h3>
                 <div class="text-sm">
                     Already have an account? <a href="{% url 'dashboard:user_signin' %}" class="link">Sign In</a>
                 </div>
@@ -30,13 +64,28 @@
             <!-- Password -->
             <div class="flex flex-col gap-1">
                 <label class="kt-form-label text-mono">Password</label>
-                <input class="kt-input" name="user_password" placeholder="Enter Password" type="password">
+                <div class="password-container">
+                    <input class="kt-input" name="user_password" id="password" placeholder="Enter Password" type="password">
+                    <svg class="eye-icon" id="password-eye" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                </div>
+                <div id="strength-bar" class="strength-bar"></div>
+                <div id="strength-text" class="text-sm"></div>
             </div>
 
             <!-- Confirm Password -->
             <div class="flex flex-col gap-1">
                 <label class="kt-form-label text-mono">Confirm Password</label>
-                <input class="kt-input" name="confirm_password" placeholder="Re-enter Password" type="password">
+                <div class="password-container">
+                    <input class="kt-input" name="confirm_password" id="confirm-password" placeholder="Re-enter Password" type="password">
+                    <svg class="eye-icon" id="confirm-password-eye" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                </div>
+                <div id="match-status" class="match-status"></div>
             </div>
 
             <!-- Mobile Number -->
@@ -58,6 +107,78 @@
         </form>
     </div>
 </div>
+
+<script>
+    // Password visibility toggle
+    const togglePasswordVisibility = (inputId, eyeId) => {
+        const input = document.getElementById(inputId);
+        const eye = document.getElementById(eyeId);
+        eye.addEventListener('click', () => {
+            const isPassword = input.type === 'password';
+            input.type = isPassword ? 'text' : 'password';
+            eye.innerHTML = isPassword
+                ? '<path d="M2 2l20 20M5.782 5.782A10.963 10.963 0 001 12a10.963 10.963 0 0022 0 10.963 10.963 0 00-5.782-6.218M15 12a3 3 0 01-3 3m-3-3a3 3 0 013-3"/>'
+                : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+        });
+    };
+
+    togglePasswordVisibility('password', 'password-eye');
+    togglePasswordVisibility('confirm-password', 'confirm-password-eye');
+
+    // Password strength checker
+    const passwordInput = document.getElementById('password');
+    const strengthBar = document.getElementById('strength-bar');
+    const strengthText = document.getElementById('strength-text');
+
+    passwordInput.addEventListener('input', () => {
+        const password = passwordInput.value;
+        let strength = 0;
+
+        if (password.length > 0) strength = 1; // Weak: Non-empty
+        if (password.length >= 4) strength = 2; // Medium: 4 or more characters
+        if (password.length >= 8) strength = 3; // Strong: 8 or more characters
+        if (/[A-Z]/.test(password) && /[0-9]/.test(password) && /[^A-Za-z0-9]/.test(password)) strength += 1;
+
+        strengthBar.className = 'strength-bar';
+        strengthText.textContent = '';
+
+        if (strength === 1) {
+            strengthBar.classList.add('strength-weak');
+            strengthText.textContent = 'Weak';
+            strengthText.style.color = '#ef4444';
+        } else if (strength === 2) {
+            strengthBar.classList.add('strength-medium');
+            strengthText.textContent = 'Medium';
+            strengthText.style.color = '#f59e0b';
+        } else if (strength === 3) {
+            strengthBar.classList.add('strength-strong');
+            strengthText.textContent = 'Strong';
+            strengthText.style.color = '#22c55e';
+        }
+
+        checkPasswordMatch();
+    });
+
+    // Password match checker
+    const confirmPasswordInput = document.getElementById('confirm-password');
+    const matchStatus = document.getElementById('match-status');
+
+    const checkPasswordMatch = () => {
+        const password = passwordInput.value;
+        const confirmPassword = confirmPasswordInput.value;
+        matchStatus.textContent = password && confirmPassword
+            ? password === confirmPassword
+                ? 'Passwords match'
+                : 'Passwords do not match'
+            : '';
+        matchStatus.className = 'match-status';
+        if (password && confirmPassword) {
+            matchStatus.classList.add(password === confirmPassword ? 'match' : 'no-match');
+        }
+    };
+
+    confirmPasswordInput.addEventListener('input', checkPasswordMatch);
+</script>
 
 </body>
 </html>

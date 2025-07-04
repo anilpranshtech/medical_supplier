@@ -7,11 +7,58 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="{% static 'metronic/tailwind/dist/assets/css/styles.css' %}" rel="stylesheet">
+    <style>
+        .page-bg {
+            background-image: url("{% static 'images/medical_bg.png' %}");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        .kt-card {
+            background-color: rgba(20, 20, 20, 0.9); /* Semi-transparent black background */
+        }
+        .otp-container {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+        .otp-input {
+            width: 40px;
+            height: 40px;
+            text-align: center;
+            font-size: 1.25rem;
+            border: 1px solid #6b7280;
+            border-radius: 4px;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
+        .otp-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+        }
+        .resend-link {
+            color: #3b82f6;
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 0.875rem;
+            text-align: center;
+        }
+        .error-message {
+            color: #ef4444;
+            font-size: 0.875rem;
+            text-align: center;
+            margin-top: 8px;
+        }
+        .kt-form-label, .text-sm, .text-secondary-foreground {
+            color: #ffffff; /* White text for better contrast */
+        }
+    </style>
 </head>
 <body class="antialiased flex h-full bg-background text-base text-foreground">
 
 <div class="flex items-center justify-center grow bg-center bg-no-repeat page-bg">
-    <div class="kt-card max-w-[370px] w-full">
+    <div class="kt-card max-w-[500px] w-full">
         <form method="post" class="kt-card-content flex flex-col gap-5 p-10" id="otp_form">
             {% csrf_token %}
             <div class="text-center mb-2.5">
@@ -24,8 +71,26 @@
             <!-- OTP Input -->
             <div class="flex flex-col gap-1">
                 <label class="kt-form-label text-mono">OTP</label>
-                <input class="kt-input" name="otp" placeholder="123456" type="text" required>
+                <div class="otp-container">
+                    <input class="otp-input" type="text" maxlength="1" pattern="[0-9]" required>
+                    <input class="otp-input" type="text" maxlength="1" pattern="[0-9]" required>
+                    <input class="otp-input" type="text" maxlength="1" pattern="[0-9]" required>
+                    <input class="otp-input" type="text" maxlength="1" pattern="[0-9]" required>
+                    <input class="otp-input" type="text" maxlength="1" pattern="[0-9]" required>
+                    <input class="otp-input" type="text" maxlength="1" pattern="[0-9]" required>
+                </div>
+                <input type="hidden" name="otp" id="otp-hidden">
             </div>
+
+            <div class="resend-link" id="resend-otp">Resend OTP</div>
+
+            {% if messages %}
+                <div class="error-message">
+                    {% for message in messages %}
+                        {{ message }}
+                    {% endfor %}
+                </div>
+            {% endif %}
 
             <button type="submit" class="kt-btn kt-btn-primary flex justify-center grow">
                 Verify
@@ -33,6 +98,73 @@
         </form>
     </div>
 </div>
+
+<script>
+    // OTP input handling
+    const otpInputs = document.querySelectorAll('.otp-input');
+    const otpHidden = document.getElementById('otp-hidden');
+
+    otpInputs.forEach((input, index) => {
+        input.addEventListener('input', (e) => {
+            // Allow only numbers
+            if (!/^[0-9]$/.test(e.target.value)) {
+                e.target.value = '';
+                return;
+            }
+            // Move to next input if current is filled
+            if (e.target.value && index < otpInputs.length - 1) {
+                otpInputs[index + 1].focus();
+            }
+            // Update hidden input with combined OTP
+            updateHiddenOTP();
+        });
+
+        input.addEventListener('keydown', (e) => {
+            // Move to previous input on backspace if empty
+            if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                otpInputs[index - 1].focus();
+            }
+        });
+
+        input.addEventListener('paste', (e) => {
+            e.preventDefault();
+            const pasteData = e.clipboardData.getData('text').replace(/\D/g, '');
+            if (pasteData.length <= 6) {
+                for (let i = 0; i < pasteData.length && i < otpInputs.length; i++) {
+                    otpInputs[i].value = pasteData[i];
+                    if (i < otpInputs.length - 1) {
+                        otpInputs[i + 1].focus();
+                    }
+                }
+                updateHiddenOTP();
+            }
+        });
+    });
+
+    function updateHiddenOTP() {
+        const otpValue = Array.from(otpInputs).map(input => input.value).join('');
+        otpHidden.value = otpValue;
+    }
+
+    // Resend OTP
+    document.getElementById('resend-otp').addEventListener('click', () => {
+        fetch('{% url "dashboard:resend_otp" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message || 'OTP resent to your mobile number!');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to resend OTP. Please try again.');
+            });
+    });
+</script>
 
 </body>
 </html>

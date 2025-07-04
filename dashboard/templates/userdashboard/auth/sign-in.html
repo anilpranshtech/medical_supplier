@@ -7,10 +7,45 @@
     <title>Sign In</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="{% static 'metronic/tailwind/dist/assets/css/styles.css' %}" rel="stylesheet">
+    <style>
+        .page-bg {
+            background-image: url("{% static 'images/medical_bg.png' %}");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        .kt-card {
+            background-color: rgba(20, 20, 20, 0.9); /* Semi-transparent black background */
+        }
+        .password-container {
+            position: relative;
+        }
+        .eye-icon {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #6b7280;
+        }
+        .error-message {
+            color: #ef4444;
+            font-size: 0.875rem;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+        .kt-form-label, .text-sm, .text-secondary-foreground, .kt-checkbox-label, .kt-link {
+            color: #ffffff; /* White text for better contrast */
+        }
+        .kt-input {
+            background-color: rgba(255, 255, 255, 0.1); /* Slightly transparent input background */
+            color: #ffffff;
+        }
+    </style>
 </head>
 <body class="antialiased flex h-full text-base text-foreground bg-background">
 <div class="flex items-center justify-center grow bg-center bg-no-repeat page-bg">
-    <div class="kt-card max-w-[370px] w-full">
+    <div class="kt-card max-w-[500px] w-full">
         <form method="post" class="kt-card-content flex flex-col gap-5 p-10" id="sign_in_form">
             {% csrf_token %}
 
@@ -24,9 +59,11 @@
 
             <!-- Show error messages -->
             {% if messages %}
-                {% for message in messages %}
-                    <div class="text-red-500 text-sm">{{ message }}</div>
-                {% endfor %}
+                <div class="error-message">
+                    {% for message in messages %}
+                        {{ message }}
+                    {% endfor %}
+                </div>
             {% endif %}
 
             <div class="flex flex-col gap-1">
@@ -41,17 +78,12 @@
                         Forgot Password?
                     </a>
                 </div>
-                <div class="kt-input" data-kt-toggle-password="true" data-kt-toggle-password-initialized="true">
-                    <input name="user_password" placeholder="Enter Password" type="password" required>
-                    <button class="kt-btn kt-btn-sm kt-btn-ghost kt-btn-icon bg-transparent! -me-1.5"
-                            data-kt-toggle-password-trigger="true" type="button">
-                        <span class="kt-toggle-password-active:hidden">
-                            <i class="ki-filled ki-eye text-muted-foreground"></i>
-                        </span>
-                        <span class="hidden kt-toggle-password-active:block">
-                            <i class="ki-filled ki-eye-slash text-muted-foreground"></i>
-                        </span>
-                    </button>
+                <div class="password-container">
+                    <input name="user_password" class="kt-input" placeholder="Enter Password" type="password" required>
+                    <svg class="eye-icon" id="password-eye" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
                 </div>
             </div>
 
@@ -64,5 +96,22 @@
         </form>
     </div>
 </div>
+
+<script>
+    // Password visibility toggle
+    const togglePasswordVisibility = () => {
+        const input = document.querySelector('input[name="user_password"]');
+        const eye = document.getElementById('password-eye');
+        eye.addEventListener('click', () => {
+            const isPassword = input.type === 'password';
+            input.type = isPassword ? 'text' : 'password';
+            eye.innerHTML = isPassword
+                ? '<path d="M2 2l20 20M5.782 5.782A10.963 10.963 0 001 12a10.963 10.963 0 0022 0 10.963 10.963 0 00-5.782-6.218M15 12a3 3 0 01-3 3m-3-3a3 3 0 013-3"/>'
+                : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+        });
+    };
+
+    togglePasswordVisibility();
+</script>
 </body>
 </html>

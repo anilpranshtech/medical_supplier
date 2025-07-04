@@ -1,4 +1,4 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth.views import LoginView, PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, \
     PasswordResetCompleteView
@@ -295,6 +295,7 @@ class UserProfile(TemplateView):
 
 VERIFY_URL = "https://api.textdrip.com/api/v1/email-otp"
 
+
 class SignUpView(View):
     def get(self, request):
         return render(request, 'userdashboard/auth/sign-up.html')
@@ -303,17 +304,25 @@ class SignUpView(View):
         email = request.POST.get('user_email')
         password = request.POST.get('user_password')
         confirm_password = request.POST.get('confirm_password')
-        phone = request.POST.get('phone')  # You can add a phone field to the HTML
+        phone = request.POST.get('phone')
 
+        # Validate passwords match
         if password != confirm_password:
             messages.error(request, "Passwords do not match.")
             return redirect('dashboard:user_signup')
 
+        # Check if user already exists
+        if User.objects.filter(username=email).exists():
+            messages.error(request, "An account with this email already exists.")
+            return redirect('dashboard:user_signup')
+
+        # Send OTP
         otp_response = send_phone_otp(phone, TEXTDRIP_OTP_TOKEN)
         if "error" in otp_response:
             messages.error(request, otp_response["error"])
             return redirect('dashboard:user_signup')
 
+        # Store signup data in session
         request.session['signup_data'] = {
             'email': email,
             'password': password,
@@ -340,17 +349,40 @@ class VerifyOTPView(View):
         print("OTP VERIFICATION RESULT:", result)
 
         if result.get("success") or result.get("status") is True:
-            from django.contrib.auth.models import User
-            User.objects.create_user(
-                username=signup_data['email'],
-                email=signup_data['email'],
-                password=signup_data['password']
-            )
-            messages.success(request, "Account created successfully.")
-            return redirect('dashboard:user_signin')
+            # Double-check user doesn't exist
+            if User.objects.filter(username=signup_data['email']).exists():
+                messages.error(request, "An account with this email already exists.")
+                request.session.pop('signup_data', None)
+                return redirect('dashboard:user_signup')
+
+            try:
+                User.objects.create_user(
+                    username=signup_data['email'],
+                    email=signup_data['email'],
+                    password=signup_data['password']
+                )
+                request.session.pop('signup_data', None)
+                messages.success(request, "Account created successfully.")
+                return redirect('dashboard:user_signin')
+            except Exception as e:
+                messages.error(request, f"Error creating account: {str(e)}")
+                return redirect('dashboard:user_signup')
         else:
             messages.error(request, result.get("message", "OTP verification failed."))
             return redirect('dashboard:verify_otp')
+
+
+class ResendOTPView(View):
+    def post(self, request):
+        signup_data = request.session.get('signup_data')
+        if not signup_data:
+            return JsonResponse({'message': 'Session expired. Please sign up again.'}, status=400)
+
+        phone = signup_data['phone']
+        otp_response = send_phone_otp(phone, TEXTDRIP_OTP_TOKEN)
+        if "error" in otp_response:
+            return JsonResponse({'message': otp_response["error"]}, status=400)
+        return JsonResponse({'message': 'OTP resent successfully!'})
 
 
 class CustomPasswordResetView(PasswordResetView):
@@ -372,7 +404,7 @@ class CustomPasswordResetDoneView(PasswordResetDoneView):
 class CustomPasswordResetConfirmView(PasswordResetConfirmView):
     form_class = CustomSetPasswordForm
     template_name = 'userdashboard/auth/password_reset_confirm.html'
-    success_url = reverse_lazy('userdashboard:password_reset_complete')
+    success_url = reverse_lazy('dashboard:password_reset_complete')
 
     def form_valid(self, form):
         messages.success(self.request, "Your password has been set.")
@@ -394,7 +426,7 @@ class SignInView(View):
         user = authenticate(request, username=email, password=password)
         if user is not None:
             login(request, user)
-            return redirect('dashboard:home')  # or wherever you want to go after login
+            return redirect('dashboard:home')
         else:
             messages.error(request, 'Invalid email or password.')
             return redirect('dashboard:user_signin')

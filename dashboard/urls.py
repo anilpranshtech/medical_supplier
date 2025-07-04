@@ -30,6 +30,7 @@ urlpatterns = [
     path('user-profile/', views.UserProfile.as_view(), name='user_profile'),
     path('user-signup/', views.SignUpView.as_view(), name='user_signup'),
     path('verify-otp/', views.VerifyOTPView.as_view(), name='verify_otp'),
+    path('resend-otp/', views.ResendOTPView.as_view(), name='resend_otp'),
     path('user-signin/', views.SignInView.as_view(), name='user_signin'),
     path('password-reset/', CustomPasswordResetView.as_view(), name='password_reset'),
     path('password-reset/done/', CustomPasswordResetDoneView.as_view(), name='password_reset_done'),
