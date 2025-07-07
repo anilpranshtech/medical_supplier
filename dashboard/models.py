@@ -229,3 +229,12 @@ class Orders(models.Model):
 
     def __str__(self):
         return f"Order #{self.pk} - {self.product.name} x {self.quantity}"
+
+
+class Payment(models.Model):
+    name = models.CharField(max_length=100)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    order_id = models.CharField(max_length=100, blank=True)
+    razorpay_payment_id = models.CharField(max_length=100, blank=True)
+    paid = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)

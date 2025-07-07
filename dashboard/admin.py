@@ -43,3 +43,5 @@ class ProductImagesAdmin(admin.ModelAdmin):
 admin.site.register(ProductCategory)
 
 admin.site.register(Orders)
+
+admin.site.register(Payment)

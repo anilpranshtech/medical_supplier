@@ -1,9 +1,16 @@
+from django.conf import settings
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth.views import LoginView, PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, \
     PasswordResetCompleteView
 from django.urls import reverse_lazy
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+from razorpay.errors import SignatureVerificationError
 
+from .forms import PaymentForm
+from.models import *
+import razorpay
 from djapp.settings import TEXTDRIP_OTP_TOKEN
 from utils.handle_textdrip_otp import send_phone_otp, verify_mobile_otp
 from .forms import EmailOnlyLoginForm, CustomPasswordResetForm, CustomSetPasswordForm
@@ -430,3 +437,62 @@ class SignInView(View):
         else:
             messages.error(request, 'Invalid email or password.')
             return redirect('dashboard:user_signin')
+
+
+class PaymentView(View):
+    template_name = 'userdashboard/view/payment.html'
+
+    def get(self, request):
+        form = PaymentForm()
+        return render(request, self.template_name, {'form': form})
+
+    def post(self, request):
+        form = PaymentForm(request.POST)
+        response_payment = None
+        if form.is_valid():
+            name = form.cleaned_data['name']
+            amount = int(form.cleaned_data['amount']) * 100
+
+            client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+            response_payment = client.order.create(dict(amount=amount, currency='USD'))
+
+            order_id = response_payment['id']
+            order_status = response_payment['status']
+
+            if order_status == 'created':
+                Payment.objects.create(
+                    name=name,
+                    amount=amount,
+                    order_id=order_id
+                )
+                response_payment['name'] = name
+
+        return render(request, self.template_name, {'form': form, 'payment': response_payment})
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class PaymentStatusView(View):
+    template_name = 'userdashboard/view/payment_status.html'
+
+    def post(self, request):
+        required_fields = ['razorpay_order_id', 'razorpay_payment_id', 'razorpay_signature']
+        if not all(field in request.POST for field in required_fields):
+            return render(request, self.template_name, {'status': False, 'error': 'Missing payment details'})
+
+        params_dict = {
+            'razorpay_order_id': request.POST['razorpay_order_id'],
+            'razorpay_payment_id': request.POST['razorpay_payment_id'],
+            'razorpay_signature': request.POST['razorpay_signature']
+        }
+
+        client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+
+        try:
+            client.utility.verify_payment_signature(params_dict)
+            payment = Payment.objects.get(order_id=params_dict['razorpay_order_id'])
+            payment.razorpay_payment_id = params_dict['razorpay_payment_id']
+            payment.paid = True
+            payment.save()
+            return render(request, self.template_name, {'status': True})
+        except SignatureVerificationError:
+            return render(request, self.template_name, {'status': False, 'error': 'Signature verification failed'})

@@ -44,8 +44,19 @@
             font-size: 0.875rem;
             text-align: center;
         }
+        .resend-link.disabled {
+            color: #6b7280;
+            cursor: not-allowed;
+            text-decoration: none;
+        }
         .error-message {
             color: #ef4444;
+            font-size: 0.875rem;
+            text-align: center;
+            margin-top: 8px;
+        }
+        .success-message {
+            color: #22c55e;
             font-size: 0.875rem;
             text-align: center;
             margin-top: 8px;
@@ -56,7 +67,6 @@
     </style>
 </head>
 <body class="antialiased flex h-full bg-background text-base text-foreground">
-
 <div class="flex items-center justify-center grow bg-center bg-no-repeat page-bg">
     <div class="kt-card max-w-[500px] w-full">
         <form method="post" class="kt-card-content flex flex-col gap-5 p-10" id="otp_form">
@@ -84,17 +94,16 @@
 
             <div class="resend-link" id="resend-otp">Resend OTP</div>
 
+            <!-- Show error or success messages -->
             {% if messages %}
-                <div class="error-message">
+                <div class="{% if message.tags == 'success' %}success-message{% else %}error-message{% endif %}">
                     {% for message in messages %}
                         {{ message }}
                     {% endfor %}
                 </div>
             {% endif %}
 
-            <button type="submit" class="kt-btn kt-btn-primary flex justify-center grow">
-                Verify
-            </button>
+            <button type="submit" class="kt-btn kt-btn-primary flex justify-center grow">Verify</button>
         </form>
     </div>
 </div>
@@ -103,6 +112,7 @@
     // OTP input handling
     const otpInputs = document.querySelectorAll('.otp-input');
     const otpHidden = document.getElementById('otp-hidden');
+    const resendLink = document.getElementById('resend-otp');
 
     otpInputs.forEach((input, index) => {
         input.addEventListener('input', (e) => {
@@ -146,8 +156,15 @@
         otpHidden.value = otpValue;
     }
 
-    // Resend OTP
-    document.getElementById('resend-otp').addEventListener('click', () => {
+    // Resend OTP with rate-limiting
+    let isResendDisabled = false;
+    resendLink.addEventListener('click', () => {
+        if (isResendDisabled) return;
+
+        isResendDisabled = true;
+        resendLink.classList.add('disabled');
+        resendLink.textContent = 'Resending...';
+
         fetch('{% url "dashboard:resend_otp" %}', {
             method: 'POST',
             headers: {
@@ -155,16 +172,43 @@
                 'Content-Type': 'application/json'
             }
         })
-            .then(response => response.json())
+            .then(response => {
+                if (response.status === 429) {
+                    return { message: 'Please wait before resending OTP.' };
+                }
+                return response.json();
+            })
             .then(data => {
-                alert(data.message || 'OTP resent to your mobile number!');
+                const messageClass = data.message.includes('successfully') ? 'success-message' : 'error-message';
+                const messageDiv = document.createElement('div');
+                messageDiv.className = messageClass;
+                messageDiv.textContent = data.message;
+                document.querySelector('.kt-card-content').prepend(messageDiv);
+                setTimeout(() => messageDiv.remove(), 5000); // Remove message after 5 seconds
+
+                // Re-enable resend after 30 seconds
+                setTimeout(() => {
+                    isResendDisabled = false;
+                    resendLink.classList.remove('disabled');
+                    resendLink.textContent = 'Resend OTP';
+                }, 30000);
             })
             .catch(error => {
-                console.error('Error:', error);
-                alert('Failed to resend OTP. Please try again.');
+                console.error('Resend OTP error:', error);
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'error-message';
+                messageDiv.textContent = 'Failed to resend OTP. Please try again.';
+                document.querySelector('.kt-card-content').prepend(messageDiv);
+                setTimeout(() => messageDiv.remove(), 5000);
+
+                // Re-enable resend after 30 seconds
+                setTimeout(() => {
+                    isResendDisabled = false;
+                    resendLink.classList.remove('disabled');
+                    resendLink.textContent = 'Resend OTP';
+                }, 30000);
             });
     });
 </script>
-
 </body>
 </html>
