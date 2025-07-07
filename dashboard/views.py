@@ -20,6 +20,8 @@ from django.contrib.auth import authenticate, login
 from django.views.generic.edit import FormView
 from .models import *
 from datetime import date
+from django.db.models import F
+import random
 
 
 class HomeView(TemplateView):
@@ -75,6 +77,28 @@ class HomeView(TemplateView):
             main_img = ProductImage.objects.filter(product=product, is_main=True).first()
             product.main_image = main_img.image.url if main_img else None
         context['limited_products'] = limited_products
+
+        
+        # ✅ Featured Products - Random 7 each refresh
+        all_ids = list(Product.objects.filter(is_active=True).values_list('id', flat=True))
+        random_ids = random.sample(all_ids, min(len(all_ids), 7))
+        featured_products = Product.objects.filter(id__in=random_ids)
+
+        for product in featured_products:
+            main_img = ProductImage.objects.filter(product=product, is_main=True).first()
+            product.main_image = main_img.image.url if main_img else None
+        context['featured_products'] = featured_products
+
+         # Add wishlist info if user is authenticated
+        if self.request.user.is_authenticated:
+            context['user_wishlist_ids'] = list(
+                WishlistProduct.objects.filter(user=self.request.user)
+                .values_list('product_id', flat=True)
+            )
+        else:
+            context['user_wishlist_ids'] = []
+        
+        
 
         return context
 
@@ -301,8 +325,15 @@ class OrderReceiptView(TemplateView):
     template_name = 'userdashboard/view/order-receipt.html'
 
 
-class UserProfile(TemplateView):
+
+class UserProfile(LoginRequiredMixin, TemplateView):
     template_name = 'pages/user_profile.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user  
+        context['user'] = user
+        return context
 
 
 VERIFY_URL = "https://api.textdrip.com/api/v1/email-otp"
