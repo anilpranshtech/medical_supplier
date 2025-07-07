@@ -1,46 +1,40 @@
 {% extends "pages/base.html" %}
 {% load static %}
-
 {% block content %}
+
 <div class="kt-container-fixed mt-5 py-5" style="max-width: var(--custom-container-width, 85%);">
     <div class="flex flex-col items-stretch gap-7 mt-5 py-5">
         <main class="grow" role="content">
-            <!-- Container -->
+            <!-- Steps -->
             <div class="kt-container-fixed">
                 <div class="flex items-center justify-center flex-wrap lg:flex-nowrap gap-8 lg:gap-1.5 pt-5 mb-12">
-                    <!-- Step Button -->
-                    <div class="text-2sm leading-none relative flex items-center gap-1.5 px-3 h-8.5 rounded-full border border-border text-foreground [&_.kt-step-icon]:text-muted-foreground bg-muted/30">
+                    <!-- Step Items -->
+                    {% comment %} Step Indicator {% endcomment %}
+                    <div class="text-2sm relative flex items-center gap-1.5 px-3 h-8.5 rounded-full border border-border text-foreground bg-muted/30">
                         <i class="ki-solid ki-check-circle text-green-500 absolute -top-1 -end-1 text-base"></i>
-                        <span class="kt-step-icon">
-                            <i class="ki-filled ki-subtitle text-base"></i>
-                        </span>
+                        <span class="kt-step-icon"><i class="ki-filled ki-subtitle text-base"></i></span>
                         Order Summary
                     </div>
                     <div class="hidden lg:block w-12 h-px border-t border-dashed border-zinc-300 dark:border-zinc-600"></div>
-                    <div class="text-2sm leading-none relative flex items-center gap-1.5 px-3 h-8.5 rounded-full border border-border text-foreground [&_.kt-step-icon]:text-muted-foreground bg-muted/30">
+                    <div class="text-2sm relative flex items-center gap-1.5 px-3 h-8.5 rounded-full border border-border text-foreground bg-muted/30">
                         <i class="ki-solid ki-check-circle text-green-500 absolute -top-1 -end-1 text-base"></i>
-                        <span class="kt-step-icon">
-                            <i class="ki-filled ki-delivery text-base"></i>
-                        </span>
+                        <span class="kt-step-icon"><i class="ki-filled ki-delivery text-base"></i></span>
                         Shipping Info
                     </div>
                     <div class="hidden lg:block w-12 h-px border-t border-dashed border-zinc-300 dark:border-zinc-600"></div>
-                    <div class="text-2sm leading-none relative flex items-center gap-1.5 px-3 h-8.5 rounded-full border font-medium border-primary/10 bg-primary/10 text-primary [&_.kt-step-icon]:text-primary">
-                        <span class="kt-step-icon">
-                            <i class="ki-filled ki-two-credit-cart text-base"></i>
-                        </span>
+                    <div class="text-2sm relative flex items-center gap-1.5 px-3 h-8.5 rounded-full border font-medium border-primary/10 bg-primary/10 text-primary">
+                        <span class="kt-step-icon"><i class="ki-filled ki-two-credit-cart text-base"></i></span>
                         Payment Method
                     </div>
                     <div class="hidden lg:block w-12 h-px border-t border-dashed border-zinc-300 dark:border-zinc-600"></div>
-                    <div class="text-2sm leading-none relative flex items-center gap-1.5 px-3 h-8.5 rounded-full border border-border text-foreground [&_.kt-step-icon]:text-muted-foreground">
-                        <span class="kt-step-icon">
-                            <i class="ki-filled ki-cheque text-base"></i>
-                        </span>
+                    <div class="text-2sm relative flex items-center gap-1.5 px-3 h-8.5 rounded-full border border-border text-foreground">
+                        <span class="kt-step-icon"><i class="ki-filled ki-cheque text-base"></i></span>
                         Order Placed
                     </div>
                 </div>
             </div>
-            <!-- Dropdown for payment selection -->
+
+            <!-- Payment Method Dropdown -->
             <div class="kt-container-fixed mb-4">
                 <div class="flex justify-end">
                     <div class="w-full sm:w-64">
@@ -54,32 +48,49 @@
                     </div>
                 </div>
             </div>
-            <!-- Payment Cards -->
+
+            <!-- Payment Cards Section -->
             <div class="kt-container-fixed">
                 <div class="grid xl:grid-cols-3 gap-5 lg:gap-9 mb-5 lg:mb-10">
-                    <!-- Left side cards -->
+                    <!-- Left Side -->
                     <div class="lg:col-span-2 space-y-5">
                         <div class="grid sm:grid-cols-2 gap-5" id="payment-list">
-                            <!-- All your payment cards here -->
-                            {% comment %} Your payment cards are already included above {% endcomment %}
-                            <!-- Cash on Delivery, Stripe Card, Razorpay Card -->
-                            {{ block.super }}
+                            <!-- COD Button -->
+                            <div class="kt-card" data-payment='{"type": "Cash on Delivery"}' id="cod-card" hidden>
+                                <button class="kt-btn kt-btn-primary w-full" onclick="window.location.href='{% url 'dashboard:order_placed' %}'">
+                                    Place Order
+                                </button>
+                            </div>
+
+                            <!-- Stripe Form -->
+                            <div class="kt-card" data-payment='{"type": "Stripe"}' id="stripe-card" hidden>
+                                <form action="." method="POST" class="stripe-form" id="stripe-form">
+                                    {% csrf_token %}
+                                    <div id="card-errors" class="text-red-500 mb-3"></div>
+                                    <div class="space-y-4">
+                                        <input type="text" name="crd_name" required placeholder="Cardholder Name" class="kt-input w-full" />
+                                        <div id="card-element" class="border p-3 rounded"></div>
+                                        <button class="kt-btn kt-btn-danger w-full mt-3" type="submit">Pay with Stripe</button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <!-- Razorpay Button -->
+                            <div class="kt-card" data-payment='{"type": "Razorpay"}' id="razorpay-card" hidden>
+                                <button id="rzp-button"  href="{% url 'dashboard:payment_status' %}" class="kt-btn kt-btn-success w-full">Pay with Razorpay</button>
+                            </div>
                         </div>
+
+                        <!-- Navigation Buttons -->
                         <div class="flex justify-end items-center flex-wrap gap-3">
-                            <button class="kt-btn kt-btn-outline" data-kt-modal-toggle="#modal_add_payment">Add New Payment Method</button>
                             <a class="kt-btn kt-btn-outline" href="{% url 'dashboard:shipping_info' %}">
-                                <i class="ki-filled ki-black-left text-base"></i>
-                                Shipping Info
-                            </a>
-                            <a class="kt-btn kt-btn-primary" href="{% url 'dashboard:order_placed' %}">
-                                Place Order
-                                <i class="ki-filled ki-mouse-square text-base"></i>
+                                <i class="ki-filled ki-black-left text-base"></i> Shipping Info
                             </a>
                         </div>
                     </div>
-                    <!-- Right side summary -->
+
+                    <!-- Right Side Summary (Optional) -->
                     <div class="lg:col-span-1">
-                        <!-- Your order summary block stays here -->
                         {{ block.super }}
                     </div>
                 </div>
@@ -88,31 +99,38 @@
     </div>
 </div>
 
+<!-- Stripe.js -->
+<script src="https://js.stripe.com/v3/"></script>
+
+<!-- Razorpay -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     const dropdown = document.getElementById('payment-method-select');
-    const paymentList = document.getElementById('payment-list');
-    const orderSummaryPayment = document.getElementById('order-summary-payment');
+    const cards = {
+        cod: document.getElementById('cod-card'),
+        stripe: document.getElementById('stripe-card'),
+        razorpay: document.getElementById('razorpay-card'),
+    };
+
+    function hideAll() {
+        Object.values(cards).forEach(card => card.hidden = true);
+    }
 
     dropdown.addEventListener('change', function () {
+        hideAll();
         const value = this.value;
-        const cards = paymentList.querySelectorAll('.kt-card');
-
-        cards.forEach(card => {
-            const data = card.dataset.payment ? JSON.parse(card.dataset.payment) : {};
-            if (data.type === value) {
-                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                const selectBtn = card.querySelector('[data-kt-action="select"]');
-                if (selectBtn) selectBtn.click();
-            }
-        });
+        if (value === "Cash on Delivery") {
+            cards.cod.hidden = false;
+        } else if (value === "Stripe") {
+            cards.stripe.hidden = false;
+        } else if (value === "Razorpay") {
+            cards.razorpay.hidden = false;
+        }
     });
-});
-</script>
 
-<script src="https://js.stripe.com/v3/"></script>
-<script>
-document.addEventListener("DOMContentLoaded", function () {
+    // Stripe Setup
     const stripe = Stripe("{{ STRIPE_PUBLIC_KEY }}");
     const elements = stripe.elements();
     const card = elements.create("card");
@@ -134,6 +152,33 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
     });
+
+    // Razorpay Setup
+    const rzpBtn = document.getElementById("rzp-button");
+    if (rzpBtn) {
+        rzpBtn.addEventListener("click", function (e) {
+            e.preventDefault();
+            const options = {
+                key: "{{ RAZORPAY_KEY_ID }}",
+                amount: "{{ razorpay_amount_in_paise }}",
+                currency: "INR",
+                name: "Landline Remover",
+                description: "Complete your payment",
+                handler: function (response) {
+                    // Optionally send response.razorpay_payment_id to your server
+                    window.location.href = "{% url 'dashboard:order_placed' %}";
+                },
+                prefill: {
+                    name: "{{ user.get_full_name }}",
+                    email: "{{ user.email }}"
+                },
+                theme: { color: "#0ea5e9" }
+            };
+            const rzp = new Razorpay(options);
+            rzp.open();
+        });
+    }
 });
 </script>
+
 {% endblock content %}
