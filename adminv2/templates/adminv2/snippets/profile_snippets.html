@@ -4,7 +4,12 @@
      <div class="me-7 mb-4">
         <div
             class="symbol symbol-100px symbol-lg-160px symbol-fixed position-relative">
-            <img src="{% static 'adminv2/media/avatars/300-1.jpg'%}" alt="image" />
+           
+<div class="symbol symbol-100px symbol-lg-160px symbol-fixed position-relative">
+    
+        <img src="{{ request.user.supplierprofile.profile_picture.url }}" alt="image" />
+  </div>
+
 
         </div>
     </div>

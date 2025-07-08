@@ -17,7 +17,7 @@
                   </span>
               </span>
 
-              <div class="menu-sub menu-sub-dropdown px-2 py-4 w-250px mh-75 overflow-auto">
+             <div class="menu-sub menu-sub-dropdown px-2 py-4 w-250px mh-75 overflow-auto">
                    <div class="menu-item">
                       <div class="menu-content ">
                           <span class="menu-section fs-5 fw-bolder ps-1 py-1">
@@ -27,17 +27,17 @@
 
                   </div>
 
-                  <div class="menu-item">
-                      <a class="menu-link" href=" ">
-                          <span class="menu-bullet">
-                              <span class="bullet bullet-dot"> </span>
-                          </span>
+                  <div class="menu-sub menu-sub-accordion">
+                           <div class="menu-item">
+                               <a class="menu-link" href="{% url 'adminv2:order_listing' %}">
+                                  <span class="menu-bullet">
+                                      <span class="bullet bullet-dot"></span>
+                                  </span>
+                                   <span class="menu-title">Sale/Order</span>
+                              </a>
+                          </div>
 
-                          <span class="menu-title">
-                              Sales/Orders
-                          </span>
-                      </a>
-                  </div>
+                      </div>
                  
               </div>
 
@@ -124,7 +124,8 @@
 
                           <div class="menu-sub menu-sub-accordion">
                               <div class="menu-item">
-                                  <a class="menu-link active" href="{% url 'adminv2:products_list' %}">
+                                  <a class="menu-link {% if request.resolver_match.url_name == 'products_list' %}active{% endif %}"
+                                     href="{% url 'adminv2:products_list' %}">
                                       <span class="menu-bullet">
                                           <span class="bullet bullet-dot"></span>
                                       </span>
@@ -133,11 +134,32 @@
                               </div>
 
                               <div class="menu-item">
-                                  <a class="menu-link" href="{% url 'adminv2:add_product' %}">
+                                  <a class="menu-link {% if request.resolver_match.url_name == 'add_product' %}active{% endif %}"
+                                     href="{% url 'adminv2:add_product' %}">
                                       <span class="menu-bullet">
                                           <span class="bullet bullet-dot"> </span>
                                       </span>
                                       <span class="menu-title">Add Product</span>
+                                  </a>
+                              </div>
+
+                              <div class="menu-item">
+                                  <a class="menu-link {% if request.resolver_match.url_name == 'wishlist_products_list' %}active{% endif %}"
+                                     href="{% url 'adminv2:wishlist_products_list' %}">
+                                      <span class="menu-bullet">
+                                          <span class="bullet bullet-dot"> </span>
+                                      </span>
+                                      <span class="menu-title">Wishlist Product</span>
+                                  </a>
+                              </div>
+
+                              <div class="menu-item">
+                                  <a class="menu-link {% if request.resolver_match.url_name == 'cart_product_list' %}active{% endif %}"
+                                     href="{% url 'adminv2:cart_product_list' %}">
+                                      <span class="menu-bullet">
+                                          <span class="bullet bullet-dot"> </span>
+                                      </span>
+                                      <span class="menu-title">Cart</span>
                                   </a>
                               </div>
 

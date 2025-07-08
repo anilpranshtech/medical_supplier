@@ -1,3 +1,4 @@
+
 {% load static %}
 <!DOCTYPE html>
 
@@ -45,6 +46,7 @@
     <link href="{% static 'adminv2/plugins/global/plugins.bundle.css' %}" rel="stylesheet" type="text/css" />
     <link href="{% static 'adminv2/css/style.bundle.css' %}" rel="stylesheet" type="text/css" />
 
+    {% block extra_css_start %}{% endblock extra_css_start %}
 
 
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-52YZ3XGZJ6"></script>
@@ -60,6 +62,14 @@
             window.top.location.replace(window.self.location.href);
         }
     </script>
+<style>.long-message {
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 300px;
+    overflow-y: auto;
+}
+</style>
+ 
 </head>
 
 
@@ -130,183 +140,130 @@
 
                     <div class="app-navbar flex-shrink-0 gap-2 gap-lg-4">
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                        
+                        
                         <!-- Notification data   -->
-                         <div class="app-navbar-item">
-                             <div class="btn btn-icon border border-200 bg-gray-100 btn-color-gray-600 btn-active-color-primary w-40px h-40px"
-                                data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-attach="parent"
-                                data-kt-menu-placement="bottom-end" id="kt_menu_item_wow">
-                                <i class="fas fa-bell fa-shake fs-4"></i>
-                            </div>
 
-                             <div class="menu menu-sub menu-sub-dropdown menu-column w-350px w-lg-375px"
-                                data-kt-menu="true" id="kt_menu_notifications">
-
-                                 <div class="d-flex flex-column bgi-no-repeat rounded-top" style="background-image:url('/static/adminv2/media/misc/menu-header-bg.jpg')">
-                                     <h3 class="text-white fw-semibold px-9 mt-10 mb-6">
-                                        Notifications <span class="fs-8 opacity-75 ps-3">24 reports</span>
-                                    </h3>
-
-                                     <ul class="nav nav-line-tabs nav-line-tabs-2x nav-stretch fw-semibold px-9">
-                                        <li class="nav-item">
-                                            <a class="nav-link text-white opacity-75 opacity-state-100 pb-4"
-                                                data-bs-toggle="tab" href="#kt_topbar_notifications_1">Alerts</a>
-                                        </li>
-
-                                        <li class="nav-item">
-                                            <a class="nav-link text-white opacity-75 opacity-state-100 pb-4 active"
-                                                data-bs-toggle="tab" href="#kt_topbar_notifications_2">Updates</a>
-                                        </li>
-
-                                        <li class="nav-item">
-                                            <a class="nav-link text-white opacity-75 opacity-state-100 pb-4"
-                                                data-bs-toggle="tab" href="#kt_topbar_notifications_3">Logs</a>
-                                        </li>
-                                    </ul>
-                                 </div>
-
-                                 <div class="tab-content">
-                                     <div class="tab-pane fade" id="kt_topbar_notifications_1" role="tabpanel">
-                                        <!--begin::Items-->
-                                        <div class="scroll-y mh-325px my-5 px-8">
-                                            <!--begin::Item-->
-                                            <div class="d-flex flex-stack py-4">
-                                                <!--begin::Section-->
-                                                <div class="d-flex align-items-center">
-                                                    <!--begin::Symbol-->
-                                                    <div class="symbol symbol-35px me-4">
-                                                        <span class="symbol-label bg-light-primary">
-                                                            <i
-                                                                class="ki-outline ki-abstract-28 fs-2 text-primary"></i>
-                                                        </span>
-                                                    </div>
-                                                    <!--end::Symbol-->
-
-                                                    <!--begin::Title-->
-                                                    <div class="mb-0 me-2">
-                                                        <a href="#"
-                                                            class="fs-6 text-gray-800 text-hover-primary fw-bold">Project
-                                                            Alice</a>
-                                                        <div class="text-gray-500 fs-7">Phase 1 development</div>
-                                                    </div>
-                                                    <!--end::Title-->
-                                                </div>
-                                                <!--end::Section-->
-
-                                                <!--begin::Label-->
-                                                <span class="badge badge-light fs-8">1 hr</span>
-                                                <!--end::Label-->
-                                            </div>
+<div class="app-navbar-item position-relative">
+    <div onclick="toggleNotificationPanel()" class="btn btn-icon border border-200 bg-gray-100 btn-color-gray-600 btn-active-color-primary w-40px h-40px" style="cursor: pointer;">
+        <i class="fas fa-bell fa-shake fs-4"></i>
+        {% if unread_notifications %}
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.75rem;">
+            {{ unread_notifications|length }}
+        </span>
+        {% endif %}
+    </div>
+</div>
 
 
-                                        </div>
-                                        <!--end::Items-->
+<!-- Notification Drawer -->
+<div id="notificationDrawer" class="position-fixed top-0 end-0 bg-white shadow-lg" style="width: 450px; height: 100vh; display: none; z-index: 1050; overflow-y: auto;">
+    <div class="d-flex justify-content-between align-items-center p-4 border-bottom">
+        <h5 class="mb-0 fw-bold">Notifications</h5>
+        <button class="btn btn-sm btn-light" onclick="toggleNotificationPanel()">&#10005;</button>
+    </div>
 
-                                        <!--begin::View more-->
-                                        <div class="py-3 text-center border-top">
-                                            <a href="https://preview.keenthemes.com/metronic8/demo58/pages/user-profile/activity.html"
-                                                class="btn btn-color-gray-600 btn-active-color-primary">
-                                                View All
-                                                <i class="ki-outline ki-arrow-right fs-5"></i> </a>
-                                        </div>
-                                        <!--end::View more-->
-                                    </div>
+    <div class="p-4">
+        <ul class="nav nav-tabs" id="notiTabs">
+            <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#notiAll">All</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#notiRead">Read</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#notiUnread">Unread</a></li>
+        </ul>
 
-                                     <div class="tab-pane fade show active" id="kt_topbar_notifications_2"
-                                        role="tabpanel">
-                                        <!--begin::Wrapper-->
-                                        <div class="d-flex flex-column px-9">
-                                            <!--begin::Section-->
-                                            <div class="pt-10 pb-0">
-                                                <!--begin::Title-->
-                                                <h3 class="text-gray-900 text-center fw-bold">
-                                                    Get Pro Access
-                                                </h3>
-                                                <!--end::Title-->
+        <div class="tab-content pt-4">
+           <!-- All Notifications -->
+<div class="tab-pane fade show active" id="notiAll">
+    {% for n in all_notifications %}
+        <div class="border-bottom pb-3 mb-3">
+            <h6 class="mb-1">{{ n.title }}</h6>
+          <small class="text-muted d-block long-message">
+    {{ n.message }} - {{ n.recipient.username }}
+</small>
 
-                                                <!--begin::Text-->
-                                                <div class="text-center text-gray-600 fw-semibold pt-1">
-                                                    Outlines keep you honest. They stoping you from amazing poorly
-                                                    about drive
-                                                </div>
-                                                <!--end::Text-->
+            <span class="badge bg-light time-display" data-created="{{ n.created_at|date:'c' }}"></span>
+        </div>
+    {% empty %}
+        <p>No notifications.</p>
+    {% endfor %}
 
-                                                <!--begin::Action-->
-                                                <div class="text-center mt-5 mb-9">
-                                                    <a href="#" class="btn btn-sm btn-primary px-6"
-                                                        data-bs-toggle="modal"
-                                                        data-bs-target="#kt_modal_upgrade_plan">Upgrade</a>
-                                                </div>
-                                                <!--end::Action-->
-                                            </div>
-                                            <!--end::Section-->
+    {% if all_notifications %}
+    <div class="text-center mt-4">
+        <form method="post" action="{% url 'adminv2:clear_all_notifications' %}">
+            {% csrf_token %}
+         <button type="button" class="btn btn-primary" onclick="clearAllNotifications()">Clear All</button>
 
-                                            <!--begin::Illustration-->
-                                            <div class="text-center px-4">
-                                                <img class="mw-100 mh-200px" alt="image"
-                                                    src="{% static 'adminv2/media/illustrations/sketchy-1/1.png'%}" />
-                                            </div>
-                                            <!--end::Illustration-->
-                                        </div>
-                                        <!--end::Wrapper-->
-                                    </div>
 
-                                     <div class="tab-pane fade" id="kt_topbar_notifications_3" role="tabpanel">
-                                         <div class="scroll-y mh-325px my-5 px-8">
-                                             <div class="d-flex flex-stack py-4">
-                                                 <div class="d-flex align-items-center me-2">
-                                                     <span class="w-70px badge badge-light-success me-4">200
-                                                        OK</span>
+        </form>
+    </div>
+    {% endif %}
+</div>
 
-                                                     <a href="#"
-                                                        class="text-gray-800 text-hover-primary fw-semibold">New
-                                                        order</a>
-                                                 </div>
+            <!-- Read Tab -->
+            <div class="tab-pane fade" id="notiRead">
+                {% for n in read_notifications %}
+                    <div class="border-bottom pb-3 mb-3" data-id="{{ n.id }}" data-tab="read">
+                        <h6 class="mb-1">{{ n.title }}</h6>
+                       <small class="text-muted d-block" style="white-space: pre-wrap; word-break: break-word;">
+    {{ n.message }} - {{ n.recipient.username }}
+</small>
 
-                                                 <span class="badge badge-light fs-8">Just now</span>
-                                             </div>
-                                             <div class="d-flex flex-stack py-4">
-                                                <!--begin::Section-->
-                                                <div class="d-flex align-items-center me-2">
-                                                    <!--begin::Code-->
-                                                    <span class="w-70px badge badge-light-danger me-4">500
-                                                        ERR</span>
-                                                    <!--end::Code-->
+                        <span class="badge bg-success text-white time-display" data-created="{{ n.created_at|date:'c' }}"></span>
+                    </div>
+                {% empty %}<p>No read notifications.</p>{% endfor %}
+            </div>
 
-                                                    <!--begin::Title-->
-                                                    <a href="#"
-                                                        class="text-gray-800 text-hover-primary fw-semibold">New
-                                                        customer</a>
-                                                    <!--end::Title-->
-                                                </div>
-                                                <!--end::Section-->
+            <!-- Unread Tab -->
+            <div class="tab-pane fade" id="notiUnread">
+                {% for n in unread_notifications %}
+                    <div class="border-bottom pb-3 mb-3" data-id="{{ n.id }}" data-tab="unread" data-notification-id="{{ n.id }}" style="cursor: pointer;">
+                        <h6 class="mb-1 text-danger">{{ n.title }}</h6>
+                       <small class="text-muted d-block" style="white-space: pre-wrap; word-break: break-word;">
+    {{ n.message }} - {{ n.recipient.username }}
+</small>
 
-                                                <!--begin::Label-->
-                                                <span class="badge badge-light fs-8">2 hrs</span>
-                                                <!--end::Label-->
-                                            </div>
+                        <span class="badge bg-danger text-white time-display" data-created="{{ n.created_at|date:'c' }}"></span>
+                    </div>
+                {% empty %}<p>No unread notifications.</p>{% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
 
-                                        </div>
-                                        <!--end::Items-->
 
-                                        <!--begin::View more-->
-                                        <div class="py-3 text-center border-top">
-                                            <a href="https://preview.keenthemes.com/metronic8/demo58/pages/user-profile/activity.html"
-                                                class="btn btn-color-gray-600 btn-active-color-primary">
-                                                View All
-                                                <i class="ki-outline ki-arrow-right fs-5"></i> </a>
-                                        </div>
-                                     </div>
-                                 </div>
-                             </div>
-                         </div>
+<!-- Step 3: Notification Popup -->
+
+<div id="notificationOverlay" class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-75" style="display: none; z-index: 1060;"></div>
+<div id="notificationPopup" class="position-fixed top-50 start-50 translate-middle bg-white rounded p-4" style="display: none; z-index: 1070; width: 400px;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 id="popupTitle" class="mb-0" ></h5>
+        <button class="btn-close" onclick="closeNotificationPopup()" ></button>
+    </div>
+     <div style="border-bottom: 1px solid #666; margin-bottom: 10px;"></div>
+    <p id="popupMessage" class="mb-3 long-message"></p>
+    
+    
+</div>
 
                         <!--  User menu  -->
                          <div class="app-navbar-item" id="kt_header_user_menu_toggle">
                              <div class="cursor-pointer symbol symbol-40px"
                                 data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-attach="parent"
                                 data-kt-menu-placement="bottom-end">
-                                <img src="{% static 'adminv2/media/avatars/300-2.jpg'%}" class="rounded-3"
-                                    alt="user" />
+                                 <img src="{{ request.user.supplierprofile.profile_picture.url }}" alt="image" />
                             </div>
 
                              <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg menu-state-color fw-semibold py-4 fs-6 w-275px"
@@ -314,7 +271,7 @@
                                  <div class="menu-item px-3">
                                     <div class="menu-content d-flex align-items-center px-3">
                                          <div class="symbol symbol-50px me-5">
-                                            <img alt="Logo" src="{% static 'adminv2/media/avatars/300-2.jpg'%}" />
+                                            <img alt="Logo" src="{{ request.user.supplierprofile.profile_picture.url }}" />
                                         </div>
 
                                          <div class="d-flex flex-column">
@@ -437,7 +394,7 @@
                                 </div>
 
                                  <div class="menu-item px-5">
-                                    <a href=" "
+                                    <a href="{% url 'adminv2:admin_logout' %} "
                                         class="menu-link px-5">
                                         Sign Out
                                     </a>
@@ -457,20 +414,46 @@
         <div class="app-wrapper  flex-column flex-row-fluid " id="kt_app_wrapper">
             {% include 'adminv2/sidebar.html' %}
 
+            {% if messages %}
+                {% for message in messages %}
+                    {% if message.tags == 'error' %}
+                        <div class="alert alert-danger alert-dismissible fade show mt-2 me-8" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close btn-close-black" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% elif message.tags == 'success' %}
+                        <div class="alert alert-success alert-dismissible fade show mt-2 me-8" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close btn-close-black" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% elif message.tags == 'info' or message.tags == 'warning' %}
+                        <div class="alert alert-warning alert-dismissible fade show mt-2 me-8" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close btn-close-black" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-secondary alert-dismissible fade show mt-2 me-8" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close btn-close-black" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+
             {% block content %}
 
             <div id="kt_app_content_container" class="app-container  container-fluid ">
-                <!--begin::Row-->
-                <div class="row g-5 g-xl-10">
+
+                 {% comment %}<div class="row g-5 g-xl-10">
                     <!--begin::Col-->
                     <div class="col-xl-8 mb-xl-10">
                         <!--begin::Row-->
-                        <div class="row g-5 g-xl-10">
+                       <div class="row g-5 g-xl-10">
                             <!--begin::Col-->
                             <div class="col-lg-6 mb-xl-10">
                                 <!--begin::Chart Widget 47-->
 
-                                <div class="card card-flush "
+                               <div class="card card-flush "
                                     style="background: linear-gradient(180deg, #1858FD 0%, #1652EA 100%); box-shadow: 0px 14px 40px 0px rgba(24, 85, 243, 0.20);">
                                     <!--begin::Header-->
                                     <div class="card-header align-items-center pt-6">
@@ -622,6 +605,7 @@
                             <!--end::Col-->
                         </div>
                         <!--end::Row-->
+
 
                         <!--begin::Row-->
                         <div class="row gx-5 gx-xl-10">
@@ -1067,15 +1051,14 @@
 
 
                 </div>
-                <!--end::Row-->
+
+                {% endcomment %}
             </div>
 
             {% endblock %}
             <div id="kt_app_footer" class="app-footer ">
 
-
-                <div
-                    class="app-container  container-fluid d-flex flex-column flex-md-row flex-center flex-md-stack py-3 ">
+                <div class="app-container  container-fluid d-flex flex-column flex-md-row flex-center flex-md-stack py-3 ">
 
                     <div class="text-gray-900 order-2 order-md-1">
                         <span class="text-muted fw-semibold me-1">2025&copy;</span>
@@ -1135,5 +1118,142 @@
     {% endblock page_only_scripts %}
 
 </body>
+<script>
+function toggleNotificationPanel() {
+    const drawer = document.getElementById("notificationDrawer");
+    drawer.style.display = (drawer.style.display === "none" || drawer.style.display === "") ? "block" : "none";
+}
+
+function formatTimeElements() {
+    document.querySelectorAll(".time-display").forEach(el => {
+        const created = new Date(el.dataset.created);
+        const now = new Date();
+        const diff = (now - created) / 1000;
+
+        let text = "Just now";
+        if (diff > 60) text = `${Math.floor(diff / 60)} minute ago`;
+        if (diff > 3600) text = `${Math.floor(diff / 3600)} hour ago`;
+
+        el.textContent = text;
+    });
+}
+
+function showNotificationPopup(title, message, notificationId, tabType) {
+    document.getElementById('popupTitle').textContent = title;
+    document.getElementById('popupMessage').textContent = message;
+    document.getElementById('notificationOverlay').style.display = 'block';
+    document.getElementById('notificationPopup').style.display = 'block';
+    document.getElementById('notificationPopup').dataset.notificationId = notificationId;
+    document.getElementById('notificationPopup').dataset.tab = tabType;
+}
+
+function closeNotificationPopup() {
+    document.getElementById('notificationOverlay').style.display = 'none';
+    document.getElementById('notificationPopup').style.display = 'none';
+
+    const popup = document.getElementById('notificationPopup');
+    const notificationId = popup.dataset.notificationId;
+    const tabType = popup.dataset.tab;
+
+    if (notificationId && tabType === 'unread') {
+        fetch(`/mark-notification-read/${notificationId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({})
+        }).then(response => {
+            if (response.ok) {
+              
+                const el = document.querySelector(`[data-notification-id="${notificationId}"]`);
+                if (el) el.remove();
+
+             
+                const readTab = document.getElementById("notiRead");
+                const newRead = document.createElement("div");
+                newRead.className = "border-bottom pb-3 mb-3";
+                newRead.setAttribute("data-id", notificationId);
+                newRead.setAttribute("data-tab", "read");
+
+                const now = new Date().toISOString();
+                const title = popup.querySelector('#popupTitle').textContent;
+                const message = popup.querySelector('#popupMessage').textContent;
+
+                newRead.innerHTML = `
+                    <h6 class="mb-1">${title}</h6>
+                    <small class="text-muted">${message}</small><br>
+                    <span class="badge bg-success text-white time-display" data-created="${now}">Just now</span>
+                `;
+
+                readTab.prepend(newRead);
+
+               
+                newRead.addEventListener('click', function () {
+                    showNotificationPopup(title, message, notificationId, 'read');
+                });
+
+              
+                formatTimeElements();
+            }
+        });
+    }
+}
+
+
+function attachNotificationClickHandlers() {
+    const notifications = document.querySelectorAll('.tab-content .border-bottom');
+    notifications.forEach(notification => {
+        const title = notification.querySelector('h6')?.textContent || '';
+        const message = notification.querySelector('small')?.textContent?.split(' - ')[0]?.trim() || '';
+        const notificationId = notification.dataset.id || '';
+        const tabType = notification.dataset.tab || '';
+
+        notification.addEventListener('click', function () {
+            showNotificationPopup(title, message, notificationId, tabType);
+        });
+    });
+}
+
+
+document.addEventListener('DOMContentLoaded', function () {
+    formatTimeElements();
+    attachNotificationClickHandlers();
+});
+function clearAllNotifications() {
+        fetch("{% url 'adminv2:clear_all_notifications' %}", {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": getCookie('csrftoken'),
+                "Content-Type": "application/json"
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                document.getElementById("notiAll").innerHTML = "<p class='text-muted'>No notifications available.</p>";
+            }
+        });
+    }
+
+   
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+             
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+</script>
+
 
 </html>

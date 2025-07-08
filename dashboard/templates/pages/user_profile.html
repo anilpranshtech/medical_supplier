@@ -65,7 +65,8 @@
                                 </tr>
                                 <tr>
                                     <td class="py-2 font-medium">Name</td>
-                                    <td class="py-2">Zala Karmveersinh</td>
+                                  <td class="py-2">{{ user.first_name }} {{ user.last_name }}</td>
+
                                     <td class="py-2 text-center">
                                         <a href="#" class="kt-btn kt-btn-icon kt-btn-sm kt-btn-ghost kt-btn-primary">
                                             <i class="ki-filled ki-notepad-edit"></i>
@@ -126,7 +127,8 @@
                     <div class="kt-card-content space-y-4">
                         <div>
                             <label class="text-sm font-medium text-secondary-foreground">Email</label>
-                            <p class="text-sm text-foreground">zalakarmveersinh143.com</p>
+                          <p class="text-sm text-foreground">{{ user.email }}</p>
+
                         </div>
                         <div>
                             <label class="text-sm font-medium text-secondary-foreground">Phone</label>

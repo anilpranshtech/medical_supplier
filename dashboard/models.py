@@ -2,6 +2,7 @@ import json
 from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 
 class DoctorProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -150,6 +151,7 @@ class Product(models.Model):
     # Purchase options
     show_add_to_cart = models.BooleanField(default=False)
     show_rfq = models.BooleanField(default=False)
+    Both = models.BooleanField(default=False)
 
     min_order_qty = models.IntegerField(default=1)
     low_stock_alert = models.IntegerField(default=5)
@@ -174,7 +176,7 @@ class Product(models.Model):
 
     # Product status
     condition = models.CharField(max_length=20, choices=[('new', 'New'), ('used', 'Used')], default='new')
-    tag = models.CharField(max_length=30, choices=[('recent', 'Recently Arrived'), ('popular', 'Most Wanted'), ('none', 'None')], default='none')
+    tag = models.CharField(max_length=30, choices=[('recent', 'Recently Arrived'), ('popular', 'Most Wanted'),('limited', 'Limited Stoke'), ('none', 'None')], default='none')
     warranty = models.CharField(max_length=20, choices=[('none', 'None'), ('1yr', '1 Year'), ('2yr', '2 Years')], default='none')
 
     created_by = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True)
@@ -192,6 +194,7 @@ class Product(models.Model):
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     image = models.ImageField(upload_to='product_images/')
+    is_main = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
@@ -200,10 +203,13 @@ class ProductImage(models.Model):
         ordering = ['-created_at']
 
 
+
+
 class Orders(models.Model):
 
     ORDER_STATUS_CHOICES = [
         ('pending', 'Pending'),
+         ('completed', 'Completed'),
         ('processing', 'Processing'),
         ('shipped', 'Shipped'),
         ('delivered', 'Delivered'),
@@ -219,6 +225,24 @@ class Orders(models.Model):
     quantity = models.IntegerField(default=1)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=20, choices=ORDER_STATUS_CHOICES, default='pending')
+
+     # Customer Info
+    phone_number = models.PositiveIntegerField(default=0)
+
+    # Payment info
+    payment_type = models.CharField(max_length=50, default='BANK TRANSFER')
+    payment_status = models.CharField(max_length=20, default='PAID')
+    payment_currency = models.CharField(max_length=10, default='USD')
+   
+    # Shipping info
+    shipping_fees = models.PositiveIntegerField(default=0)
+    shipping_type = models.CharField(max_length=100, default='Shipping')
+
+    # Address info
+    shipping_full_address = models.TextField()
+    shipping_city = models.CharField(max_length=100)
+    shipping_country = models.CharField(max_length=100)
+
 
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(null=True, blank=True)
@@ -289,6 +313,55 @@ class CustomerBillingAddress(models.Model):
             'created_at': 'Created At',
             'updated_at': 'Updated At'
         }
+
+class WishlistProduct(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='wishlists')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='wishlisted_by')
+    quantity = models.PositiveIntegerField(default=1)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'product')
+        ordering = ['-created_at']
+        verbose_name = 'Wishlist Item'
+        verbose_name_plural = 'Wishlist Items'
+
+    def __str__(self):
+        return f"{self.user} - {self.product.name}"
+
+
+class CartProduct(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='cart_items')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='cart_items')
+    quantity = models.PositiveIntegerField(default=1)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'product')
+        ordering = ['-created_at']
+        verbose_name = 'Cart Item'
+        verbose_name_plural = 'Cart Items'
+
+    def __str__(self):
+        return f"{self.quantity} x {self.product.name} for {self.user}"
+
+    def get_total_price(self):
+        return self.quantity * self.product.price
+    
+
+class Notification(models.Model):
+    recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    title = models.CharField(max_length=255)
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
+    is_deleted = models.BooleanField(default=False) 
+    created_at = models.DateTimeField(default=timezone.now)
+    
+
+    class Meta:
+        verbose_name = "Notification"
+        verbose_name_plural = "Notification"
+        ordering = ['-created_at']
 
 
 class Payment(models.Model):

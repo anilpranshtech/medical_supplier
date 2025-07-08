@@ -27,6 +27,10 @@ from django.contrib.auth.hashers import make_password
 from .models import RetailProfile, WholesaleBuyerProfile, SupplierProfile
 from django.contrib.auth import authenticate, login
 from django.views.generic.edit import FormView
+from .models import *
+from datetime import date
+from django.db.models import F
+import random
 
 
 class HomeView(TemplateView):
@@ -34,46 +38,78 @@ class HomeView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['brands'] = [
-            ('Nike', '1'), ('Adidas', '2'), ('Puma', '3'), ('New Balance', '4'),
-            ('Converse', '5'), ('Reebok', '6'), ('Skechers', '7')
-        ]
-        context['new_arrivals'] = [
-            {'name': 'Cloud Shift Lightweight Runner Pro Edition', 'img_num': '8', 'rating': '5.0', 'price': '$99.00'},
-            {'name': 'Wave Strike Dynamic Boost Sneaker', 'img_num': '9', 'rating': '4.7', 'price': '$120.00'},
-            {'name': 'Titan Edge High Impact Stability Lightweight Trainers', 'img_num': '5', 'rating': '3.5',
-             'price': '$65.99'},
-            {'name': 'Velocity Boost Xtreme High Shock Absorbers', 'img_num': '10', 'rating': '4.9', 'price': '$110.00'}
-        ]
-        context['popular_sneakers'] = [
-            {'name': 'Cloud Shift Lightweight Runner Pro Edition', 'img_num': '11', 'rating': '5.0', 'price': '$99.00'},
-            {'name': 'Titan Edge High Impact Stability Lightweight Trainers', 'img_num': '12', 'rating': '3.5',
-             'price': '$65.99'},
-            {'name': 'Wave Strike Dynamic Boost Sneaker', 'img_num': '13', 'rating': '4.7', 'price': '$120.00'},
-            {'name': 'Velocity Boost Xtreme High Shock Absorbers', 'img_num': '14', 'rating': '4.9', 'price': '$110.00'}
-        ]
-        context['deals'] = [
-            {'name': 'Cloud Shift Lightweight Runner Pro Edition', 'img_num': '3', 'rating': '5.0', 'price': '$99.00',
-             'original_price': '$140.00'},
-            {'name': 'Titan Edge High Impact Stability Lightweight Trainers', 'img_num': '4', 'rating': '3.5',
-             'price': '$46.00', 'original_price': '$110.00'},
-            {'name': 'Wave Strike Dynamic Boost Sneaker', 'img_num': '15', 'rating': '4.7', 'price': '$140.00',
-             'original_price': '$179.00'},
-            {'name': 'Velocity Boost Xtreme High Shock Absorbers', 'img_num': '2', 'rating': '4.9', 'price': '$315.00',
-             'original_price': '$280.00'}
-        ]
-        context['features'] = [
-            {'title': 'Free Delivery', 'description': 'No extra shipping costs', 'icon': 'delivery-time',
-             'icon_color': 'primary', 'stroke_color': 'primary', 'fill_color': 'primary'},
-            {'title': '24/7 Support', 'description': 'Help anytime, anywhere', 'icon': 'messages',
-             'icon_color': 'green', 'stroke_color': 'success', 'fill_color': 'success'},
-            {'title': 'Discounts', 'description': 'Save big on top deals', 'icon': 'discount', 'icon_color': 'violet',
-             'stroke_color': 'info', 'fill_color': 'info'},
-            {'title': 'Money-Back', 'description': 'Full refund, no risk', 'icon': 'credit-cart',
-             'icon_color': 'yellow', 'stroke_color': 'yellow', 'fill_color': 'warning'}
-        ]
-        return context
 
+        today = date.today()
+
+        # Special Offers
+        special_offers = Product.objects.filter(
+            offer_active=True,
+            offer_percentage__gt=0,
+            offer_start__lte=today,
+            offer_end__gte=today,
+            is_active=True
+        ).order_by('-offer_percentage')[:3]
+
+        for product in special_offers:
+            main_img = ProductImage.objects.filter(product=product, is_main=True).first()
+            product.main_image = main_img.image.url if main_img else None
+        context['special_offers'] = special_offers
+
+        # New Arrivals
+        recent_products = Product.objects.filter(
+            tag='recent',
+            is_active=True
+        ).order_by('-created_at')[:4]
+
+        for product in recent_products:
+            main_img = ProductImage.objects.filter(product=product, is_main=True).first()
+            product.main_image = main_img.image.url if main_img else None
+
+        context['recent_products'] = recent_products
+
+         # ✅ Popular Medical Supplies
+        popular_products = Product.objects.filter(
+            tag='popular',
+            is_active=True
+        ).order_by('-created_at')[:4]
+        for product in popular_products:
+            main_img = ProductImage.objects.filter(product=product, is_main=True).first()
+            product.main_image = main_img.image.url if main_img else None
+        context['popular_products'] = popular_products
+
+        # ✅ Limited-Time Deals
+        limited_products = Product.objects.filter(
+            tag='limited',
+            is_active=True
+        ).order_by('-created_at')[:4]
+        for product in limited_products:
+            main_img = ProductImage.objects.filter(product=product, is_main=True).first()
+            product.main_image = main_img.image.url if main_img else None
+        context['limited_products'] = limited_products
+
+        
+        # ✅ Featured Products - Random 7 each refresh
+        all_ids = list(Product.objects.filter(is_active=True).values_list('id', flat=True))
+        random_ids = random.sample(all_ids, min(len(all_ids), 7))
+        featured_products = Product.objects.filter(id__in=random_ids)
+
+        for product in featured_products:
+            main_img = ProductImage.objects.filter(product=product, is_main=True).first()
+            product.main_image = main_img.image.url if main_img else None
+        context['featured_products'] = featured_products
+
+         # Add wishlist info if user is authenticated
+        if self.request.user.is_authenticated:
+            context['user_wishlist_ids'] = list(
+                WishlistProduct.objects.filter(user=self.request.user)
+                .values_list('product_id', flat=True)
+            )
+        else:
+            context['user_wishlist_ids'] = []
+        
+        
+
+        return context
 
 class CustomLoginView(FormView):
     form_class = EmailOnlyLoginForm
@@ -385,8 +421,15 @@ class OrderReceiptView(TemplateView):
     template_name = 'userdashboard/view/order-receipt.html'
 
 
-class UserProfile(TemplateView):
+
+class UserProfile(LoginRequiredMixin, TemplateView):
     template_name = 'pages/user_profile.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user  
+        context['user'] = user
+        return context
 
 
 VERIFY_URL = "https://api.textdrip.com/api/v1/email-otp"
