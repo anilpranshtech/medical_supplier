@@ -3,6 +3,10 @@ from django.contrib.auth import get_user_model
 from django import forms
 from django.core.exceptions import ValidationError
 from django.contrib.auth.forms import PasswordResetForm as DjangoPasswordResetForm
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout, Submit
+from dashboard.models import Payment
+
 
 class EmailOnlyLoginForm(AuthenticationForm):
     username = forms.CharField(label="Email") 
@@ -49,3 +53,17 @@ class CustomSetPasswordForm(SetPasswordForm):
             'required': 'required'
         }),
     )
+
+
+class PaymentForm(forms.Form):
+    name = forms.CharField(max_length=100)
+    amount = forms.IntegerField(min_value=1)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.layout = Layout(
+            'name',
+            'amount',
+            Submit('submit', 'Buy', css_class='button white btn-block btn-primary'),
+        )

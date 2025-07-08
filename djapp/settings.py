@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 import os
+from dotenv import load_dotenv
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -38,9 +40,14 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'crispy_forms',
+    'crispy_bootstrap4',
+    'bootstrap4',
     'dashboard',
     'adminv2',
 ]
+
+CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -85,7 +92,6 @@ DATABASES = {
 }
 
 
-TEXTDRIP_OTP_TOKEN = str(os.environ.get('TEXTDRIP_OTP_TOKEN')).strip()
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -135,16 +141,33 @@ STATIC_ROOT = BASE_DIR / "static" / "static"
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
-RECAPTCHA_PUBLIC_KEY = '6LdTHV8rAAAAAM_YfllvwXXOezA124fFTlQXO3Tb'
-RECAPTCHA_PRIVATE_KEY = '6LdTHV8rAAAAAIgLr2wdtdtWExTS6xJpUpD8qEzh'
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# Secret Key & Debug
+# SECRET_KEY = os.getenv('SECRET_KEY', 'fallback-key')
+# DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'smtp.gmail.com'
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = 'pranshtechnewjoinee@gmail.com'
-# EMAIL_HOST_PASSWORD = 'bfqnbshgitaikkqh'
-# DEFAULT_FROM_EMAIL = 'info@medicalsupplier.com'
-# EMAIL_CC = 'info@textdrip.com'
+# Textdrip
+TEXTDRIP_OTP_TOKEN = os.getenv('TEXTDRIP_OTP_TOKEN')
+
+# Razorpay
+RAZORPAY_KEY_ID = os.getenv('RAZORPAY_KEY_ID')
+RAZORPAY_KEY_SECRET = os.getenv('RAZORPAY_KEY_SECRET')
+
+#Stripe
+STRIPE_PUBLISHABLE_KEY  =  os.environ.get('STRIPE_PUBLISHABLE_KEY_TEST')
+STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY_TEST')
+STRIPE_TEST_PUBLIC_KEY = os.environ.get('STRIPE_PUBLISHABLE_KEY_TEST')
+STRIPE_TEST_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY_TEST')
+
+
+# reCAPTCHA
+RECAPTCHA_PUBLIC_KEY = os.getenv('RECAPTCHA_PUBLIC_KEY')
+RECAPTCHA_PRIVATE_KEY = os.getenv('RECAPTCHA_PRIVATE_KEY')
+
+# Email Settings
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = os.getenv('EMAIL_HOST')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'

@@ -43,15 +43,4 @@ admin.site.register(ProductLastCategory)
 admin.site.register(Brand)
 admin.site.register(Orders)
 
-
-@admin.register(WishlistProduct)
-class ProductProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'product', 'quantity', 'created_at')
-
-@admin.register(CartProduct)
-class ProductProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'product', 'quantity', 'created_at')
-
-@admin.register(Notification)
-class NotificationAdmin(admin.ModelAdmin):
-    list_display = ('id', 'title', 'recipient', 'is_read','is_deleted','created_at')
+admin.site.register(Payment)
