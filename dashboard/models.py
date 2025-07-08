@@ -1,3 +1,4 @@
+import json
 from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
@@ -231,10 +232,87 @@ class Orders(models.Model):
         return f"Order #{self.pk} - {self.product.name} x {self.quantity}"
 
 
+class CustomerBillingAddress(models.Model):
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True)
+    customer_name = models.CharField(verbose_name="Card Holder Name", max_length=128, null=True, blank=True)
+    customer_address1 = models.CharField(max_length=255, null=True, blank=True)
+    customer_address2 = models.CharField(max_length=255, null=True, blank=True)
+    customer_city = models.CharField(max_length=128, null=True, blank=True)
+    customer_state = models.CharField(max_length=128, null=True, blank=True)
+    customer_postal_code = models.CharField(max_length=64, null=True, blank=True)
+    customer_country = models.CharField(max_length=128, null=True, blank=True)
+    customer_country_code = models.CharField(max_length=10, null=True, blank=True)
+
+    is_old = models.BooleanField(default=False)
+    old_card = models.TextField(null=True, blank=True)
+
+    is_deleted = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def delete(self, *args, **kwargs):
+        """Override delete method to implement soft delete"""
+        self.is_deleted = True
+        self.save()
+
+
+    def __str__(self):
+        return f"{self.user} Billing Address"
+
+    class Meta:
+        ordering = ["-updated_at"]
+        verbose_name = verbose_name_plural ="Customer Billing Address"
+
+    @property
+    def old_card_info(self):
+        try:
+            last_card = json.loads(self.old_card.replace("\'", "\""))
+            return f"{last_card['last4']}-{last_card['exp_month']}/{last_card['exp_year']}"
+        except:
+            return "Not Available"
+
+    @property
+    def get_export_fields(self):
+        return {
+            'user': 'User',
+            'customer_name': 'Name',
+            'customer_address1': 'Address1',
+            'customer_address2': 'Address2',
+            'customer_city': 'City',
+            'customer_state': 'State',
+            'customer_postal_code': 'Postal Code',
+            'customer_country': 'Country',
+            'customer_country_code': 'Country Code',
+            'is_old': 'Is Old',
+            'old_card': 'Old Card',
+            'created_at': 'Created At',
+            'updated_at': 'Updated At'
+        }
+
+
 class Payment(models.Model):
     name = models.CharField(max_length=100)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    order_id = models.CharField(max_length=100, blank=True)
-    razorpay_payment_id = models.CharField(max_length=100, blank=True)
+
+    # Stripe
+    stripe_charge_id = models.CharField(max_length=100, blank=True, null=True)
+    stripe_customer_id = models.CharField(max_length=100, blank=True, null=True)
+    stripe_signature = models.CharField(max_length=255, blank=True, null=True)
+
+    # Razorpay
+    razorpay_payment_id = models.CharField(max_length=100, blank=True, null=True)
+    razorpay_order_id = models.CharField(max_length=100, blank=True, null=True)
+    razorpay_signature = models.CharField(max_length=255, blank=True, null=True)
+
+    # COD
+    cod_tracking_id = models.CharField(max_length=100, blank=True, null=True)
+    delivery_partner = models.CharField(max_length=100, blank=True, null=True)
+
+    # Common
+    customer_id = models.CharField(max_length=100, blank=True, null=True)
     paid = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.name} - {self.amount} ({'Paid' if self.paid else 'Unpaid'})"

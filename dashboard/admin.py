@@ -1,4 +1,5 @@
 from django.contrib import admin
+from stripe import PaymentMethod
 
 from dashboard.models import *
 
@@ -45,3 +46,5 @@ admin.site.register(ProductCategory)
 admin.site.register(Orders)
 
 admin.site.register(Payment)
+
+admin.site.register(CustomerBillingAddress)

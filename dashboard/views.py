@@ -7,10 +7,12 @@ from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from razorpay.errors import SignatureVerificationError
-
 from .forms import PaymentForm
 from.models import *
 import razorpay
+import stripe
+from django.utils import timezone
+import uuid
 from djapp.settings import TEXTDRIP_OTP_TOKEN
 from utils.handle_textdrip_otp import send_phone_otp, verify_mobile_otp
 from .forms import EmailOnlyLoginForm, CustomPasswordResetForm, CustomSetPasswordForm
@@ -280,8 +282,95 @@ class ShippingInfoView(TemplateView):
     template_name = 'userdashboard/view/shipping-info.html'
 
 
-class PaymentMethodView(TemplateView):
+class PaymentMethodView(LoginRequiredMixin, View):
     template_name = 'userdashboard/view/payment-method.html'
+
+    def get_stripe_key(self, request):
+        # Set stripe key
+        return settings.STRIPE_PUBLISHABLE_KEY, settings.STRIPE_SECRET_KEY
+
+    def get(self, request):
+        public_key, _ = self.get_stripe_key(request)
+        return render(request, self.template_name, {
+            "STRIPE_PUBLIC_KEY": public_key,
+            "RAZORPAY_KEY_ID": settings.RAZORPAY_KEY_ID,
+            "razorpay_amount_in_paise": 10000,  # ₹100 as example
+        })
+
+    def post(self, request):
+        payment_method = request.POST.get("payment_method")
+        user = request.user
+
+        if payment_method == "cod":
+            Payment.objects.create(
+                name=user.get_full_name(),
+                amount=100.00,  # use actual order amount
+                paid=False,
+                created_at=timezone.now()
+            )
+            messages.success(request, "COD Order placed.")
+            return redirect("dashboard:order_placed")
+
+        elif payment_method == "stripe":
+            _, stripe_secret = self.get_stripe_key(request)
+            stripe.api_key = stripe_secret
+
+            token = request.POST.get("stripeToken")
+            crd_name = request.POST.get("crd_name")
+
+            try:
+                # Create customer and charge
+                customer = stripe.Customer.create(
+                    email=user.email,
+                    name=crd_name,
+                    source=token
+                )
+                charge = stripe.Charge.create(
+                    customer=customer.id,
+                    amount=10000,  # ₹100 → in paise
+                    currency="inr",
+                    description="Product Payment"
+                )
+
+                # Save payment
+                Payment.objects.create(
+                    name=crd_name,
+                    amount=100.00,
+                    order_id=charge.id,
+                    paid=True,
+                )
+
+                # Save billing address if needed
+                CustomerBillingAddress.objects.update_or_create(
+                    user=user,
+                    defaults={"customer_name": crd_name}
+                )
+
+                messages.success(request, "Stripe Payment successful.")
+                return redirect("dashboard:order_placed")
+            except Exception as e:
+                messages.error(request, f"Stripe payment failed: {e}")
+                return redirect("dashboard:payment_method")
+
+        elif payment_method == "razorpay":
+            razorpay_payment_id = request.POST.get("razorpay_payment_id")
+            if not razorpay_payment_id:
+                messages.error(request, "Razorpay payment failed.")
+                return redirect("dashboard:payment_method")
+
+            Payment.objects.create(
+                name=user.get_full_name(),
+                amount=100.00,
+                razorpay_payment_id=razorpay_payment_id,
+                paid=True
+            )
+
+            messages.success(request, "Razorpay Payment successful.")
+            return redirect("dashboard:order_placed")
+
+        else:
+            messages.error(request, "Invalid payment method.")
+            return redirect("dashboard:payment_method")
 
 
 class OrderPlacedView(TemplateView):
