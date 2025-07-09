@@ -4,15 +4,13 @@
 {% block content %}
 <title>Medical Supplies</title>
 <style>
-    /* Ensure images scale properly on mobile */
-    .kt-card img {
-        max-width: 100%;
-        height: auto;
-    }
-    /* Style for active wishlist heart icon */
-    .kt-wishlist-icon.active i.ki-filled.ki-heart {
-        color: #ff0000; /* Red color for active wishlist item */
-    }
+.text-red-500 {
+    color: #ef4444 !important;
+}
+.heart-icon {
+    transition: color 0.2s ease-in-out;
+}
+
 </style>
 <div class="kt-container-fixed mt-5 py-5" style="max-width: var(--custom-container-width, 90%);">
     <div class="grid grid-cols-1 gap-6 mt-5 py-5">
@@ -145,9 +143,11 @@
                             <button class="kt-btn kt-btn-outline kt-btn-sm" data-kt-drawer-toggle="#drawers_shop_cart">
                                 Add to Cart <i class="ki-filled ki-handcart"></i>
                             </button>
-                            <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm" data-kt-wishlist-toggle="true">
-                                <i class="ki-filled ki-heart text-base"></i>
-                            </button>
+                           <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
+        data-kt-wishlist-toggle="true"
+        data-product-id="{{ product.id }}">
+    <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
+</button>
                         </div>
                         {% if product.original_price and product.original_price > product.price %}
                             <span class="text-sm font-normal text-secondary-foreground line-through pt-[1px]">
@@ -210,10 +210,11 @@
                              data-product-price="{{ product.price }}"
                              data-product-original-price="{{ product.original_price|default:'' }}"
                              data-product-discount="{{ product.offer_percentage|default:'' }}">
-                        <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
-                                data-kt-wishlist-toggle="true">
-                            <i class="ki-filled ki-heart text-base"></i>
-                        </button>
+                       <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
+        data-kt-wishlist-toggle="true"
+        data-product-id="{{ product.id }}">
+    <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
+</button>
                     </div>
                     <a class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block product-name-link"
                        data-kt-modal-toggle="#modal_shop_product_details" href="#"
@@ -286,9 +287,10 @@
                              data-product-original-price="{{ product.original_price|default:'' }}"
                              data-product-discount="{{ product.offer_percentage|default:'' }}">
                         <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
-                                data-kt-wishlist-toggle="true">
-                            <i class="ki-filled ki-heart text-base"></i>
-                        </button>
+        data-kt-wishlist-toggle="true"
+        data-product-id="{{ product.id }}">
+    <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
+</button>
                     </div>
                     <a class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block product-name-link"
                        data-kt-modal-toggle="#modal_shop_product_details" href="#"
@@ -360,10 +362,11 @@
                              data-product-price="{{ product.price }}"
                              data-product-original-price="{{ product.original_price|default:'' }}"
                              data-product-discount="{{ product.offer_percentage|default:'' }}">
-                        <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
-                                data-kt-wishlist-toggle="true">
-                            <i class="ki-filled ki-heart text-base"></i>
-                        </button>
+                       <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
+        data-kt-wishlist-toggle="true"
+        data-product-id="{{ product.id }}">
+    <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
+</button>
                     </div>
                     <a class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block product-name-link"
                        data-kt-modal-toggle="#modal_shop_product_details" href="#"
@@ -525,6 +528,7 @@
                     <span class="text-xs font-normal text-foreground product-more-info"></span>
                 </div>
             </div>
+            
             <div class="flex items-center justify-end gap-2">
                 <span class="text-base font-normal text-secondary-foreground line-through product-original-price hidden"></span>
                 <span class="text-lg font-medium text-mono product-price"></span>
@@ -538,14 +542,14 @@
     </div>
 </div>
 <!-- end: Product Details Modal -->
-<!-- begin: JavaScript -->
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const productDetailModal = document.getElementById('modal_shop_product_details');
         const productThumbnails = document.querySelectorAll('.product-thumbnail');
         const productNameLinks = document.querySelectorAll('.product-name-link');
 
-        // Get all elements within the modal that need to be updated
+       
         const modalImage = productDetailModal.querySelector('.product-image');
         const modalDiscountBadge = productDetailModal.querySelector('.product-discount');
         const modalProductName = productDetailModal.querySelector('.product-name');
@@ -557,7 +561,7 @@
         const modalProductOriginalPrice = productDetailModal.querySelector('.product-original-price');
         const modalProductPrice = productDetailModal.querySelector('.product-price');
 
-        // Function to populate the modal
+
         function populateProductModal(element) {
             const productName = element.dataset.productName;
             const productDescription = element.dataset.productDescription;
@@ -570,7 +574,6 @@
             const productOriginalPrice = element.dataset.productOriginalPrice;
             const productDiscount = element.dataset.productDiscount;
 
-            // Update modal content
             modalImage.src = productImage;
             modalImage.alt = productName;
             modalProductName.textContent = productName;
@@ -580,7 +583,7 @@
             modalProductMoreInfo.textContent = productMoreInfo;
             modalProductPrice.textContent = `$${parseFloat(productPrice).toFixed(2)}`;
 
-            // Handle discount badge
+       
             if (productDiscount && parseFloat(productDiscount) > 0) {
                 modalDiscountBadge.textContent = `Save ${parseFloat(productDiscount).toFixed(0)}%`;
                 modalDiscountBadge.classList.remove('hidden');
@@ -588,7 +591,7 @@
                 modalDiscountBadge.classList.add('hidden');
             }
 
-            // Handle original price
+          
             if (productOriginalPrice && parseFloat(productOriginalPrice) > 0) {
                 modalProductOriginalPrice.textContent = `$${parseFloat(productOriginalPrice).toFixed(2)}`;
                 modalProductOriginalPrice.classList.remove('hidden');
@@ -596,40 +599,24 @@
                 modalProductOriginalPrice.classList.add('hidden');
             }
 
-            // Handle product rating (assuming kt-rating component handles display)
-            // This part might need adjustment based on how your 'kt-rating' component works.
-            // If it generates stars based on a data attribute, this is fine.
-            // If it needs an explicit re-render or a method call, you'd add it here.
-            // For now, we'll assume it visually updates based on data-rating or a similar mechanism.
             modalProductRating.setAttribute('data-rating', productRating);
-            // Example if kt-rating simply accepts text for now:
-            // modalProductRating.textContent = `${parseFloat(productRating).toFixed(1)} Stars`;
-
-
-            // To show the modal (assuming 'kt-modal' has a mechanism for this)
-            // The provided HTML uses data-kt-modal-toggle, which your framework might handle.
-            // If you need to manually show it, uncomment the line below.
             productDetailModal.classList.remove('hidden');
         }
 
-        // Add event listeners to product thumbnails
+        
         productThumbnails.forEach(thumbnail => {
             thumbnail.addEventListener('click', function(event) {
-                // Prevent default link behavior if the image is wrapped in a link
+               
                 event.preventDefault();
                 populateProductModal(this);
             });
         });
-
-        // Add event listeners to product name links
-        productNameLinks.forEach(link => {
+       productNameLinks.forEach(link => {
             link.addEventListener('click', function(event) {
-                event.preventDefault(); // Prevent default link behavior
+                event.preventDefault(); 
                 populateProductModal(this);
             });
         });
-
-        // Add event listener to close button
         const closeModalButton = productDetailModal.querySelector('[data-kt-modal-dismiss="true"]');
         if (closeModalButton) {
             closeModalButton.addEventListener('click', function() {
@@ -637,8 +624,6 @@
             });
         }
     });
-
-
 document.querySelectorAll('.kt-wishlist-icon').forEach(button => {
     button.addEventListener('click', function () {
         const productId = this.dataset.productId;
@@ -662,8 +647,60 @@ document.querySelectorAll('.kt-wishlist-icon').forEach(button => {
         });
     });
 });
+function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
 
+    $(document).ready(function () {
+        $(document).on('click', '[data-kt-wishlist-toggle]', function (e) {
+            e.preventDefault();
 
+            let $button = $(this);
+            let productId = $button.data('product-id');
+
+            if (!productId) return;
+
+            $.ajax({
+                url: '/wishlist/toggle/',
+                type: 'POST',
+                data: {
+                    product_id: productId
+                },
+                headers: {
+                    'X-CSRFToken': csrftoken
+                },
+                success: function (response) {
+                    const $icon = $button.find('i');
+                    if (response.status === 'added') {
+                        $icon.addClass('text-red-500');
+                    } else if (response.status === 'removed') {
+                        $icon.removeClass('text-red-500');
+                    }
+                },
+                error: function (xhr) {
+                    if (xhr.status === 403) {
+                        alert("Please login to use wishlist.");
+                        window.location.href = "/login/";
+                    } else {
+                        alert("Error saving wishlist. Check console.");
+                        console.error(xhr.responseText);
+                    }
+                }
+            });
+        });
+    });
 </script>
-<!-- end: JavaScript -->
+
 {% endblock %}

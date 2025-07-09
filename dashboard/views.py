@@ -29,6 +29,9 @@ from .models import *
 from datetime import date
 from django.db.models import F
 import random
+import requests
+from django.http import JsonResponse
+
 
 
 class HomeView(TemplateView):
@@ -65,7 +68,7 @@ class HomeView(TemplateView):
 
         context['recent_products'] = recent_products
 
-         # ✅ Popular Medical Supplies
+         #  Popular Medical Supplies
         popular_products = Product.objects.filter(
             tag='popular',
             is_active=True
@@ -75,7 +78,7 @@ class HomeView(TemplateView):
             product.main_image = main_img.image.url if main_img else None
         context['popular_products'] = popular_products
 
-        # ✅ Limited-Time Deals
+        # Limited-Time Deals
         limited_products = Product.objects.filter(
             tag='limited',
             is_active=True
@@ -86,7 +89,7 @@ class HomeView(TemplateView):
         context['limited_products'] = limited_products
 
         
-        # ✅ Featured Products - Random 7 each refresh
+        # Featured Products 
         all_ids = list(Product.objects.filter(is_active=True).values_list('id', flat=True))
         random_ids = random.sample(all_ids, min(len(all_ids), 7))
         featured_products = Product.objects.filter(id__in=random_ids)
@@ -96,7 +99,7 @@ class HomeView(TemplateView):
             product.main_image = main_img.image.url if main_img else None
         context['featured_products'] = featured_products
 
-         # Add wishlist info if user is authenticated
+         # wishlist 
         if self.request.user.is_authenticated:
             context['user_wishlist_ids'] = list(
                 WishlistProduct.objects.filter(user=self.request.user)
@@ -104,9 +107,6 @@ class HomeView(TemplateView):
             )
         else:
             context['user_wishlist_ids'] = []
-        
-        
-
         return context
 
 class CustomLoginView(FormView):
@@ -147,10 +147,6 @@ class CustomLoginView(FormView):
 
     def get_success_url(self):
         return reverse_lazy('home')
-
-
-import requests
-
 
 class RegistrationView(View):
     template_name = "auth/signup.html"
@@ -304,9 +300,54 @@ class ShoppingCartView(TemplateView):
     template_name = 'userdashboard/view/shopping-cart.html'
 
 
-class WishlistView(TemplateView):
+class WishlistToggleView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        product_id = request.POST.get('product_id')
+        try:
+            product = Product.objects.get(id=product_id)
+        except Product.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Product not found'}, status=400)
+
+        wishlist_item, created = WishlistProduct.objects.get_or_create(user=request.user, product=product)
+        if not created:
+            wishlist_item.delete()
+            return JsonResponse({'status': 'removed'})
+        return JsonResponse({'status': 'added'})
+
+class WishlistClearView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        WishlistProduct.objects.filter(user=request.user).delete()
+        return JsonResponse({'status': 'cleared'})
+
+
+class WishlistView(LoginRequiredMixin, TemplateView):
     template_name = 'userdashboard/view/wishlist.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        wishlist_items = WishlistProduct.objects.filter(user=self.request.user).select_related('product')
+
+        for item in wishlist_items:
+            main_img = ProductImage.objects.filter(product=item.product, is_main=True).first()
+            item.product.main_image = main_img.image if main_img else None
+
+        context['wishlist_items'] = wishlist_items
+        return context
+
+class WishlistProductListView(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        wishlist_items = WishlistProduct.objects.filter(user=request.user)
+        data = [
+            {  
+                "id": item.product.id,
+                "name": item.product.name,
+                "price": f"${item.product.price}",
+                "sku": item.product.supplier_sku,
+                "image": item.product.productimage_set.first().image.url if item.product.productimage_set.exists() else None,
+            }
+            for item in wishlist_items
+        ]
+        return JsonResponse(data, safe=False)
 
 class OrderSummaryView(TemplateView):
     template_name = 'userdashboard/view/order-summary.html'

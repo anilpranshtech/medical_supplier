@@ -201,9 +201,6 @@ class ProductImage(models.Model):
         verbose_name_plural = "Product Images"
         ordering = ['-created_at']
 
-
-
-
 class Orders(models.Model):
 
     ORDER_STATUS_CHOICES = [

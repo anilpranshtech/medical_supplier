@@ -592,9 +592,7 @@
             <!-- Wishlist items will be dynamically inserted here -->
         </div>
     </div>
-    <div class="kt-card-footer px-5 py-3">
-        <button class="kt-btn kt-btn-primary w-full" id="wishlist-clear">Clear Wishlist</button>
-    </div>
+  
 </div>
 <!-- end: Wishlist Drawer -->
 
@@ -616,10 +614,9 @@
     </div>
 </div>
 <!-- end: Add to Cart Drawer -->
-
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    // Dark Mode Toggle
+    //  Theme Toggle 
     const themeToggle = document.querySelector('[data-kt-theme-switch-toggle="true"]');
     if (themeToggle) {
         themeToggle.addEventListener('change', function () {
@@ -635,7 +632,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Mobile Menu Toggle
+    // Mobile Menu Toggle 
     const mobileMenuToggle = document.querySelector('.kt-mobile-menu-toggle');
     const navMenu = document.querySelector('.kt-nav-menu');
     if (mobileMenuToggle && navMenu) {
@@ -644,124 +641,44 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Dropdown menu initialization
-    const menuItems = document.querySelectorAll('[data-kt-menu-item-toggle="dropdown"]');
-    menuItems.forEach(item => {
-        const trigger = item.querySelector('[data-kt-menu-item-trigger]') || item;
-        const dropdown = item.querySelector('.kt-menu-dropdown');
-
-        if (dropdown) {
-            if (item.dataset.ktMenuItemTrigger && item.dataset.ktMenuItemTrigger.includes('hover')) {
-                item.addEventListener('mouseenter', () => {
-                    if (window.innerWidth >= 768) {
-                        dropdown.style.display = 'block';
-                    }
-                });
-                item.addEventListener('mouseleave', () => {
-                    if (window.innerWidth >= 768) {
-                        dropdown.style.display = 'none';
-                    }
-                });
-            }
-
-            trigger.addEventListener('click', (e) => {
-                if (window.innerWidth < 768) {
-                    e.preventDefault();
-                    dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
-                    item.classList.toggle('active');
-                }
-            });
-        }
-    });
-
-    // User profile dropdown
-    const userDropdown = document.querySelector('[data-kt-dropdown="true"]');
-    if (userDropdown) {
-        const toggle = userDropdown.querySelector('[data-kt-dropdown-toggle="true"]');
-        const menu = userDropdown.querySelector('.kt-dropdown-menu');
-        toggle.addEventListener('click', () => {
-            menu.classList.toggle('hidden');
-        });
-    }
-
-    // Notifications drawer
-    const notificationsToggle = document.querySelector('[data-kt-drawer-toggle="#notifications_drawer"]');
-    const notificationsDrawer = document.querySelector('#notifications_drawer');
-    if (notificationsToggle && notificationsDrawer) {
-        notificationsToggle.addEventListener('click', () => {
-            notificationsDrawer.classList.toggle('hidden');
-        });
-        const dismissButtons = notificationsDrawer.querySelectorAll('[data-kt-drawer-dismiss="true"]');
-        dismissButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                notificationsDrawer.classList.add('hidden');
-            });
-        });
-    }
-
-    // Tabs initialization
-    document.querySelectorAll('[data-kt-tabs="true"]').forEach(tabs => {
-        const tabToggles = tabs.querySelectorAll('[data-kt-tab-toggle]');
-        tabToggles.forEach(toggle => {
-            toggle.addEventListener('click', () => {
-                tabToggles.forEach(t => t.classList.remove('active'));
-                toggle.classList.add('active');
-                const tabContents = tabs.querySelectorAll('.grow');
-                tabContents.forEach(content => content.classList.add('hidden'));
-                const target = document.querySelector(toggle.dataset.ktTabToggle);
-                if (target) target.classList.remove('hidden');
-            });
-        });
-    });
-
-    // Close dropdowns on outside click
-    document.addEventListener('click', function (e) {
-        if (!e.target.closest('[data-kt-menu-item-toggle="dropdown"]') && !e.target.closest('[data-kt-dropdown="true"]')) {
-            document.querySelectorAll('.kt-menu-dropdown, .kt-dropdown-menu').forEach(dropdown => {
-                dropdown.style.display = 'none';
-            });
-            menuItems.forEach(item => item.classList.remove('active'));
-        }
-    });
-
-    // Initialize wishlist from localStorage
-    let wishlist = [];
-    try {
-        wishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
-    } catch (e) {
-        console.error('Error parsing wishlist from localStorage:', e);
-        localStorage.setItem('wishlist', JSON.stringify([]));
-    }
-
-    // Initialize cart from localStorage
-    let cart = [];
-    try {
-        const storedCart = localStorage.getItem('cart');
-        if (storedCart) {
-            cart = JSON.parse(storedCart);
-        }
-    } catch (e) {
-        console.error('Error parsing cart from localStorage:', e);
-        localStorage.setItem('cart', JSON.stringify([]));
-    }
-
-    // Helper function to safely parse JSON
     function safeParseJSON(data) {
         try {
-            return JSON.parse(data);
+            return typeof data === 'string' ? JSON.parse(data) : data;
         } catch (e) {
             console.error('Error parsing JSON:', e);
             return null;
         }
     }
 
-    // Function to update wishlist UI
+    function getCSRFToken() {
+        return document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1];
+    }
+
+    let cart = [];
+    try {
+        cart = JSON.parse(localStorage.getItem('cart')) || [];
+    } catch (e) {
+        localStorage.setItem('cart', JSON.stringify([]));
+    }
+
+    let wishlist = [];
+
+    function fetchWishlistFromServer() {
+        fetch('/wishlist/products/')
+            .then(response => response.json())
+            .then(data => {
+                wishlist = data;
+                localStorage.setItem('wishlist', JSON.stringify(wishlist));
+                updateWishlistUI();
+                updateWishlistIcons();
+            })
+            .catch(error => console.error('Error fetching wishlist:', error));
+    }
+
     function updateWishlistUI() {
-        const wishlistContainer = document.querySelector('#wishlist-items');
-        if (!wishlistContainer) {
-            console.error('Wishlist container (#wishlist-items) not found');
-            return;
-        }
+        const wishlistContainer = document.querySelector('#drawers_shop_wishlist #wishlist-items');
+        if (!wishlistContainer) return;
+
         wishlistContainer.innerHTML = '';
 
         if (wishlist.length === 0) {
@@ -769,10 +686,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        wishlist.forEach(item => {
-            const product = safeParseJSON(item);
-            if (!product) return;
-
+        wishlist.forEach(product => {
             const wishlistItem = document.createElement('div');
             wishlistItem.classList.add('flex', 'items-center', 'gap-4', 'p-3', 'border', 'border-border', 'rounded-md', 'mb-2');
             wishlistItem.innerHTML = `
@@ -785,7 +699,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <button class="kt-btn kt-btn-sm kt-btn-outline" data-kt-drawer-toggle="#drawers_shop_cart" data-product='${JSON.stringify(product)}'>
                         <i class="ki-filled ki-handcart"></i> Add to Cart
                     </button>
-                    <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost remove-wishlist-item" data-sku="${product.sku}">
+                    <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost remove-wishlist-item" data-id="${product.id}">
                         <i class="ki-filled ki-trash text-base"></i>
                     </button>
                 </div>
@@ -793,197 +707,49 @@ document.addEventListener('DOMContentLoaded', function () {
             wishlistContainer.appendChild(wishlistItem);
         });
 
-        // Add event listeners for remove buttons
         document.querySelectorAll('.remove-wishlist-item').forEach(button => {
             button.addEventListener('click', function () {
-                const sku = this.getAttribute('data-sku');
-                wishlist = wishlist.filter(item => {
-                    const product = safeParseJSON(item);
-                    return product && product.sku !== sku;
-                });
+                const productId = this.getAttribute('data-id');
+
+                wishlist = wishlist.filter(item => item.id != productId);
                 localStorage.setItem('wishlist', JSON.stringify(wishlist));
                 updateWishlistUI();
                 updateWishlistIcons();
+
+                fetch('/wishlist/toggle/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': getCSRFToken()
+                    },
+                    body: `product_id=${productId}`
+                })
+                .then(resp => resp.json())
+                .then(data => console.log(data))
+                .catch(error => console.error('Error removing from backend:', error));
             });
         });
     }
 
-    // Function to update wishlist icon states
     function updateWishlistIcons() {
         document.querySelectorAll('[data-kt-wishlist-toggle="true"]').forEach(button => {
             const card = button.closest('.kt-card');
-            if (!card) {
-                console.warn('Parent .kt-card not found for wishlist toggle button');
-                return;
-            }
-            const productData = card.getAttribute('data-product');
-            const product = safeParseJSON(productData);
-            if (!product) return;
-
-            const isInWishlist = wishlist.some(item => {
-                const wishlistProduct = safeParseJSON(item);
-                return wishlistProduct && wishlistProduct.sku === product.sku;
-            });
-
+            const product = safeParseJSON(card?.getAttribute('data-product'));
+            const isInWishlist = wishlist.some(item => item.sku === product?.sku);
             button.classList.toggle('active', isInWishlist);
         });
     }
 
-    // Function to update cart UI with total and quantity controls
-    function updateCartUI() {
-        const cartContainer = document.querySelector('#cart-items');
-        if (cartContainer) {
-            cartContainer.innerHTML = '';
-            if (cart.length === 0) {
-                cartContainer.innerHTML = '<p class="text-sm text-foreground">Your cart is empty.</p>';
-                return;
-            }
-
-            let totalPrice = 0;
-            cart.forEach(item => {
-                const product = safeParseJSON(item);
-                if (!product) return;
-
-                // Default quantity to 1 if not set
-                let quantity = product.quantity ? parseInt(product.quantity) : 1;
-
-                const cartItem = document.createElement('div');
-                cartItem.classList.add('flex', 'items-center', 'gap-4', 'p-3', 'border', 'border-border', 'rounded-md', 'mb-2');
-                cartItem.innerHTML = `
-                    <img src="${product.image}" alt="${product.name}" class="w-12 h-12 object-cover rounded">
-                    <div class="flex-1">
-                        <h4 class="text-sm font-medium text-mono">${product.name}</h4>
-                        <p class="text-xs text-foreground">${product.price}</p>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button class="kt-btn kt-btn-sm kt-btn-outline qty-decrement" data-sku="${product.sku}">-</button>
-                        <span class="qty-display text-sm font-medium">${quantity}</span>
-                        <button class="kt-btn kt-btn-sm kt-btn-outline qty-increment" data-sku="${product.sku}">+</button>
-                        <button class="remove-cart-item" data-sku="${product.sku}">
-                            <i class="ki-filled ki-trash"></i>
-                        </button>
-                    </div>
-                `;
-                cartContainer.appendChild(cartItem);
-
-                // Calculate price based on quantity
-                const itemPrice = parseFloat(product.price.replace('$', ''));
-                totalPrice += itemPrice * quantity;
-            });
-
-            // Add total section
-            const totalElement = document.createElement('div');
-            totalElement.classList.add('cart-total', 'flex', 'items-center', 'justify-between');
-            totalElement.innerHTML = `
-                <span class="text-sm font-medium text-mono">Total</span>
-                <span class="text-sm font-semibold text-mono">$${totalPrice.toFixed(2)}</span>
-            `;
-            cartContainer.appendChild(totalElement);
-
-            // Add event listeners for quantity increment
-            document.querySelectorAll('.qty-increment').forEach(button => {
-                button.addEventListener('click', function () {
-                    const sku = this.getAttribute('data-sku');
-                    const itemIndex = cart.findIndex(item => {
-                        const product = safeParseJSON(item);
-                        return product && product.sku === sku;
-                    });
-                    if (itemIndex !== -1) {
-                        const product = safeParseJSON(cart[itemIndex]);
-                        let quantity = product.quantity ? parseInt(product.quantity) : 1;
-                        quantity += 1;
-                        cart[itemIndex] = JSON.stringify({ ...product, quantity });
-                        localStorage.setItem('cart', JSON.stringify(cart));
-                        updateCartUI();
-                    }
-                });
-            });
-
-            // Add event listeners for quantity decrement
-            document.querySelectorAll('.qty-decrement').forEach(button => {
-                button.addEventListener('click', function () {
-                    const sku = this.getAttribute('data-sku');
-                    const itemIndex = cart.findIndex(item => {
-                        const product = safeParseJSON(item);
-                        return product && product.sku === sku;
-                    });
-                    if (itemIndex !== -1) {
-                        const product = safeParseJSON(cart[itemIndex]);
-                        let quantity = product.quantity ? parseInt(product.quantity) : 1;
-                        if (quantity > 1) {
-                            quantity -= 1;
-                            cart[itemIndex] = JSON.stringify({ ...product, quantity });
-                            localStorage.setItem('cart', JSON.stringify(cart));
-                            updateCartUI();
-                        }
-                    }
-                });
-            });
-
-            // Add event listeners for remove buttons
-            document.querySelectorAll('.remove-cart-item').forEach(button => {
-                button.addEventListener('click', function () {
-                    const sku = this.getAttribute('data-sku');
-                    cart = cart.filter(item => {
-                        const product = safeParseJSON(item);
-                        return product && product.sku !== sku;
-                    });
-                    localStorage.setItem('cart', JSON.stringify(cart));
-                    updateCartUI();
-                });
-            });
-        }
-    }
-
-    // Add to cart event listener
-    document.querySelectorAll('[data-kt-drawer-toggle="#drawers_shop_cart"]').forEach(button => {
-        button.addEventListener('click', function (e) {
-            e.preventDefault();
-            const card = this.closest('.kt-card');
-            let productData;
-            if (card) {
-                productData = card.getAttribute('data-product');
-            } else {
-                productData = this.getAttribute('data-product'); // For wishlist items
-            }
-            const product = safeParseJSON(productData);
-            if (product) {
-                const existingItemIndex = cart.findIndex(item => {
-                    const cartProduct = safeParseJSON(item);
-                    return cartProduct && cartProduct.sku === product.sku;
-                });
-                if (existingItemIndex === -1) {
-                    cart.push(productData);
-                    console.log(`${product.name} added to cart`);
-                } else {
-                    console.log(`${product.name} is already in cart`);
-                }
-                localStorage.setItem('cart', JSON.stringify(cart));
-                updateCartUI();
-            }
-        });
-    });
-
-    // Wishlist toggle button event listeners
     document.querySelectorAll('[data-kt-wishlist-toggle="true"]').forEach(button => {
         button.addEventListener('click', function (e) {
             e.preventDefault();
-            const card = button.closest('.kt-card');
-            if (!card) {
-                console.warn('Parent .kt-card not found for wishlist toggle');
-                return;
-            }
-            const productData = card.getAttribute('data-product');
-            const product = safeParseJSON(productData);
+            const card = this.closest('.kt-card');
+            const product = safeParseJSON(card?.getAttribute('data-product'));
             if (!product) return;
 
-            const index = wishlist.findIndex(item => {
-                const wishlistProduct = safeParseJSON(item);
-                return wishlistProduct && wishlistProduct.sku === product.sku;
-            });
-
+            const index = wishlist.findIndex(item => item.sku === product.sku);
             if (index === -1) {
-                wishlist.push(productData);
+                wishlist.push(product);
             } else {
                 wishlist.splice(index, 1);
             }
@@ -991,48 +757,30 @@ document.addEventListener('DOMContentLoaded', function () {
             localStorage.setItem('wishlist', JSON.stringify(wishlist));
             updateWishlistUI();
             updateWishlistIcons();
+
+            fetch('/wishlist/toggle/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': getCSRFToken()
+                },
+                body: `product_id=${product.id}`
+            });
         });
     });
 
-    // Clear wishlist button
-    const clearWishlistButton = document.querySelector('#wishlist-clear');
-    if (clearWishlistButton) {
-        clearWishlistButton.addEventListener('click', function () {
+    document.querySelector('#wishlist-clear')?.addEventListener('click', () => {
+        fetch('/wishlist/clear/', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCSRFToken() }
+        }).then(() => {
             wishlist = [];
             localStorage.setItem('wishlist', JSON.stringify(wishlist));
             updateWishlistUI();
             updateWishlistIcons();
         });
-    }
+    });
 
-    // Clear cart button
-    const clearCartButton = document.querySelector('#cart-clear');
-    if (clearCartButton) {
-        clearCartButton.addEventListener('click', function () {
-            cart = [];
-            localStorage.setItem('cart', JSON.stringify(cart));
-            updateCartUI();
-        });
-    }
-
-    // Buy Now button
-    const buyNowButton = document.getElementById('buy-now');
-    if (buyNowButton) {
-        buyNowButton.addEventListener('click', function () {
-            if (cart.length > 0) {
-                // Redirect to the order summary page
-                window.location.href = "{% url 'dashboard:order_summary' %}";
-            } else {
-                console.log('Cart is empty, cannot proceed to checkout');
-                // Optionally, you can show an alert or message here
-                alert('Your cart is empty. Please add items before proceeding.');
-            }
-        });
-    }
-
-    // Initialize wishlist and cart UI
-    updateWishlistUI();
-    updateWishlistIcons();
-    updateCartUI();
+    fetchWishlistFromServer(); 
 });
 </script>
