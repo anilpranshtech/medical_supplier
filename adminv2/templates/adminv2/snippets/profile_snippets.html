@@ -7,7 +7,14 @@
            
 <div class="symbol symbol-100px symbol-lg-160px symbol-fixed position-relative">
     
+
+
+    {% if request.user.supplierprofile.profile_picture %}
         <img src="{{ request.user.supplierprofile.profile_picture.url }}" alt="image" />
+    {% else %}
+        <i class="bi bi-person" style="font-size: 160px; line-height: 1;"></i>
+    {% endif %}
+
   </div>
 
 

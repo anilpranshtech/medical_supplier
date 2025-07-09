@@ -252,12 +252,14 @@
 		editButton.addEventListener("click", function () {
 			passwordEditForm.classList.remove("d-none");
 			passwordDisplay.classList.add("d-none");
+			editButton.classList.add("d-none");
 		});
 
 		// Cancel editing
 		cancelButton.addEventListener("click", function () {
 			passwordEditForm.classList.add("d-none");
 			passwordDisplay.classList.remove("d-none");
+			editButton.classList.remove("d-none");
 		});
 	});
 </script>

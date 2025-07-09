@@ -2,46 +2,17 @@
 {% load static %}
 {% block content %}
 
-<div class="kt-container-fixed mt-5 py-5" style="max-width: var(--custom-container-width, 85%);">
+<div class="kt-container-fixed mt-1" style="max-width: var(--custom-container-width, 85%);">
     <div class="flex flex-col items-stretch gap-7 mt-5 py-5">
         <main class="grow" role="content">
-            <!-- Steps -->
-            <div class="kt-container-fixed">
-                <div class="flex items-center justify-center flex-wrap lg:flex-nowrap gap-8 lg:gap-1.5 pt-5 mb-12">
-                    <!-- Step Items -->
-                    {% comment %} Step Indicator {% endcomment %}
-                    <div class="text-2sm relative flex items-center gap-1.5 px-3 h-8.5 rounded-full border border-border text-foreground bg-muted/30">
-                        <i class="ki-solid ki-check-circle text-green-500 absolute -top-1 -end-1 text-base"></i>
-                        <span class="kt-step-icon"><i class="ki-filled ki-subtitle text-base"></i></span>
-                        Order Summary
-                    </div>
-                    <div class="hidden lg:block w-12 h-px border-t border-dashed border-zinc-300 dark:border-zinc-600"></div>
-                    <div class="text-2sm relative flex items-center gap-1.5 px-3 h-8.5 rounded-full border border-border text-foreground bg-muted/30">
-                        <i class="ki-solid ki-check-circle text-green-500 absolute -top-1 -end-1 text-base"></i>
-                        <span class="kt-step-icon"><i class="ki-filled ki-delivery text-base"></i></span>
-                        Shipping Info
-                    </div>
-                    <div class="hidden lg:block w-12 h-px border-t border-dashed border-zinc-300 dark:border-zinc-600"></div>
-                    <div class="text-2sm relative flex items-center gap-1.5 px-3 h-8.5 rounded-full border font-medium border-primary/10 bg-primary/10 text-primary">
-                        <span class="kt-step-icon"><i class="ki-filled ki-two-credit-cart text-base"></i></span>
-                        Payment Method
-                    </div>
-                    <div class="hidden lg:block w-12 h-px border-t border-dashed border-zinc-300 dark:border-zinc-600"></div>
-                    <div class="text-2sm relative flex items-center gap-1.5 px-3 h-8.5 rounded-full border border-border text-foreground">
-                        <span class="kt-step-icon"><i class="ki-filled ki-cheque text-base"></i></span>
-                        Order Placed
-                    </div>
-                </div>
-            </div>
-
             <!-- Payment Method Dropdown -->
             <div class="kt-container-fixed mb-4">
                 <div class="flex justify-end">
                     <div class="w-full sm:w-64">
-                        <label for="payment-method-select" class="block mb-1 text-sm font-semibold text-mono">Select Payment Method</label>
+                        <label for="payment-method-select" class="block mb-1 text-sm font-bold text-mono">Select
+                            Payment Method</label>
                         <select id="payment-method-select" class="kt-input w-full">
-                            <option value="" disabled selected>-- Choose Method --</option>
-                            <option value="Cash on Delivery">Cash on Delivery</option>
+                            <option value="Cash on Delivery" selected>Cash on Delivery</option>
                             <option value="Stripe">Stripe</option>
                             <option value="Razorpay">Razorpay</option>
                         </select>
@@ -54,34 +25,128 @@
                 <div class="grid xl:grid-cols-3 gap-5 lg:gap-9 mb-5 lg:mb-10">
                     <!-- Left Side -->
                     <div class="lg:col-span-2 space-y-5">
-                        <div class="grid sm:grid-cols-2 gap-5" id="payment-list">
-                            <!-- COD Button -->
-                            <div class="kt-card" data-payment='{"type": "Cash on Delivery"}' id="cod-card" hidden>
-                                <button class="kt-btn kt-btn-primary w-full" onclick="window.location.href='{% url 'dashboard:order_placed' %}'">
-                                    Place Order
-                                </button>
-                            </div>
-
-                            <!-- Stripe Form -->
-                            <div class="kt-card" data-payment='{"type": "Stripe"}' id="stripe-card" hidden>
-                                <form action="." method="POST" class="stripe-form" id="stripe-form">
+                        <div class="grid sm:grid-cols-1 gap-5" id="payment-list">
+                            <!-- COD -->
+                            <div class="kt-card" id="cod-card">
+                                <form method="post" action=".">
                                     {% csrf_token %}
-                                    <div id="card-errors" class="text-red-500 mb-3"></div>
-                                    <div class="space-y-4">
-                                        <input type="text" name="crd_name" required placeholder="Cardholder Name" class="kt-input w-full" />
-                                        <div id="card-element" class="border p-3 rounded"></div>
-                                        <button class="kt-btn kt-btn-danger w-full mt-3" type="submit">Pay with Stripe</button>
+                                    <input type="hidden" name="payment_method" value="cod">
+                                    <div class="text-green-500 border border-green-700 p-3 rounded mb-4 bg-green-950 text-sm mt-5 mx-5">
+                                        <img src="{% static 'metronic/tailwind/dist/assets/media/brand-logos/cash.svg' %}"
+                                             alt="cod" class="w-5 h-5" style="background-color: #00c951;">
+                                        <strong>Note:</strong> Cash on Delivery - Pay cash on the time of Delivery
+                                    </div>
+                                    <div class="mx-5 mt-7 mb-7">
+                                        <button class="kt-btn kt-btn-primary w-full" type="submit">Place COD Order
+                                        </button>
                                     </div>
                                 </form>
                             </div>
 
-                            <!-- Razorpay Button -->
-                            <div class="kt-card" data-payment='{"type": "Razorpay"}' id="razorpay-card" hidden>
-                                <button id="rzp-button"  href="{% url 'dashboard:payment_status' %}" class="kt-btn kt-btn-success w-full">Pay with Razorpay</button>
+                            <!-- Stripe Form with Billing Address -->
+                            <div class="kt-card" data-payment='{"type": "Stripe"}' id="stripe-card" hidden>
+                                <form action="." method="POST" class="stripe-form" id="stripe-form">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="payment_method" value="stripe">
+
+                                    <!-- Info Header -->
+                                    <div class="text-white border p-3 rounded mb-4 text-sm mt-5 mx-5"
+                                         style="border-color: #675dff; color: #675dff;">
+                                        <img src="{% static 'metronic/tailwind/dist/assets/media/brand-logos/stripe.svg' %}"
+                                             alt="Stripe" class="w-5 h-5" style="background-color: #675dff;">
+                                        <strong>Note:</strong> Add Payment Method - Secure Payment Powered by Stripe
+                                    </div>
+
+                                    <!-- Saved Card Display -->
+                                    {% if billing and billing.old_card_info %}
+                                        <div class="text-sm text-muted mb-4 mx-5">
+                                            <strong>Saved Card:</strong> {{ billing.old_card_info }}
+                                        </div>
+                                    {% endif %}
+
+                                    <!-- Error Output -->
+                                    <div id="card-errors" class="text-red-900 text-center mb-3"></div>
+
+                                    <!-- Input Fields -->
+                                    <div class="grid sm:grid-cols-1 gap-4 mt-5 mx-5">
+                                        <!-- Left Column -->
+                                        <div class="space-y-4">
+                                            <input type="text" name="crd_name" required placeholder="Cardholder's Name"
+                                                   class="kt-input w-full"
+                                                   {% if billing %}value="{{ billing.customer_name|default:'' }}"{% endif %}/>
+
+                                            <div id="card-element" class="border p-3 rounded bg-muted/10"></div>
+
+                                            <input type="text" name="customer_address1" required placeholder="Address line 1"
+                                                   class="kt-input w-full"
+                                                   {% if billing %}value="{{ billing.customer_address1|default:'' }}"{% endif %}/>
+
+                                            <input type="text" name="customer_city" required placeholder="City"
+                                                   class="kt-input w-full"
+                                                   {% if billing %}value="{{ billing.customer_city|default:'' }}"{% endif %}/>
+
+                                            <input type="text" name="customer_postal_code" required placeholder="ZIP / Postal Code"
+                                                   class="kt-input w-full"
+                                                   {% if billing %}value="{{ billing.customer_postal_code|default:'' }}"{% endif %}/>
+                                        </div>
+
+                                        <!-- Right Column -->
+                                        <div class="space-y-4">
+                                            <input type="text" name="customer_address2" placeholder="Address line 2"
+                                                   class="kt-input w-full"
+                                                   {% if billing %}value="{{ billing.customer_address2|default:'' }}"{% endif %}/>
+
+                                            <input type="text" name="customer_state" required placeholder="State"
+                                                   class="kt-input w-full"
+                                                   {% if billing %}value="{{ billing.customer_state|default:'' }}"{% endif %}/>
+
+                                            <select name="customer_country" required class="kt-input w-full">
+                                                <option value="">Select Country</option>
+                                                <option value="US" {% if billing and billing.customer_country == "US" %}selected{% endif %}>United States</option>
+                                                <option value="IN" {% if billing and billing.customer_country == "IN" %}selected{% endif %}>India</option>
+                                                <!-- Add more countries if needed -->
+                                            </select>
+
+                                            <input type="text" name="customer_country_code" required placeholder="Country Code (e.g. US)"
+                                                   class="kt-input w-full"
+                                                   {% if billing %}value="{{ billing.customer_country_code|default:'' }}"{% endif %}/>
+                                        </div>
+                                    </div>
+
+                                    <!-- Submit -->
+                                    <div class="mx-5">
+                                        <button class="kt-btn kt-btn-danger w-full mt-4 mb-5" type="submit">
+                                            Pay with Stripe (USD)
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+
+
+                            <!-- Razorpay -->
+                            <div class="kt-card" id="razorpay-card" hidden>
+                                <div class="text-white border p-3 rounded mb-4 text-sm mt-5 mx-5"
+                                     style="border-color: #339afe; color: #339afe;">
+                                    <img src="{% static 'metronic/tailwind/dist/assets/media/brand-logos/razorpay.svg' %}"
+                                         alt="razorpay" class="w-5 h-5">
+                                    <strong>Note:</strong> Add Payment Method - Secure Payment Powered by Razorpay
+                                </div>
+                                <form id="razorpay-form" method="post" action=".">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="payment_method" value="razorpay">
+                                    <!-- Hidden Inputs in Razorpay Form -->
+                                    <input type="hidden" id="razorpay_payment_id" name="razorpay_payment_id">
+                                    <input type="hidden" id="razorpay_order_id" name="razorpay_order_id">
+                                    <input type="hidden" id="razorpay_signature" name="razorpay_signature">
+                                    <div class="mx-5 mb-5">
+                                        <button type="button" id="rzp-button" class="kt-btn kt-btn-primary w-full">Pay with Razorpay</button>
+                                    </div>
+                                </form>
+
                             </div>
                         </div>
 
-                        <!-- Navigation Buttons -->
+                        <!-- Navigation -->
                         <div class="flex justify-end items-center flex-wrap gap-3">
                             <a class="kt-btn kt-btn-outline" href="{% url 'dashboard:shipping_info' %}">
                                 <i class="ki-filled ki-black-left text-base"></i> Shipping Info
@@ -89,9 +154,46 @@
                         </div>
                     </div>
 
-                    <!-- Right Side Summary (Optional) -->
-                    <div class="lg:col-span-1">
-                        {{ block.super }}
+                    <!-- Right Side -->
+                    <div class="lg:col-span-1" id="order-summary-box">
+                        <div class="kt-card bg-accent/50">
+                            <div class="kt-card-header px-5">
+                                <h3 class="kt-card-title">
+                                    Order Summary
+                                </h3>
+                            </div>
+                            <div class="kt-card-content px-0 py-5 space-y-2">
+                                <div class="flex flex-col px-5">
+                                    <span class="text-sm font-medium text-mono mb-1.5">
+                                        Shipping to Jeroen’s Home
+                                    </span>
+                                    <div class="flex flex-col gap-1 text-xs font-normal text-secondary-foreground">
+                                        <span>Jeroen van Dijk</span>
+                                        <span>Keizersgracht 172</span>
+                                        <span>1016 DW, Amsterdam</span>
+                                        <span>Netherlands</span>
+                                    </div>
+                                </div>
+                                <div class="border-b border-border mb-4 mt-5"></div>
+                                <span class="text-sm font-medium block text-mono mb-3.5 px-5">Price Details</span>
+                                <div class="flex justify-between items-center px-5">
+                                    <span class="text-sm font-normal text-secondary-foreground">Subtotal</span>
+                                    <span class="text-sm font-medium text-mono" id="price-subtotal">$492.00</span>
+                                </div>
+                                <div class="flex justify-between items-center px-5">
+                                    <span class="text-sm font-normal text-secondary-foreground">Shipping</span>
+                                    <span class="text-sm font-medium text-mono">$0.00</span>
+                                </div>
+                                <div class="flex justify-between items-center px-5">
+                                    <span class="text-sm font-normal text-secondary-foreground">VAT</span>
+                                    <span class="text-sm font-medium text-mono">$0.00</span>
+                                </div>
+                            </div>
+                            <div class="kt-card-footer flex justify-between items-center px-5">
+                                <span class="text-sm font-normal text-secondary-foreground">Total</span>
+                                <span class="text-base font-semibold text-mono" id="price-total">$492.00</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -101,84 +203,105 @@
 
 <!-- Stripe.js -->
 <script src="https://js.stripe.com/v3/"></script>
-
 <!-- Razorpay -->
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-    const dropdown = document.getElementById('payment-method-select');
-    const cards = {
-        cod: document.getElementById('cod-card'),
-        stripe: document.getElementById('stripe-card'),
-        razorpay: document.getElementById('razorpay-card'),
-    };
+    document.addEventListener("DOMContentLoaded", function () {
+        const dropdown = document.getElementById('payment-method-select');
+        const cards = {
+            cod: document.getElementById('cod-card'),
+            stripe: document.getElementById('stripe-card'),
+            razorpay: document.getElementById('razorpay-card'),
+        };
+        const subtotalEl = document.getElementById("price-subtotal");
+        const totalEl = document.getElementById("price-total");
 
-    function hideAll() {
-        Object.values(cards).forEach(card => card.hidden = true);
-    }
+        const currencyMap = {
+            "Cash on Delivery": "$",
+            "Stripe": "$",
+            "Razorpay": "₹"
+        }
 
-    dropdown.addEventListener('change', function () {
-        hideAll();
-        const value = this.value;
-        if (value === "Cash on Delivery") {
-            cards.cod.hidden = false;
-        } else if (value === "Stripe") {
-            cards.stripe.hidden = false;
-        } else if (value === "Razorpay") {
-            cards.razorpay.hidden = false;
+        function hideAll() {
+            Object.values(cards).forEach(card => card.hidden = true);
+        }
+
+        function updateCurrency(value) {
+            const symbol = currencyMap[value] || "$";
+            subtotalEl.textContent = `${symbol}492.00`;
+            totalEl.textContent = `${symbol}492.00`;
+        }
+
+        dropdown.addEventListener('change', function () {
+            hideAll();
+            const value = this.value;
+            if (value === "Cash on Delivery") {
+                cards.cod.hidden = false;
+            } else if (value === "Stripe") {
+                cards.stripe.hidden = false;
+            } else if (value === "Razorpay") {
+                cards.razorpay.hidden = false;
+            }
+            updateCurrency(value);
+        });
+
+        // Initial selection
+        updateCurrency("Cash on Delivery");
+
+        // Stripe Setup
+        const stripe = Stripe("{{ STRIPE_PUBLIC_KEY }}");
+        const elements = stripe.elements();
+        const card = elements.create("card");
+        card.mount("#card-element");
+
+        const form = document.getElementById("stripe-form");
+        form?.addEventListener("submit", function (event) {
+            event.preventDefault();
+            stripe.createToken(card).then(function (result) {
+                if (result.error) {
+                    document.getElementById("card-errors").textContent = result.error.message;
+                } else {
+                    const hiddenInput = document.createElement("input");
+                    hiddenInput.setAttribute("type", "hidden");
+                    hiddenInput.setAttribute("name", "stripeToken");
+                    hiddenInput.setAttribute("value", result.token.id);
+                    form.appendChild(hiddenInput);
+                    form.submit();
+                }
+            });
+        });
+
+        // Razorpay Setup
+        const rzpBtn = document.getElementById("rzp-button");
+        if (rzpBtn) {
+            rzpBtn.addEventListener("click", function (e) {
+                e.preventDefault();
+
+                const options = {
+                    key: "{{ RAZORPAY_KEY_ID }}",
+                    amount: "{{ razorpay_amount_in_paise }}",
+                    currency: "INR",
+                    name: "Checkout",
+                    description: "Complete your payment",
+                    order_id: "{{ razorpay_order_id }}", // Pass Razorpay order ID
+                    handler: function (response) {
+                        // ✅ Set values from Razorpay into hidden fields
+                        document.getElementById("razorpay_payment_id").value = response.razorpay_payment_id;
+                        document.getElementById("razorpay_order_id").value = response.razorpay_order_id;
+                        document.getElementById("razorpay_signature").value = response.razorpay_signature;
+                        document.getElementById("razorpay-form").submit();
+                    },
+                    prefill: {
+                        name: "{{ user.get_full_name }}",
+                        email: "{{ user.email }}"
+                    },
+                    theme: { color: "#0ea5e9" }
+                };
+
+                const rzp = new Razorpay(options);
+                rzp.open();
+            });
         }
     });
-
-    // Stripe Setup
-    const stripe = Stripe("{{ STRIPE_PUBLIC_KEY }}");
-    const elements = stripe.elements();
-    const card = elements.create("card");
-    card.mount("#card-element");
-
-    const form = document.getElementById("stripe-form");
-    form.addEventListener("submit", function (event) {
-        event.preventDefault();
-        stripe.createToken(card).then(function (result) {
-            if (result.error) {
-                document.getElementById("card-errors").textContent = result.error.message;
-            } else {
-                const hiddenInput = document.createElement("input");
-                hiddenInput.setAttribute("type", "hidden");
-                hiddenInput.setAttribute("name", "stripeToken");
-                hiddenInput.setAttribute("value", result.token.id);
-                form.appendChild(hiddenInput);
-                form.submit();
-            }
-        });
-    });
-
-    // Razorpay Setup
-    const rzpBtn = document.getElementById("rzp-button");
-    if (rzpBtn) {
-        rzpBtn.addEventListener("click", function (e) {
-            e.preventDefault();
-            const options = {
-                key: "{{ RAZORPAY_KEY_ID }}",
-                amount: "{{ razorpay_amount_in_paise }}",
-                currency: "INR",
-                name: "Landline Remover",
-                description: "Complete your payment",
-                handler: function (response) {
-                    // Optionally send response.razorpay_payment_id to your server
-                    window.location.href = "{% url 'dashboard:order_placed' %}";
-                },
-                prefill: {
-                    name: "{{ user.get_full_name }}",
-                    email: "{{ user.email }}"
-                },
-                theme: { color: "#0ea5e9" }
-            };
-            const rzp = new Razorpay(options);
-            rzp.open();
-        });
-    }
-});
 </script>
-
 {% endblock content %}
