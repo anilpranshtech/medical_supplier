@@ -165,19 +165,19 @@
                                         </div>
 
                                         <div class="mb-10 mt-4 fv-row">
-                                            <label class="form-label">Brand</label>
+                                            <label class="form-label required">Brand</label>
                                             <input type="text" name="brand" class="form-control" placeholder="Enter brand" required />
                                             <div class="text-muted fs-7">Enter the product brand (new or existing).</div>
                                         </div>
 
                                         <div class="mb-10 mt-4 fv-row">
-                                            <label class="form-label">Product From</label>
+                                            <label class="form-label required">Product From</label>
                                             <input type="text" name="product_from" class="form-control mb-2" placeholder="e.g., India, China" value="{{ product_from }}" required />
                                             <div class="text-muted fs-7">Country of origin.</div>
                                         </div>
                                         
                                         <div class="mb-10 mt-4 fv-row">
-                                            <label class="form-label">Selling Countries</label>
+                                            <label class="form-label required">Selling Countries</label>
                                             <input type="text" name="selling_countries" class="form-control mb-2" placeholder="e.g., India, USA, UK" value="{{ selling_countries|default:'' }}" required  />
                                             <div class="text-muted fs-7">Comma-separated country names (e.g., India, USA, UK).</div>
                                         </div>
@@ -202,25 +202,25 @@
                                         </div>
                                         
                                         <div class="mb-10 mt-4 fv-row">
-                                            <label class="form-label">Return Time Limit (Days)</label>
+                                            <label class="form-label required">Return Time Limit (Days)</label>
                                             <input type="number" name="return_time_limit" class="form-control mb-2" placeholder="Enter return time limit in days" value="{{ return_time_limit }}" min="0" required />
                                             <div class="text-muted fs-7">Number of days for product return.</div>
                                         </div>
                                         
                                        
                                         <div class="mb-10 mt-4 fv-row">
-                                            <label class="form-label">Manufacture Date</label>
+                                            <label class="form-label required">Manufacture Date</label>
                                             <input type="date" name="manufacture_date" class="form-control mb-2" placeholder="Select manufacture date" value="{{ manufacture_date }}" required />
                                             <div class="text-muted fs-7">Date of manufacture.</div>
                                         </div>
 
                                         <div class="mb-10 mt-4 fv-row">
-                                            <label class="form-label">Expiry Date</label>
+                                            <label class="form-label required">Expiry Date</label>
                                             <input type="date" name="expiry_date" class="form-control mb-2" placeholder="Select expiry date" value="{{ expiry_date }}" required />
                                             <div class="text-muted fs-7">Date of expiry.</div>
                                         </div>
                                          <div class="mb-10 mt-4 fv-row">
-                                            <label class="form-label">Barcode</label>
+                                            <label class="form-label required">Barcode</label>
                                             <input type="text" name="barcode" class="form-control mb-2" placeholder="Enter barcode" value="{{ barcode }}" required />
                                             <div class="text-muted fs-7">Product barcode.</div>
                                         </div>
@@ -316,16 +316,7 @@
                                         </div>
                                     </div>
                                     <div class="card-body pt-0">
-                                        <div class="mb-10 mt-4 fv-row">
-                                            <label class="form-label">Weight</label>
-                                            <input type="number" name="weight" class="form-control mb-2" placeholder="Enter product weight" value="{{ weight }}" min="0" step="0.01" required  />
-                                            <div class="text-muted fs-7">Product weight.</div>
-                                        </div>
-                                         <div class="mb-10 mt-4 fv-row">
-                                            <label class="form-label">Delivery Time (Days)</label>
-                                            <input type="number" name="delivery_time" class="form-control mb-2" placeholder="Enter estimated delivery time in days" value="{{ delivery_time }}" min="0" required />
-                                            <div class="text-muted fs-7">Estimated delivery time in days.</div>
-                                        </div>
+
                                         <div class="mb-10 mt-4 fv-row">
                                             <label class="form-label">Weight Unit</label>
                                             <select class="form-select mb-2" name="weight_unit" data-control="select2" data-hide-search="true" data-placeholder="Select weight unit">
@@ -336,80 +327,100 @@
                                             </select>
                                             <div class="text-muted fs-7">Unit of product weight.</div>
                                         </div>
+
+                                        <div class="mb-10 mt-4 fv-row">
+                                            <label class="form-label required">Weight</label>
+                                            <input type="number" name="weight" class="form-control mb-2" placeholder="Enter product weight" value="{{ weight }}" min="0" step="0.01" required  />
+                                            <div class="text-muted fs-7">Product weight.</div>
+                                        </div>
+
+
+
+
+                                         <div class="mb-10 mt-4 fv-row">
+                                            <label class="form-label required">Delivery Time (Days)</label>
+                                            <input type="number" name="delivery_time" class="form-control mb-2" placeholder="Enter estimated delivery time in days" value="{{ delivery_time }}" min="0" required />
+                                            <div class="text-muted fs-7">Estimated delivery time in days.</div>
+                                        </div>
+
+
                                          
                                         <div class="mb-10 mt-4 fv-row">
-                                            <label class="form-label">Keywords</label>
+                                            <label class="form-label required">Keywords</label>
                                             <input type="text" name="keywords" class="form-control mb-2" placeholder="Comma-separated keywords" value="{{ keywords }}" required />
                                             <div class="text-muted fs-7">Comma-separated keywords for product search.</div>
                                         </div>
                                         
                                         
                                         <div class="mb-10 mt-4 fv-row">
-                                            <label class="form-label">Commission Percentage</label>
+                                            <label class="form-label required">Commission Percentage</label>
                                             <input type="number" name="commission_percentage" class="form-control mb-2" placeholder="Enter commission percentage" value="{{ commission_percentage }}" min="0" max="100" step="0.01" required />
                                             <div class="text-muted fs-7">Commission percentage for the product.</div>
                                         </div>
                                         
                                        
                                         <div class="mb-10 mt-4 fv-row">
-                                            <label class="form-label">Brochure</label>
+                                            <label class="form-label required">Brochure</label>
                                             <input type="file" name="brochure" class="form-control mb-2" accept=".pdf, .doc, .docx" required />
                                             <div class="text-muted fs-7">Upload product brochure (PDF, DOC).</div>
                                         </div>
                                         
                                         <div class="mb-10 mt-4 fv-row">
-                                            <label class="form-label">Supplier SKU</label>
+                                            <label class="form-label required">Supplier SKU</label>
                                             <input type="text" name="supplier_sku" class="form-control mb-2" placeholder="Enter supplier SKU" value="{{ supplier_sku }}" required />
                                             <div class="text-muted fs-7">Supplier Stock Keeping Unit.</div>
                                         </div>
                                         
                                         <div class="mb-10 mt-4 fv-row">
-                                            <label class="form-label">Pcs Per Unit</label>
+                                            <label class="form-label required">Pcs Per Unit</label>
                                             <input type="number" name="pcs_per_unit" class="form-control mb-2" placeholder="Enter pieces per unit" value="{{ pcs_per_unit }}" min="1" required />
                                             <div class="text-muted fs-7">Number of pieces in one unit of the product.</div>
                                         </div>
-                                                 <div class="mb-10 mt-4 fv-row">
-    <label class="form-label required">Enable Add to cart / RFQ Button</label>
-    <div class="d-flex gap-5 mt-2">
-        <div class="form-check form-check-custom form-check-solid">
-            <input class="form-check-input" type="radio" name="button_type" value="both" id="both"
-                   {% if show_add_to_cart and show_rfq %}checked{% endif %} />
-            <label class="form-check-label" for="both">
-                Both
-            </label>
-        </div>
-        <div class="form-check form-check-custom form-check-solid">
-            <input class="form-check-input" type="radio" name="button_type" value="rfq" id="rfq"
-                   {% if show_rfq and not show_add_to_cart %}checked{% endif %} />
-            <label class="form-check-label" for="rfq">
-                RFQ Only
-            </label>
-        </div>
-        <div class="form-check form-check-custom form-check-solid">
-            <input class="form-check-input" type="radio" name="button_type" value="cart" id="cart"
-                   {% if show_add_to_cart and not show_rfq %}checked{% endif %} />
-            <label class="form-check-label" for="cart">
-                Add To Cart Only
-            </label>
-        </div>
-    </div>
-</div>
 
-                                        
                                         <div class="mb-10 mt-4 fv-row">
-                                            <label class="form-label">Min Order Qty</label>
+                                            <label class="form-label required">Min Order Qty</label>
                                             <input type="number" name="min_order_qty" class="form-control mb-2" placeholder="Enter minimum order quantity" value="{{ min_order_qty }}" min="1" required />
                                             <div class="text-muted fs-7">Minimum quantity required for an order.</div>
                                         </div>
-                                        
+
                                         <div class="mb-10 mt-4 fv-row">
-                                            <label class="form-label">Low Stock Alert</label>
+                                            <label class="form-label required">Low Stock Alert</label>
                                             <input type="number" name="low_stock_alert" class="form-control mb-2" placeholder="Enter low stock alert level" value="{{ low_stock_alert }}" min="0" required />
                                             <div class="text-muted fs-7">Alert when stock falls below this level.</div>
                                         </div>
+
+                                         <div class="mb-10 mt-4 fv-row">
+                                            <label class="form-label required">Enable Add to cart / RFQ Button</label>
+                                            <div class="d-flex gap-5 mt-2">
+                                                <div class="form-check form-check-custom form-check-solid">
+                                                    <input class="form-check-input" type="radio" name="button_type" value="both" id="both"
+                                                           {% if show_add_to_cart and show_rfq %}checked{% endif %} />
+                                                    <label class="form-check-label" for="both">
+                                                        Both
+                                                    </label>
+                                                </div>
+                                                <div class="form-check form-check-custom form-check-solid">
+                                                    <input class="form-check-input" type="radio" name="button_type" value="rfq" id="rfq"
+                                                           {% if show_rfq and not show_add_to_cart %}checked{% endif %} />
+                                                    <label class="form-check-label" for="rfq">
+                                                        RFQ Only
+                                                    </label>
+                                                </div>
+                                                <div class="form-check form-check-custom form-check-solid">
+                                                    <input class="form-check-input" type="radio" name="button_type" value="cart" id="cart"
+                                                           {% if show_add_to_cart and not show_rfq %}checked{% endif %} />
+                                                    <label class="form-check-label" for="cart">
+                                                        Add To Cart Only
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        
+
                                         
                                         <div class="mb-10 mt-4 fv-row">
-                                            <label class="form-label">Expiration Days</label>
+                                            <label class="form-label required">Expiration Days</label>
                                             <input type="number" name="expiration_days" class="form-control mb-2" placeholder="Enter expiration days" value="{{ expiration_days }}" min="0" required />
                                             <div class="text-muted fs-7">Number of days until product expires.</div>
                                         </div>
