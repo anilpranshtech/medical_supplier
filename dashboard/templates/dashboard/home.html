@@ -23,7 +23,7 @@
             <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
                 <div class="mb-2.5">
                     <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[250px] mb-4 shadow-none">
-                        
+
                         <img alt="{{ product.name }}" class="h-[180px] shrink-0 cursor-pointer product-thumbnail"
                              data-kt-modal-toggle="#modal_shop_product_details"
                              src="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
@@ -101,11 +101,11 @@
                                     <button class="kt-btn kt-btn-mono kt-btn-sm" data-kt-drawer-toggle="#drawers_shop_cart">
                                         Add to Cart <i class="ki-filled ki-handcart"></i>
                                     </button>
-                                    <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm" 
-        data-kt-wishlist-toggle="true"
-        data-product-id="{{ product.id }}">
-    <i class="ki-filled ki-heart {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
-</button>
+                                    <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm"
+                                            data-kt-wishlist-toggle="true"
+                                            data-product-id="{{ product.id }}">
+                                        <i class="ki-filled ki-heart {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
+                                    </button>
                                     {% if product.original_price and product.original_price > product.price %}
                                         <span class="text-base font-normal text-secondary-foreground line-through pt-[1px]">
                                             ${{ product.original_price|floatformat:2 }}
@@ -229,7 +229,7 @@
                        data-product-discount="{{ product.offer_percentage|default:'' }}">
                         <div class="flex items-center gap-2">
                             <span>{{ product.name }}</span>
-                            
+
                         </div>
                     </a>
                 </div>
@@ -304,7 +304,7 @@
                        data-product-discount="{{ product.offer_percentage|default:'' }}">
                         <div class="flex items-center gap-2">
                             <span>{{ product.name }}</span>
-                           
+
                         </div>
                     </a>
                 </div>
@@ -379,7 +379,7 @@
                        data-product-discount="{{ product.offer_percentage|default:'' }}">
                         <div class="flex items-center gap-2">
                             <span>{{ product.name }}</span>
-                           
+
                         </div>
                     </a>
                 </div>
