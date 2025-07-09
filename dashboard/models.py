@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 
+
 class DoctorProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     current_position = models.CharField(max_length=100, null=True, blank=True)
@@ -314,6 +315,7 @@ class CustomerBillingAddress(models.Model):
             'updated_at': 'Updated At'
         }
 
+
 class WishlistProduct(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='wishlists')
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='wishlisted_by')
@@ -356,7 +358,6 @@ class Notification(models.Model):
     is_read = models.BooleanField(default=False)
     is_deleted = models.BooleanField(default=False) 
     created_at = models.DateTimeField(default=timezone.now)
-    
 
     class Meta:
         verbose_name = "Notification"
@@ -364,28 +365,71 @@ class Notification(models.Model):
         ordering = ['-created_at']
 
 
+class DeliveryPartner(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    tracking_url_template = models.URLField(
+        max_length=500,
+        blank=True,
+        help_text="Use {tracking_id} as a placeholder. e.g., https://track.example.com/{tracking_id}"
+    )
+    support_email = models.EmailField(blank=True, null=True)
+    phone_number = models.CharField(max_length=20, blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+
 class Payment(models.Model):
     name = models.CharField(max_length=100)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-
-    # Stripe
-    stripe_charge_id = models.CharField(max_length=100, blank=True, null=True)
-    stripe_customer_id = models.CharField(max_length=100, blank=True, null=True)
-    stripe_signature = models.CharField(max_length=255, blank=True, null=True)
-
-    # Razorpay
-    razorpay_payment_id = models.CharField(max_length=100, blank=True, null=True)
-    razorpay_order_id = models.CharField(max_length=100, blank=True, null=True)
-    razorpay_signature = models.CharField(max_length=255, blank=True, null=True)
-
-    # COD
-    cod_tracking_id = models.CharField(max_length=100, blank=True, null=True)
-    delivery_partner = models.CharField(max_length=100, blank=True, null=True)
-
-    # Common
+    payment_method = models.CharField(max_length=20, choices=[
+        ("stripe", "Stripe"),
+        ("razorpay", "Razorpay"),
+        ("cod", "Cash on Delivery"),
+    ])
     customer_id = models.CharField(max_length=100, blank=True, null=True)
     paid = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.name} - {self.amount} ({'Paid' if self.paid else 'Unpaid'})"
+        return f"{self.name} - {self.amount} ({self.payment_method.upper()})"
+
+
+class StripePayment(models.Model):
+    name = models.CharField(max_length=100)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    paid = models.BooleanField(default=True)
+    customer_id = models.CharField(max_length=100)
+    stripe_charge_id = models.CharField(max_length=100)
+    stripe_customer_id = models.CharField(max_length=100)
+    stripe_signature = models.CharField(max_length=255, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class RazorpayPayment(models.Model):
+    name = models.CharField(max_length=100)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    paid = models.BooleanField(default=True)
+    razorpay_payment_id = models.CharField(max_length=100)
+    razorpay_order_id = models.CharField(max_length=100, blank=True, null=True)
+    razorpay_signature = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+
+class CODPayment(models.Model):
+    name = models.CharField(max_length=100)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    paid = models.BooleanField(default=False)
+    cod_tracking_id = models.CharField(max_length=100, blank=True, null=True)
+    delivery_partner = models.ForeignKey(
+        DeliveryPartner, on_delete=models.SET_NULL, blank=True, null=True
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"COD - {self.cod_tracking_id or 'No Tracking ID'}"
+

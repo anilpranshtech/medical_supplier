@@ -322,7 +322,6 @@ class PaymentMethodView(LoginRequiredMixin, View):
     template_name = 'userdashboard/view/payment-method.html'
 
     def get_stripe_key(self, request):
-        # Set stripe key
         return settings.STRIPE_PUBLISHABLE_KEY, settings.STRIPE_SECRET_KEY
 
     def get(self, request):
@@ -333,17 +332,119 @@ class PaymentMethodView(LoginRequiredMixin, View):
             "razorpay_amount_in_paise": 10000,  # ₹100 as example
         })
 
+    # def post(self, request):
+    #     payment_method = request.POST.get("payment_method")
+    #     user = request.user
+    #
+    #     if payment_method == "cod":
+    #         payment = Payment.objects.create(
+    #             name=user.get_full_name(),
+    #             amount=100.00,
+    #             payment_method="cod",
+    #             paid=False
+    #         )
+    #         CODPayment.objects.create(
+    #             payment=payment,
+    #             cod_tracking_id="COD123456",  # Optional or dynamic
+    #             delivery_partner=DeliveryPartner.objects.get_or_create(name="Delhivery")[0] # Optional
+    #         )
+    #         messages.success(request, "COD Order placed.")
+    #         return redirect("dashboard:order_placed")
+    #
+    #     elif payment_method == "stripe":
+    #         _, stripe_secret = self.get_stripe_key(request)
+    #         stripe.api_key = stripe_secret
+    #
+    #         token = request.POST.get("stripeToken")
+    #         crd_name = request.POST.get("crd_name")
+    #
+    #         try:
+    #             # Create customer and charge
+    #             customer = stripe.Customer.create(
+    #                 email=user.email,
+    #                 name=crd_name,
+    #                 source=token
+    #             )
+    #             charge = stripe.Charge.create(
+    #                 customer=customer.id,
+    #                 amount=10000,  # ₹100 → in paise
+    #                 currency="usd",  # Set as USD for Stripe
+    #                 description="Product Payment"
+    #             )
+    #
+    #             payment = Payment.objects.create(
+    #                 name=crd_name,
+    #                 amount=100.00,
+    #                 payment_method="stripe",
+    #                 paid=True,
+    #                 customer_id=customer.id
+    #             )
+    #             StripePayment.objects.create(
+    #                 payment=payment,
+    #                 stripe_charge_id=charge.id,
+    #                 stripe_customer_id=customer.id,
+    #                 stripe_signature=charge.payment_method  # or any metadata you get
+    #             )
+    #
+    #             CustomerBillingAddress.objects.update_or_create(
+    #                 user=user,
+    #                 defaults={"customer_name": crd_name}
+    #             )
+    #
+    #             messages.success(request, "Stripe Payment successful.")
+    #             return redirect("dashboard:order_placed")
+    #
+    #         except Exception as e:
+    #             messages.error(request, f"Stripe payment failed: {e}")
+    #             return redirect("dashboard:payment_method")
+    #
+    #
+    #     elif payment_method == "razorpay":
+    #         razorpay_payment_id = request.POST.get("razorpay_payment_id")
+    #         razorpay_order_id = request.POST.get("razorpay_order_id")
+    #         razorpay_signature = request.POST.get("razorpay_signature")
+    #
+    #         if not razorpay_payment_id:
+    #             messages.error(request, "Razorpay payment failed.")
+    #             return redirect("dashboard:payment_method")
+    #
+    #         payment = Payment.objects.create(
+    #             name=user.get_full_name(),
+    #             amount=100.00,
+    #             payment_method="razorpay",
+    #             paid=True
+    #         )
+    #
+    #         RazorpayPayment.objects.create(
+    #             payment=payment,
+    #             razorpay_payment_id=razorpay_payment_id,
+    #             razorpay_order_id=razorpay_order_id,
+    #             razorpay_signature=razorpay_signature
+    #         )
+    #         messages.success(request, "Razorpay Payment successful.")
+    #         return redirect("dashboard:order_placed")
     def post(self, request):
         payment_method = request.POST.get("payment_method")
         user = request.user
 
         if payment_method == "cod":
-            Payment.objects.create(
+            # Create main Payment record
+            payment = Payment.objects.create(
                 name=user.get_full_name(),
-                amount=100.00,  # use actual order amount
-                paid=False,
-                created_at=timezone.now()
+                amount=100.00,
+                payment_method="cod",
+                paid=False
             )
+
+            delivery_partner, _ = DeliveryPartner.objects.get_or_create(name="Delhivery")
+            CODPayment.objects.create(
+                name=user.get_full_name(),
+                amount=100.00,
+                paid=False,
+                cod_tracking_id="COD123456",
+                delivery_partner=delivery_partner
+            )
+
             messages.success(request, "COD Order placed.")
             return redirect("dashboard:order_placed")
 
@@ -355,7 +456,7 @@ class PaymentMethodView(LoginRequiredMixin, View):
             crd_name = request.POST.get("crd_name")
 
             try:
-                # Create customer and charge
+                # Stripe customer + charge (in USD)
                 customer = stripe.Customer.create(
                     email=user.email,
                     name=crd_name,
@@ -363,20 +464,29 @@ class PaymentMethodView(LoginRequiredMixin, View):
                 )
                 charge = stripe.Charge.create(
                     customer=customer.id,
-                    amount=10000,  # ₹100 → in paise
-                    currency="inr",
+                    amount=10000,  # $100.00 in cents
+                    currency="usd",
                     description="Product Payment"
                 )
 
-                # Save payment
-                Payment.objects.create(
+                payment = Payment.objects.create(
                     name=crd_name,
                     amount=100.00,
-                    order_id=charge.id,
+                    payment_method="stripe",
                     paid=True,
+                    customer_id=customer.id
                 )
 
-                # Save billing address if needed
+                StripePayment.objects.create(
+                    name=crd_name,
+                    amount=100.00,
+                    paid=True,
+                    customer_id=customer.id,
+                    stripe_charge_id=charge.id,
+                    stripe_customer_id=customer.id,
+                    stripe_signature=charge.payment_method
+                )
+
                 CustomerBillingAddress.objects.update_or_create(
                     user=user,
                     defaults={"customer_name": crd_name}
@@ -384,21 +494,34 @@ class PaymentMethodView(LoginRequiredMixin, View):
 
                 messages.success(request, "Stripe Payment successful.")
                 return redirect("dashboard:order_placed")
+
             except Exception as e:
                 messages.error(request, f"Stripe payment failed: {e}")
                 return redirect("dashboard:payment_method")
 
         elif payment_method == "razorpay":
             razorpay_payment_id = request.POST.get("razorpay_payment_id")
+            razorpay_order_id = request.POST.get("razorpay_order_id")
+            razorpay_signature = request.POST.get("razorpay_signature")
+
             if not razorpay_payment_id:
                 messages.error(request, "Razorpay payment failed.")
                 return redirect("dashboard:payment_method")
 
-            Payment.objects.create(
+            payment = Payment.objects.create(
                 name=user.get_full_name(),
                 amount=100.00,
-                razorpay_payment_id=razorpay_payment_id,
+                payment_method="razorpay",
                 paid=True
+            )
+
+            RazorpayPayment.objects.create(
+                name=user.get_full_name(),
+                amount=100.00,
+                paid=True,
+                razorpay_payment_id=razorpay_payment_id,
+                razorpay_order_id=razorpay_order_id,
+                razorpay_signature=razorpay_signature
             )
 
             messages.success(request, "Razorpay Payment successful.")
