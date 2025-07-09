@@ -399,6 +399,7 @@ class Payment(models.Model):
 
 
 class StripePayment(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="stripe_payments")
     name = models.CharField(max_length=100)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     paid = models.BooleanField(default=True)
@@ -410,6 +411,7 @@ class StripePayment(models.Model):
 
 
 class RazorpayPayment(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="razorpay_payments")
     name = models.CharField(max_length=100)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     paid = models.BooleanField(default=True)
@@ -419,8 +421,8 @@ class RazorpayPayment(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 
-
 class CODPayment(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="cod_payments")
     name = models.CharField(max_length=100)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     paid = models.BooleanField(default=False)
@@ -431,5 +433,6 @@ class CODPayment(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"COD - {self.cod_tracking_id or 'No Tracking ID'}"
+        return f"COD - {self.cod_tracking_id or 'No Tracking ID'} by {self.user.get_full_name() or self.user.email}"
+
 
