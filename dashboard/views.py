@@ -754,3 +754,8 @@ class PaymentStatusView(View):
             return render(request, self.template_name, {'status': True})
         except SignatureVerificationError:
             return render(request, self.template_name, {'status': False, 'error': 'Signature verification failed'})
+
+
+
+class Test(TemplateView):
+    template_name = 'dashboard/register.html'
