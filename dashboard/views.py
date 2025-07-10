@@ -1,14 +1,13 @@
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import render, redirect
-from django.contrib.auth.views import LoginView, PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, \
-    PasswordResetCompleteView
+from django.contrib.auth.views import *
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from razorpay.errors import SignatureVerificationError
 from .forms import PaymentForm
-from.models import *
+from .models import *
 import razorpay
 import stripe
 from django.utils import timezone
@@ -19,20 +18,16 @@ from .forms import EmailOnlyLoginForm, CustomPasswordResetForm, CustomSetPasswor
 from django.views import View
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
-from .models import DoctorProfile, MedicalSupplierProfile, CorporateProfile
 from django.contrib import messages
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.hashers import make_password
-from .models import RetailProfile, WholesaleBuyerProfile, SupplierProfile
 from django.contrib.auth import authenticate, login
 from django.views.generic.edit import FormView
-from .models import *
 from datetime import date
 from django.db.models import F
 import random
 import requests
-from django.http import JsonResponse
 
 
 
@@ -41,8 +36,7 @@ class HomeView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
-        today = date.today()
+        today = timezone.now().date()  # Use timezone-aware date
 
         # Special Offers
         special_offers = Product.objects.filter(
@@ -52,7 +46,6 @@ class HomeView(TemplateView):
             offer_end__gte=today,
             is_active=True
         ).order_by('-offer_percentage')[:3]
-
         for product in special_offers:
             main_img = ProductImage.objects.filter(product=product, is_main=True).first()
             product.main_image = main_img.image.url if main_img else None
@@ -63,14 +56,12 @@ class HomeView(TemplateView):
             tag='recent',
             is_active=True
         ).order_by('-created_at')[:4]
-
         for product in recent_products:
             main_img = ProductImage.objects.filter(product=product, is_main=True).first()
             product.main_image = main_img.image.url if main_img else None
-
         context['recent_products'] = recent_products
 
-         #  Popular Medical Supplies
+        # Popular Medical Supplies
         popular_products = Product.objects.filter(
             tag='popular',
             is_active=True
@@ -90,18 +81,16 @@ class HomeView(TemplateView):
             product.main_image = main_img.image.url if main_img else None
         context['limited_products'] = limited_products
 
-        
-        # Featured Products 
+        # Featured Products
         all_ids = list(Product.objects.filter(is_active=True).values_list('id', flat=True))
         random_ids = random.sample(all_ids, min(len(all_ids), 7))
         featured_products = Product.objects.filter(id__in=random_ids)
-
         for product in featured_products:
             main_img = ProductImage.objects.filter(product=product, is_main=True).first()
             product.main_image = main_img.image.url if main_img else None
         context['featured_products'] = featured_products
 
-         # wishlist 
+        # Wishlist
         if self.request.user.is_authenticated:
             context['user_wishlist_ids'] = list(
                 WishlistProduct.objects.filter(user=self.request.user)
@@ -110,6 +99,7 @@ class HomeView(TemplateView):
         else:
             context['user_wishlist_ids'] = []
         return context
+
 
 class CustomLoginView(FormView):
     form_class = EmailOnlyLoginForm
@@ -296,6 +286,21 @@ class SearchResultsListView(TemplateView):
 
 class ProductDetailsView(TemplateView):
     template_name = 'userdashboard/view/product-details.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        pk = self.kwargs.get('pk')
+        if pk:
+            try:
+                product = Product.objects.get(id=pk)
+                main_img = ProductImage.objects.filter(product=product, is_main=True).first()
+                product.main_image = main_img.image.url if main_img else None
+                context['product'] = product
+            except ObjectDoesNotExist:
+                context['product'] = None
+        else:
+            context['product'] = None
+        return context
 
 
 class ShoppingCartView(TemplateView):
