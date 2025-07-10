@@ -284,14 +284,14 @@ size-9 rounded-full border-2 border-mono/25"
                             <img alt="User Avatar" class="size-9 rounded-full border-2 border-green-500"
                                  src="{% static 'metronic/tailwind/dist/assets/media/avatars/300-2.png' %}"/>
                             <div class="flex flex-col gap-1.5">
-                                <span class="text-sm text-foreground font-semibold">Zala Karmveersinh</span>
+                                <span class="text-sm text-foreground font-semibold">{{request.user}}</span>
                                 <a class="text-xs text-secondary-foreground hover:text-primary font-medium"
                                    href="https://keenthemes.com/metronic/tailwind/demo10/account/home/get-started">
-                                    zalakarmveersinh@gmail.com
+                                    {{request.user.email}}
                                 </a>
                             </div>
                         </div>
-                        <span class="kt-badge kt-badge-sm kt-badge-primary kt-badge-outline">Pro</span>
+                        
                     </div>
                     <ul class="kt-dropdown-menu-sub">
                         <li>
@@ -665,6 +665,13 @@ size-9 rounded-full border-2 border-mono/25"
 </div>
 <!-- end: Add to Cart Drawer -->
 <script>
+
+document.querySelectorAll('[data-kt-drawer-toggle="#drawers_shop_wishlist"]').forEach(button => {
+    button.addEventListener('click', function () {
+        fetchWishlistFromServer(); // Refresh drawer each time it's opened
+    });
+});
+
 document.addEventListener('DOMContentLoaded', function () {
     //  Theme Toggle 
     // Convert hex colors to RGB for use in rgba
@@ -674,6 +681,16 @@ document.addEventListener('DOMContentLoaded', function () {
         const b = parseInt(hex.slice(5, 7), 16);
         return `${r}, ${g}, ${b}`;
     }
+
+    document.querySelectorAll('[data-kt-drawer-toggle="#drawers_shop_wishlist"]').forEach(button => {
+        button.addEventListener('click', function () {
+            fetchWishlistFromServer(); // Refresh drawer each time it's opened
+        });
+    });
+
+    document.querySelector('#drawers_shop_wishlist')?.addEventListener('hide.bs.drawer', () => {
+        updateWishlistIcons();
+    });
 
     // Define RGB values for background colors
     const lightBackgroundRgb = hexToRgb('#ffffff'); // Light mode background
@@ -825,10 +842,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function updateWishlistIcons() {
         document.querySelectorAll('[data-kt-wishlist-toggle="true"]').forEach(button => {
-            const card = button.closest('.kt-card');
-            const product = safeParseJSON(card?.getAttribute('data-product'));
-            const isInWishlist = wishlist.some(item => item.sku === product?.sku);
-            button.classList.toggle('active', isInWishlist);
+            const productId = parseInt(button.dataset.productId);
+            const icon = button.querySelector('i.heart-icon');
+            const isInWishlist = wishlist.some(item => item.id === productId);
+
+            if (isInWishlist) {
+                icon?.classList.add('text-red-500');
+                button.classList.add('active');
+            } else {
+                icon?.classList.remove('text-red-500');
+                button.classList.remove('active');
+            }
         });
     }
 
@@ -965,20 +989,10 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('[data-kt-wishlist-toggle="true"]').forEach(button => {
         button.addEventListener('click', function (e) {
             e.preventDefault();
+
             const card = this.closest('.kt-card');
             const product = safeParseJSON(card?.getAttribute('data-product'));
             if (!product) return;
-
-            const index = wishlist.findIndex(item => item.sku === product.sku);
-            if (index === -1) {
-                wishlist.push(product);
-            } else {
-                wishlist.splice(index, 1);
-            }
-
-            localStorage.setItem('wishlist', JSON.stringify(wishlist));
-            updateWishlistUI();
-            updateWishlistIcons();
 
             fetch('/wishlist/toggle/', {
                 method: 'POST',
@@ -987,6 +1001,19 @@ document.addEventListener('DOMContentLoaded', function () {
                     'X-CSRFToken': getCSRFToken()
                 },
                 body: `product_id=${product.id}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'added') {
+                    wishlist.push(product);
+                } else if (data.status === 'removed') {
+                    wishlist = wishlist.filter(item => item.id !== product.id);
+                }
+
+                // Update localStorage and UI
+                localStorage.setItem('wishlist', JSON.stringify(wishlist));
+                updateWishlistUI();
+                updateWishlistIcons();
             });
         });
     });
