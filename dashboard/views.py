@@ -1,34 +1,34 @@
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import render, redirect
-from django.contrib.auth.views import LoginView, PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, \
-    PasswordResetCompleteView
+from django.contrib.auth.views import *
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from razorpay.errors import SignatureVerificationError
-
 from .forms import PaymentForm
-from.models import *
+from .models import *
 import razorpay
+import stripe
+from django.utils import timezone
+import uuid
 from djapp.settings import TEXTDRIP_OTP_TOKEN
-from utils.handle_textdrip_otp import send_phone_otp, verify_mobile_otp
+from utils.handle_textdrip_otp import send_phone_otp, verify_mobile_otp, VERIFY_URL
 from .forms import EmailOnlyLoginForm, CustomPasswordResetForm, CustomSetPasswordForm
 from django.views import View
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
-from .models import DoctorProfile, MedicalSupplierProfile, CorporateProfile
 from django.contrib import messages
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.hashers import make_password
-from .models import RetailProfile, WholesaleBuyerProfile, SupplierProfile
 from django.contrib.auth import authenticate, login
 from django.views.generic.edit import FormView
-from .models import *
 from datetime import date
 from django.db.models import F
 import random
+import requests
+
 
 
 class HomeView(TemplateView):
@@ -36,8 +36,7 @@ class HomeView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
-        today = date.today()
+        today = timezone.now().date()  # Use timezone-aware date
 
         # Special Offers
         special_offers = Product.objects.filter(
@@ -47,7 +46,6 @@ class HomeView(TemplateView):
             offer_end__gte=today,
             is_active=True
         ).order_by('-offer_percentage')[:3]
-
         for product in special_offers:
             main_img = ProductImage.objects.filter(product=product, is_main=True).first()
             product.main_image = main_img.image.url if main_img else None
@@ -58,14 +56,12 @@ class HomeView(TemplateView):
             tag='recent',
             is_active=True
         ).order_by('-created_at')[:4]
-
         for product in recent_products:
             main_img = ProductImage.objects.filter(product=product, is_main=True).first()
             product.main_image = main_img.image.url if main_img else None
-
         context['recent_products'] = recent_products
 
-         # ✅ Popular Medical Supplies
+        # Popular Medical Supplies
         popular_products = Product.objects.filter(
             tag='popular',
             is_active=True
@@ -75,7 +71,7 @@ class HomeView(TemplateView):
             product.main_image = main_img.image.url if main_img else None
         context['popular_products'] = popular_products
 
-        # ✅ Limited-Time Deals
+        # Limited-Time Deals
         limited_products = Product.objects.filter(
             tag='limited',
             is_active=True
@@ -85,18 +81,16 @@ class HomeView(TemplateView):
             product.main_image = main_img.image.url if main_img else None
         context['limited_products'] = limited_products
 
-        
-        # ✅ Featured Products - Random 7 each refresh
+        # Featured Products
         all_ids = list(Product.objects.filter(is_active=True).values_list('id', flat=True))
         random_ids = random.sample(all_ids, min(len(all_ids), 7))
         featured_products = Product.objects.filter(id__in=random_ids)
-
         for product in featured_products:
             main_img = ProductImage.objects.filter(product=product, is_main=True).first()
             product.main_image = main_img.image.url if main_img else None
         context['featured_products'] = featured_products
 
-         # Add wishlist info if user is authenticated
+        # Wishlist
         if self.request.user.is_authenticated:
             context['user_wishlist_ids'] = list(
                 WishlistProduct.objects.filter(user=self.request.user)
@@ -104,10 +98,8 @@ class HomeView(TemplateView):
             )
         else:
             context['user_wishlist_ids'] = []
-        
-        
-
         return context
+
 
 class CustomLoginView(FormView):
     form_class = EmailOnlyLoginForm
@@ -147,10 +139,6 @@ class CustomLoginView(FormView):
 
     def get_success_url(self):
         return reverse_lazy('home')
-
-
-import requests
-
 
 class RegistrationView(View):
     template_name = "auth/signup.html"
@@ -299,14 +287,74 @@ class SearchResultsListView(TemplateView):
 class ProductDetailsView(TemplateView):
     template_name = 'userdashboard/view/product-details.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        pk = self.kwargs.get('pk')
+        if pk:
+            try:
+                product = Product.objects.get(id=pk)
+                main_img = ProductImage.objects.filter(product=product, is_main=True).first()
+                product.main_image = main_img.image.url if main_img else None
+                context['product'] = product
+            except ObjectDoesNotExist:
+                context['product'] = None
+        else:
+            context['product'] = None
+        return context
+
 
 class ShoppingCartView(TemplateView):
     template_name = 'userdashboard/view/shopping-cart.html'
 
 
-class WishlistView(TemplateView):
+class WishlistToggleView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        product_id = request.POST.get('product_id')
+        try:
+            product = Product.objects.get(id=product_id)
+        except Product.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Product not found'}, status=400)
+
+        wishlist_item, created = WishlistProduct.objects.get_or_create(user=request.user, product=product)
+        if not created:
+            wishlist_item.delete()
+            return JsonResponse({'status': 'removed'})
+        return JsonResponse({'status': 'added'})
+
+class WishlistClearView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        WishlistProduct.objects.filter(user=request.user).delete()
+        return JsonResponse({'status': 'cleared'})
+
+
+class WishlistView(LoginRequiredMixin, TemplateView):
     template_name = 'userdashboard/view/wishlist.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        wishlist_items = WishlistProduct.objects.filter(user=self.request.user).select_related('product')
+
+        for item in wishlist_items:
+            main_img = ProductImage.objects.filter(product=item.product, is_main=True).first()
+            item.product.main_image = main_img.image if main_img else None
+
+        context['wishlist_items'] = wishlist_items
+        return context
+
+class WishlistProductListView(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        wishlist_items = WishlistProduct.objects.filter(user=request.user)
+        data = [
+            {  
+                "id": item.product.id,
+                "name": item.product.name,
+                "price": f"${item.product.price}",
+                "sku": item.product.supplier_sku,
+                "image": item.product.productimage_set.first().image.url if item.product.productimage_set.exists() else None,
+            }
+            for item in wishlist_items
+        ]
+        return JsonResponse(data, safe=False)
 
 class OrderSummaryView(TemplateView):
     template_name = 'userdashboard/view/order-summary.html'
@@ -316,8 +364,174 @@ class ShippingInfoView(TemplateView):
     template_name = 'userdashboard/view/shipping-info.html'
 
 
-class PaymentMethodView(TemplateView):
+class PaymentMethodView(LoginRequiredMixin, View):
     template_name = 'userdashboard/view/payment-method.html'
+
+    def get_stripe_key(self, request):
+        return settings.STRIPE_PUBLISHABLE_KEY, settings.STRIPE_SECRET_KEY
+
+    def get(self, request):
+        public_key, _ = self.get_stripe_key(request)
+
+        # Razorpay: Create Order
+        amount_in_paise = 10000  # ₹100
+        client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+        razorpay_order = client.order.create({
+            "amount": amount_in_paise,
+            "currency": "INR",
+            "payment_capture": "1"
+        })
+
+        billing = CustomerBillingAddress.objects.filter(user=request.user).first()
+        return render(request, self.template_name, {
+            "STRIPE_PUBLIC_KEY": public_key,
+            "RAZORPAY_KEY_ID": settings.RAZORPAY_KEY_ID,
+            "razorpay_amount_in_paise": amount_in_paise,
+            "razorpay_order_id": razorpay_order['id'],
+            "billing": billing
+        })
+
+    def post(self, request):
+        payment_method = request.POST.get("payment_method")
+        user = request.user
+
+        if payment_method == "cod":
+            payment = Payment.objects.create(
+                name=user.get_full_name(),
+                amount=100.00,
+                payment_method="cod",
+                paid=False
+            )
+
+            delivery_partner, _ = DeliveryPartner.objects.get_or_create(name="Delhivery")
+            CODPayment.objects.create(
+                user=request.user,
+                name=user.get_full_name(),
+                amount=100.00,
+                paid=False,
+                cod_tracking_id="COD123456",
+                delivery_partner=delivery_partner
+            )
+
+            messages.success(request, "COD Order placed.")
+            return redirect("dashboard:order_placed")
+
+        elif payment_method == "stripe":
+            _, stripe_secret = self.get_stripe_key(request)
+            stripe.api_key = stripe_secret
+
+            token = request.POST.get("stripeToken")
+            crd_name = request.POST.get("crd_name")
+
+            try:
+                customer = stripe.Customer.create(
+                    email=user.email,
+                    name=crd_name,
+                    source=token
+                )
+                charge = stripe.Charge.create(
+                    customer=customer.id,
+                    amount=10000,
+                    currency="usd",
+                    description="Product Payment"
+                )
+
+                payment = Payment.objects.create(
+                    name=crd_name,
+                    amount=100.00,
+                    payment_method="stripe",
+                    paid=True,
+                    customer_id=customer.id
+                )
+
+                StripePayment.objects.create(
+                    user=request.user,
+                    name=crd_name,
+                    amount=100.00,
+                    paid=True,
+                    customer_id=customer.id,
+                    stripe_charge_id=charge.id,
+                    stripe_customer_id=customer.id,
+                    stripe_signature=charge.payment_method
+                )
+
+                card_details = charge.payment_method_details.get("card") if charge.payment_method_details else None
+
+                CustomerBillingAddress.objects.update_or_create(
+                    user=user,
+                    defaults={
+                        "customer_name": crd_name,
+                        "customer_address1": request.POST.get("customer_address1"),
+                        "customer_address2": request.POST.get("customer_address2"),
+                        "customer_city": request.POST.get("customer_city"),
+                        "customer_state": request.POST.get("customer_state"),
+                        "customer_postal_code": request.POST.get("customer_postal_code"),
+                        "customer_country": request.POST.get("customer_country"),
+                        "customer_country_code": request.POST.get("customer_country_code"),
+                        "is_old": True,
+                        "old_card": json.dumps({
+                            "brand": card_details.brand,
+                            "last4": card_details.last4,
+                            "exp_month": card_details.exp_month,
+                            "exp_year": card_details.exp_year
+                        }) if card_details else None
+                    }
+                )
+
+                messages.success(request, "Stripe Payment successful.")
+                return redirect("dashboard:order_placed")
+
+            except Exception as e:
+                messages.error(request, f"Stripe payment failed: {e}")
+                return redirect("dashboard:payment_method")
+
+        elif payment_method == "razorpay":
+            razorpay_payment_id = request.POST.get("razorpay_payment_id")
+            razorpay_order_id = request.POST.get("razorpay_order_id")
+            razorpay_signature = request.POST.get("razorpay_signature")
+
+            if not razorpay_payment_id:
+                messages.error(request, "Razorpay payment failed.")
+                return redirect("dashboard:payment_method")
+
+            # ✅ Signature verification
+            client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+            params_dict = {
+                "razorpay_order_id": razorpay_order_id,
+                "razorpay_payment_id": razorpay_payment_id,
+                "razorpay_signature": razorpay_signature
+            }
+
+            try:
+                client.utility.verify_payment_signature(params_dict)
+            except SignatureVerificationError:
+                messages.error(request, "Signature verification failed.")
+                return redirect("dashboard:payment_method")
+
+            # ✅ Save only if verification succeeded
+            payment = Payment.objects.create(
+                name=user.get_full_name(),
+                amount=100.00,
+                payment_method="razorpay",
+                paid=True
+            )
+
+            RazorpayPayment.objects.create(
+                user=request.user,
+                name=user.get_full_name(),
+                amount=100.00,
+                paid=True,
+                razorpay_payment_id=razorpay_payment_id,
+                razorpay_order_id=razorpay_order_id,
+                razorpay_signature=razorpay_signature
+            )
+
+            messages.success(request, "Razorpay Payment successful.")
+            return redirect("dashboard:order_placed")
+
+        else:
+            messages.error(request, "Invalid payment method.")
+            return redirect("dashboard:payment_method")
 
 
 class OrderPlacedView(TemplateView):
@@ -341,9 +555,6 @@ class UserProfile(LoginRequiredMixin, TemplateView):
         user = self.request.user  
         context['user'] = user
         return context
-
-
-VERIFY_URL = "https://api.textdrip.com/api/v1/email-otp"
 
 
 class SignUpView(View):
@@ -499,14 +710,15 @@ class PaymentView(View):
             client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
             response_payment = client.order.create(dict(amount=amount, currency='USD'))
 
-            order_id = response_payment['id']
+            razorpay_order_id = response_payment['id']
             order_status = response_payment['status']
 
             if order_status == 'created':
-                Payment.objects.create(
+                RazorpayPayment.objects.create(
+                    user=request.user,
                     name=name,
                     amount=amount,
-                    order_id=order_id
+                    razorpay_order_id=razorpay_order_id
                 )
                 response_payment['name'] = name
 
@@ -532,10 +744,13 @@ class PaymentStatusView(View):
 
         try:
             client.utility.verify_payment_signature(params_dict)
-            payment = Payment.objects.get(order_id=params_dict['razorpay_order_id'])
+
+            payment = RazorpayPayment.objects.get(razorpay_order_id=params_dict['razorpay_order_id'])
             payment.razorpay_payment_id = params_dict['razorpay_payment_id']
+            payment.razorpay_signature = params_dict['razorpay_signature']
             payment.paid = True
             payment.save()
+
             return render(request, self.template_name, {'status': True})
         except SignatureVerificationError:
             return render(request, self.template_name, {'status': False, 'error': 'Signature verification failed'})

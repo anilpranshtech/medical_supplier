@@ -1,5 +1,7 @@
 import requests
 
+VERIFY_URL = "https://api.textdrip.com/api/v1/email-otp"
+
 def send_phone_otp(input_value, token):
     """
     Sends an email OTP using the TextDrip API.

@@ -2,101 +2,76 @@
 {% load static %}
 
 {% block content %}
-<div class="kt-container-fixed mt-5 py-5" style="max-width: var(--custom-container-width, 85%);">
+<div class="kt-container-fixed mt-1" style="max-width: var(--custom-container-width, 85%);">
     <div class="flex flex-col items-stretch gap-7 mt-5 py-5">
-        <!--Product Details Drawer-->
-        <div class="hidden kt-drawer kt-drawer-end kt-card flex-col max-w-[90%] w-[520px] top-5 bottom-5 end-5 rounded-xl border border-border"
-             data-kt-drawer="true" data-kt-drawer-container="body" id="drawers_shop_product_details">
-            <div class="kt-card-header px-5">
-                <h3 class="kt-card-title">
-                    Product Details
-                </h3>
-                <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" data-kt-drawer-dismiss="true">
-                    <i class="ki-filled ki-cross text-base"></i>
-                </button>
+        <!-- Product Title -->
+        <h1 class="text-3xl font-semibold text-gray-650 dark:text-white">{{ product.name|default:'Product Not Found' }}</h1>
+
+        {% if product %}
+        <!-- Product Grid Layout -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Product Image -->
+            <div class="relative w-full h-[600px] bg-gray-100 dark:bg-gray-650 rounded-lg overflow-hidden shadow-md">
+                {% if product.main_image and product.main_image|length > 0 %}
+                    <img src="{{ product.main_image }}" alt="{{ product.name }}" class="w-full h-full object-cover">
+                {% else %}
+                    <img src="{% static 'default.png' %}" alt="Default Product Image" class="w-full h-full object-cover">
+                {% endif %}
+                {% if not product.main_image or product.main_image|length == 0 %}
+                    <div class="absolute inset-0 flex items-center justify-center text-red-500 bg-opacity-50">
+                        Image not available
+                    </div>
+                {% endif %}
             </div>
-            <div class="kt-card-content flex flex-col space-y-3 p-5 kt-scrollable-y-auto">
-                <div class="kt-card relative items-center justify-center bg-accent/50 mb-6.5 h-[280px] shadow-none">
-                    <span class="kt-badge kt-badge-destructive kt-badge-sm absolute top-4 end-4 uppercase">save 40%</span>
-                    <img alt="Pulse Oximeter" class="size-80"
-                         src="{% static 'metronic/tailwind/dist/assets/media/medical/600x600/pulse-oximeter.png' %}"/>
+
+            <!-- Product Details -->
+            <div class="flex flex-col gap-4">
+                <p class="text-gray-650 dark:text-gray-650 text-lg leading-relaxed">
+                    {{ product.description|default:'No description available' }}
+                </p>
+
+                <!-- Pricing Section -->
+                <div class="flex items-center gap-4">
+                    {% if product.original_price and product.original_price > product.price %}
+                        <span class="text-sm font-medium text-gray-500 line-through">
+                            ${{ product.original_price|floatformat:2 }}
+                        </span>
+                    {% endif %}
+                    <span class="text-2xl font-bold text-gray-650 dark:text-white">
+                        ${{ product.price|floatformat:2 }}
+                    </span>
+                    {% if product.offer_percentage and product.offer_percentage > 0 %}
+                        <span class="text-sm font-medium text-green-600 bg-green-100 px-2 py-1 rounded-full">
+                            Save {{ product.offer_percentage|floatformat:0 }}%
+                        </span>
+                    {% endif %}
                 </div>
-                <span class="text-base font-medium text-mono">
-                    Pulse Oximeter Pro
-                </span>
-                <span class="text-sm font-normal text-foreground block mb-7">
-                    Compact and reliable, this pulse oximeter measures blood oxygen levels and pulse rate with high accuracy.
-                    Features a clear LED display, one-button operation, and long battery life. Ideal for home and clinical use.
-                </span>
-                <div class="flex flex-col gap-2.5 lg:mb-11">
-                    <div class="flex items-center gap-2.5">
-                        <span class="text-xs font-normal text-foreground min-w-14 xl:min-w-24 shrink-0">Availability</span>
-                        <div>
-                            <span class="kt-badge kt-badge-success kt-badge-sm">In Stock</span>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2.5">
-                        <span class="text-xs font-normal text-foreground min-w-14 xl:min-w-24 shrink-0">SKU</span>
-                        <div>
-                            <span class="text-xs font-medium text-foreground">MED-OXI-008</span>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2.5">
-                        <span class="text-xs font-normal text-foreground min-w-14 xl:min-w-24 shrink-0">Category</span>
-                        <div>
-                            <span class="text-xs font-medium text-foreground">Diagnostics</span>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2.5">
-                        <span class="text-xs font-normal text-foreground min-w-14 xl:min-w-24 shrink-0">Rating</span>
-                        <div>
-                            <div class="kt-rating">
-                                <div class="kt-rating-label checked">
-                                    <i class="kt-rating-on ki-solid ki-star text-base leading-none"></i>
-                                    <i class="kt-rating-off ki-outline ki-star text-base leading-none"></i>
-                                </div>
-                                <div class="kt-rating-label checked">
-                                    <i class="kt-rating-on ki-solid ki-star text-base leading-none"></i>
-                                    <i class="kt-rating-off ki-outline ki-star text-base leading-none"></i>
-                                </div>
-                                <div class="kt-rating-label checked">
-                                    <i class="kt-rating-on ki-solid ki-star text-base leading-none"></i>
-                                    <i class="kt-rating-off ki-outline ki-star text-base leading-none"></i>
-                                </div>
-                                <div class="kt-rating-label checked">
-                                    <i class="kt-rating-on ki-solid ki-star text-base leading-none"></i>
-                                    <i class="kt-rating-off ki-outline ki-star text-base leading-none"></i>
-                                </div>
-                                <div class="kt-rating-label checked">
-                                    <i class="kt-rating-on ki-solid ki-star text-base leading-none"></i>
-                                    <i class="kt-rating-off ki-outline ki-star text-base leading-none"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2.5">
-                        <span class="text-xs font-normal text-foreground min-w-14 xl:min-w-24 shrink-0">More Info</span>
-                        <div>
-                            <span class="text-xs font-normal text-foreground">
-                                Includes carrying case, batteries, and user manual. FDA-approved.
-                            </span>
-                        </div>
-                    </div>
+
+                <!-- Add to Cart and Wishlist -->
+                <div class="flex items-center gap-3 mt-4">
+                    <button class="kt-btn kt-btn-primary kt-btn-md flex items-center gap-2" data-kt-drawer-toggle="#drawers_shop_cart">
+                        Add to Cart <i class="ki-filled ki-handcart"></i>
+                    </button>
+                    <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-md" data-kt-wishlist-toggle="true" data-product-id="{{ product.id|default:'0' }}">
+                        <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
+                    </button>
                 </div>
-                <div class="flex items-center justify-end gap-2">
-                    <span class="text-base font-normal text-secondary-foreground line-through">₹1499.00</span>
-                    <span class="text-lg font-medium text-mono">₹999.00</span>
+
+                <!-- Additional Info -->
+                <div class="mt-6">
+                    <p class="text-sm text-gray-650 dark:text-gray-650"><strong>SKU:</strong> {{ product.sku|default:'N/A' }}</p>
+                    <p class="text-sm text-gray-650 dark:text-gray-650"><strong>Category:</strong> {{ product.category|default:'Uncategorized' }}</p>
+                    <p class="text-sm text-gray-650 dark:text-gray-650"><strong>Rating:</strong> {{ product.rating|default:'4.5' }} <i class="ki-solid ki-star text-yellow-400"></i></p>
+                    <p class="text-sm text-gray-650 dark:text-gray-650"><strong>More Info:</strong> {{ product.more_info|default:'No additional info' }}</p>
                 </div>
-            </div>
-            <div class="kt-card-footer px-5">
-                <button class="kt-btn kt-btn-primary grow">
-                    <i class="ki-filled ki-handcart"></i>
-                    Add to Cart
-                </button>
             </div>
         </div>
-        <!--End of Product Details Drawer-->
+        {% else %}
+        <div class="text-center py-10 text-gray-500 dark:text-gray-400">
+            <p>Product not found. Please check the URL or try again.</p>
+            <a href="{% url 'dashboard:home' %}" class="mt-4 inline-block kt-btn kt-btn-primary kt-btn-sm">Back to Home</a>
+        </div>
+        {% endif %}
     </div>
 </div>
-
-{% endblock content %}
+{% endblock %}

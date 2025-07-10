@@ -407,79 +407,94 @@ class EditproductsView(LoginRequiredMixin, View):
         return render(request, self.template, context)
 
     def post(self, request, pk):
+        try:
+            product = get_object_or_404(Product, pk=pk)
+            product.name = request.POST.get('product_name')
+            product.description = request.POST.get('product_description')
+            product.price = request.POST.get('price')
+            product.stock_quantity = request.POST.get('product_quantity')
+            product.product_from = request.POST.get('product_from')
+            product.selling_countries = request.POST.get('selling_countries', '')
+            product.warranty = request.POST.get('warranty', 'none')
+            product.condition = request.POST.get('condition', 'new')
+            product.return_time_limit = request.POST.get('return_time_limit')
+            product.manufacture_date = request.POST.get('manufacture_date')
+            product.expiry_date = request.POST.get('expiry_date')
+            product.weight = request.POST.get('weight')
+            product.weight_unit = request.POST.get('weight_unit', 'gm')
+            product.delivery_time = request.POST.get('delivery_time')
+            product.commission_percentage = request.POST.get('commission_percentage')
+            product.barcode = request.POST.get('barcode')
+            product.keywords = request.POST.get('keywords')
+            product.supplier_sku = request.POST.get('supplier_sku')
+            product.pcs_per_unit = request.POST.get('pcs_per_unit')
+            product.min_order_qty = request.POST.get('min_order_qty')
+            product.low_stock_alert = request.POST.get('low_stock_alert')
+            product.expiration_days = request.POST.get('expiration_days')
+            product.tag = request.POST.get('tag', 'none')
 
-        product = get_object_or_404(Product, pk=pk)
-        product.name = request.POST.get('product_name')
-        product.description = request.POST.get('product_description')
-        product.price = request.POST.get('price')
-        product.stock_quantity = request.POST.get('product_quantity')
-        product.product_from = request.POST.get('product_from')
-        product.selling_countries = request.POST.get('selling_countries', '')
-        product.warranty = request.POST.get('warranty', 'none')
-        product.condition = request.POST.get('condition', 'new')
-        product.return_time_limit = request.POST.get('return_time_limit')
-        product.manufacture_date = request.POST.get('manufacture_date')
-        product.expiry_date = request.POST.get('expiry_date')
-        product.weight = request.POST.get('weight')
-        product.weight_unit = request.POST.get('weight_unit', 'gm')
-        product.delivery_time = request.POST.get('delivery_time')
-        product.commission_percentage = request.POST.get('commission_percentage')
-        product.barcode = request.POST.get('barcode')
-        product.keywords = request.POST.get('keywords')
-        product.supplier_sku = request.POST.get('supplier_sku')
-        product.pcs_per_unit = request.POST.get('pcs_per_unit')
-        product.min_order_qty = request.POST.get('min_order_qty')
-        product.low_stock_alert = request.POST.get('low_stock_alert')
-        product.expiration_days = request.POST.get('expiration_days')
-        product.tag = request.POST.get('tag', 'none')
-        product.offer_percentage = request.POST.get('offer_percentage')
-        product.offer_start = request.POST.get('offer_start')
-        product.offer_end = request.POST.get('offer_end')
-        product.is_active = request.POST.get('is_active') == 'True'
-        category_id = request.POST.get('category')
-        if category_id:
-            try:
-                product.category = ProductCategory.objects.get(pk=category_id)
-            except ProductCategory.DoesNotExist:
-                product.category = None
-        sub_category_id = request.POST.get('sub_category')
-        if sub_category_id:
-            try:
-                product.sub_category = ProductSubCategory.objects.get(pk=sub_category_id)
-            except ProductSubCategory.DoesNotExist:
-                product.sub_category = None
-        last_category_id = request.POST.get('last_category')
-        if last_category_id:
-            try:
-                product.last_category = ProductLastCategory.objects.get(pk=last_category_id)
-            except ProductLastCategory.DoesNotExist:
-                product.last_category = None
-        
-        if 'main_image' in request.FILES:
-            ProductImage.objects.filter(product=product, is_main=True).delete()
-            ProductImage.objects.create(
-                product=product,
-                image=request.FILES['main_image'],
-                is_main=True
-            )
-        if 'gallery_images' in request.FILES:
-            for image in request.FILES.getlist('gallery_images'):
+            offer_percentage = request.POST.get('offer_percentage')
+            if offer_percentage:
+                product.offer_percentage = offer_percentage
+
+            start_offer = request.POST.get('offer_start')
+            end_offer = request.POST.get('offer_end')
+
+            if start_offer:
+                product.offer_start = start_offer
+
+            if end_offer:
+                product.offer_end = end_offer
+
+            product.is_active = request.POST.get('is_active') == 'True'
+            category_id = request.POST.get('category')
+            if category_id:
+                try:
+                    product.category = ProductCategory.objects.get(pk=category_id)
+                except ProductCategory.DoesNotExist:
+                    product.category = None
+            sub_category_id = request.POST.get('sub_category')
+            if sub_category_id:
+                try:
+                    product.sub_category = ProductSubCategory.objects.get(pk=sub_category_id)
+                except ProductSubCategory.DoesNotExist:
+                    product.sub_category = None
+            last_category_id = request.POST.get('last_category')
+            if last_category_id:
+                try:
+                    product.last_category = ProductLastCategory.objects.get(pk=last_category_id)
+                except ProductLastCategory.DoesNotExist:
+                    product.last_category = None
+
+            if 'main_image' in request.FILES:
+                ProductImage.objects.filter(product=product, is_main=True).delete()
                 ProductImage.objects.create(
                     product=product,
-                    image=image,
-                    is_main=False
+                    image=request.FILES['main_image'],
+                    is_main=True
                 )
-        brand_name = request.POST.get('brand')
-        if brand_name:
-                brand_obj, created = Brand.objects.get_or_create(name=brand_name)
-                product.brand = brand_obj
+            if 'gallery_images' in request.FILES:
+                for image in request.FILES.getlist('gallery_images'):
+                    ProductImage.objects.create(
+                        product=product,
+                        image=image,
+                        is_main=False
+                    )
+            brand_name = request.POST.get('brand')
+            if brand_name:
+                    brand_obj, created = Brand.objects.get_or_create(name=brand_name)
+                    product.brand = brand_obj
 
-        if 'brochure' in request.FILES:
-            product.brochure = request.FILES['brochure']
-        
-        product.save()
-        
-        messages.success(request, 'Product updated successfully!')
+            if 'brochure' in request.FILES:
+                product.brochure = request.FILES['brochure']
+
+            product.save()
+
+            messages.success(request, 'Product updated successfully!')
+        except Exception as e:
+            print('exception in edit product --- ',e)
+            messages.error(request, 'Issue in Product updated !')
+
         return redirect('adminv2:products_list')  
         
    

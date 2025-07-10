@@ -1,4 +1,5 @@
 from django.contrib import admin
+from stripe import PaymentMethod
 
 from dashboard.models import *
 
@@ -43,4 +44,33 @@ admin.site.register(ProductLastCategory)
 admin.site.register(Brand)
 admin.site.register(Orders)
 
-admin.site.register(Payment)
+
+
+@admin.register(DeliveryPartner)
+class DeliveryPartnerAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'tracking_url_template', 'support_email', 'phone_number', 'is_active', 'created_at')
+
+@admin.register(Payment)
+class PaymentAdmin(admin.ModelAdmin):
+    list_display = ('id','name', 'amount', 'payment_method', 'paid', 'created_at')
+    list_filter = ('paid', 'created_at')
+
+@admin.register(StripePayment)
+class StripePaymentAdmin(admin.ModelAdmin):
+    list_display = ('id','name', 'amount', 'paid', 'created_at')
+    list_filter = ('paid', 'created_at')
+
+@admin.register(RazorpayPayment)
+class RazorpayPaymentAdmin(admin.ModelAdmin):
+    list_display = ('id','name', 'amount', 'paid', 'created_at')
+    list_filter = ('paid', 'created_at')
+
+@admin.register(CODPayment)
+class CODPaymentAdmin(admin.ModelAdmin):
+    list_display = ('id','name', 'amount', 'paid', 'created_at')
+    list_filter = ('paid', 'created_at')
+
+@admin.register(CustomerBillingAddress)
+class CustomerBillingAddressAdmin(admin.ModelAdmin):
+    list_display = ('id','user', 'customer_name', 'is_deleted', 'created_at', 'updated_at')
+

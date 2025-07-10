@@ -16,36 +16,44 @@
 
             <div id="kt_app_content_container" class="app-container  container-fluid ">
 
-                <div class="card card-flush">
+                <div class="card card-flush ">
 
-                     <div class="card-header align-items-center py-5 gap-2 gap-md-5">
+                     <div class="card-header flex-wrap align-items-center py-5 gap-4">
 
-                       <div class="card-title">
-    <div class="d-flex align-items-center position-relative my-1">
-        <i class="fas fa-search fs-3 position-absolute ms-4"></i>
-        <input type="text" id="search-order" class="form-control form-control-solid w-250px ps-12" placeholder="Search Order">
+    <!-- Search Input -->
+    <div class="card-title w-100 w-md-auto">
+        <div class="d-flex align-items-center position-relative">
+            <i class="fas fa-search fs-3 position-absolute ms-4"></i>
+            <input type="text" id="search-order" class="form-control form-control-solid ps-12 w-100 w-md-250px" placeholder="Search Order">
+        </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="card-toolbar d-flex flex-wrap justify-content-md-end align-items-center gap-3 w-100 w-md-auto mt-4 mt-md-0">
+
+        <!-- Fixed Width Dropdown -->
+        <div style="min-width: 150px; flex-shrink: 0;">
+            <select class="form-select form-select-solid" data-control="select2"
+                    data-hide-search="true" data-placeholder="Status"
+                    data-kt-ecommerce-product-filter="status">
+                <option selected value="all">All</option>
+                <option value="published">Published</option>
+                <option value="scheduled">Scheduled</option>
+                <option value="inactive">Inactive</option>
+            </select>
+        </div>
+
+        <!-- Fixed Width Button -->
+        <div style="min-width: 140px; flex-shrink: 0;">
+            <a href="{% url 'adminv2:add_product' %}" class="btn btn-primary w-100">
+                Add Product
+            </a>
+        </div>
+
     </div>
 </div>
 
-                         <div class="card-toolbar flex-row-fluid justify-content-end gap-5">
-                            <div class="w-100 mw-150px">
-                                 <select class="form-select form-select-solid" data-control="select2"
-                                    data-hide-search="true" data-placeholder="Status"
-                                    data-kt-ecommerce-product-filter="status">
-                                    <option selected value="all">All</option>
-                                    <option value="published">Published</option>
-                                    <option value="scheduled">Scheduled</option>
-                                    <option value="inactive">Inactive</option>
-                                </select>
-                             </div>
-
-                             <a href="{% url 'adminv2:add_product' %}" class="btn btn-primary">
-                                Add Product
-                            </a>
-                         </div>
-                    </div>
-
-                     <div class="card-body pt-0">
+                     <div class="card-body pt-0 table-responsive">
 
                        <table id="kt_ecommerce_sales_table" class="table align-middle table-row-dashed fs-6 gy-5">
 
@@ -113,7 +121,11 @@
                                         </td>
 
                                         <td class="text-center pe-0">
-                                            <div class="badge badge-light-danger">Inactive</div>
+                                            {% if product.is_active %}
+                                            <div class="badge badge-light-success">Published</div>
+                                            {% elif not product.is_active %}
+                                            <div class="badge badge-light-danger">Draft</div>
+                                            {% endif %}
                                         </td>
 
                                         <td class="text-center">
