@@ -210,11 +210,11 @@
 
 <div class="w-full header-container border-b border-border z-20 fixed top-0">
     <!-- Top Header -->
-    <header class="flex items-center justify-between h-[50px] px-4 sm:px-6 transition-[height] shrink-0">
+    <header class="flex items-center justify-between h-[50px] px-4 sm:px-6 transition-[height] shrink-0 mx-5 px-5 mt-2">
         <!-- Header Left: Logo -->
         <div class="flex items-center gap-4 sm:gap-5 pl-4 sm:pl-5">
             <a href="https://keenthemes.com/metronic/tailwind/demo10/index.html">
-                <img class="size-8"
+                <img class="size-10"
                      src="https://keenthemes.com/static/metronic/tailwind/dist/assets/media/app/mini-logo-circle-success.svg"
                      alt="Logo"/>
             </a>
@@ -225,13 +225,33 @@
             </button>
         </div>
 
+        <!-- Center: Search Bar -->
+        <div class="flex-1 px-4 sm:px-8">
+            <div class="w-full max-w-2xl mx-auto">
+                <form class="relative">
+                    <input type="text"
+                           class="w-full h-10 px-4 pr-28 text-sm rounded-full border
+                                  border-gray-300 dark:border-gray-700
+                                  focus:outline-none focus:ring-2 focus:ring-primary
+                                  bg-white dark:bg-gray-800
+                                  text-gray-900 dark:text-gray-100
+                                  placeholder-gray-500 dark:placeholder-gray-400 transition-colors"
+                           placeholder="Search products, categories..." />
+
+                    <button type="submit"
+                            class="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5
+                                   text-sm font-medium rounded-full
+                                   text-white bg-primary hover:bg-primary/90
+                                   transition-all">
+                        <i class="ki-filled ki-magnifier mr-1"></i>Search
+                    </button>
+                </form>
+            </div>
+        </div>
+
+
         <!-- Header Right: Actions and User Profile -->
         <div class="flex items-center gap-3 sm:gap-5">
-            <!-- Search Button -->
-            <button class="kt-btn kt-btn-icon kt-btn-secondary text-white rounded-full size-8 flex items-center justify-center"
-                    data-kt-modal-toggle="#search_modal">
-                <i class="ki-filled ki-magnifier"></i>
-            </button>
 
             <button class="kt-btn kt-btn-ghost kt-btn-icon size-8 hover:bg-background hover:[&_i]:text-primary wishlist-drawer-toggle"
                     data-kt-drawer-toggle="#drawers_shop_wishlist">
