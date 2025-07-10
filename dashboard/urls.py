@@ -43,7 +43,7 @@ urlpatterns = [
     # razorpay payment
     path('make-payment/', PaymentView.as_view(), name='make_payment'),
     path('payment-status/', PaymentStatusView.as_view(), name='payment_status'),
-    path('test/', Test.as_view(), name='test'),
+
     
 
     # Become a seller
