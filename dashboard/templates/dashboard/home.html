@@ -141,13 +141,14 @@
                                         data-product-discount="{{ product.offer_percentage|default:'' }}"
                                 />
                             </a>
+
                             <button
                                     class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
                                     data-kt-wishlist-toggle="true"
-                                    data-product-id="{{ product.id|default:'0' }}"
-                            >
+                                    data-product-id="{{ product.id|default:'0' }}">
                                 <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
                             </button>
+
                         </div>
                         <a
                                 class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block product-name-link"
@@ -216,11 +217,9 @@
                                             data-kt-drawer-toggle="#drawers_shop_cart">
                                         Add to Cart <i class="ki-filled ki-handcart"></i>
                                     </button>
-                                    <button
-                                            class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm"
+                                    <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm"
                                             data-kt-wishlist-toggle="true"
-                                            data-product-id="{{ product.id|default:'0' }}"
-                                    >
+                                            data-product-id="{{ product.id|default:'0' }}" >
                                         <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
                                     </button>
                                     {% if product.original_price and product.original_price > product.price %}
@@ -637,77 +636,77 @@
             <!-- end: Benefits -->
 
             <!-- begin: JavaScript -->
-            <script>
-                // CSRF Token Helper
-                function getCookie(name) {
-                    let cookieValue = null;
-                    if (document.cookie && document.cookie !== '') {
-                        const cookies = document.cookie.split(';');
-                        for (let i = 0; i < cookies.length; i++) {
-                            const cookie = cookies[i].trim();
-                            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                                break;
-                            }
-                        }
+<script>
+    // CSRF Token Helper
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    const csrftoken = getCookie('csrftoken');
+
+    // Wishlist Toggle
+    document.querySelectorAll('.kt-wishlist-icon').forEach(button => {
+        button.addEventListener('click', () => {
+            const productId = button.dataset.productId || '0';
+            fetch('/wishlist/toggle/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: `product_id=${productId}`
+            })
+                .then(response => {
+                    if (response.status === 403) {
+                        alert('Please login to use wishlist.');
+                        window.location.href = '/login/';
+                        return;
                     }
-                    return cookieValue;
-                }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data) {
+                        const icon = button.querySelector('i');
+                        icon.classList.toggle('text-red-500', data.status === 'added');
+                    }
+                })
+                .catch(error => console.error('Wishlist toggle error:', error));
+        });
+    });
 
-                const csrftoken = getCookie('csrftoken');
+    // Slider JavaScript
+    let currentSlide = 0;
+    const slider = document.getElementById('slider');
+    const totalSlides = slider ? slider.children.length : 0;
 
-                // Wishlist Toggle
-                document.querySelectorAll('.kt-wishlist-icon').forEach(button => {
-                    button.addEventListener('click', () => {
-                        const productId = button.dataset.productId || '0';
-                        fetch('/wishlist/toggle/', {
-                            method: 'POST',
-                            headers: {
-                                'X-CSRFToken': csrftoken,
-                                'Content-Type': 'application/x-www-form-urlencoded'
-                            },
-                            body: `product_id=${productId}`
-                        })
-                            .then(response => {
-                                if (response.status === 403) {
-                                    alert('Please login to use wishlist.');
-                                    window.location.href = '/login/';
-                                    return;
-                                }
-                                return response.json();
-                            })
-                            .then(data => {
-                                if (data) {
-                                    const icon = button.querySelector('i');
-                                    icon.classList.toggle('text-red-500', data.status === 'added');
-                                }
-                            })
-                            .catch(error => console.error('Wishlist toggle error:', error));
-                    });
-                });
+    function showSlide(index) {
+        if (!slider) return;
+        currentSlide = (index + totalSlides) % totalSlides;
+        slider.style.transform = `translateX(-${currentSlide * 100}%)`;
+    }
 
-                // Slider JavaScript
-                let currentSlide = 0;
-                const slider = document.getElementById('slider');
-                const totalSlides = slider ? slider.children.length : 0;
+    function nextSlide() {
+        showSlide(currentSlide + 1);
+    }
 
-                function showSlide(index) {
-                    if (!slider) return;
-                    currentSlide = (index + totalSlides) % totalSlides;
-                    slider.style.transform = `translateX(-${currentSlide * 100}%)`;
-                }
+    function prevSlide() {
+        showSlide(currentSlide - 1);
+    }
 
-                function nextSlide() {
-                    showSlide(currentSlide + 1);
-                }
-
-                function prevSlide() {
-                    showSlide(currentSlide - 1);
-                }
-
-                if (slider) {
-                    setInterval(nextSlide, 5000); // Auto slide every 5 seconds
-                }
-            </script>
+    if (slider) {
+        setInterval(nextSlide, 5000); // Auto slide every 5 seconds
+    }
+</script>
             <!-- end: JavaScript -->
             {% endblock %}
