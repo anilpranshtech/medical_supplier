@@ -45,12 +45,12 @@
 
                                     <span class="btn btn-icon btn-circle btn-active-color-primary w-25px h-25px bg-body shadow"
                                         data-kt-image-input-action="cancel" data-bs-toggle="tooltip" title="Cancel avatar">
-                                        <i class="ki-outline ki-cross fs-2"></i>
+                                        <i class="bi bi-x-lg"></i>
                                     </span>
 
                                     <span class="btn btn-icon btn-circle btn-active-color-primary w-25px h-25px bg-body shadow"
                                         data-kt-image-input-action="remove" data-bs-toggle="tooltip" title="Remove avatar">
-                                        <i class="ki-outline ki-cross fs-2"></i>
+                                        <i class="bi bi-x-lg"></i>
                                     </span>
                                 </div>
 
@@ -69,13 +69,13 @@
                                 <div class="card-title">
                                     <h2>Status</h2>
                                 </div>
-                                <div class="card-toolbar">
-                                    <div class="rounded-circle bg-success w-15px h-15px" id="kt_ecommerce_add_product_status"></div>
-                                </div>
+
                             </div>
                             <div class="card-body pt-0">
-                                <select class="form-select mb-2" data-control="select2" data-hide-search="true" data-placeholder="Select an option" id="kt_ecommerce_add_product_status_select" name="is_active">
-                                    <option></option>
+
+                                <label class="form-label required">Product status</label>
+                                <select class="form-select mb-2" data-control="select2" data-hide-search="true" data-placeholder="Select an option" id="kt_ecommerce_add_product_status_select" name="is_active" required>
+                                    <option value="">Select an option </option>
                                     <option value="True" {% if is_active == 'True' %}selected{% endif %}>Published</option>
                                     <option value="False" {% if is_active == 'False' %}selected{% endif %}>Draft</option>
                                 </select>
@@ -96,8 +96,8 @@
                             </div>
                             <div class="card-body pt-0">
                                 <label class="form-label required">Categories</label>
-                                <select class="form-select mb-2" name="category" data-control="select2" data-placeholder="Select an option" data-allow-clear="true" required>
-                                    <option></option>
+                                <select class="form-select mb-2" name="category" data-control="select2" data-placeholder="Select a Category" data-allow-clear="true" required>
+                                    <option value="">Select a Category</option>
                                     {% for cat in categories %}
                                         <option value="{{cat.id }}" {% if category_id|stringformat:"s" == cat.id|stringformat:"s" %}selected{% endif %}>{{cat.name}}</option>
                                     {% endfor %}
@@ -526,6 +526,7 @@
     </div>
 </div>
 
+<!-- Sub category form -->
 <div class="modal fade" id="createSubCategoryModal" tabindex="-1" aria-labelledby="createSubCategoryModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -535,10 +536,7 @@
             </div>
             <form action="{% url 'adminv2:create_subcategory' %}" method="post"> {% csrf_token %}
                 <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="subcategory_name" class="form-label">Sub-Category Name</label>
-                        <input type="text" class="form-control" id="subcategory_name" name="name" required>
-                    </div>
+
                     <div class="mb-3">
                         <label for="parent_category" class="form-label">Parent Category</label>
                         <select class="form-select" id="parent_category" name="category" required>
@@ -548,6 +546,12 @@
                             {% endfor %}
                         </select>
                     </div>
+
+                    <div class="mb-3">
+                        <label for="subcategory_name" class="form-label">Sub-Category Name</label>
+                        <input type="text" class="form-control" id="subcategory_name" name="name" required>
+                    </div>
+
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -558,6 +562,7 @@
     </div>
 </div>
 
+<!-- Last category model  -->
 <div class="modal fade" id="createLastCategoryModal" tabindex="-1" aria-labelledby="createLastCategoryModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -567,10 +572,7 @@
             </div>
             <form action="{% url 'adminv2:create_lastcategory' %}" method="post"> {% csrf_token %}
                 <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="lastcategory_name" class="form-label">Last Category Name</label>
-                        <input type="text" class="form-control" id="lastcategory_name" name="name" required>
-                    </div>
+
                     <div class="mb-3">
                         <label for="parent_subcategory" class="form-label">Parent Sub-Category</label>
                         <select class="form-select" id="parent_subcategory" name="sub_category" required>
@@ -580,6 +582,12 @@
                             {% endfor %}
                         </select>
                     </div>
+
+                    <div class="mb-3">
+                        <label for="lastcategory_name" class="form-label">Last Category Name</label>
+                        <input type="text" class="form-control" id="lastcategory_name" name="name" required>
+                    </div>
+
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>

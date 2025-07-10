@@ -10,7 +10,8 @@
 
 
             <!-- Home -->
-          <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="right-start" class="menu-item py-2">
+          <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="right-start"
+               class="menu-item py-2 {% if request.resolver_match.url_name == 'order_listing' %} here show {% endif %}">
               <span class="menu-link menu-center">
                   <span class="menu-icon me-0">
                       <i class="fas fa-home fs-1"></i>
@@ -18,7 +19,7 @@
               </span>
 
              <div class="menu-sub menu-sub-dropdown px-2 py-4 w-250px mh-75 overflow-auto">
-                   <div class="menu-item">
+                   <div class="menu-item ">
                       <div class="menu-content ">
                           <span class="menu-section fs-5 fw-bolder ps-1 py-1">
                               Home
@@ -28,7 +29,7 @@
                   </div>
 
                   <div class="menu-sub menu-sub-accordion">
-                           <div class="menu-item">
+                           <div class="menu-item {% if request.resolver_match.url_name == 'order_listing' %} here show {% endif %}">
                                <a class="menu-link" href="{% url 'adminv2:order_listing' %}">
                                   <span class="menu-bullet">
                                       <span class="bullet bullet-dot"></span>
@@ -44,7 +45,8 @@
           </div>
 
           <!-- Pages  -->
-          <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="right-start" class="menu-item py-2">
+          <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="right-start"
+               class="menu-item py-2 {% if request.resolver_match.url_name == 'overview_list' %} here show {% endif %}">
               <span class="menu-link menu-center">
                   <span class="menu-icon me-0">
                       <i class="fas fa-bell fs-1"></i>
@@ -59,7 +61,8 @@
                       </div>
 
                   </div>
-                  <div data-kt-menu-trigger="click" class="menu-item menu-accordion">
+                  <div data-kt-menu-trigger="click"
+                       class="menu-item menu-accordion {% if request.resolver_match.url_name == 'overview_list' %} here show {% endif %}">
                        <span class="menu-link">
                            <span class="menu-bullet">
                                <span
@@ -77,7 +80,8 @@
 
                       <div class="menu-sub menu-sub-accordion">
                            <div class="menu-item">
-                               <a class="menu-link" href="{% url 'adminv2:overview_list' %}">
+                               <a class="menu-link {% if request.resolver_match.url_name == 'overview_list' %} active {% endif %}"
+                                  href="{% url 'adminv2:overview_list' %}">
                                   <span class="menu-bullet">
                                       <span class="bullet bullet-dot"></span>
                                   </span>
@@ -94,7 +98,8 @@
           </div>
 
           <!-- Products  -->
-          <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="right-start" class="menu-item here show py-2">
+          <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="right-start"
+               class="menu-item py-2 {% if request.resolver_match.url_name == 'products_list' or request.resolver_match.url_name == 'add_product' or request.resolver_match.url_name == 'wishlist_products_list' %} here show {% endif %}">
                <span class="menu-link menu-center">
                   <span class="menu-icon me-0">
                       <i class="fas fa-cubes fs-1"></i>
@@ -112,7 +117,7 @@
 
                   <div class="menu-sub menu-sub-accordion">
 
-                      <div data-kt-menu-trigger="click" class="menu-item here show menu-accordion">
+                      <div data-kt-menu-trigger="click" class="menu-item menu-accordion {% if request.resolver_match.url_name == 'products_list' or request.resolver_match.url_name == 'add_product' or request.resolver_match.url_name == 'wishlist_products_list' %} here show {% endif %}">
                           <span class="menu-link">
                               <span class="menu-bullet">
                                   <span class="bullet bullet-dot"></span>

@@ -114,8 +114,8 @@
                              class="mh-25px"/>
                     </a>
                     <button class="btn btn-icon btn-sm btn-active-color-primary d-flex d-lg-none"
-                            id="kt_app_sidebar_mobile_toggle">
-                        <i class="ki-outline ki-abstract-14 fs-1"></i>
+                        id="kt_app_sidebar_mobile_toggle">
+                        <i class="bi bi-list fs-1"></i>
                     </button>
                 </div>
 
@@ -291,8 +291,7 @@
 
                                         <div class="d-flex flex-column">
                                             <div class="fw-bold d-flex align-items-center fs-5">
-                                                {{request.user}} <span
-                                                    class="badge badge-light-success fw-bold fs-8 px-2 py-1 ms-2">Pro</span>
+                                                {{request.user}} <span class="badge badge-light-success fw-bold fs-7 px-2 py-1 ms-2">Supplier</span>
                                             </div>
 
                                             <a href="#" class="fw-semibold text-muted text-hover-primary fs-7">
@@ -309,13 +308,18 @@
                                         My Profile
                                     </a>
                                 </div>
-
                                 <div class="menu-item px-5" data-kt-menu-trigger="{default: 'click', lg: 'hover'}"
                                      data-kt-menu-placement="left-start" data-kt-menu-offset="-15px, 0">
                                     <a href="#" class="menu-link px-5">
                                         <span class="menu-title">My Subscription</span>
                                         <span class="menu-arrow"></span>
+
+                                 <div class="menu-item px-5">
+                                    <a href="{% url 'adminv2:order_listing' %}"
+                                        class="menu-link px-5">
+                                        My Orders
                                     </a>
+                                </div>
 
                                     <div class="menu-sub menu-sub-dropdown w-175px py-4">
 
@@ -353,6 +357,12 @@
                                             </div>
                                         </div>
                                     </div>
+                                </div>
+                                 <div class="menu-item px-5">
+                                    <a href="{% url 'adminv2:products_list' %}"
+                                        class="menu-link px-5">
+                                        All Products
+                                    </a>
                                 </div>
 
                                 <div class="separator my-2"></div>
@@ -1031,7 +1041,7 @@
                     <div class="text-gray-900 order-2 order-md-1">
                         <span class="text-muted fw-semibold me-1">2025&copy;</span>
                         <a href="https://keenthemes.com/" target="_blank"
-                           class="text-gray-800 text-hover-primary">Keenthemes</a>
+                            class="text-gray-800 text-hover-primary">Medical Supplier</a>
                     </div>
 
 
@@ -1042,9 +1052,7 @@
                         <li class="menu-item"><a href="https://devs.keenthemes.com/" target="_blank"
                                                  class="menu-link px-2">Support</a></li>
 
-                        <li class="menu-item"><a
-                                href="https://themeforest.net/item/metronic-responsive-admin-dashboard-template/4021469?irgwc=1&amp;clickid=Qb1XFm3dIxyIUCez3ZXf1X0mUks0kb3cC2sEUQ0&amp;iradid=275988&amp;irpid=1330466&amp;iradtype=ONLINE_TRACKING_LINK&amp;irmptype=mediapartner&amp;mp_value1=&amp;utm_campaign=af_impact_radius_1330466&amp;utm_medium=affiliate&amp;utm_source=impact_radius"
-                                target="_blank" class="menu-link px-2">Purchase</a></li>
+
                     </ul>
 
                 </div>

@@ -207,7 +207,7 @@ class Orders(models.Model):
 
     ORDER_STATUS_CHOICES = [
         ('pending', 'Pending'),
-         ('completed', 'Completed'),
+        ('completed', 'Completed'),
         ('processing', 'Processing'),
         ('shipped', 'Shipped'),
         ('delivered', 'Delivered'),
@@ -215,6 +215,11 @@ class Orders(models.Model):
         ('cancelled', 'Cancelled'),
         ('refunded', 'Refunded'),
         ('failed', 'Failed')
+    ]
+
+    PAYMENT_STATUS_CHOICES = [
+        ('paid', 'Paid'),
+        ('unpaid', 'Unpaid')
     ]
 
     order_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders_placed')
@@ -229,7 +234,7 @@ class Orders(models.Model):
 
     # Payment info
     payment_type = models.CharField(max_length=50, default='BANK TRANSFER')
-    payment_status = models.CharField(max_length=20, default='PAID')
+    payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='unpaid')
     payment_currency = models.CharField(max_length=10, default='USD')
    
     # Shipping info

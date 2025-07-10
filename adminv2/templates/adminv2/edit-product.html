@@ -22,56 +22,56 @@
                     <div class="d-flex flex-column gap-7 gap-lg-10 w-100 w-lg-300px mb-7 me-lg-10">
                         <!-- Thumbnail + Gallery Card -->
                    
-<div class="card card-flush py-4">
-    <div class="card-header">
-        <div class="card-title">
-            <h2>Thumbnail & Gallery</h2>
-        </div>
-    </div>
-    <div class="card-body text-center pt-0">
-        <!-- Main Thumbnail Upload -->
-        <div class="image-input image-input-outline mb-3" data-kt-image-input="true" style="background-image: url('{% if main_image_url %}{{ main_image_url }}{% else %}https://preview.keenthemes.com/metronic8/demo58/assets/media/svg/files/blank-image.svg{% endif %}')">
-            <div class="image-input-wrapper w-150px h-150px" style="background-image: url('{% if main_image_url %}{{ main_image_url }}{% endif %}')"></div>
+                        <div class="card card-flush py-4">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    <h2>Thumbnail & Gallery</h2>
+                                </div>
+                            </div>
+                            <div class="card-body text-center pt-0">
+                                <!-- Main Thumbnail Upload -->
+                                <div class="image-input image-input-outline mb-3" data-kt-image-input="true" style="background-image: url('{% if main_image_url %}{{ main_image_url }}{% else %}https://preview.keenthemes.com/metronic8/demo58/assets/media/svg/files/blank-image.svg{% endif %}')">
+                                    <div class="image-input-wrapper w-150px h-150px" style="background-image: url('{% if main_image_url %}{{ main_image_url }}{% endif %}')"></div>
 
-            <label class="btn btn-icon btn-circle btn-active-color-primary w-25px h-25px bg-body shadow"
-                data-kt-image-input-action="change" data-bs-toggle="tooltip" title="Change avatar">
-                <i class="fas fa-pen fs-7 text-primary"></i>
-                <input type="file" name="main_image" accept=".png, .jpg, .jpeg" />
-                <input type="hidden" name="main_image_remove" />
-            </label>
+                                    <label class="btn btn-icon btn-circle btn-active-color-primary w-25px h-25px bg-body shadow"
+                                        data-kt-image-input-action="change" data-bs-toggle="tooltip" title="Change avatar">
+                                        <i class="fas fa-pen fs-7 text-primary"></i>
+                                        <input type="file" name="main_image" accept=".png, .jpg, .jpeg" />
+                                        <input type="hidden" name="main_image_remove" />
+                                    </label>
 
-            {% if main_image_url %}
-            <span class="btn btn-icon btn-circle btn-active-color-primary w-25px h-25px bg-body shadow"
-                data-kt-image-input-action="remove" data-bs-toggle="tooltip" title="Remove avatar">
-                <i class="ki-outline ki-cross fs-2"></i>
-            </span>
-            {% endif %}
-        </div>
+                                    {% if main_image_url %}
+                                    <span class="btn btn-icon btn-circle btn-active-color-primary w-25px h-25px bg-body shadow"
+                                        data-kt-image-input-action="remove" data-bs-toggle="tooltip" title="Remove avatar">
+                                        <i class="bi bi-x-lg"></i>
+                                    </span>
+                                    {% endif %}
+                                </div>
 
-        <div class="text-muted fs-7 mb-4">Upload the main thumbnail image. Only *.png, *.jpg and *.jpeg image files are accepted</div>
+                                <div class="text-muted fs-7 mb-4">Upload the main thumbnail image. Only *.png, *.jpg and *.jpeg image files are accepted</div>
 
-        <!-- Another Images Upload -->
-        <label class="form-label fw-bold">Another Images</label>
-        <input type="file" name="gallery_images" multiple accept=".png, .jpg, .jpeg" class="form-control mb-3" />
-        
-        <!-- Display existing gallery images -->
-        {% if gallery_images %}
-        <div class="mt-3">
-            <h6>Existing Gallery Images:</h6>
-            <div class="d-flex flex-wrap gap-2">
-                {% for image in gallery_images %}
-                <div class="position-relative">
-                    <img src="{{ image.image.url }}" alt="Gallery image" style="width: 100px; height: 100px; object-fit: cover;">
-                    <a href="{% url 'adminv2:delete_product_image' image.id %}" class="btn btn-icon btn-sm btn-danger position-absolute top-0 end-0" title="Delete image">
-                        <i class="fas fa-times"></i>
-                    </a>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-        {% endif %}
-    </div>
-</div>
+                                <!-- Another Images Upload -->
+                                <label class="form-label fw-bold">Another Images</label>
+                                <input type="file" name="gallery_images" multiple accept=".png, .jpg, .jpeg" class="form-control mb-3" />
+
+                                <!-- Display existing gallery images -->
+                                {% if gallery_images %}
+                                <div class="mt-3">
+                                    <h6>Existing Gallery Images:</h6>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        {% for image in gallery_images %}
+                                        <div class="position-relative">
+                                            <img src="{{ image.image.url }}" alt="Gallery image" style="width: 100px; height: 100px; object-fit: cover;">
+                                            <a href="{% url 'adminv2:delete_product_image' image.id %}" class="btn btn-icon btn-sm btn-danger position-absolute top-0 end-0" title="Delete image">
+                                                <i class="fas fa-times"></i>
+                                            </a>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
 
                         <!-- Status Card -->
                         <div class="card card-flush py-4">
@@ -79,13 +79,13 @@
                                 <div class="card-title">
                                     <h2>Status</h2>
                                 </div>
-                                <div class="card-toolbar">
-                                    <div class="rounded-circle bg-success w-15px h-15px" id="kt_ecommerce_add_product_status"></div>
-                                </div>
+
                             </div>
                             <div class="card-body pt-0">
-                                <select class="form-select mb-2" data-control="select2" data-hide-search="true" data-placeholder="Select an option" id="kt_ecommerce_add_product_status_select" name="is_active">
-                                    <option></option>
+
+                                <label class="form-label required">Product status</label>
+                                <select class="form-select mb-2" data-control="select2" data-hide-search="true" data-placeholder="Select an option" id="kt_ecommerce_add_product_status_select" name="is_active" required>
+
                                     <option value="True" {% if is_active == 'True' %}selected{% endif %}>Published</option>
                                     <option value="False" {% if is_active == 'False' %}selected{% endif %}>Draft</option>
                                 </select>
@@ -483,6 +483,7 @@
     </div>
 </div>
 
+<!-- sub category add -->
 <div class="modal fade" id="createSubCategoryModal" tabindex="-1" aria-labelledby="createSubCategoryModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -492,10 +493,7 @@
             </div>
             <form action="{% url 'adminv2:create_subcategory' %}" method="post"> {% csrf_token %}
                 <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="subcategory_name" class="form-label">Sub-Category Name</label>
-                        <input type="text" class="form-control" id="subcategory_name" name="name" required>
-                    </div>
+
                     <div class="mb-3">
                         <label for="parent_category" class="form-label">Parent Category</label>
                         <select class="form-select" id="parent_category" name="category" required>
@@ -505,6 +503,13 @@
                             {% endfor %}
                         </select>
                     </div>
+
+                    <div class="mb-3">
+                        <label for="subcategory_name" class="form-label">Sub-Category Name</label>
+                        <input type="text" class="form-control" id="subcategory_name" name="name" required>
+                    </div>
+
+
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -515,6 +520,7 @@
     </div>
 </div>
 
+<!-- Last category add -->
 <div class="modal fade" id="createLastCategoryModal" tabindex="-1" aria-labelledby="createLastCategoryModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -524,10 +530,7 @@
             </div>
             <form action="{% url 'adminv2:create_lastcategory' %}" method="post"> {% csrf_token %}
                 <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="lastcategory_name" class="form-label">Last Category Name</label>
-                        <input type="text" class="form-control" id="lastcategory_name" name="name" required>
-                    </div>
+
                     <div class="mb-3">
                         <label for="parent_subcategory" class="form-label">Parent Sub-Category</label>
                         <select class="form-select" id="parent_subcategory" name="sub_category" required>
@@ -537,6 +540,12 @@
                             {% endfor %}
                         </select>
                     </div>
+
+                    <div class="mb-3">
+                        <label for="lastcategory_name" class="form-label">Last Category Name</label>
+                        <input type="text" class="form-control" id="lastcategory_name" name="name" required>
+                    </div>
+
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
