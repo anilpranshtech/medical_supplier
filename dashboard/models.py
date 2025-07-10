@@ -438,3 +438,22 @@ class CODPayment(models.Model):
         return f"COD - {self.cod_tracking_id or 'No Tracking ID'} by {self.user.get_full_name() or self.user.email}"
 
 
+class RoleRequest(models.Model):
+    ROLE_CHOICES = [
+        ('supplier', 'Supplier'),
+        ('retailer', 'Retailer'),
+        ('wholesaler', 'Wholesaler'),
+    ]
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    requested_role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+    status = models.CharField(max_length=20, choices=[('pending', 'Pending'), ('approved', 'Approved'), ('rejected', 'Rejected')], default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Role Request"
+        verbose_name_plural = "Role Requests"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username} - {self.requested_role} ({self.status})"

@@ -1,0 +1,107 @@
+{% extends 'pages/base.html' %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="container mx-auto p-4">
+    <div class="max-w-md mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white text-center">Request a Role</h2>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="mb-4 p-3 rounded-md text-sm {% if message.tags == 'error' %}bg-red-100 text-red-700 dark:bg-red-900 dark:bg-opacity-50{% else %}bg-green-100 text-green-700 dark:bg-green-900 dark:bg-opacity-50{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data" id="roleRequestForm" class="space-y-6">
+            {% csrf_token %}
+
+            <!-- Role Selection (from RoleRequest form) -->
+            <div>
+                <label for="id_requested_role" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Select Role</label>
+                {% if form and 'requested_role' in form.fields %}
+                    {{ form.requested_role|add_class:"w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white transition duration-200" }}
+                    {% for error in form.requested_role.errors %}
+                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ error }}</p>
+                    {% endfor %}
+                {% else %}
+                    <select name="requested_role" id="id_requested_role" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white transition duration-200" onchange="updateFormFields()">
+                        {% for value, label in role_choices %}
+                            <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                {% endif %}
+            </div>
+
+            <!-- Profile Form Fields -->
+            {% if profile_form %}
+                {% for field in profile_form %}
+                    <div>
+                        <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ field.label }}</label>
+                        {% if field.field.widget.input_type == 'file' %}
+                            {{ field|add_class:"w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white custom-file-input" }}
+                        {% else %}
+                            {{ field|add_class:"w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white" }}
+                        {% endif %}
+                        {% if field.errors %}
+                            {% for error in field.errors %}
+                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ error }}</p>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                {% endfor %}
+                {% for error in profile_form.non_field_errors %}
+                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ error }}</p>
+                {% endfor %}
+                <button type="submit" class="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200">Submit Request</button>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+<script>
+    function updateFormFields() {
+        const form = document.getElementById('roleRequestForm');
+        form.submit();
+    }
+</script>
+{% endblock %}
+
+{% block extra_css %}
+    <style>
+        .custom-file-input::-webkit-file-upload-button {
+            visibility: hidden;
+        }
+        .custom-file-input::before {
+            content: 'Select File';
+            display: inline-block;
+            background: linear-gradient(to bottom, #f9f9f9, #e3e3e3);
+            border: 1px solid #999;
+            border-radius: 3px;
+            padding: 5px 8px;
+            outline: none;
+            white-space: nowrap;
+            -webkit-user-select: none;
+            cursor: pointer;
+            text-shadow: 1px 1px #fff;
+            font-weight: 700;
+            font-size: 10pt;
+        }
+        .custom-file-input:hover::before {
+            border-color: black;
+        }
+        .custom-file-input:active::before {
+            background: linear-gradient(to top, #e3e3e3, #f9f9f9);
+        }
+    </style>
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileInputs = document.querySelectorAll('input[type="file"]');
+            fileInputs.forEach(input => input.classList.add('custom-file-input'));
+        });
+    </script>
+{% endblock %}

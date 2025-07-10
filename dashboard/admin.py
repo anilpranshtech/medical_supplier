@@ -76,3 +76,24 @@ class CODPaymentAdmin(admin.ModelAdmin):
 class CustomerBillingAddressAdmin(admin.ModelAdmin):
     list_display = ('id','user', 'customer_name', 'is_deleted', 'created_at', 'updated_at')
 
+@admin.register(RoleRequest)
+class RoleRequestAdmin(admin.ModelAdmin):
+    list_display = ('user', 'requested_role', 'status', 'created_at')
+    list_filter = ('status', 'created_at')
+    actions = ['approve_requests']
+
+    def approve_requests(self, request, queryset):
+        for role_request in queryset:
+            if role_request.status == 'pending':
+                role_request.status = 'approved'
+                role_request.save()
+                user = role_request.user
+                if role_request.requested_role == 'supplier':
+                    MedicalSupplierProfile.objects.get_or_create(user=user)
+                elif role_request.requested_role == 'retailer':
+                    RetailProfile.objects.get_or_create(user=user)
+                elif role_request.requested_role == 'wholesaler':
+                    WholesaleBuyerProfile.objects.get_or_create(user=user)
+        self.message_user(request, "Selected requests have been approved.")
+    approve_requests.short_description = "Approve selected requests"
+

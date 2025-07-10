@@ -46,4 +46,9 @@ urlpatterns = [
     path('test/', Test.as_view(), name='test'),
     
 
+    # Become a seller
+    path('request-role/', views.RequestRoleView.as_view(), name='request_role'),
+    path('approve-role/<int:pk>/', views.ApproveRoleRequestView.as_view(), name='approve_role_request'),
+    path('manage-requests/', views.ManageRequestsView.as_view(), name='manage_requests'),
+
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
