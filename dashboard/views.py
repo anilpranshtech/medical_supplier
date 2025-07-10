@@ -1,9 +1,12 @@
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.mail import send_mail
 from django.http import HttpResponse, JsonResponse
 from django.contrib.auth.views import *
+from django.template.loader import render_to_string
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
+from django.utils.html import strip_tags
 from django.views.decorators.csrf import csrf_exempt
 from razorpay.errors import SignatureVerificationError
 from .forms import PaymentForm
@@ -19,11 +22,11 @@ from django.views import View
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
 from django.contrib import messages
-from django.views.generic import TemplateView
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import TemplateView, ListView
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import authenticate, login
-from django.views.generic.edit import FormView
+from django.views.generic.edit import FormView, CreateView, UpdateView
 from datetime import date
 from django.db.models import F
 import random
@@ -754,3 +757,195 @@ class PaymentStatusView(View):
             return render(request, self.template_name, {'status': True})
         except SignatureVerificationError:
             return render(request, self.template_name, {'status': False, 'error': 'Signature verification failed'})
+
+
+# ------------------------------------------------------------------------------------------------------------------------
+import logging
+from .forms import *
+logger = logging.getLogger(__name__)
+
+class RequestRoleView(LoginRequiredMixin, View):
+    template_name = 'userdashboard/seller/request_role.html'
+    success_url = reverse_lazy('dashboard:home')
+
+    def get_form_class(self):
+        role = self.request.POST.get('requested_role') or self.request.GET.get('requested_role', 'retailer')
+        if role == 'retailer':
+            return RetailProfileForm
+        elif role == 'wholesaler':
+            return WholesaleBuyerProfileForm
+        elif role == 'supplier':
+            return SupplierProfileForm
+        return RetailProfileForm
+
+    def get(self, request, *args, **kwargs):
+        form_class = self.get_form_class()
+        form = form_class()
+        return render(request, self.template_name, {
+            'form': form,
+            'profile_form': form,
+            'role_choices': RoleRequest.ROLE_CHOICES,
+            'selected_role': request.GET.get('requested_role', 'retailer')
+        })
+
+    def post(self, request, *args, **kwargs):
+        requested_role = request.POST.get('requested_role')
+        form_class = self.get_form_class()
+        form = form_class(request.POST, request.FILES)
+
+        if RoleRequest.objects.filter(user=request.user, requested_role=requested_role).exists():
+            messages.error(request, "You already have a pending or approved request for this role.")
+            return self.get(request)
+
+        if form.is_valid():
+            # Save role request
+            role_request = RoleRequest.objects.create(
+                user=request.user,
+                requested_role=requested_role,
+                status='pending'
+            )
+
+            # Save profile data
+            profile = form.save(commit=False)
+            profile.user = request.user
+
+            if requested_role == 'retailer':
+                RetailProfile.objects.update_or_create(user=request.user, defaults={
+                    'profile_picture': profile.profile_picture,
+                    'age': profile.age,
+                    'medical_needs': profile.medical_needs
+                })
+            elif requested_role == 'wholesaler':
+                WholesaleBuyerProfile.objects.update_or_create(user=request.user, defaults={
+                    'profile_picture': profile.profile_picture,
+                    'company_name': profile.company_name,
+                    'gst_number': profile.gst_number,
+                    'department': profile.department,
+                    'purchase_capacity': profile.purchase_capacity
+                })
+            elif requested_role == 'supplier':
+                SupplierProfile.objects.update_or_create(user=request.user, defaults={
+                    'profile_picture': profile.profile_picture,
+                    'company_name': profile.company_name,
+                    'license_number': profile.license_number
+                })
+
+            messages.success(request, f"Your role request for {requested_role} has been submitted.")
+            return redirect(self.success_url)
+
+        messages.error(request, "Please correct the errors below.")
+        return render(request, self.template_name, {
+            'form': form,
+            'profile_form': form,
+            'role_choices': RoleRequest.ROLE_CHOICES,
+            'selected_role': requested_role
+        })
+
+
+class ManageRequestsView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+    model = RoleRequest
+    template_name = 'userdashboard/seller/manage_requests.html'
+    context_object_name = 'requests'
+
+    def test_func(self):
+        return self.request.user.is_superuser
+
+    def handle_no_permission(self):
+        messages.error(self.request, "You do not have permission to manage requests.")
+        return redirect('dashboard:home')
+
+class ApproveRoleRequestView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = RoleRequest
+    fields = []
+    template_name = 'userdashboard/seller/approve_role_request.html'
+    success_url = reverse_lazy('dashboard:manage_requests')
+
+    def test_func(self):
+        return self.request.user.is_superuser
+
+    def handle_no_permission(self):
+        messages.error(self.request, "You do not have permission to approve requests.")
+        return redirect('dashboard:home')
+
+    def form_valid(self, form):
+        role_request = self.object
+        user = role_request.user
+        current_status = role_request.status
+
+        if role_request.status == 'pending':
+            role_request.status = 'approved'
+            role_request.save()
+
+            # Ensure profile exists (should already be created from request)
+            try:
+                if role_request.requested_role == 'supplier':
+                    supplier_profile, _ = SupplierProfile.objects.get_or_create(user=user)
+                    logger.info(f"Verified SupplierProfile for {user.username}")
+                elif role_request.requested_role == 'wholesaler':
+                    wholesale_profile, _ = WholesaleBuyerProfile.objects.get_or_create(user=user)
+                    logger.info(f"Verified WholesaleBuyerProfile for {user.username}")
+                elif role_request.requested_role == 'retailer':
+                    retail_profile, _ = RetailProfile.objects.get_or_create(user=user)
+                    logger.info(f"Verified RetailProfile for {user.username}")
+            except Exception as e:
+                logger.error(f"Failed to verify profile for {user.username}: {str(e)}")
+                messages.error(self.request, f"Failed to verify profile: {str(e)}")
+                return self.form_invalid(form)
+
+            # Send acceptance email with current date and time
+            subject = 'Role Request Approved'
+            html_message = render_to_string('userdashboard/email/role_approved.html', {
+                'user': user.username,
+                'role': role_request.requested_role,
+                'date': '04:31 PM IST on Thursday, July 10, 2025'
+            })
+            plain_message = strip_tags(html_message)
+            try:
+                send_mail(
+                    subject,
+                    plain_message,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [user.email],
+                    html_message=html_message,
+                    fail_silently=False,
+                )
+                logger.info(f"Email sent to {user.email} for role approval")
+            except Exception as e:
+                logger.error(f"Email sending failed for {user.email}: {str(e)}")
+                messages.warning(self.request, "Role approved, but email failed to send.")
+
+            messages.success(self.request, f"Role '{role_request.requested_role}' approved for {user.username}.")
+        elif current_status == 'approved' and 'reject' in self.request.POST:
+            role_request.status = 'rejected'
+            role_request.save()
+
+            # Send rejection email with current date and time
+            subject = 'Role Request Rejected'
+            html_message = render_to_string('userdashboard/email/role_rejected.html', {
+                'user': user.username,
+                'role': role_request.requested_role,
+                'date': '04:31 PM IST on Thursday, July 10, 2025'
+            })
+            plain_message = strip_tags(html_message)
+            try:
+                send_mail(
+                    subject,
+                    plain_message,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [user.email],
+                    html_message=html_message,
+                    fail_silently=False,
+                )
+                logger.info(f"Email sent to {user.email} for role rejection")
+            except Exception as e:
+                logger.error(f"Email sending failed for {user.email}: {str(e)}")
+                messages.warning(self.request, "Role rejected, but email failed to send.")
+
+            messages.warning(self.request, f"Role request for {user.username} has been rejected.")
+
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['can_reject'] = self.object.status == 'approved'
+        return context
