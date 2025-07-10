@@ -238,9 +238,9 @@ class Orders(models.Model):
     shipping_type = models.CharField(max_length=100, default='Shipping')
 
     # Address info
-    shipping_full_address = models.TextField()
-    shipping_city = models.CharField(max_length=100)
-    shipping_country = models.CharField(max_length=100)
+    shipping_full_address = models.TextField(null=True,blank=True)
+    shipping_city = models.CharField(max_length=100,null=True,blank=True)
+    shipping_country = models.CharField(max_length=100,null=True,blank=True)
 
 
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
