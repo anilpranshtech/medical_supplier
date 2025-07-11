@@ -29,6 +29,10 @@ urlpatterns = [
     path('wishlist/products/', WishlistProductListView.as_view(), name='wishlist_product_list'),
     path('order-summary/', views.OrderSummaryView.as_view(), name='order_summary'),
     path('shipping-info/', views.ShippingInfoView.as_view(), name='shipping_info'),
+    path('profile/add-address/', views.AddAddressView.as_view(), name='add_address'),
+    path('profile/edit-address/<int:pk>/', views.EditAddressView.as_view(), name='edit_address'),
+    path('profile/remove-address/<int:address_id>/', views.RemoveAddressView.as_view(), name='remove_address'),
+    path('profile/set-default-address/', views.SetDefaultAddressView.as_view(), name='set_default_address'),
     path('payment-method/', views.PaymentMethodView.as_view(), name='payment_method'),
     path('order-placed/', views.OrderPlacedView.as_view(), name='order_placed'),
     path('my-orders/', views.MyOrdersView.as_view(), name='my_orders'),
@@ -36,6 +40,11 @@ urlpatterns = [
 
     # user profile
     path('user-profile/', views.UserProfile.as_view(), name='user_profile'),
+    path('upload-avatar/', UploadAvatarView.as_view(), name='upload_avatar'),
+    path('profile/edit/', views.EditProfileView.as_view(), name='edit_profile'),
+    path('profile/edit-email/', views.EditEmailView.as_view(), name='edit_email'),
+    path('profile/edit-phone/', views.EditPhoneView.as_view(), name='edit_phone'),
+
     path('user-signup/', views.SignUpView.as_view(), name='user_signup'),
     path('verify-otp/', views.VerifyOTPView.as_view(), name='verify_otp'),
     path('resend-otp/', views.ResendOTPView.as_view(), name='resend_otp'),

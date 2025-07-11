@@ -213,7 +213,7 @@
     <header class="flex items-center justify-between h-[50px] px-4 sm:px-6 transition-[height] shrink-0 mx-5 px-5 mt-2">
         <!-- Header Left: Logo -->
         <div class="flex items-center gap-4 sm:gap-5 pl-4 sm:pl-5">
-            <a href="https://keenthemes.com/metronic/tailwind/demo10/index.html">
+            <a href="#">
                 <img class="size-10"
                      src="https://keenthemes.com/static/metronic/tailwind/dist/assets/media/app/mini-logo-circle-success.svg"
                      alt="Logo"/>
@@ -657,7 +657,7 @@ size-9 rounded-full border-2 border-mono/25"
      data-kt-drawer="true" data-kt-drawer-container="body" id="drawers_shop_cart">
     <div class="kt-card-header px-5">
         <h3 class="kt-card-title">Cart</h3>
-        <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" data-kt-drawer-dismiss="true">
+        <button id="cart-close-btn" class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" data-kt-drawer-dismiss="true">
             <i class="ki-filled ki-cross text-base"></i>
         </button>
     </div>
@@ -697,7 +697,24 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.querySelector('#drawers_shop_wishlist')?.addEventListener('hide.bs.drawer', () => {
         updateWishlistIcons();
+
     });
+
+    const closeBtn = document.getElementById('cart-close-btn');
+
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function () {
+
+                try {
+                    cart = JSON.parse(localStorage.getItem('cart')) || [];
+                } catch (e) {
+                    cart = [];
+                }
+
+                location.reload();
+            });
+        }
+
 
     // Define RGB values for background colors
     const lightBackgroundRgb = hexToRgb('#ffffff'); // Light mode background
@@ -910,6 +927,27 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    function updateCartIcons() {
+        // Only target the correct buttons (bottom "Add" button)
+        document.querySelectorAll('.add-to-cart-btn, .kt-btn-success[data-product-id]').forEach(button => {
+            const productId = parseInt(button.dataset.productId);
+            const inCart = cart.some(item => {
+                const parsed = safeParseJSON(item);
+                return parsed?.id === productId;
+            });
+
+            if (inCart) {
+                button.classList.remove('kt-btn-outline', 'add-to-cart-btn');
+                button.classList.add('kt-btn-success');
+                button.innerHTML = `In cart <i class="ki-filled ki-handcart"></i>`;
+            } else {
+                button.classList.add('kt-btn-outline', 'add-to-cart-btn');
+                button.classList.remove('kt-btn-success');
+                button.innerHTML = `Add <i class="ki-filled ki-handcart"></i>`;
+            }
+        });
+    }
+
     function updateCartUI() {
         const cartContainer = document.querySelector('#cart-items');
         if (cartContainer) {
@@ -968,9 +1006,12 @@ document.addEventListener('DOMContentLoaded', function () {
                         cart[itemIndex] = JSON.stringify({ ...product, quantity });
                         localStorage.setItem('cart', JSON.stringify(cart));
                         updateCartUI();
+                        updateCartIcons();
                     }
                 });
             });
+
+
 
             document.querySelectorAll('.qty-decrement').forEach(button => {
                 button.addEventListener('click', function () {
@@ -984,6 +1025,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             cart[itemIndex] = JSON.stringify({ ...product, quantity });
                             localStorage.setItem('cart', JSON.stringify(cart));
                             updateCartUI();
+                            updateCartIcons();
                         }
                     }
                 });
@@ -995,6 +1037,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     cart = cart.filter(item => safeParseJSON(item)?.sku !== sku);
                     localStorage.setItem('cart', JSON.stringify(cart));
                     updateCartUI();
+                    updateCartIcons();
+
                 });
             });
         }
@@ -1025,6 +1069,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
                 localStorage.setItem('cart', JSON.stringify(cart));
                 updateCartUI();
+                updateCartIcons();
             }
         });
     });
@@ -1083,6 +1128,7 @@ document.addEventListener('DOMContentLoaded', function () {
             cart = [];
             localStorage.setItem('cart', JSON.stringify(cart));
             updateCartUI();
+            updateCartIcons();
         });
     }
 
@@ -1148,7 +1194,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             <button class="qty-decrease bg-gray-200 px-2 rounded" data-id="${item.id}">-</button>
                             <span class="text-sm font-medium">${quantity}</span>
                             <button class="qty-increase bg-gray-200 px-2 rounded" data-id="${item.id}">+</button>
-                            <button class="remove-cart-item text-red-500 hover:text-red-700" data-id="${item.id}">
+                            <button class="remove-cart-item  hover:text-red-700" data-id="${item.id}">
                                 <i class="ki-filled ki-trash text-base"></i>
                             </button>
                         </div>
@@ -1165,6 +1211,37 @@ document.addEventListener('DOMContentLoaded', function () {
             });
     }
 
+     let cart = [];
+    try {
+        cart = JSON.parse(localStorage.getItem('cart')) || [];
+    } catch (e) {
+        localStorage.setItem('cart', JSON.stringify([]));
+    }
+
+    function updateCartIcons(onlyId = null) {
+        const selector = onlyId
+        ? `button[data-product-id="${onlyId}"]:not([data-kt-wishlist-toggle])`
+        : 'button[data-product-id]:not([data-kt-wishlist-toggle])';
+
+        document.querySelectorAll(selector).forEach(button => {
+            const productId = parseInt(button.dataset.productId, 10);
+            const inCart = cart.some(item => {
+                const parsed = safeParseJSON(item);
+                return parsed?.id === productId;
+            });
+
+            if (inCart) {
+                button.classList.remove('kt-btn-outline', 'add-to-cart-btn');
+                button.classList.add('kt-btn-success');
+                button.innerHTML = 'In cart <i class="ki-filled ki-handcart"></i>';
+            } else {
+                button.classList.add('kt-btn-outline', 'add-to-cart-btn');
+                button.classList.remove('kt-btn-success');
+                button.innerHTML = 'Add <i class="ki-filled ki-handcart"></i>';
+            }
+        });
+    }
+
     function attachEvents() {
         document.querySelectorAll('.remove-cart-item').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -1178,7 +1255,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     body: `item_id=${id}`
                 }).then(res => res.json())
                 .then(data => {
-                    if (data.status === 'success') updateCartUI();
+                    if (data.status === 'success') {
+                        updateCartUI();    // re‑render drawer contents
+                        updateCartIcons(id); // flip “Add / In cart” buttons
+                    } else {
+                        console.warn('Remove failed:', data);
+                    }
                 });
             });
         });
@@ -1198,7 +1280,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     body: `product_id=${id}&quantity=${qtyChange}`
                 }).then(res => res.json())
                 .then(data => {
-                    if (data.status === 'success') updateCartUI();
+                    if (data.status === 'success') {updateCartUI();updateCartIcons();}
                 });
             });
         });
@@ -1213,7 +1295,7 @@ document.addEventListener('DOMContentLoaded', function () {
             method: 'POST',
             headers: { 'X-CSRFToken': getCSRFToken() }
         }).then(res => res.json()).then(data => {
-            if (data.status === 'success') updateCartUI();
+            if (data.status === 'success'){ updateCartUI();updateCartIcons();}
         });
     });
 
@@ -1231,4 +1313,3 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
 
- 
