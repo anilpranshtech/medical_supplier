@@ -30,23 +30,27 @@
                                         <div class="flex justify-center items-center">
                                             <div class="kt-image-input size-20" data-kt-image-input="true"
                                                  data-kt-image-input-initialized="true">
-                                                <input accept=".png, .jpg, .jpeg" name="avatar" type="file">
-                                                <input name="avatar_remove" type="hidden">
-                                                <button class="kt-image-input-remove"
-                                                        data-kt-image-input-remove="true" data-kt-tooltip="true"
-                                                        data-kt-tooltip-placement="right"
-                                                        data-kt-tooltip-trigger="hover" type="button"
-                                                        data-kt-tooltip-initialized="true">
-                                                    <i class="ki-filled ki-cross"></i>
-                                                    <span class="kt-tooltip" data-kt-tooltip-content="true">
-                                                        Click to remove or revert
-                                                    </span>
-                                                </button>
+                                                <form method="post" enctype="multipart/form-data" action="{% url 'dashboard:upload_avatar' %}">
+                                                    {% csrf_token %}
+                                                    <input accept=".png, .jpg, .jpeg" name="avatar" type="file">
+                                                    <input name="avatar_remove" type="hidden">
+                                                    <button class="kt-image-input-remove"
+                                                            data-kt-image-input-remove="true" data-kt-tooltip="true"
+                                                            data-kt-tooltip-placement="right"
+                                                            data-kt-tooltip-trigger="hover" type="button"
+                                                            data-kt-tooltip-initialized="true">
+                                                        <i class="ki-filled ki-cross"></i>
+                                                        <span class="kt-tooltip" data-kt-tooltip-content="true">
+                                                            Click to remove or revert
+                                                        </span>
+                                                    </button>
+                                                    <button type="submit" class="hidden">Upload</button>
+                                                </form>
                                                 <div class="kt-image-input-placeholder border-2 border-green-500 kt-image-input-empty:border-input"
                                                      data-kt-image-input-placeholder="true"
-                                                     style="background-image:url(/static/metronic/tailwind/dist/assets/media/avatars/blank.png)">
+                                                     style="background-image:url({% static 'metronic/tailwind/dist/assets/media/avatars/blank.png' %})">
                                                     <div class="kt-image-input-preview" data-kt-image-input-preview="true"
-                                                         style="background-image:url('/media/avatars/300-2.png')">
+                                                         style="background-image:url('{% if avatar %}{{ avatar.url }}{% else %}/media/avatars/blank.png{% endif %}')">
                                                     </div>
                                                     <div class="flex items-center justify-center cursor-pointer h-5 left-0 right-0 bottom-0 bg-black/25 absolute">
                                                         <svg class="fill-border opacity-80" height="12"
@@ -65,50 +69,50 @@
                                 </tr>
                                 <tr>
                                     <td class="py-2 font-medium">Name</td>
-                                  <td class="py-2">{{ user.first_name }} {{ user.last_name }}</td>
-
+                                    <td class="py-2">{{ user.first_name }} {{ user.last_name }}</td>
                                     <td class="py-2 text-center">
-                                        <a href="#" class="kt-btn kt-btn-icon kt-btn-sm kt-btn-ghost kt-btn-primary">
+                                        <a href="{% url 'dashboard:edit_profile' %}" class="kt-btn kt-btn-icon kt-btn-sm kt-btn-ghost kt-btn-primary">
                                             <i class="ki-filled ki-notepad-edit"></i>
                                         </a>
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td class="py-2 font-medium">Availability</td>
+                                    <td class="py-2 font-medium">Profile Type</td>
+                                    <td class="py-2">{{ profile_type|title|default:"Not set" }}</td>
+                                    <td class="py-2 text-center">
+                                        <a href="{% url 'dashboard:edit_profile' %}" class="kt-btn kt-btn-icon kt-btn-sm kt-btn-ghost kt-btn-primary">
+                                            <i class="ki-filled ki-notepad-edit"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="py-2 font-medium">Specialization/Company</td>
                                     <td class="py-2">
-                                        <span class="kt-badge kt-badge-sm kt-badge-outline kt-badge-success">
-                                            Available now
-                                        </span>
+                                        {% if profile_type == 'doctor' %}
+                                            {{ profile.speciality|default:"Not set" }}
+                                        {% elif profile_type in 'medical_supplier|corporate|wholesaler|supplier' %}
+                                            {{ profile.company_name|default:"Not set" }}
+                                        {% else %}
+                                            Not applicable
+                                        {% endif %}
                                     </td>
                                     <td class="py-2 text-center">
-                                        <a href="#" class="kt-btn kt-btn-icon kt-btn-sm kt-btn-ghost kt-btn-primary">
-                                            <i class="ki-filled ki-notepad-edit"></i>
-                                        </a>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="py-2 font-medium">Birthday</td>
-                                    <td class="py-2">05 December</td>
-                                    <td class="py-2 text-center">
-                                        <a href="#" class="kt-btn kt-btn-icon kt-btn-sm kt-btn-ghost kt-btn-primary">
-                                            <i class="ki-filled ki-notepad-edit"></i>
-                                        </a>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="py-2 font-medium">Gender</td>
-                                    <td class="py-2">Male</td>
-                                    <td class="py-2 text-center">
-                                        <a href="#" class="kt-btn kt-btn-icon kt-btn-sm kt-btn-ghost kt-btn-primary">
+                                        <a href="{% url 'dashboard:edit_profile' %}" class="kt-btn kt-btn-icon kt-btn-sm kt-btn-ghost kt-btn-primary">
                                             <i class="ki-filled ki-notepad-edit"></i>
                                         </a>
                                     </td>
                                 </tr>
                                 <tr>
                                     <td class="py-2 font-medium">Address</td>
-                                    <td class="py-2">No address added</td>
+                                    <td class="py-2">
+                                        {% if default_address %}
+                                            {{ default_address.customer_address1 }}{% if default_address.customer_address2 %}, {{ default_address.customer_address2 }}{% endif %}, {{ default_address.customer_city }}, {{ default_address.customer_state }} {{ default_address.customer_postal_code }}, {{ default_address.customer_country }}
+                                        {% else %}
+                                            No address added
+                                        {% endif %}
+                                    </td>
                                     <td class="py-2 text-center">
-                                        <a href="#" class="kt-link kt-link-underlined kt-link-dashed">Add</a>
+                                        <a href="{% url 'dashboard:shipping_info' %}" class="kt-link kt-link-underlined kt-link-dashed">Add/Edit</a>
                                     </td>
                                 </tr>
                             </tbody>
@@ -125,18 +129,35 @@
                         <h3 class="kt-card-title">Contact & Address</h3>
                     </div>
                     <div class="kt-card-content space-y-4">
-                        <div>
-                            <label class="text-sm font-medium text-secondary-foreground">Email</label>
-                          <p class="text-sm text-foreground">{{ user.email }}</p>
-
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <label class="text-sm font-medium text-secondary-foreground">Email</label>
+                                <p class="text-sm text-foreground">{{ user.email }}</p>
+                            </div>
+                            <a href="#" class="kt-link kt-link-underlined kt-link-dashed text-sm" data-kt-modal-toggle="#modal_edit_email">Edit</a>
                         </div>
-                        <div>
-                            <label class="text-sm font-medium text-secondary-foreground">Phone</label>
-                            <p class="text-sm text-foreground">+1 209 265 5466</p>
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <label class="text-sm font-medium text-secondary-foreground">Phone</label>
+                                <p class="text-sm text-foreground">
+                                    {% if default_address and default_address.phone %}
+                                        {{ default_address.phone }}
+                                    {% else %}
+                                        {{ phone|default:"Not set" }}
+                                    {% endif %}
+                                </p>
+                            </div>
+                            <a href="#" class="kt-link kt-link-underlined kt-link-dashed text-sm" data-kt-modal-toggle="#modal_edit_phone">Edit</a>
                         </div>
                         <div>
                             <label class="text-sm font-medium text-secondary-foreground">Default Address</label>
-                            <p class="text-sm text-foreground">123 Main Street, New York, NY</p>
+                            <p class="text-sm text-foreground">
+                                {% if default_address %}
+                                    {{ default_address.customer_address1 }}{% if default_address.customer_address2 %}, {{ default_address.customer_address2 }}{% endif %}, {{ default_address.customer_city }}, {{ default_address.customer_state }} {{ default_address.customer_postal_code }}, {{ default_address.customer_country }}
+                                {% else %}
+                                    No address added
+                                {% endif %}
+                            </p>
                             <a href="{% url 'dashboard:shipping_info' %}" class="kt-link kt-link-underlined text-sm">Manage Addresses</a>
                         </div>
                     </div>
@@ -150,19 +171,19 @@
                     <div class="kt-card-content grid grid-cols-2 gap-5 text-sm">
                         <div>
                             <div class="text-secondary-foreground">Total Orders</div>
-                            <div class="font-bold text-lg text-primary">24</div>
+                            <div class="font-bold text-lg text-primary">{{ total_orders }}</div>
                         </div>
                         <div>
                             <div class="text-secondary-foreground">Pending</div>
-                            <div class="font-bold text-lg text-yellow-600">2</div>
+                            <div class="font-bold text-lg text-yellow-600">{{ pending_orders }}</div>
                         </div>
                         <div>
                             <div class="text-secondary-foreground">Delivered</div>
-                            <div class="font-bold text-lg text-green-600">18</div>
+                            <div class="font-bold text-lg text-green-600">{{ delivered_orders }}</div>
                         </div>
                         <div>
                             <div class="text-secondary-foreground">Cancelled</div>
-                            <div class="font-bold text-lg text-red-500">4</div>
+                            <div class="font-bold text-lg text-red-500">{{ cancelled_orders }}</div>
                         </div>
                     </div>
                 </div>
@@ -173,7 +194,7 @@
                         <h3 class="kt-card-title">Wishlist</h3>
                     </div>
                     <div class="kt-card-content space-y-2 text-sm">
-                        <p class="text-secondary-foreground">You have 6 items in your wishlist.</p>
+                        <p class="text-secondary-foreground">You have {{ wishlist_count }} item{{ wishlist_count|pluralize }} in your wishlist.</p>
                         <a href="{% url 'dashboard:wish_list' %}" class="kt-btn kt-btn-sm kt-btn-primary">View Wishlist</a>
                     </div>
                 </div>
@@ -184,12 +205,129 @@
                         <h3 class="kt-card-title">Payment Methods</h3>
                     </div>
                     <div class="kt-card-content space-y-2 text-sm">
-                        <p class="text-secondary-foreground">Visa ending in 4242</p>
+                        <p class="text-secondary-foreground">
+                            {% if payment_method %}
+                                {{ payment_method.type }} - {{ payment_method.details }}
+                            {% else %}
+                                No payment method added
+                            {% endif %}
+                        </p>
                         <a href="{% url 'dashboard:payment_method' %}" class="kt-link kt-link-underlined text-sm">Manage Payment Options</a>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- Edit Email Modal -->
+        <div class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" data-kt-modal="true" id="modal_edit_email">
+            <div class="kt-card w-full max-w-[500px] rounded-xl border border-border bg-background">
+                <form method="post" action="{% url 'dashboard:edit_email' %}">
+                    {% csrf_token %}
+                    <div class="kt-card-header px-5 flex items-center justify-between">
+                        <h3 class="kt-card-title">Edit Email</h3>
+                        <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" data-kt-modal-dismiss="true" type="button">
+                            <i class="ki-filled ki-cross text-base"></i>
+                        </button>
+                    </div>
+                    <div class="kt-card-content flex flex-col space-y-3 p-5">
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-2sm font-semibold text-mono">Email Address</label>
+                            <input type="email" name="email" class="kt-input" value="{{ user.email }}" required>
+                        </div>
+                    </div>
+                    <div class="kt-card-footer px-5 flex justify-end gap-3">
+                        <button class="kt-btn kt-btn-outline" data-kt-modal-dismiss="true" type="button">Cancel</button>
+                        <button class="kt-btn kt-btn-primary" type="submit">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Edit Phone Modal -->
+        <div class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" data-kt-modal="true" id="modal_edit_phone">
+            <div class="kt-card w-full max-w-[500px] rounded-xl border border-border bg-background">
+                <form method="post" action="{% url 'dashboard:edit_phone' %}">
+                    {% csrf_token %}
+                    <div class="kt-card-header px-5 flex items-center justify-between">
+                        <h3 class="kt-card-title">Edit Phone Number</h3>
+                        <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" data-kt-modal-dismiss="true" type="button">
+                            <i class="ki-filled ki-cross text-base"></i>
+                        </button>
+                    </div>
+                    <div class="kt-card-content flex flex-col space-y-3 p-5">
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-2sm font-semibold text-mono">Phone Number</label>
+                            <input type="tel" name="phone" class="kt-input" value="{% if default_address and default_address.phone %}{{ default_address.phone }}{% else %}{{ phone|default:'' }}{% endif %}" placeholder="+1234567890" required>
+                        </div>
+                    </div>
+                    <div class="kt-card-footer px-5 flex justify-end gap-3">
+                        <button class="kt-btn kt-btn-outline" data-kt-modal-dismiss="true" type="button">Cancel</button>
+                        <button class="kt-btn kt-btn-primary" type="submit">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Modal handling
+    const modals = document.querySelectorAll('[data-kt-modal="true"]');
+    const modalTriggers = document.querySelectorAll('[data-kt-modal-toggle]');
+    const modalDismiss = document.querySelectorAll('[data-kt-modal-dismiss="true"]');
+
+    modalTriggers.forEach(trigger => {
+        trigger.addEventListener('click', function (e) {
+            e.preventDefault();
+            const modalId = this.getAttribute('data-kt-modal-toggle');
+            const modal = document.querySelector(modalId);
+            modal.classList.remove('hidden');
+        });
+    });
+
+    modalDismiss.forEach(dismiss => {
+        dismiss.addEventListener('click', function () {
+            const modal = this.closest('[data-kt-modal="true"]');
+            modal.classList.add('hidden');
+            modal.querySelectorAll('input').forEach(input => input.value = input.type === 'checkbox' ? false : input.getAttribute('value') || '');
+        });
+    });
+
+    modals.forEach(modal => {
+        modal.addEventListener('click', function (e) {
+            if (e.target === modal) {
+                modal.classList.add('hidden');
+                modal.querySelectorAll('input').forEach(input => input.value = input.type === 'checkbox' ? false : input.getAttribute('value') || '');
+            }
+        });
+    });
+
+    // Form submission via AJAX
+    const forms = document.querySelectorAll('.kt-modal form');
+    forms.forEach(form => {
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert(data.message);
+                    window.location.reload();
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(() => alert('An error occurred. Please try again.'));
+        });
+    });
+});
+</script>
 {% endblock content %}

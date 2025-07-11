@@ -9,7 +9,7 @@ from django.utils.decorators import method_decorator
 from django.utils.html import strip_tags
 from django.views.decorators.csrf import csrf_exempt
 from razorpay.errors import SignatureVerificationError
-from .forms import PaymentForm
+from .forms import *
 from .models import *
 import razorpay
 import stripe
@@ -26,12 +26,11 @@ from django.views.generic import TemplateView, ListView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import authenticate, login
-from django.views.generic.edit import FormView, CreateView, UpdateView
+from django.views.generic.edit import *
 from datetime import date
 from django.db.models import F
 import random
 import requests
-
 from django.http import JsonResponse
 from datetime import date, timedelta
 from django.shortcuts import get_object_or_404
@@ -415,15 +414,15 @@ class UploadProfilePictureView(LoginRequiredMixin, View):
 
 # ------------------------------------------------------------------------------------------------------------------------
 class SearchResultsGridView(TemplateView):
-    template_name = 'userdashboard/view/search-results-grid.html'
+    template_name = 'userdashboard/view/search_results_grid.html'
 
 
 class SearchResultsListView(TemplateView):
-    template_name = 'userdashboard/view/search-results-list.html'
+    template_name = 'userdashboard/view/search_results_list.html'
 
 
 class ProductDetailsView(TemplateView):
-    template_name = 'userdashboard/view/product-details.html'
+    template_name = 'userdashboard/view/product_details.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -442,7 +441,7 @@ class ProductDetailsView(TemplateView):
 
 
 class ShoppingCartView(LoginRequiredMixin, TemplateView):
-    template_name = 'userdashboard/view/shopping-cart.html'
+    template_name = 'userdashboard/view/shopping_cart.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -550,15 +549,136 @@ class WishlistProductListView(LoginRequiredMixin, View):
         return JsonResponse(data, safe=False)
 
 class OrderSummaryView(TemplateView):
-    template_name = 'userdashboard/view/order-summary.html'
+    template_name = 'userdashboard/view/order_summary.html'
 
 
-class ShippingInfoView(TemplateView):
-    template_name = 'userdashboard/view/shipping-info.html'
+class ShippingInfoView(LoginRequiredMixin, TemplateView):
+    template_name = 'userdashboard/view/shipping_info.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        context['user'] = user
+
+        # Get phone number
+        phone = None
+        profile_type = None
+        try:
+            profile = DoctorProfile.objects.get(user=user)
+            phone = None
+            profile_type = 'doctor'
+        except DoctorProfile.DoesNotExist:
+            try:
+                profile = MedicalSupplierProfile.objects.get(user=user)
+                phone = None
+                profile_type = 'medical_supplier'
+            except MedicalSupplierProfile.DoesNotExist:
+                try:
+                    profile = CorporateProfile.objects.get(user=user)
+                    phone = None
+                    profile_type = 'corporate'
+                except CorporateProfile.DoesNotExist:
+                    try:
+                        profile = RetailProfile.objects.get(user=user)
+                        phone = None
+                        profile_type = 'retailer'
+                    except RetailProfile.DoesNotExist:
+                        try:
+                            profile = WholesaleBuyerProfile.objects.get(user=user)
+                            phone = None
+                            profile_type = 'wholesaler'
+                        except WholesaleBuyerProfile.DoesNotExist:
+                            try:
+                                profile = SupplierProfile.objects.get(user=user)
+                                phone = None
+                                profile_type = 'supplier'
+                            except SupplierProfile.DoesNotExist:
+                                pass
+        context['phone'] = phone or 'Not set'
+        context['profile_type'] = profile_type
+
+        # Get all non-deleted addresses
+        context['addresses'] = CustomerBillingAddress.objects.filter(user=user, is_deleted=False)
+        context['default_address'] = CustomerBillingAddress.objects.filter(user=user, is_default=True, is_deleted=False).first()
+
+        # Order summary (example calculation, adjust based on your Order model)
+        orders = Orders.objects.filter(order_by=user, status__in=['pending', 'processing'])
+        subtotal = sum(order.total_price for order in orders) if orders else 0.0
+        shipping = 0.0  # Adjust based on your logic
+        vat = 0.0       # Adjust based on your logic
+        total = subtotal + shipping + vat
+        context['order_summary'] = {
+            'subtotal': subtotal,
+            'shipping': shipping,
+            'vat': vat,
+            'total': total
+        }
+
+        return context
+
+
+class AddAddressView(LoginRequiredMixin, FormView):
+    form_class = AddressForm
+    template_name = 'userdashboard/view/add_address.html'
+    success_url = reverse_lazy('dashboard:shipping_info')
+
+    def form_valid(self, form):
+        address = form.save(commit=False)
+        address.user = self.request.user
+        if address.is_default:
+            CustomerBillingAddress.objects.filter(user=self.request.user, is_default=True).update(is_default=False)
+        address.save()
+        messages.success(self.request, "Address added successfully.")
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        messages.error(self.request, "Failed to add address. Please check the form.")
+        return super().form_invalid(form)
+
+
+class EditAddressView(LoginRequiredMixin, UpdateView):
+    model = CustomerBillingAddress
+    form_class = AddressForm
+    template_name = 'userdashboard/view/edit_address.html'
+    success_url = reverse_lazy('dashboard:shipping_info')
+
+    def get_queryset(self):
+        return CustomerBillingAddress.objects.filter(user=self.request.user, is_deleted=False)
+
+    def form_valid(self, form):
+        address = form.save(commit=False)
+        if address.is_default:
+            CustomerBillingAddress.objects.filter(user=self.request.user, is_default=True).exclude(id=address.id).update(is_default=False)
+        address.save()
+        messages.success(self.request, "Address updated successfully.")
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        messages.error(self.request, "Failed to update address. Please check the form.")
+        return super().form_invalid(form)
+
+
+class RemoveAddressView(LoginRequiredMixin, View):
+    def post(self, request, address_id):
+        address = get_object_or_404(CustomerBillingAddress, id=address_id, user=self.request.user, is_deleted=False)
+        address.is_deleted = True
+        address.save()
+        messages.success(self.request, "Address removed successfully.")
+        return redirect('dashboard:shipping_info')
+
+
+class SetDefaultAddressView(LoginRequiredMixin, View):
+    def post(self, request):
+        address_id = self.request.GET.get('address_id')
+        address = get_object_or_404(CustomerBillingAddress, id=address_id, user=self.request.user, is_deleted=False)
+        CustomerBillingAddress.objects.filter(user=self.request.user, is_default=True).update(is_default=False)
+        address.is_default = True
+        address.save()
+        return JsonResponse({'status': 'success'})
 
 
 class PaymentMethodView(LoginRequiredMixin, View):
-    template_name = 'userdashboard/view/payment-method.html'
+    template_name = 'userdashboard/view/payment_method.html'
 
     def get_stripe_key(self, request):
         return settings.STRIPE_PUBLISHABLE_KEY, settings.STRIPE_SECRET_KEY
@@ -728,15 +848,15 @@ class PaymentMethodView(LoginRequiredMixin, View):
 
 
 class OrderPlacedView(TemplateView):
-    template_name = 'userdashboard/view/order-placed.html'
+    template_name = 'userdashboard/view/order_placed.html'
 
 
 class MyOrdersView(TemplateView):
-    template_name = 'userdashboard/view/my-orders.html'
+    template_name = 'userdashboard/view/my_orders.html'
 
 
 class OrderReceiptView(TemplateView):
-    template_name = 'userdashboard/view/order-receipt.html'
+    template_name = 'userdashboard/view/order_receipt.html'
 
 
 
@@ -745,9 +865,251 @@ class UserProfile(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        user = self.request.user  
+        user = self.request.user
         context['user'] = user
+
+        # Get user profile and type
+        profile = None
+        profile_type = None
+        try:
+            profile = DoctorProfile.objects.get(user=user)
+            profile_type = 'doctor'
+        except DoctorProfile.DoesNotExist:
+            try:
+                profile = MedicalSupplierProfile.objects.get(user=user)
+                profile_type = 'medical_supplier'
+            except MedicalSupplierProfile.DoesNotExist:
+                try:
+                    profile = CorporateProfile.objects.get(user=user)
+                    profile_type = 'corporate'
+                except CorporateProfile.DoesNotExist:
+                    try:
+                        profile = RetailProfile.objects.get(user=user)
+                        profile_type = 'retailer'
+                    except RetailProfile.DoesNotExist:
+                        try:
+                            profile = WholesaleBuyerProfile.objects.get(user=user)
+                            profile_type = 'wholesaler'
+                        except WholesaleBuyerProfile.DoesNotExist:
+                            try:
+                                profile = SupplierProfile.objects.get(user=user)
+                                profile_type = 'supplier'
+                            except SupplierProfile.DoesNotExist:
+                                pass
+
+        context['profile'] = profile
+        context['profile_type'] = profile_type
+
+        # Get phone number
+        phone = None
+        if profile_type == 'doctor':
+            phone = profile.phone_number
+        elif profile_type == 'medical_supplier':
+            phone = profile.phone_details
+        elif profile_type in ('corporate', 'wholesaler'):
+            phone = profile.phone
+        context['phone'] = phone or 'Not set'
+
+        # Get avatar
+        avatar = None
+        if profile_type in ('medical_supplier', 'retailer', 'wholesaler', 'supplier'):
+            avatar = profile.profile_picture
+        context['avatar'] = avatar
+
+        # Get default address
+        try:
+            default_address = CustomerBillingAddress.objects.get(user=user, is_default=True , is_deleted=False)
+            context['default_address'] = default_address
+        except CustomerBillingAddress.DoesNotExist:
+            context['default_address'] = None
+
+        # Order summary
+        orders = Orders.objects.filter(order_by=user)
+        context['total_orders'] = orders.count()
+        context['pending_orders'] = orders.filter(status='pending').count()
+        context['delivered_orders'] = orders.filter(status='delivered').count()
+        context['cancelled_orders'] = orders.filter(status='cancelled').count()
+
+        # Wishlist count
+        context['wishlist_count'] = WishlistProduct.objects.filter(user=user).count()
+
+        # Payment method (get most recent paid payment)
+        stripe_payment = StripePayment.objects.filter(user=user, paid=True).order_by('-created_at').first()
+        razorpay_payment = RazorpayPayment.objects.filter(user=user, paid=True).order_by('-created_at').first()
+        cod_payment = CODPayment.objects.filter(user=user, paid=True).order_by('-created_at').first()
+
+        latest_payment = None
+        if stripe_payment:
+            latest_payment = {'type': 'Stripe', 'details': f"{stripe_payment.name} ending in {stripe_payment.stripe_customer_id[-4:]}", 'created_at': stripe_payment.created_at}
+        if razorpay_payment and (not latest_payment or razorpay_payment.created_at > latest_payment['created_at']):
+            latest_payment = {'type': 'Razorpay', 'details': f"{razorpay_payment.name} ending in {razorpay_payment.razorpay_payment_id[-4:]}", 'created_at': razorpay_payment.created_at}
+        if cod_payment and (not latest_payment or cod_payment.created_at > latest_payment['created_at']):
+            latest_payment = {'type': 'COD', 'details': f"COD - {cod_payment.name}", 'created_at': cod_payment.created_at}
+
+        context['payment_method'] = latest_payment
+
         return context
+
+class UploadAvatarView(LoginRequiredMixin, View):
+    def post(self, request):
+        profile = None
+        try:
+            profile = MedicalSupplierProfile.objects.get(user=self.request.user)
+        except MedicalSupplierProfile.DoesNotExist:
+            try:
+                profile = RetailProfile.objects.get(user=self.request.user)
+            except RetailProfile.DoesNotExist:
+                try:
+                    profile = WholesaleBuyerProfile.objects.get(user=self.request.user)
+                except WholesaleBuyerProfile.DoesNotExist:
+                    try:
+                        profile = SupplierProfile.objects.get(user=self.request.user)
+                    except SupplierProfile.DoesNotExist:
+                        pass
+
+        if profile:
+            if 'avatar' in self.request.FILES:
+                profile.profile_picture = self.request.FILES['avatar']
+                profile.save()
+                messages.success(self.request, "Avatar updated successfully.")
+            elif 'avatar_remove' in self.request.POST:
+                profile.profile_picture.delete()
+                profile.save()
+                messages.success(self.request, "Avatar removed successfully.")
+        else:
+            messages.error(self.request, "Profile not found.")
+        return redirect('dashboard:user_profile')
+
+    def get(self, request):
+        return redirect('dashboard:user_profile')
+
+class EditProfileView(LoginRequiredMixin, UpdateView):
+    template_name = 'pages/edit_profile.html'
+    form_class = ProfileForm
+
+    def get_object(self):
+        user = self.request.user
+        try:
+            return DoctorProfile.objects.get(user=user)
+        except DoctorProfile.DoesNotExist:
+            try:
+                return MedicalSupplierProfile.objects.get(user=user)
+            except MedicalSupplierProfile.DoesNotExist:
+                try:
+                    return CorporateProfile.objects.get(user=user)
+                except CorporateProfile.DoesNotExist:
+                    try:
+                        return RetailProfile.objects.get(user=user)
+                    except RetailProfile.DoesNotExist:
+                        try:
+                            return WholesaleBuyerProfile.objects.get(user=user)
+                        except WholesaleBuyerProfile.DoesNotExist:
+                            return SupplierProfile.objects.get(user=user)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        # Determine profile_type directly
+        user = self.request.user
+        profile_type = None
+        try:
+            DoctorProfile.objects.get(user=user)
+            profile_type = 'doctor'
+        except DoctorProfile.DoesNotExist:
+            try:
+                MedicalSupplierProfile.objects.get(user=user)
+                profile_type = 'medical_supplier'
+            except MedicalSupplierProfile.DoesNotExist:
+                try:
+                    CorporateProfile.objects.get(user=user)
+                    profile_type = 'corporate'
+                except CorporateProfile.DoesNotExist:
+                    try:
+                        RetailProfile.objects.get(user=user)
+                        profile_type = 'retailer'
+                    except RetailProfile.DoesNotExist:
+                        try:
+                            WholesaleBuyerProfile.objects.get(user=user)
+                            profile_type = 'wholesaler'
+                        except WholesaleBuyerProfile.DoesNotExist:
+                            try:
+                                SupplierProfile.objects.get(user=user)
+                                profile_type = 'supplier'
+                            except SupplierProfile.DoesNotExist:
+                                pass
+        kwargs['profile_type'] = profile_type
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Reuse profile_type from get_form_kwargs logic
+        user = self.request.user
+        profile_type = None
+        try:
+            DoctorProfile.objects.get(user=user)
+            profile_type = 'doctor'
+        except DoctorProfile.DoesNotExist:
+            try:
+                MedicalSupplierProfile.objects.get(user=user)
+                profile_type = 'medical_supplier'
+            except MedicalSupplierProfile.DoesNotExist:
+                try:
+                    CorporateProfile.objects.get(user=user)
+                    profile_type = 'corporate'
+                except CorporateProfile.DoesNotExist:
+                    try:
+                        RetailProfile.objects.get(user=user)
+                        profile_type = 'retailer'
+                    except RetailProfile.DoesNotExist:
+                        try:
+                            WholesaleBuyerProfile.objects.get(user=user)
+                            profile_type = 'wholesaler'
+                        except WholesaleBuyerProfile.DoesNotExist:
+                            try:
+                                SupplierProfile.objects.get(user=user)
+                                profile_type = 'supplier'
+                            except SupplierProfile.DoesNotExist:
+                                pass
+        context['profile_type'] = profile_type
+        return context
+
+    def get_success_url(self):
+        return reverse_lazy('dashboard:user_profile')
+
+
+class EditEmailView(LoginRequiredMixin, View):
+    def post(self, request):
+        form = EmailForm(request.POST, instance=self.request.user)
+        if form.is_valid():
+            form.save()
+            return JsonResponse({'status': 'success', 'message': 'Email updated successfully.'})
+        return JsonResponse({'status': 'error', 'message': 'Failed to update email. Please check the form.'})
+
+
+class EditPhoneView(LoginRequiredMixin, View):
+    def post(self, request):
+        default_address = CustomerBillingAddress.objects.filter(user=self.request.user, is_default=True, is_deleted=False).first()
+        if not default_address:
+            default_address = CustomerBillingAddress.objects.filter(user=self.request.user, is_deleted=False).first()
+            if default_address:
+                default_address.is_default = True
+                default_address.save()
+            else:
+                default_address = CustomerBillingAddress.objects.create(
+                    user=self.request.user,
+                    address_title="Default Address",
+                    customer_address1="Not set",
+                    customer_city="Not set",
+                    customer_state="Not set",
+                    customer_postal_code="00000",
+                    customer_country="Not set",
+                    is_default=True
+                )
+        form = PhoneForm(request.POST, instance=default_address)
+        if form.is_valid():
+            form.save()
+            return JsonResponse({'status': 'success', 'message': 'Phone number updated successfully.'})
+        return JsonResponse({'status': 'error', 'message': 'Failed to update phone number. Please check the form.'})
 
 
 class SignUpView(View):

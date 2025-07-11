@@ -261,9 +261,11 @@ class Orders(models.Model):
 
 class CustomerBillingAddress(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True)
+    address_title = models.CharField(max_length=100, blank=True, default="Address")
     customer_name = models.CharField(verbose_name="Card Holder Name", max_length=128, null=True, blank=True)
     customer_address1 = models.CharField(max_length=255, null=True, blank=True)
     customer_address2 = models.CharField(max_length=255, null=True, blank=True)
+    phone = models.CharField(max_length=20, blank=True, null=True)
     customer_city = models.CharField(max_length=128, null=True, blank=True)
     customer_state = models.CharField(max_length=128, null=True, blank=True)
     customer_postal_code = models.CharField(max_length=64, null=True, blank=True)
@@ -274,6 +276,7 @@ class CustomerBillingAddress(models.Model):
     old_card = models.TextField(null=True, blank=True)
 
     is_deleted = models.BooleanField(default=False)
+    is_default = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

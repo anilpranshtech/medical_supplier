@@ -1,0 +1,93 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="kt-container-fixed mt-7 py-6" style="max-width: var(--custom-container-width, 85%);">
+    <h1 class="font-medium text-lg text-mono">Edit Profile</h1>
+    <form method="post" class="kt-card w-full max-w-md mt-4">
+        {% csrf_token %}
+        <div class="kt-card-content space-y-4">
+            <div>
+                <label class="text-sm font-medium">First Name</label>
+                {{ form.first_name }}
+            </div>
+            <div>
+                <label class="text-sm font-medium">Last Name</label>
+                {{ form.last_name }}
+            </div>
+            {% if profile_type == 'doctor' %}
+                <div>
+                    <label class="text-sm font-medium">Phone Number</label>
+                    {{ form.phone_number }}
+                </div>
+                <div>
+                    <label class="text-sm font-medium">Speciality</label>
+                    {{ form.speciality }}
+                </div>
+                <div>
+                    <label class="text-sm font-medium">Current Position</label>
+                    {{ form.current_position }}
+                </div>
+                <div>
+                    <label class="text-sm font-medium">Workplace</label>
+                    {{ form.workplace }}
+                </div>
+            {% elif profile_type == 'medical_supplier' %}
+                <div>
+                    <label class="text-sm font-medium">Phone Details</label>
+                    {{ form.phone_details }}
+                </div>
+                <div>
+                    <label class="text-sm font-medium">Company Name</label>
+                    {{ form.company_name }}
+                </div>
+                <div>
+                    <label class="text-sm font-medium">Workplace</label>
+                    {{ form.workplace }}
+                </div>
+            {% elif profile_type == 'corporate' %}
+                <div>
+                    <label class="text-sm font-medium">Phone</label>
+                    {{ form.phone }}
+                </div>
+                <div>
+                    <label class="text-sm font-medium">Company Name</label>
+                    {{ form.company_name }}
+                </div>
+                <div>
+                    <label class="text-sm font-medium">Department</label>
+                    {{ form.department }}
+                </div>
+            {% elif profile_type == 'retailer' %}
+                <div>
+                    <label class="text-sm font-medium">Age</label>
+                    {{ form.age }}
+                </div>
+                <div>
+                    <label class="text-sm font-medium">Medical Needs</label>
+                    {{ form.medical_needs }}
+                </div>
+            {% elif profile_type == 'wholesaler' %}
+                <div>
+                    <label class="text-sm font-medium">Phone</label>
+                    {{ form.phone }}
+                </div>
+                <div>
+                    <label class="text-sm font-medium">Company Name</label>
+                    {{ form.company_name }}
+                </div>
+                <div>
+                    <label class="text-sm font-medium">Department</label>
+                    {{ form.department }}
+                </div>
+            {% elif profile_type == 'supplier' %}
+                <div>
+                    <label class="text-sm font-medium">Company Name</label>
+                    {{ form.company_name }}
+                </div>
+            {% endif %}
+            <button type="submit" class="kt-btn kt-btn-primary">Save Changes</button>
+        </div>
+    </form>
+</div>
+{% endblock content %}

@@ -1,0 +1,54 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="kt-container-fixed mt-7 py-6" style="max-width: var(--custom-container-width, 85%);">
+    <h1 class="font-medium text-lg text-mono">Edit Address</h1>
+    <form method="post" class="kt-card w-full max-w-md mt-4">
+        {% csrf_token %}
+        <div class="kt-card-content space-y-4">
+            <div>
+                <label class="text-2sm font-semibold text-mono">Address Title</label>
+                {{ form.address_title }}
+            </div>
+            <div>
+                <label class="text-2sm font-semibold text-mono">Full Name</label>
+                {{ form.full_name }}
+            </div>
+            <div>
+                <label class="text-2sm font-semibold text-mono">Street Address</label>
+                {{ form.customer_address1 }}
+            </div>
+            <div>
+                <label class="text-2sm font-semibold text-mono">Street Address 2 (Optional)</label>
+                {{ form.customer_address2 }}
+            </div>
+            <div>
+                <label class="text-2sm font-semibold text-mono">City</label>
+                {{ form.customer_city }}
+            </div>
+            <div>
+                <label class="text-2sm font-semibold text-mono">State</label>
+                {{ form.customer_state }}
+            </div>
+            <div>
+                <label class="text-2sm font-semibold text-mono">Postal Code</label>
+                {{ form.customer_postal_code }}
+            </div>
+            <div>
+                <label class="text-2sm font-semibold text-mono">Country</label>
+                {{ form.customer_country }}
+            </div>
+            <div>
+                <label class="text-2sm font-semibold text-mono">Phone Number</label>
+                {{ form.phone }}
+            </div>
+            <div class="flex items-center gap-2">
+                {{ form.is_default }}
+                <label for="{{ form.is_default.id_for_label }}" class="text-2sm font-semibold text-mono">Set as Default</label>
+            </div>
+            <button type="submit" class="kt-btn kt-btn-primary">Save Changes</button>
+        </div>
+    </form>
+</div>
+{% endblock content %}
