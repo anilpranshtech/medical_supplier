@@ -697,6 +697,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.querySelector('#drawers_shop_wishlist')?.addEventListener('hide.bs.drawer', () => {
         updateWishlistIcons();
+
     });
 
     const closeBtn = document.getElementById('cart-close-btn');
@@ -926,6 +927,27 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    function updateCartIcons() {
+        // Only target the correct buttons (bottom "Add" button)
+        document.querySelectorAll('.add-to-cart-btn, .kt-btn-success[data-product-id]').forEach(button => {
+            const productId = parseInt(button.dataset.productId);
+            const inCart = cart.some(item => {
+                const parsed = safeParseJSON(item);
+                return parsed?.id === productId;
+            });
+
+            if (inCart) {
+                button.classList.remove('kt-btn-outline', 'add-to-cart-btn');
+                button.classList.add('kt-btn-success');
+                button.innerHTML = `In cart <i class="ki-filled ki-handcart"></i>`;
+            } else {
+                button.classList.add('kt-btn-outline', 'add-to-cart-btn');
+                button.classList.remove('kt-btn-success');
+                button.innerHTML = `Add <i class="ki-filled ki-handcart"></i>`;
+            }
+        });
+    }
+
     function updateCartUI() {
         const cartContainer = document.querySelector('#cart-items');
         if (cartContainer) {
@@ -984,9 +1006,12 @@ document.addEventListener('DOMContentLoaded', function () {
                         cart[itemIndex] = JSON.stringify({ ...product, quantity });
                         localStorage.setItem('cart', JSON.stringify(cart));
                         updateCartUI();
+                        updateCartIcons();
                     }
                 });
             });
+
+
 
             document.querySelectorAll('.qty-decrement').forEach(button => {
                 button.addEventListener('click', function () {
@@ -1000,6 +1025,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             cart[itemIndex] = JSON.stringify({ ...product, quantity });
                             localStorage.setItem('cart', JSON.stringify(cart));
                             updateCartUI();
+                            updateCartIcons();
                         }
                     }
                 });
@@ -1011,6 +1037,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     cart = cart.filter(item => safeParseJSON(item)?.sku !== sku);
                     localStorage.setItem('cart', JSON.stringify(cart));
                     updateCartUI();
+                    updateCartIcons();
+
                 });
             });
         }
@@ -1041,6 +1069,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
                 localStorage.setItem('cart', JSON.stringify(cart));
                 updateCartUI();
+                updateCartIcons();
             }
         });
     });
@@ -1099,6 +1128,7 @@ document.addEventListener('DOMContentLoaded', function () {
             cart = [];
             localStorage.setItem('cart', JSON.stringify(cart));
             updateCartUI();
+            updateCartIcons();
         });
     }
 
@@ -1181,6 +1211,37 @@ document.addEventListener('DOMContentLoaded', function () {
             });
     }
 
+     let cart = [];
+    try {
+        cart = JSON.parse(localStorage.getItem('cart')) || [];
+    } catch (e) {
+        localStorage.setItem('cart', JSON.stringify([]));
+    }
+
+    function updateCartIcons(onlyId = null) {
+        const selector = onlyId
+        ? `button[data-product-id="${onlyId}"]:not([data-kt-wishlist-toggle])`
+        : 'button[data-product-id]:not([data-kt-wishlist-toggle])';
+
+        document.querySelectorAll(selector).forEach(button => {
+            const productId = parseInt(button.dataset.productId, 10);
+            const inCart = cart.some(item => {
+                const parsed = safeParseJSON(item);
+                return parsed?.id === productId;
+            });
+
+            if (inCart) {
+                button.classList.remove('kt-btn-outline', 'add-to-cart-btn');
+                button.classList.add('kt-btn-success');
+                button.innerHTML = 'In cart <i class="ki-filled ki-handcart"></i>';
+            } else {
+                button.classList.add('kt-btn-outline', 'add-to-cart-btn');
+                button.classList.remove('kt-btn-success');
+                button.innerHTML = 'Add <i class="ki-filled ki-handcart"></i>';
+            }
+        });
+    }
+
     function attachEvents() {
         document.querySelectorAll('.remove-cart-item').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -1194,7 +1255,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     body: `item_id=${id}`
                 }).then(res => res.json())
                 .then(data => {
-                    if (data.status === 'success') updateCartUI();
+                    if (data.status === 'success') {
+                        updateCartUI();    // re‑render drawer contents
+                        updateCartIcons(id); // flip “Add / In cart” buttons
+                    } else {
+                        console.warn('Remove failed:', data);
+                    }
                 });
             });
         });
@@ -1214,7 +1280,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     body: `product_id=${id}&quantity=${qtyChange}`
                 }).then(res => res.json())
                 .then(data => {
-                    if (data.status === 'success') updateCartUI();
+                    if (data.status === 'success') {updateCartUI();updateCartIcons();}
                 });
             });
         });
@@ -1229,7 +1295,7 @@ document.addEventListener('DOMContentLoaded', function () {
             method: 'POST',
             headers: { 'X-CSRFToken': getCSRFToken() }
         }).then(res => res.json()).then(data => {
-            if (data.status === 'success') updateCartUI();
+            if (data.status === 'success'){ updateCartUI();updateCartIcons();}
         });
     });
 
