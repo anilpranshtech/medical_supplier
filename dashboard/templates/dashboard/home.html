@@ -15,8 +15,8 @@
     /* Slider Styles */
     .kt-slider-container {
         width: 100%;
-        max-width: 1600px; /* Rendered width */
-        height: 265px; /* Rendered height */
+        max-width: 1600px;
+        height: 265px;
         overflow: hidden;
         position: relative;
         background: white;
@@ -39,15 +39,15 @@
     .kt-slide img {
         width: 100%;
         height: 100%;
-        object-fit: cover; /* Scales 1620x269 images to 1600x265 */
-        aspect-ratio: 320 / 53; /* Enforce 320:53 aspect ratio */
+        object-fit: cover;
+        aspect-ratio: 320 / 53;
     }
 
     .kt-nav-btn {
         position: absolute;
         top: 50%;
         transform: translateY(-50%);
-        background: rgba(229, 231, 235, 0.8); /* bg-gray-200 */
+        background: rgba(229, 231, 235, 0.8);
         padding: 0.5rem;
         border-radius: 9999px;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -59,7 +59,7 @@
     }
 
     .kt-nav-btn:hover {
-        background-color: var(--primary-color, #007bff); /* hover:bg-primary */
+        background-color: var(--primary-color, #007bff);
         color: white;
     }
 
@@ -74,17 +74,17 @@
     /* Responsive adjustments */
     @media (max-width: 1599px) {
         .kt-slider-container {
-            height: calc(100vw * 265 / 1600); /* Maintain 320:53 aspect ratio */
+            height: calc(100vw * 265 / 1600);
         }
     }
 
     @media (prefers-color-scheme: dark) {
         .kt-slider-container {
-            background: #1a202c; /* Dark mode background */
+            background: #1a202c;
         }
 
         .kt-nav-btn {
-            background: rgba(55, 65, 81, 0.8); /* bg-gray-700 */
+            background: rgba(55, 65, 81, 0.8);
             color: white;
         }
     }
@@ -120,74 +120,74 @@
         <!-- begin: Featured Products -->
         <div class="grid sm:grid-cols-4 xl:grid-cols-7 gap-5 mb-2">
             {% for product in featured_products %}
-            <div class="kt-card">
-                <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
-                    <div class="mb-2.5">
-                        <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[250px] mb-4 shadow-none">
-                            <a href="{% url 'dashboard:product_detail' product.id %}" class="w-full h-full block">
-                                <img
-                                        alt="{{ product.name|default:'Unnamed Product' }}"
-                                        class="h-[180px] shrink-0 cursor-pointer product-thumbnail"
-                                        src="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
-                                        data-product-name="{{ product.name|default:'Unnamed Product' }}"
-                                        data-product-description="{{ product.description|default:'No description available' }}"
-                                        data-product-image="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
-                                        data-product-sku="{{ product.sku|default:'N/A' }}"
-                                        data-product-category="{{ product.category|default:'Uncategorized' }}"
-                                        data-product-rating="{{ product.rating|default:'4.5' }}"
-                                        data-product-more-info="{{ product.more_info|default:'No additional info' }}"
-                                        data-product-price="{{ product.price|default:'0.00' }}"
-                                        data-product-original-price="{{ product.original_price|default:'' }}"
-                                        data-product-discount="{{ product.offer_percentage|default:'' }}"
-                                />
+                <div class="kt-card">
+                    <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
+                        <div class="mb-2.5">
+                            <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[250px] mb-4 shadow-none">
+                                <img alt="{{ product.name }}" class="h-[180px] shrink-0 cursor-pointer product-thumbnail"
+                                     data-kt-modal-toggle="#modal_shop_product_details"
+                                     src="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
+                                     data-product-name="{{ product.name }}"
+                                     data-product-description="{{ product.description }}"
+                                     data-product-image="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
+                                     data-product-sku="{{ product.sku }}"
+                                     data-product-category="{{ product.category }}"
+                                     data-product-rating="{{ product.rating }}"
+                                     data-product-more-info="{{ product.more_info }}"
+                                     data-product-price="{{ product.price }}"
+                                     data-product-original-price="{{ product.original_price|default:'' }}"
+                                     data-product-discount="{{ product.offer_percentage|default:'' }}">
+                                <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
+                                        data-kt-wishlist-toggle="true"
+                                        data-product-id="{{ product.id }}">
+                                    <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
+                                </button>
+                            </div>
+                            <a class="block px-2.5 pt-1 cursor-pointer product-name-link"
+                               data-kt-modal-toggle="#modal_shop_product_details"
+                               href="#"
+                               data-product-name="{{ product.name }}"
+                               data-product-description="{{ product.description }}"
+                               data-product-image="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
+                               data-product-sku="{{ product.sku }}"
+                               data-product-category="{{ product.category }}"
+                               data-product-rating="{{ product.rating }}"
+                               data-product-more-info="{{ product.more_info }}"
+                               data-product-price="{{ product.price }}"
+                               data-product-original-price="{{ product.original_price|default:'' }}"
+                               data-product-discount="{{ product.offer_percentage|default:'' }}">
+                                <h3 class="text-lg font-bold text-gray-900 leading-snug truncate hover:text-primary transition">
+                                    {{ product.name }}
+                                </h3>
+                                <p class="text-sm text-gray-600 mt-1 truncate">
+                                    {{ product.description|default:"No description available"|truncatechars:120 }}
+                                </p>
+                                {% if product.delivery_date %}
+                                    <p class="text-xs text-green-600 mt-1">
+                                        Delivery by: <strong>{{ product.delivery_date }}</strong>
+                                    </p>
+                                {% endif %}
                             </a>
-
-                            <button
-                                    class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
-                                    data-kt-wishlist-toggle="true"
-                                    data-product-id="{{ product.id|default:'0' }}">
-                                <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
-                            </button>
-
                         </div>
-                        <a
-                                class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block product-name-link"
-                                href="{% url 'dashboard:product_detail' product.id %}"
-                                data-debug-url="{% url 'dashboard:product_detail' product.id %}"
-                                data-product-name="{{ product.name|default:'Unnamed Product' }}"
-                                data-product-description="{{ product.description|default:'No description available' }}"
-                                data-product-image="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
-                                data-product-sku="{{ product.sku|default:'N/A' }}"
-                                data-product-category="{{ product.category|default:'Uncategorized' }}"
-                                data-product-rating="{{ product.rating|default:'4.5' }}"
-                                data-product-more-info="{{ product.more_info|default:'No additional info' }}"
-                                data-product-price="{{ product.price|default:'0.00' }}"
-                                data-product-original-price="{{ product.original_price|default:'' }}"
-                                data-product-discount="{{ product.offer_percentage|default:'' }}"
-                        >
-                            {{ product.name|default:'Unnamed Product' }}
-                        </a>
-                    </div>
-                    <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
-                <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1">
-                    <i class="ki-solid ki-star text-white -mt-0.5"></i>
-                    {{ product.rating|default:"4.5" }}
-                </span>
-                        <div class="flex items-center flex-wrap gap-1.5">
-                            {% if product.original_price and product.original_price > product.price %}
-                            <span class="text-xs font-normal text-secondary-foreground line-through pt-[1px]">
-                        ${{ product.original_price|floatformat:2 }}
-                    </span>
-                            {% endif %}
-                            <span class="text-sm font-medium text-mono">${{ product.price|floatformat:2 }}</span>
-                            <button class="kt-btn kt-btn-outline kt-btn-sm ms-1"
-                                    data-kt-drawer-toggle="#drawers_shop_cart">
-                                Add <i class="ki-filled ki-handcart"></i>
-                            </button>
+                        <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
+                            <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1">
+                                <i class="ki-solid ki-star text-white -mt-0.5"></i>
+                                {{ product.rating|default:"4.5" }}
+                            </span>
+                            <div class="flex items-center flex-wrap gap-1.5">
+                                {% if product.original_price and product.original_price > product.price %}
+                                    <span class="text-xs font-normal text-secondary-foreground line-through pt-[1px]">
+                                        ${{ product.original_price|floatformat:2 }}
+                                    </span>
+                                {% endif %}
+                                <span class="text-sm font-medium text-mono">${{ product.price|floatformat:2 }}</span>
+                                <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 add-to-cart-btn" data-product-id="{{ product.id }}">
+                                    Add <i class="ki-filled ki-handcart"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
             {% endfor %}
         </div>
         <!-- end: Featured Products -->
@@ -200,442 +200,498 @@
             </div>
             <div class="grid xl:grid-cols-2 gap-5 mb-2">
                 {% for product in special_offers %}
-                {% if forloop.first %}
-                <div class="lg:col-span-1">
-                    <div class="kt-card h-full bg-violet-50 border-violet-200 dark:border-violet-950 dark:bg-violet-950/30">
-                        <div class="kt-card-content flex items-center flex-wrap sm:flex-nowrap justify-between gap-5 lg:gap-9 lg:px-7.5 p-5">
-                            <div class="flex flex-col">
-                                <div class="mb-3">
-                                    {% if product.offer_percentage and product.offer_percentage > 0 %}
-                                    <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">save {{ product.offer_percentage|floatformat:0 }}%</span>
-                                    {% endif %}
-                                </div>
-                                <h3 class="text-[26px] font-semibold text-mono mb-1">{{ product.name|default:'Unnamed Product' }}</h3>
-                                <span class="text-sm font-normal text-foreground mb-5 leading-5.5">{{ product.description|default:'No description available' }}</span>
-                                <div class="flex items-center gap-4">
-                                    <button class="kt-btn kt-btn-mono kt-btn-sm"
-                                            data-kt-drawer-toggle="#drawers_shop_cart">
-                                        Add to Cart <i class="ki-filled ki-handcart"></i>
-                                    </button>
-                                    <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm"
-                                            data-kt-wishlist-toggle="true"
-                                            data-product-id="{{ product.id|default:'0' }}" >
-                                        <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
-                                    </button>
-                                    {% if product.original_price and product.original_price > product.price %}
-                                    <span class="text-base font-normal text-secondary-foreground line-through pt-[1px]">
-                                        ${{ product.original_price|floatformat:2 }}
-                                    </span>
-                                    {% endif %}
-                                    <span class="text-base font-semibold text-mono">${{ product.price|floatformat:2 }}</span>
+                    {% if forloop.first %}
+                        <div class="lg:col-span-1">
+                            <div class="kt-card h-full bg-violet-50 border-violet-200 dark:border-violet-950 dark:bg-violet-950/30">
+                                <div class="kt-card-content flex items-center flex-wrap sm:flex-nowrap justify-between gap-5 lg:gap-9 lg:px-7.5 p-5">
+                                    <div class="flex flex-col">
+                                        <div class="mb-3">
+                                            {% if product.offer_percentage and product.offer_percentage > 0 %}
+                                                <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">save {{ product.offer_percentage|floatformat:0 }}%</span>
+                                            {% endif %}
+                                        </div>
+                                        <h3 class="text-[26px] font-semibold text-mono mb-1">{{ product.name|default:'Unnamed Product' }}</h3>
+                                        <span class="text-sm font-normal text-foreground mb-5 leading-5.5">{{ product.description|default:'No description available' }}</span>
+                                        <div class="flex items-center gap-4">
+                                            <button class="kt-btn kt-btn-mono kt-btn-sm"
+                                                    data-kt-drawer-toggle="#drawers_shop_cart">
+                                                Add to Cart <i class="ki-filled ki-handcart"></i>
+                                            </button>
+                                            <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm"
+                                                    data-kt-wishlist-toggle="true"
+                                                    data-product-id="{{ product.id|default:'0' }}">
+                                                <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
+                                            </button>
+                                            {% if product.original_price and product.original_price > product.price %}
+                                                <span class="text-base font-normal text-secondary-foreground line-through pt-[1px]">
+                                                    ${{ product.original_price|floatformat:2 }}
+                                                </span>
+                                            {% endif %}
+                                            <span class="text-base font-semibold text-mono">${{ product.price|floatformat:2 }}</span>
+                                        </div>
+                                    </div>
+                                    <a href="{% url 'dashboard:product_detail' product.id %}" class="block">
+                                        <img alt="{{ product.name|default:'Unnamed Product' }}"
+                                             class="size-48 shrink-0 cursor-pointer product-thumbnail"
+                                             src="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
+                                             data-product-name="{{ product.name|default:'Unnamed Product' }}"
+                                             data-product-description="{{ product.description|default:'No description available' }}"
+                                             data-product-image="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
+                                             data-product-sku="{{ product.sku|default:'N/A' }}"
+                                             data-product-category="{{ product.category|default:'Uncategorized' }}"
+                                             data-product-rating="{{ product.rating|default:'4.5' }}"
+                                             data-product-more-info="{{ product.more_info|default:'No additional info' }}"
+                                             data-product-price="{{ product.price|default:'0.00' }}"
+                                             data-product-original-price="{{ product.original_price|default:'' }}"
+                                             data-product-discount="{{ product.offer_percentage|default:'' }}"/>
+                                    </a>
                                 </div>
                             </div>
-                            <a href="{% url 'dashboard:product_detail' product.id %}" class="block">
-                            <img
-                                    alt="{{ product.name|default:'Unnamed Product' }}"
-                                    class="size-48 shrink-0 cursor-pointer product-thumbnail"
-                                    src="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
-                                    data-product-name="{{ product.name|default:'Unnamed Product' }}"
-                                    data-product-description="{{ product.description|default:'No description available' }}"
-                                    data-product-image="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
-                                    data-product-sku="{{ product.sku|default:'N/A' }}"
-                                    data-product-category="{{ product.category|default:'Uncategorized' }}"
-                                    data-product-rating="{{ product.rating|default:'4.5' }}"
-                                    data-product-more-info="{{ product.more_info|default:'No additional info' }}"
-                                    data-product-price="{{ product.price|default:'0.00' }}"
-                                    data-product-original-price="{{ product.original_price|default:'' }}"
-                                    data-product-discount="{{ product.offer_percentage|default:'' }}"
-                            />
-                            </a>
                         </div>
-                    </div>
-                </div>
-                <div class="lg:col-span-1">
-                    <div class="grid sm:grid-cols-2 gap-5 items-stretch">
-                        {% else %}
+                        <div class="lg:col-span-1">
+                            <div class="grid sm:grid-cols-2 gap-5 items-stretch">
+                    {% else %}
                         <div class="kt-card h-full bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-950">
                             <div class="kt-card-content flex flex-col items-center justify-center px-5 pb-0">
                                 <div class="mb-3.5">
                                     {% if product.offer_percentage and product.offer_percentage > 0 %}
-                                    <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">save {{ product.offer_percentage|floatformat:0 }}%</span>
+                                        <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">save {{ product.offer_percentage|floatformat:0 }}%</span>
                                     {% endif %}
                                 </div>
                                 <span class="text-base font-medium text-mono mb-3">{{ product.name|default:'Unnamed Product' }}</span>
                                 <div class="flex items-center gap-2.5 mb-2.5">
-                                    <button class="kt-btn kt-btn-outline kt-btn-sm"
-                                            data-kt-drawer-toggle="#drawers_shop_cart">
+                                    <button class="kt-btn kt-btn-outline kt-btn-sm add-to-cart-btn" data-product-id="{{ product.id }}">
                                         Add to Cart <i class="ki-filled ki-handcart"></i>
                                     </button>
-                                    <button
-                                            class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
+                                    <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
                                             data-kt-wishlist-toggle="true"
-                                            data-product-id="{{ product.id|default:'0' }}"
-                                    >
+                                            data-product-id="{{ product.id|default:'0' }}">
                                         <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
                                     </button>
                                 </div>
                                 {% if product.original_price and product.original_price > product.price %}
-                                <span class="text-sm font-normal text-secondary-foreground line-through pt-[1px]">
-                                    ${{ product.original_price|floatformat:2 }}
-                                </span>
+                                    <span class="text-sm font-normal text-secondary-foreground line-through pt-[1px]">
+                                        ${{ product.original_price|floatformat:2 }}
+                                    </span>
                                 {% endif %}
                                 <span class="text-sm font-medium text-mono">${{ product.price|floatformat:2 }}</span>
                                 <a href="{% url 'dashboard:product_detail' product.id %}" class="block">
-                                <img
-                                        alt="{{ product.name|default:'Unnamed Product' }}"
-                                        class="size-48 shrink-0 cursor-pointer product-thumbnail"
-                                        src="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
-                                        data-product-name="{{ product.name|default:'Unnamed Product' }}"
-                                        data-product-description="{{ product.description|default:'No description available' }}"
-                                        data-product-image="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
-                                        data-product-sku="{{ product.sku|default:'N/A' }}"
-                                        data-product-category="{{ product.category|default:'Uncategorized' }}"
-                                        data-product-rating="{{ product.rating|default:'4.5' }}"
-                                        data-product-more-info="{{ product.more_info|default:'No additional info' }}"
-                                        data-product-price="{{ product.price|default:'0.00' }}"
-                                        data-product-original-price="{{ product.original_price|default:'' }}"
-                                        data-product-discount="{{ product.offer_percentage|default:'' }}"
-                                />
+                                    <img alt="{{ product.name|default:'Unnamed Product' }}"
+                                         class="size-48 shrink-0 cursor-pointer product-thumbnail"
+                                         src="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
+                                         data-product-name="{{ product.name|default:'Unnamed Product' }}"
+                                         data-product-description="{{ product.description|default:'No description available' }}"
+                                         data-product-image="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
+                                         data-product-sku="{{ product.sku|default:'N/A' }}"
+                                         data-product-category="{{ product.category|default:'Uncategorized' }}"
+                                         data-product-rating="{{ product.rating|default:'4.5' }}"
+                                         data-product-more-info="{{ product.more_info|default:'No additional info' }}"
+                                         data-product-price="{{ product.price|default:'0.00' }}"
+                                         data-product-original-price="{{ product.original_price|default:'' }}"
+                                         data-product-discount="{{ product.offer_percentage|default:'' }}"/>
                                 </a>
                             </div>
                         </div>
-                        {% endif %}
-                        {% empty %}
-                        <div class="col-span-full text-center py-10 text-gray-500">
-                            No special offers available at the moment.
-                        </div>
-                        {% endfor %}
-                        {% if special_offers and special_offers|length > 1 %}
-                    </div>
                     {% endif %}
-                </div>
-            </div>
-            <!-- end: Special Offers -->
-
-            <!-- begin: New Arrivals -->
-            <div class="space-y-4">
-                <div class="flex items-center justify-between gap-4">
-                    <span class="text-lg font-medium text-mono">New Arrivals</span>
-                    <a class="kt-link" href="#">See All <i class="ki-filled ki-right text-xs"></i></a>
-                </div>
-                <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-2">
-                    {% for product in recent_products %}
-                    <div class="kt-card">
-                        <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
-                            <div class="mb-2.5">
-                                <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[250px] mb-4 shadow-none">
-                                    <a href="{% url 'dashboard:product_detail' product.id %}" class="block">
-                                    <img
-                                            alt="{{ product.name|default:'Unnamed Product' }}"
-                                            class="h-[180px] shrink-0 cursor-pointer product-thumbnail"
-                                            src="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
-                                            data-product-name="{{ product.name|default:'Unnamed Product' }}"
-                                            data-product-description="{{ product.description|default:'No description available' }}"
-                                            data-product-image="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
-                                            data-product-sku="{{ product.sku|default:'N/A' }}"
-                                            data-product-category="{{ product.category|default:'Uncategorized' }}"
-                                            data-product-rating="{{ product.rating|default:'4.5' }}"
-                                            data-product-more-info="{{ product.more_info|default:'No additional info' }}"
-                                            data-product-price="{{ product.price|default:'0.00' }}"
-                                            data-product-original-price="{{ product.original_price|default:'' }}"
-                                            data-product-discount="{{ product.offer_percentage|default:'' }}"
-                                    />
-                                    </a>
-                                    <button
-                                            class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
-                                            data-kt-wishlist-toggle="true"
-                                            data-product-id="{{ product.id|default:'0' }}"
-                                    >
-                                        <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
-                                    </button>
-                                </div>
-                                <a
-                                        class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block product-name-link"
-                                        href="{% url 'dashboard:product_detail' product.pk %}"
-                                        data-product-name="{{ product.name|default:'Unnamed Product' }}"
-                                        data-product-description="{{ product.description|default:'No description available' }}"
-                                        data-product-image="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
-                                        data-product-sku="{{ product.sku|default:'N/A' }}"
-                                        data-product-category="{{ product.category|default:'Uncategorized' }}"
-                                        data-product-rating="{{ product.rating|default:'4.5' }}"
-                                        data-product-more-info="{{ product.more_info|default:'No additional info' }}"
-                                        data-product-price="{{ product.price|default:'0.00' }}"
-                                        data-product-original-price="{{ product.original_price|default:'' }}"
-                                        data-product-discount="{{ product.offer_percentage|default:'' }}"
-                                >
-                                    {{ product.name|default:'Unnamed Product' }}
-                                </a>
-                            </div>
-                            <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
-                            <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1">
-                                <i class="ki-solid ki-star text-white -mt-0.5"></i>
-                                {{ product.rating|default:"4.5" }}
-                            </span>
-                                <div class="flex items-center flex-wrap gap-1.5">
-                                    {% if product.original_price and product.original_price > product.price %}
-                                    <span class="text-xs font-normal text-secondary-foreground line-through pt-[1px]">
-                                    ${{ product.original_price|floatformat:2 }}
-                                </span>
-                                    {% endif %}
-                                    <span class="text-sm font-medium text-mono">${{ product.price|floatformat:2 }}</span>
-                                    <button class="kt-btn kt-btn-outline kt-btn-sm ms-1"
-                                            data-kt-drawer-toggle="#drawers_shop_cart">
-                                        Add <i class="ki-filled ki-handcart"></i>
-                                    </button>
-                                </div>
+                {% empty %}
+                    <div class="col-span-full text-center py-10 text-gray-500">
+                        No special offers available at the moment.
+                    </div>
+                {% endfor %}
+                {% if special_offers and special_offers|length > 1 %}
                             </div>
                         </div>
-                    </div>
-                    {% endfor %}
-                </div>
+                {% endif %}
             </div>
-            <!-- end: New Arrivals -->
+        </div>
+        <!-- end: Special Offers -->
 
-            <!-- begin: Popular Medical Supplies -->
-            <div class="space-y-4">
-                <div class="flex items-center justify-between gap-4">
-                    <span class="text-lg font-medium text-mono">Popular Medical Supplies</span>
-                    <a class="kt-link" href="#">See All <i class="ki-filled ki-right text-xs"></i></a>
-                </div>
-                <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-2">
-                    {% for product in popular_products %}
-                    <div class="kt-card">
-                        <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
-                            <div class="mb-2.5">
-                                <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[250px] mb-4 shadow-none">
-                                    <a href="{% url 'dashboard:product_detail' product.id %}" class="block">
-                                    <img
-                                            alt="{{ product.name|default:'Unnamed Product' }}"
-                                            class="h-[180px] shrink-0 cursor-pointer product-thumbnail"
-                                            src="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
-                                            data-product-name="{{ product.name|default:'Unnamed Product' }}"
-                                            data-product-description="{{ product.description|default:'No description available' }}"
-                                            data-product-image="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
-                                            data-product-sku="{{ product.sku|default:'N/A' }}"
-                                            data-product-category="{{ product.category|default:'Uncategorized' }}"
-                                            data-product-rating="{{ product.rating|default:'4.5' }}"
-                                            data-product-more-info="{{ product.more_info|default:'No additional info' }}"
-                                            data-product-price="{{ product.price|default:'0.00' }}"
-                                            data-product-original-price="{{ product.original_price|default:'' }}"
-                                            data-product-discount="{{ product.offer_percentage|default:'' }}"
-                                    />
-                                    </a>
-                                    <button
-                                            class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
-                                            data-kt-wishlist-toggle="true"
-                                            data-product-id="{{ product.id|default:'0' }}"
-                                    >
-                                        <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
-                                    </button>
-                                </div>
-                                <a
-                                        class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block product-name-link"
-                                        href="{% url 'dashboard:product_detail' product.pk %}"
-                                        data-product-name="{{ product.name|default:'Unnamed Product' }}"
-                                        data-product-description="{{ product.description|default:'No description available' }}"
-                                        data-product-image="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
-                                        data-product-sku="{{ product.sku|default:'N/A' }}"
-                                        data-product-category="{{ product.category|default:'Uncategorized' }}"
-                                        data-product-rating="{{ product.rating|default:'4.5' }}"
-                                        data-product-more-info="{{ product.more_info|default:'No additional info' }}"
-                                        data-product-price="{{ product.price|default:'0.00' }}"
-                                        data-product-original-price="{{ product.original_price|default:'' }}"
-                                        data-product-discount="{{ product.offer_percentage|default:'' }}"
-                                >
-                                    {{ product.name|default:'Unnamed Product' }}
-                                </a>
-                            </div>
-                            <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
-                            <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1">
-                                <i class="ki-solid ki-star text-white -mt-0.5"></i>
-                                {{ product.rating|default:"4.5" }}
-                            </span>
-                                <div class="flex items-center flex-wrap gap-1.5">
-                                    {% if product.original_price and product.original_price > product.price %}
-                                    <span class="text-xs font-normal text-secondary-foreground line-through pt-[1px]">
-                                    ${{ product.original_price|floatformat:2 }}
-                                </span>
-                                    {% endif %}
-                                    <span class="text-sm font-medium text-mono">${{ product.price|floatformat:2 }}</span>
-                                    <button class="kt-btn kt-btn-outline kt-btn-sm ms-1"
-                                            data-kt-drawer-toggle="#drawers_shop_cart">
-                                        Add <i class="ki-filled ki-handcart"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
+        <!-- begin: New Arrivals -->
+        <div class="space-y-4">
+            <div class="flex items-center justify-between gap-4">
+                <span class="text-lg font-medium text-mono">New Arrivals</span>
+                <a class="kt-link" href="#">See All <i class="ki-filled ki-right text-xs"></i></a>
             </div>
-            <!-- end: Popular Medical Supplies -->
-
-            <!-- begin: Limited-Time Deals -->
-            <div class="space-y-4">
-                <div class="flex items-center justify-between gap-4">
-                    <span class="text-lg font-medium text-mono">Limited-Time Deals</span>
-                    <a class="kt-btn kt-btn-sm kt-btn-ghost kt-btn-primary" href="#">See All <i
-                            class="ki-filled ki-right"></i></a>
-                </div>
-                <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-2">
-                    {% for product in limited_products %}
-                    <div class="kt-card">
-                        <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
-                            <div class="mb-2.5">
-                                <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[250px] mb-4 shadow-none">
-                                    <a href="{% url 'dashboard:product_detail' product.id %}" class="block">
-                                    <img
-                                            alt="{{ product.name|default:'Unnamed Product' }}"
-                                            class="h-[180px] shrink-0 cursor-pointer product-thumbnail"
-                                            src="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
-                                            data-product-name="{{ product.name|default:'Unnamed Product' }}"
-                                            data-product-description="{{ product.description|default:'No description available' }}"
-                                            data-product-image="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
-                                            data-product-sku="{{ product.sku|default:'N/A' }}"
-                                            data-product-category="{{ product.category|default:'Uncategorized' }}"
-                                            data-product-rating="{{ product.rating|default:'4.5' }}"
-                                            data-product-more-info="{{ product.more_info|default:'No additional info' }}"
-                                            data-product-price="{{ product.price|default:'0.00' }}"
-                                            data-product-original-price="{{ product.original_price|default:'' }}"
-                                            data-product-discount="{{ product.offer_percentage|default:'' }}"
-                                    />
-                                    </a>
-                                    <button
-                                            class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
-                                            data-kt-wishlist-toggle="true"
-                                            data-product-id="{{ product.id|default:'0' }}"
-                                    >
-                                        <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
-                                    </button>
-                                </div>
-                                <a
-                                        class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block product-name-link"
-                                        href="{% url 'dashboard:product_detail' product.pk %}"
-                                        data-product-name="{{ product.name|default:'Unnamed Product' }}"
-                                        data-product-description="{{ product.description|default:'No description available' }}"
-                                        data-product-image="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
-                                        data-product-sku="{{ product.sku|default:'N/A' }}"
-                                        data-product-category="{{ product.category|default:'Uncategorized' }}"
-                                        data-product-rating="{{ product.rating|default:'4.5' }}"
-                                        data-product-more-info="{{ product.more_info|default:'No additional info' }}"
-                                        data-product-price="{{ product.price|default:'0.00' }}"
-                                        data-product-original-price="{{ product.original_price|default:'' }}"
-                                        data-product-discount="{{ product.offer_percentage|default:'' }}"
-                                >
-                                    {{ product.name|default:'Unnamed Product' }}
-                                </a>
-                            </div>
-                            <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
-                            <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1">
-                                <i class="ki-solid ki-star text-white -mt-0.5"></i>
-                                {{ product.rating|default:"4.5" }}
-                            </span>
-                                <div class="flex items-center flex-wrap gap-1.5">
-                                    {% if product.original_price and product.original_price > product.price %}
-                                    <span class="text-xs font-normal text-secondary-foreground line-through pt-[1px]">
-                                    ${{ product.original_price|floatformat:2 }}
-                                </span>
-                                    {% endif %}
-                                    <span class="text-sm font-medium text-mono">${{ product.price|floatformat:2 }}</span>
-                                    <button class="kt-btn kt-btn-outline kt-btn-sm ms-1"
-                                            data-kt-drawer-toggle="#drawers_shop_cart">
-                                        Add <i class="ki-filled ki-handcart"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-            <!-- end: Limited-Time Deals -->
-
-            <!-- begin: Benefits -->
             <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-2">
-                <div class="kt-card">
-                    <div class="kt-card-content flex items-center gap-3.5 px-5">
-                        <div class="relative size-[50px] shrink-0">
-                            <svg class="w-full h-full stroke-primary/10 fill-primary-soft" fill="none" height="48"
-                                 viewBox="0 0 44 48" width="44" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M16 2.4641C19.7128 0.320509 24.2872 0.320508 28 2.4641L37.6506 8.0359C41.3634 10.1795 43.6506 14.141 43.6506 18.4282V29.5718C43.6506 33.859 41.3634 37.8205 37.6506 39.9641L28 45.5359C24.2872 47.6795 19.7128 47.6795 16 45.5359L6.34937 39.9641C2.63655 37.8205 0.349365 33.859 0.349365 29.5718V18.4282C0.349365 14.141 2.63655 10.1795 6.34937 8.0359L16 2.4641Z"
-                                      fill=""></path>
-                                <path d="M16.25 2.89711C19.8081 0.842838 24.1919 0.842837 27.75 2.89711L37.4006 8.46891C40.9587 10.5232 43.1506 14.3196 43.1506 18.4282V29.5718C43.1506 33.6804 40.9587 37.4768 37.4006 39.5311L27.75 45.1029C24.1919 47.1572 19.8081 47.1572 16.25 45.1029L6.59937 39.5311C3.04125 37.4768 0.849365 33.6803 0.849365 29.5718V18.4282C0.849365 14.3196 3.04125 10.5232 6.59937 8.46891L16.25 2.89711Z"
-                                      stroke=""></path>
-                            </svg>
-                            <div class="absolute leading-none start-2/4 top-2/4 -translate-y-2/4 -translate-x-2/4">
-                                <i class="ki-filled ki-delivery-time text-xl ps-px text-primary"></i>
+                {% for product in recent_products %}
+                    <div class="kt-card">
+                        <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
+                            <div class="mb-2.5">
+                                <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[250px] mb-4 shadow-none">
+                                    <a href="{% url 'dashboard:product_detail' product.id %}" class="block">
+                                        <img alt="{{ product.name|default:'Unnamed Product' }}"
+                                             class="h-[180px] shrink-0 cursor-pointer product-thumbnail"
+                                             src="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
+                                             data-product-name="{{ product.name|default:'Unnamed Product' }}"
+                                             data-product-description="{{ product.description|default:'No description available' }}"
+                                             data-product-image="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
+                                             data-product-sku="{{ product.sku|default:'N/A' }}"
+                                             data-product-category="{{ product.category|default:'Uncategorized' }}"
+                                             data-product-rating="{{ product.rating|default:'4.5' }}"
+                                             data-product-more-info="{{ product.more_info|default:'No additional info' }}"
+                                             data-product-price="{{ product.price|default:'0.00' }}"
+                                             data-product-original-price="{{ product.original_price|default:'' }}"
+                                             data-product-discount="{{ product.offer_percentage|default:'' }}"/>
+                                    </a>
+                                    <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
+                                            data-kt-wishlist-toggle="true"
+                                            data-product-id="{{ product.id|default:'0' }}">
+                                        <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
+                                    </button>
+                                </div>
+                                <a class="block px-2.5 pt-1 cursor-pointer product-name-link"
+                                   data-kt-modal-toggle="#modal_shop_product_details"
+                                   href="#"
+                                   data-product-name="{{ product.name }}"
+                                   data-product-description="{{ product.description }}"
+                                   data-product-image="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
+                                   data-product-sku="{{ product.sku }}"
+                                   data-product-category="{{ product.category }}"
+                                   data-product-rating="{{ product.rating }}"
+                                   data-product-more-info="{{ product.more_info }}"
+                                   data-product-price="{{ product.price }}"
+                                   data-product-original-price="{{ product.original_price|default:'' }}"
+                                   data-product-discount="{{ product.offer_percentage|default:'' }}">
+                                    <h3 class="text-lg font-bold text-gray-900 leading-snug truncate hover:text-primary transition">
+                                        {{ product.name }}
+                                    </h3>
+                                    <p class="text-sm text-gray-600 mt-1 truncate">
+                                        {{ product.description|default:"No description available"|truncatechars:120 }}
+                                    </p>
+                                    {% if product.delivery_date %}
+                                        <p class="text-xs text-green-600 mt-1">
+                                            Delivery by: <strong>{{ product.delivery_date }}</strong>
+                                        </p>
+                                    {% endif %}
+                                </a>
                             </div>
-                        </div>
-                        <div class="flex flex-col">
-                            <a class="hover:text-primary text-md font-medium text-mono" href="#">Free Delivery</a>
-                            <span class="text-xs font-normal text-secondary-foreground">No extra shipping costs</span>
+                            <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
+                                <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1">
+                                    <i class="ki-solid ki-star text-white -mt-0.5"></i>
+                                    {{ product.rating|default:"4.5" }}
+                                </span>
+                                <div class="flex items-center flex-wrap gap-1.5">
+                                    {% if product.original_price and product.original_price > product.price %}
+                                        <span class="text-xs font-normal text-secondary-foreground line-through pt-[1px]">
+                                            ${{ product.original_price|floatformat:2 }}
+                                        </span>
+                                    {% endif %}
+                                    <span class="text-sm font-medium text-mono">${{ product.price|floatformat:2 }}</span>
+                                    <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 add-to-cart-btn" data-product-id="{{ product.id }}">
+                                        Add <i class="ki-filled ki-handcart"></i>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="kt-card">
-                    <div class="kt-card-content flex items-center gap-3.5 px-5">
-                        <div class="relative size-[50px] shrink-0">
-                            <svg class="w-full h-full stroke-success-transparent fill-success-soft" fill="none"
-                                 height="48" viewBox="0 0 44 48" width="44" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M16 2.4641C19.7128 0.320509 24.2872 0.320508 28 2.4641L37.6506 8.0359C41.3634 10.1795 43.6506 14.141 43.6506 18.4282V29.5718C43.6506 33.859 41.3634 37.8205 37.6506 39.9641L28 45.5359C24.2872 47.6795 19.7128 47.6795 16 45.5359L6.34937 39.9641C2.63655 37.8205 0.349365 33.859 0.349365 29.5718V18.4282C0.349365 14.141 2.63655 10.1795 6.34937 8.0359L16 2.4641Z"
-                                      fill=""></path>
-                                <path d="M16.25 2.89711C19.8081 0.842838 24.1919 0.842837 27.75 2.89711L37.4006 8.46891C40.9587 10.5232 43.1506 14.3196 43.1506 18.4282V29.5718C43.1506 33.6804 40.9587 37.4768 37.4006 39.5311L27.75 45.1029C24.1919 47.1572 19.8081 47.1572 16.25 45.1029L6.59937 39.5311C3.04125 37.4768 0.849365 33.6803 0.849365 29.5718V18.4282C0.849365 14.3196 3.04125 10.5232 6.59937 8.46891L16.25 2.89711Z"
-                                      stroke=""></path>
-                            </svg>
-                            <div class="absolute leading-none start-2/4 top-2/4 -translate-y-2/4 -translate-x-2/4">
-                                <i class="ki-filled ki-messages text-xl ps-px text-green-500"></i>
+                {% endfor %}
+            </div>
+        </div>
+        <!-- end: New Arrivals -->
+
+        <!-- begin: Popular Medical Supplies -->
+        <div class="space-y-4">
+            <div class="flex items-center justify-between gap-4">
+                <span class="text-lg font-medium text-mono">Popular Medical Supplies</span>
+                <a class="kt-link" href="#">See All <i class="ki-filled ki-right text-xs"></i></a>
+            </div>
+            <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-2">
+                {% for product in popular_products %}
+                    <div class="kt-card">
+                        <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
+                            <div class="mb-2.5">
+                                <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[250px] mb-4 shadow-none">
+                                    <a href="{% url 'dashboard:product_detail' product.id %}" class="block">
+                                        <img alt="{{ product.name|default:'Unnamed Product' }}"
+                                             class="h-[180px] shrink-0 cursor-pointer product-thumbnail"
+                                             src="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
+                                             data-product-name="{{ product.name|default:'Unnamed Product' }}"
+                                             data-product-description="{{ product.description|default:'No description available' }}"
+                                             data-product-image="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
+                                             data-product-sku="{{ product.sku|default:'N/A' }}"
+                                             data-product-category="{{ product.category|default:'Uncategorized' }}"
+                                             data-product-rating="{{ product.rating|default:'4.5' }}"
+                                             data-product-more-info="{{ product.more_info|default:'No additional info' }}"
+                                             data-product-price="{{ product.price|default:'0.00' }}"
+                                             data-product-original-price="{{ product.original_price|default:'' }}"
+                                             data-product-discount="{{ product.offer_percentage|default:'' }}"/>
+                                    </a>
+                                    <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
+                                            data-kt-wishlist-toggle="true"
+                                            data-product-id="{{ product.id|default:'0' }}">
+                                        <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
+                                    </button>
+                                </div>
+                                <a class="block px-2.5 pt-1 cursor-pointer product-name-link"
+                                   data-kt-modal-toggle="#modal_shop_product_details"
+                                   href="#"
+                                   data-product-name="{{ product.name }}"
+                                   data-product-description="{{ product.description }}"
+                                   data-product-image="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
+                                   data-product-sku="{{ product.sku }}"
+                                   data-product-category="{{ product.category }}"
+                                   data-product-rating="{{ product.rating }}"
+                                   data-product-more-info="{{ product.more_info }}"
+                                   data-product-price="{{ product.price }}"
+                                   data-product-original-price="{{ product.original_price|default:'' }}"
+                                   data-product-discount="{{ product.offer_percentage|default:'' }}">
+                                    <h3 class="text-lg font-bold text-gray-900 leading-snug truncate hover:text-primary transition">
+                                        {{ product.name }}
+                                    </h3>
+                                    <p class="text-sm text-gray-600 mt-1 truncate">
+                                        {{ product.description|default:"No description available"|truncatechars:120 }}
+                                    </p>
+                                    {% if product.delivery_date %}
+                                        <p class="text-xs text-green-600 mt-1">
+                                            Delivery by: <strong>{{ product.delivery_date }}</strong>
+                                        </p>
+                                    {% endif %}
+                                </a>
                             </div>
-                        </div>
-                        <div class="flex flex-col">
-                            <a class="hover:text-primary text-md font-medium text-mono" href="#">24/7 Support</a>
-                            <span class="text-xs font-normal text-secondary-foreground">Help anytime, anywhere</span>
+                            <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
+                                <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1">
+                                    <i class="ki-solid ki-star text-white -mt-0.5"></i>
+                                    {{ product.rating|default:"4.5" }}
+                                </span>
+                                <div class="flex items-center flex-wrap gap-1.5">
+                                    {% if product.original_price and product.original_price > product.price %}
+                                        <span class="text-xs font-normal text-secondary-foreground line-through pt-[1px]">
+                                            ${{ product.original_price|floatformat:2 }}
+                                        </span>
+                                    {% endif %}
+                                    <span class="text-sm font-medium text-mono">${{ product.price|floatformat:2 }}</span>
+                                    <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 add-to-cart-btn" data-product-id="{{ product.id }}">
+                                        Add <i class="ki-filled ki-handcart"></i>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="kt-card">
-                    <div class="kt-card-content flex items-center gap-3.5 px-5">
-                        <div class="relative size-[50px] shrink-0">
-                            <svg class="w-full h-full stroke-info-transparent fill-info-soft" fill="none" height="48"
-                                 viewBox="0 0 44 48" width="44" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M16 2.4641C19.7128 0.320509 24.2872 0.320508 28 2.4641L37.6506 8.0359C41.3634 10.1795 43.6506 14.141 43.6506 18.4282V29.5718C43.6506 33.859 41.3634 37.8205 37.6506 39.9641L28 45.5359C24.2872 47.6795 19.7128 47.6795 16 45.5359L6.34937 39.9641C2.63655 37.8205 0.349365 33.859 0.349365 29.5718V18.4282C0.349365 14.141 2.63655 10.1795 6.34937 8.0359L16 2.4641Z"
-                                      fill=""></path>
-                                <path d="M16.25 2.89711C19.8081 0.842838 24.1919 0.842837 27.75 2.89711L37.4006 8.46891C40.9587 10.5232 43.1506 14.3196 43.1506 18.4282V29.5718C43.1506 33.6804 40.9587 37.4768 37.4006 39.5311L27.75 45.1029C24.1919 47.1572 19.8081 47.1572 16.25 45.1029L6.59937 39.5311C3.04125 37.4768 0.849365 33.6803 0.849365 29.5718V18.4282C0.849365 14.3196 3.04125 10.5232 6.59937 8.46891L16.25 2.89711Z"
-                                      stroke=""></path>
-                            </svg>
-                            <div class="absolute leading-none start-2/4 top-2/4 -translate-y-2/4 -translate-x-2/4">
-                                <i class="ki-filled ki-discount text-xl ps-px text-violet-500"></i>
+                {% endfor %}
+            </div>
+        </div>
+        <!-- end: Popular Medical Supplies -->
+
+        <!-- begin: Limited-Time Deals -->
+        <div class="space-y-4">
+            <div class="flex items-center justify-between gap-4">
+                <span class="text-lg font-medium text-mono">Limited-Time Deals</span>
+                <a class="kt-btn kt-btn-sm kt-btn-ghost kt-btn-primary" href="#">See All <i class="ki-filled ki-right"></i></a>
+            </div>
+            <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-2">
+                {% for product in limited_products %}
+                    <div class="kt-card">
+                        <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
+                            <div class="mb-2.5">
+                                <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[250px] mb-4 shadow-none">
+                                    <a href="{% url 'dashboard:product_detail' product.id %}" class="block">
+                                        <img alt="{{ product.name|default:'Unnamed Product' }}"
+                                             class="h-[180px] shrink-0 cursor-pointer product-thumbnail"
+                                             src="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
+                                             data-product-name="{{ product.name|default:'Unnamed Product' }}"
+                                             data-product-description="{{ product.description|default:'No description available' }}"
+                                             data-product-image="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
+                                             data-product-sku="{{ product.sku|default:'N/A' }}"
+                                             data-product-category="{{ product.category|default:'Uncategorized' }}"
+                                             data-product-rating="{{ product.rating|default:'4.5' }}"
+                                             data-product-more-info="{{ product.more_info|default:'No additional info' }}"
+                                             data-product-price="{{ product.price|default:'0.00' }}"
+                                             data-product-original-price="{{ product.original_price|default:'' }}"
+                                             data-product-discount="{{ product.offer_percentage|default:'' }}"/>
+                                    </a>
+                                    <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
+                                            data-kt-wishlist-toggle="true"
+                                            data-product-id="{{ product.id|default:'0' }}">
+                                        <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
+                                    </button>
+                                </div>
+                                <a class="block px-2.5 pt-1 cursor-pointer product-name-link"
+                                   data-kt-modal-toggle="#modal_shop_product_details"
+                                   href="#"
+                                   data-product-name="{{ product.name }}"
+                                   data-product-description="{{ product.description }}"
+                                   data-product-image="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
+                                   data-product-sku="{{ product.sku }}"
+                                   data-product-category="{{ product.category }}"
+                                   data-product-rating="{{ product.rating }}"
+                                   data-product-more-info="{{ product.more_info }}"
+                                   data-product-price="{{ product.price }}"
+                                   data-product-original-price="{{ product.original_price|default:'' }}"
+                                   data-product-discount="{{ product.offer_percentage|default:'' }}">
+                                    <h3 class="text-lg font-bold text-gray-900 leading-snug truncate hover:text-primary transition">
+                                        {{ product.name }}
+                                    </h3>
+                                    <p class="text-sm text-gray-600 mt-1 truncate">
+                                        {{ product.description|default:"No description available"|truncatechars:120 }}
+                                    </p>
+                                    {% if product.delivery_date %}
+                                        <p class="text-xs text-green-600 mt-1">
+                                            Delivery by: <strong>{{ product.delivery_date }}</strong>
+                                        </p>
+                                    {% endif %}
+                                </a>
                             </div>
-                        </div>
-                        <div class="flex flex-col">
-                            <a class="hover:text-primary text-md font-medium text-mono" href="#">Discounts</a>
-                            <span class="text-xs font-normal text-secondary-foreground">Save big on top deals</span>
+                            <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
+                                <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1">
+                                    <i class="ki-solid ki-star text-white -mt-0.5"></i>
+                                    {{ product.rating|default:"4.5" }}
+                                </span>
+                                <div class="flex items-center flex-wrap gap-1.5">
+                                    {% if product.original_price and product.original_price > product.price %}
+                                        <span class="text-xs font-normal text-secondary-foreground line-through pt-[1px]">
+                                            ${{ product.original_price|floatformat:2 }}
+                                        </span>
+                                    {% endif %}
+                                    <span class="text-sm font-medium text-mono">${{ product.price|floatformat:2 }}</span>
+                                    <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 add-to-cart-btn" data-product-id="{{ product.id }}">
+                                        Add <i class="ki-filled ki-handcart"></i>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="kt-card">
-                    <div class="kt-card-content flex items-center gap-3.5 px-5">
-                        <div class="relative size-[50px] shrink-0">
-                            <svg class="w-full h-full stroke-yellow-100 fill-warning-soft" fill="none" height="48"
-                                 viewBox="0 0 44 48" width="44" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M16 2.4641C19.7128 0.320509 24.2872 0.320508 28 2.4641L37.6506 8.0359C41.3634 10.1795 43.6506 14.141 43.6506 18.4282V29.5718C43.6506 33.859 41.3634 37.8205 37.6506 39.9641L28 45.5359C24.2872 47.6795 19.7128 47.6795 16 45.5359L6.34937 39.9641C2.63655 37.8205 0.349365 33.859 0.349365 29.5718V18.4282C0.349365 14.141 2.63655 10.1795 6.34937 8.0359L16 2.4641Z"
-                                      fill=""></path>
-                                <path d="M16.25 2.89711C19.8081 0.842838 24.1919 0.842837 27.75 2.89711L37.4006 8.46891C40.9587 10.5232 43.1506 14.3196 43.1506 18.4282V29.5718C43.1506 33.6804 40.9587 37.4768 37.4006 39.5311L27.75 45.1029C24.1919 47.1572 19.8081 47.1572 16.25 45.1029L6.59937 39.5311C3.04125 37.4768 0.849365 33.6803 0.849365 29.5718V18.4282C0.849365 14.3196 3.04125 10.5232 6.59937 8.46891L16.25 2.89711Z"
-                                      stroke=""></path>
-                            </svg>
-                            <div class="absolute leading-none start-2/4 top-2/4 -translate-y-2/4 -translate-x-2/4">
-                                <i class="ki-filled ki-credit-cart text-xl ps-px text-yellow-500"></i>
-                            </div>
+                {% endfor %}
+            </div>
+        </div>
+        <!-- end: Limited-Time Deals -->
+
+        <!-- begin: Benefits -->
+        <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-2">
+            <div class="kt-card">
+                <div class="kt-card-content flex items-center gap-3.5 px-5">
+                    <div class="relative size-[50px] shrink-0">
+                        <svg class="w-full h-full stroke-primary/10 fill-primary-soft" fill="none" height="48"
+                             viewBox="0 0 44 48" width="44" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M16 2.4641C19.7128 0.320509 24.2872 0.320508 28 2.4641L37.6506 8.0359C41.3634 10.1795 43.6506 14.141 43.6506 18.4282V29.5718C43.6506 33.859 41.3634 37.8205 37.6506 39.9641L28 45.5359C24.2872 47.6795 19.7128 47.6795 16 45.5359L6.34937 39.9641C2.63655 37.8205 0.349365 33.859 0.349365 29.5718V18.4282C0.349365 14.141 2.63655 10.1795 6.34937 8.0359L16 2.4641Z"
+                                  fill=""></path>
+                            <path d="M16.25 2.89711C19.8081 0.842838 24.1919 0.842837 27.75 2.89711L37.4006 8.46891C40.9587 10.5232 43.1506 14.3196 43.1506 18.4282V29.5718C43.1506 33.6804 40.9587 37.4768 37.4006 39.5311L27.75 45.1029C24.1919 47.1572 19.8081 47.1572 16.25 45.1029L6.59937 39.5311C3.04125 37.4768 0.849365 33.6803 0.849365 29.5718V18.4282C0.849365 14.3196 3.04125 10.5232 6.59937 8.46891L16.25 2.89711Z"
+                                  stroke=""></path>
+                        </svg>
+                        <div class="absolute leading-none start-2/4 top-2/4 -translate-y-2/4 -translate-x-2/4">
+                            <i class="ki-filled ki-delivery-time text-xl ps-px text-primary"></i>
                         </div>
-                        <div class="flex flex-col">
-                            <a class="hover:text-primary text-md font-medium text-mono" href="#">Money-Back</a>
-                            <span class="text-xs font-normal text-secondary-foreground">Full refund, no risk</span>
-                        </div>
+                    </div>
+                    <div class="flex flex-col">
+                        <a class="hover:text-primary text-md font-medium text-mono" href="#">Free Delivery</a>
+                        <span class="text-xs font-normal text-secondary-foreground">No extra shipping costs</span>
                     </div>
                 </div>
             </div>
-            <!-- end: Benefits -->
+            <div class="kt-card">
+                <div class="kt-card-content flex items-center gap-3.5 px-5">
+                    <div class="relative size-[50px] shrink-0">
+                        <svg class="w-full h-full stroke-success-transparent fill-success-soft" fill="none"
+                             height="48" viewBox="0 0 44 48" width="44" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M16 2.4641C19.7128 0.320509 24.2872 0.320508 28 2.4641L37.6506 8.0359C41.3634 10.1795 43.6506 14.141 43.6506 18.4282V29.5718C43.6506 33.859 41.3634 37.8205 37.6506 39.9641L28 45.5359C24.2872 47.6795 19.7128 47.6795 16 45.5359L6.34937 39.9641C2.63655 37.8205 0.349365 33.859 0.349365 29.5718V18.4282C0.349365 14.141 2.63655 10.1795 6.34937 8.0359L16 2.4641Z"
+                                  fill=""></path>
+                            <path d="M16.25 2.89711C19.8081 0.842838 24.1919 0.842837 27.75 2.89711L37.4006 8.46891C40.9587 10.5232 43.1506 14.3196 43.1506 18.4282V29.5718C43.1506 33.6804 40.9587 37.4768 37.4006 39.5311L27.75 45.1029C24.1919 47.1572 19.8081 47.1572 16.25 45.1029L6.59937 39.5311C3.04125 37.4768 0.849365 33.6803 0.849365 29.5718V18.4282C0.849365 14.3196 3.04125 10.5232 6.59937 8.46891L16.25 2.89711Z"
+                                  stroke=""></path>
+                        </svg>
+                        <div class="absolute leading-none start-2/4 top-2/4 -translate-y-2/4 -translate-x-2/4">
+                            <i class="ki-filled ki-messages text-xl ps-px text-green-500"></i>
+                        </div>
+                    </div>
+                    <div class="flex flex-col">
+                        <a class="hover:text-primary text-md font-medium text-mono" href="#">24/7 Support</a>
+                        <span class="text-xs font-normal text-secondary-foreground">Help anytime, anywhere</span>
+                    </div>
+                </div>
+            </div>
+            <div class="kt-card">
+                <div class="kt-card-content flex items-center gap-3.5 px-5">
+                    <div class="relative size-[50px] shrink-0">
+                        <svg class="w-full h-full stroke-info-transparent fill-info-soft" fill="none" height="48"
+                             viewBox="0 0 44 48" width="44" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M16 2.4641C19.7128 0.320509 24.2872 0.320508 28 2.4641L37.6506 8.0359C41.3634 10.1795 43.6506 14.141 43.6506 18.4282V29.5718C43.6506 33.859 41.3634 37.8205 37.6506 39.9641L28 45.5359C24.2872 47.6795 19.7128 47.6795 16 45.5359L6.34937 39.9641C2.63655 37.8205 0.349365 33.859 0.349365 29.5718V18.4282C0.349365 14.141 2.63655 10.1795 6.34937 8.0359L16 2.4641Z"
+                                  fill=""></path>
+                            <path d="M16.25 2.89711C19.8081 0.842838 24.1919 0.842837 27.75 2.89711L37.4006 8.46891C40.9587 10.5232 43.1506 14.3196 43.1506 18.4282V29.5718C43.1506 33.6804 40.9587 37.4768 37.4006 39.5311L27.75 45.1029C24.1919 47.1572 19.8081 47.1572 16.25 45.1029L6.59937 39.5311C3.04125 37.4768 0.849365 33.6803 0.849365 29.5718V18.4282C0.849365 14.3196 3.04125 10.5232 6.59937 8.46891L16.25 2.89711Z"
+                                  stroke=""></path>
+                        </svg>
+                        <div class="absolute leading-none start-2/4 top-2/4 -translate-y-2/4 -translate-x-2/4">
+                            <i class="ki-filled ki-discount text-xl ps-px text-violet-500"></i>
+                        </div>
+                    </div>
+                    <div class="flex flex-col">
+                        <a class="hover:text-primary text-md font-medium text-mono" href="#">Discounts</a>
+                        <span class="text-xs font-normal text-secondary-foreground">Save big on top deals</span>
+                    </div>
+                </div>
+            </div>
+            <div class="kt-card">
+                <div class="kt-card-content flex items-center gap-3.5 px-5">
+                    <div class="relative size-[50px] shrink-0">
+                        <svg class="w-full h-full stroke-yellow-100 fill-warning-soft" fill="none" height="48"
+                             viewBox="0 0 44 48" width="44" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M16 2.4641C19.7128 0.320509 24.2872 0.320508 28 2.4641L37.6506 8.0359C41.3634 10.1795 43.6506 14.141 43.6506 18.4282V29.5718C43.6506 33.859 41.3634 37.8205 37.6506 39.9641L28 45.5359C24.2872 47.6795 19.7128 47.6795 16 45.5359L6.34937 39.9641C2.63655 37.8205 0.349365 33.859 0.349365 29.5718V18.4282C0.349365 14.141 2.63655 10.1795 6.34937 8.0359L16 2.4641Z"
+                                  fill=""></path>
+                            <path d="M16.25 2.89711C19.8081 0.842838 24.1919 0.842837 27.75 2.89711L37.4006 8.46891C40.9587 10.5232 43.1506 14.3196 43.1506 18.4282V29.5718C43.1506 33.6804 40.9587 37.4768 37.4006 39.5311L27.75 45.1029C24.1919 47.1572 19.8081 47.1572 16.25 45.1029L6.59937 39.5311C3.04125 37.4768 0.849365 33.6803 0.849365 29.5718V18.4282C0.849365 14.3196 3.04125 10.5232 6.59937 8.46891L16.25 2.89711Z"
+                                  stroke=""></path>
+                        </svg>
+                        <div class="absolute leading-none start-2/4 top-2/4 -translate-y-2/4 -translate-x-2/4">
+                            <i class="ki-filled ki-credit-cart text-xl ps-px text-yellow-500"></i>
+                        </div>
+                    </div>
+                    <div class="flex flex-col">
+                        <a class="hover:text-primary text-md font-medium text-mono" href="#">Money-Back</a>
+                        <span class="text-xs font-normal text-secondary-foreground">Full refund, no risk</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- end: Benefits -->
 
-            <!-- begin: JavaScript -->
+        <!-- begin: Product Details Modal -->
+        <div class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+             data-kt-modal="true" id="modal_shop_product_details">
+            <div class="kt-card w-full max-w-[500px] h-full rounded-xl border border-border bg-background">
+                <div class="kt-card-header px-5 flex items-center justify-between">
+                    <h3 class="kt-card-title">Product Details</h3>
+                    <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" data-kt-modal-dismiss="true">
+                        <i class="ki-filled ki-cross text-base"></i>
+                    </button>
+                </div>
+                <div class="kt-card-content flex flex-col space-y-3 p-5 kt-scrollable-y-auto">
+                    <div class="kt-card relative items-center justify-center bg-accent/50 mb-6.5 h-[280px] shadow-none">
+                        <span class="kt-badge kt-badge-destructive kt-badge-sm absolute top-4 end-4 uppercase product-discount hidden"></span>
+                        <img alt="" class="w-[250px] h-[250px] object-cover product-image"/>
+                    </div>
+                    <span class="text-base font-medium text-mono product-name"></span>
+                    <span class="text-sm font-normal text-foreground block mb-7 product-description"></span>
+                    <div class="flex flex-col gap-2.5">
+                        <div class="flex items-center gap-2.5">
+                            <span class="text-xs font-normal text-foreground min-w-14">SKU</span>
+                            <span class="text-xs font-medium text-foreground product-sku"></span>
+                        </div>
+                        <div class="flex items-center gap-2.5">
+                            <span class="text-xs font-normal text-foreground min-w-14">Category</span>
+                            <span class="text-xs font-medium text-foreground product-category"></span>
+                        </div>
+                        <div class="flex items-center gap-2.5">
+                            <span class="text-xs font-normal text-foreground min-w-14">Rating</span>
+                            <div class="kt-rating product-rating"></div>
+                        </div>
+                        <div class="flex items-center gap-2.5">
+                            <span class="text-xs font-normal text-foreground min-w-14">More Info</span>
+                            <span class="text-xs font-normal text-foreground product-more-info"></span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-end gap-2">
+                        <span class="text-base font-normal text-secondary-foreground line-through product-original-price hidden"></span>
+                        <span class="text-lg font-medium text-mono product-price"></span>
+                    </div>
+                </div>
+                <div class="kt-card-footer px-5">
+                    <button class="kt-btn kt-btn-primary grow" data-kt-drawer-toggle="#drawers_shop_cart">
+                        <i class="ki-filled ki-handcart"></i> Add to Cart
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- end: Product Details Modal -->
+    </div>
+</div>
+
+<!-- begin: JavaScript -->
 <script>
     // CSRF Token Helper
     function getCookie(name) {
@@ -685,6 +741,35 @@
         });
     });
 
+    // Add to Cart
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.add-to-cart-btn').forEach(button => {
+            button.addEventListener('click', function () {
+                const productId = this.dataset.productId;
+                fetch("{% url 'dashboard:add_to_cart' %}", {
+                    method: "POST",
+                    headers: {
+                        'X-CSRFToken': csrftoken,
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: new URLSearchParams({
+                        product_id: productId,
+                        quantity: 1
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert("Product added to cart!");
+                    } else {
+                        alert("Something went wrong");
+                    }
+                })
+                .catch(error => console.error('Add to cart error:', error));
+            });
+        });
+    });
+
     // Slider JavaScript
     let currentSlide = 0;
     const slider = document.getElementById('slider');
@@ -708,5 +793,5 @@
         setInterval(nextSlide, 5000); // Auto slide every 5 seconds
     }
 </script>
-            <!-- end: JavaScript -->
-            {% endblock %}
+<!-- end: JavaScript -->
+{% endblock %}

@@ -32,6 +32,9 @@ from django.db.models import F
 import random
 import requests
 
+from django.http import JsonResponse
+from datetime import date, timedelta
+from django.shortcuts import get_object_or_404
 
 
 class HomeView(TemplateView):
@@ -40,7 +43,21 @@ class HomeView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         today = timezone.now().date()  # Use timezone-aware date
+        today = date.today()
 
+        def set_product_fields(product_queryset):
+            for product in product_queryset:
+                main_img = ProductImage.objects.filter(product=product, is_main=True).first()
+                product.main_image = main_img.image.url if main_img else None
+
+                # Calculate delivery date
+                if product.delivery_time:
+                    delivery_date = today + timedelta(days=product.delivery_time)
+                    product.delivery_date = delivery_date.strftime('%a, %d %b')  # e.g., Sun, 13 Jul
+                else:
+                    product.delivery_date = 'N/A'
+            return product_queryset
+             
         # Special Offers
         special_offers = Product.objects.filter(
             offer_active=True,
@@ -52,7 +69,7 @@ class HomeView(TemplateView):
         for product in special_offers:
             main_img = ProductImage.objects.filter(product=product, is_main=True).first()
             product.main_image = main_img.image.url if main_img else None
-        context['special_offers'] = special_offers
+        context['special_offers'] = set_product_fields(special_offers)
 
         # New Arrivals
         recent_products = Product.objects.filter(
@@ -62,7 +79,10 @@ class HomeView(TemplateView):
         for product in recent_products:
             main_img = ProductImage.objects.filter(product=product, is_main=True).first()
             product.main_image = main_img.image.url if main_img else None
-        context['recent_products'] = recent_products
+
+
+        context['recent_products'] = set_product_fields(recent_products)
+
 
         # Popular Medical Supplies
         popular_products = Product.objects.filter(
@@ -72,7 +92,8 @@ class HomeView(TemplateView):
         for product in popular_products:
             main_img = ProductImage.objects.filter(product=product, is_main=True).first()
             product.main_image = main_img.image.url if main_img else None
-        context['popular_products'] = popular_products
+        context['popular_products'] = set_product_fields(popular_products)
+
 
         # Limited-Time Deals
         limited_products = Product.objects.filter(
@@ -82,7 +103,8 @@ class HomeView(TemplateView):
         for product in limited_products:
             main_img = ProductImage.objects.filter(product=product, is_main=True).first()
             product.main_image = main_img.image.url if main_img else None
-        context['limited_products'] = limited_products
+        context['limited_products'] = set_product_fields(limited_products)
+
 
         # Featured Products
         all_ids = list(Product.objects.filter(is_active=True).values_list('id', flat=True))
@@ -91,7 +113,8 @@ class HomeView(TemplateView):
         for product in featured_products:
             main_img = ProductImage.objects.filter(product=product, is_main=True).first()
             product.main_image = main_img.image.url if main_img else None
-        context['featured_products'] = featured_products
+        context['featured_products'] = set_product_fields(featured_products)
+
 
         # Wishlist
         if self.request.user.is_authenticated:
@@ -306,9 +329,64 @@ class ProductDetailsView(TemplateView):
         return context
 
 
-class ShoppingCartView(TemplateView):
+class ShoppingCartView(LoginRequiredMixin, TemplateView):
     template_name = 'userdashboard/view/shopping-cart.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        cart_items = CartProduct.objects.filter(user=self.request.user).select_related('product')
+        total = sum(item.get_total_price() for item in cart_items)
+        context['cart_items'] = cart_items
+        context['total'] = total
+        return context
+    
+class CartAddView(LoginRequiredMixin, View):
+    def get(self, request):
+        cart_items = CartProduct.objects.filter(user=request.user).select_related('product')
+        cart_data = []
+        for item in cart_items:
+            image = ''
+            if item.product.productimage_set.exists():
+                image = item.product.productimage_set.first().image.url
+
+            cart_data.append({
+                'id': item.product.id, 
+                'name': item.product.name,
+                'price': str(item.product.price),
+                'quantity': item.quantity,
+                'image': image
+            })
+
+        return JsonResponse({'cart': cart_data})
+
+    def post(self, request, *args, **kwargs):
+        product_id = request.POST.get('product_id')
+        quantity = int(request.POST.get('quantity', 1))
+        product = get_object_or_404(Product, id=product_id)
+
+        cart_item, created = CartProduct.objects.get_or_create(
+            user=request.user,
+            product=product
+        )
+
+        if not created:
+            cart_item.quantity += quantity
+        else:
+            cart_item.quantity = quantity
+
+        cart_item.save()
+        return JsonResponse({'status': 'success', 'message': 'Product added to cart'})
+
+class RemoveFromCartView(View):
+    def post(self, request):
+        item_id = request.POST.get('item_id')
+        try:
+            item = CartProduct.objects.get(product_id=item_id, user=request.user)
+
+            item.delete()
+            return JsonResponse({'status': 'success'})
+        except CartProduct.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Item not found'})
 
 class WishlistToggleView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):

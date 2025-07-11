@@ -17,7 +17,12 @@ urlpatterns = [
     path('search-results-grid/', views.SearchResultsGridView.as_view(), name='search_results_grid'),
     path('search-results-list/', views.SearchResultsListView.as_view(), name='search_results_list'),
     path('product-detail/<int:pk>/', views.ProductDetailsView.as_view(), name='product_detail'),
-    path('shopping-cart/', views.ShoppingCartView.as_view(), name='shopping_cart'),
+    path('product-detail/', views.ProductDetailsView.as_view(), name='product_detail'),
+   #cart
+    path('add-to-cart/', CartAddView.as_view(), name='add_to_cart'),
+    path('shopping-cart/', ShoppingCartView.as_view(), name='shopping_cart'),
+    path('remove-from-cart/', RemoveFromCartView.as_view(), name='remove_from_cart'),
+   
     path('wish-list/', views.WishlistView.as_view(), name='wish_list'),
     path('wishlist/toggle/', views.WishlistToggleView.as_view(), name='toggle_wishlist'),
     path('wishlist/clear/',views.WishlistClearView.as_view(), name='clear_wishlist'),
