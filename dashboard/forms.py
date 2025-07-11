@@ -22,16 +22,7 @@ class ProfileForm(forms.ModelForm):
         self.fields['first_name'].initial = user.first_name
         self.fields['last_name'].initial = user.last_name
 
-        if profile_type == 'doctor':
-            self.Meta.model = DoctorProfile
-            self.Meta.fields = ['phone_number', 'speciality', 'current_position', 'workplace']
-        elif profile_type == 'medical_supplier':
-            self.Meta.model = MedicalSupplierProfile
-            self.Meta.fields = ['phone_details', 'company_name', 'workplace']
-        elif profile_type == 'corporate':
-            self.Meta.model = CorporateProfile
-            self.Meta.fields = ['phone', 'company_name', 'department']
-        elif profile_type == 'retailer':
+        if profile_type == 'retailer':
             self.Meta.model = RetailProfile
             self.Meta.fields = ['age', 'medical_needs']
         elif profile_type == 'wholesaler':

@@ -28,7 +28,6 @@
     .login-header {
         text-align: center;
         margin-bottom: 32px;
-
     }
 
     .login-header h1 {
@@ -117,6 +116,10 @@
 
     .input-field::placeholder {
         color: #98A2B3;
+    }
+
+    .input-field.input-error {
+        border-color: #F04438;
     }
 
     .toggle-password {
@@ -257,40 +260,59 @@
         color: #344054;
     }
 
-
+    .error-message {
+        color: #F04438;
+        font-size: 14px;
+        margin-bottom: 15px;
+        display: block;
+    }
 </style>
 
 <div class="login-container">
     <div class="login-header">
-        <h1>Sign in to Health Equipment </h1>
+        <h1>Sign in to Health Equipment</h1>
     </div>
+
+    <!-- Display non-field errors (e.g., "Invalid email or password") -->
+    {% if form.non_field_errors %}
+        <div class="error-message">
+            {% for error in form.non_field_errors %}
+                {{ error }}
+            {% endfor %}
+        </div>
+    {% endif %}
 
     <form method="post" class="login-form">
         {% csrf_token %}
-        <input type="hidden" id="user_type" name="user_type" value="buyer">
+        <input type="hidden" id="user_type" name="user_type" value="{{ form.user_type.value|default:'buyer' }}">
 
         <!-- Buyer/Supplier Toggle Buttons -->
         <div class="role-toggle">
-            <button type="button" id="buyerBtn" class="role-toggle-btn active">Buyer</button>
-            <button type="button" id="supplierBtn" class="role-toggle-btn">Supplier</button>
+            <button type="button" id="buyerBtn" class="role-toggle-btn {% if form.user_type.value|default:'buyer' == 'buyer' %}active{% endif %}">Buyer</button>
+            <button type="button" id="supplierBtn" class="role-toggle-btn {% if form.user_type.value == 'supplier' %}active{% endif %}">Supplier</button>
         </div>
 
         <!-- Retailer/Wholesaler Radio Buttons -->
-        <div id="buyerOptions" class="buyer-options">
-            <label><input type="radio" name="buyer_type" value="retailer" checked> Retailer</label>
-            <label><input type="radio" name="buyer_type" value="wholesaler"> Wholesaler</label>
+        <div id="buyerOptions" class="buyer-options" style="{% if form.user_type.value == 'supplier' %}display: none;{% endif %}">
+            <label><input type="radio" name="buyer_type" value="retailer" {% if form.buyer_type.value|default:'retailer' == 'retailer' %}checked{% endif %}> Retailer</label>
+            <label><input type="radio" name="buyer_type" value="wholesaler" {% if form.buyer_type.value == 'wholesaler' %}checked{% endif %}> Wholesaler</label>
         </div>
-
 
         <div class="form-group">
             <label for="id_username">Email</label>
-            <input type="text" name="username" id="id_username" placeholder="Your email" class="input-field">
+            <input type="text" name="username" id="id_username" placeholder="Your email" class="input-field {% if form.username.errors %}input-error{% endif %}" value="{{ form.username.value|default_if_none:'' }}">
+            {% for error in form.username.errors %}
+                <div class="error-message">{{ error }}</div>
+            {% endfor %}
         </div>
 
         <div class="form-group">
             <label for="id_password">Password</label>
             <div class="password-input-container">
-                <input type="password" name="password" id="id_password" placeholder="Your password" class="input-field">
+                <input type="password" name="password" id="id_password" placeholder="Your password" class="input-field {% if form.password.errors %}input-error{% endif %}">
+                {% for error in form.password.errors %}
+                    <div class="error-message">{{ error }}</div>
+                {% endfor %}
                 <button type="button" class="toggle-password" aria-label="Toggle password visibility">
                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M10 4.375C3.75 4.375 1.25 10 1.25 10C1.25 10 3.75 15.625 10 15.625C16.25 15.625 18.75 10 18.75 10C18.75 10 16.25 4.375 10 4.375Z"
@@ -304,7 +326,7 @@
 
         <div class="form-options">
             <div class="remember-me">
-                <input type="checkbox" id="remember-me" class="checkbox">
+                <input type="checkbox" id="remember-me" class="checkbox" {% if form.remember_me.value %}checked{% endif %}>
                 <label for="remember-me">Remember me</label>
             </div>
             <a href="{% url 'dashboard:password_reset' %}" class="forgot-password">Forgot Password?</a>
@@ -318,12 +340,16 @@
     </div>
 </div>
 
-
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const togglePassword = document.querySelector('.toggle-password');
         const passwordInput = document.getElementById('id_password');
+        const buyerBtn = document.getElementById('buyerBtn');
+        const supplierBtn = document.getElementById('supplierBtn');
+        const buyerOptions = document.getElementById('buyerOptions');
+        const userTypeInput = document.getElementById('user_type');
 
+        // Password visibility toggle
         togglePassword.addEventListener('click', function () {
             const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
             passwordInput.setAttribute('type', type);
@@ -343,25 +369,21 @@
                 `;
             }
         });
-    });
 
-    const buyerBtn = document.getElementById('buyerBtn');
-    const supplierBtn = document.getElementById('supplierBtn');
-    const buyerOptions = document.getElementById('buyerOptions');
-    const userTypeInput = document.getElementById('user_type');
+        // Buyer/Supplier toggle
+        buyerBtn.addEventListener('click', () => {
+            buyerBtn.classList.add('active');
+            supplierBtn.classList.remove('active');
+            buyerOptions.style.display = 'flex';
+            userTypeInput.value = 'buyer';
+        });
 
-    buyerBtn.addEventListener('click', () => {
-        buyerBtn.classList.add('active');
-        supplierBtn.classList.remove('active');
-        buyerOptions.style.display = 'flex';
-        userTypeInput.value = 'buyer';
-    });
-
-    supplierBtn.addEventListener('click', () => {
-        supplierBtn.classList.add('active');
-        buyerBtn.classList.remove('active');
-        buyerOptions.style.display = 'none';
-        userTypeInput.value = 'supplier';
+        supplierBtn.addEventListener('click', () => {
+            supplierBtn.classList.add('active');
+            buyerBtn.classList.remove('active');
+            buyerOptions.style.display = 'none';
+            userTypeInput.value = 'supplier';
+        });
     });
 </script>
 {% endblock %}
