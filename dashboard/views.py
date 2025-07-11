@@ -122,8 +122,14 @@ class HomeView(TemplateView):
                 WishlistProduct.objects.filter(user=self.request.user)
                 .values_list('product_id', flat=True)
             )
+
+            context['user_cart_ids'] = list(
+                CartProduct.objects.filter(user=self.request.user).values_list('product_id', flat=True)
+            )
         else:
             context['user_wishlist_ids'] = []
+            context['user_cart_ids'] = []
+
         return context
 
 

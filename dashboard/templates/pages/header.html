@@ -657,7 +657,7 @@ size-9 rounded-full border-2 border-mono/25"
      data-kt-drawer="true" data-kt-drawer-container="body" id="drawers_shop_cart">
     <div class="kt-card-header px-5">
         <h3 class="kt-card-title">Cart</h3>
-        <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" data-kt-drawer-dismiss="true">
+        <button id="cart-close-btn" class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" data-kt-drawer-dismiss="true">
             <i class="ki-filled ki-cross text-base"></i>
         </button>
     </div>
@@ -698,6 +698,22 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelector('#drawers_shop_wishlist')?.addEventListener('hide.bs.drawer', () => {
         updateWishlistIcons();
     });
+
+    const closeBtn = document.getElementById('cart-close-btn');
+
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function () {
+
+                try {
+                    cart = JSON.parse(localStorage.getItem('cart')) || [];
+                } catch (e) {
+                    cart = [];
+                }
+
+                location.reload();
+            });
+        }
+
 
     // Define RGB values for background colors
     const lightBackgroundRgb = hexToRgb('#ffffff'); // Light mode background
@@ -1148,7 +1164,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             <button class="qty-decrease bg-gray-200 px-2 rounded" data-id="${item.id}">-</button>
                             <span class="text-sm font-medium">${quantity}</span>
                             <button class="qty-increase bg-gray-200 px-2 rounded" data-id="${item.id}">+</button>
-                            <button class="remove-cart-item text-red-500 hover:text-red-700" data-id="${item.id}">
+                            <button class="remove-cart-item  hover:text-red-700" data-id="${item.id}">
                                 <i class="ki-filled ki-trash text-base"></i>
                             </button>
                         </div>
@@ -1231,4 +1247,3 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
 
- 
