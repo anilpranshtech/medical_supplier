@@ -7,7 +7,7 @@
 
     {% if cart_items %}
         <div class="grid grid-cols-4 gap-5">
-            {% for item in cart_items|slice:":4" %}
+            {% for item in cart_items %}
                 <div id="cart-item-{{  item.product.id }}"
                      class="kt-card p-4 border border-gray-300 rounded-xl shadow-md bg-white w-[270px] h-[350px] relative">
 
