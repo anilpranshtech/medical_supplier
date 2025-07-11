@@ -213,10 +213,9 @@
                                         <h3 class="text-[26px] font-semibold text-mono mb-1">{{ product.name|default:'Unnamed Product' }}</h3>
                                         <span class="text-sm font-normal text-foreground mb-5 leading-5.5">{{ product.description|default:'No description available' }}</span>
                                         <div class="flex items-center gap-4">
-                                            <button class="kt-btn kt-btn-mono kt-btn-sm"
-                                                    data-kt-drawer-toggle="#drawers_shop_cart">
-                                                Add to Cart <i class="ki-filled ki-handcart"></i>
-                                            </button>
+                                            <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 add-to-cart-btn" data-product-id="{{ product.id }}">
+                                    Add to Cart<i class="ki-filled ki-handcart"></i>
+                                </button>
                                             <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm"
                                                     data-kt-wishlist-toggle="true"
                                                     data-product-id="{{ product.id|default:'0' }}">
