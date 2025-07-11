@@ -85,6 +85,7 @@ class PhoneForm(forms.ModelForm):
             raise forms.ValidationError("Phone number must start with '+' followed by country code.")
         return phone
 
+
 class RetailProfileForm(forms.ModelForm):
     class Meta:
         model = RetailProfile
@@ -94,6 +95,7 @@ class RetailProfileForm(forms.ModelForm):
             'age': forms.NumberInput(attrs={'placeholder': 'Enter your age'}),
             'medical_needs': forms.Textarea(attrs={'placeholder': 'Enter medical needs'}),
         }
+
 
 class WholesaleBuyerProfileForm(forms.ModelForm):
     class Meta:
@@ -107,6 +109,7 @@ class WholesaleBuyerProfileForm(forms.ModelForm):
             'purchase_capacity': forms.NumberInput(attrs={'placeholder': 'Enter monthly purchase capacity'}),
         }
 
+
 class SupplierProfileForm(forms.ModelForm):
     class Meta:
         model = SupplierProfile
@@ -116,6 +119,7 @@ class SupplierProfileForm(forms.ModelForm):
             'company_name': forms.TextInput(attrs={'placeholder': 'Enter company name'}),
             'license_number': forms.TextInput(attrs={'placeholder': 'Enter license number'}),
         }
+
 
 class EmailOnlyLoginForm(AuthenticationForm):
     username = forms.CharField(label="Email") 

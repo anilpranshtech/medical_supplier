@@ -171,6 +171,7 @@ class CustomLoginView(FormView):
     def get_success_url(self):
         return reverse_lazy('dashboard:home')
 
+import re
 
 class RegistrationView(View):
     template_name = "dashboard/register.html"
@@ -179,6 +180,9 @@ class RegistrationView(View):
         return render(request, self.template_name)
 
     def post(self, request):
+        # Initialize error dictionary to collect all validation errors
+        errors = {}
+
         # reCAPTCHA validation
         recaptcha_response = request.POST.get('g-recaptcha-response')
         recaptcha_secret = '6LdTHV8rAAAAAIgLr2wdtdtWExTS6xJpUpD8qEzh'
@@ -191,8 +195,7 @@ class RegistrationView(View):
         ).json()
 
         if not recaptcha_result.get('success'):
-            messages.error(request, 'Invalid reCAPTCHA. Please try again.')
-            return render(request, self.template_name)
+            errors['recaptcha'] = 'Invalid reCAPTCHA. Please try again.'
 
         # Collect form data
         first_name = request.POST.get('first_name')
@@ -204,21 +207,62 @@ class RegistrationView(View):
         user_type = request.POST.get('user_type')
         buyer_type = request.POST.get('buyer_type')
 
-        # Validate passwords match
-        if password != confirm_password:
-            messages.error(request, "Passwords do not match.")
-            return render(request, self.template_name)
+        # Validate required fields
+        if not first_name:
+            errors['first_name'] = 'First name is required.'
+        if not last_name:
+            errors['last_name'] = 'Last name is required.'
+        if not email:
+            errors['email'] = 'Email is required.'
+        if not phone:
+            errors['phone'] = 'Phone number is required.'
+        if not password:
+            errors['password'] = 'Password is required.'
+        if not confirm_password:
+            errors['confirm_password'] = 'Confirm password is required.'
+
+        # Validate email format
+        if email and not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
+            errors['email'] = 'Invalid email format.'
 
         # Check if user already exists
-        if User.objects.filter(username=email).exists():
-            messages.error(request, "An account with this email already exists.")
-            return render(request, self.template_name)
+        if email and User.objects.filter(username=email).exists():
+            errors['email'] = 'An account with this email already exists.'
 
-        # Send OTP
+        # Password validation
+        if password:
+            # Minimum length
+            if len(password) < 8:
+                errors['password'] = 'Password must be at least 8 characters long.'
+            # Check for uppercase, lowercase, number, and special character
+            if not re.search(r'[A-Z]', password):
+                errors['password'] = 'Password must contain at least one uppercase letter.'
+            if not re.search(r'[a-z]', password):
+                errors['password'] = 'Password must contain at least one lowercase letter.'
+            if not re.search(r'[0-9]', password):
+                errors['password'] = 'Password must contain at least one number.'
+            if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
+                errors['password'] = 'Password must contain at least one special character.'
+
+        # Validate passwords match
+        if password and confirm_password and password != confirm_password:
+            errors['confirm_password'] = 'Passwords do not match.'
+
+        # If there are any errors, display them and return to form
+        if errors:
+            for field, message in errors.items():
+                messages.error(request, message, extra_tags=field)
+            return render(request, self.template_name, {
+                'form_data': request.POST  # Preserve form data
+            })
+
+        # Send OTP only if all validations pass
         otp_response = send_phone_otp(phone, TEXTDRIP_OTP_TOKEN)
         if "error" in otp_response:
-            messages.error(request, otp_response["error"])
-            return render(request, self.template_name)
+            messages.error(request, otp_response["error"], extra_tags='phone')
+            return render(request, self.template_name, {
+                'form_data': request.POST
+            })
 
         # Store signup data in session
         request.session['signup_data'] = {
@@ -564,36 +608,21 @@ class ShippingInfoView(LoginRequiredMixin, TemplateView):
         phone = None
         profile_type = None
         try:
-            profile = DoctorProfile.objects.get(user=user)
+            profile = RetailProfile.objects.get(user=user)
             phone = None
-            profile_type = 'doctor'
-        except DoctorProfile.DoesNotExist:
+            profile_type = 'retailer'
+        except RetailProfile.DoesNotExist:
             try:
-                profile = MedicalSupplierProfile.objects.get(user=user)
+                profile = WholesaleBuyerProfile.objects.get(user=user)
                 phone = None
-                profile_type = 'medical_supplier'
-            except MedicalSupplierProfile.DoesNotExist:
+                profile_type = 'wholesaler'
+            except WholesaleBuyerProfile.DoesNotExist:
                 try:
-                    profile = CorporateProfile.objects.get(user=user)
+                    profile = SupplierProfile.objects.get(user=user)
                     phone = None
-                    profile_type = 'corporate'
-                except CorporateProfile.DoesNotExist:
-                    try:
-                        profile = RetailProfile.objects.get(user=user)
-                        phone = None
-                        profile_type = 'retailer'
-                    except RetailProfile.DoesNotExist:
-                        try:
-                            profile = WholesaleBuyerProfile.objects.get(user=user)
-                            phone = None
-                            profile_type = 'wholesaler'
-                        except WholesaleBuyerProfile.DoesNotExist:
-                            try:
-                                profile = SupplierProfile.objects.get(user=user)
-                                phone = None
-                                profile_type = 'supplier'
-                            except SupplierProfile.DoesNotExist:
-                                pass
+                    profile_type = 'supplier'
+                except SupplierProfile.DoesNotExist:
+                    pass
         context['phone'] = phone or 'Not set'
         context['profile_type'] = profile_type
 
@@ -613,7 +642,6 @@ class ShippingInfoView(LoginRequiredMixin, TemplateView):
             'vat': vat,
             'total': total
         }
-
         return context
 
 
@@ -872,31 +900,21 @@ class UserProfile(LoginRequiredMixin, TemplateView):
         profile = None
         profile_type = None
         try:
-            profile = DoctorProfile.objects.get(user=user)
-            profile_type = 'doctor'
-        except DoctorProfile.DoesNotExist:
+            profile = RetailProfile.objects.get(user=user)
+            phone = None
+            profile_type = 'retailer'
+        except RetailProfile.DoesNotExist:
             try:
-                profile = MedicalSupplierProfile.objects.get(user=user)
-                profile_type = 'medical_supplier'
-            except MedicalSupplierProfile.DoesNotExist:
+                profile = WholesaleBuyerProfile.objects.get(user=user)
+                phone = None
+                profile_type = 'wholesaler'
+            except WholesaleBuyerProfile.DoesNotExist:
                 try:
-                    profile = CorporateProfile.objects.get(user=user)
-                    profile_type = 'corporate'
-                except CorporateProfile.DoesNotExist:
-                    try:
-                        profile = RetailProfile.objects.get(user=user)
-                        profile_type = 'retailer'
-                    except RetailProfile.DoesNotExist:
-                        try:
-                            profile = WholesaleBuyerProfile.objects.get(user=user)
-                            profile_type = 'wholesaler'
-                        except WholesaleBuyerProfile.DoesNotExist:
-                            try:
-                                profile = SupplierProfile.objects.get(user=user)
-                                profile_type = 'supplier'
-                            except SupplierProfile.DoesNotExist:
-                                pass
-
+                    profile = SupplierProfile.objects.get(user=user)
+                    phone = None
+                    profile_type = 'supplier'
+                except SupplierProfile.DoesNotExist:
+                    pass
         context['profile'] = profile
         context['profile_type'] = profile_type
 
@@ -954,18 +972,15 @@ class UploadAvatarView(LoginRequiredMixin, View):
     def post(self, request):
         profile = None
         try:
-            profile = MedicalSupplierProfile.objects.get(user=self.request.user)
-        except MedicalSupplierProfile.DoesNotExist:
+            profile = RetailProfile.objects.get(user=self.request.user)
+        except RetailProfile.DoesNotExist:
             try:
-                profile = RetailProfile.objects.get(user=self.request.user)
-            except RetailProfile.DoesNotExist:
+                profile = WholesaleBuyerProfile.objects.get(user=self.request.user)
+            except WholesaleBuyerProfile.DoesNotExist:
                 try:
-                    profile = WholesaleBuyerProfile.objects.get(user=self.request.user)
-                except WholesaleBuyerProfile.DoesNotExist:
-                    try:
-                        profile = SupplierProfile.objects.get(user=self.request.user)
-                    except SupplierProfile.DoesNotExist:
-                        pass
+                    profile = SupplierProfile.objects.get(user=self.request.user)
+                except SupplierProfile.DoesNotExist:
+                    pass
 
         if profile:
             if 'avatar' in self.request.FILES:
@@ -993,18 +1008,12 @@ class EditProfileView(LoginRequiredMixin, UpdateView):
             return DoctorProfile.objects.get(user=user)
         except DoctorProfile.DoesNotExist:
             try:
-                return MedicalSupplierProfile.objects.get(user=user)
-            except MedicalSupplierProfile.DoesNotExist:
+                return RetailProfile.objects.get(user=user)
+            except RetailProfile.DoesNotExist:
                 try:
-                    return CorporateProfile.objects.get(user=user)
-                except CorporateProfile.DoesNotExist:
-                    try:
-                        return RetailProfile.objects.get(user=user)
-                    except RetailProfile.DoesNotExist:
-                        try:
-                            return WholesaleBuyerProfile.objects.get(user=user)
-                        except WholesaleBuyerProfile.DoesNotExist:
-                            return SupplierProfile.objects.get(user=user)
+                    return WholesaleBuyerProfile.objects.get(user=user)
+                except WholesaleBuyerProfile.DoesNotExist:
+                    return SupplierProfile.objects.get(user=user)
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -1013,30 +1022,21 @@ class EditProfileView(LoginRequiredMixin, UpdateView):
         user = self.request.user
         profile_type = None
         try:
-            DoctorProfile.objects.get(user=user)
-            profile_type = 'doctor'
-        except DoctorProfile.DoesNotExist:
+            profile = RetailProfile.objects.get(user=user)
+            phone = None
+            profile_type = 'retailer'
+        except RetailProfile.DoesNotExist:
             try:
-                MedicalSupplierProfile.objects.get(user=user)
-                profile_type = 'medical_supplier'
-            except MedicalSupplierProfile.DoesNotExist:
+                profile = WholesaleBuyerProfile.objects.get(user=user)
+                phone = None
+                profile_type = 'wholesaler'
+            except WholesaleBuyerProfile.DoesNotExist:
                 try:
-                    CorporateProfile.objects.get(user=user)
-                    profile_type = 'corporate'
-                except CorporateProfile.DoesNotExist:
-                    try:
-                        RetailProfile.objects.get(user=user)
-                        profile_type = 'retailer'
-                    except RetailProfile.DoesNotExist:
-                        try:
-                            WholesaleBuyerProfile.objects.get(user=user)
-                            profile_type = 'wholesaler'
-                        except WholesaleBuyerProfile.DoesNotExist:
-                            try:
-                                SupplierProfile.objects.get(user=user)
-                                profile_type = 'supplier'
-                            except SupplierProfile.DoesNotExist:
-                                pass
+                    profile = SupplierProfile.objects.get(user=user)
+                    phone = None
+                    profile_type = 'supplier'
+                except SupplierProfile.DoesNotExist:
+                    pass
         kwargs['profile_type'] = profile_type
         return kwargs
 
@@ -1046,30 +1046,21 @@ class EditProfileView(LoginRequiredMixin, UpdateView):
         user = self.request.user
         profile_type = None
         try:
-            DoctorProfile.objects.get(user=user)
-            profile_type = 'doctor'
-        except DoctorProfile.DoesNotExist:
+            profile = RetailProfile.objects.get(user=user)
+            phone = None
+            profile_type = 'retailer'
+        except RetailProfile.DoesNotExist:
             try:
-                MedicalSupplierProfile.objects.get(user=user)
-                profile_type = 'medical_supplier'
-            except MedicalSupplierProfile.DoesNotExist:
+                profile = WholesaleBuyerProfile.objects.get(user=user)
+                phone = None
+                profile_type = 'wholesaler'
+            except WholesaleBuyerProfile.DoesNotExist:
                 try:
-                    CorporateProfile.objects.get(user=user)
-                    profile_type = 'corporate'
-                except CorporateProfile.DoesNotExist:
-                    try:
-                        RetailProfile.objects.get(user=user)
-                        profile_type = 'retailer'
-                    except RetailProfile.DoesNotExist:
-                        try:
-                            WholesaleBuyerProfile.objects.get(user=user)
-                            profile_type = 'wholesaler'
-                        except WholesaleBuyerProfile.DoesNotExist:
-                            try:
-                                SupplierProfile.objects.get(user=user)
-                                profile_type = 'supplier'
-                            except SupplierProfile.DoesNotExist:
-                                pass
+                    profile = SupplierProfile.objects.get(user=user)
+                    phone = None
+                    profile_type = 'supplier'
+                except SupplierProfile.DoesNotExist:
+                    pass
         context['profile_type'] = profile_type
         return context
 
