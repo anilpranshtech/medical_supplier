@@ -129,7 +129,7 @@ class HomeView(TemplateView):
 
 class CustomLoginView(FormView):
     form_class = EmailOnlyLoginForm
-    template_name = 'auth/login.html'
+    template_name = 'dashboard/login.html'
 
     def form_valid(self, form):
         email = form.cleaned_data['username']
@@ -164,10 +164,10 @@ class CustomLoginView(FormView):
             return self.form_invalid(form)
 
     def get_success_url(self):
-        return reverse_lazy('home')
+        return reverse_lazy('dashboard:home')
 
 class RegistrationView(View):
-    template_name = "auth/signup.html"
+    template_name = "dashboard/register.html"
 
     def get(self, request):
         return render(request, self.template_name)
@@ -250,7 +250,7 @@ class RegistrationView(View):
                 user.delete()
                 return render(request, self.template_name)
 
-            return redirect('login')
+            return redirect('dashboard:login')
 
         except Exception as e:
             messages.error(request, f"An error occurred: {e}")
@@ -298,7 +298,7 @@ class UploadProfilePictureView(LoginRequiredMixin, View):
             profile.profile_picture = request.FILES['profile_picture']
             profile.save()
 
-        return redirect('profile')
+        return redirect('dashboard:profile')
 
 
 # ------------------------------------------------------------------------------------------------------------------------
