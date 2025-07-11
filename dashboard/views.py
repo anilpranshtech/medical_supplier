@@ -134,7 +134,7 @@ class HomeView(TemplateView):
 
 class CustomLoginView(FormView):
     form_class = EmailOnlyLoginForm
-    template_name = 'dashboard/login.html'
+    template_name = 'auth/login.html'
 
     def form_valid(self, form):
         email = form.cleaned_data['username']
@@ -169,19 +169,19 @@ class CustomLoginView(FormView):
             return self.form_invalid(form)
 
     def get_success_url(self):
-        return reverse_lazy('dashboard:home')
-
+        return reverse_lazy('home')
 
 class RegistrationView(View):
-    template_name = "dashboard/register.html"
+    template_name = "auth/signup.html"
 
     def get(self, request):
         return render(request, self.template_name)
 
     def post(self, request):
-        # reCAPTCHA validation
+
         recaptcha_response = request.POST.get('g-recaptcha-response')
         recaptcha_secret = '6LdTHV8rAAAAAIgLr2wdtdtWExTS6xJpUpD8qEzh'
+
         recaptcha_result = requests.post(
             'https://www.google.com/recaptcha/api/siteverify',
             data={
@@ -194,178 +194,72 @@ class RegistrationView(View):
             messages.error(request, 'Invalid reCAPTCHA. Please try again.')
             return render(request, self.template_name)
 
-        # Collect form data
         first_name = request.POST.get('first_name')
         last_name = request.POST.get('last_name')
         email = request.POST.get('email')
         password = request.POST.get('password')
-        confirm_password = request.POST.get('confirm_password')
-        phone = request.POST.get('phone')
         user_type = request.POST.get('user_type')
         buyer_type = request.POST.get('buyer_type')
 
-        # Validate passwords match
-        if password != confirm_password:
-            messages.error(request, "Passwords do not match.")
-            return render(request, self.template_name)
+        try:
+            user = User.objects.create_user(
+                username=email,
+                email=email,
+                password=password,
+                first_name=first_name,
+                last_name=last_name
+            )
 
-        # Check if user already exists
-        if User.objects.filter(username=email).exists():
-            messages.error(request, "An account with this email already exists.")
-            return render(request, self.template_name)
-
-        # Send OTP
-        otp_response = send_phone_otp(phone, TEXTDRIP_OTP_TOKEN)
-        if "error" in otp_response:
-            messages.error(request, otp_response["error"])
-            return render(request, self.template_name)
-
-        # Store signup data in session
-        request.session['signup_data'] = {
-            'first_name': first_name,
-            'last_name': last_name,
-            'email': email,
-            'password': password,
-            'phone': phone,
-            'user_type': user_type,
-            'buyer_type': buyer_type,
-            'supplier_company_name': request.POST.get('supplier_company_name'),
-            'license_number': request.POST.get('license_number'),
-            'age': request.POST.get('age'),
-            'medical_needs': request.POST.get('medical_needs'),
-            'company_name': request.POST.get('company_name'),
-            'gst_number': request.POST.get('gst_number'),
-            'department': request.POST.get('department'),
-            'purchase_capacity': request.POST.get('purchase_capacity'),
-        }
-        return redirect('dashboard:verify_otp')
-
-
-class VerifyOTPView(View):
-    template_name = 'userdashboard/auth/verify_otp.html'
-
-    def get(self, request):
-        return render(request, self.template_name)
-
-    def post(self, request):
-        otp = request.POST.get('otp')
-        signup_data = request.session.get('signup_data')
-
-        if not signup_data:
-            messages.error(request, "Session expired. Please sign up again.")
-            return redirect('dashboard:register')
-
-        phone = signup_data['phone']
-        result = verify_mobile_otp(VERIFY_URL, TEXTDRIP_OTP_TOKEN, phone, otp)
-
-        if result.get("success") or result.get("status") is True:
-            # Double-check user doesn't exist
-            if User.objects.filter(username=signup_data['email']).exists():
-                messages.error(request, "An account with this email already exists.")
-                request.session.pop('signup_data', None)
-                return redirect('dashboard:register')
-
-            try:
-                # Create user
-                user = User.objects.create_user(
-                    username=signup_data['email'],
-                    email=signup_data['email'],
-                    password=signup_data['password'],
-                    first_name=signup_data['first_name'],
-                    last_name=signup_data['last_name']
+            # Supplier
+            if user_type == 'supplier':
+                company_name = request.POST.get('supplier_company_name')
+                license_number = request.POST.get('license_number')
+                SupplierProfile.objects.create(
+                    user=user,
+                    company_name=company_name,
+                    license_number=license_number
                 )
+                messages.success(request, "Supplier account created successfully.")
 
-                # Create profile based on user_type
-                if signup_data['user_type'] == 'supplier':
-                    SupplierProfile.objects.create(
-                        user=user,
-                        company_name=signup_data['supplier_company_name'],
-                        license_number=signup_data['license_number']
-                    )
-                    messages.success(request, "Supplier account created successfully.")
+            # Retail buyer
+            elif buyer_type == 'retailer':
+                try:
+                    age = int(request.POST.get('age') or 0)
+                except ValueError:
+                    age = 0
+                medical_needs = request.POST.get('medical_needs') or ''
+                RetailProfile.objects.create(
+                    user=user,
+                    age=age,
+                    medical_needs=medical_needs
+                )
+                messages.success(request, "Retailer user created. Please update your profile.")
 
-                elif signup_data['buyer_type'] == 'retailer':
-                    try:
-                        age = int(signup_data['age'] or 0)
-                    except ValueError:
-                        age = 0
-                    RetailProfile.objects.create(
-                        user=user,
-                        age=age,
-                        medical_needs=signup_data['medical_needs'] or ''
-                    )
-                    messages.success(request, "Retailer user created. Please update your profile.")
+            # Wholesale buyer
+            elif user_type == 'wholesale' or buyer_type == 'wholesaler':
+                company_name = request.POST.get('company_name')
+                gst_number = request.POST.get('gst_number')
+                department = request.POST.get('department')
+                purchase_capacity = request.POST.get('purchase_capacity')
+                WholesaleBuyerProfile.objects.create(
+                    user=user,
+                    company_name=company_name,
+                    gst_number=gst_number,
+                    department=department,
+                    purchase_capacity=purchase_capacity
+                )
+                messages.success(request, "Wholesaler account created successfully.")
 
-                elif signup_data['user_type'] == 'wholesale' or signup_data['buyer_type'] == 'wholesaler':
-                    WholesaleBuyerProfile.objects.create(
-                        user=user,
-                        company_name=signup_data['company_name'],
-                        gst_number=signup_data['gst_number'],
-                        department=signup_data['department'],
-                        purchase_capacity=signup_data['purchase_capacity']
-                    )
-                    messages.success(request, "Wholesaler account created successfully.")
+            else:
+                messages.error(request, "Invalid user type.")
+                user.delete()
+                return render(request, self.template_name)
 
-                else:
-                    messages.error(request, "Invalid user type.")
-                    user.delete()
-                    request.session.pop('signup_data', None)
-                    return redirect('dashboard:register')
+            return redirect('login')
 
-                # Clean up session
-                request.session.pop('signup_data', None)
-                messages.success(request, "Account created successfully.")
-                return redirect('dashboard:login')
-
-            except Exception as e:
-                messages.error(request, f"Error creating account: {str(e)}")
-                return redirect('dashboard:register')
-        else:
-            messages.error(request, result.get("message", "OTP verification failed."))
-            return redirect('dashboard:verify_otp')
-
-
-class ResendOTPView(View):
-    def post(self, request):
-        signup_data = request.session.get('signup_data')
-        if not signup_data:
-            return JsonResponse({'message': 'Session expired. Please sign up again.'}, status=400)
-
-        phone = signup_data['phone']
-        otp_response = send_phone_otp(phone, TEXTDRIP_OTP_TOKEN)
-        if "error" in otp_response:
-            return JsonResponse({'message': otp_response["error"]}, status=400)
-        return JsonResponse({'message': 'OTP resent successfully!'})
-
-
-class CustomPasswordResetView(PasswordResetView):
-    form_class = CustomPasswordResetForm
-    template_name = 'userdashboard/auth/password_reset_form.html'
-    email_template_name = 'userdashboard/auth/password_reset_email.html'
-    subject_template_name = 'userdashboard/auth/password_reset_email.txt'
-    success_url = reverse_lazy('dashboard:password_reset_done')
-
-    def form_valid(self, form):
-        messages.success(self.request, "Password reset link sent.")
-        return super().form_valid(form)
-
-
-class CustomPasswordResetDoneView(PasswordResetDoneView):
-    template_name = 'userdashboard/auth/password_reset_done.html'
-
-
-class CustomPasswordResetConfirmView(PasswordResetConfirmView):
-    form_class = CustomSetPasswordForm
-    template_name = 'userdashboard/auth/password_reset_confirm.html'
-    success_url = reverse_lazy('dashboard:password_reset_complete')
-
-    def form_valid(self, form):
-        messages.success(self.request, "Your password has been set.")
-        return super().form_valid(form)
-
-
-class CustomPasswordResetCompleteView(PasswordResetCompleteView):
-    template_name = 'userdashboard/auth/password_reset_complete.html'
+        except Exception as e:
+            messages.error(request, f"An error occurred: {e}")
+            return render(request, self.template_name)
 
 
 class UserProfileView(LoginRequiredMixin, TemplateView):
@@ -409,7 +303,7 @@ class UploadProfilePictureView(LoginRequiredMixin, View):
             profile.profile_picture = request.FILES['profile_picture']
             profile.save()
 
-        return redirect('dashboard:profile')
+        return redirect('profile')
 
 
 # ------------------------------------------------------------------------------------------------------------------------
@@ -421,22 +315,36 @@ class SearchResultsListView(TemplateView):
     template_name = 'userdashboard/view/search_results_list.html'
 
 
+
 class ProductDetailsView(TemplateView):
     template_name = 'userdashboard/view/product_details.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         pk = self.kwargs.get('pk')
+
         if pk:
             try:
-                product = Product.objects.get(id=pk)
+                product = Product.objects.select_related('category', 'sub_category', 'last_category', 'brand').get(id=pk)
+
+                # Get main image
                 main_img = ProductImage.objects.filter(product=product, is_main=True).first()
                 product.main_image = main_img.image.url if main_img else None
+
+                # Get other images excluding the main image
+                other_images = ProductImage.objects.filter(product=product).exclude(id=main_img.id if main_img else None)
+
                 context['product'] = product
-            except ObjectDoesNotExist:
+                context['other_images'] = other_images
+
+            except Product.DoesNotExist:
                 context['product'] = None
+                context['other_images'] = []
+
         else:
             context['product'] = None
+            context['other_images'] = []
+
         return context
 
 
@@ -1147,88 +1055,88 @@ class SignUpView(View):
         return redirect('dashboard:verify_otp')
 
 
-# class VerifyOTPView(View):
-#     def get(self, request):
-#         return render(request, 'userdashboard/auth/verify_otp.html')
-#
-#     def post(self, request):
-#         otp = request.POST.get('otp')
-#         signup_data = request.session.get('signup_data')
-#
-#         if not signup_data:
-#             messages.error(request, "Session expired. Please sign up again.")
-#             return redirect('dashboard:user_signup')
-#
-#         phone = signup_data['phone']
-#         result = verify_mobile_otp(VERIFY_URL, TEXTDRIP_OTP_TOKEN, phone, otp)
-#
-#         print("OTP VERIFICATION RESULT:", result)
-#
-#         if result.get("success") or result.get("status") is True:
-#             # Double-check user doesn't exist
-#             if User.objects.filter(username=signup_data['email']).exists():
-#                 messages.error(request, "An account with this email already exists.")
-#                 request.session.pop('signup_data', None)
-#                 return redirect('dashboard:user_signup')
-#
-#             try:
-#                 User.objects.create_user(
-#                     username=signup_data['email'],
-#                     email=signup_data['email'],
-#                     password=signup_data['password']
-#                 )
-#                 request.session.pop('signup_data', None)
-#                 messages.success(request, "Account created successfully.")
-#                 return redirect('dashboard:user_signin')
-#             except Exception as e:
-#                 messages.error(request, f"Error creating account: {str(e)}")
-#                 return redirect('dashboard:user_signup')
-#         else:
-#             messages.error(request, result.get("message", "OTP verification failed."))
-#             return redirect('dashboard:verify_otp')
-#
-#
-# class ResendOTPView(View):
-#     def post(self, request):
-#         signup_data = request.session.get('signup_data')
-#         if not signup_data:
-#             return JsonResponse({'message': 'Session expired. Please sign up again.'}, status=400)
-#
-#         phone = signup_data['phone']
-#         otp_response = send_phone_otp(phone, TEXTDRIP_OTP_TOKEN)
-#         if "error" in otp_response:
-#             return JsonResponse({'message': otp_response["error"]}, status=400)
-#         return JsonResponse({'message': 'OTP resent successfully!'})
-#
-#
-# class CustomPasswordResetView(PasswordResetView):
-#     form_class = CustomPasswordResetForm
-#     template_name = 'userdashboard/auth/password_reset_form.html'
-#     email_template_name = 'userdashboard/auth/password_reset_email.html'
-#     subject_template_name = 'userdashboard/auth/password_reset_email.txt'
-#     success_url = reverse_lazy('dashboard:password_reset_done')
-#
-#     def form_valid(self, form):
-#         messages.success(self.request, "Password reset link sent.")
-#         return super().form_valid(form)
-#
-#
-# class CustomPasswordResetDoneView(PasswordResetDoneView):
-#     template_name = 'userdashboard/auth/password_reset_done.html'
-#
-#
-# class CustomPasswordResetConfirmView(PasswordResetConfirmView):
-#     form_class = CustomSetPasswordForm
-#     template_name = 'userdashboard/auth/password_reset_confirm.html'
-#     success_url = reverse_lazy('dashboard:password_reset_complete')
-#
-#     def form_valid(self, form):
-#         messages.success(self.request, "Your password has been set.")
-#         return super().form_valid(form)
-#
-#
-# class CustomPasswordResetCompleteView(PasswordResetCompleteView):
-#     template_name = 'userdashboard/auth/password_reset_complete.html'
+class VerifyOTPView(View):
+    def get(self, request):
+        return render(request, 'userdashboard/auth/verify_otp.html')
+
+    def post(self, request):
+        otp = request.POST.get('otp')
+        signup_data = request.session.get('signup_data')
+
+        if not signup_data:
+            messages.error(request, "Session expired. Please sign up again.")
+            return redirect('dashboard:user_signup')
+
+        phone = signup_data['phone']
+        result = verify_mobile_otp(VERIFY_URL, TEXTDRIP_OTP_TOKEN, phone, otp)
+
+        print("OTP VERIFICATION RESULT:", result)
+
+        if result.get("success") or result.get("status") is True:
+            # Double-check user doesn't exist
+            if User.objects.filter(username=signup_data['email']).exists():
+                messages.error(request, "An account with this email already exists.")
+                request.session.pop('signup_data', None)
+                return redirect('dashboard:user_signup')
+
+            try:
+                User.objects.create_user(
+                    username=signup_data['email'],
+                    email=signup_data['email'],
+                    password=signup_data['password']
+                )
+                request.session.pop('signup_data', None)
+                messages.success(request, "Account created successfully.")
+                return redirect('dashboard:user_signin')
+            except Exception as e:
+                messages.error(request, f"Error creating account: {str(e)}")
+                return redirect('dashboard:user_signup')
+        else:
+            messages.error(request, result.get("message", "OTP verification failed."))
+            return redirect('dashboard:verify_otp')
+
+
+class ResendOTPView(View):
+    def post(self, request):
+        signup_data = request.session.get('signup_data')
+        if not signup_data:
+            return JsonResponse({'message': 'Session expired. Please sign up again.'}, status=400)
+
+        phone = signup_data['phone']
+        otp_response = send_phone_otp(phone, TEXTDRIP_OTP_TOKEN)
+        if "error" in otp_response:
+            return JsonResponse({'message': otp_response["error"]}, status=400)
+        return JsonResponse({'message': 'OTP resent successfully!'})
+
+
+class CustomPasswordResetView(PasswordResetView):
+    form_class = CustomPasswordResetForm
+    template_name = 'userdashboard/auth/password_reset_form.html'
+    email_template_name = 'userdashboard/auth/password_reset_email.html'
+    subject_template_name = 'userdashboard/auth/password_reset_email.txt'
+    success_url = reverse_lazy('dashboard:password_reset_done')
+
+    def form_valid(self, form):
+        messages.success(self.request, "Password reset link sent.")
+        return super().form_valid(form)
+
+
+class CustomPasswordResetDoneView(PasswordResetDoneView):
+    template_name = 'userdashboard/auth/password_reset_done.html'
+
+
+class CustomPasswordResetConfirmView(PasswordResetConfirmView):
+    form_class = CustomSetPasswordForm
+    template_name = 'userdashboard/auth/password_reset_confirm.html'
+    success_url = reverse_lazy('dashboard:password_reset_complete')
+
+    def form_valid(self, form):
+        messages.success(self.request, "Your password has been set.")
+        return super().form_valid(form)
+
+
+class CustomPasswordResetCompleteView(PasswordResetCompleteView):
+    template_name = 'userdashboard/auth/password_reset_complete.html'
 
 
 class SignInView(View):
