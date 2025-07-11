@@ -49,13 +49,6 @@ urlpatterns = [
     path('make-payment/', PaymentView.as_view(), name='make_payment'),
     path('payment-status/', PaymentStatusView.as_view(), name='payment_status'),
 
-    
-
-    # Become a seller
-    path('request-role/', views.RequestRoleView.as_view(), name='request_role'),
-    path('approve-role/<int:pk>/', views.ApproveRoleRequestView.as_view(), name='approve_role_request'),
-    path('manage-requests/', views.ManageRequestsView.as_view(), name='manage_requests'),
-
     # Become a seller
     path('request-role/', views.RequestRoleView.as_view(), name='request_role'),
     path('approve-role/<int:pk>/', views.ApproveRoleRequestView.as_view(), name='approve_role_request'),
