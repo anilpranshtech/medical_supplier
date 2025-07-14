@@ -419,6 +419,16 @@ class RoleRequest(models.Model):
     def __str__(self):
         return f"{self.user.username} - {self.requested_role} ({self.status})"
 
+class RatingReview(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='reviews')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    rating = models.IntegerField(choices=[(i, f'{i} Stars') for i in range(1, 6)])
+    review = models.TextField(blank=True)
+    photo = models.ImageField(upload_to='review_photos/', blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('product', 'user')  
 
 class RFQRequest(models.Model):
     STATUS_CHOICES = [

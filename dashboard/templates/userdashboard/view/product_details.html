@@ -1,309 +1,8 @@
 {% extends "pages/base.html" %}
 {% load static %}
+{% load custom_filters %}
 
 {% block content %}
-<div class="kt-container-fixed mt-1" style="max-width: var(--custom-container-width, 85%);">
-    <div class="flex flex-col items-stretch gap-7 mt-5 py-5">
-        <!-- Product Title -->
-        <h1 class="text-3xl font-semibold text-gray-650 dark:text-white">
-            {{ product.name|default:'Product Not Found' }}
-        </h1>
-
-        {% if product %}
-        <!-- Product Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- ✅ Product Images with Swiper -->
-            <div class="relative w-full bg-gray-100 dark:bg-gray-650 rounded-lg shadow-md">
-                {% if product.main_image or other_images %}
-                <!-- Main Image Slider -->
-                <div class="swiper mainSwiper h-[500px] rounded-md overflow-hidden">
-                    <div class="swiper-wrapper">
-                        {% if product.main_image %}
-                        <div class="swiper-slide">
-                            <img src="{{ product.main_image }}" alt="{{ product.name }}" class="w-full h-full object-cover" />
-                        </div>
-                        {% endif %}
-                        {% for img in other_images %}
-                        <div class="swiper-slide">
-                            <img src="{{ img.image.url }}" alt="Product Image" class="w-full h-full object-cover" />
-                        </div>
-                        {% endfor %}
-                    </div>
-
-                    <!-- Navigation -->
-                    <div class="swiper-button-prev"></div>
-                    <div class="swiper-button-next"></div>
-                </div>
-                 <br>
-                <!-- Thumbnails Slider - Updated for smaller size and all visible -->
-                <div class="swiper thumbSwiper mt-4 h-20">
-                    <div class="swiper-wrapper flex-wrap justify-start">
-                        {% if product.main_image %}
-                        <div class="swiper-slide w-16 h-full cursor-pointer">
-                            <img src="{{ product.main_image }}" class="w-full h-full object-cover border rounded" />
-                        </div>
-                        {% endif %}
-                        {% for img in other_images %}
-                        <div class="swiper-slide w-16 h-full cursor-pointer">
-                            <img src="{{ img.image.url }}" class="w-full h-full object-cover border rounded" />
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-                {% else %}
-                <img src="{% static 'default.png' %}" alt="Default Product Image" class="w-full h-full object-cover bg-white" />
-                <div class="absolute inset-0 flex items-center justify-center text-red-500 bg-opacity-50">
-                    Image not available
-                </div>
-                {% endif %}
-            </div>
-
-           <!-- ✅ Product Information + Additional Info Wrapper -->
-<div id="product-extra-info">
-    <!-- Product Information -->
-    <h1><b>Product Information</b></h1>
-    <p class="text-gray-650 dark:text-gray-650 text-lg leading-relaxed">
-        {{ product.description|default:'No description available' }}
-    </p>
-
-    <!-- Pricing (unchanged) -->
-    <div class="flex items-center gap-4">
-        {% if product.original_price and product.original_price > product.price %}
-        <span class="text-sm font-medium text-gray-500 line-through">
-            ${{ product.original_price|floatformat:2 }}
-        </span>
-        {% endif %}
-        <span class="text-2xl font-bold text-gray-650 dark:text-white">
-            ${{ product.price|floatformat:2 }}
-        </span>
-        {% if product.offer_percentage and product.offer_percentage > 0 %}
-        <span class="text-sm font-medium text-green-600 bg-green-100 px-2 py-1 rounded-full">
-            Save {{ product.offer_percentage|floatformat:0 }}%
-        </span>
-        {% endif %}
-    </div>
-
-    <!-- Buttons (unchanged) -->
-    <div class="flex items-center gap-3 mt-4">
-        <button class="kt-btn kt-btn-primary kt-btn-md flex items-center gap-2" data-kt-drawer-toggle="#drawers_shop_cart">
-            Add to Cart <i class="ki-filled ki-handcart"></i>
-        </button>
-        <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-md"
-                data-kt-wishlist-toggle="true" data-product-id="{{ product.id|default:'0' }}">
-            <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
-        </button>
-    </div>
-<!-- Additional Information Section (new, same style, separate) -->
-<!-- Additional Information Section (collapsed by default) -->
-<div  id="additional-info-wrapper" class="mt-6 product-specs space-y-1 text-sm text-gray-650 dark:text-gray-300 border-t pt-4">
-    <h1 class="text-lg font-semibold mb-2">Additional Information</h1>
-
-    <!-- Content container with limited height -->
-    <div id="additional-info-content" style="max-height: 150px; overflow: hidden; transition: max-height 0.3s ease;">
-        <p><strong>SKU:</strong> {{ product.supplier_sku|default:'N/A' }}</p>
-        <p><strong>Category:</strong> {{ product.category.name|default:'Uncategorized' }}</p>
-        <p><strong>Brand:</strong> {{ product.brand.name|default:'Unbranded' }}</p>
-        <p><strong>Product From:</strong> {{ product.product_from|default:'N/A' }}</p>
-        <p><strong>Condition:</strong> {{ product.get_condition_display }}</p>
-        <p><strong>Warranty:</strong> {{ product.get_warranty_display }}</p>
-        <p><strong>Tag:</strong> {{ product.get_tag_display }}</p>
-        <p><strong>Manufacture Date:</strong> {{ product.manufacture_date|date:"d M, Y"|default:'N/A' }}</p>
-        <p><strong>Expiration Days:</strong> {{ product.expiration_days|default:'N/A' }}</p>
-        <p><strong>Delivery Time:</strong> {{ product.delivery_time }} Days</p>
-        <p><strong>Return Time Limit:</strong> {{ product.return_time_limit }} Days</p>
-        <p><strong>Available Stock:</strong> {{ product.stock_quantity }}</p>
-        <p><strong>Low Stock Alert:</strong> {{ product.low_stock_alert }}</p>
-        <p><strong>Weight:</strong> {{ product.weight }} {{ product.weight_unit }}</p>
-    </div>
-
-    <!-- See More / See Less button -->
-    <button id="toggle-additional-info" class="text-blue-600 dark:text-blue-400 font-semibold mt-2 hover:underline">
-        See More
-    </button>
-</div>
-<!-- ✅ Ratings Section (keep as-is, shown above this) -->
-<div class="ratings-section" style="margin-top: 30px;">
-    <h3>RATINGS <span>☆</span></h3>
-    <div class="overall-rating" style="display: flex; align-items: center; gap: 20px; margin-top: 10px;">
-        <div style="font-size: 48px; font-weight: bold; color: #0b7663;">4.5 <span style="color:#0b7663; font-size: 36px;">★</span></div>
-        <div>
-            <p>15 Verified Buyers</p>
-        </div>
-    </div>
-    <div class="rating-breakdown" style="margin-top: 15px; max-width: 300px;">
-        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-            <span>5 ★</span>
-            <div style="flex-grow: 1; background: #e0e0e0; height: 8px; border-radius: 4px; overflow: hidden;">
-                <div style="width: 66%; background: #0b7663; height: 100%;"></div>
-            </div>
-            <span>10</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-            <span>4 ★</span>
-            <div style="flex-grow: 1; background: #e0e0e0; height: 8px; border-radius: 4px; overflow: hidden;">
-                <div style="width: 26%; background: #0b7663; height: 100%;"></div>
-            </div>
-            <span>4</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-            <span>3 ★</span>
-            <div style="flex-grow: 1; background: #e0e0e0; height: 8px; border-radius: 4px; overflow: hidden;"></div>
-            <span>0</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-            <span>2 ★</span>
-            <div style="flex-grow: 1; background: #e0e0e0; height: 8px; border-radius: 4px; overflow: hidden;">
-                <div style="width: 6%; background: orange; height: 100%;"></div>
-            </div>
-            <span>1</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 8px;">
-            <span>1 ★</span>
-            <div style="flex-grow: 1; background: #e0e0e0; height: 8px; border-radius: 4px; overflow: hidden;"></div>
-            <span>0</span>
-        </div>
-    </div>
-</div>
-
-<!-- ✅ Reviews Section -->
-<div class="reviews-section" style="margin-top: 40px;" id="reviews-section">
-    <h4>Customer Reviews (8)</h4>
-
-    <!-- One review always visible -->
-    <div class="review" style="border-top: 1px solid #ddd; padding: 15px 0; display: flex; gap: 20px;">
-        <div class="review-rating" style="background: #0b7663; color: white; padding: 5px 10px; border-radius: 3px; font-weight: bold;">4★</div>
-        <div class="review-content">
-            <p>Good spacious bag. Bit average on quality, but nice to carry light weight things. Suitable for college. Color and feel is good</p>
-            <div class="review-photos" style="display: flex; gap: 5px; margin-top: 8px;">
-                <img src="photo1.jpg" alt="Customer photo" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">
-                <img src="photo2.jpg" alt="Customer photo" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">
-                <img src="photo3.jpg" alt="Customer photo" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">
-            </div>
-            <small>Vinod N | 10 June 2025</small>
-        </div>
-    </div>
-
-    <!-- Hidden Reviews -->
-    <div id="more-reviews" style="display: none;">
-        {% comment %} 7 More Static Reviews {% endcomment %}
-        {% for review in "1234567" %}
-        <div class="review" style="border-top: 1px solid #ddd; padding: 15px 0; display: flex; gap: 20px;">
-            <div class="review-rating" style="background: #0b7663; color: white; padding: 5px 10px; border-radius: 3px; font-weight: bold;">5★</div>
-            <div class="review-content">
-                <p>Very good product 👍 Satisfied product</p>
-                <small>User {{ forloop.counter }} | {{ review_date }}</small>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-
-    <!-- View All Button -->
-    <!-- View All Button (initially shown) -->
-<a href="#" id="view-all-reviews-btn"
-   style="color: #e60023; font-weight: bold; display: block; margin-top: 20px;">
-   View all 8 reviews
-</a>
-
-<!-- See Less Button (initially hidden) -->
-<a href="#" id="see-less-reviews-btn"
-   style="display: none; color: #0b7663; font-weight: bold; margin-top: 10px;">
-   See less reviews
-</a>
-
-</div>
-
-</div>
-        </div>
-        {% else %}
-        <div class="text-center py-10 text-gray-500 dark:text-gray-400">
-            <p>Product not found. Please check the URL or try again.</p>
-            <a href="{% url 'dashboard:home' %}" class="mt-4 inline-block kt-btn kt-btn-primary kt-btn-sm">Back to Home</a>
-        </div>
-        {% endif %}
-    </div>
-</div>
-
-<!-- ✅ SwiperJS CDN -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.css" />
-<script src="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.js"></script>
-
-<!-- ✅ Swiper Initialization -->
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const thumbSwiper = new Swiper(".thumbSwiper", {
-            spaceBetween: 8,
-            slidesPerView: 'auto',
-            freeMode: true,
-            watchSlidesProgress: true,
-        });
-
-        new Swiper(".mainSwiper", {
-            spaceBetween: 10,
-            loop: true,
-            navigation: {
-                nextEl: ".swiper-button-next",
-                prevEl: ".swiper-button-prev",
-            },
-            thumbs: {
-                swiper: thumbSwiper,
-            },
-        });
-    });
-    //see more
-     document.addEventListener('DOMContentLoaded', function() {
-        const content = document.getElementById('additional-info-content');
-        const btn = document.getElementById('toggle-additional-info');
-
-        btn.addEventListener('click', function() {
-            if (content.style.maxHeight && content.style.maxHeight !== '150px') {
-                // Collapse
-                content.style.maxHeight = '150px';
-                btn.textContent = 'See More';
-            } else {
-                // Expand
-                content.style.maxHeight = content.scrollHeight + 'px';
-                btn.textContent = 'See Less';
-            }
-        });
-    });
-    //see review
-       document.addEventListener('DOMContentLoaded', function () {
-        const viewAllBtn = document.getElementById('view-all-reviews-btn');
-        const moreReviews = document.getElementById('more-reviews');
-        const productInfoSection = document.getElementById('product-info-section');
-
-        viewAllBtn.addEventListener('click', function (e) {
-            e.preventDefault();
-            moreReviews.style.display = 'block';
-            productInfoSection.style.display = 'none';
-            viewAllBtn.style.display = 'none';
-        });
-    });
-document.addEventListener('DOMContentLoaded', function () {
-    const viewAllBtn = document.getElementById('view-all-reviews-btn');
-    const seeLessBtn = document.getElementById('see-less-reviews-btn');
-    const moreReviews = document.getElementById('more-reviews');
-    const additionalInfo = document.getElementById('additional-info-wrapper');
-
-    viewAllBtn.addEventListener('click', function (e) {
-        e.preventDefault();
-        moreReviews.style.display = 'block';          // Show 7 hidden reviews
-        additionalInfo.style.display = 'none';        // Hide additional info
-        viewAllBtn.style.display = 'none';            // Hide "View all"
-        seeLessBtn.style.display = 'inline-block';    // Show "See less"
-    });
-
-    seeLessBtn.addEventListener('click', function (e) {
-        e.preventDefault();
-        moreReviews.style.display = 'none';           // Hide extra reviews
-        additionalInfo.style.display = 'block';       // Show additional info
-        viewAllBtn.style.display = 'inline-block';    // Show "View all"
-        seeLessBtn.style.display = 'none';            // Hide "See less"
-    });
-});
-</script>
-
-<!-- ✅ Extra CSS for active thumbnail and layout -->
 <style>
     .thumbSwiper {
         overflow: visible !important;
@@ -372,7 +71,423 @@ document.addEventListener('DOMContentLoaded', function () {
 .review-content small {
     color: #a0a0a0;
 }
+.main-image-wrapper {
+    border: 1px solid #e5e7eb;
+    background-color: #f9fafb;
+}
+
+.thumbnail-wrapper {
+    border: 1px solid #d1d5db;
+    background-color: #ffffff;
+}
+.ratings-section h3 {
+    font-size: 16px;
+    font-weight: bold;
+    color: #0b1727;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+   .text-red-500 {
+        color: #ef4444 !important;
+    }
+
+    .heart-icon {
+        transition: color 0.2s ease-in-out;
+    }
 
 </style>
 
+<div class="kt-container-fixed mt-1" style="max-width: var(--custom-container-width, 85%);">
+    <div class="flex flex-col items-stretch gap-7 mt-5 py-5">
+        <!-- Product Title -->
+        <h1 class="text-3xl font-semibold text-gray-650 dark:text-white">
+            {{ product.name|default:'Product Not Found' }}
+        </h1>
+       {% if product %}
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Product Images Section -->
+<div class="flex flex-col gap-4">
+    {% if product.main_image or other_images %}
+        <!-- Main Image Block -->
+        <div class="main-image-wrapper bg-gray-100 dark:bg-gray-650 rounded-lg shadow-md p-2">
+            <div class="swiper mainSwiper h-[500px] rounded-md overflow-hidden">
+                <div class="swiper-wrapper">
+                    {% if product.main_image %}
+                    <div class="swiper-slide">
+                        <img src="{{ product.main_image }}" alt="{{ product.name }}" class="w-full h-full object-cover" />
+                    </div>
+                    {% endif %}
+                    {% for img in other_images %}
+                    <div class="swiper-slide">
+                        <img src="{{ img.image.url }}" alt="Product Image" class="w-full h-full object-cover" />
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="swiper-button-prev"></div>
+                <div class="swiper-button-next"></div>
+            </div>
+        </div>
+
+        <!-- Thumbnail Block -->
+      
+            <div class="swiper thumbSwiper h-20">
+                <div class="swiper-wrapper flex-wrap justify-start">
+                    {% if product.main_image %}
+                    <div class="swiper-slide w-16 h-full cursor-pointer">
+                        <img src="{{ product.main_image }}" class="w-full h-full object-cover border rounded" />
+                    </div>
+                    {% endif %}
+                    {% for img in other_images %}
+                    <div class="swiper-slide w-16 h-full cursor-pointer">
+                        <img src="{{ img.image.url }}" class="w-full h-full object-cover border rounded" />
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+   
+    {% else %}
+        <div class="bg-white border rounded p-6 flex flex-col items-center justify-center text-red-500">
+            <img src="{% static 'default.png' %}" alt="Default Product Image" class="w-64 h-64 object-cover" />
+            <p class="mt-4">Image not available</p>
+        </div>
+    {% endif %}
+</div>
+
+          
+<div id="product-extra-info">
+    <!-- Product Information -->
+    <h1><b>Product Information</b></h1>
+    <p class="text-gray-650 dark:text-gray-650 text-lg leading-relaxed">
+        {{ product.description|default:'No description available' }}
+    </p>
+
+    <!-- Pricing  -->
+    <div class="flex items-center gap-4">
+        {% if product.original_price and product.original_price > product.price %}
+        <span class="text-sm font-medium text-gray-500 line-through">
+            ${{ product.original_price|floatformat:2 }}
+        </span>
+        {% endif %}
+        <span class="text-2xl font-bold text-gray-650 dark:text-white">
+            ${{ product.price|floatformat:2 }}
+        </span>
+        {% if product.offer_percentage and product.offer_percentage > 0 %}
+        <span class="text-sm font-medium text-green-600 bg-green-100 px-2 py-1 rounded-full">
+            Save {{ product.offer_percentage|floatformat:0 }}%
+        </span>
+        {% endif %}
+    </div>
+
+    <!-- Buttons -->
+    <div class="flex items-center gap-3 mt-4">
+          {% if product.id in user_cart_ids %}
+
+                                        <button class="kt-btn kt-btn-outline kt-btn-sm ms-1" style="background:#3b82f6; color:white;" data-product-id="{{ product.id }}">
+                                            In cart <i class="ki-filled ki-handcart text-white"></i>
+                                        </button>
+                                    {% else %}
+
+                                        <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 add-to-cart-btn" data-product-id="{{ product.id }}">
+                                            Add <i class="ki-filled ki-handcart"></i>
+                                        </button>
+
+                                    {% endif %}
+        <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-md"
+                data-kt-wishlist-toggle="true" data-product-id="{{ product.id|default:'0' }}">
+            <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
+        </button>
+    </div>
+<!-- Additional Information  -->
+
+<div  id="additional-info-wrapper" class="mt-6 product-specs space-y-1 text-sm text-gray-650 dark:text-gray-300 border-t pt-4">
+    <h1 class="text-lg font-semibold mb-2">Additional Information</h1>
+
+   
+    <div id="additional-info-content" style="max-height: 150px; overflow: hidden; transition: max-height 0.3s ease;">
+        <p><strong>SKU:</strong> {{ product.supplier_sku|default:'N/A' }}</p>
+        <p><strong>Category:</strong> {{ product.category.name|default:'Uncategorized' }}</p>
+        <p><strong>Brand:</strong> {{ product.brand.name|default:'Unbranded' }}</p>
+        <p><strong>Product From:</strong> {{ product.product_from|default:'N/A' }}</p>
+        <p><strong>Condition:</strong> {{ product.get_condition_display }}</p>
+        <p><strong>Warranty:</strong> {{ product.get_warranty_display }}</p>
+        <p><strong>Tag:</strong> {{ product.get_tag_display }}</p>
+        <p><strong>Manufacture Date:</strong> {{ product.manufacture_date|date:"d M, Y"|default:'N/A' }}</p>
+        <p><strong>Expiration Days:</strong> {{ product.expiration_days|default:'N/A' }}</p>
+        <p><strong>Delivery Time:</strong> {{ product.delivery_time }} Days</p>
+        <p><strong>Return Time Limit:</strong> {{ product.return_time_limit }} Days</p>
+        <p><strong>Available Stock:</strong> {{ product.stock_quantity }}</p>
+        <p><strong>Low Stock Alert:</strong> {{ product.low_stock_alert }}</p>
+        <p><strong>Weight:</strong> {{ product.weight }} {{ product.weight_unit }}</p>
+    </div>
+
+    <!-- See More / See Less button -->
+    <button id="toggle-additional-info" class="text-blue-600 dark:text-blue-400 font-semibold mt-2 hover:underline">
+        See More
+    </button>
+</div>
+<!-- Ratings Section -->
+<div class="ratings-section" style="margin-top: 30px;">
+    <h3 style="font-size: 18px; font-weight: 600; color: #222;">RATINGS <span style="color: #7f91a0;">☆</span></h3>
+
+    <div style="display: flex; gap: 40px; margin-top: 20px; align-items: flex-start;">
+     
+        <div style="min-width: 100px; text-align: center;">
+            <div style="font-size: 38px; font-weight: 500; color: #0b7663; line-height: 1;">
+                {{ average_rating|default:"0.0" }}★
+            </div>
+            <div style="font-size: 15px; color: #555; margin-top: 6px;">
+                {{ total_reviews }} Verified Buyer{{ total_reviews|pluralize }}
+            </div>
+        </div>
+
+        <div style="width: 1px; background: #e0e0e0; height: 65px; margin-top: 5px;"></div>
+        <div style="flex-grow: 1; max-width: 300px; padding-left: 10px;">
+            {% for i in "54321" %}
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                <span style="width: 24px; font-size: 15px; color: #333;">{{ i }}★</span>
+                <div style="flex-grow: 1; background: #e0e0e0; height: 8px; border-radius: 4px; overflow: hidden;">
+              <div style="width: {{ rating_counts|get:i|percentage:total_reviews|floatformat:"0" }}%; height: 100%; background: {% if i == '1' %}#ff4d4f{% elif i == '2' %}#ffc107{% else %}#0b7663{% endif %};"></div>
+
+            </div>
+                <span style="width: 20px; font-size: 14px; color: #555; text-align: right;">
+                    {{ rating_counts|get:i|default:"0" }}
+                </span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Reviews Section -->
+
+<div class="reviews-section" style="margin-top: 40px;" id="reviews-section">
+    <h4>Customer Reviews ({{ total_reviews }})</h4>
+
+    {% if reviews %}
+       <div class="review" style="border-top: 1px solid #ddd; padding: 15px 0; display: flex; gap: 20px; align-items: flex-start;">
+
+         <div class="review-rating" style="background: #0b7663; color: white; padding: 6px 10px; border-radius: 3px; font-weight: bold; min-width: 48px; height: fit-content; display: inline-block; text-align: center;">
+
+                {{ reviews.0.rating }}★
+            </div>
+            <div class="review-content" style="flex: 1;">
+                <p>{{ reviews.0.review|default:"No comment provided." }}</p>
+
+                {% if reviews.0.photo %}
+                    <div class="review-photo" style="margin: 10px 0;">
+                        <img src="{{ reviews.0.photo.url }}" alt="Review Photo"
+                             style="width: 100px; height: auto; border-radius: 6px; box-shadow: 0 0 5px rgba(0,0,0,0.1);">
+                             
+
+                    </div>
+                {% endif %}
+
+                <small>{{ reviews.0.user.username }} | {{ reviews.0.created_at|date:"d M Y" }}</small>
+            </div>
+        </div>
+
+        <!-- Hidden reviews -->
+      
+<div id="more-reviews" style="display: none;">
+    {% for review in reviews|slice:"1:" %}
+        <div class="review" style="border-top: 1px solid #ddd; padding: 15px 0; display: flex; gap: 20px; align-items: flex-start;">
+            <div class="review-rating" style=" background: #0b7663;   color: white; padding: 6px 10px; border-radius: 3px;font-weight: bold; min-width: 48px;height: fit-content;display: inline-block;text-align: center;">
+                {{ review.rating }}★
+            </div>
+            <div class="review-content" style="flex: 1;">
+                <p>{{ review.review|default:"No comment provided." }}</p>
+
+                {% if review.photo %}
+                    <div class="review-photo" style="margin: 10px 0;">
+                        <img src="{{ review.photo.url }}" alt="Review Photo"
+                             style="width: 100px; height: auto; border-radius: 6px; box-shadow: 0 0 5px rgba(0,0,0,0.1);">
+                    </div>
+                {% endif %}
+
+                <small>{{ review.user.username }} | {{ review.created_at|date:"d M Y" }}</small>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+        <!-- Toggle Buttons -->
+        <a href="#" id="view-all-reviews-btn"
+           style="color: #e60023; font-weight: bold; display: block; margin-top: 20px;">
+            View all {{ total_reviews }} reviews
+        </a>
+
+        <a href="#" id="see-less-reviews-btn"
+           style="display: none; color: #0b7663; font-weight: bold; margin-top: 10px;">
+            See less reviews
+        </a>
+
+    {% else %}
+        <p class="text-gray-500 mt-4">No reviews yet for this product.</p>
+    {% endif %}
+</div>
+
+</div>
+        </div>
+        {% else %}
+        <div class="text-center py-10 text-gray-500 dark:text-gray-400">
+            <p>Product not found. Please check the URL or try again.</p>
+            <a href="{% url 'dashboard:home' %}" class="mt-4 inline-block kt-btn kt-btn-primary kt-btn-sm">Back to Home</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!--  SwiperJS CDN -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.js"></script>
+
+<script>
+    //csrf token
+    function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+const csrftoken = getCookie('csrftoken');
+
+    //images show
+    document.addEventListener("DOMContentLoaded", function () {
+        const thumbSwiper = new Swiper(".thumbSwiper", {
+            spaceBetween: 8,
+            slidesPerView: 'auto',
+            freeMode: true,
+            watchSlidesProgress: true,
+        });
+
+        new Swiper(".mainSwiper", {
+            spaceBetween: 10,
+            loop: true,
+            navigation: {
+                nextEl: ".swiper-button-next",
+                prevEl: ".swiper-button-prev",
+            },
+            thumbs: {
+                swiper: thumbSwiper,
+            },
+        });
+    });
+    //see more
+     document.addEventListener('DOMContentLoaded', function() {
+        const content = document.getElementById('additional-info-content');
+        const btn = document.getElementById('toggle-additional-info');
+
+        btn.addEventListener('click', function() {
+            if (content.style.maxHeight && content.style.maxHeight !== '150px') {
+                // Collapse
+                content.style.maxHeight = '150px';
+                btn.textContent = 'See More';
+            } else {
+                // Expand
+                content.style.maxHeight = content.scrollHeight + 'px';
+                btn.textContent = 'See Less';
+            }
+        });
+    });
+    //see review
+       document.addEventListener('DOMContentLoaded', function () {
+    const viewAllBtn = document.getElementById('view-all-reviews-btn');
+    const seeLessBtn = document.getElementById('see-less-reviews-btn');
+    const moreReviews = document.getElementById('more-reviews');
+
+    if (viewAllBtn && seeLessBtn && moreReviews) {
+        viewAllBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            moreReviews.style.display = 'block';
+            viewAllBtn.style.display = 'none';
+            seeLessBtn.style.display = 'inline-block';
+        });
+
+        seeLessBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            moreReviews.style.display = 'none';
+            viewAllBtn.style.display = 'inline-block';
+            seeLessBtn.style.display = 'none';
+        });
+    }
+});
+//add to cart
+    document.addEventListener('DOMContentLoaded', () => {
+              const markAsInCart = (btn) => {
+
+            btn.classList.remove('kt-btn-outline');
+            btn.classList.add('kt-btn-success');
+            btn.innerHTML = `In cart <i class="ki-filled ki-handcart"></i>`;
+        };
+document.querySelectorAll('.add-to-cart-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                const productId = button.dataset.productId;
+
+                fetch("{% url 'dashboard:add_to_cart' %}", {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": csrftoken,
+                        "Content-Type": "application/x-www-form-urlencoded",
+                    },
+                    body: new URLSearchParams({
+                        product_id: productId,
+                        quantity: 1,
+                    }),
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === "success") {
+                    
+                        document
+                            .querySelectorAll(`.add-to-cart-btn[data-product-id="${productId}"]`)
+                            .forEach(markAsInCart);
+                    } else {
+                        alert("Something went wrong");
+                    }
+                })
+                .catch(err => console.error("Add to cart error:", err));
+            });
+        });
+
+    });
+ // Wishlist Toggle
+    document.querySelectorAll('.kt-wishlist-icon').forEach(button => {
+        button.addEventListener('click', () => {
+            const productId = button.dataset.productId || '0';
+            fetch('/wishlist/toggle/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: `product_id=${productId}`
+            })
+                .then(response => {
+                    if (response.status === 403) {
+                        alert('Please login to use wishlist.');
+                        window.location.href = '/login/';
+                        return;
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data) {
+                        const icon = button.querySelector('i');
+                        icon.classList.toggle('text-red-500', data.status === 'added');
+                    }
+                })
+                .catch(error => console.error('Wishlist toggle error:', error));
+        });
+    });
+
+</script>
 {% endblock %}

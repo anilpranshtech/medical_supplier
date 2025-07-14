@@ -37,6 +37,7 @@ import requests
 from django.http import JsonResponse
 from datetime import date, timedelta
 from django.shortcuts import get_object_or_404
+from django.db.models import Avg
 
 
 class HomeView(TemplateView):
@@ -44,7 +45,7 @@ class HomeView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        today = timezone.now().date()  # Use timezone-aware date
+        today = timezone.now().date() 
         today = date.today()
 
         def set_product_fields(product_queryset):
@@ -172,6 +173,7 @@ class CustomLoginView(FormView):
 
 import re
 
+
 class RegistrationView(View):
     template_name = "dashboard/register.html"
 
@@ -179,10 +181,9 @@ class RegistrationView(View):
         return render(request, self.template_name)
 
     def post(self, request):
-        # Initialize error dictionary to collect all validation errors
         errors = {}
 
-        # reCAPTCHA validation
+        # Step 1: reCAPTCHA
         recaptcha_response = request.POST.get('g-recaptcha-response')
         recaptcha_secret = '6LdTHV8rAAAAAIgLr2wdtdtWExTS6xJpUpD8qEzh'
         recaptcha_result = requests.post(
@@ -206,7 +207,7 @@ class RegistrationView(View):
         user_type = request.POST.get('user_type')
         buyer_type = request.POST.get('buyer_type')
 
-        # Validate required fields
+        # Step 3: Basic field validations
         if not first_name:
             errors['first_name'] = 'First name is required.'
         if not last_name:
@@ -220,42 +221,38 @@ class RegistrationView(View):
         if not confirm_password:
             errors['confirm_password'] = 'Confirm password is required.'
 
-        # Validate email format
+        # Step 4: Email format & existing user
         if email and not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
             errors['email'] = 'Invalid email format.'
-
-        # Check if user already exists
-        if email and User.objects.filter(username=email).exists():
+        elif email and User.objects.filter(username=email).exists():
             errors['email'] = 'An account with this email already exists.'
 
-        # Password validation
+        # Step 5: Password strength
         if password:
-            # Minimum length
             if len(password) < 8:
-                errors['password'] = 'Password must be at least 8 characters long.'
-            # Check for uppercase, lowercase, number, and special character
+                errors['password'] = 'Password must be at least 8 characters.'
             if not re.search(r'[A-Z]', password):
-                errors['password'] = 'Password must contain at least one uppercase letter.'
+                errors['password'] = 'Must include an uppercase letter.'
             if not re.search(r'[a-z]', password):
-                errors['password'] = 'Password must contain at least one lowercase letter.'
+                errors['password'] = 'Must include a lowercase letter.'
             if not re.search(r'[0-9]', password):
-                errors['password'] = 'Password must contain at least one number.'
+                errors['password'] = 'Must include a number.'
             if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
-                errors['password'] = 'Password must contain at least one special character.'
+                errors['password'] = 'Must include a special character.'
 
-        # Validate passwords match
+        # Step 6: Password match
         if password and confirm_password and password != confirm_password:
             errors['confirm_password'] = 'Passwords do not match.'
 
-        # If there are any errors, display them and return to form
+        # Step 7: If errors → show messages
         if errors:
             for field, message in errors.items():
                 messages.error(request, message, extra_tags=field)
             return render(request, self.template_name, {
-                'form_data': request.POST  # Preserve form data
+                'form_data': request.POST
             })
 
-        # Send OTP only if all validations pass
+        # Step 8: Send OTP
         otp_response = send_phone_otp(phone, TEXTDRIP_OTP_TOKEN)
         if "error" in otp_response:
             messages.error(request, otp_response["error"], extra_tags='phone')
@@ -263,7 +260,7 @@ class RegistrationView(View):
                 'form_data': request.POST
             })
 
-        # Store signup data in session
+        # Step 9: Save in session
         request.session['signup_data'] = {
             'first_name': first_name,
             'last_name': last_name,
@@ -281,8 +278,8 @@ class RegistrationView(View):
             'department': request.POST.get('department'),
             'purchase_capacity': request.POST.get('purchase_capacity'),
         }
-        return redirect('dashboard:verify_otp')
 
+        return redirect('dashboard:verify_otp')
 
 class VerifyOTPView(View):
     template_name = 'userdashboard/auth/verify_otp.html'
@@ -420,8 +417,6 @@ class SearchResultsGridView(TemplateView):
 class SearchResultsListView(TemplateView):
     template_name = 'userdashboard/view/search_results_list.html'
 
-
-
 class ProductDetailsView(TemplateView):
     template_name = 'userdashboard/view/product_details.html'
 
@@ -431,31 +426,52 @@ class ProductDetailsView(TemplateView):
 
         if pk:
             try:
-                product = Product.objects.select_related('category', 'sub_category', 'last_category', 'brand').get(id=pk)
+                product = Product.objects.select_related(
+                    'category', 'sub_category', 'last_category', 'brand'
+                ).get(id=pk)
 
-                # Get main image
+                # Main and other images
                 main_img = ProductImage.objects.filter(product=product, is_main=True).first()
                 product.main_image = main_img.image.url if main_img else None
-
-                # Get other images excluding the main image
                 other_images = ProductImage.objects.filter(product=product).exclude(id=main_img.id if main_img else None)
 
-                context['product'] = product
-                context['other_images'] = other_images
+                # Rating & review data
+                reviews = RatingReview.objects.filter(product=product)
+                rating_counts = {i: reviews.filter(rating=i).count() for i in range(1, 6)}
+                total_reviews = reviews.count()
+                avg_rating = reviews.aggregate(avg=Avg('rating'))['avg'] or 0
+
+                # Cart & Wishlist IDs
+                user_cart_ids = []
+                user_wishlist_ids = []
+
+                user = self.request.user
+                if user.is_authenticated:
+                    user_cart_ids = list(CartProduct.objects.filter(user=user).values_list('product_id', flat=True))
+                    user_wishlist_ids = list(WishlistProduct.objects.filter(user=user).values_list('product_id', flat=True))
+
+                context.update({
+                    'product': product,
+                    'other_images': other_images,
+                    'reviews': reviews,
+                    'rating_counts': rating_counts,
+                    'total_reviews': total_reviews,
+                    'average_rating': round(avg_rating, 1),
+                    'user_cart_ids': user_cart_ids,
+                    'user_wishlist_ids': user_wishlist_ids,
+                })
 
             except Product.DoesNotExist:
                 context['product'] = None
                 context['other_images'] = []
 
-        else:
-            context['product'] = None
-            context['other_images'] = []
-
         return context
+
 
 
 class ShoppingCartView(LoginRequiredMixin, TemplateView):
     template_name = 'userdashboard/view/shopping_cart.html'
+    login_url = 'dashboard:login'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -535,6 +551,7 @@ class WishlistClearView(LoginRequiredMixin, View):
 
 class WishlistView(LoginRequiredMixin, TemplateView):
     template_name = 'userdashboard/view/wishlist.html'
+    login_url = 'dashboard:login'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
