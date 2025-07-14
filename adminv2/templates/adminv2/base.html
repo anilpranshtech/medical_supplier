@@ -114,7 +114,7 @@
                              class="mh-25px"/>
                     </a>
                     <button class="btn btn-icon btn-sm btn-active-color-primary d-flex d-lg-none"
-                        id="kt_app_sidebar_mobile_toggle">
+                            id="kt_app_sidebar_mobile_toggle">
                         <i class="bi bi-list fs-1"></i>
                     </button>
                 </div>
@@ -273,10 +273,6 @@
                                 <div class="menu-item px-3">
                                     <div class="menu-content d-flex align-items-center px-3">
                                         <div class="symbol symbol-50px me-5">
-                                            {% comment %}
-                                            <img alt="Logo"
-                                                 src="{{ request.user.supplierprofile.profile_picture.url }}"/>
-                                            {% endcomment %}
 
                                             {% if request.user.supplierprofile.profile_picture %}
                                             <img src="{{ request.user.supplierprofile.profile_picture.url }}"
@@ -291,7 +287,8 @@
 
                                         <div class="d-flex flex-column">
                                             <div class="fw-bold d-flex align-items-center fs-5">
-                                                {{request.user}} <span class="badge badge-light-success fw-bold fs-7 px-2 py-1 ms-2">Supplier</span>
+                                                {{request.user}} <span
+                                                    class="badge badge-light-success fw-bold fs-7 px-2 py-1 ms-2">Supplier</span>
                                             </div>
 
                                             <a href="#" class="fw-semibold text-muted text-hover-primary fs-7">
@@ -314,53 +311,54 @@
                                         <span class="menu-title">My Subscription</span>
                                         <span class="menu-arrow"></span>
 
-                                 <div class="menu-item px-5">
-                                    <a href="{% url 'adminv2:order_listing' %}"
-                                        class="menu-link px-5">
-                                        My Orders
-                                    </a>
-                                </div>
-
-                                    <div class="menu-sub menu-sub-dropdown w-175px py-4">
-
-                                        <div class="menu-item px-3">
-                                            <a href="https://preview.keenthemes.com/metronic8/demo58/account/billing.html"
+                                        <div class="menu-item px-5">
+                                            <a href="{% url 'adminv2:order_listing' %}"
                                                class="menu-link px-5">
-                                                Billing
+                                                My Orders
                                             </a>
                                         </div>
 
+                                        <div class="menu-sub menu-sub-dropdown w-175px py-4">
 
-                                        <div class="menu-item px-3">
-                                            <a href="https://preview.keenthemes.com/metronic8/demo58/account/statements.html"
-                                               class="menu-link d-flex flex-stack px-5">
-                                                Statements
+                                            <div class="menu-item px-3">
+                                                <a href="https://preview.keenthemes.com/metronic8/demo58/account/billing.html"
+                                                   class="menu-link px-5">
+                                                    Billing
+                                                </a>
+                                            </div>
 
-                                                <span class="ms-2 lh-0" data-bs-toggle="tooltip"
-                                                      title="View your statements">
+
+                                            <div class="menu-item px-3">
+                                                <a href="https://preview.keenthemes.com/metronic8/demo58/account/statements.html"
+                                                   class="menu-link d-flex flex-stack px-5">
+                                                    Statements
+
+                                                    <span class="ms-2 lh-0" data-bs-toggle="tooltip"
+                                                          title="View your statements">
                                                     <i class="ki-outline ki-information-5 fs-5"></i> </span>
-                                            </a>
-                                        </div>
+                                                </a>
+                                            </div>
 
-                                        <div class="separator my-2"></div>
+                                            <div class="separator my-2"></div>
 
-                                        <div class="menu-item px-3">
-                                            <div class="menu-content px-3">
-                                                <label
-                                                        class="form-check form-switch form-check-custom form-check-solid">
-                                                    <input class="form-check-input w-30px h-20px" type="checkbox"
-                                                           value="1" checked="checked" name="notifications"/>
-                                                    <span class="form-check-label text-muted fs-7">
+                                            <div class="menu-item px-3">
+                                                <div class="menu-content px-3">
+                                                    <label
+                                                            class="form-check form-switch form-check-custom form-check-solid">
+                                                        <input class="form-check-input w-30px h-20px" type="checkbox"
+                                                               value="1" checked="checked" name="notifications"/>
+                                                        <span class="form-check-label text-muted fs-7">
                                                         Notifications
                                                     </span>
-                                                </label>
+                                                    </label>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    </a>
                                 </div>
-                                 <div class="menu-item px-5">
+                                <div class="menu-item px-5">
                                     <a href="{% url 'adminv2:products_list' %}"
-                                        class="menu-link px-5">
+                                       class="menu-link px-5">
                                         All Products
                                     </a>
                                 </div>
@@ -383,7 +381,6 @@
 
             </div>
         </div>
-
 
         <div class="app-wrapper  flex-column flex-row-fluid " id="kt_app_wrapper">
             {% include 'adminv2/sidebar.html' %}
@@ -421,646 +418,27 @@
             {% block content %}
 
             <div id="kt_app_content_container" class="app-container  container-fluid ">
-
-                {% comment %}
-                <div class="row g-5 g-xl-10">
-                    <!--begin::Col-->
-                    <div class="col-xl-8 mb-xl-10">
-                        <!--begin::Row-->
-                        <div class="row g-5 g-xl-10">
-                            <!--begin::Col-->
-                            <div class="col-lg-6 mb-xl-10">
-                                <!--begin::Chart Widget 47-->
-
-                                <div class="card card-flush "
-                                     style="background: linear-gradient(180deg, #1858FD 0%, #1652EA 100%); box-shadow: 0px 14px 40px 0px rgba(24, 85, 243, 0.20);">
-                                    <!--begin::Header-->
-                                    <div class="card-header align-items-center pt-6">
-                                        <!--begin::Symbol-->
-                                        <div class="symbol symbol-50px me-4">
-                                            <div class="symbol-label bg-transparent rounded-lg"
-                                                 style="border: 1px dashed rgba(255, 255, 255, 0.20)">
-                                                <i class="ki-outline ki-handcart text-white fs-1"></i>
-                                            </div>
-                                        </div>
-                                        <!--end::Symbol-->
-
-                                        <!--begin::Info-->
-                                        <div class="card-title flex-column flex-grow-1">
-                                            <span class="card-label fw-bold fs-3 text-white">NewOrders</span>
-                                            <span class="text-white opacity-50 fw-semibold fs-base">Recent customer purchase trends</span>
-                                        </div>
-                                        <!--end::Info-->
-
-                                        <!--begin::Toolbar-->
-                                        <div class="card-toolbar">
-                                            <a href="#"
-                                               class="btn btn-sm btn-text-white bg-white bg-opacity-10" style="border: 1px solid rgba(255, 255, 255, 0.20)">Today
-                                            </a>
-                                        </div>
-                                        <!--end::Toolbar-->
-                                    </div>
-                                    <!--end::Header-->
-
-                                    <!--begin::Card body-->
-                                    <div class="card-body d-flex align-items-end pb-0">
-                                        <!--begin::Wrapper-->
-                                        <div class="d-flex flex-stack flex-row-fluid">
-                                            <!--begin::Block-->
-                                            <div class="d-flex flex-column">
-                                                <!--begin::Stats-->
-                                                <div class="d-flex align-items-center mb-1">
-                                                    <!--begin::Amount-->
-                                                    <span
-                                                            class="fs-2hx fw-bold text-white me-2">$1,934</span>
-                                                    <!--end::Amount-->
-
-                                                    <!--begin::Label-->
-                                                    <span class="fw-semibold text-success fs-6">
-                                                        +6.83%
-                                                    </span>
-                                                    <!--end::Label-->
-                                                </div>
-                                                <!--end::Stats-->
-
-                                                <!--begin::Total-->
-                                                <span class="fw-semibold text-white opacity-50">For past
-                                                    24 hours</span>
-                                                <!--end::Total-->
-                                            </div>
-                                            <!--end::Block-->
-
-                                            <!--begin::Chart-->
-                                            <div id="kt_charts_widget_47"
-                                                 class="h-125px w-200px min-h-auto"></div>
-                                            <!--end::Chart-->
-                                        </div>
-                                        <!--end::Wrapper-->
-                                    </div>
-                                    <!--end::Card body-->
-                                </div>
-                                <!--end::Chart Widget 47-->
-                            </div>
-                            <!--end::Col-->
-
-                            <!--begin::Col-->
-                            <div class="col-lg-6 mb-5 mb-xl-10">
-                                <!--begin::Chart Widget 47-->
-
-                                <!--begin::Chart Widget 48-->
-                                <div class="card card-flush ">
-                                    <!--begin::Header-->
-                                    <div
-                                            class="card-header justify-content-start align-items-center pt-6">
-                                        <!--begin::Symbol-->
-                                        <div class="symbol symbol-50px me-4">
-                                            <div
-                                                    class="symbol-label border border-dashed border-gray-300">
-                                                <i class="ki-outline ki-handcart text-info fs-1"></i>
-                                            </div>
-                                        </div>
-                                        <!--end::Symbol-->
-
-                                        <!--begin::Info-->
-                                        <div class="card-title flex-column flex-grow-1">
-                                            <span class="card-label fw-bold fs-3 text-gray-800">New
-                                                Orders</span>
-
-                                            <span class="text-gray-500 fw-semibold fs-base">Recent
-                                                customer purchase trends</span>
-                                        </div>
-                                        <!--end::Info-->
-
-                                        <!--begin::Toolbar-->
-                                        <div class="card-toolbar">
-                                            <a href="#" class="btn btn-sm btn-secondary">Month</a>
-                                        </div>
-                                        <!--end::Toolbar-->
-                                    </div>
-                                    <!--end::Header-->
-
-                                    <!--begin::Card body-->
-                                    <div class="card-body d-flex align-items-end pb-0">
-                                        <!--begin::Wrapper-->
-                                        <div class="d-flex flex-stack flex-row-fluid">
-                                            <!--begin::Block-->
-                                            <div class="d-flex flex-column">
-                                                <!--begin::Stats-->
-                                                <div class="d-flex align-items-center mb-1">
-                                                    <!--begin::Amount-->
-                                                    <span
-                                                            class="fs-2hx fw-bold text-gray-800 me-2">16%</span>
-                                                    <!--end::Amount-->
-
-                                                    <!--begin::Label-->
-                                                    <span class="fw-semibold text-success fs-6">
-                                                        +4,245$
-                                                    </span>
-                                                    <!--end::Label-->
-                                                </div>
-                                                <!--end::Stats-->
-
-                                                <!--begin::Total-->
-                                                <span class="fw-semibold text-gray-500">For past 30
-                                                    days</span>
-                                                <!--end::Total-->
-                                            </div>
-                                            <!--end::Wrapper-->
-
-                                            <!--begin::Chart-->
-                                            <div id="kt_charts_widget_48"
-                                                 class="h-125px w-200px min-h-auto"></div>
-                                            <!--end::Chart-->
-                                        </div>
-                                        <!--end::Wrapper-->
-                                    </div>
-                                    <!--end::Card body-->
-                                </div>
-                                <!--end::Chart Widget 48-->
-                            </div>
-                            <!--end::Col-->
-                        </div>
-                        <!--end::Row-->
-
-
-                        <!--begin::Row-->
-                        <div class="row gx-5 gx-xl-10">
-                            <!--begin::Col-->
-                            <div class="col-xl-6 mb-5 mb-xl-10">
-
-                                <!--begin::Table widget 9-->
-                                <div class="card card-flush h-xl-100">
-                                    <!--begin::Header-->
-                                    <div class="card-header pt-5">
-                                        <!--begin::Title-->
-                                        <h3 class="card-title align-items-start flex-column">
-                                            <span class="card-label fw-bold text-gray-800">Top Referral
-                                                Sources</span>
-
-                                            <span class="text-gray-500 pt-1 fw-semibold fs-6">Counted in
-                                                Millions</span>
-                                        </h3>
-                                        <!--end::Title-->
-
-                                        <!--begin::Toolbar-->
-                                        <div class="card-toolbar">
-                                            <a href="#" class="btn btn-sm btn-light">PDF Report</a>
-                                        </div>
-                                        <!--end::Toolbar-->
-                                    </div>
-                                    <!--end::Header-->
-
-                                    <!--begin::Body-->
-                                    <div class="card-body py-3">
-                                        <!--begin::Table container-->
-                                        <div class="table-responsive">
-                                            <!--begin::Table-->
-                                            <table
-                                                    class="table table-row-dashed align-middle gs-0 gy-4">
-                                                <!--begin::Table head-->
-                                                <thead>
-                                                <tr class="fs-7 fw-bold border-0 text-gray-500">
-                                                    <th class="min-w-150px" colspan="2">CAMPAIGN
-                                                    </th>
-                                                    <th class="min-w-150px text-end pe-0"
-                                                        colspan="2">SESSIONS
-                                                    </th>
-                                                    <th class="text-end min-w-150px" colspan="2">
-                                                        CONVERSION RATE
-                                                    </th>
-                                                </tr>
-                                                </thead>
-                                                <!--end::Table head-->
-
-                                                <!--begin::Table body-->
-                                                <tbody>
-                                                <tr>
-                                                    <td class="" colspan="2">
-                                                        <a href="#"
-                                                           class="text-gray-800 fw-bold text-hover-primary mb-1 fs-6">Google</a>
-                                                    </td>
-
-                                                    <td class="pe-0" colspan="2">
-                                                        <div class="d-flex justify-content-end">
-                                                                <span
-                                                                        class="text-gray-800 fw-bold fs-6 me-1">1,256</span>
-
-                                                            <span
-                                                                    class="text-danger min-w-50px d-block text-end fw-bold fs-6">-935</span>
-                                                        </div>
-                                                    </td>
-
-                                                    <td class="" colspan="2">
-                                                        <div class="d-flex justify-content-end">
-                                                                <span
-                                                                        class="text-gray-900 fw-bold fs-6 me-3">23.63%</span>
-
-                                                            <span
-                                                                    class="text-danger min-w-60px d-block text-end fw-bold fs-6">-9.35%</span>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="" colspan="2">
-                                                        <a href="#"
-                                                           class="text-gray-800 fw-bold text-hover-primary mb-1 fs-6">Facebook</a>
-                                                    </td>
-
-                                                    <td class="pe-0" colspan="2">
-                                                        <div class="d-flex justify-content-end">
-                                                                <span
-                                                                        class="text-gray-800 fw-bold fs-6 me-1">446</span>
-
-                                                            <span
-                                                                    class="text-danger min-w-50px d-block text-end fw-bold fs-6">-576</span>
-                                                        </div>
-                                                    </td>
-
-                                                    <td class="" colspan="2">
-                                                        <div class="d-flex justify-content-end">
-                                                                <span
-                                                                        class="text-gray-900 fw-bold fs-6 me-3">12.45%</span>
-
-                                                            <span
-                                                                    class="text-danger min-w-60px d-block text-end fw-bold fs-6">-57.02%</span>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="" colspan="2">
-                                                        <a href="#"
-                                                           class="text-gray-800 fw-bold text-hover-primary mb-1 fs-6">Bol.com</a>
-                                                    </td>
-
-                                                    <td class="pe-0" colspan="2">
-                                                        <div class="d-flex justify-content-end">
-                                                                <span
-                                                                        class="text-gray-800 fw-bold fs-6 me-1">67</span>
-
-                                                            <span
-                                                                    class="text-success min-w-50px d-block text-end fw-bold fs-6">+24</span>
-                                                        </div>
-                                                    </td>
-
-                                                    <td class="" colspan="2">
-                                                        <div class="d-flex justify-content-end">
-                                                                <span
-                                                                        class="text-gray-900 fw-bold fs-6 me-3">73.63%</span>
-
-                                                            <span
-                                                                    class="text-success min-w-60px d-block text-end fw-bold fs-6">+28.73%</span>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="" colspan="2">
-                                                        <a href="#"
-                                                           class="text-gray-800 fw-bold text-hover-primary mb-1 fs-6">Dutchnews.nl</a>
-                                                    </td>
-
-                                                    <td class="pe-0" colspan="2">
-                                                        <div class="d-flex justify-content-end">
-                                                                <span
-                                                                        class="text-gray-800 fw-bold fs-6 me-1">2,136</span>
-
-                                                            <span
-                                                                    class="text-danger min-w-50px d-block text-end fw-bold fs-6">-1,229</span>
-                                                        </div>
-                                                    </td>
-
-                                                    <td class="" colspan="2">
-                                                        <div class="d-flex justify-content-end">
-                                                                <span
-                                                                        class="text-gray-900 fw-bold fs-6 me-3">3.67%</span>
-
-                                                            <span
-                                                                    class="text-danger min-w-60px d-block text-end fw-bold fs-6">-12.29%</span>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="" colspan="2">
-                                                        <a href="#"
-                                                           class="text-gray-800 fw-bold text-hover-primary mb-1 fs-6">Stackoverflow</a>
-                                                    </td>
-
-                                                    <td class="pe-0" colspan="2">
-                                                        <div class="d-flex justify-content-end">
-                                                                <span
-                                                                        class="text-gray-800 fw-bold fs-6 me-1">945</span>
-
-                                                            <span
-                                                                    class="text-danger min-w-50px d-block text-end fw-bold fs-6">-634</span>
-                                                        </div>
-                                                    </td>
-
-                                                    <td class="" colspan="2">
-                                                        <div class="d-flex justify-content-end">
-                                                                <span
-                                                                        class="text-gray-900 fw-bold fs-6 me-3">25.03%</span>
-
-                                                            <span
-                                                                    class="text-danger min-w-60px d-block text-end fw-bold fs-6">-9.35%</span>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="" colspan="2">
-                                                        <a href="#"
-                                                           class="text-gray-800 fw-bold text-hover-primary mb-1 fs-6">Themeforest</a>
-                                                    </td>
-
-                                                    <td class="pe-0" colspan="2">
-                                                        <div class="d-flex justify-content-end">
-                                                                <span
-                                                                        class="text-gray-800 fw-bold fs-6 me-1">237</span>
-
-                                                            <span
-                                                                    class="text-success min-w-50px d-block text-end fw-bold fs-6">106</span>
-                                                        </div>
-                                                    </td>
-
-                                                    <td class="" colspan="2">
-                                                        <div class="d-flex justify-content-end">
-                                                                <span
-                                                                        class="text-gray-900 fw-bold fs-6 me-3">36.52%</span>
-
-                                                            <span
-                                                                    class="text-success min-w-60px d-block text-end fw-bold fs-6">+3.06%</span>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                                </tbody>
-                                                <!--end::Table body-->
-                                            </table>
-                                            <!--end::Table-->
-                                        </div>
-                                        <!--end::Table container-->
-                                    </div>
-                                    <!--end::Body-->
-                                </div>
-                                <!--end::Table Widget 9-->
-                            </div>
-                            <!--end::Col-->
-
-                            <!--begin::Col-->
-                            <div class="col-xl-6 mb-5 mb-xl-10">
-
-                                <!--begin::Table widget 10-->
-                                <div class="card card-flush h-xl-100">
-                                    <!--begin::Header-->
-                                    <div class="card-header pt-5">
-                                        <!--begin::Title-->
-                                        <h3 class="card-title align-items-start flex-column">
-                                            <span class="card-label fw-bold text-gray-800">Top
-                                                Performing Pages</span>
-
-                                            <span class="text-gray-500 pt-1 fw-semibold fs-6">Counted in
-                                                Millions</span>
-                                        </h3>
-                                        <!--end::Title-->
-
-                                        <!--begin::Toolbar-->
-                                        <div class="card-toolbar">
-                                            <a href="#" class="btn btn-sm btn-light">PDF Report</a>
-                                        </div>
-                                        <!--end::Toolbar-->
-                                    </div>
-                                    <!--end::Header-->
-
-                                    <!--begin::Body-->
-                                    <div class="card-body py-3">
-                                        <!--begin::Table container-->
-                                        <div class="table-responsive">
-                                            <!--begin::Table-->
-                                            <table
-                                                    class="table table-row-dashed align-middle gs-0 gy-4">
-                                                <!--begin::Table head-->
-                                                <thead>
-                                                <tr class="fs-7 fw-bold border-0 text-gray-500">
-                                                    <th class="min-w-200px" colspan="2">LANDING PAGE
-                                                    </th>
-                                                    <th class="min-w-100px text-end pe-0"
-                                                        colspan="2">CLICKS
-                                                    </th>
-                                                    <th class="text-end min-w-100px" colspan="2">
-                                                        AVG. POSITION
-                                                    </th>
-                                                </tr>
-                                                </thead>
-                                                <!--end::Table head-->
-
-                                                <!--begin::Table body-->
-                                                <tbody>
-                                                <tr>
-                                                    <td class="" colspan="2">
-                                                        <a href="#"
-                                                           class="text-gray-800 fw-bold text-hover-primary mb-1 fs-6">Index</a>
-                                                    </td>
-
-                                                    <td class="pe-0" colspan="2">
-                                                        <div class="d-flex justify-content-end">
-                                                                <span
-                                                                        class="text-gray-800 fw-bold fs-6">1,256</span>
-
-                                                            <span
-                                                                    class="text-danger min-w-50px d-block text-end fw-bold fs-6">-935</span>
-                                                        </div>
-                                                    </td>
-
-                                                    <td class="" colspan="2">
-                                                        <div class="d-flex justify-content-end">
-                                                                <span
-                                                                        class="text-gray-900 fw-bold fs-6">2.63</span>
-
-                                                            <span
-                                                                    class="text-danger min-w-50px d-block text-end fw-bold fs-6">-1.35</span>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="" colspan="2">
-                                                        <a href="#"
-                                                           class="text-gray-800 fw-bold text-hover-primary mb-1 fs-6">Products</a>
-                                                    </td>
-
-                                                    <td class="pe-0" colspan="2">
-                                                        <div class="d-flex justify-content-end">
-                                                                <span
-                                                                        class="text-gray-800 fw-bold fs-6">446</span>
-
-                                                            <span
-                                                                    class="text-danger min-w-50px d-block text-end fw-bold fs-6">-576</span>
-                                                        </div>
-                                                    </td>
-
-                                                    <td class="" colspan="2">
-                                                        <div class="d-flex justify-content-end">
-                                                                <span
-                                                                        class="text-gray-900 fw-bold fs-6">1.45</span>
-
-                                                            <span
-                                                                    class="text-danger min-w-50px d-block text-end fw-bold fs-6">0.32</span>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="" colspan="2">
-                                                        <a href="#"
-                                                           class="text-gray-800 fw-bold text-hover-primary mb-1 fs-6">devs.keenthemes.com</a>
-                                                    </td>
-
-                                                    <td class="pe-0" colspan="2">
-                                                        <div class="d-flex justify-content-end">
-                                                                <span
-                                                                        class="text-gray-800 fw-bold fs-6">67</span>
-
-                                                            <span
-                                                                    class="text-success min-w-50px d-block text-end fw-bold fs-6">+24</span>
-                                                        </div>
-                                                    </td>
-
-                                                    <td class="" colspan="2">
-                                                        <div class="d-flex justify-content-end">
-                                                                <span
-                                                                        class="text-gray-900 fw-bold fs-6">7.63</span>
-
-                                                            <span
-                                                                    class="text-success min-w-50px d-block text-end fw-bold fs-6">+8.73</span>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="" colspan="2">
-                                                        <a href="#"
-                                                           class="text-gray-800 fw-bold text-hover-primary mb-1 fs-6">studio.keenthemes.com</a>
-                                                    </td>
-
-                                                    <td class="pe-0" colspan="2">
-                                                        <div class="d-flex justify-content-end">
-                                                                <span
-                                                                        class="text-gray-800 fw-bold fs-6">2,136</span>
-
-                                                            <span
-                                                                    class="text-danger min-w-50px d-block text-end fw-bold fs-6">-1,229</span>
-                                                        </div>
-                                                    </td>
-
-                                                    <td class="" colspan="2">
-                                                        <div class="d-flex justify-content-end">
-                                                                <span
-                                                                        class="text-gray-900 fw-bold fs-6">3.67</span>
-
-                                                            <span
-                                                                    class="text-danger min-w-50px d-block text-end fw-bold fs-6">-2.29</span>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="" colspan="2">
-                                                        <a href="#"
-                                                           class="text-gray-800 fw-bold text-hover-primary mb-1 fs-6">graphics.keenthemes.com</a>
-                                                    </td>
-
-                                                    <td class="pe-0" colspan="2">
-                                                        <div class="d-flex justify-content-end">
-                                                                <span
-                                                                        class="text-gray-800 fw-bold fs-6">945</span>
-
-                                                            <span
-                                                                    class="text-danger min-w-50px d-block text-end fw-bold fs-6">-634</span>
-                                                        </div>
-                                                    </td>
-
-                                                    <td class="" colspan="2">
-                                                        <div class="d-flex justify-content-end">
-                                                                <span
-                                                                        class="text-gray-900 fw-bold fs-6">5.03</span>
-
-                                                            <span
-                                                                    class="text-danger min-w-50px d-block text-end fw-bold fs-6">-0.35</span>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="" colspan="2">
-                                                        <a href="#"
-                                                           class="text-gray-800 fw-bold text-hover-primary mb-1 fs-6">Licenses</a>
-                                                    </td>
-
-                                                    <td class="pe-0" colspan="2">
-                                                        <div class="d-flex justify-content-end">
-                                                                <span
-                                                                        class="text-gray-800 fw-bold fs-6">237</span>
-
-                                                            <span
-                                                                    class="text-success min-w-50px d-block text-end fw-bold fs-6">106</span>
-                                                        </div>
-                                                    </td>
-
-                                                    <td class="" colspan="2">
-                                                        <div class="d-flex justify-content-end">
-                                                                <span
-                                                                        class="text-gray-900 fw-bold fs-6">3.52</span>
-
-                                                            <span
-                                                                    class="text-success min-w-50px d-block text-end fw-bold fs-6">+3.06</span>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                                </tbody>
-                                                <!--end::Table body-->
-                                            </table>
-                                            <!--end::Table-->
-                                        </div>
-                                        <!--end::Table container-->
-                                    </div>
-                                    <!--end::Body-->
-                                </div>
-                                <!--end::Table Widget 10-->
-                            </div>
-                            <!--end::Col-->
-                        </div>
-                        <!--end::Row-->
-
-
-                    </div>
-                    <!--end::Col-->
-
-
-                </div>
-
-                {% endcomment %}
             </div>
 
             {% endblock %}
             <div id="kt_app_footer" class="app-footer ">
-
                 <div class="app-container  container-fluid d-flex flex-column flex-md-row flex-center flex-md-stack py-3 ">
-
                     <div class="text-gray-900 order-2 order-md-1">
                         <span class="text-muted fw-semibold me-1">2025&copy;</span>
                         <a href="https://keenthemes.com/" target="_blank"
-                            class="text-gray-800 text-hover-primary">Medical Supplier</a>
+                           class="text-gray-800 text-hover-primary">Medical Supplier</a>
                     </div>
-
 
                     <ul class="menu menu-gray-600 menu-hover-primary fw-semibold order-1">
                         <li class="menu-item"><a href="https://keenthemes.com/" target="_blank"
                                                  class="menu-link px-2">About</a></li>
-
                         <li class="menu-item"><a href="https://devs.keenthemes.com/" target="_blank"
                                                  class="menu-link px-2">Support</a></li>
-
-
                     </ul>
-
                 </div>
             </div>
         </div>
-
     </div>
-
 </div>
 
 <div id="kt_scrolltop" class="scrolltop" data-kt-scrolltop="true">

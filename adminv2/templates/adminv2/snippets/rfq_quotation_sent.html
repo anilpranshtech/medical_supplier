@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<body style="font-family: Arial, sans-serif; padding: 20px;">
+    <h2>New Quotation Submitted</h2>
+
+    <p>Dear {{ rfq.requested_by.username }},</p>
+
+    <p>{{ supplier.username }} has submitted a quotation for your RFQ <strong>#{{ rfq.id }}</strong>:</p>
+
+    <ul>
+        <li><strong>Product:</strong> {{ rfq.product.name }}</li>
+        <li><strong>Quoted Price:</strong> ₹{{ rfq.quoted_price }}</li>
+        <li><strong>Delivery Date:</strong> {{ rfq.quote_delivery_date|default:"—" }}</li>
+        <li><strong>Notes:</strong> {{ rfq.supplier_notes|default:"—" }}</li>
+    </ul>
+
+    {% if rfq.quote_attached_file %}
+        <p><strong>Attachment:</strong> Quotation document is attached.</p>
+    {% endif %}
+
+    <p>Thank you,<br/>Medical-Supplier Team</p>
+</body>
+</html>

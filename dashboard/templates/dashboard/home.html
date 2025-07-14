@@ -94,17 +94,17 @@
 <div class="kt-slider-container mt-7">
     <div class="kt-slider" id="slider">
         <!-- Slide 1 -->
-        <a href="/products/masks" class="kt-slide">
+        <a href="#" class="kt-slide">
             <img src="{% static 'metronic/tailwind/dist/assets/media/banners/medical_banner.jpg' %}"
                  alt="Protective Masks"/>
         </a>
         <!-- Slide 2 -->
-        <a href="/products/sanitizers" class="kt-slide">
+        <a href="#" class="kt-slide">
             <img src="{% static 'metronic/tailwind/dist/assets/media/banners/medical_banner2.jpg' %}"
                  alt="Hand Sanitizers"/>
         </a>
         <!-- Slide 3 -->
-        <a href="/products/home-checkups" class="kt-slide">
+        <a href="#" class="kt-slide">
             <img src="{% static 'metronic/tailwind/dist/assets/media/banners/medical_banner3.jpg' %}"
                  alt="Home Health Checkup Kits"/>
         </a>
@@ -145,7 +145,19 @@
                                     <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
                                 </button>
                             </div>
-                            
+                            <a class="block px-2.5 pt-1 cursor-pointer product-name-link"
+                               data-kt-modal-toggle="#modal_shop_product_details"
+                               href="#"
+                               data-product-name="{{ product.name }}"
+                               data-product-description="{{ product.description }}"
+                               data-product-image="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
+                               data-product-sku="{{ product.sku }}"
+                               data-product-category="{{ product.category }}"
+                               data-product-rating="{{ product.rating }}"
+                               data-product-more-info="{{ product.more_info }}"
+                               data-product-price="{{ product.price }}"
+                               data-product-original-price="{{ product.original_price|default:'' }}"
+                                keyboard:product-discount="{{ product.offer_percentage|default:'' }}">
                                 <h3 class="text-lg font-bold text-gray-650 leading-snug truncate hover:text-primary transition">
                                     {{ product.name }}
                                 </h3>
@@ -171,22 +183,25 @@
                                     </span>
                                 {% endif %}
                                 <span class="text-sm font-medium text-mono">${{ product.price|floatformat:2 }}</span>
-
-
                                 {% if product.id in user_cart_ids %}
-
                                     <button class="kt-btn kt-btn-outline kt-btn-sm ms-1" style="background:#3b82f6; color:white;" data-product-id="{{ product.id }}">
-                                            In cart <i class="ki-filled ki-handcart text-white"></i>
-                                        </button>
+                                        In cart <i class="ki-filled ki-handcart text-white"></i>
+                                    </button>
                                 {% else %}
-
                                     <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 add-to-cart-btn" data-product-id="{{ product.id }}">
                                         Add <i class="ki-filled ki-handcart"></i>
                                     </button>
-
                                 {% endif %}
-
-
+                                {% if product.show_rfq or product.Both %}
+                                    <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 open-rfq-modal"
+                                            data-product-id="{{ product.id }}"
+                                            data-product-name="{{ product.name }}"
+                                            data-product-price="{{ product.price }}"
+                                            data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
+                                            data-quantity="1">
+                                        RFQ <i class="ki-solid ki-file-text"></i>
+                                    </button>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
@@ -216,21 +231,25 @@
                                         <h3 class="text-[26px] font-semibold text-mono mb-1">{{ product.name|default:'Unnamed Product' }}</h3>
                                         <span class="text-sm font-normal text-foreground mb-5 leading-5.5">{{ product.description|default:'No description available' }}</span>
                                         <div class="flex items-center gap-4">
-
-
                                             {% if product.id in user_cart_ids %}
-
                                                 <button class="kt-btn kt-btn-outline kt-btn-sm ms-1" style="background:#3b82f6; color:white;" data-product-id="{{ product.id }}">
-                                            In cart <i class="ki-filled ki-handcart text-white"></i>
-                                        </button>
+                                                    In cart <i class="ki-filled ki-handcart text-white"></i>
+                                                </button>
                                             {% else %}
-
                                                 <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 add-to-cart-btn" data-product-id="{{ product.id }}">
                                                     Add <i class="ki-filled ki-handcart"></i>
                                                 </button>
-
                                             {% endif %}
-
+                                            {% if product.show_rfq or product.Both %}
+                                                <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 open-rfq-modal"
+                                                        data-product-id="{{ product.id }}"
+                                                        data-product-name="{{ product.name }}"
+                                                        data-product-price="{{ product.price }}"
+                                                        data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
+                                                        data-quantity="1">
+                                                    RFQ <i class="ki-solid ki-file-text"></i>
+                                                </button>
+                                            {% endif %}
                                             <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm"
                                                     data-kt-wishlist-toggle="true"
                                                     data-product-id="{{ product.id|default:'0' }}">
@@ -274,21 +293,25 @@
                                 </div>
                                 <span class="text-base font-medium text-mono mb-3">{{ product.name|default:'Unnamed Product' }}</span>
                                 <div class="flex items-center gap-2.5 mb-2.5">
-
-
                                     {% if product.id in user_cart_ids %}
-
                                         <button class="kt-btn kt-btn-outline kt-btn-sm ms-1" style="background:#3b82f6; color:white;" data-product-id="{{ product.id }}">
                                             In cart <i class="ki-filled ki-handcart text-white"></i>
                                         </button>
                                     {% else %}
-
                                         <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 add-to-cart-btn" data-product-id="{{ product.id }}">
                                             Add <i class="ki-filled ki-handcart"></i>
                                         </button>
-
                                     {% endif %}
-
+                                    {% if product.show_rfq or product.Both %}
+                                        <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 open-rfq-modal"
+                                                data-product-id="{{ product.id }}"
+                                                data-product-name="{{ product.name }}"
+                                                data-product-price="{{ product.price }}"
+                                                data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
+                                                data-quantity="1">
+                                            RFQ <i class="ki-solid ki-file-text"></i>
+                                        </button>
+                                    {% endif %}
                                     <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
                                             data-kt-wishlist-toggle="true"
                                             data-product-id="{{ product.id|default:'0' }}">
@@ -392,20 +415,25 @@
                                         </span>
                                     {% endif %}
                                     <span class="text-sm font-medium text-mono">${{ product.price|floatformat:2 }}</span>
-
                                     {% if product.id in user_cart_ids %}
-
                                         <button class="kt-btn kt-btn-outline kt-btn-sm ms-1" style="background:#3b82f6; color:white;" data-product-id="{{ product.id }}">
                                             In cart <i class="ki-filled ki-handcart text-white"></i>
                                         </button>
                                     {% else %}
-
                                         <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 add-to-cart-btn" data-product-id="{{ product.id }}">
                                             Add <i class="ki-filled ki-handcart"></i>
                                         </button>
-
                                     {% endif %}
-
+                                    {% if product.show_rfq or product.Both %}
+                                        <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 open-rfq-modal"
+                                                data-product-id="{{ product.id }}"
+                                                data-product-name="{{ product.name }}"
+                                                data-product-price="{{ product.price }}"
+                                                data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
+                                                data-quantity="1">
+                                            RFQ <i class="ki-solid ki-file-text"></i>
+                                        </button>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
@@ -474,20 +502,25 @@
                                         </span>
                                     {% endif %}
                                     <span class="text-sm font-medium text-mono">${{ product.price|floatformat:2 }}</span>
-
                                     {% if product.id in user_cart_ids %}
-
                                         <button class="kt-btn kt-btn-outline kt-btn-sm ms-1" style="background:#3b82f6; color:white;" data-product-id="{{ product.id }}">
                                             In cart <i class="ki-filled ki-handcart text-white"></i>
                                         </button>
                                     {% else %}
-
                                         <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 add-to-cart-btn" data-product-id="{{ product.id }}">
                                             Add <i class="ki-filled ki-handcart"></i>
                                         </button>
-
                                     {% endif %}
-
+                                    {% if product.show_rfq or product.Both %}
+                                        <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 open-rfq-modal"
+                                                data-product-id="{{ product.id }}"
+                                                data-product-name="{{ product.name }}"
+                                                data-product-price="{{ product.price }}"
+                                                data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
+                                                data-quantity="1">
+                                            RFQ <i class="ki-solid ki-file-text"></i>
+                                        </button>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
@@ -556,17 +589,24 @@
                                         </span>
                                     {% endif %}
                                     <span class="text-sm font-medium text-mono">${{ product.price|floatformat:2 }}</span>
-                                   {% if product.id in user_cart_ids %}
-
+                                    {% if product.id in user_cart_ids %}
                                         <button class="kt-btn kt-btn-outline kt-btn-sm ms-1" style="background:#3b82f6; color:white;" data-product-id="{{ product.id }}">
                                             In cart <i class="ki-filled ki-handcart text-white"></i>
                                         </button>
                                     {% else %}
-
                                         <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 add-to-cart-btn" data-product-id="{{ product.id }}">
                                             Add <i class="ki-filled ki-handcart"></i>
                                         </button>
-
+                                    {% endif %}
+                                    {% if product.show_rfq or product.Both %}
+                                        <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 open-rfq-modal"
+                                                data-product-id="{{ product.id }}"
+                                                data-product-name="{{ product.name }}"
+                                                data-product-price="{{ product.price }}"
+                                                data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
+                                                data-quantity="1">
+                                            RFQ <i class="ki-solid ki-file-text"></i>
+                                        </button>
                                     {% endif %}
                                 </div>
                             </div>
@@ -710,6 +750,48 @@
             </div>
         </div>
         <!-- end: Product Details Modal -->
+
+        <!-- begin: RFQ Modal -->
+        <div id="rfqModal" class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" data-kt-modal="true" role="dialog" aria-labelledby="rfqModalTitle" aria-modal="true">
+            <div class="kt-card w-full max-w-[500px] rounded-xl border border-border bg-background shadow-2xl transition-transform duration-300 ease-in-out transform scale-95">
+                <div class="kt-card-header px-5 py-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
+                    <h2 id="rfqModalTitle" class="text-xl font-bold text-mono">Request for Quotation</h2>
+                    <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" onclick="closeRFQModal()" aria-label="Close modal">
+                        <i class="ki-filled ki-cross text-base text-gray-500 hover:text-red-500"></i>
+                    </button>
+                </div>
+                <form method="POST" action="{% url 'dashboard:rfq_submit' %}" id="rfqForm">
+                    {% csrf_token %}
+                    <div class="kt-card-content flex flex-col space-y-4 p-5">
+                        <input type="hidden" name="product_id" id="rfqProductId">
+                        <div>
+                            <label for="rfqProductName" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Product</label>
+                            <input type="text" id="rfqProductName" class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 cursor-not-allowed" disabled>
+                        </div>
+                        <div>
+                            <label for="rfqCompanyName" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Company Name <span class="text-red-500">*</span></label>
+                            <input type="text" name="company_name" id="rfqCompanyName" class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 focus:ring-2 focus:ring-primary focus:border-primary transition-colors" required aria-required="true">
+                            <p class="text-xs text-red-500 mt-1 hidden" id="rfqCompanyNameError">Company name is required.</p>
+                        </div>
+                        <div>
+                            <label for="rfqQuantity" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Quantity <span class="text-red-500">*</span></label>
+                            <input type="number" name="quantity" id="rfqQuantity" class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 focus:ring-2 focus:ring-primary focus:border-primary transition-colors" min="1" required aria-required="true">
+                            <p class="text-xs text-red-500 mt-1 hidden" id="rfqQuantityError">Quantity must be at least 1.</p>
+                        </div>
+                        <div>
+                            <label for="rfqMessage" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Message</label>
+                            <textarea name="message" id="rfqMessage" class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 focus:ring-2 focus:ring-primary focus:border-primary transition-colors" rows="4" placeholder="Add any additional details..."></textarea>
+                        </div>
+                    </div>
+                    <div class="kt-card-footer px-5 py-4 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700">
+                        <button type="button" class="kt-btn kt-btn-outline kt-btn-sm text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700" onclick="closeRFQModal()">Cancel</button>
+                        <button type="submit" class="kt-btn kt-btn-primary kt-btn-sm bg-blue-600 hover:bg-blue-700 text-white">Submit RFQ</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- end: RFQ Modal -->
+
     </div>
 </div>
 
@@ -763,25 +845,17 @@
         });
     });
 
-    
-
+    // Add to Cart
     document.addEventListener('DOMContentLoaded', () => {
-
-
         const markAsInCart = (btn) => {
-
             btn.classList.remove('kt-btn-outline');
             btn.classList.add('kt-btn-success');
             btn.innerHTML = `In cart <i class="ki-filled ki-handcart"></i>`;
-
-
         };
-
 
         document.querySelectorAll('.add-to-cart-btn').forEach(button => {
             button.addEventListener('click', () => {
                 const productId = button.dataset.productId;
-
                 fetch("{% url 'dashboard:add_to_cart' %}", {
                     method: "POST",
                     headers: {
@@ -796,7 +870,6 @@
                 .then(res => res.json())
                 .then(data => {
                     if (data.status === "success") {
-                        // 3️⃣  update EVERY button that shows the same product
                         document
                             .querySelectorAll(`.add-to-cart-btn[data-product-id="${productId}"]`)
                             .forEach(markAsInCart);
@@ -807,7 +880,6 @@
                 .catch(err => console.error("Add to cart error:", err));
             });
         });
-
     });
 
     // Slider JavaScript
@@ -832,6 +904,28 @@
     if (slider) {
         setInterval(nextSlide, 5000); // Auto slide every 5 seconds
     }
+
+    // RFQ Modal
+    function closeRFQModal() {
+        document.getElementById('rfqModal').classList.add('hidden');
+    }
+
+    document.querySelectorAll('.open-rfq-modal').forEach(button => {
+        button.addEventListener('click', () => {
+            const productId = button.getAttribute('data-product-id');
+            const productName = button.getAttribute('data-product-name');
+            const companyName = button.getAttribute('data-company-name');
+            const quantity = button.getAttribute('data-quantity');
+
+            document.getElementById('rfqProductId').value = productId;
+            document.getElementById('rfqProductName').value = productName;
+            document.getElementById('rfqCompanyName').value = companyName;
+            document.getElementById('rfqQuantity').value = quantity;
+
+            document.getElementById('rfqModal').classList.remove('hidden');
+        });
+    });
 </script>
 <!-- end: JavaScript -->
+
 {% endblock %}

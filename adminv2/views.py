@@ -1,11 +1,17 @@
 import json
 
+from django.conf import settings
+from django.core.mail import send_mail, EmailMessage
+from django.template.loader import render_to_string
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.shortcuts import render,redirect
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import logout
+from django.views.generic import *
+from adminv2.forms import *
+from adminv2.models import *
 from dashboard.models import *
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth import authenticate, login
@@ -913,10 +919,64 @@ class LogoutView(View):
         return redirect('adminv2:admin_login') 
 
 
+class RFQListView(LoginRequiredMixin, ListView):
+    template_name = 'adminv2/rfq_list.html'
+    context_object_name = 'rfqs'
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_superuser:
+            return RFQRequest.objects.all()
+        elif hasattr(user, 'supplierprofile'):
+            return RFQRequest.objects.filter(product__created_by=user)
+        return RFQRequest.objects.none()
 
 
+class SupplierQuotationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = RFQRequest
+    form_class = SupplierRFQQuotationForm
+    template_name = 'adminv2/rfq_quotation_form.html'
+    success_url = '/adminv2/rfq_list/'
 
+    def form_valid(self, form):
+        rfq = form.save(commit=False)
+        rfq.quoted_by = self.request.user
+        rfq.quote_sent_at = timezone.now()
+        rfq.status = 'quoted'
+        rfq.save()
 
+        # Send quotation email to requester
+        self.send_quotation_email(rfq)
+
+        messages.success(self.request, "Quotation sent and email delivered to the user.")
+        return super().form_valid(form)
+
+    def send_quotation_email(self, rfq):
+        subject = f"Quotation for RFQ #{rfq.id} - {rfq.product.name}"
+        recipient_email = rfq.requested_by.email
+        context = {
+            'rfq': rfq,
+            'supplier': rfq.quoted_by,
+        }
+
+        message = render_to_string('adminv2/snippets/rfq_quotation_sent.html', context)
+
+        email = EmailMessage(
+            subject=subject,
+            body=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[recipient_email]
+        )
+        email.content_subtype = 'html'  # so template renders as HTML
+
+        # Attach file if exists
+        if rfq.quote_attached_file:
+            email.attach_file(rfq.quote_attached_file.path)
+
+        email.send(fail_silently=False)
+
+    def test_func(self):
+        return self.request.user.is_staff or self.request.user.is_superuser
 
 
 

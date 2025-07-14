@@ -171,3 +171,9 @@ class PaymentForm(forms.Form):
             'amount',
             Submit('submit', 'Buy', css_class='button white btn-block btn-primary'),
         )
+
+
+class RFQRequestForm(forms.ModelForm):
+    class Meta:
+        model = RFQRequest
+        fields = ['product', 'quantity', 'company_name', 'message']

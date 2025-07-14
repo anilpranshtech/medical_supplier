@@ -1,0 +1,194 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="kt-container-fixed mt-1" style="max-width: var(--custom-container-width, 90%);">
+    <div class="flex flex-col items-stretch gap-7 mt-5 py-5">
+        <div class="flex items-center gap-3 w-full">
+            <h2 class="text-lg font-medium text-mono">RFQ Quotations Requests</h2>
+        </div>
+
+        <!-- Toggle Buttons -->
+        <div class="kt-toggle-group" data-kt-tabs="true" data-kt-tabs-initialized="true">
+            <label class="kt-btn kt-btn-outline active" data-kt-tab-toggle="#sent_quotations">
+                Sent Quotations
+                <input name="quotation-view" type="radio" value="sent" checked>
+            </label>
+            <label class="kt-btn kt-btn-outline" data-kt-tab-toggle="#received_quotations">
+                Received Quotations
+                <input name="quotation-view" type="radio" value="received">
+            </label>
+        </div>
+
+        {% if sent_quotations or received_quotations %}
+        <div class="tab-content">
+            <!-- Sent Quotations -->
+            <div class="tab-pane" id="sent_quotations">
+                {% if sent_quotations %}
+                <div class="grid grid-cols-1 gap-5">
+                    {% for rfq in sent_quotations %}
+                    <div class="kt-card">
+                        <div class="kt-card-content flex items-center flex-wrap justify-between p-2 pe-5 gap-4.5">
+                            <div class="flex flex-col gap-2">
+                                <div class="flex items-center gap-2.5 -mt-1">
+                                    <span class="text-sm font-medium text-mono">RFQ #{{ rfq.id }}</span>
+                                </div>
+                                <div class="flex items-center flex-wrap gap-3">
+                                    <span class="text-xs font-normal text-secondary-foreground">
+                                        Product: <span class="text-xs font-medium text-foreground">{{ rfq.product.name }}</span>
+                                    </span>
+                                    <span class="text-xs font-normal text-secondary-foreground">
+                                        Buyer: <span class="text-xs font-medium text-foreground">{{ rfq.requested_by.username }}</span>
+                                    </span>
+                                    <span class="text-xs font-normal text-secondary-foreground">
+                                        Price: <span class="text-xs font-medium text-foreground">
+                                            {% if rfq.quoted_price %} ₹{{ rfq.quoted_price }} {% else %} — {% endif %}
+                                        </span>
+                                    </span>
+                                    <span class="text-xs font-normal text-secondary-foreground">
+                                        Delivery Date: <span class="text-xs font-medium text-foreground">{{ rfq.quote_delivery_date|default:"—" }}</span>
+                                    </span>
+                                    <span class="text-xs font-normal text-secondary-foreground">
+                                        Notes: <span class="text-xs font-medium text-foreground">{{ rfq.supplier_notes|default:"—"|truncatewords:10 }}</span>
+                                    </span>
+                                    <span class="text-xs font-normal text-secondary-foreground">
+                                        File: <span class="text-xs font-medium text-foreground">
+                                            {% if rfq.quote_attached_file %}
+                                            <a href="{{ rfq.quote_attached_file.url }}" target="_blank">Download</a>
+                                            {% else %} — {% endif %}
+                                        </span>
+                                    </span>
+                                    <span class="text-xs font-normal text-secondary-foreground">
+                                        Sent At: <span class="text-xs font-medium text-foreground">{{ rfq.quote_sent_at|date:"Y-m-d H:i" }}</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted text-sm font-normal text-secondary-foreground">No sent quotations found.</p>
+                {% endif %}
+            </div>
+
+            {% if messages %}
+              <div class="space-y-2 my-4">
+                {% for message in messages %}
+                  <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
+
+
+            <!-- Received Quotations -->
+            <div class="tab-pane hidden" id="received_quotations">
+                {% if received_quotations %}
+                <div class="grid grid-cols-1 gap-5">
+                    {% for rfq in received_quotations %}
+                    <div class="kt-card">
+                        <div class="kt-card-content flex items-center flex-wrap justify-between p-2 pe-5 gap-4.5">
+                            <div class="flex flex-col gap-2">
+                                <div class="flex items-center gap-2.5 -mt-1">
+                                    <span class="text-sm font-medium text-mono">RFQ #{{ rfq.id }}</span>
+                                </div>
+                                <div class="flex items-center flex-wrap gap-3">
+                                    <span class="text-xs font-normal text-secondary-foreground">
+                                        Product: <span class="text-xs font-medium text-foreground">{{ rfq.product.name }}</span>
+                                    </span>
+                                    <span class="text-xs font-normal text-secondary-foreground">
+                                        Supplier: <span class="text-xs font-medium text-foreground">
+                                            {% if rfq.quoted_by %}
+                                                {{ rfq.quoted_by.username }}
+                                            {% else %}
+                                                —
+                                            {% endif %}
+                                        </span>
+                                    </span>
+                                    <span class="text-xs font-normal text-secondary-foreground">
+                                        Price: <span class="text-xs font-medium text-foreground">
+                                            {% if rfq.quoted_price %} ₹{{ rfq.quoted_price }} {% else %} — {% endif %}
+                                        </span>
+                                    </span>
+                                    <span class="text-xs font-normal text-secondary-foreground">
+                                        Delivery Date: <span class="text-xs font-medium text-foreground">{{ rfq.quote_delivery_date|default:"—" }}</span>
+                                    </span>
+                                    <span class="text-xs font-normal text-secondary-foreground">
+                                        Notes: <span class="text-xs font-medium text-foreground">{{ rfq.supplier_notes|default:"—"|truncatewords:10 }}</span>
+                                    </span>
+                                    <span class="text-xs font-normal text-secondary-foreground">
+                                        File: <span class="text-xs font-medium text-foreground">
+                                            {% if rfq.quote_attached_file %}
+                                            <a href="{{ rfq.quote_attached_file.url }}" target="_blank">Download</a>
+                                            {% else %} — {% endif %}
+                                        </span>
+                                    </span>
+                                    <span class="text-xs font-normal text-secondary-foreground">
+                                        Received At: <span class="text-xs font-medium text-foreground">{{ rfq.quote_sent_at|date:"Y-m-d H:i" }}</span>
+                                    </span>
+                                </div>
+                                {% if rfq.status == 'quoted' %}
+                                    <div class="flex gap-2 mt-2">
+                                        <form method="post" action="{% url 'dashboard:accept_rfq' rfq.pk %}">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-success">Accept</button>
+                                        </form>
+                                        <form method="post" action="{% url 'dashboard:reject_rfq' rfq.pk %}">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-danger">Reject</button>
+                                        </form>
+                                    </div>
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted text-sm font-normal text-secondary-foreground">No received quotations found.</p>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <p class="text-muted text-sm font-normal text-secondary-foreground">No quotations available.</p>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const toggleButtons = document.querySelectorAll('[data-kt-tab-toggle]');
+        const tabPanes = document.querySelectorAll('.tab-pane');
+
+        toggleButtons.forEach(button => {
+            button.addEventListener('click', function (e) {
+                e.preventDefault();
+
+                // Remove active class from all buttons
+                toggleButtons.forEach(btn => {
+                    btn.classList.remove('active');
+                    btn.querySelector('input').removeAttribute('checked');
+                });
+
+                // Add active class to clicked button
+                button.classList.add('active');
+                button.querySelector('input').setAttribute('checked', 'checked');
+
+                // Hide all tab panes
+                tabPanes.forEach(pane => pane.classList.add('hidden'));
+
+                // Show the selected tab pane
+                const targetPane = document.querySelector(button.getAttribute('data-kt-tab-toggle'));
+                if (targetPane) {
+                    targetPane.classList.remove('hidden');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

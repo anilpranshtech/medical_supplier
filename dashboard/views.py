@@ -176,7 +176,7 @@ import re
 
 
 class RegistrationView(View):
-    template_name = "auth/signup.html"
+    template_name = "dashboard/register.html"
 
     def get(self, request):
         return render(request, self.template_name)
@@ -187,7 +187,6 @@ class RegistrationView(View):
         # Step 1: reCAPTCHA
         recaptcha_response = request.POST.get('g-recaptcha-response')
         recaptcha_secret = '6LdTHV8rAAAAAIgLr2wdtdtWExTS6xJpUpD8qEzh'
-
         recaptcha_result = requests.post(
             'https://www.google.com/recaptcha/api/siteverify',
             data={
@@ -199,13 +198,13 @@ class RegistrationView(View):
         if not recaptcha_result.get('success'):
             errors['recaptcha'] = 'Invalid reCAPTCHA. Please try again.'
 
-        # Step 2: Get POST data
-        first_name = request.POST.get('first_name', '').strip()
-        last_name = request.POST.get('last_name', '').strip()
-        email = request.POST.get('email', '').strip()
-        phone = request.POST.get('phone', '').strip()
+        # Collect form data
+        first_name = request.POST.get('first_name')
+        last_name = request.POST.get('last_name')
+        email = request.POST.get('email')
         password = request.POST.get('password')
         confirm_password = request.POST.get('confirm_password')
+        phone = request.POST.get('phone')
         user_type = request.POST.get('user_type')
         buyer_type = request.POST.get('buyer_type')
 
@@ -317,52 +316,54 @@ class VerifyOTPView(View):
                     last_name=signup_data['last_name']
                 )
 
-                # Check user_type or buyer_type (assuming one is defined in signup_data)
-                user_type = signup_data.get('user_type') or signup_data.get('buyer_type')
+                # Create profile based on user_type
+                if signup_data['user_type'] == 'supplier':
+                    SupplierProfile.objects.create(
+                        user=user,
+                        company_name=signup_data['supplier_company_name'],
+                        license_number=signup_data['license_number']
+                    )
+                    messages.success(request, "Supplier account created successfully.")
 
-                if user_type == 'retailer':
+                elif signup_data['buyer_type'] == 'retailer':
                     try:
-                        age = int(request.POST.get('age') or 0)
+                        age = int(signup_data['age'] or 0)
                     except ValueError:
                         age = 0
-                    medical_needs = request.POST.get('medical_needs') or ''
                     RetailProfile.objects.create(
                         user=user,
                         age=age,
-                        medical_needs=medical_needs
+                        medical_needs=signup_data['medical_needs'] or ''
                     )
                     messages.success(request, "Retailer user created. Please update your profile.")
 
-                elif user_type in ['wholesale', 'wholesaler']:
-                    company_name = request.POST.get('company_name')
-                    gst_number = request.POST.get('gst_number')
-                    department = request.POST.get('department')
-                    purchase_capacity = request.POST.get('purchase_capacity')
+                elif signup_data['user_type'] == 'wholesale' or signup_data['buyer_type'] == 'wholesaler':
                     WholesaleBuyerProfile.objects.create(
                         user=user,
-                        company_name=company_name,
-                        gst_number=gst_number,
-                        department=department,
-                        purchase_capacity=purchase_capacity
+                        company_name=signup_data['company_name'],
+                        gst_number=signup_data['gst_number'],
+                        department=signup_data['department'],
+                        purchase_capacity=signup_data['purchase_capacity']
                     )
                     messages.success(request, "Wholesaler account created successfully.")
 
                 else:
                     messages.error(request, "Invalid user type.")
                     user.delete()
-                    return render(request, self.template_name)
+                    request.session.pop('signup_data', None)
+                    return redirect('dashboard:register')
 
-                messages.success(request, "Account created successfully.")
+                # Clean up session
                 request.session.pop('signup_data', None)
-                return redirect('login')
+                messages.success(request, "Account created successfully.")
+                return redirect('dashboard:login')
 
             except Exception as e:
-                messages.error(request, f"An error occurred: {e}")
-                return render(request, self.template_name)
-
+                messages.error(request, f"Error creating account: {str(e)}")
+                return redirect('dashboard:register')
         else:
-            messages.error(request, "Invalid OTP. Please try again.")
-            return render(request, self.template_name)
+            messages.error(request, result.get("message", "OTP verification failed."))
+            return redirect('dashboard:verify_otp')
 
 
 class UserProfileView(LoginRequiredMixin, TemplateView):
@@ -990,15 +991,12 @@ class EditProfileView(LoginRequiredMixin, UpdateView):
     def get_object(self):
         user = self.request.user
         try:
-            return DoctorProfile.objects.get(user=user)
-        except DoctorProfile.DoesNotExist:
+            return RetailProfile.objects.get(user=user)
+        except RetailProfile.DoesNotExist:
             try:
-                return RetailProfile.objects.get(user=user)
-            except RetailProfile.DoesNotExist:
-                try:
-                    return WholesaleBuyerProfile.objects.get(user=user)
-                except WholesaleBuyerProfile.DoesNotExist:
-                    return SupplierProfile.objects.get(user=user)
+                return WholesaleBuyerProfile.objects.get(user=user)
+            except WholesaleBuyerProfile.DoesNotExist:
+                return SupplierProfile.objects.get(user=user)
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -1477,3 +1475,77 @@ class ApproveRoleRequestView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
         context = super().get_context_data(**kwargs)
         context['can_reject'] = self.object.status == 'approved'
         return context
+
+
+class RFQSubmissionView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        product_id = request.POST.get('product_id')
+        try:
+            product = Product.objects.get(id=product_id)
+        except Product.DoesNotExist:
+            return redirect('dashboard:home')
+
+        rfq = RFQRequest.objects.create(
+            requested_by=request.user,
+            product=product,
+            quantity=request.POST.get('quantity'),
+            message=request.POST.get('message', ''),
+            company_name=request.POST.get('company_name', ''),
+            expected_delivery_date=request.POST.get('expected_delivery_date') or None,
+            status='received',
+        )
+
+        # Send email confirmation
+        send_mail(
+            subject='Quotation Request Received',
+            message='Thank you for your quotation request. Our team will get back to you shortly.',
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[request.user.email],
+        )
+        rfq.email_sent = True
+
+        rfq.save()
+        return redirect('dashboard:home')
+
+    def get(self, request, *args, **kwargs):
+        return redirect('dashboard:home')
+
+
+class UserQuotationView(LoginRequiredMixin, TemplateView):
+    template_name = 'userdashboard/view/view_user_quotations.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        context['sent_quotations'] = RFQRequest.objects.filter(quoted_by=user)
+        context['received_quotations'] = RFQRequest.objects.filter(requested_by=user)
+        return context
+
+
+class RFQActionBaseView(LoginRequiredMixin, View):
+    action = None  # 'accepted' or 'rejected'
+    success_message = ""
+
+    def post(self, request, pk, *args, **kwargs):
+        rfq = get_object_or_404(RFQRequest, pk=pk, requested_by=request.user)
+
+        if rfq.status != 'quoted':
+            messages.warning(request, "This quotation is not available for action.")
+            return redirect('dashboard:home')  # Change to your actual dashboard view name
+
+        rfq.status = self.action
+        rfq.updated_at = timezone.now()
+        rfq.save()
+
+        messages.success(request, self.success_message)
+        return redirect('dashboard:home')
+
+
+class RFQAcceptView(RFQActionBaseView):
+    action = 'accepted'
+    success_message = "You have accepted the quotation."
+
+
+class RFQRejectView(RFQActionBaseView):
+    action = 'rejected'
+    success_message = "You have rejected the quotation."
