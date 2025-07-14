@@ -4,21 +4,6 @@ from stripe import PaymentMethod
 from dashboard.models import *
 
 
-@admin.register(DoctorProfile)
-class DoctorProfileAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'current_position', 'workplace')
-
-
-@admin.register(MedicalSupplierProfile)
-class MedicalSupplierProfileAdmin(admin.ModelAdmin):
-    list_display = ('id', 'profile_picture', 'user', 'workplace', 'nationality', 'created_at')
-
-
-@admin.register(CorporateProfile)
-class CorporateProfileAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'company_name', 'department')
-
-
 @admin.register(RetailProfile)
 class RetailProfileAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'profile_picture', 'age', 'medical_needs')

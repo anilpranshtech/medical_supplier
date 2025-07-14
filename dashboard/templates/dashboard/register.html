@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>User Registration</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <style>
         .page-bg {
             background-image: url('https://storely-nextjs.keenthemes.com//media/images/2600x1200/bg-10.png');
@@ -151,6 +152,12 @@
             margin-top: 4px;
             display: none;
         }
+
+        .server-error {
+            color: #F04438;
+            font-size: 12px;
+            margin-top: 4px;
+        }
     </style>
 </head>
 <body class="antialiased flex h-full text-base bg-background">
@@ -162,60 +169,84 @@
                 {% csrf_token %}
 
                 <!-- Hidden User Type Field -->
-                <input type="hidden" name="user_type" id="user_type_input" value="buyer">
+                <input type="hidden" name="user_type" id="user_type_input" value="{{ form_data.user_type|default:'buyer' }}">
 
                 <!-- Step 1 Fields -->
                 <div id="step1Fields" class="space-y-4">
                     <div class="role-toggle mb-3">
-                        <a href="#" id="supplierBtn" class="role-toggle-btn text-center inline-block">Become a supplier?</a>
+                        <a href="#" id="supplierBtn" class="role-toggle-btn text-center inline-block {% if form_data.user_type == 'supplier' %}active{% endif %}">
+                            {% if form_data.user_type == 'supplier' %}Become a buyer?{% else %}Become a supplier?{% endif %}
+                        </a>
                     </div>
 
                     <!-- Buyer Options -->
-                    <div id="buyerOptions" class="buyer-options">
-                        <label><input type="radio" name="buyer_type" value="retailer" checked> Retailer</label>
-                        <label><input type="radio" name="buyer_type" value="wholesaler"> Wholesaler</label>
+                    <div id="buyerOptions" class="buyer-options {% if form_data.user_type == 'supplier' %}hidden{% endif %}">
+                        <label><input type="radio" name="buyer_type" value="retailer" {% if form_data.buyer_type == 'retailer' or not form_data.buyer_type %}checked{% endif %}> Retailer</label>
+                        <label><input type="radio" name="buyer_type" value="wholesaler" {% if form_data.buyer_type == 'wholesaler' %}checked{% endif %}> Wholesaler</label>
                     </div>
 
                     <!-- Common Fields -->
                     <div>
-                        <label>First Name</label>
-                        <input type="text" name="first_name" id="first_name" class="w-full px-3 py-2 border rounded-md"
-                               placeholder="Your firstname" required>
+                        <label for="first_name">First Name</label>
+                        <input type="text" name="first_name" id="first_name" class="w-full px-3 py-2 border rounded-md {% if messages %}{% for message in messages %}{% if message.extra_tags == 'first_name' %}input-error{% endif %}{% endfor %}{% endif %}"
+                               placeholder="Your firstname" value="{{ form_data.first_name|default_if_none:'' }}" required>
+                        {% for message in messages %}
+                            {% if message.extra_tags == 'first_name' %}
+                                <div class="server-error">{{ message }}</div>
+                            {% endif %}
+                        {% endfor %}
                         <div class="error-message" id="first_name_error">Please enter your first name</div>
                     </div>
                     <div>
-                        <label>Last Name</label>
-                        <input type="text" name="last_name" id="last_name" class="w-full px-3 py-2 border rounded-md"
-                               placeholder="Your lastname" required>
+                        <label for="last_name">Last Name</label>
+                        <input type="text" name="last_name" id="last_name" class="w-full px-3 py-2 border rounded-md {% if messages %}{% for message in messages %}{% if message.extra_tags == 'last_name' %}input-error{% endif %}{% endfor %}{% endif %}"
+                               placeholder="Your lastname" value="{{ form_data.last_name|default_if_none:'' }}" required>
+                        {% for message in messages %}
+                            {% if message.extra_tags == 'last_name' %}
+                                <div class="server-error">{{ message }}</div>
+                            {% endif %}
+                        {% endfor %}
                         <div class="error-message" id="last_name_error">Please enter your last name</div>
                     </div>
                     <div>
-                        <label>Email</label>
-                        <input type="email" name="email" id="email" class="w-full px-3 py-2 border rounded-md" required
-                               placeholder="Your email">
+                        <label for="email">Email</label>
+                        <input type="email" name="email" id="email" class="w-full px-3 py-2 border rounded-md {% if messages %}{% for message in messages %}{% if message.extra_tags == 'email' %}input-error{% endif %}{% endfor %}{% endif %}"
+                               placeholder="Your email" value="{{ form_data.email|default_if_none:'' }}" required>
+                        {% for message in messages %}
+                            {% if message.extra_tags == 'email' %}
+                                <div class="server-error">{{ message }}</div>
+                            {% endif %}
+                        {% endfor %}
                         <div class="error-message" id="email_error">Please enter a valid email address</div>
                     </div>
                     <div>
-                        <label>Phone Number</label>
-                        <input type="tel" name="phone" id="phone" class="w-full px-3 py-2 border rounded-md" required
-                               placeholder="Your phone number">
+                        <label for="phone">Phone Number</label>
+                        <input type="tel" name="phone" id="phone" class="w-full px-3 py-2 border rounded-md {% if messages %}{% for message in messages %}{% if message.extra_tags == 'phone' %}input-error{% endif %}{% endfor %}{% endif %}"
+                               placeholder="Your phone number" value="{{ form_data.phone|default_if_none:'' }}" required>
+                        {% for message in messages %}
+                            {% if message.extra_tags == 'phone' %}
+                                <div class="server-error">{{ message }}</div>
+                            {% endif %}
+                        {% endfor %}
                         <div class="error-message" id="phone_error">Please enter a valid phone number</div>
                     </div>
                     <div class="form-group">
                         <label for="password">Password</label>
                         <div class="password-input-container">
                             <input type="password" name="password" id="password" placeholder="Your password"
-                                   class="input-field" required>
+                                   class="w-full px-3 py-2 border rounded-md {% if messages %}{% for message in messages %}{% if message.extra_tags == 'password' %}input-error{% endif %}{% endfor %}{% endif %}" required>
+                            {% for message in messages %}
+                                {% if message.extra_tags == 'password' %}
+                                    <div class="server-error">{{ message }}</div>
+                                {% endif %}
+                            {% endfor %}
                             <div class="error-message" id="password_error">Please enter a password</div>
                             <button type="button" class="toggle-password" aria-label="Toggle password visibility">
-                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"
-                                     xmlns="http://www.w3.org/2000/svg">
+                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M10 4.375C3.75 4.375 1.25 10 1.25 10C1.25 10 3.75 15.625 10 15.625C16.25 15.625 18.75 10 18.75 10C18.75 10 16.25 4.375 10 4.375Z"
-                                          stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round"
-                                          stroke-linejoin="round"/>
+                                          stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                                     <path d="M10 13.125C11.7259 13.125 13.125 11.7259 13.125 10C13.125 8.27411 11.7259 6.875 10 6.875C8.27411 6.875 6.875 8.27411 6.875 10C6.875 11.7259 8.27411 13.125 10 13.125Z"
-                                          stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round"
-                                          stroke-linejoin="round"/>
+                                          stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
                             </button>
                         </div>
@@ -224,30 +255,33 @@
                         <label for="confirm_password">Confirm Password</label>
                         <div class="password-input-container">
                             <input type="password" name="confirm_password" id="confirm_password" placeholder="Confirm your password"
-                                   class="input-field" required>
+                                   class="w-full px-3 py-2 border rounded-md {% if messages %}{% for message in messages %}{% if message.extra_tags == 'confirm_password' %}input-error{% endif %}{% endfor %}{% endif %}" required>
+                            {% for message in messages %}
+                                {% if message.extra_tags == 'confirm_password' %}
+                                    <div class="server-error">{{ message }}</div>
+                                {% endif %}
+                            {% endfor %}
                             <div class="error-message" id="confirm_password_error">Passwords do not match</div>
                             <button type="button" class="toggle-password" aria-label="Toggle password visibility">
-                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"
-                                     xmlns="http://www.w3.org/2000/svg">
+                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M10 4.375C3.75 4.375 1.25 10 1.25 10C1.25 10 3.75 15.625 10 15.625C16.25 15.625 18.75 10 18.75 10C18.75 10 16.25 4.375 10 4.375Z"
-                                          stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round"
-                                          stroke-linejoin="round"/>
+                                          stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                                     <path d="M10 13.125C11.7259 13.125 13.125 11.7259 13.125 10C13.125 8.27411 11.7259 6.875 10 6.875C8.27411 6.875 6.875 8.27411 6.875 10C6.875 11.7259 8.27411 13.125 10 13.125Z"
-                                          stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round"
-                                          stroke-linejoin="round"/>
+                                          stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
                             </button>
                         </div>
                     </div>
                     <!-- Google reCAPTCHA -->
-                    <div class="g-recaptcha" data-sitekey="6LdTHV8rAAAAAM_YfllvwXXOezA124fFTlQXO3Tb"
-                         id="recaptcha-container"></div>
-                    <div class="error-message" id="captcha_error" style="display: none;">Please complete the captcha
-                    </div>
+                    <div class="g-recaptcha" data-sitekey="6LdTHV8rAAAAAM_YfllvwXXOezA124fFTlQXO3Tb"></div>
+                    {% for message in messages %}
+                        {% if message.extra_tags == 'recaptcha' %}
+                            <div class="server-error">{{ message }}</div>
+                        {% endif %}
+                    {% endfor %}
+                    <div class="error-message" id="captcha_error">Please complete the captcha</div>
 
-                    <button type="button" id="nextBtn" class="w-full py-2.5 text-white bg-blue-600 rounded-md">
-                        Continue
-                    </button>
+                    <button type="button" id="nextBtn" class="w-full py-2.5 text-white bg-blue-600 rounded-md hover:bg-blue-700">Continue</button>
                 </div>
 
                 <!-- Step 2 Fields -->
@@ -255,44 +289,43 @@
                     <!-- Retailer Fields -->
                     <div id="retailFields" class="user-fields hidden" style="margin-top: 1rem;">
                         <label style="display:block; margin-bottom: 0.25rem;">Age</label>
-                        <input type="number" name="age" placeholder="Your age"
+                        <input type="number" name="age" placeholder="Your age" value="{{ form_data.age|default_if_none:'' }}"
                                style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:0.375rem; margin-bottom:1rem;">
                         <label style="display:block; margin-bottom: 0.25rem;">Medical Needs</label>
-                        <input type="text" name="medical_needs" placeholder="Your medical needs"
+                        <input type="text" name="medical_needs" placeholder="Your medical needs" value="{{ form_data.medical_needs|default_if_none:'' }}"
                                style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:0.375rem; margin-bottom:1rem;">
                     </div>
 
                     <!-- Wholesaler Fields -->
                     <div id="wholesalerFields" class="user-fields hidden" style="margin-top: 1rem;">
                         <label style="display:block; margin-bottom: 0.25rem;">Company Name</label>
-                        <input type="text" name="company_name" placeholder="Your company name"
+                        <input type="text" name="company_name" placeholder="Your company name" value="{{ form_data.company_name|default_if_none:'' }}"
                                style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:0.375rem; margin-bottom:1rem;">
                         <label style="display:block; margin-bottom: 0.25rem;">GST Number</label>
-                        <input type="text" name="gst_number" placeholder="Your GST number"
+                        <input type="text" name="gst_number" placeholder="Your GST number" value="{{ form_data.gst_number|default_if_none:'' }}"
                                style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:0.375rem; margin-bottom:1rem;">
                         <label style="display:block; margin-bottom: 0.25rem;">Department</label>
-                        <input type="text" name="department" placeholder="Your department"
+                        <input type="text" name="department" placeholder="Your department" value="{{ form_data.department|default_if_none:'' }}"
                                style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:0.375rem; margin-bottom:1rem;">
                         <label style="display:block; margin-bottom: 0.25rem;">Purchase Capacity</label>
-                        <input type="text" name="purchase_capacity" placeholder="Your purchase capacity"
+                        <input type="text" name="purchase_capacity" placeholder="Your purchase capacity" value="{{ form_data.purchase_capacity|default_if_none:'' }}"
                                style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:0.375rem; margin-bottom:1rem;">
                     </div>
 
                     <!-- Supplier Fields -->
                     <div id="supplierFields" class="user-fields hidden" style="margin-top: 1rem;">
                         <label style="display:block; margin-bottom: 0.25rem;">Company Name</label>
-                        <input type="text" name="supplier_company_name" placeholder="Your company name"
+                        <input type="text" name="supplier_company_name" placeholder="Your company name" value="{{ form_data.supplier_company_name|default_if_none:'' }}"
                                style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:0.375rem; margin-bottom:1rem;">
                         <label style="display:block; margin-bottom: 0.25rem;">License Number</label>
-                        <input type="text" name="license_number" placeholder="Your license number"
+                        <input type="text" name="license_number" placeholder="Your license number" value="{{ form_data.license_number|default_if_none:'' }}"
                                style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:0.375rem; margin-bottom:1rem;">
                     </div>
 
                     <!-- Back and Create -->
                     <div class="flex gap-4">
-                        <button type="button" id="backBtn" class="w-full py-2.5 bg-gray-300 rounded-md">Back</button>
-                        <button type="submit" class="w-full py-2.5 bg-blue-600 text-white rounded-md">Create Account
-                        </button>
+                        <button type="button" id="backBtn" class="w-full py-2.5 bg-gray-300 rounded-md hover:bg-gray-400">Back</button>
+                        <button type="submit" class="w-full py-2.5 bg-blue-600 text-white rounded-md hover:bg-blue-700">Create Account</button>
                     </div>
                 </div>
 
@@ -306,16 +339,14 @@
 </div>
 
 <script>
+    // Form elements
     const supplierBtn = document.getElementById("supplierBtn");
     const buyerOptions = document.getElementById("buyerOptions");
     const userTypeInput = document.getElementById("user_type_input");
-
     const nextBtn = document.getElementById("nextBtn");
     const backBtn = document.getElementById("backBtn");
-
     const step1 = document.getElementById("step1Fields");
     const step2 = document.getElementById("step2Fields");
-
     const retailFields = document.getElementById("retailFields");
     const wholesalerFields = document.getElementById("wholesalerFields");
     const supplierFields = document.getElementById("supplierFields");
@@ -335,20 +366,25 @@
     const phoneError = document.getElementById("phone_error");
     const passwordError = document.getElementById("password_error");
     const confirmPasswordError = document.getElementById("confirm_password_error");
+    const captchaError = document.getElementById("captcha_error");
 
-    let isSupplier = false;
+    let isSupplier = userTypeInput.value === "supplier";
 
-    supplierBtn.addEventListener("click", () => {
+    // Toggle supplier/buyer
+    supplierBtn.addEventListener("click", (e) => {
+        e.preventDefault();
         isSupplier = !isSupplier;
+        supplierBtn.textContent = isSupplier ? "Become a buyer?" : "Become a supplier?";
         supplierBtn.classList.toggle("active");
         buyerOptions.classList.toggle("hidden");
         userTypeInput.value = isSupplier ? "supplier" : "buyer";
     });
 
+    // Client-side validation for Step 1
     nextBtn.addEventListener("click", () => {
         let isValid = true;
 
-        // Reset error states
+        // Reset client-side error states
         firstNameInput.classList.remove("input-error");
         lastNameInput.classList.remove("input-error");
         emailInput.classList.remove("input-error");
@@ -361,6 +397,7 @@
         phoneError.style.display = "none";
         passwordError.style.display = "none";
         confirmPasswordError.style.display = "none";
+        captchaError.style.display = "none";
 
         // Validate first name
         if (!firstNameInput.value.trim()) {
@@ -397,6 +434,34 @@
             passwordInput.classList.add("input-error");
             passwordError.style.display = "block";
             isValid = false;
+        } else {
+            // Client-side password strength validation
+            if (passwordInput.value.length < 8) {
+                passwordError.textContent = "Password must be at least 8 characters long";
+                passwordInput.classList.add("input-error");
+                passwordError.style.display = "block";
+                isValid = false;
+            } else if (!/[A-Z]/.test(passwordInput.value)) {
+                passwordError.textContent = "Password must contain at least one uppercase letter";
+                passwordInput.classList.add("input-error");
+                passwordError.style.display = "block";
+                isValid = false;
+            } else if (!/[a-z]/.test(passwordInput.value)) {
+                passwordError.textContent = "Password must contain at least one lowercase letter";
+                passwordInput.classList.add("input-error");
+                passwordError.style.display = "block";
+                isValid = false;
+            } else if (!/[0-9]/.test(passwordInput.value)) {
+                passwordError.textContent = "Password must contain at least one number";
+                passwordInput.classList.add("input-error");
+                passwordError.style.display = "block";
+                isValid = false;
+            } else if (!/[!@#$%^&*(),.?":{}|<>]/.test(passwordInput.value)) {
+                passwordError.textContent = "Password must contain at least one special character";
+                passwordInput.classList.add("input-error");
+                passwordError.style.display = "block";
+                isValid = false;
+            }
         }
 
         // Validate confirm password
@@ -408,15 +473,12 @@
 
         // Validate reCAPTCHA
         const recaptchaResponse = grecaptcha.getResponse();
-        const captchaError = document.getElementById("captcha_error");
         if (!recaptchaResponse) {
             captchaError.style.display = "block";
             isValid = false;
-        } else {
-            captchaError.style.display = "none";
         }
 
-        // Only proceed if all fields are valid
+        // Proceed to Step 2 if valid
         if (isValid) {
             step1.classList.add("hidden");
             step2.classList.remove("hidden");
@@ -439,12 +501,13 @@
         }
     });
 
+    // Back button
     backBtn.addEventListener("click", () => {
         step2.classList.add("hidden");
         step1.classList.remove("hidden");
     });
 
-    // Password and Confirm Password visibility toggle
+    // Password visibility toggle
     document.addEventListener('DOMContentLoaded', function () {
         const togglePasswordButtons = document.querySelectorAll('.toggle-password');
         togglePasswordButtons.forEach(button => {
@@ -469,8 +532,23 @@
                 }
             });
         });
+
+        // Show server-side errors on page load
+        {% if messages %}
+            step1.classList.remove("hidden");
+            step2.classList.add("hidden");
+            {% for message in messages %}
+                {% if message.extra_tags %}
+                    const errorElement = document.getElementById("{{ message.extra_tags }}_error");
+                    if (errorElement) {
+                        errorElement.textContent = "{{ message|escapejs }}";
+                        errorElement.style.display = "block";
+                        document.getElementById("{{ message.extra_tags }}").classList.add("input-error");
+                    }
+                {% endif %}
+            {% endfor %}
+        {% endif %}
     });
 </script>
-<script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </body>
 </html>

@@ -273,8 +273,7 @@
                  data-kt-dropdown-offset-rtl="-20px, 10px" data-kt-dropdown-placement="bottom-end"
                  data-kt-dropdown-trigger="click">
                 <div class="cursor-pointer" data-kt-dropdown-toggle="true">
-                    <img alt="User Avatar" class="size-9 MAYBE YOU CAN CHANGE THIS
-size-9 rounded-full border-2 border-mono/25"
+                    <img alt="User Avatar" class="size-9 MAYBE YOU CAN CHANGE THIS size-9 rounded-full border-2 border-mono/25"
                          src="{% static 'metronic/tailwind/dist/assets/media/avatars/gray/5.png' %}"/>
                 </div>
                 <div class="kt-dropdown-menu w-[250px] bg-background dark:bg-gray-800 border border-border rounded-lg shadow-lg py-2 z-10 hidden group-[data-kt-dropdown-toggle='true']:block"
@@ -284,7 +283,7 @@ size-9 rounded-full border-2 border-mono/25"
                             <img alt="User Avatar" class="size-9 rounded-full border-2 border-green-500"
                                  src="{% static 'metronic/tailwind/dist/assets/media/avatars/300-2.png' %}"/>
                             <div class="flex flex-col gap-1.5">
-                                <span class="text-sm text-foreground font-semibold">{{request.user}}</span>
+                                <span class="text-sm text-foreground font-semibold">{{request.user.first_name}} {{request.user.last_name}}</span>
                                 <a class="text-xs text-secondary-foreground hover:text-primary font-medium"
                                    href="https://keenthemes.com/metronic/tailwind/demo10/account/home/get-started">
                                     {{request.user.email}}
