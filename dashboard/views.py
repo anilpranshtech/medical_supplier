@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
@@ -8,6 +10,7 @@ from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.utils.html import strip_tags
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 from razorpay.errors import SignatureVerificationError
 from .forms import *
 from .models import *
@@ -57,7 +60,7 @@ class HomeView(TemplateView):
                 else:
                     product.delivery_date = 'N/A'
             return product_queryset
-             
+
         # Special Offers
         special_offers = Product.objects.filter(
             offer_active=True,
@@ -80,9 +83,7 @@ class HomeView(TemplateView):
             main_img = ProductImage.objects.filter(product=product, is_main=True).first()
             product.main_image = main_img.image.url if main_img else None
 
-
         context['recent_products'] = set_product_fields(recent_products)
-
 
         # Popular Medical Supplies
         popular_products = Product.objects.filter(
@@ -94,7 +95,6 @@ class HomeView(TemplateView):
             product.main_image = main_img.image.url if main_img else None
         context['popular_products'] = set_product_fields(popular_products)
 
-
         # Limited-Time Deals
         limited_products = Product.objects.filter(
             tag='limited',
@@ -105,7 +105,6 @@ class HomeView(TemplateView):
             product.main_image = main_img.image.url if main_img else None
         context['limited_products'] = set_product_fields(limited_products)
 
-
         # Featured Products
         all_ids = list(Product.objects.filter(is_active=True).values_list('id', flat=True))
         random_ids = random.sample(all_ids, min(len(all_ids), 7))
@@ -114,7 +113,6 @@ class HomeView(TemplateView):
             main_img = ProductImage.objects.filter(product=product, is_main=True).first()
             product.main_image = main_img.image.url if main_img else None
         context['featured_products'] = set_product_fields(featured_products)
-
 
         # Wishlist
         if self.request.user.is_authenticated:
@@ -135,7 +133,7 @@ class HomeView(TemplateView):
 
 class CustomLoginView(FormView):
     form_class = EmailOnlyLoginForm
-    template_name = 'auth/login.html'
+    template_name = 'dashboard/login.html'
 
     def form_valid(self, form):
         email = form.cleaned_data['username']
@@ -171,6 +169,7 @@ class CustomLoginView(FormView):
 
     def get_success_url(self):
         return reverse_lazy('dashboard:home')
+
 
 import re
 
@@ -578,8 +577,59 @@ class WishlistProductListView(LoginRequiredMixin, View):
         ]
         return JsonResponse(data, safe=False)
 
-class OrderSummaryView(TemplateView):
+
+class OrderSummaryView(LoginRequiredMixin, TemplateView):
     template_name = 'userdashboard/view/order_summary.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Fetch cart items for the authenticated user
+        cart_items = CartProduct.objects.filter(user=self.request.user).select_related('product')
+
+        # Calculate the total price of all cart items
+        total = sum(item.get_total_price() for item in cart_items)
+
+        # Add cart_items and total to the context
+        context['cart_items'] = cart_items
+        context['total'] = "{:.2f}".format(total)  # Format to two decimal places
+
+        return context
+
+@require_POST
+def add_to_cart(request):
+    product_id = request.POST.get('product_id')
+    quantity_change = int(request.POST.get('quantity', 1))
+
+    try:
+        product = get_object_or_404(Product, id=product_id)
+        cart_item, created = CartProduct.objects.get_or_create(
+            user=request.user,
+            product=product,
+            defaults={'quantity': 0}
+        )
+
+        # Update quantity
+        new_quantity = cart_item.quantity + quantity_change
+        if new_quantity <= 0:
+            cart_item.delete()
+            return JsonResponse({'status': 'removed'})
+        else:
+            cart_item.quantity = new_quantity
+            cart_item.save()
+            return JsonResponse({'status': 'success', 'quantity': cart_item.quantity})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+@require_POST
+def remove_from_cart(request):
+    item_id = request.POST.get('item_id')
+
+    try:
+        cart_item = get_object_or_404(CartProduct, product__id=item_id, user=request.user)
+        cart_item.delete()
+        return JsonResponse({'status': 'success'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
 
 class ShippingInfoView(LoginRequiredMixin, TemplateView):
@@ -595,17 +645,17 @@ class ShippingInfoView(LoginRequiredMixin, TemplateView):
         profile_type = None
         try:
             profile = RetailProfile.objects.get(user=user)
-            phone = None
+            phone = None  # Adjust if RetailProfile has a phone field
             profile_type = 'retailer'
         except RetailProfile.DoesNotExist:
             try:
                 profile = WholesaleBuyerProfile.objects.get(user=user)
-                phone = None
+                phone = None  # Adjust if WholesaleBuyerProfile has a phone field
                 profile_type = 'wholesaler'
             except WholesaleBuyerProfile.DoesNotExist:
                 try:
                     profile = SupplierProfile.objects.get(user=user)
-                    phone = None
+                    phone = None  # Adjust if SupplierProfile has a phone field
                     profile_type = 'supplier'
                 except SupplierProfile.DoesNotExist:
                     pass
@@ -616,18 +666,20 @@ class ShippingInfoView(LoginRequiredMixin, TemplateView):
         context['addresses'] = CustomerBillingAddress.objects.filter(user=user, is_deleted=False)
         context['default_address'] = CustomerBillingAddress.objects.filter(user=user, is_default=True, is_deleted=False).first()
 
-        # Order summary (example calculation, adjust based on your Order model)
-        orders = Orders.objects.filter(order_by=user, status__in=['pending', 'processing'])
-        subtotal = sum(order.total_price for order in orders) if orders else 0.0
-        shipping = 0.0  # Adjust based on your logic
-        vat = 0.0       # Adjust based on your logic
+        # Order summary based on CartProduct
+        cart_items = CartProduct.objects.filter(user=user).select_related('product')
+        subtotal = sum(item.get_total_price() for item in cart_items) or Decimal('0.00')
+        shipping = Decimal('0.00')  # Convert to Decimal; adjust based on your logic (e.g., Orders.shipping_fees)
+        vat = Decimal('0.00')       # Convert to Decimal; adjust based on your logic (e.g., tax calculation)
         total = subtotal + shipping + vat
+        context['cart_items'] = cart_items
         context['order_summary'] = {
             'subtotal': subtotal,
             'shipping': shipping,
             'vat': vat,
             'total': total
         }
+
         return context
 
 
