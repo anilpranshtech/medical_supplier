@@ -936,7 +936,7 @@ class SupplierQuotationUpdateView(LoginRequiredMixin, UserPassesTestMixin, Updat
     model = RFQRequest
     form_class = SupplierRFQQuotationForm
     template_name = 'adminv2/rfq_quotation_form.html'
-    success_url = '/adminv2/rfq_list/'
+    success_url = '/rfq/'
 
     def form_valid(self, form):
         rfq = form.save(commit=False)
