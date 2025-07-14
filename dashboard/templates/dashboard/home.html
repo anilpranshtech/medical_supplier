@@ -124,9 +124,9 @@
                     <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
                         <div class="mb-2.5">
                             <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[250px] mb-4 shadow-none">
-                              <a href="{% url 'dashboard:product_detail' product.id %}" class="block">
+                                <a href="{% url 'dashboard:product_detail' product.id %}" class="block">
                                         <img alt="{{ product.name|default:'Unnamed Product' }}"
-                                             class="size-48 shrink-0 cursor-pointer product-thumbnail"
+                                             class="h-[180px] shrink-0 cursor-pointer product-thumbnail"
                                              src="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
                                              data-product-name="{{ product.name|default:'Unnamed Product' }}"
                                              data-product-description="{{ product.description|default:'No description available' }}"
@@ -145,19 +145,7 @@
                                     <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
                                 </button>
                             </div>
-                            <a class="block px-2.5 pt-1 cursor-pointer product-name-link"
-                               data-kt-modal-toggle="#modal_shop_product_details"
-                               href="#"
-                               data-product-name="{{ product.name }}"
-                               data-product-description="{{ product.description }}"
-                               data-product-image="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
-                               data-product-sku="{{ product.sku }}"
-                               data-product-category="{{ product.category }}"
-                               data-product-rating="{{ product.rating }}"
-                               data-product-more-info="{{ product.more_info }}"
-                               data-product-price="{{ product.price }}"
-                               data-product-original-price="{{ product.original_price|default:'' }}"
-                                keyboard:product-discount="{{ product.offer_percentage|default:'' }}">
+                            
                                 <h3 class="text-lg font-bold text-gray-650 leading-snug truncate hover:text-primary transition">
                                     {{ product.name }}
                                 </h3>
@@ -169,7 +157,7 @@
                                         Delivery by: <strong>{{ product.delivery_date }}</strong>
                                     </p>
                                 {% endif %}
-                        
+                          
                         </div>
                         <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
                             <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1">
