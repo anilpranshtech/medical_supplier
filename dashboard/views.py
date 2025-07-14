@@ -471,6 +471,7 @@ class ProductDetailsView(TemplateView):
 
 class ShoppingCartView(LoginRequiredMixin, TemplateView):
     template_name = 'userdashboard/view/shopping_cart.html'
+    login_url = 'dashboard:login'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -550,6 +551,7 @@ class WishlistClearView(LoginRequiredMixin, View):
 
 class WishlistView(LoginRequiredMixin, TemplateView):
     template_name = 'userdashboard/view/wishlist.html'
+    login_url = 'dashboard:login'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
