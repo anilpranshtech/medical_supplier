@@ -174,7 +174,7 @@ class CustomLoginView(FormView):
 import re
 
 class RegistrationView(View):
-    template_name = "auth/signup.html"
+    template_name = "dashboard/register.html"
 
     def get(self, request):
         return render(request, self.template_name)
@@ -186,7 +186,6 @@ class RegistrationView(View):
         # reCAPTCHA validation
         recaptcha_response = request.POST.get('g-recaptcha-response')
         recaptcha_secret = '6LdTHV8rAAAAAIgLr2wdtdtWExTS6xJpUpD8qEzh'
-
         recaptcha_result = requests.post(
             'https://www.google.com/recaptcha/api/siteverify',
             data={
@@ -198,10 +197,13 @@ class RegistrationView(View):
         if not recaptcha_result.get('success'):
             errors['recaptcha'] = 'Invalid reCAPTCHA. Please try again.'
 
+        # Collect form data
         first_name = request.POST.get('first_name')
         last_name = request.POST.get('last_name')
         email = request.POST.get('email')
         password = request.POST.get('password')
+        confirm_password = request.POST.get('confirm_password')
+        phone = request.POST.get('phone')
         user_type = request.POST.get('user_type')
         buyer_type = request.POST.get('buyer_type')
 
@@ -316,47 +318,55 @@ class VerifyOTPView(View):
                     first_name=signup_data['first_name'],
                     last_name=signup_data['last_name']
                 )
-                messages.success(request, "Supplier account created successfully.")
 
-            # Retail buyer
-            elif buyer_type == 'retailer':
-                try:
-                    age = int(request.POST.get('age') or 0)
-                except ValueError:
-                    age = 0
-                medical_needs = request.POST.get('medical_needs') or ''
-                RetailProfile.objects.create(
-                    user=user,
-                    age=age,
-                    medical_needs=medical_needs
-                )
-                messages.success(request, "Retailer user created. Please update your profile.")
+                # Create profile based on user_type
+                if signup_data['user_type'] == 'supplier':
+                    SupplierProfile.objects.create(
+                        user=user,
+                        company_name=signup_data['supplier_company_name'],
+                        license_number=signup_data['license_number']
+                    )
+                    messages.success(request, "Supplier account created successfully.")
 
-            # Wholesale buyer
-            elif user_type == 'wholesale' or buyer_type == 'wholesaler':
-                company_name = request.POST.get('company_name')
-                gst_number = request.POST.get('gst_number')
-                department = request.POST.get('department')
-                purchase_capacity = request.POST.get('purchase_capacity')
-                WholesaleBuyerProfile.objects.create(
-                    user=user,
-                    company_name=company_name,
-                    gst_number=gst_number,
-                    department=department,
-                    purchase_capacity=purchase_capacity
-                )
-                messages.success(request, "Wholesaler account created successfully.")
+                elif signup_data['buyer_type'] == 'retailer':
+                    try:
+                        age = int(signup_data['age'] or 0)
+                    except ValueError:
+                        age = 0
+                    RetailProfile.objects.create(
+                        user=user,
+                        age=age,
+                        medical_needs=signup_data['medical_needs'] or ''
+                    )
+                    messages.success(request, "Retailer user created. Please update your profile.")
 
-            else:
-                messages.error(request, "Invalid user type.")
-                user.delete()
-                return render(request, self.template_name)
+                elif signup_data['user_type'] == 'wholesale' or signup_data['buyer_type'] == 'wholesaler':
+                    WholesaleBuyerProfile.objects.create(
+                        user=user,
+                        company_name=signup_data['company_name'],
+                        gst_number=signup_data['gst_number'],
+                        department=signup_data['department'],
+                        purchase_capacity=signup_data['purchase_capacity']
+                    )
+                    messages.success(request, "Wholesaler account created successfully.")
 
-            return redirect('login')
+                else:
+                    messages.error(request, "Invalid user type.")
+                    user.delete()
+                    request.session.pop('signup_data', None)
+                    return redirect('dashboard:register')
 
-        except Exception as e:
-            messages.error(request, f"An error occurred: {e}")
-            return render(request, self.template_name)
+                # Clean up session
+                request.session.pop('signup_data', None)
+                messages.success(request, "Account created successfully.")
+                return redirect('dashboard:login')
+
+            except Exception as e:
+                messages.error(request, f"Error creating account: {str(e)}")
+                return redirect('dashboard:register')
+        else:
+            messages.error(request, result.get("message", "OTP verification failed."))
+            return redirect('dashboard:verify_otp')
 
 
 class UserProfileView(LoginRequiredMixin, TemplateView):
@@ -966,15 +976,12 @@ class EditProfileView(LoginRequiredMixin, UpdateView):
     def get_object(self):
         user = self.request.user
         try:
-            return DoctorProfile.objects.get(user=user)
-        except DoctorProfile.DoesNotExist:
+            return RetailProfile.objects.get(user=user)
+        except RetailProfile.DoesNotExist:
             try:
-                return RetailProfile.objects.get(user=user)
-            except RetailProfile.DoesNotExist:
-                try:
-                    return WholesaleBuyerProfile.objects.get(user=user)
-                except WholesaleBuyerProfile.DoesNotExist:
-                    return SupplierProfile.objects.get(user=user)
+                return WholesaleBuyerProfile.objects.get(user=user)
+            except WholesaleBuyerProfile.DoesNotExist:
+                return SupplierProfile.objects.get(user=user)
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
