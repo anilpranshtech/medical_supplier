@@ -30,6 +30,7 @@ admin.site.register(Brand)
 admin.site.register(Orders)
 admin.site.register(CartProduct)
 admin.site.register(WishlistProduct)
+admin.site.register(RatingReview)
 
 
 
