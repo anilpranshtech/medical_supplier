@@ -135,6 +135,50 @@
                                     </div>
                                     <div class="border-b border-border mb-4 mt-5"></div>
                                     <span class="text-sm font-medium block text-mono mb-3.5 px-5">
+                                        Cart Items
+                                    </span>
+                                    {% if cart_items %}
+                                        {% for item in cart_items %}
+                                            <div class="flex items-center justify-between px-5 py-2 border-b border-border">
+                                                <div class="flex items-center gap-3">
+                                                    <img src="{{ item.product.productimage_set.first.image.url }}"
+                                                         alt="{{ item.product.name }}"
+                                                         class="w-12 h-12 object-cover rounded">
+                                                    <div class="flex flex-col">
+                                                        <span class="text-xs font-medium text-mono">{{ item.product.name }}</span>
+                                                        <span class="text-xs font-normal text-secondary-foreground">
+                                                            SKU: {{ item.product.supplier_sku|default:item.product.id }}
+                                                        </span>
+                                                        <div class="flex items-center gap-2 mt-1">
+                                                            <button class="decrease-btn px-2 py-1 bg-gray-200 rounded text-xs" data-product-id="{{ item.product.id }}">-</button>
+                                                            <span class="text-xs font-normal quantity">{{ item.quantity }}</span>
+                                                            <button class="increase-btn px-2 py-1 bg-gray-200 rounded text-xs" data-product-id="{{ item.product.id }}">+</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="flex flex-col items-end gap-1">
+                                                    <button class="text-red-500 hover:text-red-700 remove-from-cart"
+                                                            data-item-id="{{ item.product.id }}">
+                                                        <i class="ki-filled ki-cross text-sm"></i>
+                                                    </button>
+                                                    <span class="text-sm font-semibold text-mono">
+                                                        ${{ item.get_total_price|floatformat:2 }}
+                                                    </span>
+                                                    {% if item.product.offer_percentage and item.product.offer_active %}
+                                                        <span class="text-xs font-normal text-secondary-foreground line-through">
+                                                            ${{ item.product.price|floatformat:2 }}
+                                                        </span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <div class="px-5">
+                                            <span class="text-xs font-normal text-secondary-foreground">Your cart is empty.</span>
+                                        </div>
+                                    {% endif %}
+                                    <div class="border-b border-border mb-4 mt-5"></div>
+                                    <span class="text-sm font-medium block text-mono mb-3.5 px-5">
                                         Price Details
                                     </span>
                                     <div class="flex justify-between items-center px-5">
@@ -245,6 +289,7 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    // Add Address Modal Handling
     const modal = document.querySelector('#modal_add_address');
     const modalTriggers = document.querySelectorAll('[data-kt-modal-toggle="#modal_add_address"]');
     const modalDismiss = modal.querySelectorAll('[data-kt-modal-dismiss="true"]');
@@ -288,6 +333,55 @@ document.addEventListener('DOMContentLoaded', function () {
                     window.location.reload();
                 } else {
                     alert('Failed to set default address.');
+                }
+            });
+        });
+    });
+
+    // Remove from Cart
+    document.querySelectorAll('.remove-from-cart').forEach(button => {
+        button.addEventListener('click', function () {
+            const itemId = this.dataset.itemId;
+
+            fetch("{% url 'dashboard:remove_from_cart' %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `item_id=${itemId}`
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    document.getElementById(`cart-item-${itemId}`).remove();
+                    location.reload();
+                } else {
+                    alert('Failed to remove item from cart');
+                }
+            });
+        });
+    });
+
+    // Increase/Decrease Quantity
+    document.querySelectorAll('.increase-btn, .decrease-btn').forEach(button => {
+        button.addEventListener('click', function () {
+            const productId = this.dataset.productId;
+            const isIncrease = this.classList.contains('increase-btn');
+            const quantityChange = isIncrease ? 1 : -1;
+
+            fetch("{% url 'dashboard:add_to_cart' %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `product_id=${productId}&quantity=${quantityChange}`
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success' || data.status === 'removed') {
+                    location.reload();
                 }
             });
         });
