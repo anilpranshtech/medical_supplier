@@ -39,7 +39,7 @@
                           </div>
 
                       </div>
-                 
+
               </div>
 
           </div>
@@ -92,8 +92,8 @@
                       </div>
                   </div>
 
-                  
-               
+
+
               </div>
           </div>
 
@@ -175,6 +175,38 @@
 
               </div>
           </div>
+
+           <!-- RFQ Requests -->
+            <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}"
+                 data-kt-menu-placement="right-start"
+                 class="menu-item py-2 {% if request.resolver_match.url_name == 'rfq_list' %} here show {% endif %}">
+              <span class="menu-link menu-center">
+                <span class="menu-icon me-0">
+                  <i class="fas fa-envelope-open-text fs-1"></i>
+                </span>
+              </span>
+
+              <div class="menu-sub menu-sub-dropdown menu-sub-indention px-2 py-4 w-250px mh-75 overflow-auto">
+                <div class="menu-item">
+                  <div class="menu-content">
+                    <span class="menu-section fs-5 fw-bolder ps-1 py-1">RFQ</span>
+                  </div>
+                </div>
+
+                <div class="menu-sub menu-sub-accordion">
+                  <div class="menu-item">
+                    <a class="menu-link {% if request.resolver_match.url_name == 'rfq_list' %} active {% endif %}"
+                       href="{% url 'adminv2:rfq_list' %}">
+                      <span class="menu-bullet">
+                        <span class="bullet bullet-dot"></span>
+                      </span>
+                      <span class="menu-title">RFQ Requests</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
 
       </div>
    </div>

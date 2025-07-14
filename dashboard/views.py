@@ -1453,3 +1453,77 @@ class ApproveRoleRequestView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
         context = super().get_context_data(**kwargs)
         context['can_reject'] = self.object.status == 'approved'
         return context
+
+
+class RFQSubmissionView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        product_id = request.POST.get('product_id')
+        try:
+            product = Product.objects.get(id=product_id)
+        except Product.DoesNotExist:
+            return redirect('dashboard:home')
+
+        rfq = RFQRequest.objects.create(
+            requested_by=request.user,
+            product=product,
+            quantity=request.POST.get('quantity'),
+            message=request.POST.get('message', ''),
+            company_name=request.POST.get('company_name', ''),
+            expected_delivery_date=request.POST.get('expected_delivery_date') or None,
+            status='received',
+        )
+
+        # Send email confirmation
+        send_mail(
+            subject='Quotation Request Received',
+            message='Thank you for your quotation request. Our team will get back to you shortly.',
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[request.user.email],
+        )
+        rfq.email_sent = True
+
+        rfq.save()
+        return redirect('dashboard:home')
+
+    def get(self, request, *args, **kwargs):
+        return redirect('dashboard:home')
+
+
+class UserQuotationView(LoginRequiredMixin, TemplateView):
+    template_name = 'userdashboard/view/view_user_quotations.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        context['sent_quotations'] = RFQRequest.objects.filter(quoted_by=user)
+        context['received_quotations'] = RFQRequest.objects.filter(requested_by=user)
+        return context
+
+
+class RFQActionBaseView(LoginRequiredMixin, View):
+    action = None  # 'accepted' or 'rejected'
+    success_message = ""
+
+    def post(self, request, pk, *args, **kwargs):
+        rfq = get_object_or_404(RFQRequest, pk=pk, requested_by=request.user)
+
+        if rfq.status != 'quoted':
+            messages.warning(request, "This quotation is not available for action.")
+            return redirect('dashboard:home')  # Change to your actual dashboard view name
+
+        rfq.status = self.action
+        rfq.updated_at = timezone.now()
+        rfq.save()
+
+        messages.success(request, self.success_message)
+        return redirect('dashboard:home')
+
+
+class RFQAcceptView(RFQActionBaseView):
+    action = 'accepted'
+    success_message = "You have accepted the quotation."
+
+
+class RFQRejectView(RFQActionBaseView):
+    action = 'rejected'
+    success_message = "You have rejected the quotation."

@@ -74,7 +74,7 @@ class RoleRequestAdmin(admin.ModelAdmin):
                 role_request.save()
                 user = role_request.user
                 if role_request.requested_role == 'supplier':
-                    MedicalSupplierProfile.objects.get_or_create(user=user)
+                    SupplierProfile.objects.get_or_create(user=user)
                 elif role_request.requested_role == 'retailer':
                     RetailProfile.objects.get_or_create(user=user)
                 elif role_request.requested_role == 'wholesaler':
@@ -82,3 +82,24 @@ class RoleRequestAdmin(admin.ModelAdmin):
         self.message_user(request, "Selected requests have been approved.")
     approve_requests.short_description = "Approve selected requests"
 
+
+@admin.register(RFQRequest)
+class RFQRequestAdmin(admin.ModelAdmin):
+    list_display = (
+        'id', 'product', 'requested_by', 'quoted_by', 'quoted_price', 'status', 'created_at'
+    )
+    list_filter = ('status', 'created_at')
+    search_fields = ('product__name', 'requested_by__username', 'company_name', 'message')
+
+    fieldsets = (
+        ('RFQ Details', {
+            'fields': ('requested_by', 'product', 'quantity', 'company_name', 'message', 'attached_file', 'expected_delivery_date')
+        }),
+        ('Quotation Details', {
+            'fields': ('quoted_by', 'quoted_price', 'quote_attached_file', 'quote_delivery_date', 'supplier_notes', 'quote_sent_at')
+        }),
+        ('Meta', {
+            'fields': ('status', 'email_sent', 'created_at', 'updated_at')
+        }),
+    )
+    readonly_fields = ('created_at', 'updated_at', 'quote_sent_at')

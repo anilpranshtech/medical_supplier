@@ -63,4 +63,10 @@ urlpatterns = [
     path('approve-role/<int:pk>/', views.ApproveRoleRequestView.as_view(), name='approve_role_request'),
     path('manage-requests/', views.ManageRequestsView.as_view(), name='manage_requests'),
 
+    # RFQ
+    path('rfq/submit/', RFQSubmissionView.as_view(), name='rfq_submit'),
+    path('my-quotations/', UserQuotationView.as_view(), name='view_user_quotations'),
+    path('rfq/<int:pk>/accept/', RFQAcceptView.as_view(), name='accept_rfq'),
+    path('rfq/<int:pk>/reject/', RFQRejectView.as_view(), name='reject_rfq'),
+
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

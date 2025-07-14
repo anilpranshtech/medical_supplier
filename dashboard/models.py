@@ -10,6 +10,9 @@ class RetailProfile(models.Model):
     age = models.IntegerField(null=True, blank=True)
     medical_needs = models.TextField(blank=True)
 
+    class Meta:
+        verbose_name = verbose_name_plural ="Retail Profile"
+
 
 class WholesaleBuyerProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -19,6 +22,9 @@ class WholesaleBuyerProfile(models.Model):
     department = models.CharField(max_length=100)
     purchase_capacity = models.IntegerField(help_text="Monthly purchase capacity")
 
+    class Meta:
+        verbose_name = verbose_name_plural ="Wholesale Buyer Profile"
+
 
 class SupplierProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -26,6 +32,9 @@ class SupplierProfile(models.Model):
     company_name = models.CharField(max_length=255)
     license_number = models.CharField(max_length=100)
     is_verified = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = verbose_name_plural ="Supplier Profile"
 
 
 class ProductCategory(models.Model):
@@ -35,6 +44,10 @@ class ProductCategory(models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = verbose_name_plural ="Product Category"
+
 class ProductSubCategory(models.Model):
     category = models.ForeignKey(ProductCategory,on_delete=models.CASCADE)
     name = models.CharField(max_length=255, unique=True)
@@ -42,6 +55,10 @@ class ProductSubCategory(models.Model):
 
     def __str__(self):
         return self.name
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = verbose_name_plural ="Product Sub Category"
 
 class ProductLastCategory(models.Model):
     sub_category = models.ForeignKey(ProductSubCategory,on_delete=models.CASCADE)
@@ -51,8 +68,15 @@ class ProductLastCategory(models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = verbose_name_plural ="Product Last Category"
+
 class Brand(models.Model):
     name = models.CharField(max_length=100)
+
+    class Meta:
+        verbose_name = verbose_name_plural ="Brand"
 
 
 class Product(models.Model):
@@ -115,7 +139,7 @@ class Product(models.Model):
 
     # Product status
     condition = models.CharField(max_length=20, choices=[('new', 'New'), ('used', 'Used')], default='new')
-    tag = models.CharField(max_length=30, choices=[('recent', 'Recently Arrived'), ('popular', 'Most Wanted'),('limited', 'Limited Stoke'), ('none', 'None')], default='none')
+    tag = models.CharField(max_length=30, choices=[('recent', 'Recently Arrived'), ('popular', 'Most Wanted'),('limited', 'Limited Stock'), ('none', 'None')], default='none')
     warranty = models.CharField(max_length=20, choices=[('none', 'None'), ('1yr', '1 Year'), ('2yr', '2 Years')], default='none')
 
     created_by = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True)
@@ -125,10 +149,8 @@ class Product(models.Model):
         return self.name
 
     class Meta:
-        verbose_name = "Product"
-        verbose_name_plural = "Products"
         ordering = ['-created_at']
-
+        verbose_name = verbose_name_plural = "Product"
 
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
@@ -137,9 +159,8 @@ class ProductImage(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
-        verbose_name = "Product Image"
-        verbose_name_plural = "Product Images"
         ordering = ['-created_at']
+        verbose_name = verbose_name_plural = "Product Image"
 
 class Orders(models.Model):
 
@@ -174,7 +195,7 @@ class Orders(models.Model):
     payment_type = models.CharField(max_length=50, default='BANK TRANSFER')
     payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='unpaid')
     payment_currency = models.CharField(max_length=10, default='USD')
-   
+
     # Shipping info
     shipping_fees = models.PositiveIntegerField(default=0)
     shipping_type = models.CharField(max_length=100, default='Shipping')
@@ -189,9 +210,8 @@ class Orders(models.Model):
     updated_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        verbose_name = "Order"
-        verbose_name_plural = "Orders"
         ordering = ['-created_at']
+        verbose_name = verbose_name_plural = "Order"
 
     def __str__(self):
         return f"Order #{self.pk} - {self.product.name} x {self.quantity}"
@@ -240,24 +260,6 @@ class CustomerBillingAddress(models.Model):
         except:
             return "Not Available"
 
-    @property
-    def get_export_fields(self):
-        return {
-            'user': 'User',
-            'customer_name': 'Name',
-            'customer_address1': 'Address1',
-            'customer_address2': 'Address2',
-            'customer_city': 'City',
-            'customer_state': 'State',
-            'customer_postal_code': 'Postal Code',
-            'customer_country': 'Country',
-            'customer_country_code': 'Country Code',
-            'is_old': 'Is Old',
-            'old_card': 'Old Card',
-            'created_at': 'Created At',
-            'updated_at': 'Updated At'
-        }
-
 
 class WishlistProduct(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='wishlists')
@@ -265,14 +267,14 @@ class WishlistProduct(models.Model):
     quantity = models.PositiveIntegerField(default=1)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
-        unique_together = ('user', 'product')
-        ordering = ['-created_at']
-        verbose_name = 'Wishlist Item'
-        verbose_name_plural = 'Wishlist Items'
-
     def __str__(self):
         return f"{self.user} - {self.product.name}"
+
+    class Meta:
+        unique_together = ('user', 'product')
+        ordering = ["-created_at"]
+        verbose_name = verbose_name_plural = "Wishlist Product"
+
 
 
 class CartProduct(models.Model):
@@ -281,31 +283,29 @@ class CartProduct(models.Model):
     quantity = models.PositiveIntegerField(default=1)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
-        unique_together = ('user', 'product')
-        ordering = ['-created_at']
-        verbose_name = 'Cart Item'
-        verbose_name_plural = 'Cart Items'
-
     def __str__(self):
         return f"{self.quantity} x {self.product.name} for {self.user}"
 
     def get_total_price(self):
         return self.quantity * self.product.price
-    
+
+    class Meta:
+        unique_together = ('user', 'product')
+        ordering = ["-created_at"]
+        verbose_name = verbose_name_plural = "Cart Product"
+
 
 class Notification(models.Model):
     recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
     title = models.CharField(max_length=255)
     message = models.TextField()
     is_read = models.BooleanField(default=False)
-    is_deleted = models.BooleanField(default=False) 
+    is_deleted = models.BooleanField(default=False)
     created_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
-        verbose_name = "Notification"
-        verbose_name_plural = "Notification"
         ordering = ['-created_at']
+        verbose_name = verbose_name_plural = "Notification"
 
 
 class DeliveryPartner(models.Model):
@@ -324,6 +324,10 @@ class DeliveryPartner(models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = verbose_name_plural = "Delivery Partner"
+
 
 class Payment(models.Model):
     name = models.CharField(max_length=100)
@@ -340,6 +344,10 @@ class Payment(models.Model):
     def __str__(self):
         return f"{self.name} - {self.amount} ({self.payment_method.upper()})"
 
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = verbose_name_plural = "Payment"
+
 
 class StripePayment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="stripe_payments")
@@ -352,6 +360,10 @@ class StripePayment(models.Model):
     stripe_signature = models.CharField(max_length=255, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = verbose_name_plural = "Stripe Payment"
+
 
 class RazorpayPayment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="razorpay_payments")
@@ -362,6 +374,11 @@ class RazorpayPayment(models.Model):
     razorpay_order_id = models.CharField(max_length=100, blank=True, null=True)
     razorpay_signature = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = verbose_name_plural = "Razorpay Payment"
+
 
 
 class CODPayment(models.Model):
@@ -378,6 +395,10 @@ class CODPayment(models.Model):
     def __str__(self):
         return f"COD - {self.cod_tracking_id or 'No Tracking ID'} by {self.user.get_full_name() or self.user.email}"
 
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = verbose_name_plural = "COD Payment"
+
 
 class RoleRequest(models.Model):
     ROLE_CHOICES = [
@@ -392,9 +413,48 @@ class RoleRequest(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = "Role Request"
-        verbose_name_plural = "Role Requests"
         ordering = ['-created_at']
+        verbose_name = verbose_name_plural = "Role Request"
 
     def __str__(self):
         return f"{self.user.username} - {self.requested_role} ({self.status})"
+
+
+class RFQRequest(models.Model):
+    STATUS_CHOICES = [
+        ('received', 'Received'),
+        ('pending', 'Pending'),
+        ('quoted', 'Quoted'),
+        ('accepted', 'Accepted'),
+        ('rejected', 'Rejected'),
+        ('cancelled', 'Cancelled'),
+    ]
+
+    # --- Request Info ---
+    requested_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='rfqs')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='rfq_requests')
+    quantity = models.PositiveIntegerField(default=1)
+    company_name = models.CharField(max_length=255, blank=True)
+    message = models.TextField(blank=True)
+    attached_file = models.FileField(upload_to='rfq_attachments/', null=True, blank=True)
+    expected_delivery_date = models.DateField(null=True, blank=True)
+
+    # Quotation Info (from supplier/admin)
+    quoted_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='quoted_rfqs')
+    quoted_price = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    quote_attached_file = models.FileField(upload_to='rfq_attachments/', null=True, blank=True)
+    supplier_notes = models.TextField(blank=True)
+    quote_delivery_date = models.DateField(null=True, blank=True)
+    quote_sent_at = models.DateTimeField(null=True, blank=True)
+
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='received')
+    email_sent = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"RFQ #{self.id} - {self.product.name} by {self.requested_by.username}"
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = verbose_name_plural = "RFQ Request"
