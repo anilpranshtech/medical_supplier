@@ -1247,7 +1247,7 @@ class UserProfile(LoginRequiredMixin, TemplateView):
         elif profile_type == 'medical_supplier':
             phone = profile.phone_details
         elif profile_type in ('corporate', 'wholesaler'):
-            phone = profile.phone
+            phone = None
         context['phone'] = phone or 'Not set'
 
         # Get avatar
