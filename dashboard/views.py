@@ -582,6 +582,7 @@ class WishlistProductListView(LoginRequiredMixin, View):
 
 class OrderSummaryView(LoginRequiredMixin, TemplateView):
     template_name = 'userdashboard/view/order_summary.html'
+    login_url = 'dashboard:login'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -636,6 +637,7 @@ def remove_from_cart(request):
 
 class ShippingInfoView(LoginRequiredMixin, TemplateView):
     template_name = 'userdashboard/view/shipping_info.html'
+    login_url = 'dashboard:login'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -747,6 +749,7 @@ class SetDefaultAddressView(LoginRequiredMixin, View):
 
 class PaymentMethodView(LoginRequiredMixin, View):
     template_name = 'userdashboard/view/payment_method.html'
+    login_url = 'dashboard:login'
 
     def get_stripe_key(self, request):
         return settings.STRIPE_PUBLISHABLE_KEY, settings.STRIPE_SECRET_KEY
@@ -917,19 +920,23 @@ class PaymentMethodView(LoginRequiredMixin, View):
 
 class OrderPlacedView(TemplateView):
     template_name = 'userdashboard/view/order_placed.html'
+    login_url = 'dashboard:login'
 
 
 class MyOrdersView(TemplateView):
     template_name = 'userdashboard/view/my_orders.html'
+    login_url = 'dashboard:login'
 
 
 class OrderReceiptView(TemplateView):
     template_name = 'userdashboard/view/order_receipt.html'
+    login_url = 'dashboard:login'
 
 
 
 class UserProfile(LoginRequiredMixin, TemplateView):
     template_name = 'pages/user_profile.html'
+    login_url = 'dashboard:login'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1567,6 +1574,7 @@ class RFQSubmissionView(LoginRequiredMixin, View):
 
 class UserQuotationView(LoginRequiredMixin, TemplateView):
     template_name = 'userdashboard/view/view_user_quotations.html'
+    login_url = 'dashboard:login'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
