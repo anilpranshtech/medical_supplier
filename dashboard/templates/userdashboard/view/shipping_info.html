@@ -135,50 +135,6 @@
                                     </div>
                                     <div class="border-b border-border mb-4 mt-5"></div>
                                     <span class="text-sm font-medium block text-mono mb-3.5 px-5">
-                                        Cart Items
-                                    </span>
-                                    {% if cart_items %}
-                                        {% for item in cart_items %}
-                                            <div class="flex items-center justify-between px-5 py-2 border-b border-border">
-                                                <div class="flex items-center gap-3">
-                                                    <img src="{{ item.product.productimage_set.first.image.url }}"
-                                                         alt="{{ item.product.name }}"
-                                                         class="w-12 h-12 object-cover rounded">
-                                                    <div class="flex flex-col">
-                                                        <span class="text-xs font-medium text-mono">{{ item.product.name }}</span>
-                                                        <span class="text-xs font-normal text-secondary-foreground">
-                                                            SKU: {{ item.product.supplier_sku|default:item.product.id }}
-                                                        </span>
-                                                        <div class="flex items-center gap-2 mt-1">
-                                                            <button class="decrease-btn px-2 py-1 bg-gray-200 rounded text-xs" data-product-id="{{ item.product.id }}">-</button>
-                                                            <span class="text-xs font-normal quantity">{{ item.quantity }}</span>
-                                                            <button class="increase-btn px-2 py-1 bg-gray-200 rounded text-xs" data-product-id="{{ item.product.id }}">+</button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="flex flex-col items-end gap-1">
-                                                    <button class="text-red-500 hover:text-red-700 remove-from-cart"
-                                                            data-item-id="{{ item.product.id }}">
-                                                        <i class="ki-filled ki-cross text-sm"></i>
-                                                    </button>
-                                                    <span class="text-sm font-semibold text-mono">
-                                                        ${{ item.get_total_price|floatformat:2 }}
-                                                    </span>
-                                                    {% if item.product.offer_percentage and item.product.offer_active %}
-                                                        <span class="text-xs font-normal text-secondary-foreground line-through">
-                                                            ${{ item.product.price|floatformat:2 }}
-                                                        </span>
-                                                    {% endif %}
-                                                </div>
-                                            </div>
-                                        {% endfor %}
-                                    {% else %}
-                                        <div class="px-5">
-                                            <span class="text-xs font-normal text-secondary-foreground">Your cart is empty.</span>
-                                        </div>
-                                    {% endif %}
-                                    <div class="border-b border-border mb-4 mt-5"></div>
-                                    <span class="text-sm font-medium block text-mono mb-3.5 px-5">
                                         Price Details
                                     </span>
                                     <div class="flex justify-between items-center px-5">

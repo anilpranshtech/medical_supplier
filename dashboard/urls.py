@@ -38,7 +38,8 @@ urlpatterns = [
     path('payment-method/', views.PaymentMethodView.as_view(), name='payment_method'),
     path('order-placed/', views.OrderPlacedView.as_view(), name='order_placed'),
     path('my-orders/', views.MyOrdersView.as_view(), name='my_orders'),
-    path('order-receipt/', views.OrderReceiptView.as_view(), name='order_receipt'),
+    path('order-receipt/<int:pk>/', OrderReceiptView.as_view(), name='order_receipt'),
+    path('order-receipt/<int:pk>/download/', views.DownloadReceiptView.as_view(), name='download_receipt'),
 
     # user profile
     path('user-profile/', views.UserProfile.as_view(), name='user_profile'),

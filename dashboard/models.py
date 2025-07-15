@@ -3,6 +3,8 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
 from django.utils import timezone
+from razorpay import Payment
+
 
 class RetailProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -190,8 +192,10 @@ class Orders(models.Model):
 
      # Customer Info
     phone_number = models.PositiveIntegerField(default=0)
+    # order_reference = models.CharField(max_length=20, blank=True, null=True)
 
     # Payment info
+    payment = models.ForeignKey('Payment', on_delete=models.CASCADE, null=True, blank=True, related_name='orders')
     payment_type = models.CharField(max_length=50, default='BANK TRANSFER')
     payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='unpaid')
     payment_currency = models.CharField(max_length=10, default='USD')
@@ -330,6 +334,7 @@ class DeliveryPartner(models.Model):
 
 
 class Payment(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='payments')
     name = models.CharField(max_length=100)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     payment_method = models.CharField(max_length=20, choices=[
