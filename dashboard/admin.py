@@ -27,7 +27,10 @@ admin.site.register(ProductCategory)
 admin.site.register(ProductSubCategory)
 admin.site.register(ProductLastCategory)
 admin.site.register(Brand)
-admin.site.register(Orders)
+
+@admin.register(Orders)
+class OrdersAdmin(admin.ModelAdmin):
+    list_display = ('id', 'payment_type', 'payment_status')
 admin.site.register(CartProduct)
 admin.site.register(WishlistProduct)
 admin.site.register(RatingReview)

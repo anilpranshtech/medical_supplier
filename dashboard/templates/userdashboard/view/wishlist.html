@@ -6,20 +6,22 @@
 
 <div class="kt-container-fixed mt-1" style="max-width: var(--custom-container-width, 90%);">
     <div class="flex items-center justify-between mt-5 py-5">
-        <h1 class="text-lg font-medium text-mono">Your Wishlist</h1>
+        <h1 class="text-xl font-bold">Your Wishlist</h1>
         <button class="kt-btn kt-btn-primary kt-btn-sm" id="wishlist-clear">Clear Wishlist</button>
     </div>
 
 
-  <div class="grid grid-cols-1 sm:grid-cols-4 md:grid-cols-3 lg:grid-cols-4 gap-5" id="wishlist-items">
+    <div class="grid grid-cols-1 sm:grid-cols-4 md:grid-cols-3 lg:grid-cols-4 gap-5" id="wishlist-items">
 
         {% for item in wishlist_items %}
         <div id="wish-{{ item.product.id }}" class="kt-card border p-4 rounded-xl">
             <div class="relative">
-                <img src="{{ item.product.main_image.url }}" alt="{{ item.product.name }}" class="w-full h-48 object-cover rounded-lg">
-                <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2" data-product-id="{{ item.product.id }}">
-    <i class="ki-filled ki-cross text-red-500"></i>
-</button>
+                <img src="{{ item.product.main_image.url }}" alt="{{ item.product.name }}"
+                     class="w-full h-48 object-cover rounded-lg">
+                <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
+                        data-product-id="{{ item.product.id }}">
+                    <i class="ki-filled ki-cross text-red-500"></i>
+                </button>
 
             </div>
             <div class="mt-3">
@@ -29,56 +31,53 @@
         </div>
         {% empty %}
         <div class="col-span-full">
-            <p class="text-muted">No items in wishlist.</p>
+            <p class="text-gray-500 font-bold text-center">No items in wishlist.</p>
         </div>
         {% endfor %}
     </div>
 </div>
 
 <script>
-document.querySelectorAll('.kt-wishlist-icon').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const pid = btn.dataset.productId;
-        fetch("{% url 'dashboard:toggle_wishlist' %}", {
+    document.querySelectorAll('.kt-wishlist-icon').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const pid = btn.dataset.productId;
+            fetch("{% url 'dashboard:toggle_wishlist' %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `product_id=${pid}`
+            })
+                .then(response => response.json())
+                .then(data => {
+                    const icon = btn.querySelector('i');
+                    const card = document.getElementById(`wish-${pid}`);
+                    if (data.status === 'removed') {
+                        icon.classList.remove('text-red-500');
+                        if (card) card.remove();
+                    }
+                });
+        });
+    });
+
+    document.getElementById('wishlist-clear').addEventListener('click', () => {
+        fetch("{% url 'dashboard:clear_wishlist' %}", {
             method: 'POST',
             headers: {
                 'X-CSRFToken': '{{ csrf_token }}',
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: `product_id=${pid}`
-        })
-        .then(response => response.json())
-        .then(data => {
-            const icon = btn.querySelector('i');
-            const card = document.getElementById(`wish-${pid}`);
-            if (data.status === 'removed') {
-                icon.classList.remove('text-red-500');
-                if (card) card.remove();
             }
-        });
-    });
-});
-
-document.getElementById('wishlist-clear').addEventListener('click', () => {
-    fetch("{% url 'dashboard:clear_wishlist' %}", {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': '{{ csrf_token }}',
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.status === 'cleared') {
-            document.getElementById('wishlist-items').innerHTML = '<p class="text-muted">No items in wishlist.</p>';
-            document.querySelectorAll('.kt-wishlist-icon i').forEach(icon => {
-                icon.classList.remove('text-red-500');
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'cleared') {
+                    document.getElementById('wishlist-items').innerHTML = '<p class="text-muted">No items in wishlist.</p>';
+                    document.querySelectorAll('.kt-wishlist-icon i').forEach(icon => {
+                        icon.classList.remove('text-red-500');
+                    });
+                }
             });
-        }
     });
-});
-
-
-
 
 
 </script>

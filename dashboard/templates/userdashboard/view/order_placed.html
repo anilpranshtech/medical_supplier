@@ -5,224 +5,147 @@
 <div class="kt-container-fixed mt-1" style="max-width: var(--custom-container-width, 85%);">
     <div class="flex flex-col items-stretch gap-7 mt-5 py-5">
         <main class="grow" role="content">
-            <!-- Container -->
+
+            <!-- Step Indicator -->
             <div class="kt-container-fixed">
                 <div class="flex items-center justify-center flex-wrap lg:flex-nowrap gap-8 lg:gap-1.5 pt-5 mb-12">
-                    <!-- Step Button -->
-                    <div class="text-2sm leading-none relative flex items-center gap-1.5 px-3 h-8.5 rounded-full border border-border text-foreground [&_.kt-step-icon]:text-muted-foreground bg-muted/30">
-                        <!-- Completed -->
-                        <i class="ki-solid ki-check-circle text-green-500 absolute -top-1 -end-1 text-base"></i>
-                        <!-- Icon -->
-                        <span class="kt-step-icon">
-                            <i class="ki-filled ki-subtitle text-base"></i>
-                        </span>
-                        <!-- Step Title -->
-                        Order Summary
-                    </div>
-                    <div class="hidden lg:block w-12 h-px border-t border-dashed border-zinc-300 dark:border-zinc-600"></div>
-                    <!-- Step Button -->
-                    <div class="text-2sm leading-none relative flex items-center gap-1.5 px-3 h-8.5 rounded-full border border-border text-foreground [&_.kt-step-icon]:text-muted-foreground bg-muted/30">
-                        <!-- Completed -->
-                        <i class="ki-solid ki-check-circle text-green-500 absolute -top-1 -end-1 text-base"></i>
-                        <!-- Icon -->
-                        <span class="kt-step-icon">
-                            <i class="ki-filled ki-delivery text-base"></i>
-                        </span>
-                        <!-- Step Title -->
-                        Shipping Info
-                    </div>
-                    <div class="hidden lg:block w-12 h-px border-t border-dashed border-zinc-300 dark:border-zinc-600"></div>
-                    <!-- Step Button -->
-                    <div class="text-2sm leading-none relative flex items-center gap-1.5 px-3 h-8.5 rounded-full border border-border text-foreground [&_.kt-step-icon]:text-muted-foreground bg-muted/30">
-                        <!-- Completed -->
-                        <i class="ki-solid ki-check-circle text-green-500 absolute -top-1 -end-1 text-base"></i>
-                        <!-- Icon -->
-                        <span class="kt-step-icon">
-                            <i class="ki-filled ki-two-credit-cart text-base"></i>
-                        </span>
-                        <!-- Step Title -->
-                        Payment Method
-                    </div>
-                    <div class="hidden lg:block w-12 h-px border-t border-dashed border-zinc-300 dark:border-zinc-600"></div>
-                    <!-- Step Button -->
-                    <div class="text-2sm leading-none relative flex items-center gap-1.5 px-3 h-8.5 rounded-full border font-medium border-primary/10 bg-primary/10 text-primary [&_.kt-step-icon]:text-primary">
-                        <!-- Icon -->
-                        <span class="kt-step-icon">
-                            <i class="ki-filled ki-cheque text-base"></i>
-                        </span>
-                        <!-- Step Title -->
-                        Order Placed
-                    </div>
+                    {% for step in steps %}
+                        <div class="text-2sm leading-none relative flex items-center gap-1.5 px-3 h-8.5 rounded-full border {{ step.status_class }} [&_.kt-step-icon]:{{ step.icon_class }}">
+                            {% if step.completed %}
+                                <i class="ki-solid ki-check-circle text-green-500 absolute -top-1 -end-1 text-base"></i>
+                            {% endif %}
+                            <span class="kt-step-icon">
+                                <i class="{{ step.icon }} text-base"></i>
+                            </span>
+                            {{ step.title }}
+                        </div>
+                        {% if not forloop.last %}
+                            <div class="hidden lg:block w-12 h-px border-t border-dashed border-zinc-300 dark:border-zinc-600"></div>
+                        {% endif %}
+                    {% endfor %}
                 </div>
             </div>
-            <!-- End of Container -->
-            <!-- Container -->
+
+            <!-- Order Details -->
             <div class="kt-container-fixed">
-                <!-- begin: grid -->
                 <div class="grid xl:grid-cols-3 gap-5 lg:gap-9">
                     <div class="lg:col-span-2 space-y-5">
                         <div class="grid grid-cols-1 gap-5 lg:gap-9">
-                            <!-- begin: Card -->
-                            <div class="lg:col-span-1">
-                                <div class="kt-card">
-                                    <div class="kt-card-header justify-start bg-muted/70 gap-9 h-auto py-5">
-                                        <div class="flex flex-col gap-1.5">
-                                            <span class="text-xs font-normal text-secondary-foreground">Order ID</span>
-                                            <span class="text-sm font-medium text-mono">X319330-S24</span>
-                                        </div>
-                                        <div class="flex flex-col gap-1.5">
-                                            <span class="text-xs font-normal text-secondary-foreground">Order placed</span>
-                                            <span class="text-sm font-medium text-mono">26 June, 2025</span>
-                                        </div>
-                                        <div class="flex flex-col gap-1.5">
-                                            <span class="text-xs font-normal text-secondary-foreground">Total</span>
-                                            <span class="text-sm font-medium text-mono">$7.78</span>
-                                        </div>
-                                        <div class="flex flex-col gap-1.5">
-                                            <span class="text-xs font-normal text-secondary-foreground">Ship to</span>
-                                            <span class="text-sm font-medium text-mono">Jeroen van Dijk</span>
-                                        </div>
-                                        <div class="flex flex-col gap-1.5">
-                                            <span class="text-xs font-normal text-secondary-foreground">Estimated Delivery</span>
-                                            <span class="text-sm font-medium text-mono">07 July, 2025</span>
-                                        </div>
+
+                            <!-- Order Info Card -->
+                            <div class="kt-card">
+                                <div class="kt-card-header justify-start bg-muted/70 gap-9 h-auto py-5">
+                                    <div class="flex flex-col gap-1.5">
+                                        <span class="text-xs font-normal text-secondary-foreground">Order ID</span>
+                                        <span class="text-sm font-medium text-mono">{{ payment.id|stringformat:"05d" }}</span>
                                     </div>
-                                    <div class="kt-card-content p-5 lg:p-7.5 space-y-5">
-                                        <div class="kt-card">
-                                            <div class="kt-card-content flex items-center flex-wrap justify-between gap-4.5 p-2 pe-5">
-                                                <div class="flex items-center gap-3.5">
-                                                    <div class="kt-card flex items-center justify-center bg-accent/50 h-[70px] w-[90px] shadow-none">
-                                                        <img alt="Sterile Bandages" class="cursor-pointer h-[70px]" data-kt-drawer-toggle="#drawers_shop_product_details" src="{% static 'metronic/tailwind/dist/assets/media/medical/600x600/medical-bandages.png' %}">
-                                                    </div>
-                                                    <div class="flex flex-col gap-1">
-                                                        <a class="hover:text-primary text-sm font-medium text-mono leading-5.5" data-kt-drawer-toggle="#drawers_shop_product_details" href="#">Sterile Bandages (2 Packs)</a>
-                                                        <div class="flex items-center gap-1.5">
-                                                            <span class="text-xs font-normal text-secondary-foreground uppercase">
-                                                                sku: <span class="text-xs font-medium text-foreground">MED-BAND-001</span>
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="flex flex-col gap-1.5">
-                                                    <span class="text-xs font-normal text-secondary-foreground text-end">2 x</span>
-                                                    <div class="flex items-center flex-wrap gap-1.5">
-                                                        <span class="text-sm font-semibold text-mono">$3.60</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="kt-card">
-                                            <div class="kt-card-content flex items-center flex-wrap justify-between gap-4.5 p-2 pe-5">
-                                                <div class="flex items-center gap-3.5">
-                                                    <div class="kt-card flex items-center justify-center bg-accent/50 h-[70px] w-[90px] shadow-none">
-                                                        <img alt="Disposable Syringes" class="cursor-pointer h-[70px]" data-kt-drawer-toggle="#drawers_shop_product_details" src="{% static 'metronic/tailwind/dist/assets/media/medical/600x600/medical-syringes.png' %}">
-                                                    </div>
-                                                    <div class="flex flex-col gap-1">
-                                                        <a class="hover:text-primary text-sm font-medium text-mono leading-5.5" data-kt-drawer-toggle="#drawers_shop_product_details" href="#">Disposable Syringes (1 Pack)</a>
-                                                        <div class="flex items-center gap-1.5">
-                                                            <span class="text-xs font-normal text-secondary-foreground uppercase">
-                                                                sku: <span class="text-xs font-medium text-foreground">MED-SYR-001</span>
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="flex flex-col gap-1.5">
-                                                    <span class="text-xs font-normal text-secondary-foreground text-end">1 x</span>
-                                                    <div class="flex items-center flex-wrap gap-1.5">
-                                                        <span class="text-sm font-semibold text-mono">$1.20</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="kt-card">
-                                            <div class="kt-card-content flex items-center flex-wrap justify-between gap-4.5 p-2 pe-5">
-                                                <div class="flex items-center gap-3.5">
-                                                    <div class="kt-card flex items-center justify-center bg-accent/50 h-[70px] w-[90px] shadow-none">
-                                                        <img alt="Digital Thermometer" class="cursor-pointer h-[70px]" data-kt-drawer-toggle="#drawers_shop_product_details" src="{% static 'metronic/tailwind/dist/assets/media/medical/600x600/thermometer.png' %}">
-                                                    </div>
-                                                    <div class="flex flex-col gap-1">
-                                                        <a class="hover:text-primary text-sm font-medium text-mono leading-5.5" data-kt-drawer-toggle="#drawers_shop_product_details" href="#">Digital Thermometer</a>
-                                                        <div class="flex items-center gap-1.5">
-                                                            <span class="text-xs font-normal text-secondary-foreground uppercase">
-                                                                sku: <span class="text-xs font-medium text-foreground">MED-THERM-001</span>
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="flex flex-col gap-1.5">
-                                                    <span class="text-xs font-normal text-secondary-foreground text-end">1 x</span>
-                                                    <div class="flex items-center flex-wrap gap-1.5">
-                                                        <span class="text-sm font-semibold text-mono">$2.38</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="kt-card">
-                                            <div class="kt-card-content flex items-center flex-wrap justify-between gap-4.5 p-2 pe-5">
-                                                <div class="flex items-center gap-3.5">
-                                                    <div class="kt-card flex items-center justify-center bg-accent/50 h-[70px] w-[90px] shadow-none">
-                                                        <img alt="Hand Sanitizer Gel" class="cursor-pointer h-[70px]" data-kt-drawer-toggle="#drawers_shop_product_details" src="{% static 'metronic/tailwind/dist/assets/media/medical/600x600/hand-sanitizer.png' %}">
-                                                    </div>
-                                                    <div class="flex flex-col gap-1">
-                                                        <a class="hover:text-primary text-sm font-medium text-mono leading-5.5" data-kt-drawer-toggle="#drawers_shop_product_details" href="#">Hand Sanitizer Gel</a>
-                                                        <div class="flex items-center gap-1.5">
-                                                            <span class="text-xs font-normal text-secondary-foreground uppercase">
-                                                                sku: <span class="text-xs font-medium text-foreground">MED-SAN-001</span>
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="flex flex-col gap-1.5">
-                                                    <span class="text-xs font-normal text-secondary-foreground text-end">1 x</span>
-                                                    <div class="flex items-center flex-wrap gap-1.5">
-                                                        <span class="text-sm font-semibold text-mono">$0.60</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                    <div class="flex flex-col gap-1.5">
+                                        <span class="text-xs font-normal text-secondary-foreground">Order placed</span>
+                                        <span class="text-sm font-medium text-mono">{{ order_date|date:"d M, Y" }}</span>
+                                    </div>
+                                    <div class="flex flex-col gap-1.5">
+                                        <span class="text-xs font-normal text-secondary-foreground">Total</span>
+                                        <span class="text-sm font-medium text-mono">₹{{ order_total }}</span>
+                                    </div>
+                                    <div class="flex flex-col gap-1.5">
+                                        <span class="text-xs font-normal text-secondary-foreground">Ship to</span>
+                                        <span class="text-sm font-medium text-mono">{{ billing.customer_name }}</span>
+                                    </div>
+                                    <div class="flex flex-col gap-1.5">
+                                        <span class="text-xs font-normal text-secondary-foreground">Estimated Delivery</span>
+                                        <span class="text-sm font-medium text-mono">{{ estimated_delivery|default:"5-7 business days" }}</span>
                                     </div>
                                 </div>
+
+                                <!-- Products -->
+                                <div class="kt-card-content p-5 lg:p-7.5 space-y-5">
+                                    {% for item in cart_items %}
+                                    <div class="kt-card">
+                                        <div class="kt-card-content flex items-center flex-wrap justify-between gap-4.5 p-2 pe-5">
+                                            <div class="flex items-center gap-3.5">
+                                                <div class="kt-card flex items-center justify-center bg-accent/50 h-[70px] w-[90px] shadow-none">
+                                                    <img alt="{{ item.product.name }}" class="cursor-pointer h-[70px]" src="{{ item.product.image.url }}">
+                                                </div>
+                                                <div class="flex flex-col gap-1">
+                                                    <a class="hover:text-primary text-sm font-medium text-mono leading-5.5" href="#">
+                                                        {{ item.product.name }}
+                                                    </a>
+                                                    <div class="flex items-center gap-1.5">
+                                                        <span class="text-xs font-normal text-secondary-foreground uppercase">
+                                                            SKU: <span class="text-xs font-medium text-foreground">{{ item.product.sku }}</span>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex flex-col gap-1.5">
+                                                <span class="text-xs font-normal text-secondary-foreground text-end">{{ item.quantity }} x</span>
+                                                <div class="flex items-center flex-wrap gap-1.5">
+                                                    <span class="text-sm font-semibold text-mono">₹{{ item.get_total_price }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
                             </div>
-                            <!-- end: Card -->
+
+                            <!-- Payment & Address -->
                             <div class="grid grid-cols-2 gap-5 lg:gap-9">
-                                <!-- begin: Card -->
                                 <div class="kt-card">
                                     <div class="kt-card-header px-5 min-h-[44px]">
                                         <h3 class="kt-card-title text-sm">Payment</h3>
                                     </div>
                                     <div class="kt-card-content p-5">
                                         <div class="flex items-center gap-2.5">
-                                            <img alt="Visa" class="size-12" src="{% static 'metronic/tailwind/dist/assets/media/brand-logos/razorpay.svg' %}">
-                                            <div class="flex flex-col gap-0.5 text-2sm">
-                                                <span class="font-semibold text-mono">Jeroen van Dijk</span>
-                                                <span class="font-normal text-mono">Ending 3604 Expires on 12/2026</span>
-                                            </div>
+                                            {% if payment_method == "stripe" %}
+                                                <img alt="Stripe" class="size-12" src="{% static 'metronic/tailwind/dist/assets/media/brand-logos/stripe.svg' %}">
+                                                <div class="flex flex-col gap-0.5 text-2sm">
+                                                    <span class="font-semibold text-mono">{{ payment_details.name }}</span>
+                                                    <span class="font-normal text-mono">
+                                                        Ending {{ payment_details.card_last4 }} Exp {{ payment_details.card_expiry }}
+                                                    </span>
+                                                </div>
+                                            {% elif payment_method == "razorpay" %}
+                                                <img alt="Razorpay" class="size-12" src="{% static 'metronic/tailwind/dist/assets/media/brand-logos/razorpay.svg' %}">
+                                                <div class="flex flex-col gap-0.5 text-2sm">
+                                                    <span class="font-semibold text-mono">{{ payment_details.name }}</span>
+                                                    <span class="font-normal text-mono">
+                                                        Razorpay ID: {{ payment_details.razorpay_payment_id }}
+                                                    </span>
+                                                </div>
+                                            {% else %}
+                                                <img alt="COD" class="size-12" src="{% static 'metronic/tailwind/dist/assets/media/icons/cod.svg' %}">
+                                                <div class="flex flex-col gap-0.5 text-2sm">
+                                                    <span class="font-semibold text-mono">{{ payment_details.name }}</span>
+                                                    <span class="font-normal text-mono">COD Tracking: {{ payment_details.cod_tracking_id }}</span>
+                                                </div>
+                                            {% endif %}
                                         </div>
                                     </div>
                                 </div>
-                                <!-- end: Card -->
-                                <!-- begin: Card -->
+
                                 <div class="kt-card">
                                     <div class="kt-card-header px-5 min-h-[44px]">
                                         <h3 class="kt-card-title text-sm">Delivery to</h3>
                                     </div>
                                     <div class="kt-card-content">
-                                        <div class="text-sm font-semibold text-mono mb-2.5">Jeroen van Dijk</div>
+                                        <div class="text-sm font-semibold text-mono mb-2.5">{{ billing.customer_name }}</div>
                                         <div class="flex flex-col gap-2 text-2sm font-normal text-mono">
-                                            <span>Keizersgracht 172</span>
-                                            <span>1016 DW, Amsterdam</span>
-                                            <span>Netherlands</span>
-                                            <span>Phone number: +31612345678</span>
+                                            <span>{{ billing.customer_address1 }}</span>
+                                            <span>{{ billing.customer_city }}, {{ billing.customer_postal_code }}</span>
+                                            <span>{{ billing.customer_country }}</span>
+                                            <span>Phone: {{ billing.customer_phone_number|default:"N/A" }}</span>
                                         </div>
                                     </div>
                                 </div>
-                                <!-- end: Card -->
                             </div>
+
                         </div>
                     </div>
+
+                    <!-- Order Summary -->
                     <div class="lg:col-span-1">
                         <div class="space-y-5">
-                            <!-- begin: Card -->
                             <div class="kt-card bg-accent/50">
                                 <div class="kt-card-header px-5">
                                     <h3 class="kt-card-title">Order Summary</h3>
@@ -231,29 +154,26 @@
                                     <h4 class="text-sm font-medium text-mono mb-3.5">Price Details</h4>
                                     <div class="flex justify-between items-center">
                                         <span class="text-sm font-normal text-secondary-foreground">Subtotal</span>
-                                        <span class="text-sm font-medium text-mono">$7.78</span>
+                                        <span class="text-sm font-medium text-mono">₹{{ order_summary.subtotal }}</span>
                                     </div>
                                     <div class="flex justify-between items-center">
                                         <span class="text-sm font-normal text-secondary-foreground">Shipping</span>
-                                        <span class="text-sm font-medium text-mono">$0.00</span>
+                                        <span class="text-sm font-medium text-mono">₹{{ order_summary.shipping }}</span>
                                     </div>
                                     <div class="flex justify-between items-center">
                                         <span class="text-sm font-normal text-secondary-foreground">VAT</span>
-                                        <span class="text-sm font-medium text-mono">$0.00</span>
+                                        <span class="text-sm font-medium text-mono">₹{{ order_summary.vat }}</span>
                                     </div>
                                 </div>
                                 <div class="kt-card-footer flex justify-between items-center px-5">
                                     <span class="text-sm font-normal text-secondary-foreground">Total</span>
-                                    <span class="text-base font-semibold text-mono">$7.78</span>
+                                    <span class="text-base font-semibold text-mono">₹{{ order_summary.total }}</span>
                                 </div>
                             </div>
-                            <!-- end: Card -->
                         </div>
                     </div>
                 </div>
-                <!-- end: grid -->
             </div>
-            <!-- End of Container -->
         </main>
     </div>
 </div>

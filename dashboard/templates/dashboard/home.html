@@ -741,7 +741,7 @@
 
         <!-- begin: RFQ Modal -->
         <div id="rfqModal" class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" data-kt-modal="true" role="dialog" aria-labelledby="rfqModalTitle" aria-modal="true">
-            <div class="kt-card w-full max-w-[500px] rounded-xl border border-border bg-background shadow-2xl transition-transform duration-300 ease-in-out transform scale-95">
+            <div class="kt-card w-full max-w-[600px] rounded-xl border border-border bg-background shadow-2xl transition-transform duration-300 ease-in-out transform scale-95">
                 <div class="kt-card-header px-5 py-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
                     <h2 id="rfqModalTitle" class="text-xl font-bold text-mono">Request for Quotation</h2>
                     <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" onclick="closeRFQModal()" aria-label="Close modal">
@@ -753,26 +753,26 @@
                     <div class="kt-card-content flex flex-col space-y-4 p-5">
                         <input type="hidden" name="product_id" id="rfqProductId">
                         <div>
-                            <label for="rfqProductName" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Product</label>
-                            <input type="text" id="rfqProductName" class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 cursor-not-allowed" disabled>
+                            <label for="rfqProductName" class="block text-sm font-medium text-gray-650 dark:text-gray-300 mb-1">Product</label>
+                            <input type="text" id="rfqProductName" class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 bg-gray-100 dark:bg-gray-800 text-gray-650 dark:text-gray-300 cursor-not-allowed" disabled>
                         </div>
                         <div>
-                            <label for="rfqCompanyName" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Company Name <span class="text-red-500">*</span></label>
+                            <label for="rfqCompanyName" class="block text-sm font-medium text-gray-650 dark:text-gray-300 mb-1">Company Name <span class="text-red-500">*</span></label>
                             <input type="text" name="company_name" id="rfqCompanyName" class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 focus:ring-2 focus:ring-primary focus:border-primary transition-colors" required aria-required="true">
                             <p class="text-xs text-red-500 mt-1 hidden" id="rfqCompanyNameError">Company name is required.</p>
                         </div>
                         <div>
-                            <label for="rfqQuantity" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Quantity <span class="text-red-500">*</span></label>
+                            <label for="rfqQuantity" class="block text-sm font-medium text-gray-650 dark:text-gray-300 mb-1">Quantity <span class="text-red-500">*</span></label>
                             <input type="number" name="quantity" id="rfqQuantity" class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 focus:ring-2 focus:ring-primary focus:border-primary transition-colors" min="1" required aria-required="true">
                             <p class="text-xs text-red-500 mt-1 hidden" id="rfqQuantityError">Quantity must be at least 1.</p>
                         </div>
                         <div>
-                            <label for="rfqMessage" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Message</label>
+                            <label for="rfqMessage" class="block text-sm font-medium text-gray-650 dark:text-gray-300 mb-1">Message</label>
                             <textarea name="message" id="rfqMessage" class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 focus:ring-2 focus:ring-primary focus:border-primary transition-colors" rows="4" placeholder="Add any additional details..."></textarea>
                         </div>
                     </div>
                     <div class="kt-card-footer px-5 py-4 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700">
-                        <button type="button" class="kt-btn kt-btn-outline kt-btn-sm text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700" onclick="closeRFQModal()">Cancel</button>
+                        <button type="button" class="kt-btn kt-btn-outline kt-btn-sm text-gray-650 hover:bg-gray-100 dark:hover:bg-gray-700" onclick="closeRFQModal()">Cancel</button>
                         <button type="submit" class="kt-btn kt-btn-primary kt-btn-sm bg-blue-600 hover:bg-blue-700 text-white">Submit RFQ</button>
                     </div>
                 </form>

@@ -5,12 +5,46 @@
 <div class="kt-container-fixed mt-1" style="max-width: var(--custom-container-width, 85%);">
     <div class="flex flex-col items-stretch gap-7 mt-5 py-5">
         <main class="grow" role="content">
+            <!-- Progress Steps -->
+            <div class="kt-container-fixed">
+                <div class="flex items-center justify-center flex-wrap lg:flex-nowrap gap-8 lg:gap-1.5 pt-5 mb-12">
+                    <div class="text-2sm leading-none relative flex items-center gap-1.5 px-3 h-8.5 rounded-full border border-border text-foreground [&_.kt-step-icon]:text-muted-foreground bg-muted/30">
+                        <i class="ki-solid ki-check-circle text-green-500 absolute -top-1 -end-1 text-base"></i>
+                        <span class="kt-step-icon">
+                            <i class="ki-filled ki-subtitle text-base"></i>
+                        </span>
+                        Order Summary
+                    </div>
+                    <div class="hidden lg:block w-12 h-px border-t border-dashed border-zinc-300 dark:border-zinc-600"></div>
+                    <div class="text-2sm leading-none relative flex items-center gap-1.5 px-3 h-8.5 rounded-full border border-border text-foreground [&_.kt-step-icon]:text-muted-foreground bg-muted/30">
+                        <i class="ki-solid ki-check-circle text-green-500 absolute -top-1 -end-1 text-base"></i>
+                        <span class="kt-step-icon">
+                            <i class="ki-filled ki-delivery text-base"></i>
+                        </span>
+                        Shipping Info
+                    </div>
+                    <div class="hidden lg:block w-12 h-px border-t border-dashed border-zinc-300 dark:border-zinc-600"></div>
+                    <div class="text-2sm leading-none relative flex items-center gap-1.5 px-3 h-8.5 rounded-full border font-medium border-primary/10 bg-primary/10 text-primary [&_.kt-step-icon]:text-primary">
+                        <span class="kt-step-icon">
+                            <i class="ki-filled ki-two-credit-cart text-base"></i>
+                        </span>
+                        Payment Method
+                    </div>
+                    <div class="hidden lg:block w-12 h-px border-t border-dashed border-zinc-300 dark:border-zinc-600"></div>
+                    <div class="text-2sm leading-none relative flex items-center gap-1.5 px-3 h-8.5 rounded-full border border-border text-foreground [&_.kt-step-icon]:text-muted-foreground">
+                        <span class="kt-step-icon">
+                            <i class="ki-filled ki-cheque text-base"></i>
+                        </span>
+                        Order Placed
+                    </div>
+                </div>
+            </div>
+
             <!-- Payment Method Dropdown -->
             <div class="kt-container-fixed mb-4">
                 <div class="flex justify-end">
                     <div class="w-full sm:w-64">
-                        <label for="payment-method-select" class="block mb-1 text-sm font-bold text-mono">Select
-                            Payment Method</label>
+                        <label for="payment-method-select" class="block mb-1 text-sm font-bold text-mono">Select Payment Method</label>
                         <select id="payment-method-select" class="kt-input w-full">
                             <option value="Cash on Delivery" selected>Cash on Delivery</option>
                             <option value="Stripe">Stripe</option>
@@ -37,8 +71,7 @@
                                         <strong>Note:</strong> Cash on Delivery - Pay cash on the time of Delivery
                                     </div>
                                     <div class="mx-5 mt-7 mb-7">
-                                        <button class="kt-btn kt-btn-primary w-full" type="submit">Place COD Order
-                                        </button>
+                                        <button class="kt-btn kt-btn-primary w-full" type="submit">Place COD Order</button>
                                     </div>
                                 </form>
                             </div>
@@ -58,9 +91,9 @@
                                     </div>
 
                                     <!-- Saved Card Display -->
-                                    {% if billing and billing.old_card_info %}
+                                    {% if billing and billing.old_card %}
                                         <div class="text-sm text-muted mb-4 mx-5">
-                                            <strong>Saved Card:</strong> {{ billing.old_card_info }}
+                                            <strong>Saved Card:</strong> {{ billing.old_card|default:'No saved card' }}
                                         </div>
                                     {% endif %}
 
@@ -68,12 +101,12 @@
                                     <div id="card-errors" class="text-red-900 text-center mb-3"></div>
 
                                     <!-- Input Fields -->
-                                    <div class="grid sm:grid-cols-1 gap-4 mt-5 mx-5">
+                                    <div class="grid sm:grid-cols-2 gap-4 mt-5 mx-5">
                                         <!-- Left Column -->
                                         <div class="space-y-4">
                                             <input type="text" name="crd_name" required placeholder="Cardholder's Name"
                                                    class="kt-input w-full"
-                                                   {% if billing %}value="{{ billing.customer_name|default:'' }}"{% endif %}/>
+                                                   {% if billing %}value="{{ billing.customer_name|default:user.get_full_name }}"{% endif %}/>
 
                                             <div id="card-element" class="border p-3 rounded bg-muted/10"></div>
 
@@ -104,7 +137,7 @@
                                                 <option value="">Select Country</option>
                                                 <option value="US" {% if billing and billing.customer_country == "US" %}selected{% endif %}>United States</option>
                                                 <option value="IN" {% if billing and billing.customer_country == "IN" %}selected{% endif %}>India</option>
-                                                <!-- Add more countries if needed -->
+                                                <!-- Add more countries as needed -->
                                             </select>
 
                                             <input type="text" name="customer_country_code" required placeholder="Country Code (e.g. US)"
@@ -116,12 +149,11 @@
                                     <!-- Submit -->
                                     <div class="mx-5">
                                         <button class="kt-btn kt-btn-danger w-full mt-4 mb-5" type="submit">
-                                            Pay with Stripe (USD)
+                                            Pay with Stripe (USD {{ order_summary.total|floatformat:2 }})
                                         </button>
                                     </div>
                                 </form>
                             </div>
-
 
                             <!-- Razorpay -->
                             <div class="kt-card" id="razorpay-card" hidden>
@@ -134,15 +166,15 @@
                                 <form id="razorpay-form" method="post" action=".">
                                     {% csrf_token %}
                                     <input type="hidden" name="payment_method" value="razorpay">
-                                    <!-- Hidden Inputs in Razorpay Form -->
                                     <input type="hidden" id="razorpay_payment_id" name="razorpay_payment_id">
                                     <input type="hidden" id="razorpay_order_id" name="razorpay_order_id">
                                     <input type="hidden" id="razorpay_signature" name="razorpay_signature">
                                     <div class="mx-5 mb-5">
-                                        <button type="button" id="rzp-button" class="kt-btn kt-btn-primary w-full">Pay with Razorpay</button>
+                                        <button type="button" id="rzp-button" class="kt-btn kt-btn-primary w-full">
+                                            Pay with Razorpay (₹{{ order_summary.total|floatformat:2 }})
+                                        </button>
                                     </div>
                                 </form>
-
                             </div>
                         </div>
 
@@ -154,44 +186,53 @@
                         </div>
                     </div>
 
-                    <!-- Right Side -->
+                    <!-- Right Side: Order Summary -->
                     <div class="lg:col-span-1" id="order-summary-box">
                         <div class="kt-card bg-accent/50">
                             <div class="kt-card-header px-5">
-                                <h3 class="kt-card-title">
-                                    Order Summary
-                                </h3>
+                                <h3 class="kt-card-title">Order Summary</h3>
                             </div>
                             <div class="kt-card-content px-0 py-5 space-y-2">
                                 <div class="flex flex-col px-5">
                                     <span class="text-sm font-medium text-mono mb-1.5">
-                                        Shipping to Jeroen’s Home
+                                        {% if billing %}
+                                            Shipping to {{ billing.address_title|default:"Default Address" }}
+                                        {% else %}
+                                            No shipping address selected
+                                        {% endif %}
                                     </span>
                                     <div class="flex flex-col gap-1 text-xs font-normal text-secondary-foreground">
-                                        <span>Jeroen van Dijk</span>
-                                        <span>Keizersgracht 172</span>
-                                        <span>1016 DW, Amsterdam</span>
-                                        <span>Netherlands</span>
+                                        {% if billing %}
+                                            <span>{{ user.first_name }} {{ user.last_name }}</span>
+                                            <span>{{ billing.customer_address1 }}</span>
+                                            {% if billing.customer_address2 %}
+                                                <span>{{ billing.customer_address2 }}</span>
+                                            {% endif %}
+                                            <span>{{ billing.customer_city }}, {{ billing.customer_state }} {{ billing.customer_postal_code }}</span>
+                                            <span>{{ billing.customer_country }}</span>
+                                        {% else %}
+                                            <span>Please select an address</span>
+                                        {% endif %}
                                     </div>
                                 </div>
                                 <div class="border-b border-border mb-4 mt-5"></div>
                                 <span class="text-sm font-medium block text-mono mb-3.5 px-5">Price Details</span>
                                 <div class="flex justify-between items-center px-5">
                                     <span class="text-sm font-normal text-secondary-foreground">Subtotal</span>
-                                    <span class="text-sm font-medium text-mono" id="price-subtotal">$492.00</span>
+                                    <span class="text-sm font-medium text-mono" id="price-subtotal">{{ currency_symbol }}{{ order_summary.subtotal|floatformat:2 }}</span>
                                 </div>
                                 <div class="flex justify-between items-center px-5">
                                     <span class="text-sm font-normal text-secondary-foreground">Shipping</span>
-                                    <span class="text-sm font-medium text-mono">$0.00</span>
+                                    <span class="text-sm font-medium text-mono">{{ currency_symbol }}{{ order_summary.shipping|floatformat:2 }}</span>
                                 </div>
                                 <div class="flex justify-between items-center px-5">
                                     <span class="text-sm font-normal text-secondary-foreground">VAT</span>
-                                    <span class="text-sm font-medium text-mono">$0.00</span>
+                                    <span class="text-sm font-medium text-mono">{{ currency_symbol }}{{ order_summary.vat|floatformat:2 }}</span>
                                 </div>
                             </div>
                             <div class="kt-card-footer flex justify-between items-center px-5">
                                 <span class="text-sm font-normal text-secondary-foreground">Total</span>
-                                <span class="text-base font-semibold text-mono" id="price-total">$492.00</span>
+                                <span class="text-base font-semibold text-mono" id="price-total">{{ currency_symbol }}{{ order_summary.total|floatformat:2 }}</span>
                             </div>
                         </div>
                     </div>
@@ -220,7 +261,7 @@
             "Cash on Delivery": "$",
             "Stripe": "$",
             "Razorpay": "₹"
-        }
+        };
 
         function hideAll() {
             Object.values(cards).forEach(card => card.hidden = true);
@@ -228,8 +269,13 @@
 
         function updateCurrency(value) {
             const symbol = currencyMap[value] || "$";
-            subtotalEl.textContent = `${symbol}492.00`;
-            totalEl.textContent = `${symbol}492.00`;
+            subtotalEl.textContent = `${symbol}{{ order_summary.subtotal|floatformat:2 }}`;
+            totalEl.textContent = `${symbol}{{ order_summary.total|floatformat:2 }}`;
+            document.querySelectorAll('.kt-card-content .text-mono:not(#price-subtotal, #price-total)').forEach(el => {
+                if (el.textContent.includes('$') || el.textContent.includes('₹')) {
+                    el.textContent = `${symbol}${el.textContent.replace(/[$₹]/, '')}`;
+                }
+            });
         }
 
         dropdown.addEventListener('change', function () {
@@ -283,9 +329,8 @@
                     currency: "INR",
                     name: "Checkout",
                     description: "Complete your payment",
-                    order_id: "{{ razorpay_order_id }}", // Pass Razorpay order ID
+                    order_id: "{{ razorpay_order_id }}",
                     handler: function (response) {
-                        // ✅ Set values from Razorpay into hidden fields
                         document.getElementById("razorpay_payment_id").value = response.razorpay_payment_id;
                         document.getElementById("razorpay_order_id").value = response.razorpay_order_id;
                         document.getElementById("razorpay_signature").value = response.razorpay_signature;

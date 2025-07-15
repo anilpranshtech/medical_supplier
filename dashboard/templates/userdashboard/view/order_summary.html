@@ -47,80 +47,90 @@
                 <!-- begin: grid -->
                 <div class="grid grid-cols-1 xl:grid-cols-3 gap-5 lg:gap-9 mb-5 lg:mb-10">
                     <div class="col-span-2 space-y-5">
-                        {% if cart_items %}
-                        <div class="grid sm:grid-cols-1 gap-5">
-                            {% for item in cart_items %}
-                            <div class="kt-card" id="cart-item-{{ item.product.id }}" data-product='{
-                                "name": "{{ item.product.name|escapejs }}",
-                                "image": "{{ item.product.productimage_set.first.image.url|escapejs }}",
-                                "description": "{{ item.product.description|escapejs }}",
-                                "sku": "{{ item.product.supplier_sku|default:item.product.id|escapejs }}",
-                                "category": "{{ item.product.category.name|default:item.product.sub_category.name|default:item.product.last_category.name|escapejs }}",
-                                "price": "${{ item.get_total_price }}",
-                                "original_price": {% if item.product.offer_percentage and item.product.offer_active %}"${{ item.product.price }}"{% else %}""{% endif %},
-                                "discount": {% if item.product.offer_percentage and item.product.offer_active %}"save {{ item.product.offer_percentage }}%"{% else %}""{% endif %},
-                                "more_info": "{{ item.product.pcs_per_unit|default:'1'|escapejs }} pcs per unit"
-                            }'>
-                                <div class="kt-card-content flex items-center flex-wrap justify-between gap-4.5 p-2 pe-5 relative">
-                                    <!-- Remove Button -->
-                                    <button class="absolute top-2 right-2 text-red-500 hover:text-red-700 remove-from-cart"
-                                            data-item-id="{{ item.product.id }}">
-                                        <i class="ki-filled ki-cross text-lg"></i>
-                                    </button>
-                                    <div class="flex items-center gap-3.5">
-                                        <div class="kt-card flex items-center justify-center bg-accent/50 h-[70px] w-[90px] shadow-none">
-                                            <img alt="{{ item.product.name|escapejs }}" class="cursor-pointer h-[70px]"
-                                                 data-kt-modal-toggle="#modal_shop_product_details"
-                                                 src="{{ item.product.productimage_set.first.image.url }}">
-                                        </div>
-                                        <div class="flex flex-col gap-1">
-                                            <a class="hover:text-primary text-sm font-medium text-mono leading-5.5"
-                                               data-kt-modal-toggle="#modal_shop_product_details" href="#">
-                                                {{ item.product.name }}
-                                            </a>
-                                            <div class="flex items-center gap-1.5">
-                                                <span class="text-xs font-normal text-secondary-foreground uppercase">
-                                                    sku:
-                                                    <span class="text-xs font-medium text-foreground">
-                                                        {{ item.product.supplier_sku|default:item.product.id }}
+                        <div class="kt-card">
+                            <div class="kt-card-content p-5">
+                                <h2 class="text-lg font-medium text-foreground text-center">Shopping Cart</h2>
+                                <div class="flex items-center gap-10 text-sm text-secondary-foreground mt-5">
+                                    <span class="mx-5">Product</span>
+                                    <span class="mx-5">QTY</span>
+                                    <span class="mx-5">Price</span>
+                                </div>
+                                {% if cart_items %}
+                                <div class="grid sm:grid-cols-1 gap-5">
+                                    {% for item in cart_items %}
+                                    <div class="kt-card" id="cart-item-{{ item.product.id }}" data-product='{
+                                        "name": "{{ item.product.name|escapejs }}",
+                                        "image": "{{ item.product.productimage_set.first.image.url|escapejs }}",
+                                        "description": "{{ item.product.description|escapejs }}",
+                                        "sku": "{{ item.product.supplier_sku|default:item.product.id|escapejs }}",
+                                        "category": "{{ item.product.category.name|default:item.product.sub_category.name|default:item.product.last_category.name|escapejs }}",
+                                        "price": "${{ item.get_total_price }}",
+                                        "original_price": {% if item.product.offer_percentage and item.product.offer_active %}"${{ item.product.price }}"{% else %}""{% endif %},
+                                        "discount": {% if item.product.offer_percentage and item.product.offer_active %}"save {{ item.product.offer_percentage }}%"{% else %}""{% endif %},
+                                        "more_info": "{{ item.product.pcs_per_unit|default:'1'|escapejs }} pcs per unit"
+                                    }'>
+                                        <div class="kt-card-content flex items-center flex-wrap justify-between gap-4.5 p-2 pe-5 relative">
+                                            <!-- Remove Button -->
+                                            <button class="absolute top-2 right-2 text-red-500 hover:text-red-700 remove-from-cart"
+                                                    data-item-id="{{ item.product.id }}">
+                                                <i class="ki-filled ki-cross text-lg"></i>
+                                            </button>
+                                            <div class="flex items-center gap-3.5">
+                                                <div class="kt-card flex items-center justify-center bg-accent/50 h-[70px] w-[90px] shadow-none">
+                                                    <img alt="{{ item.product.name|escapejs }}" class="cursor-pointer h-[70px]"
+                                                         data-kt-modal-toggle="#modal_shop_product_details"
+                                                         src="{{ item.product.productimage_set.first.image.url }}">
+                                                </div>
+                                                <div class="flex flex-col gap-1">
+                                                    <a class="hover:text-primary text-sm font-medium text-mono leading-5.5"
+                                                       data-kt-modal-toggle="#modal_shop_product_details" href="#">
+                                                        {{ item.product.name }}
+                                                    </a>
+                                                    <div class="flex items-center gap-1.5">
+                                                        <span class="text-xs font-normal text-secondary-foreground uppercase">
+                                                            sku:
+                                                            <span class="text-xs font-medium text-foreground">
+                                                                {{ item.product.supplier_sku|default:item.product.id }}
+                                                            </span>
+                                                        </span>
+                                                        {% if item.product.offer_percentage and item.product.offer_active %}
+                                                        <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">
+                                                            save {{ item.product.offer_percentage }}%
+                                                        </span>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex flex-col gap-1.5">
+                                                <div class="flex items-center gap-2">
+                                                    <button class="decrease-btn px-2 py-1 bg-gray-200 rounded" data-product-id="{{ item.product.id }}">-</button>
+                                                    <span class="text-xs font-normal text-secondary-foreground text-end quantity">{{ item.quantity }}</span>
+                                                    <button class="increase-btn px-2 py-1 bg-gray-200 rounded" data-product-id="{{ item.product.id }}">+</button>
+                                                </div>
+                                                <div class="flex items-center flex-wrap gap-1.5">
+                                                    {% if item.product.offer_percentage and item.product.offer_active %}
+                                                    <span class="text-sm font-normal text-secondary-foreground line-through">
+                                                        ${{ item.product.price }}
                                                     </span>
-                                                </span>
-                                                {% if item.product.offer_percentage and item.product.offer_active %}
-                                                <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">
-                                                    save {{ item.product.offer_percentage }}%
-                                                </span>
-                                                {% endif %}
+                                                    {% endif %}
+                                                    <span class="text-sm font-semibold text-mono">
+                                                        ${{ item.get_total_price }}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="flex flex-col gap-1.5">
-                                        <div class="flex items-center gap-2">
-                                            <button class="decrease-btn px-2 py-1 bg-gray-200 rounded" data-product-id="{{ item.product.id }}">-</button>
-                                            <span class="text-xs font-normal text-secondary-foreground text-end quantity">{{ item.quantity }}</span>
-                                            <button class="increase-btn px-2 py-1 bg-gray-200 rounded" data-product-id="{{ item.product.id }}">+</button>
-                                        </div>
-                                        <div class="flex items-center flex-wrap gap-1.5">
-                                            {% if item.product.offer_percentage and item.product.offer_active %}
-                                            <span class="text-sm font-normal text-secondary-foreground line-through">
-                                                ${{ item.product.price }}
-                                            </span>
-                                            {% endif %}
-                                            <span class="text-sm font-semibold text-mono">
-                                                ${{ item.get_total_price }}
-                                            </span>
-                                        </div>
-                                    </div>
+                                    {% endfor %}
                                 </div>
+                                {% else %}
+                                <p class="text-muted text-sm font-normal text-center text-secondary-foreground mx-5 mt-5">No products available in Cart</p>
+                                {% endif %}
                             </div>
-                            {% endfor %}
                         </div>
-                        {% else %}
-                        <p class="text-muted text-sm font-normal text-secondary-foreground">Your cart is empty.</p>
-                        {% endif %}
                         <div class="flex justify-end items-center flex-wrap gap-3">
-                            <button class="kt-btn kt-btn-outline" fdprocessedid="1zln6">
+                            <a class="kt-btn kt-btn-outline" fdprocessedid="1zln6" href="{% url 'dashboard:home' %}">
                                 Cancel
-                            </button>
+                            </a>
                             <a class="kt-btn kt-btn-primary"
                                href="{% url 'dashboard:shipping_info' %}">
                                 Shipping Info
@@ -134,10 +144,11 @@
                             <div class="kt-card bg-accent/50">
                                 <div class="kt-card-header px-5">
                                     <h3 class="kt-card-title">
-                                        Order Summary
+                                        Cart Summary
                                     </h3>
                                 </div>
                                 <div class="kt-card-content px-5 py-4 space-y-2">
+                                    {% if cart_items %}
                                     <h4 class="text-sm font-medium text-mono mb-3.5">
                                         Price Details
                                     </h4>
@@ -165,6 +176,9 @@
                                             $0.00
                                         </span>
                                     </div>
+                                    {% else %}
+                                    <p class="text-muted text-sm font-normal text-center text-secondary-foreground">No items in cart to summarize.</p>
+                                    {% endif %}
                                 </div>
                                 <div class="kt-card-footer flex justify-between items-center px-5">
                                     <span class="text-sm font-normal text-secondary-foreground">
