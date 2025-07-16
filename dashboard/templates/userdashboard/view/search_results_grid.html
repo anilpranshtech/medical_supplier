@@ -1,6 +1,5 @@
 {% extends "pages/base.html" %}
 {% load static %}
-
 {% block content %}
 <style>
     .kt-wishlist-icon.active i.ki-filled.ki-heart {
@@ -20,17 +19,19 @@
         height: fit-content;
     }
 
-    .kt-product-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr 1fr; 
-        gap: 15px;
-    }
+  .kt-product-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); 
+    gap: 20px;
+}
+
 .kt-category-grid {
     display: grid;
-    grid-template-columns: 1fr 3fr; 
+    grid-template-columns: 0.8fr 3.2fr; 
     gap: 20px;
     width: 100%;
 }
+
 
 .amazon-sidebar {
     border-right: 1px solid #e0e0e0;
@@ -43,12 +44,82 @@
     .heart-icon {
         transition: color 0.2s ease-in-out;
     }  
+.rotate-180 {
+        transform: rotate(180deg);
+    }
+
+    .kt-select-wrapper {
+    position: relative; 
+}
+
+.kt-select-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background-color: white;
+    border: 1px solid #ccc;
+    margin-top: 4px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 105;
+}
+
+.amazon-sidebar h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    text-transform: uppercase;
+    color: #111827;
+}
+
+.category-button {
+    font-size: 1.1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: none;
+    border: none;
+    width: 100%;
+    padding: 0.5rem 0;
+    color: #1f2937;
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+}
+
+.category-button:hover {
+    color: #3b82f6;
+}
+
+.subcategory-list {
+    margin-left: 1.5rem;
+    margin-top: 0.25rem;
+}
+
+.subcategory-list a {
+    display: block;
+    padding: 4px 0;
+    font-size: 0.95rem;
+    color: #4b5563;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.subcategory-list a:hover {
+    color: #3b82f6;
+    
+}
+
+.rotate-180 {
+    transform: rotate(180deg);
+}
+
 </style>
 
 <title>Search Results - Medical Supplies</title>
 <div class="kt-container-fixed mt-1" style="max-width: var(--custom-container-width, 90%);">
     <div class="flex flex-col items-stretch gap-7 mt-5 py-5">
-        <div class="flex items-center gap-3 w-full">
+        <!-- <div class="flex items-center gap-3 w-full">
             <div class="kt-input w-full">
                 <i class="ki-filled ki-magnifier"></i>
                 <input placeholder="" type="text" value="Medical Supplies" fdprocessedid="imlqyi">
@@ -59,25 +130,26 @@
                 <i class="ki-filled ki-filter"></i>
                 Filter
             </button>
-        </div>
+        </div> -->
         <div class="flex flex-wrap items-center gap-5 justify-between mt-3">
-            <h3 class="text-sm text-mono font-medium">
-                1 - 12 over 280 results for
-                <span class="text-destructive">Medical Supplies</span>
-            </h3>
+            {% if page_obj %}
+    <h3 class="text-sm text-mono font-medium">
+        {{ page_obj.start_index }} - {{ page_obj.end_index }} over {{ total_products }} results for
+        <span class="text-destructive">
+            {{ selected_last_category.name|default:selected_sub_category.name|default:selected_category.name|default:"Products" }}
+        </span>
+    </h3>
+{% endif %}
+
             <div class="flex items-center gap-2.5">
-                <select class="hidden" data-kt-select="true" name="kt-select" data-kt-select-initialized="true">
-                    <option selected="" value="1" data-kt-select-option-initialized="true">Price High to Low</option>
-                    <option value="2" data-kt-select-option-initialized="true">Price Low to High</option>
-                    <option value="3" data-kt-select-option-initialized="true">Newest</option>
-                    <option value="4" data-kt-select-option-initialized="true">Best Rated</option>
-                </select>
                 <div data-kt-select-wrapper="" class="kt-select-wrapper w-[175px] bg-background">
                     <div data-kt-select-display="" class="kt-select-display kt-select" tabindex="0" role="button"
                          data-selected="0" aria-haspopup="listbox" aria-expanded="false" aria-label="Select an option"
                          fdprocessedid="d8gn9b">
-                        Price High to Low
+                        Price Low to High
                     </div>
+
+                    
                     <div data-kt-select-dropdown="" class="kt-select-dropdown hidden" style="z-index: 105;">
                         <ul role="listbox" aria-label="Select an option" class="kt-select-options"
                             data-kt-select-options="true">
@@ -99,50 +171,15 @@
                                     <path d="M20 6 9 17l-5-5"></path>
                                 </svg>
                             </li>
-                            <li data-kt-select-option="" data-value="3" data-text="Newest" class="kt-select-option"
-                                role="option" aria-selected="false">
-                                <div class="kt-select-option-text" data-kt-text-container="true">Newest</div>
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                     stroke-linecap="round" stroke-linejoin="round"
-                                     class="size-3.5 ms-auto hidden text-primary kt-select-option-selected:block">
-                                    <path d="M20 6 9 17l-5-5"></path>
-                                </svg>
-                            </li>
-                            <li data-kt-select-option="" data-value="4" data-text="Best Rated" class="kt-select-option"
-                                role="option" aria-selected="false">
-                                <div class="kt-select-option-text" data-kt-text-container="true">Best Rated</div>
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                     stroke-linecap="round" stroke-linejoin="round"
-                                     class="size-3.5 ms-auto hidden text-primary kt-select-option-selected:block">
-                                    <path d="M20 6 9 17l-5-5"></path>
-                                </svg>
-                            </li>
-                        </ul>
+                           </ul>
                     </div>
                 </div>
-                <div class="kt-toggle-group">
-                    <label class="kt-btn">
-                        Week
-                        <input name="search-date-range" type="radio" value="week">
-                    </label>
-                    <label class="kt-btn">
-                        Today
-                        <input checked="" name="search-date-range" type="radio" value="today">
-                    </label>
-                    <label class="kt-btn">
-                        Month
-                        <input name="search-date-range" type="radio" value="month">
-                    </label>
-                    <label class="kt-btn">
-                        All
-                        <input name="search-date-range" type="radio" value="all">
-                    </label>
-                </div>
+              
                 <div class="kt-toggle-group" data-kt-tabs="true" data-kt-tabs-initialized="true">
                     <a class="kt-btn kt-btn-icon active" data-kt-tab-toggle="#shop1_grids" href="#">
                         <i class="ki-filled ki-category"></i>
                     </a>
-                    <a class="kt-btn kt-btn-icon" data-kt-tab-toggle="#shop1_lists" href="#">
+                    <a class="kt-btn kt-btn-icon" data-kt-tab-toggle="#shop1_lists" href="{%url 'dashboard:search_results_list' %}">
                         <i class="ki-filled ki-row-horizontal"></i>
                     </a>
                 </div>
@@ -153,32 +190,36 @@
     <!-- Category Column -->
 
 <div class="amazon-sidebar w-full md:w-1/4 pr-6">
-    <h2 class="text-base font-bold mb-4 uppercase  pb-1">Category</h2>
+    <h2 class="text-base font-bold mb-4 uppercase pb-1">Category</h2>
 
-    {% for category in categories %}
-    <div class="mb-4">
-        <button onclick="toggleCategory('cat-{{ category.id }}')"
-                class="text-sm font-bold text-gray-800 hover:text-blue-600 w-full text-left">
-            {{ category.name }}
+   
+{% for category in categories %}
+    <div class="mb-3">
+        <button type="button" onclick="toggleCategory('cat-{{ category.id }}')" class="category-button">
+            <span>{{ category.name }}</span>
+            <svg id="arrow-{{ category.id }}" class="w-4 h-4 transform transition-transform duration-200"
+                 xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
         </button>
-        <div id="cat-{{ category.id }}" class="mt-2 ml-4 hidden">
-            <ul class="space-y-1">
+
+        <div id="cat-{{ category.id }}" class="subcategory-list hidden">
+            <ul>
                 {% for subcategory in category.productsubcategory_set.all %}
                     {% for lastcategory in subcategory.productlastcategory_set.all %}
                         {% if lastcategory.product_set.count > 0 %}
-                        <li>
-                            <a href="?last_category={{ lastcategory.id }}"
-                               class="text-sm text-gray-600 hover:text-primary hover:underline">
-                                • {{ lastcategory.name }}
-                            </a>
-                        </li>
+                            <li>
+                                <a href="?last_category={{ lastcategory.id }}">• {{ lastcategory.name }}</a>
+                            </li>
                         {% endif %}
                     {% endfor %}
                 {% endfor %}
             </ul>
         </div>
     </div>
-    {% endfor %}
+{% endfor %}
+
+
 </div>
 
   
@@ -248,7 +289,7 @@
                             </div>
                             {% else %}
                             {{ product.name }}<br>
-                              {{ product.description|default:"No description available"|truncatechars:120 }}
+                           
                             {% endif %}
                         </a>
                     </div>
@@ -290,8 +331,46 @@
                 <p>No products found in this category.</p>
             </div>
             {% endfor %}
+            {% if page_obj.has_other_pages %}
+    <div class="col-span-4 mt-10 flex justify-center w-full">
+        <ul class="inline-flex items-center -space-x-px text-sm">
+            {% if page_obj.has_previous %}
+                <li>
+                    <a href="?{% if selected_last_category %}last_category={{ selected_last_category.id }}&{% elif selected_sub_category %}sub_category={{ selected_sub_category.id }}&{% elif selected_category %}category={{ selected_category.id }}&{% endif %}page={{ page_obj.previous_page_number }}"
+                       class="kt-btn kt-btn-outline me-2">
+                        Previous
+                    </a>
+                </li>
+            {% endif %}
+
+            {% for num in paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <li><span class="kt-btn kt-btn-primary me-2">{{ num }}</span></li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li>
+                        <a href="?{% if selected_last_category %}last_category={{ selected_last_category.id }}&{% elif selected_sub_category %}sub_category={{ selected_sub_category.id }}&{% elif selected_category %}category={{ selected_category.id }}&{% endif %}page={{ num }}"
+                           class="kt-btn kt-btn-outline me-2">
+                            {{ num }}
+                        </a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <li>
+                    <a href="?{% if selected_last_category %}last_category={{ selected_last_category.id }}&{% elif selected_sub_category %}sub_category={{ selected_sub_category.id }}&{% elif selected_category %}category={{ selected_category.id }}&{% endif %}page={{ page_obj.next_page_number }}"
+                       class="kt-btn kt-btn-outline">
+                        Next
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </div>
+{% endif %}
+
         {% endif %}
     </div>
+    
 </div>
 
 <script>
@@ -312,10 +391,40 @@
   }
   const csrftoken = getCookie('csrftoken');
 
- function toggleCategory(id) {
-        const el = document.getElementById(id);
-        el.classList.toggle('hidden');
-    }
+  // Toggle only one open category at a time
+  function toggleCategory(id) {
+      // Close all categories first
+      document.querySelectorAll('[id^="cat-"]').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('[id^="arrow-"]').forEach(arrow => arrow.classList.remove('rotate-180'));
+
+      const content = document.getElementById(id);
+      const arrow = document.getElementById("arrow-" + id.replace("cat-", ""));
+
+      const alreadyOpen = !content.classList.contains("hidden");
+
+      if (!alreadyOpen) {
+          content.classList.remove("hidden");
+          arrow.classList.add("rotate-180");
+          localStorage.setItem('openCategory', id);
+      } else {
+          content.classList.add("hidden");
+          arrow.classList.remove("rotate-180");
+          localStorage.removeItem('openCategory');
+      }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+      // Open last selected category
+      const openId = localStorage.getItem('openCategory');
+      if (openId) {
+          const el = document.getElementById(openId);
+          const arrow = document.getElementById("arrow-" + openId.replace("cat-", ""));
+          if (el && arrow) {
+              el.classList.remove("hidden");
+              arrow.classList.add("rotate-180");
+          }
+      }
+    })
 //add to cart
     document.addEventListener('DOMContentLoaded', () => {
               const markAsInCart = (btn) => {
@@ -384,6 +493,38 @@ document.querySelectorAll('.add-to-cart-btn').forEach(button => {
                 .catch(error => console.error('Wishlist toggle error:', error));
         });
     });
+    //pricing filter
+document.addEventListener('DOMContentLoaded', () => {
+    const selectDisplay = document.querySelector('[data-kt-select-display]');
+    const selectDropdown = document.querySelector('[data-kt-select-dropdown]');
+    const selectOptions = document.querySelectorAll('[data-kt-select-option]');
 
+    selectDisplay.addEventListener('click', () => {
+        selectDropdown.classList.toggle('hidden');
+        selectDisplay.setAttribute('aria-expanded', selectDropdown.classList.contains('hidden') ? 'false' : 'true');
+    });
+
+
+    selectOptions.forEach(option => {
+        option.addEventListener('click', () => {
+            const value = option.getAttribute('data-value');
+
+    
+            const params = new URLSearchParams(window.location.search);
+            params.set('sort_by', value);
+            params.set('page', 1);  
+
+            window.location.search = params.toString();
+        });
+    });
+
+
+    document.addEventListener('click', (e) => {
+        if (!selectDisplay.contains(e.target) && !selectDropdown.contains(e.target)) {
+            selectDropdown.classList.add('hidden');
+            selectDisplay.setAttribute('aria-expanded', 'false');
+        }
+    });
+});
 </script>
 {% endblock content %}

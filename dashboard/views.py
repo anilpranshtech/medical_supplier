@@ -414,6 +414,8 @@ class UploadProfilePictureView(LoginRequiredMixin, View):
 
 # ------------------------------------------------------------------------------------------------------------------------
 from django.db.models import Count, Prefetch
+from django.core.paginator import Paginator
+
 class SearchResultsGridView(TemplateView):
     template_name = 'userdashboard/view/search_results_grid.html'
 
@@ -423,17 +425,113 @@ class SearchResultsGridView(TemplateView):
         category_id = self.request.GET.get('category')
         sub_category_id = self.request.GET.get('sub_category')
         last_category_id = self.request.GET.get('last_category')
+        sort_by = self.request.GET.get('sort_by')
+        page = self.request.GET.get('page', 1)
 
         context['selected_category'] = None
         context['selected_sub_category'] = None
         context['selected_last_category'] = None
 
-        #LastCategories 
+        # Categories & Subcategories 
         last_categories_with_products = ProductLastCategory.objects.annotate(
             product_count=Count('product')
         ).filter(product_count__gt=0)
 
-        #  SubCategories 
+        valid_subcategory_ids = last_categories_with_products.values_list('sub_category_id', flat=True).distinct()
+        subcategories_with_products = ProductSubCategory.objects.filter(
+            id__in=valid_subcategory_ids
+        ).prefetch_related('productlastcategory_set')
+
+        valid_category_ids = subcategories_with_products.values_list('category_id', flat=True).distinct()
+        categories_with_products = ProductCategory.objects.filter(
+            id__in=valid_category_ids
+        ).prefetch_related('productsubcategory_set')
+
+        context['categories'] = categories_with_products
+
+        # Handle products by last_category
+        if last_category_id:
+            try:
+                last_category = ProductLastCategory.objects.get(id=last_category_id)
+            except ProductLastCategory.DoesNotExist:
+                last_category = None
+
+            if last_category:
+                products = Product.objects.filter(last_category=last_category)
+
+                # Sorting
+                if sort_by == '1':
+                    products = products.order_by('-price')
+                elif sort_by == '2':
+                    products = products.order_by('price')
+                else:
+                    products = products.order_by('-created_at')
+
+                paginator = Paginator(products, 16)
+                page_obj = paginator.get_page(page)
+
+                context.update({
+                    'products': page_obj,
+                    'page_obj': page_obj,
+                    'paginator': paginator,
+                    'selected_last_category': last_category,
+                    'selected_sub_category': last_category.sub_category,
+                    'selected_category': last_category.sub_category.category,
+                    'total_products': paginator.count,
+                })
+
+        elif sub_category_id:
+            try:
+                sub_category = ProductSubCategory.objects.get(id=sub_category_id)
+                context['last_categories'] = last_categories_with_products.filter(sub_category=sub_category)
+                context['selected_sub_category'] = sub_category
+                context['selected_category'] = sub_category.category
+            except ProductSubCategory.DoesNotExist:
+                pass
+
+        elif category_id:
+            try:
+                category = ProductCategory.objects.get(id=category_id)
+                subcategories = ProductSubCategory.objects.filter(category=category)
+                context['last_categories'] = last_categories_with_products.filter(sub_category__in=subcategories)
+                context['selected_category'] = category
+            except ProductCategory.DoesNotExist:
+                pass
+
+        else:
+            context['products'] = None
+
+        # Wishlist/Cart 
+        if self.request.user.is_authenticated:
+            cart_ids = CartProduct.objects.filter(user=self.request.user).values_list('product_id', flat=True)
+            context['user_cart_ids'] = list(cart_ids)
+        else:
+            context['user_cart_ids'] = []
+
+        return context
+    
+class SearchResultsListView(TemplateView):
+    template_name = 'userdashboard/view/search_results_list.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        category_id = self.request.GET.get('category')
+        sub_category_id = self.request.GET.get('sub_category')
+        last_category_id = self.request.GET.get('last_category')
+        sort_by = self.request.GET.get('sort_by')
+        page = self.request.GET.get('page', 1)
+
+        context['selected_category'] = None
+        context['selected_sub_category'] = None
+        context['selected_last_category'] = None
+
+        # LastCategories 
+        last_categories_with_products = ProductLastCategory.objects.annotate(
+            product_count=Count('product')
+        ).filter(product_count__gt=0)
+
+        # SubCategories 
         valid_subcategory_ids = last_categories_with_products.values_list('sub_category_id', flat=True).distinct()
         subcategories_with_products = ProductSubCategory.objects.filter(
             id__in=valid_subcategory_ids
@@ -450,97 +548,60 @@ class SearchResultsGridView(TemplateView):
         )
 
         context['categories'] = categories_with_products
-        if last_category_id:
-            last_category = ProductLastCategory.objects.get(id=last_category_id)
-            context['products'] = Product.objects.filter(last_category=last_category)
-            context['selected_last_category'] = last_category
-            context['selected_sub_category'] = last_category.sub_category
-            context['selected_category'] = last_category.sub_category.category
-
-        elif sub_category_id:
-            sub_category = ProductSubCategory.objects.get(id=sub_category_id)
-            context['last_categories'] = last_categories_with_products.filter(sub_category=sub_category)
-            context['selected_sub_category'] = sub_category
-            context['selected_category'] = sub_category.category
-
-    
-        elif category_id:
-            category = ProductCategory.objects.get(id=category_id)
-            context['selected_category'] = category
-            subcategories = ProductSubCategory.objects.filter(category=category)
-            context['last_categories'] = last_categories_with_products.filter(sub_category__in=subcategories)
-
-        if self.request.user.is_authenticated:
-            cart_product_ids = CartProduct.objects.filter(
-                user=self.request.user
-            ).values_list('product_id', flat=True)
-            context['user_cart_ids'] = list(cart_product_ids)
-        else:
-            context['user_cart_ids'] = []
-
-        return context
-
-class SearchResultsListView(TemplateView):
-    template_name = 'userdashboard/view/search_results_list.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
-        category_id = self.request.GET.get('category')
-        sub_category_id = self.request.GET.get('sub_category')
-        last_category_id = self.request.GET.get('last_category')
-
-        context['selected_category'] = None
-        context['selected_sub_category'] = None
-        context['selected_last_category'] = None
-
-        #  LastCategories 
-        last_categories_with_products = ProductLastCategory.objects.annotate(
-            product_count=Count('product')
-        ).filter(product_count__gt=0)
-
-        # SubCategories 
-        valid_subcategory_ids = last_categories_with_products.values_list('sub_category_id', flat=True).distinct()
-        subcategories_with_products = ProductSubCategory.objects.filter(
-            id__in=valid_subcategory_ids
-        ).prefetch_related(
-            Prefetch('productlastcategory_set', queryset=last_categories_with_products)
-        )
-
-        #  Categories 
-        valid_category_ids = subcategories_with_products.values_list('category_id', flat=True).distinct()
-        categories_with_products = ProductCategory.objects.filter(
-            id__in=valid_category_ids
-        ).prefetch_related(
-            Prefetch('productsubcategory_set', queryset=subcategories_with_products)
-        )
-
-        context['categories'] = categories_with_products
 
         if last_category_id:
-            last_category = ProductLastCategory.objects.get(id=last_category_id)
-            context['products'] = Product.objects.filter(last_category=last_category)
-            context['selected_last_category'] = last_category
-            context['selected_sub_category'] = last_category.sub_category
-            context['selected_category'] = last_category.sub_category.category
+            try:
+                last_category = ProductLastCategory.objects.get(id=last_category_id)
+                products = Product.objects.filter(last_category=last_category)
+
+                # sorting 
+                if sort_by == '1':
+                    products = products.order_by('-price')
+                elif sort_by == '2':
+                    products = products.order_by('price')
+                else:
+                    products = products.order_by('-created_at')
+
+                # Pagination 
+                paginator = Paginator(products, 10)
+                page_obj = paginator.get_page(page)
+
+                context.update({
+                    'products': page_obj,
+                    'page_obj': page_obj,
+                    'paginator': paginator,
+                    'total_products': paginator.count,
+                    'selected_last_category': last_category,
+                    'selected_sub_category': last_category.sub_category,
+                    'selected_category': last_category.sub_category.category,
+                })
+
+
+            except ProductLastCategory.DoesNotExist:
+                pass
 
         elif sub_category_id:
-            sub_category = ProductSubCategory.objects.get(id=sub_category_id)
-            context['last_categories'] = last_categories_with_products.filter(sub_category=sub_category)
-            context['selected_sub_category'] = sub_category
-            context['selected_category'] = sub_category.category
+            try:
+                sub_category = ProductSubCategory.objects.get(id=sub_category_id)
+                context['last_categories'] = last_categories_with_products.filter(sub_category=sub_category)
+                context['selected_sub_category'] = sub_category
+                context['selected_category'] = sub_category.category
+            except ProductSubCategory.DoesNotExist:
+                pass
 
         elif category_id:
-            category = ProductCategory.objects.get(id=category_id)
-            context['selected_category'] = category
-            subcategories = ProductSubCategory.objects.filter(category=category)
-            context['last_categories'] = last_categories_with_products.filter(sub_category__in=subcategories)
+            try:
+                category = ProductCategory.objects.get(id=category_id)
+                subcategories = ProductSubCategory.objects.filter(category=category)
+                context['last_categories'] = last_categories_with_products.filter(sub_category__in=subcategories)
+                context['selected_category'] = category
+            except ProductCategory.DoesNotExist:
+                pass
 
+        # Wishlist/Cart 
         if self.request.user.is_authenticated:
-            cart_product_ids = CartProduct.objects.filter(
-                user=self.request.user
-            ).values_list('product_id', flat=True)
-            context['user_cart_ids'] = list(cart_product_ids)
+            cart_ids = CartProduct.objects.filter(user=self.request.user).values_list('product_id', flat=True)
+            context['user_cart_ids'] = list(cart_ids)
         else:
             context['user_cart_ids'] = []
 

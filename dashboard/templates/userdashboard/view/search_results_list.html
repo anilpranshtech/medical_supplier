@@ -65,7 +65,7 @@
 
 .kt-category-grid {
     display: grid;
-    grid-template-columns: 1fr 3fr; 
+      grid-template-columns: 0.8fr 3.2fr; 
     gap: 20px;
     width: 100%;
 }
@@ -80,28 +80,102 @@
 .kt-product-list {
     padding-left: 10px;
 }
+.amazon-sidebar {
+    border-right: 1px solid #e0e0e0;
+    padding-right: 16px;
+}
+.text-red-500 {
+        color: #ef4444 !important;
+    }
+
+    .heart-icon {
+        transition: color 0.2s ease-in-out;
+    }  
+.rotate-180 {
+        transform: rotate(180deg);
+    }
+
+    .kt-select-wrapper {
+    position: relative; 
+}
+
+.kt-select-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background-color: white;
+    border: 1px solid #ccc;
+    margin-top: 4px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 105;
+}
+
+.amazon-sidebar h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    text-transform: uppercase;
+    color: #111827;
+}
+
+.category-button {
+    font-size: 1.1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: none;
+    border: none;
+    width: 100%;
+    padding: 0.5rem 0;
+    color: #1f2937;
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+}
+
+.category-button:hover {
+    color: #3b82f6;
+}
+
+.subcategory-list {
+    margin-left: 1.5rem;
+    margin-top: 0.25rem;
+}
+
+.subcategory-list a {
+    display: block;
+    padding: 4px 0;
+    font-size: 0.95rem;
+    color: #4b5563;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.subcategory-list a:hover {
+    color: #3b82f6;
+    
+}
+
+.rotate-180 {
+    transform: rotate(180deg);
+}
 
 </style>
 
 <title>Search Results - Medical Supplies</title>
 <div class="kt-container-fixed mt-1" style="max-width: var(--custom-container-width, 90%);">
     <div class="flex flex-col items-stretch gap-7 mt-5 py-5">
-        <div class="flex items-center gap-3 w-full">
-            <div class="kt-input w-full">
-                <i class="ki-filled ki-magnifier"></i>
-                <input placeholder="" type="text" value="Medical Supplies" fdprocessedid="imlqyi">
-                <span class="kt-badge kt-badge-outline -me-1.5">⌘ K</span>
-            </div>
-            <button class="kt-dropdown-toggle kt-btn kt-btn-primary" data-kt-drawer-toggle="#drawers_shop_filter"
-                    fdprocessedid="g9axil">
-                <i class="ki-filled ki-filter"></i>
-                Filter
-            </button>
-        </div>
+        
         <div class="flex flex-wrap items-center gap-5 justify-between mt-3">
-            <h3 class="text-sm text-mono font-medium">
-                1 - {{ products|length }} over {{ products.count }} results
-            </h3>
+           <h3 class="text-sm text-mono font-medium">
+    {% if page_obj %}
+        {{ page_obj.start_index }} - {{ page_obj.end_index }} over {{ total_products }} results for
+        <span class="text-destructive">
+            {{ selected_last_category.name|default:selected_sub_category.name|default:selected_category.name|default:"Products" }}
+        </span>
+    {% endif %}
+</h3>
             <div class="flex items-center gap-2.5">
                 <div data-kt-select-wrapper="" class="kt-select-wrapper w-[175px] bg-background">
                     <div data-kt-select-display="" class="kt-select-display kt-select" tabindex="0" role="button"
@@ -127,30 +201,32 @@
         <div class="kt-category-grid">
             <div class="amazon-sidebar w-full md:w-1/4 pr-6">
                 <h2 class="text-base font-bold mb-4 uppercase pb-1">Category</h2>
-                {% for category in categories %}
-                <div class="mb-4">
-                    <button onclick="toggleCategory('cat-{{ category.id }}')"
-                            class="text-sm font-bold text-gray-800 hover:text-blue-600 w-full text-left">
-                        {{ category.name }}
-                    </button>
-                    <div id="cat-{{ category.id }}" class="mt-2 ml-4 hidden">
-                        <ul class="space-y-1">
-                            {% for subcategory in category.productsubcategory_set.all %}
-                                {% for lastcategory in subcategory.productlastcategory_set.all %}
-                                    {% if lastcategory.product_set.count > 0 %}
-                                    <li>
-                                        <a href="?last_category={{ lastcategory.id }}"
-                                           class="text-sm text-gray-600 hover:text-primary hover:underline">
-                                            • {{ lastcategory.name }}
-                                        </a>
-                                    </li>
-                                    {% endif %}
-                                {% endfor %}
-                            {% endfor %}
-                        </ul>
-                    </div>
-                </div>
+               {% for category in categories %}
+    <div class="mb-3">
+        <button type="button" onclick="toggleCategory('cat-{{ category.id }}')" class="category-button">
+            <span>{{ category.name }}</span>
+            <svg id="arrow-{{ category.id }}" class="w-4 h-4 transform transition-transform duration-200"
+                 xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+        </button>
+
+        <div id="cat-{{ category.id }}" class="subcategory-list hidden">
+            <ul>
+                {% for subcategory in category.productsubcategory_set.all %}
+                    {% for lastcategory in subcategory.productlastcategory_set.all %}
+                        {% if lastcategory.product_set.count > 0 %}
+                            <li>
+                                <a href="?last_category={{ lastcategory.id }}">• {{ lastcategory.name }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
                 {% endfor %}
+            </ul>
+        </div>
+    </div>
+{% endfor %}
+
             </div>
             
             <!-- Product List  -->
@@ -282,6 +358,42 @@
                         <p>No products found in this category.</p>
                     </div>
                     {% endfor %}
+                    {% if page_obj.has_other_pages %}
+    <div class="mt-10 flex justify-center w-full">
+        <ul class="inline-flex items-center -space-x-px text-sm">
+            {% if page_obj.has_previous %}
+                <li>
+                    <a href="?{% if selected_last_category %}last_category={{ selected_last_category.id }}&{% elif selected_sub_category %}sub_category={{ selected_sub_category.id }}&{% elif selected_category %}category={{ selected_category.id }}&{% endif %}page={{ page_obj.previous_page_number }}"
+                       class="kt-btn kt-btn-outline me-2">
+                        Previous
+                    </a>
+                </li>
+            {% endif %}
+
+            {% for num in paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <li><span class="kt-btn kt-btn-primary me-2">{{ num }}</span></li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li>
+                        <a href="?{% if selected_last_category %}last_category={{ selected_last_category.id }}&{% elif selected_sub_category %}sub_category={{ selected_sub_category.id }}&{% elif selected_category %}category={{ selected_category.id }}&{% endif %}page={{ num }}"
+                           class="kt-btn kt-btn-outline me-2">
+                            {{ num }}
+                        </a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <li>
+                    <a href="?{% if selected_last_category %}last_category={{ selected_last_category.id }}&{% elif selected_sub_category %}sub_category={{ selected_sub_category.id }}&{% elif selected_category %}category={{ selected_category.id }}&{% endif %}page={{ page_obj.next_page_number }}"
+                       class="kt-btn kt-btn-outline">
+                        Next
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </div>
+{% endif %}
                 {% endif %}
             </div>
         </div>
