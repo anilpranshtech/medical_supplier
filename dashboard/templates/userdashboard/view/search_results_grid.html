@@ -62,7 +62,7 @@
         </div>
         <div class="flex flex-wrap items-center gap-5 justify-between mt-3">
             <h3 class="text-sm text-mono font-medium">
-                1 - 12 over 280 results for
+                1 - {{ products|length }} over {{ products.count }} results for
                 <span class="text-destructive">Medical Supplies</span>
             </h3>
             <div class="flex items-center gap-2.5">
@@ -120,6 +120,7 @@
                         </ul>
                     </div>
                 </div>
+                {% comment %}
                 <div class="kt-toggle-group">
                     <label class="kt-btn">
                         Week
@@ -138,11 +139,14 @@
                         <input name="search-date-range" type="radio" value="all">
                     </label>
                 </div>
+                {% endcomment %}
                 <div class="kt-toggle-group" data-kt-tabs="true" data-kt-tabs-initialized="true">
-                    <a class="kt-btn kt-btn-icon active" data-kt-tab-toggle="#shop1_grids" href="#">
+                    <a class="kt-btn kt-btn-icon active" href="{% url 'dashboard:search_results_grid' %}?{{ request.GET.urlencode }}"
+                       data-kt-tab-toggle="#shop1_grids">
                         <i class="ki-filled ki-category"></i>
                     </a>
-                    <a class="kt-btn kt-btn-icon" data-kt-tab-toggle="#shop1_lists" href="#">
+                    <a class="kt-btn kt-btn-icon" href="{% url 'dashboard:search_results_list' %}?{{ request.GET.urlencode }}"
+                       data-kt-tab-toggle="#shop1_lists">
                         <i class="ki-filled ki-row-horizontal"></i>
                     </a>
                 </div>

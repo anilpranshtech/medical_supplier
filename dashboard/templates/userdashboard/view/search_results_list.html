@@ -100,7 +100,8 @@
         </div>
         <div class="flex flex-wrap items-center gap-5 justify-between mt-3">
             <h3 class="text-sm text-mono font-medium">
-                1 - {{ products|length }} over {{ products.count }} results
+                1 - {{ products|length }} over {{ products.count }} results for
+                <span class="text-destructive">Medical Supplies</span>
             </h3>
             <div class="flex items-center gap-2.5">
                 <div data-kt-select-wrapper="" class="kt-select-wrapper w-[175px] bg-background">
@@ -130,7 +131,7 @@
                 {% for category in categories %}
                 <div class="mb-4">
                     <button onclick="toggleCategory('cat-{{ category.id }}')"
-                            class="text-sm font-bold text-gray-800 hover:text-blue-600 w-full text-left">
+                            class="text-sm font-bold text-gray-600 hover:text-blue-600 w-full text-left">
                         {{ category.name }}
                     </button>
                     <div id="cat-{{ category.id }}" class="mt-2 ml-4 hidden">
