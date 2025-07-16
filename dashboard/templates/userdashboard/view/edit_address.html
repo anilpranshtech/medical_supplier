@@ -2,51 +2,59 @@
 {% load static %}
 
 {% block content %}
-<div class="kt-container-fixed mt-7 py-6" style="max-width: var(--custom-container-width, 85%);">
-    <h1 class="font-medium text-lg text-mono">Edit Address</h1>
-    <form method="post" class="kt-card w-full max-w-md mt-4">
+<div class="kt-container-fixed py-8" style="max-width: var(--custom-container-width, 85%);">
+    <h1 class="text-xl font-semibold text-gray-650 mb-6">Edit Address</h1>
+
+    <form method="post" class="kt-card w-full max-w-2xl p-6 space-y-5">
         {% csrf_token %}
-        <div class="kt-card-content space-y-4">
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-                <label class="text-2sm font-semibold text-mono">Address Title</label>
+                <label class="block text-sm font-medium text-gray-650 mb-1">Address Title</label>
                 {{ form.address_title }}
             </div>
             <div>
-                <label class="text-2sm font-semibold text-mono">Full Name</label>
+                <label class="block text-sm font-medium text-gray-650 mb-1">Full Name</label>
                 {{ form.full_name }}
             </div>
-            <div>
-                <label class="text-2sm font-semibold text-mono">Street Address</label>
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-650 mb-1">Street Address</label>
                 {{ form.customer_address1 }}
             </div>
-            <div>
-                <label class="text-2sm font-semibold text-mono">Street Address 2 (Optional)</label>
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-650 mb-1">Street Address 2 (Optional)</label>
                 {{ form.customer_address2 }}
             </div>
             <div>
-                <label class="text-2sm font-semibold text-mono">City</label>
+                <label class="block text-sm font-medium text-gray-650 mb-1">City</label>
                 {{ form.customer_city }}
             </div>
             <div>
-                <label class="text-2sm font-semibold text-mono">State</label>
+                <label class="block text-sm font-medium text-gray-650 mb-1">State</label>
                 {{ form.customer_state }}
             </div>
             <div>
-                <label class="text-2sm font-semibold text-mono">Postal Code</label>
+                <label class="block text-sm font-medium text-gray-650 mb-1">Postal Code</label>
                 {{ form.customer_postal_code }}
             </div>
             <div>
-                <label class="text-2sm font-semibold text-mono">Country</label>
+                <label class="block text-sm font-medium text-gray-650 mb-1">Country</label>
                 {{ form.customer_country }}
             </div>
-            <div>
-                <label class="text-2sm font-semibold text-mono">Phone Number</label>
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-650 mb-1">Phone Number</label>
                 {{ form.phone }}
             </div>
-            <div class="flex items-center gap-2">
-                {{ form.is_default }}
-                <label for="{{ form.is_default.id_for_label }}" class="text-2sm font-semibold text-mono">Set as Default</label>
-            </div>
+        </div>
+
+        <div class="flex items-center gap-2 mt-2">
+            {{ form.is_default }}
+            <label for="{{ form.is_default.id_for_label }}" class="text-sm text-gray-650 font-medium">
+                Set as Default
+            </label>
+        </div>
+
+        <div class="pt-4">
             <button type="submit" class="kt-btn kt-btn-primary">Save Changes</button>
         </div>
     </form>

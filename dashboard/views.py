@@ -15,6 +15,8 @@ from django.utils.timezone import now
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from razorpay.errors import SignatureVerificationError
+
+from utils.handle_payments import create_orders_from_cart
 from .forms import *
 from .models import *
 import razorpay
@@ -34,7 +36,7 @@ from django.contrib.auth.hashers import make_password
 from django.contrib.auth import authenticate, login
 from django.views.generic.edit import *
 from datetime import date
-from django.db.models import F
+from django.db.models import F, Prefetch
 import random
 import requests
 from django.http import JsonResponse
@@ -938,31 +940,6 @@ class SetDefaultAddressView(LoginRequiredMixin, View):
         address.save()
         return JsonResponse({'status': 'success'})
 
-def create_orders_from_cart(user, payment_type, payment_status):
-    cart_items = CartProduct.objects.filter(user=user).select_related('product')
-
-    for item in cart_items:
-        Orders.objects.create(
-            order_by=user,
-            order_to=item.product.created_by,
-            product=item.product,
-            quantity=item.quantity,
-            price=item.get_total_price(),
-            phone_number=user.retailprofile.age if hasattr(user, 'retailprofile') else 0,
-            payment_type=payment_type,
-            payment_status=payment_status,
-            payment_currency="INR" if payment_type == "razorpay" else "USD",
-            shipping_fees=0,
-            shipping_type="Standard",
-            shipping_full_address="Auto-saved Address",
-            shipping_city="Auto City",
-            shipping_country="Auto Country",
-            status="processing",
-            created_at=now()
-        )
-
-    # Clear the cart after order creation
-    cart_items.delete()
 
 class PaymentMethodView(LoginRequiredMixin, View):
     template_name = 'userdashboard/view/payment_method.html'
@@ -1169,58 +1146,91 @@ class PaymentMethodView(LoginRequiredMixin, View):
             return redirect("dashboard:payment_method")
 
 
+
 class OrderPlacedView(LoginRequiredMixin, TemplateView):
     template_name = 'userdashboard/view/order_placed.html'
     login_url = 'dashboard:login'
 
+    def dispatch(self, request, *args, **kwargs):
+        # Ensure user has a recent payment with associated orders
+        payment = Payment.objects.filter(user=request.user).order_by('-created_at').first()
+        if not payment or not Orders.objects.filter(payment=payment, order_by=request.user).exists():
+            messages.error(request, "No recent order found.")
+            return redirect('dashboard:cart')
+        return super().dispatch(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
-        from datetime import timedelta
-        from django.utils.timezone import now
         context = super().get_context_data(**kwargs)
         user = self.request.user
 
-        # Get the most recent successful payment
-        payment = Payment.objects.filter(name=user.get_full_name()).order_by('-created_at').first()
+        # Get the most recent payment
+        payment = Payment.objects.filter(user=user).order_by('-created_at').first()
         if not payment:
             context['error'] = "No payment found."
             return context
 
-        # Get related cart items (assuming you didn't clear the cart after order)
-        cart_items = CartProduct.objects.filter(user=user).select_related('product')
+        # Get orders with main image prefetched
+        main_image_prefetch = Prefetch(
+            'product__productimage_set',
+            queryset=ProductImage.objects.filter(is_main=True),
+            to_attr='main_image'
+        )
+        orders = Orders.objects.filter(
+            order_by=user,
+            payment=payment
+        ).select_related('product__brand', 'payment', 'order_to').prefetch_related(main_image_prefetch)
 
-        subtotal = sum(item.get_total_price() for item in cart_items)
-        shipping = Decimal('0.00')  # Adjust as per logic
-        vat = Decimal('0.00')       # Adjust as per logic
+        if not orders.exists():
+            context['error'] = "No orders found for this payment."
+            return context
+
+        # Calculate order summary
+        subtotal = sum(order.price for order in orders) or Decimal('0.00')
+        shipping = sum(order.shipping_fees for order in orders) or Decimal('0.00')
+        vat = Decimal('0.00')  # Adjust as per your VAT logic
         total = subtotal + shipping + vat
 
-        # Delivery estimate
-        estimated_delivery = now().date() + timedelta(days=5)
+        # Delivery estimate (use max delivery time from products)
+        max_delivery_days = max((order.product.delivery_time or 5) for order in orders)
+        estimated_delivery = now().date() + timedelta(days=max_delivery_days)
 
         # Payment method-specific info
         payment_method = payment.payment_method
         payment_details = None
+        time_window = payment.created_at + timedelta(minutes=1)
         if payment_method == "stripe":
-            payment_details = StripePayment.objects.filter(user=user).order_by('-created_at').first()
+            payment_details = StripePayment.objects.filter(
+                user=user,
+                created_at__gte=payment.created_at,
+                created_at__lte=time_window
+            ).order_by('-created_at').first()
         elif payment_method == "razorpay":
-            payment_details = RazorpayPayment.objects.filter(user=user).order_by('-created_at').first()
+            payment_details = RazorpayPayment.objects.filter(
+                user=user,
+                created_at__gte=payment.created_at,
+                created_at__lte=time_window
+            ).order_by('-created_at').first()
         elif payment_method == "cod":
-            payment_details = CODPayment.objects.filter(user=user).order_by('-created_at').first()
+            payment_details = CODPayment.objects.filter(
+                user=user,
+                created_at__gte=payment.created_at,
+                created_at__lte=time_window
+            ).order_by('-created_at').first()
 
         # Default billing address
         billing = CustomerBillingAddress.objects.filter(user=user, is_default=True, is_deleted=False).first()
 
         context.update({
             'payment': payment,
-            'cart_items': cart_items,
+            'orders': orders,
             'order_summary': {
                 'subtotal': subtotal,
                 'shipping': shipping,
                 'vat': vat,
                 'total': total
             },
-            'order_id': payment.id,
-            'order_total': total,
-            'order_date': payment.created_at if payment else now(),
+            'order_ids': [order.id for order in orders],
+            'order_date': payment.created_at,
             'estimated_delivery': estimated_delivery,
             'payment_method': payment_method,
             'payment_details': payment_details,

@@ -63,7 +63,7 @@ class CODPaymentAdmin(admin.ModelAdmin):
 
 @admin.register(CustomerBillingAddress)
 class CustomerBillingAddressAdmin(admin.ModelAdmin):
-    list_display = ('id','user', 'customer_name', 'is_deleted', 'created_at', 'updated_at')
+    list_display = ('id','user', 'customer_name', 'is_default', 'is_deleted', 'created_at', 'updated_at')
 
 @admin.register(RoleRequest)
 class RoleRequestAdmin(admin.ModelAdmin):

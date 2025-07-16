@@ -144,7 +144,7 @@ class Product(models.Model):
     tag = models.CharField(max_length=30, choices=[('recent', 'Recently Arrived'), ('popular', 'Most Wanted'),('limited', 'Limited Stock'), ('none', 'None')], default='none')
     warranty = models.CharField(max_length=20, choices=[('none', 'None'), ('1yr', '1 Year'), ('2yr', '2 Years')], default='none')
 
-    created_by = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True)
+    created_by = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     def __str__(self):
@@ -191,7 +191,7 @@ class Orders(models.Model):
     status = models.CharField(max_length=20, choices=ORDER_STATUS_CHOICES, default='pending')
 
      # Customer Info
-    phone_number = models.PositiveIntegerField(default=0)
+    phone_number = models.CharField(max_length=20, blank=True, null=True)
     # order_reference = models.CharField(max_length=20, blank=True, null=True)
 
     # Payment info
@@ -253,6 +253,13 @@ class CustomerBillingAddress(models.Model):
         return f"{self.user} Billing Address"
 
     class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user'],
+                condition=models.Q(is_default=True),
+                name='unique_default_billing_address'
+            )
+        ]
         ordering = ["-updated_at"]
         verbose_name = verbose_name_plural ="Customer Billing Address"
 

@@ -233,7 +233,7 @@
         <!-- Top Header -->
         <header class="flex items-center justify-between h-[50px] px-4 sm:px-6 transition-[height] shrink-0 mx-5 px-5 mt-2">
             <!-- Header Left: Logo -->
-            <div class="flex items-center gap-4 sm:gap-5 pl-4 sm:pl-5">
+            <div class="flex items-center gap-4 sm:gap-5 pl-4 sm:pl-5 mx-5 px-5">
                 <a href="#">
                     <img class="size-10"
                          src="https://keenthemes.com/static/metronic/tailwind/dist/assets/media/app/mini-logo-circle-success.svg"
@@ -269,7 +269,7 @@
             </div>
 
             <!-- Header Right: Actions and User Profile -->
-            <div class="flex items-center gap-3 sm:gap-5">
+            <div class="flex items-center gap-3 sm:gap-5 mr-5 px-5">
                 <button class="kt-btn kt-btn-ghost kt-btn-icon size-8 hover:bg-background hover:[&_i]:text-primary wishlist-drawer-toggle"
                         data-kt-drawer-toggle="#drawers_shop_wishlist">
                     <i class="ki-filled ki-heart text-xl"></i>
@@ -295,7 +295,7 @@
                                 <img alt="User Avatar" class="size-9 rounded-full border-2 border-green-500"
                                      src="{% static 'metronic/tailwind/dist/assets/media/avatars/300-2.png' %}"/>
                                 <div class="flex flex-col gap-1.5">
-                                    <span class="text-sm text-foreground font-semibold">{{request.user.first_name}} {{request.user.lastOREGOName}}</span>
+                                    <span class="text-sm text-foreground font-semibold">{{request.user.first_name}} {{request.user.last_name}}</span>
                                     <a class="text-xs text-secondary-foreground hover:text-primary font-medium"
                                        href="https://keenthemes.com/metronic/tailwind/demo10/account/home/get-started">
                                         {{request.user.email}}
@@ -395,102 +395,166 @@
         <!-- Bottom Header -->
         <header class="flex items-center h-[50px] px-4 sm:px-6 transition-[height] shrink-0">
             <div class="container flex justify-center items-center gap-3.5">
-                <div class="kt-nav-menu flex items-center gap-4 sm:gap-6 flex-wrap">
-                    <a class="flex items-center gap-2 px-3 py-2 hover:bg-secondary {% if request.resolver_match.url_name == 'home' %}bg-secondary text-primary{% endif %}"
+                <div class="kt-nav-menu flex items-center gap-7 sm:gap-6 flex-wrap">
+
+                    <!-- Home -->
+                    <a class="kt-menu-link flex items-center gap-2 px-3 py-2 text-2sm leading-none relative h-8.5 rounded-full border
+                        {% if request.resolver_match.url_name == 'home' %}
+                            bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
+                        {% else %}
+                            border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
+                        {% endif %}"
                        href="{% url 'dashboard:home' %}">
-                        <i class="ki-filled ki-home"></i>
-                        <span class="text-sm text-foreground hover:text-mono">Home</span>
+                        <i class="ki-filled ki-home kt-step-icon"></i>
+                        <span class="text-sm">Home</span>
                     </a>
-                    <div class="kt-menu-item relative group" data-kt-menu-item-toggle="dropdown"
-                         data-kt-menu-item-trigger="hover">
-                        <a class="kt-menu-link flex items-center gap-2 px-3 py-2 hover:bg-secondary" href="#">
-                            <i class="ki-filled ki-magnifier"></i>
-                            <span class="text-sm text-foreground hover:text-mono">Search Results</span>
+
+                    <!-- Search Results -->
+                    <div class="kt-menu-item relative group" data-kt-menu-item-toggle="dropdown" data-kt-menu-item-trigger="hover">
+                        <a class="kt-menu-link flex items-center gap-2 px-3 py-2 text-2sm leading-none relative h-8.5 rounded-full border
+                            border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground"
+                           href="#">
+                            <i class="ki-filled ki-magnifier kt-step-icon"></i>
+                            <span class="text-sm">Search Results</span>
                         </a>
-                        <div class="kt-menu-dropdown absolute w-48 bg-background dark:bg-gray-800 border border-border rounded-lg shadow-lg py-2 z-10 hidden group-hover:block mt-7 py-5">
+                        <div class="kt-menu-dropdown absolute w-48 bg-background dark:bg-gray-800 border border-border rounded-lg shadow-lg z-10 hidden group-hover:block mt-7 py-5 px-3">
                             <div class="kt-menu-item">
-                                <a class="kt-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary {% if request.resolver_match.url_name == 'search_results_grid' %}bg-secondary text-primary{% endif %}"
+                                <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
+                                    {% if request.resolver_match.url_name == 'search_results_grid' %}
+                                        bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
+                                    {% else %}
+                                        border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
+                                    {% endif %}"
                                    href="{% url 'dashboard:search_results_grid' %}">
-                                    <i class="ki-filled ki-grid"></i>
-                                    <span class="text-sm text-foreground hover:text-mono">Search Results - Grid</span>
+                                    <i class="ki-filled ki-grid kt-step-icon"></i>
+                                    <span class="text-sm">Grid View</span>
                                 </a>
                             </div>
-                            <div class="kt-menu-item">
-                                <a class="kt-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary"
+                            <div class="kt-menu-item mt-3">
+                                <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
+                                    {% if request.resolver_match.url_name == 'search_results_list' %}
+                                        bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
+                                    {% else %}
+                                        border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
+                                    {% endif %}"
                                    href="{% url 'dashboard:search_results_list' %}">
-                                    <i class="bi bi-card-checklist"></i>
-                                    <span class="text-sm text-foreground hover:text-mono">Search Results - List</span>
+                                    <i class="bi bi-card-checklist kt-step-icon"></i>
+                                    <span class="text-sm">List View</span>
                                 </a>
                             </div>
                         </div>
                     </div>
-                    <div class="kt-menu-item relative group" data-kt-menu-item-toggle="dropdown"
-                         data-kt-menu-item-trigger="hover">
-                        <a class="kt-menu-link flex items-center gap-2 px-3 py-2 hover:bg-secondary" href="#">
-                            <i class="bi bi-exclude"></i>
-                            <span class="text-sm text-foreground hover:text-mono">Overlays</span>
+
+                    <!-- Overlays -->
+                    <div class="kt-menu-item relative group" data-kt-menu-item-toggle="dropdown" data-kt-menu-item-trigger="hover">
+                        <a class="kt-menu-link flex items-center gap-2 px-3 py-2 text-2sm leading-none relative h-8.5 rounded-full border
+                            border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground"
+                           href="#">
+                            <i class="bi bi-exclude kt-step-icon"></i>
+                            <span class="text-sm">Overlays</span>
                         </a>
-                        <div class="kt-menu-dropdown absolute w-48 bg-background dark:bg-gray-800 border border-border rounded-lg shadow-lg py-2 z-10 hidden group-hover:block mt-7 py-5">
+                        <div class="kt-menu-dropdown absolute w-48 bg-background dark:bg-gray-800 border border-border rounded-lg shadow-lg z-10 hidden group-hover:block mt-7 py-5 px-3">
                             <div class="kt-menu-item">
-                                <a class="kt-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary"
+                                <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
+                                    {% if request.resolver_match.url_name == 'shopping_cart' %}
+                                        bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
+                                    {% else %}
+                                        border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
+                                    {% endif %}"
                                    href="{% url 'dashboard:shopping_cart' %}">
-                                    <i class="ki-filled ki-basket"></i>
-                                    <span class="text-sm text-foreground hover:text-mono">Shopping Cart</span>
+                                    <i class="ki-filled ki-basket kt-step-icon"></i>
+                                    <span class="text-sm">Shopping Cart</span>
                                 </a>
                             </div>
-                            <div class="kt-menu-item">
-                                <a class="kt-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary"
+                            <div class="kt-menu-item mt-3">
+                                <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
+                                    {% if request.resolver_match.url_name == 'wish_list' %}
+                                        bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
+                                    {% else %}
+                                        border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
+                                    {% endif %}"
                                    href="{% url 'dashboard:wish_list' %}">
-                                    <i class="ki-filled ki-heart"></i>
-                                    <span class="text-sm text-foreground hover:text-mono">Wishlist</span>
+                                    <i class="ki-filled ki-heart kt-step-icon"></i>
+                                    <span class="text-sm">Wishlist</span>
                                 </a>
                             </div>
                         </div>
                     </div>
-                    <div class="kt-menu-item relative group" data-kt-menu-item-toggle="dropdown"
-                         data-kt-menu-item-trigger="hover">
-                        <a class="kt-menu-link flex items-center gap-2 px-3 py-2 hover:bg-secondary" href="#">
-                            <i class="ki-filled ki-wallet"></i>
-                            <span class="text-sm text-foreground hover:text-mono">Checkout</span>
+
+                    <!-- Checkout -->
+                    <div class="kt-menu-item relative group" data-kt-menu-item-toggle="dropdown" data-kt-menu-item-trigger="hover">
+                        <a class="kt-menu-link flex items-center gap-2 px-3 py-2 text-2sm leading-none relative h-8.5 rounded-full border
+                            border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground"
+                           href="#">
+                            <i class="ki-filled ki-wallet kt-step-icon"></i>
+                            <span class="text-sm">Checkout</span>
                         </a>
-                        <div class="kt-menu-dropdown absolute w-40 bg-background dark:bg-gray-800 border border-border rounded-lg shadow-lg py-2 z-10 hidden group-hover:block mt-7 py-5">
+                        <div class="kt-menu-dropdown absolute w-40 bg-background dark:bg-gray-800 border border-border rounded-lg shadow-lg z-10 hidden group-hover:block mt-7 py-5 px-3">
                             <div class="kt-menu-item">
-                                <a class="kt-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary"
+                                <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
+                                    {% if request.resolver_match.url_name == 'order_summary' %}
+                                        bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
+                                    {% else %}
+                                        border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
+                                    {% endif %}"
                                    href="{% url 'dashboard:order_summary' %}">
-                                    <i class="ki-filled ki-notepad"></i>
-                                    <span class="text-sm text-foreground hover:text-mono">Order Summary</span>
+                                    <i class="ki-filled ki-notepad kt-step-icon"></i>
+                                    <span class="text-sm">Order Summary</span>
                                 </a>
                             </div>
-                            <div class="kt-menu-item">
-                                <a class="kt-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary"
+                            <div class="kt-menu-item mt-3">
+                                <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
+                                    {% if request.resolver_match.url_name == 'shipping_info' %}
+                                        bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
+                                    {% else %}
+                                        border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
+                                    {% endif %}"
                                    href="{% url 'dashboard:shipping_info' %}">
-                                    <i class="ki-filled ki-delivery"></i>
-                                    <span class="text-sm text-foreground hover:text-mono">Shipping Info</span>
+                                    <i class="ki-filled ki-delivery kt-step-icon"></i>
+                                    <span class="text-sm">Shipping Info</span>
                                 </a>
                             </div>
-                            <div class="kt-menu-item">
-                                <a class="kt-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary"
+                            <div class="kt-menu-item mt-3">
+                                <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
+                                    {% if request.resolver_match.url_name == 'payment_method' %}
+                                        bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
+                                    {% else %}
+                                        border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
+                                    {% endif %}"
                                    href="{% url 'dashboard:payment_method' %}">
-                                    <i class="bi bi-stripe"></i>
-                                    <span class="text-sm text-foreground hover:text-mono">Payment Method</span>
+                                    <i class="bi bi-stripe kt-step-icon"></i>
+                                    <span class="text-sm">Payment Method</span>
                                 </a>
                             </div>
-                            <div class="kt-menu-item">
-                                <a class="kt-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary"
+                            <div class="kt-menu-item mt-3">
+                                <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
+                                    {% if request.resolver_match.url_name == 'order_placed' %}
+                                        bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
+                                    {% else %}
+                                        border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
+                                    {% endif %}"
                                    href="{% url 'dashboard:order_placed' %}">
-                                    <i class="ki-filled ki-check-circle"></i>
-                                    <span class="text-sm text-foreground hover:text-mono">Order Placed</span>
+                                    <i class="ki-filled ki-check-circle kt-step-icon"></i>
+                                    <span class="text-sm">Order Placed</span>
                                 </a>
                             </div>
                         </div>
                     </div>
+
+                    <!-- My Orders -->
                     <div class="kt-menu-item relative">
-                        <a class="kt-menu-link flex items-center gap-2 px-3 py-2 hover:bg-secondary {% if request.resolver_match.url_name == 'my_orders' %}bg-secondary text-primary{% endif %}"
+                        <a class="kt-menu-link flex items-center gap-2 px-3 py-2 text-2sm leading-none relative h-8.5 rounded-full border
+                            {% if request.resolver_match.url_name == 'my_orders' %}
+                                bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
+                            {% else %}
+                                border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
+                            {% endif %}"
                            href="{% url 'dashboard:my_orders' %}">
-                            <i class="ki-filled ki-package"></i>
-                            <span class="text-sm text-foreground hover:text-mono">My Orders</span>
+                            <i class="ki-filled ki-package kt-step-icon"></i>
+                            <span class="text-sm">My Orders</span>
                         </a>
                     </div>
+
                 </div>
             </div>
         </header>
@@ -769,7 +833,7 @@
                 wishlistContainer.innerHTML = '';
 
                 if (wishlist.length === 0) {
-                    wishlistContainer.innerHTML = '<p class="text-sm text-foreground">Your wishlist is empty.</p>';
+                    wishlistContainer.innerHTML = '<p class="text-sm text-foreground text-center font-monospace mt-5">Your wishlist is empty.</p>';
                     return;
                 }
 
@@ -1092,7 +1156,7 @@
                     .then(data => {
                         cartItemsContainer.innerHTML = '';
                         if (!data.cart || data.cart.length === 0) {
-                            cartItemsContainer.innerHTML = '<p class="text-sm text-muted">🛒 Your cart is empty.</p>';
+                            cartItemsContainer.innerHTML = '<p class="text-sm text-muted text-center font-monospace mt-5">🛒 Your cart is empty.</p>';
                             return;
                         }
 

@@ -50,47 +50,55 @@
                     <div class="lg:col-span-2 space-y-5">
                         <div class="grid sm:grid-cols-2 gap-5" id="address-list">
                             {% for address in addresses %}
-                                <div class="kt-card" data-address-id="{{ address.id }}">
-                                    <div class="kt-card-header px-5">
-                                        <h3 class="kt-card-title">
-                                            {{ address.address_title|default:"Address" }}
-                                        </h3>
-                                        {% if address.is_default %}
-                                            <span class="kt-badge kt-badge-outline kt-badge-success">Ship here</span>
-                                        {% endif %}
-                                    </div>
-                                    <div class="kt-card-content px-5 space-y-4">
-                                        <div class="flex flex-col gap-1.5">
+                            <div class="kt-card" data-address-id="{{ address.id }}">
+                                <div class="kt-card-header px-5">
+                                    <h3 class="kt-card-title">
+                                        {{ address.address_title|default:"Address" }}
+                                    </h3>
+                                    {% if address.is_default %}
+                                    <span class="kt-badge kt-badge-outline kt-badge-success">Ship here</span>
+                                    {% endif %}
+                                </div>
+                                <div class="kt-card-content px-5 space-y-4">
+                                    <div class="flex flex-col gap-1.5">
                                             <span class="text-2sm font-semibold text-mono mb-1.5">
                                                 {{ user.first_name }} {{ user.last_name }}
                                             </span>
-                                            <div class="flex flex-col gap-2 text-2sm font-normal text-mono">
-                                                <span>{{ address.customer_address1 }}</span>
-                                                {% if address.customer_address2 %}
-                                                    <span>{{ address.customer_address2 }}</span>
-                                                {% endif %}
-                                                <span>{{ address.customer_city }}, {{ address.customer_state }} {{ address.customer_postal_code }}</span>
-                                                <span>{{ address.customer_country }}</span>
-                                                <span>Phone number: {{ address.phone|default:phone }}</span>
-                                            </div>
-                                        </div>
-                                        <div class="flex justify-between items-center min-h-8.5">
-                                            <div class="flex items-center gap-5">
-                                                <a class="kt-link kt-link-underlined kt-link-dashed" href="{% url 'dashboard:edit_address' address.id %}" data-kt-action="edit">Edit</a>
-                                                <a class="kt-link kt-link-underlined kt-link-dashed" href="{% url 'dashboard:remove_address' address.id %}" data-kt-action="remove">Remove</a>
-                                            </div>
-                                            {% if not address.is_default %}
-                                                <button class="kt-btn kt-btn-outline kt-btn-sm" data-kt-action="select" data-address-id="{{ address.id }}">Select Address</button>
+                                        <div class="flex flex-col gap-2 text-2sm font-normal text-mono">
+                                            <span>{{ address.customer_address1 }}</span>
+                                            {% if address.customer_address2 %}
+                                            <span>{{ address.customer_address2 }}</span>
                                             {% endif %}
+                                            <span>{{ address.customer_city }}, {{ address.customer_state }} {{ address.customer_postal_code }}</span>
+                                            <span>{{ address.customer_country }}</span>
+                                            <span>Phone number: {{ address.phone|default:phone }}</span>
                                         </div>
                                     </div>
+                                    <div class="flex justify-between items-center min-h-8.5">
+                                        <div class="flex items-center gap-5">
+                                            <a class="kt-link kt-link-underlined kt-link-dashed"
+                                               href="{% url 'dashboard:edit_address' address.id %}"
+                                               data-kt-action="edit">Edit</a>
+                                            <a class="kt-link kt-link-underlined kt-link-dashed"
+                                               href="{% url 'dashboard:remove_address' address.id %}"
+                                               data-kt-action="remove">Remove</a>
+                                        </div>
+                                        {% if not address.is_default %}
+                                        <button class="kt-btn kt-btn-outline kt-btn-sm" data-kt-action="select"
+                                                data-address-id="{{ address.id }}">Select Address
+                                        </button>
+                                        {% endif %}
+                                    </div>
                                 </div>
+                            </div>
                             {% empty %}
-                                <p>No addresses added</p>
+                            <p>No addresses added</p>
                             {% endfor %}
                         </div>
                         <div class="flex justify-end items-center flex-wrap gap-3">
-                            <button class="kt-btn kt-btn-outline" data-kt-modal-toggle="#modal_add_address">Add New Address</button>
+                            <button class="kt-btn kt-btn-outline" data-kt-modal-toggle="#modal_add_address">Add New
+                                Address
+                            </button>
                             <a class="kt-btn kt-btn-outline" href="{% url 'dashboard:order_summary' %}">
                                 <i class="ki-filled ki-black-left text-base"></i>
                                 Order Summary
@@ -121,15 +129,15 @@
                                         </span>
                                         <div class="flex flex-col gap-1 text-xs font-normal text-secondary-foreground">
                                             {% if default_address %}
-                                                <span>{{ user.first_name }} {{ user.last_name }}</span>
-                                                <span>{{ default_address.customer_address1 }}</span>
-                                                {% if default_address.customer_address2 %}
-                                                    <span>{{ default_address.customer_address2 }}</span>
-                                                {% endif %}
-                                                <span>{{ default_address.customer_city }}, {{ default_address.customer_state }} {{ default_address.customer_postal_code }}</span>
-                                                <span>{{ default_address.customer_country }}</span>
+                                            <span>{{ user.first_name }} {{ user.last_name }}</span>
+                                            <span>{{ default_address.customer_address1 }}</span>
+                                            {% if default_address.customer_address2 %}
+                                            <span>{{ default_address.customer_address2 }}</span>
+                                            {% endif %}
+                                            <span>{{ default_address.customer_city }}, {{ default_address.customer_state }} {{ default_address.customer_postal_code }}</span>
+                                            <span>{{ default_address.customer_country }}</span>
                                             {% else %}
-                                                <span>Please select an address</span>
+                                            <span>Please select an address</span>
                                             {% endif %}
                                         </div>
                                     </div>
@@ -179,32 +187,38 @@
             </div>
             <!-- End of Container -->
             <!-- begin: Add Address Modal -->
-            <div class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" data-kt-modal="true" id="modal_add_address">
+            <div class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+                 data-kt-modal="true" id="modal_add_address">
                 <div class="kt-card w-full max-w-[500px] rounded-xl border border-border bg-background">
                     <form method="post" action="{% url 'dashboard:add_address' %}">
                         {% csrf_token %}
                         <div class="kt-card-header px-5 flex items-center justify-between">
                             <h3 class="kt-card-title">Add New Address</h3>
-                            <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" data-kt-modal-dismiss="true" type="button">
+                            <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0"
+                                    data-kt-modal-dismiss="true" type="button">
                                 <i class="ki-filled ki-cross text-base"></i>
                             </button>
                         </div>
                         <div class="kt-card-content flex flex-col space-y-3 p-5 kt-scrollable-y-auto">
                             <div class="flex flex-col gap-1.5">
                                 <label class="text-2sm font-semibold text-mono">Address Title</label>
-                                <input type="text" name="address_title" class="kt-input" placeholder="e.g., Home, Office" required>
+                                <input type="text" name="address_title" class="kt-input"
+                                       placeholder="e.g., Home, Office" required>
                             </div>
                             <div class="flex flex-col gap-1.5">
                                 <label class="text-2sm font-semibold text-mono">Full Name</label>
-                                <input type="text" name="full_name" class="kt-input" placeholder="Full Name" value="{{ user.first_name }} {{ user.last_name }}" required>
+                                <input type="text" name="customer_name" class="kt-input" placeholder="Full Name"
+                                       value="{{ user.first_name }} {{ user.last_name }}" required>
                             </div>
                             <div class="flex flex-col gap-1.5">
                                 <label class="text-2sm font-semibold text-mono">Street Address</label>
-                                <input type="text" name="customer_address1" class="kt-input" placeholder="Street Address" required>
+                                <input type="text" name="customer_address1" class="kt-input"
+                                       placeholder="Street Address" required>
                             </div>
                             <div class="flex flex-col gap-1.5">
                                 <label class="text-2sm font-semibold text-mono">Street Address 2 (Optional)</label>
-                                <input type="text" name="customer_address2" class="kt-input" placeholder="Apartment, Suite, etc.">
+                                <input type="text" name="customer_address2" class="kt-input"
+                                       placeholder="Apartment, Suite, etc.">
                             </div>
                             <div class="flex flex-col gap-1.5">
                                 <label class="text-2sm font-semibold text-mono">City</label>
@@ -216,15 +230,18 @@
                             </div>
                             <div class="flex flex-col gap-1.5">
                                 <label class="text-2sm font-semibold text-mono">Postal Code</label>
-                                <input type="text" name="customer_postal_code" class="kt-input" placeholder="Postal Code" required>
+                                <input type="text" name="customer_postal_code" class="kt-input"
+                                       placeholder="Postal Code" required>
                             </div>
                             <div class="flex flex-col gap-1.5">
                                 <label class="text-2sm font-semibold text-mono">Country</label>
-                                <input type="text" name="customer_country" class="kt-input" placeholder="Country" required>
+                                <input type="text" name="customer_country" class="kt-input" placeholder="Country"
+                                       required>
                             </div>
                             <div class="flex flex-col gap-1.5">
                                 <label class="text-2sm font-semibold text-mono">Phone Number</label>
-                                <input type="tel" name="phone" class="kt-input" placeholder="+1234567890" value="{{ phone }}" required>
+                                <input type="tel" name="phone" class="kt-input" placeholder="+1234567890"
+                                       value="{{ phone }}" required>
                             </div>
                             <div class="flex items-center gap-2">
                                 <input type="checkbox" name="is_default" id="is_default">
@@ -232,13 +249,108 @@
                             </div>
                         </div>
                         <div class="kt-card-footer px-5 flex justify-end gap-3">
-                            <button class="kt-btn kt-btn-outline" data-kt-modal-dismiss="true" type="button">Cancel</button>
+                            <button class="kt-btn kt-btn-outline" data-kt-modal-dismiss="true" type="button">Cancel
+                            </button>
                             <button class="kt-btn kt-btn-primary" type="submit">Save Address</button>
                         </div>
                     </form>
                 </div>
             </div>
             <!-- end: Add Address Modal -->
+            <!-- begin: Edit Address Modal -->
+            <div class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+                 data-kt-modal="true" id="modal_edit_address">
+                <div class="kt-card w-full max-w-[500px] rounded-xl border border-border bg-background">
+                    <form method="post" action="{% url 'dashboard:edit_address' 0 %}" id="edit-address-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="address_id" id="edit-address-id">
+                        <div class="kt-card-header px-5 flex items-center justify-between">
+                            <h3 class="kt-card-title">Edit Address</h3>
+                            <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0"
+                                    data-kt-modal-dismiss="true" type="button">
+                                <i class="ki-filled ki-cross text-base"></i>
+                            </button>
+                        </div>
+                        <div class="kt-card-content flex flex-col space-y-3 p-5 kt-scrollable-y-auto">
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-2sm font-semibold text-mono">Address Title</label>
+                                <input type="text" name="address_title" id="edit-address-title" class="kt-input"
+                                       required>
+                            </div>
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-2sm font-semibold text-mono">Street Address</label>
+                                <input type="text" name="customer_address1" id="edit-address-line1" class="kt-input"
+                                       required>
+                            </div>
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-2sm font-semibold text-mono">Street Address 2</label>
+                                <input type="text" name="customer_address2" id="edit-address-line2" class="kt-input">
+                            </div>
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-2sm font-semibold text-mono">City</label>
+                                <input type="text" name="customer_city" id="edit-city" class="kt-input" required>
+                            </div>
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-2sm font-semibold text-mono">State</label>
+                                <input type="text" name="customer_state" id="edit-state" class="kt-input" required>
+                            </div>
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-2sm font-semibold text-mono">Postal Code</label>
+                                <input type="text" name="customer_postal_code" id="edit-postal" class="kt-input"
+                                       required>
+                            </div>
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-2sm font-semibold text-mono">Country</label>
+                                <input type="text" name="customer_country" id="edit-country" class="kt-input" required>
+                            </div>
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-2sm font-semibold text-mono">Phone Number</label>
+                                <input type="tel" name="phone" id="edit-phone" class="kt-input" placeholder="+1234567890"
+                                       value="{{ phone }}" required>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" name="is_default" id="edit-is-default">
+                                <label for="edit-is-default" class="text-2sm font-semibold text-mono">Set as
+                                    Default</label>
+                            </div>
+                        </div>
+                        <div class="kt-card-footer px-5 flex justify-end gap-3">
+                            <button class="kt-btn kt-btn-outline" data-kt-modal-dismiss="true" type="button">Cancel
+                            </button>
+                            <button class="kt-btn kt-btn-primary" type="submit">Update Address</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <!-- end: Edit Address Modal -->
+
+            <!-- begin: Remove Address Modal -->
+            <div class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+                 data-kt-modal="true" id="modal_remove_address">
+                <div class="kt-card w-full max-w-[400px] rounded-xl border border-border bg-background">
+                    <form method="post" action="{% url 'dashboard:remove_address' 0 %}" id="remove-address-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="address_id" id="remove-address-id">
+                        <div class="kt-card-header px-5 flex items-center justify-between">
+                            <h3 class="kt-card-title">Confirm Remove</h3>
+                            <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost" data-kt-modal-dismiss="true"
+                                    type="button">
+                                <i class="ki-filled ki-cross text-base"></i>
+                            </button>
+                        </div>
+                        <div class="kt-card-content px-5 py-4 text-sm text-muted-foreground">
+                            Are you sure you want to remove this address?
+                        </div>
+                        <div class="kt-card-footer px-5 flex justify-end gap-3">
+                            <button class="kt-btn kt-btn-outline" data-kt-modal-dismiss="true" type="button">Cancel
+                            </button>
+                            <button class="kt-btn kt-btn-danger" type="submit">Remove</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <!-- end: Remove Address Modal -->
+
         </main>
     </div>
 </div>
@@ -250,7 +362,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const modalTriggers = document.querySelectorAll('[data-kt-modal-toggle="#modal_add_address"]');
     const modalDismiss = modal.querySelectorAll('[data-kt-modal-dismiss="true"]');
 
-    // Open modal
     modalTriggers.forEach(trigger => {
         trigger.addEventListener('click', function (e) {
             e.preventDefault();
@@ -258,7 +369,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Close modal
     modalDismiss.forEach(dismiss => {
         dismiss.addEventListener('click', function () {
             modal.classList.add('hidden');
@@ -266,11 +376,26 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Close modal when clicking outside
     modal.addEventListener('click', function (e) {
         if (e.target === modal) {
             modal.classList.add('hidden');
             modal.querySelectorAll('input').forEach(input => input.value = input.type === 'checkbox' ? false : '');
+        }
+    });
+
+    // Edit Modal Dismiss Handling
+    const editModal = document.getElementById('modal_edit_address');
+    const editModalDismissButtons = editModal.querySelectorAll('[data-kt-modal-dismiss="true"]');
+
+    editModalDismissButtons.forEach(dismiss => {
+        dismiss.addEventListener('click', () => {
+            editModal.classList.add('hidden');
+        });
+    });
+
+    editModal.addEventListener('click', function (e) {
+        if (e.target === editModal) {
+            editModal.classList.add('hidden');
         }
     });
 
@@ -294,6 +419,41 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    // Edit Address Button Handling
+    document.querySelectorAll('[data-kt-action="edit"]').forEach(link => {
+        link.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            const card = this.closest('[data-address-id]');
+            const addressId = card.dataset.addressId;
+            const title = card.querySelector('.kt-card-title').textContent.trim();
+            const lines = card.querySelectorAll('.kt-card-content span');
+
+            document.getElementById('edit-address-id').value = addressId;
+            document.getElementById('edit-address-title').value = title;
+            document.getElementById('edit-address-line1').value = lines[1]?.textContent.trim();
+
+            const form = document.getElementById('edit-address-form');
+            form.action = `{% url 'dashboard:edit_address' 0 %}`.replace("0", addressId);
+
+            document.getElementById('modal_edit_address').classList.remove('hidden');
+        });
+    });
+
+    // Remove Address Confirmation Modal
+    document.querySelectorAll('[data-kt-action="remove"]').forEach(link => {
+        link.addEventListener('click', function (e) {
+            e.preventDefault();
+            const card = this.closest('[data-address-id]');
+            const addressId = card.dataset.addressId;
+
+            document.getElementById('remove-address-id').value = addressId;
+            document.getElementById('remove-address-form').action = `{% url 'dashboard:remove_address' 0 %}`.replace("0", addressId);
+
+            document.getElementById('modal_remove_address').classList.remove('hidden');
+        });
+    });
+
     // Remove from Cart
     document.querySelectorAll('.remove-from-cart').forEach(button => {
         button.addEventListener('click', function () {
@@ -307,15 +467,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 },
                 body: `item_id=${itemId}`
             })
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    document.getElementById(`cart-item-${itemId}`).remove();
-                    location.reload();
-                } else {
-                    alert('Failed to remove item from cart');
-                }
-            });
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        document.getElementById(`cart-item-${itemId}`).remove();
+                        location.reload();
+                    } else {
+                        alert('Failed to remove item from cart');
+                    }
+                });
         });
     });
 
@@ -334,12 +494,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 },
                 body: `product_id=${productId}&quantity=${quantityChange}`
             })
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === 'success' || data.status === 'removed') {
-                    location.reload();
-                }
-            });
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success' || data.status === 'removed') {
+                        location.reload();
+                    }
+                });
         });
     });
 });
