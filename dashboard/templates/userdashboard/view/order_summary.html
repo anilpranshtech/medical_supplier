@@ -50,11 +50,14 @@
                         <div class="kt-card">
                             <div class="kt-card-content p-5">
                                 <h2 class="text-lg font-medium text-foreground text-center">Shopping Cart</h2>
-                                <div class="flex items-center gap-10 text-sm text-secondary-foreground mt-5">
-                                    <span class="mx-5">Product</span>
-                                    <span class="mx-5">QTY</span>
-                                    <span class="mx-5">Price</span>
+                                <div class="flex justify-between items-center text-sm text-secondary-foreground mt-5 mb-3 px-5">
+                                    <span class="text-mono font-medium">Product</span>
+                                    <div class="flex gap-10">
+                                        <span class="text-mono font-medium">QTY</span>
+                                        <span class="text-mono font-medium">Price</span>
+                                    </div>
                                 </div>
+
                                 {% if cart_items %}
                                 <div class="grid sm:grid-cols-1 gap-5">
                                     {% for item in cart_items %}

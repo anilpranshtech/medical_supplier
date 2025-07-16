@@ -4,11 +4,11 @@
 {% block content %}
 <style>
     .kt-wishlist-icon.active i.ki-filled.ki-heart {
-        color: #ff0000; 
+        color: #ff0000;
     }
     .kt-category-grid {
         display: grid;
-        grid-template-columns: 1fr 3fr; 
+        grid-template-columns: 1fr 3fr;
         gap: 20px;
         width: 100%;
     }
@@ -22,12 +22,12 @@
 
     .kt-product-grid {
         display: grid;
-        grid-template-columns: 1fr 1fr 1fr; 
+        grid-template-columns: 1fr 1fr 1fr;
         gap: 15px;
     }
 .kt-category-grid {
     display: grid;
-    grid-template-columns: 1fr 3fr; 
+    grid-template-columns: 1fr 3fr;
     gap: 20px;
     width: 100%;
 }
@@ -42,7 +42,7 @@
 
     .heart-icon {
         transition: color 0.2s ease-in-out;
-    }  
+    }
 </style>
 
 <title>Search Results - Medical Supplies</title>
@@ -158,7 +158,7 @@
     {% for category in categories %}
     <div class="mb-4">
         <button onclick="toggleCategory('cat-{{ category.id }}')"
-                class="text-sm font-bold text-gray-800 hover:text-blue-600 w-full text-left">
+                class="text-sm font-bold text-gray-600 hover:text-blue-600 w-full text-left">
             {{ category.name }}
         </button>
         <div id="cat-{{ category.id }}" class="mt-2 ml-4 hidden">
@@ -181,7 +181,7 @@
     {% endfor %}
 </div>
 
-  
+
     <div class="kt-product-grid">
         {% if last_categories %}
             {% for lastcategory in last_categories %}
@@ -189,10 +189,10 @@
                 <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
                     <div class="mb-2.5">
                         <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[180px] mb-4 shadow-none">
-                            <img alt="{{ lastcategory.name }}" class="h-[180px] shrink-0" 
+                            <img alt="{{ lastcategory.name }}" class="h-[180px] shrink-0"
                                  src="{{ lastcategory.image.url|default:'/static/default_category_image.png' }}">
                         </div>
-                        <a class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block"
+                        <a class="hover:text-primary text-sm font-medium text-bold text-mono px-2.5 leading-5.5 block"
                            href="?last_category={{ lastcategory.id }}">
                             {{ lastcategory.name }}
                         </a>
@@ -242,9 +242,9 @@
                             {% if product.discounted_price %}
                             <div class="flex items-center gap-2">
                                 <span>{{ product.name }}</span>
-                                
+
                                 <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">save {{ product.discount_percentage }}%</span>
-                                
+
                             </div>
                             {% else %}
                             {{ product.name }}<br>
@@ -254,7 +254,7 @@
                     </div>
                     <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
                         {% if product.average_rating %}
-                        <span class="kt-badge 
+                        <span class="kt-badge
                             {% if product.average_rating >= 4 %}kt-badge-success
                             {% elif product.average_rating >= 2 %}kt-badge-warning
                             {% else %}kt-badge-danger{% endif %} 
@@ -286,7 +286,7 @@
                 </div>
             </div>
             {% empty %}
-            <div class="col-span-3 text-center py-10">
+            <div class="col-span-3 text-center font-medium py-10">
                 <p>No products found in this category.</p>
             </div>
             {% endfor %}
@@ -342,7 +342,7 @@ document.querySelectorAll('.add-to-cart-btn').forEach(button => {
                 .then(res => res.json())
                 .then(data => {
                     if (data.status === "success") {
-                    
+
                         document
                             .querySelectorAll(`.add-to-cart-btn[data-product-id="${productId}"]`)
                             .forEach(markAsInCart);
