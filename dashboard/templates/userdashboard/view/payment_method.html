@@ -1,7 +1,6 @@
 {% extends "pages/base.html" %}
 {% load static %}
 {% block content %}
-
 <div class="kt-container-fixed mt-1" style="max-width: var(--custom-container-width, 85%);">
     <div class="flex flex-col items-stretch gap-7 mt-5 py-5">
         <main class="grow" role="content">
@@ -76,77 +75,59 @@
                                 </form>
                             </div>
 
-                            <!-- Stripe Form with Billing Address -->
+                            <!-- Stripe Form -->
                             <div class="kt-card" data-payment='{"type": "Stripe"}' id="stripe-card" hidden>
                                 <form action="." method="POST" class="stripe-form" id="stripe-form">
                                     {% csrf_token %}
                                     <input type="hidden" name="payment_method" value="stripe">
-
-                                    <!-- Info Header -->
                                     <div class="text-white border p-3 rounded mb-4 text-sm mt-5 mx-5"
                                          style="border-color: #675dff; color: #675dff;">
                                         <img src="{% static 'metronic/tailwind/dist/assets/media/brand-logos/stripe.svg' %}"
                                              alt="Stripe" class="w-5 h-5" style="background-color: #675dff;">
                                         <strong>Note:</strong> Add Payment Method - Secure Payment Powered by Stripe
                                     </div>
-
-                                    <!-- Saved Card Display -->
                                     {% if billing and billing.old_card %}
                                         <div class="text-sm text-muted mb-4 mx-5">
-                                            <strong>Saved Card:</strong> {{ billing.old_card|default:'No saved card' }}
+                                            <strong>Saved Card:</strong> {{ billing.old_card_info|default:'No saved card' }}
                                         </div>
                                     {% endif %}
-
-                                    <!-- Error Output -->
                                     <div id="card-errors" class="text-red-900 text-center mb-3"></div>
-
-                                    <!-- Input Fields -->
                                     <div class="grid sm:grid-cols-2 gap-4 mt-5 mx-5">
-                                        <!-- Left Column -->
                                         <div class="space-y-4">
                                             <input type="text" name="crd_name" required placeholder="Cardholder's Name"
                                                    class="kt-input w-full"
                                                    {% if billing %}value="{{ billing.customer_name|default:user.get_full_name }}"{% endif %}/>
-
                                             <div id="card-element" class="border p-3 rounded bg-muted/10"></div>
-
                                             <input type="text" name="customer_address1" required placeholder="Address line 1"
                                                    class="kt-input w-full"
                                                    {% if billing %}value="{{ billing.customer_address1|default:'' }}"{% endif %}/>
-
                                             <input type="text" name="customer_city" required placeholder="City"
                                                    class="kt-input w-full"
                                                    {% if billing %}value="{{ billing.customer_city|default:'' }}"{% endif %}/>
-
                                             <input type="text" name="customer_postal_code" required placeholder="ZIP / Postal Code"
                                                    class="kt-input w-full"
                                                    {% if billing %}value="{{ billing.customer_postal_code|default:'' }}"{% endif %}/>
+                                            <input type="text" name="phone" required placeholder="Phone Number"
+                                                   class="kt-input w-full"
+                                                   {% if billing %}value="{{ billing.phone|default:'' }}"{% endif %}/>
                                         </div>
-
-                                        <!-- Right Column -->
                                         <div class="space-y-4">
                                             <input type="text" name="customer_address2" placeholder="Address line 2"
                                                    class="kt-input w-full"
                                                    {% if billing %}value="{{ billing.customer_address2|default:'' }}"{% endif %}/>
-
                                             <input type="text" name="customer_state" required placeholder="State"
                                                    class="kt-input w-full"
                                                    {% if billing %}value="{{ billing.customer_state|default:'' }}"{% endif %}/>
-
                                             <select name="customer_country" required class="kt-input w-full">
                                                 <option value="">Select Country</option>
                                                 <option value="US" {% if billing and billing.customer_country == "US" %}selected{% endif %}>United States</option>
                                                 <option value="IN" {% if billing and billing.customer_country == "IN" %}selected{% endif %}>India</option>
-                                                <!-- Add more countries as needed -->
                                             </select>
-
                                             <input type="text" name="customer_country_code" required placeholder="Country Code (e.g. US)"
                                                    class="kt-input w-full"
                                                    {% if billing %}value="{{ billing.customer_country_code|default:'' }}"{% endif %}/>
                                         </div>
                                     </div>
-
-                                    <!-- Submit -->
                                     <div class="mx-5">
                                         <button class="kt-btn kt-btn-danger w-full mt-4 mb-5" type="submit">
                                             Pay with Stripe (USD {{ order_summary.total|floatformat:2 }})
@@ -186,7 +167,7 @@
                         </div>
                     </div>
 
-                    <!-- Right Side: Order Summary -->
+                    <!-- Order Summary -->
                     <div class="lg:col-span-1" id="order-summary-box">
                         <div class="kt-card bg-accent/50">
                             <div class="kt-card-header px-5">
@@ -203,13 +184,16 @@
                                     </span>
                                     <div class="flex flex-col gap-1 text-xs font-normal text-secondary-foreground">
                                         {% if billing %}
-                                            <span>{{ user.first_name }} {{ user.last_name }}</span>
+                                            <span>{{ billing.customer_name|default:user.get_full_name }}</span>
                                             <span>{{ billing.customer_address1 }}</span>
                                             {% if billing.customer_address2 %}
                                                 <span>{{ billing.customer_address2 }}</span>
                                             {% endif %}
                                             <span>{{ billing.customer_city }}, {{ billing.customer_state }} {{ billing.customer_postal_code }}</span>
                                             <span>{{ billing.customer_country }}</span>
+                                            {% if billing.phone %}
+                                                <span>Phone: {{ billing.phone }}</span>
+                                            {% endif %}
                                         {% else %}
                                             <span>Please select an address</span>
                                         {% endif %}
@@ -291,10 +275,8 @@
             updateCurrency(value);
         });
 
-        // Initial selection
         updateCurrency("Cash on Delivery");
 
-        // Stripe Setup
         const stripe = Stripe("{{ STRIPE_PUBLIC_KEY }}");
         const elements = stripe.elements();
         const card = elements.create("card");
@@ -317,12 +299,10 @@
             });
         });
 
-        // Razorpay Setup
         const rzpBtn = document.getElementById("rzp-button");
         if (rzpBtn) {
             rzpBtn.addEventListener("click", function (e) {
                 e.preventDefault();
-
                 const options = {
                     key: "{{ RAZORPAY_KEY_ID }}",
                     amount: "{{ razorpay_amount_in_paise }}",
@@ -342,7 +322,6 @@
                     },
                     theme: { color: "#0ea5e9" }
                 };
-
                 const rzp = new Razorpay(options);
                 rzp.open();
             });

@@ -1,178 +1,196 @@
 {% extends "pages/base.html" %}
 {% load static %}
-
 {% block content %}
 <div class="kt-container-fixed mt-1" style="max-width: var(--custom-container-width, 85%);">
     <div class="flex flex-col items-stretch gap-7 mt-5 py-5">
         <main class="grow" role="content">
-
-            <!-- Step Indicator -->
+            <!-- Progress Steps -->
             <div class="kt-container-fixed">
                 <div class="flex items-center justify-center flex-wrap lg:flex-nowrap gap-8 lg:gap-1.5 pt-5 mb-12">
-                    {% for step in steps %}
-                        <div class="text-2sm leading-none relative flex items-center gap-1.5 px-3 h-8.5 rounded-full border {{ step.status_class }} [&_.kt-step-icon]:{{ step.icon_class }}">
-                            {% if step.completed %}
-                                <i class="ki-solid ki-check-circle text-green-500 absolute -top-1 -end-1 text-base"></i>
-                            {% endif %}
-                            <span class="kt-step-icon">
-                                <i class="{{ step.icon }} text-base"></i>
-                            </span>
-                            {{ step.title }}
-                        </div>
-                        {% if not forloop.last %}
-                            <div class="hidden lg:block w-12 h-px border-t border-dashed border-zinc-300 dark:border-zinc-600"></div>
-                        {% endif %}
-                    {% endfor %}
+                    <div class="text-2sm leading-none relative flex items-center gap-1.5 px-3 h-8.5 rounded-full border border-border text-foreground [&_.kt-step-icon]:text-muted-foreground bg-muted/30">
+                        <i class="ki-solid ki-check-circle text-green-500 absolute -top-1 -end-1 text-base"></i>
+                        <span class="kt-step-icon">
+                            <i class="ki-filled ki-subtitle text-base"></i>
+                        </span>
+                        Order Summary
+                    </div>
+                    <div class="hidden lg:block w-12 h-px border-t border-dashed border-zinc-300 dark:border-zinc-600"></div>
+                    <div class="text-2sm leading-none relative flex items-center gap-1.5 px-3 h-8.5 rounded-full border border-border text-foreground [&_.kt-step-icon]:text-muted-foreground bg-muted/30">
+                        <i class="ki-solid ki-check-circle text-green-500 absolute -top-1 -end-1 text-base"></i>
+                        <span class="kt-step-icon">
+                            <i class="ki-filled ki-delivery text-base"></i>
+                        </span>
+                        Shipping Info
+                    </div>
+                    <div class="hidden lg:block w-12 h-px border-t border-dashed border-zinc-300 dark:border-zinc-600"></div>
+                    <div class="text-2sm leading-none relative flex items-center gap-1.5 px-3 h-8.5 rounded-full border border-border text-foreground [&_.kt-step-icon]:text-muted-foreground bg-muted/30">
+                        <i class="ki-solid ki-check-circle text-green-500 absolute -top-1 -end-1 text-base"></i>
+                        <span class="kt-step-icon">
+                            <i class="ki-filled ki-two-credit-cart text-base"></i>
+                        </span>
+                        Payment Method
+                    </div>
+                    <div class="hidden lg:block w-12 h-px border-t border-dashed border-zinc-300 dark:border-zinc-600"></div>
+                    <div class="text-2sm leading-none relative flex items-center gap-1.5 px-3 h-8.5 rounded-full border font-medium border-primary/10 bg-primary/10 text-primary [&_.kt-step-icon]:text-primary">
+                        <span class="kt-step-icon">
+                            <i class="ki-filled ki-cheque text-base"></i>
+                        </span>
+                        Order Placed
+                    </div>
                 </div>
             </div>
 
-            <!-- Order Details -->
+            <!-- Order Confirmation -->
             <div class="kt-container-fixed">
-                <div class="grid xl:grid-cols-3 gap-5 lg:gap-9">
-                    <div class="lg:col-span-2 space-y-5">
-                        <div class="grid grid-cols-1 gap-5 lg:gap-9">
-
-                            <!-- Order Info Card -->
+                {% if error %}
+                    <div class="text-red-900 text-center mb-5">{{ error }}</div>
+                {% else %}
+                    <div class="grid xl:grid-cols-3 gap-5 lg:gap-9 mb-5 lg:mb-10">
+                        <!-- Left Side: Order Details -->
+                        <div class="lg:col-span-2 space-y-5">
                             <div class="kt-card">
-                                <div class="kt-card-header justify-start bg-muted/70 gap-9 h-auto py-5">
-                                    <div class="flex flex-col gap-1.5">
-                                        <span class="text-xs font-normal text-secondary-foreground">Order ID</span>
-                                        <span class="text-sm font-medium text-mono">{{ payment.id|stringformat:"05d" }}</span>
-                                    </div>
-                                    <div class="flex flex-col gap-1.5">
-                                        <span class="text-xs font-normal text-secondary-foreground">Order placed</span>
-                                        <span class="text-sm font-medium text-mono">{{ order_date|date:"d M, Y" }}</span>
-                                    </div>
-                                    <div class="flex flex-col gap-1.5">
-                                        <span class="text-xs font-normal text-secondary-foreground">Total</span>
-                                        <span class="text-sm font-medium text-mono">₹{{ order_total }}</span>
-                                    </div>
-                                    <div class="flex flex-col gap-1.5">
-                                        <span class="text-xs font-normal text-secondary-foreground">Ship to</span>
-                                        <span class="text-sm font-medium text-mono">{{ billing.customer_name }}</span>
-                                    </div>
-                                    <div class="flex flex-col gap-1.5">
-                                        <span class="text-xs font-normal text-secondary-foreground">Estimated Delivery</span>
-                                        <span class="text-sm font-medium text-mono">{{ estimated_delivery|default:"5-7 business days" }}</span>
-                                    </div>
+                                <div class="kt-card-header px-5">
+                                    <h3 class="kt-card-title">Order Confirmation</h3>
                                 </div>
-
-                                <!-- Products -->
-                                <div class="kt-card-content p-5 lg:p-7.5 space-y-5">
-                                    {% for item in cart_items %}
-                                    <div class="kt-card">
-                                        <div class="kt-card-content flex items-center flex-wrap justify-between gap-4.5 p-2 pe-5">
-                                            <div class="flex items-center gap-3.5">
-                                                <div class="kt-card flex items-center justify-center bg-accent/50 h-[70px] w-[90px] shadow-none">
-                                                    <img alt="{{ item.product.name }}" class="cursor-pointer h-[70px]" src="{{ item.product.image.url }}">
-                                                </div>
-                                                <div class="flex flex-col gap-1">
-                                                    <a class="hover:text-primary text-sm font-medium text-mono leading-5.5" href="#">
-                                                        {{ item.product.name }}
-                                                    </a>
-                                                    <div class="flex items-center gap-1.5">
-                                                        <span class="text-xs font-normal text-secondary-foreground uppercase">
-                                                            SKU: <span class="text-xs font-medium text-foreground">{{ item.product.sku }}</span>
-                                                        </span>
+                                <div class="kt-card-content px-0 py-5 space-y-2">
+                                    <div class="px-5">
+                                        <h4 class="text-lg font-semibold text-mono mb-3">Thank you for your order!</h4>
+                                        <p class="text-sm text-secondary-foreground">
+                                            Your order{% if order_ids|length > 1 %}s{% endif %}
+                                            #{{ order_ids|join:", #" }}
+                                            {% if order_ids|length > 1 %}have{% else %}has{% endif %} been placed successfully.
+                                        </p>
+                                        <p class="text-sm text-secondary-foreground">
+                                            Order Date: {{ order_date|date:"F j, Y, g:i A" }}
+                                        </p>
+                                        <p class="text-sm text-secondary-foreground">
+                                            Estimated Delivery: {{ estimated_delivery|date:"F j, Y" }}
+                                        </p>
+                                    </div>
+                                    <div class="border-b border-border mb-4 mt-5"></div>
+                                    <div class="px-5">
+                                        <h4 class="text-sm font-medium text-mono mb-3">Order Items</h4>
+                                        {% for order in orders %}
+                                            <div class="flex items-start gap-4 mb-4">
+                                                {% if order.product.main_image %}
+                                                    <img src="{{ order.product.main_image.0.image.url }}" alt="{{ order.product.name }}"
+                                                         class="w-16 h-16 object-cover rounded">
+                                                {% else %}
+                                                    <div class="w-16 h-16 bg-muted rounded flex items-center justify-center">
+                                                        <span class="text-xs text-muted-foreground">No Image</span>
                                                     </div>
+                                                {% endif %}
+                                                <div class="flex-1">
+                                                    <h5 class="text-sm font-medium">{{ order.product.name }}</h5>
+                                                    <p class="text-xs text-secondary-foreground">
+                                                        Brand: {{ order.product.brand.name|default:"N/A" }}
+                                                    </p>
+                                                    <p class="text-xs text-secondary-foreground">
+                                                        Quantity: {{ order.quantity }}
+                                                    </p>
+                                                    <p class="text-xs text-secondary-foreground">
+                                                        Price: {{ order.payment_currency }} {{ order.price|floatformat:2 }}
+                                                    </p>
+                                                    <p class="text-xs text-secondary-foreground">
+                                                        Status: {{ order.get_status_display }}
+                                                    </p>
                                                 </div>
                                             </div>
-                                            <div class="flex flex-col gap-1.5">
-                                                <span class="text-xs font-normal text-secondary-foreground text-end">{{ item.quantity }} x</span>
-                                                <div class="flex items-center flex-wrap gap-1.5">
-                                                    <span class="text-sm font-semibold text-mono">₹{{ item.get_total_price }}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {% endfor %}
-                                </div>
-                            </div>
-
-                            <!-- Payment & Address -->
-                            <div class="grid grid-cols-2 gap-5 lg:gap-9">
-                                <div class="kt-card">
-                                    <div class="kt-card-header px-5 min-h-[44px]">
-                                        <h3 class="kt-card-title text-sm">Payment</h3>
-                                    </div>
-                                    <div class="kt-card-content p-5">
-                                        <div class="flex items-center gap-2.5">
-                                            {% if payment_method == "stripe" %}
-                                                <img alt="Stripe" class="size-12" src="{% static 'metronic/tailwind/dist/assets/media/brand-logos/stripe.svg' %}">
-                                                <div class="flex flex-col gap-0.5 text-2sm">
-                                                    <span class="font-semibold text-mono">{{ payment_details.name }}</span>
-                                                    <span class="font-normal text-mono">
-                                                        Ending {{ payment_details.card_last4 }} Exp {{ payment_details.card_expiry }}
-                                                    </span>
-                                                </div>
-                                            {% elif payment_method == "razorpay" %}
-                                                <img alt="Razorpay" class="size-12" src="{% static 'metronic/tailwind/dist/assets/media/brand-logos/razorpay.svg' %}">
-                                                <div class="flex flex-col gap-0.5 text-2sm">
-                                                    <span class="font-semibold text-mono">{{ payment_details.name }}</span>
-                                                    <span class="font-normal text-mono">
-                                                        Razorpay ID: {{ payment_details.razorpay_payment_id }}
-                                                    </span>
-                                                </div>
-                                            {% else %}
-                                                <img alt="COD" class="size-12" src="{% static 'metronic/tailwind/dist/assets/media/icons/cod.svg' %}">
-                                                <div class="flex flex-col gap-0.5 text-2sm">
-                                                    <span class="font-semibold text-mono">{{ payment_details.name }}</span>
-                                                    <span class="font-normal text-mono">COD Tracking: {{ payment_details.cod_tracking_id }}</span>
-                                                </div>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="kt-card">
-                                    <div class="kt-card-header px-5 min-h-[44px]">
-                                        <h3 class="kt-card-title text-sm">Delivery to</h3>
-                                    </div>
-                                    <div class="kt-card-content">
-                                        <div class="text-sm font-semibold text-mono mb-2.5">{{ billing.customer_name }}</div>
-                                        <div class="flex flex-col gap-2 text-2sm font-normal text-mono">
-                                            <span>{{ billing.customer_address1 }}</span>
-                                            <span>{{ billing.customer_city }}, {{ billing.customer_postal_code }}</span>
-                                            <span>{{ billing.customer_country }}</span>
-                                            <span>Phone: {{ billing.customer_phone_number|default:"N/A" }}</span>
-                                        </div>
+                                        {% endfor %}
                                     </div>
                                 </div>
                             </div>
-
+                            <!-- Navigation -->
+                            <div class="flex justify-end items-center flex-wrap gap-3">
+                                <a class="kt-btn kt-btn-outline" href="{% url 'dashboard:my_orders' %}">
+                                    View All Orders
+                                </a>
+                                <a class="kt-btn kt-btn-outline" href="{% url 'dashboard:home' %}">
+                                    Continue Shopping
+                                </a>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Order Summary -->
-                    <div class="lg:col-span-1">
-                        <div class="space-y-5">
+                        <!-- Right Side: Order Summary -->
+                        <div class="lg:col-span-1">
                             <div class="kt-card bg-accent/50">
                                 <div class="kt-card-header px-5">
                                     <h3 class="kt-card-title">Order Summary</h3>
                                 </div>
-                                <div class="kt-card-content px-5 py-4 space-y-2">
-                                    <h4 class="text-sm font-medium text-mono mb-3.5">Price Details</h4>
-                                    <div class="flex justify-between items-center">
+                                <div class="kt-card-content px-0 py-5 space-y-2">
+                                    <!-- Billing Address -->
+                                    <div class="flex flex-col px-5">
+                                        <span class="text-sm font-medium text-mono mb-1.5">
+                                            {% if billing %}
+                                                Shipping to {{ billing.address_title|default:"Default Address" }}
+                                            {% else %}
+                                                No shipping address selected
+                                            {% endif %}
+                                        </span>
+                                        <div class="flex flex-col gap-1 text-xs font-normal text-secondary-foreground">
+                                            {% if billing %}
+                                                <span>{{ billing.customer_name|default:user.get_full_name }}</span>
+                                                <span>{{ billing.customer_address1 }}</span>
+                                                {% if billing.customer_address2 %}
+                                                    <span>{{ billing.customer_address2 }}</span>
+                                                {% endif %}
+                                                <span>{{ billing.customer_city }}, {{ billing.customer_state }} {{ billing.customer_postal_code }}</span>
+                                                <span>{{ billing.customer_country }}</span>
+                                                {% if billing.phone %}
+                                                    <span>Phone: {{ billing.phone }}</span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span>Please select an address</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="border-b border-border mb-4 mt-5"></div>
+                                    <!-- Payment Details -->
+                                    <div class="flex flex-col px-5">
+                                        <span class="text-sm font-medium text-mono mb-1.5">Payment Details</span>
+                                        <div class="flex flex-col gap-1 text-xs font-normal text-secondary-foreground">
+                                            <span>Payment Method: {{ payment_method|title }}</span>
+                                            {% if payment_details %}
+                                                {% if payment_method == "stripe" %}
+                                                    <span>Card: {{ billing.old_card_info|default:"N/A" }}</span>
+                                                    <span>Charge ID: {{ payment_details.stripe_charge_id }}</span>
+                                                {% elif payment_method == "razorpay" %}
+                                                    <span>Payment ID: {{ payment_details.razorpay_payment_id }}</span>
+                                                    <span>Order ID: {{ payment_details.razorpay_order_id }}</span>
+                                                {% elif payment_method == "cod" %}
+                                                    <span>Tracking ID: {{ payment_details.cod_tracking_id|default:"Pending" }}</span>
+                                                    <span>Delivery Partner: {{ payment_details.delivery_partner.name|default:"N/A" }}</span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span>No payment details available</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="border-b border-border mb-4 mt-5"></div>
+                                    <!-- Price Details -->
+                                    <span class="text-sm font-medium block text-mono mb-3.5 px-5">Price Details</span>
+                                    <div class="flex justify-between items-center px-5">
                                         <span class="text-sm font-normal text-secondary-foreground">Subtotal</span>
-                                        <span class="text-sm font-medium text-mono">₹{{ order_summary.subtotal }}</span>
+                                        <span class="text-sm font-medium text-mono">{{ payment.payment_currency }} {{ order_summary.subtotal|floatformat:2 }}</span>
                                     </div>
-                                    <div class="flex justify-between items-center">
+                                    <div class="flex justify-between items-center px-5">
                                         <span class="text-sm font-normal text-secondary-foreground">Shipping</span>
-                                        <span class="text-sm font-medium text-mono">₹{{ order_summary.shipping }}</span>
+                                        <span class="text-sm font-medium text-mono">{{ payment.payment_currency }} {{ order_summary.shipping|floatformat:2 }}</span>
                                     </div>
-                                    <div class="flex justify-between items-center">
+                                    <div class="flex justify-between items-center px-5">
                                         <span class="text-sm font-normal text-secondary-foreground">VAT</span>
-                                        <span class="text-sm font-medium text-mono">₹{{ order_summary.vat }}</span>
+                                        <span class="text-sm font-medium text-mono">{{ payment.payment_currency }} {{ order_summary.vat|floatformat:2 }}</span>
                                     </div>
-                                </div>
-                                <div class="kt-card-footer flex justify-between items-center px-5">
-                                    <span class="text-sm font-normal text-secondary-foreground">Total</span>
-                                    <span class="text-base font-semibold text-mono">₹{{ order_summary.total }}</span>
+                                    <div class="border-b border-border mb-4 mt-5"></div>
+                                    <div class="flex justify-between items-center px-5">
+                                        <span class="text-sm font-normal text-secondary-foreground">Total</span>
+                                        <span class="text-base font-semibold text-mono">{{ payment.payment_currency }} {{ order_summary.total|floatformat:2 }}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                {% endif %}
             </div>
         </main>
     </div>

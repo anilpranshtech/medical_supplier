@@ -47,10 +47,52 @@ class AddressForm(forms.ModelForm):
     class Meta:
         model = CustomerBillingAddress
         fields = [
-            'customer_address1', 'customer_address2',
+            'address_title', 'customer_address1', 'customer_address2',
             'customer_city', 'customer_state', 'customer_postal_code',
-            'customer_country'
+            'customer_country', 'phone', 'is_default'
         ]
+
+
+# class CustomerBillingAddressForm(forms.ModelForm):
+#     class Meta:
+#         model = CustomerBillingAddress
+#         fields = [
+#             'address_title', 'customer_name', 'customer_address1', 'customer_address2',
+#             'phone', 'customer_city', 'customer_state', 'customer_postal_code',
+#             'customer_country', 'customer_country_code', 'is_default'
+#         ]
+#         widgets = {
+#             'address_title': forms.TextInput(attrs={'placeholder': 'e.g., Home, Office', 'class': 'kt-input'}),
+#             'customer_name': forms.TextInput(attrs={'placeholder': 'Card Holder Name', 'class': 'kt-input'}),
+#             'customer_address1': forms.TextInput(attrs={'placeholder': 'Street Address', 'class': 'kt-input'}),
+#             'customer_address2': forms.TextInput(attrs={'placeholder': 'Apartment, Suite, etc.', 'class': 'kt-input'}),
+#             'phone': forms.TextInput(attrs={'placeholder': '+1234567890', 'class': 'kt-input'}),
+#             'customer_city': forms.TextInput(attrs={'placeholder': 'City', 'class': 'kt-input'}),
+#             'customer_state': forms.TextInput(attrs={'placeholder': 'State', 'class': 'kt-input'}),
+#             'customer_postal_code': forms.TextInput(attrs={'placeholder': 'Postal Code', 'class': 'kt-input'}),
+#             'customer_country': forms.TextInput(attrs={'placeholder': 'Country', 'class': 'kt-input'}),
+#             'customer_country_code': forms.TextInput(attrs={'placeholder': 'Country Code (e.g., US)', 'class': 'kt-input'}),
+#             'is_default': forms.CheckboxInput(),
+#         }
+#
+#     def __init__(self, *args, **kwargs):
+#         self.user = kwargs.pop('user', None)
+#         super().__init__(*args, **kwargs)
+#
+#     def clean(self):
+#         cleaned_data = super().clean()
+#         required_fields = ['customer_address1', 'customer_city', 'customer_state', 'customer_postal_code', 'customer_country', 'customer_country_code', 'phone']
+#         for field in required_fields:
+#             if not cleaned_data.get(field):
+#                 self.add_error(field, 'This field is required.')
+#         return cleaned_data
+#
+#     def save(self, commit=True):
+#         instance = super().save(commit=False)
+#         instance.user = self.user
+#         if commit:
+#             instance.save()
+#         return instance
 
 
 class EmailForm(forms.ModelForm):
