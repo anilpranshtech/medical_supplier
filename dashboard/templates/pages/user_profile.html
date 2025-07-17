@@ -71,7 +71,7 @@
                                     <td class="py-2 font-medium">Name</td>
                                     <td class="py-2">{{ user.first_name }} {{ user.last_name }}</td>
                                     <td class="py-2 text-center">
-                                        <a href="{% url 'dashboard:edit_profile' %}" class="kt-btn kt-btn-icon kt-btn-sm kt-btn-ghost kt-btn-primary">
+                                        <a href="#" class="kt-btn kt-btn-icon kt-btn-sm kt-btn-ghost kt-btn-primary" data-kt-modal-toggle="#modal_edit_profile">
                                             <i class="ki-filled ki-notepad-edit"></i>
                                         </a>
                                     </td>
@@ -80,8 +80,7 @@
                                     <td class="py-2 font-medium">Profile Type</td>
                                     <td class="py-2">{{ profile_type|title|default:"Not set" }}</td>
                                     <td class="py-2 text-center">
-                                        <a href="{% url 'dashboard:edit_profile' %}" class="kt-btn kt-btn-icon kt-btn-sm kt-btn-ghost kt-btn-primary">
-                                            <i class="ki-filled ki-notepad-edit"></i>
+                                        <a href="#" class="kt-btn kt-btn-icon kt-btn-sm kt-btn-ghost kt-btn-primary" data-kt-modal-toggle="#modal_edit_profile">
                                         </a>
                                     </td>
                                 </tr>
@@ -97,8 +96,7 @@
                                         {% endif %}
                                     </td>
                                     <td class="py-2 text-center">
-                                        <a href="{% url 'dashboard:edit_profile' %}" class="kt-btn kt-btn-icon kt-btn-sm kt-btn-ghost kt-btn-primary">
-                                            <i class="ki-filled ki-notepad-edit"></i>
+                                        <a href="#" class="kt-btn kt-btn-icon kt-btn-sm kt-btn-ghost kt-btn-primary" data-kt-modal-toggle="#modal_edit_profile">
                                         </a>
                                     </td>
                                 </tr>
@@ -218,51 +216,93 @@
             </div>
         </div>
 
-        <!-- Edit Email Modal -->
-        <div class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" data-kt-modal="true" id="modal_edit_email">
-            <div class="kt-card w-full max-w-[500px] rounded-xl border border-border bg-background">
+        <!-- ==================== Edit Email Modal ==================== -->
+        <div id="modal_edit_email"
+             class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center"
+             style="backdrop-filter: blur(8px); background-color: rgba(0, 0, 0, 0.3);">
+            <div class="kt-card w-full max-w-[500px] max-h-[90vh] overflow-y-auto rounded-xl border border-border bg-background shadow-lg">
                 <form method="post" action="{% url 'dashboard:edit_email' %}">
                     {% csrf_token %}
                     <div class="kt-card-header px-5 flex items-center justify-between">
                         <h3 class="kt-card-title">Edit Email</h3>
-                        <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" data-kt-modal-dismiss="true" type="button">
+                        <button type="button" class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost" onclick="closeModal('modal_edit_email')">
                             <i class="ki-filled ki-cross text-base"></i>
                         </button>
                     </div>
-                    <div class="kt-card-content flex flex-col space-y-3 p-5">
-                        <div class="flex flex-col gap-1.5">
-                            <label class="text-2sm font-semibold text-mono">Email Address</label>
-                            <input type="email" name="email" class="kt-input" value="{{ user.email }}" required>
-                        </div>
+                    <div class="kt-card-content p-5">
+                        <label class="text-2sm font-semibold text-mono">Email Address</label>
+                        <input type="email" name="email" class="kt-input w-full" value="{{ user.email }}" required>
                     </div>
-                    <div class="kt-card-footer px-5 flex justify-end gap-3">
-                        <button class="kt-btn kt-btn-outline" data-kt-modal-dismiss="true" type="button">Cancel</button>
-                        <button class="kt-btn kt-btn-primary" type="submit">Save Changes</button>
+                    <div class="kt-card-footer px-5 py-4 flex justify-end gap-3">
+                        <button type="button" class="kt-btn kt-btn-outline" onclick="closeModal('modal_edit_email')">Cancel</button>
+                        <button type="submit" class="kt-btn kt-btn-primary">Save Changes</button>
                     </div>
                 </form>
             </div>
         </div>
 
-        <!-- Edit Phone Modal -->
-        <div class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" data-kt-modal="true" id="modal_edit_phone">
-            <div class="kt-card w-full max-w-[500px] rounded-xl border border-border bg-background">
+        <!-- ==================== Edit Phone Modal ==================== -->
+        <div id="modal_edit_phone"
+             class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center"
+             style="backdrop-filter: blur(8px); background-color: rgba(0, 0, 0, 0.3);">
+            <div class="kt-card w-full max-w-[500px] max-h-[90vh] overflow-y-auto rounded-xl border border-border bg-background shadow-lg">
                 <form method="post" action="{% url 'dashboard:edit_phone' %}">
                     {% csrf_token %}
                     <div class="kt-card-header px-5 flex items-center justify-between">
                         <h3 class="kt-card-title">Edit Phone Number</h3>
-                        <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" data-kt-modal-dismiss="true" type="button">
+                        <button type="button" class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost" onclick="closeModal('modal_edit_phone')">
                             <i class="ki-filled ki-cross text-base"></i>
                         </button>
                     </div>
-                    <div class="kt-card-content flex flex-col space-y-3 p-5">
-                        <div class="flex flex-col gap-1.5">
-                            <label class="text-2sm font-semibold text-mono">Phone Number</label>
-                            <input type="tel" name="phone" class="kt-input" value="{% if default_address and default_address.phone %}{{ default_address.phone }}{% else %}{{ phone|default:'' }}{% endif %}" placeholder="+1234567890" required>
+                    <div class="kt-card-content p-5">
+                        <label class="text-2sm font-semibold text-mono">Phone Number</label>
+                        <input type="tel" name="phone" class="kt-input w-full" value="{% if default_address and default_address.phone %}{{ default_address.phone }}{% else %}{{ phone|default:'' }}{% endif %}" placeholder="+1234567890" required>
+                    </div>
+                    <div class="kt-card-footer px-5 py-4 flex justify-end gap-3">
+                        <button type="button" class="kt-btn kt-btn-outline" onclick="closeModal('modal_edit_phone')">Cancel</button>
+                        <button type="submit" class="kt-btn kt-btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- ==================== Edit Name & Profile Modal ==================== -->
+        <div id="modal_edit_profile"
+             class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center"
+             style="backdrop-filter: blur(8px); background-color: rgba(0, 0, 0, 0.3);">
+            <div class="kt-card w-full max-w-[500px] max-h-[90vh] overflow-y-auto rounded-xl border border-border bg-background shadow-lg">
+                <form method="post" action="{% url 'dashboard:edit_profile' %}">
+                    {% csrf_token %}
+                    <div class="kt-card-header px-5 flex items-center justify-between">
+                        <h3 class="kt-card-title">Edit Name & Profile</h3>
+                        <button type="button" class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost" onclick="closeModal('modal_edit_profile')">
+                            <i class="ki-filled ki-cross text-base"></i>
+                        </button>
+                    </div>
+                    <div class="kt-card-content p-5 space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-2sm font-semibold text-mono">First Name</label>
+                                <input type="text" name="first_name" class="kt-input w-full" value="{{ user.first_name }}" required>
+                            </div>
+                            <div>
+                                <label class="text-2sm font-semibold text-mono">Last Name</label>
+                                <input type="text" name="last_name" class="kt-input w-full" value="{{ user.last_name }}" required>
+                            </div>
+                        </div>
+                        <div id="dynamic-profile-field">
+                            {% if profile_type == 'doctor' %}
+                                <label class="text-2sm font-semibold text-mono">Specialization</label>
+                                <input type="text" name="speciality" class="kt-input w-full" value="{{ profile.speciality }}">
+                            {% elif profile_type in 'medical_supplier|corporate|wholesaler|supplier' %}
+                                <label class="text-2sm font-semibold text-mono">Company Name</label>
+                                <input type="text" name="company_name" class="kt-input w-full" value="{{ profile.company_name }}">
+                            {% endif %}
                         </div>
                     </div>
-                    <div class="kt-card-footer px-5 flex justify-end gap-3">
-                        <button class="kt-btn kt-btn-outline" data-kt-modal-dismiss="true" type="button">Cancel</button>
-                        <button class="kt-btn kt-btn-primary" type="submit">Save Changes</button>
+                    <div class="kt-card-footer px-5 py-4 flex justify-end gap-3">
+                        <button type="button" class="kt-btn kt-btn-outline" onclick="closeModal('modal_edit_profile')">Cancel</button>
+                        <button type="submit" class="kt-btn kt-btn-primary">Save Changes</button>
                     </div>
                 </form>
             </div>
@@ -339,6 +379,67 @@ document.addEventListener('DOMContentLoaded', function () {
             })
             .catch(() => alert('An error occurred. Please try again.'));
         });
+    });
+});
+</script>
+<script>
+function openModal(id) {
+    document.getElementById(id)?.classList.remove('hidden');
+}
+function closeModal(id) {
+    document.getElementById(id)?.classList.add('hidden');
+}
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const profileSelect = document.getElementById('profile_type_select');
+    const profileField = document.getElementById('dynamic-profile-field');
+    const nameForm = document.getElementById('edit-name-form');
+
+    function updateDynamicField() {
+        const type = profileSelect.value;
+        let html = '';
+        if (type === 'doctor') {
+            html = `
+                <label class="text-2sm font-semibold text-mono">Specialization</label>
+                <input type="text" name="speciality" class="kt-input" required>
+            `;
+        } else if (['medical_supplier', 'corporate', 'wholesaler', 'supplier'].includes(type)) {
+            html = `
+                <label class="text-2sm font-semibold text-mono">Company Name</label>
+                <input type="text" name="company_name" class="kt-input" required>
+            `;
+        }
+        profileField.innerHTML = html;
+    }
+
+    if (profileSelect) {
+        profileSelect.addEventListener('change', updateDynamicField);
+        updateDynamicField();
+    }
+
+    nameForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const formData = new FormData(nameForm);
+
+        fetch(nameForm.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+                'X-Requested-With': 'XMLHttpRequest',
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                alert(data.message);
+                window.location.reload();
+            } else {
+                alert(data.message || 'Error occurred');
+            }
+        })
+        .catch(() => alert('An unexpected error occurred.'));
     });
 });
 </script>

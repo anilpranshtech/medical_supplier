@@ -1519,70 +1519,38 @@ class UploadAvatarView(LoginRequiredMixin, View):
 
 
 class EditProfileView(LoginRequiredMixin, UpdateView):
-    template_name = 'pages/edit_profile.html'
-    form_class = ProfileForm
+    def post(self, request):
+        user = request.user
+        profile = user.profile
 
-    def get_object(self):
-        user = self.request.user
-        try:
-            return RetailProfile.objects.get(user=user)
-        except RetailProfile.DoesNotExist:
-            try:
-                return WholesaleBuyerProfile.objects.get(user=user)
-            except WholesaleBuyerProfile.DoesNotExist:
-                return SupplierProfile.objects.get(user=user)
+        # Get basic info
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        profile_type = request.POST.get('profile_type', '').strip()
 
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs['user'] = self.request.user
-        # Determine profile_type directly
-        user = self.request.user
-        profile_type = None
-        try:
-            profile = RetailProfile.objects.get(user=user)
-            phone = None
-            profile_type = 'retailer'
-        except RetailProfile.DoesNotExist:
-            try:
-                profile = WholesaleBuyerProfile.objects.get(user=user)
-                phone = None
-                profile_type = 'wholesaler'
-            except WholesaleBuyerProfile.DoesNotExist:
-                try:
-                    profile = SupplierProfile.objects.get(user=user)
-                    phone = None
-                    profile_type = 'supplier'
-                except SupplierProfile.DoesNotExist:
-                    pass
-        kwargs['profile_type'] = profile_type
-        return kwargs
+        # Validate
+        if not first_name or not last_name or not profile_type:
+            return JsonResponse({'status': 'error', 'message': 'All fields are required.'}, status=400)
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        # Reuse profile_type from get_form_kwargs logic
-        user = self.request.user
-        profile_type = None
-        try:
-            profile = RetailProfile.objects.get(user=user)
-            phone = None
-            profile_type = 'retailer'
-        except RetailProfile.DoesNotExist:
-            try:
-                profile = WholesaleBuyerProfile.objects.get(user=user)
-                phone = None
-                profile_type = 'wholesaler'
-            except WholesaleBuyerProfile.DoesNotExist:
-                try:
-                    profile = SupplierProfile.objects.get(user=user)
-                    phone = None
-                    profile_type = 'supplier'
-                except SupplierProfile.DoesNotExist:
-                    pass
-        context['profile_type'] = profile_type
-        return context
+        # Update user and profile
+        user.first_name = first_name
+        user.last_name = last_name
+        profile.profile_type = profile_type
 
-    def get_success_url(self):
-        return reverse_lazy('dashboard:user_profile')
+        if profile_type == 'doctor':
+            profile.speciality = request.POST.get('speciality', '').strip()
+            profile.company_name = ''
+        elif profile_type in ['medical_supplier', 'corporate', 'wholesaler', 'supplier']:
+            profile.company_name = request.POST.get('company_name', '').strip()
+            profile.speciality = ''
+        else:
+            profile.speciality = ''
+            profile.company_name = ''
+
+        user.save()
+        profile.save()
+
+        return JsonResponse({'status': 'success', 'message': 'Profile updated successfully.'})
 
 
 class EditEmailView(LoginRequiredMixin, View):
