@@ -1643,7 +1643,7 @@ class VerifyOTPView(View):
 
         if not signup_data:
             messages.error(request, "Session expired. Please sign up again.")
-            return redirect('dashboard:user_signup')
+            return redirect('dashboard:login')
 
         phone = signup_data['phone']
         result = verify_mobile_otp(VERIFY_URL, TEXTDRIP_OTP_TOKEN, phone, otp)
@@ -1655,7 +1655,7 @@ class VerifyOTPView(View):
             if User.objects.filter(username=signup_data['email']).exists():
                 messages.error(request, "An account with this email already exists.")
                 request.session.pop('signup_data', None)
-                return redirect('dashboard:user_signup')
+                return redirect('dashboard:login')
 
             try:
                 User.objects.create_user(
@@ -1665,7 +1665,7 @@ class VerifyOTPView(View):
                 )
                 request.session.pop('signup_data', None)
                 messages.success(request, "Account created successfully.")
-                return redirect('dashboard:user_signin')
+                return redirect('dashboard:login')
             except Exception as e:
                 messages.error(request, f"Error creating account: {str(e)}")
                 return redirect('dashboard:user_signup')
