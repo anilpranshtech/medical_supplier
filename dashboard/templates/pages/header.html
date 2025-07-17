@@ -409,40 +409,40 @@
 
                     <!-- Search Results -->
                     {% comment %}
-<!--                    <div class="kt-menu-item relative group" data-kt-menu-item-toggle="dropdown" data-kt-menu-item-trigger="hover">-->
-<!--                        <a class="kt-menu-link flex items-center gap-2 px-3 py-2 text-2sm leading-none relative h-8.5 rounded-full border-->
-<!--                            border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground"-->
-<!--                           href="#">-->
-<!--                            <i class="ki-filled ki-magnifier kt-step-icon"></i>-->
-<!--                            <span class="text-sm">Search Results</span>-->
-<!--                        </a>-->
-<!--                        <div class="kt-menu-dropdown absolute w-48 bg-background dark:bg-gray-800 border border-border rounded-lg shadow-lg z-10 hidden group-hover:block mt-7 py-5 px-3">-->
-<!--                            <div class="kt-menu-item">-->
-<!--                                <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border-->
-<!--                                    {% if request.resolver_match.url_name == 'search_results_grid' %}-->
-<!--                                        bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary-->
-<!--                                    {% else %}-->
-<!--                                        border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground-->
-<!--                                    {% endif %}"-->
-<!--                                   href="{% url 'dashboard:search_results_grid' %}">-->
-<!--                                    <i class="ki-filled ki-grid kt-step-icon"></i>-->
-<!--                                    <span class="text-sm">Grid View</span>-->
-<!--                                </a>-->
-<!--                            </div>-->
-<!--                            <div class="kt-menu-item mt-3">-->
-<!--                                <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border-->
-<!--                                    {% if request.resolver_match.url_name == 'search_results_list' %}-->
-<!--                                        bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary-->
-<!--                                    {% else %}-->
-<!--                                        border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground-->
-<!--                                    {% endif %}"-->
-<!--                                   href="{% url 'dashboard:search_results_list' %}">-->
-<!--                                    <i class="bi bi-card-checklist kt-step-icon"></i>-->
-<!--                                    <span class="text-sm">List View</span>-->
-<!--                                </a>-->
-<!--                            </div>-->
-<!--                        </div>-->
-<!--                    </div>-->
+                    <div class="kt-menu-item relative group" data-kt-menu-item-toggle="dropdown" data-kt-menu-item-trigger="hover">
+                        <a class="kt-menu-link flex items-center gap-2 px-3 py-2 text-2sm leading-none relative h-8.5 rounded-full border
+                            border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground"
+                           href="#">
+                            <i class="ki-filled ki-magnifier kt-step-icon"></i>
+                            <span class="text-sm">Search Results</span>
+                        </a>
+                        <div class="kt-menu-dropdown absolute w-48 bg-background dark:bg-gray-800 border border-border rounded-lg shadow-lg z-10 hidden group-hover:block mt-7 py-5 px-3">
+                            <div class="kt-menu-item">
+                                <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
+                                    {% if request.resolver_match.url_name == 'search_results_grid' %}
+                                        bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
+                                    {% else %}
+                                        border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
+                                    {% endif %}"
+                                   href="{% url 'dashboard:search_results_grid' %}">
+                                    <i class="ki-filled ki-grid kt-step-icon"></i>
+                                    <span class="text-sm">Grid View</span>
+                                </a>
+                            </div>
+                            <div class="kt-menu-item mt-3">
+                                <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
+                                    {% if request.resolver_match.url_name == 'search_results_list' %}
+                                        bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
+                                    {% else %}
+                                        border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
+                                    {% endif %}"
+                                   href="{% url 'dashboard:search_results_list' %}">
+                                    <i class="bi bi-card-checklist kt-step-icon"></i>
+                                    <span class="text-sm">List View</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                     {% endcomment %}
 
                     <!-- Overlays -->
@@ -491,18 +491,6 @@
                         </a>
                         <div class="kt-menu-dropdown absolute w-40 bg-background dark:bg-gray-800 border border-border rounded-lg shadow-lg z-10 hidden group-hover:block mt-7 py-5 px-3">
                             <div class="kt-menu-item">
-                                <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
-                                    {% if request.resolver_match.url_name == 'order_summary' %}
-                                        bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
-                                    {% else %}
-                                        border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
-                                    {% endif %}"
-                                   href="{% url 'dashboard:order_summary' %}">
-                                    <i class="ki-filled ki-notepad kt-step-icon"></i>
-                                    <span class="text-sm">Order Summary</span>
-                                </a>
-                            </div>
-                            <div class="kt-menu-item mt-3">
                                 <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
                                     {% if request.resolver_match.url_name == 'shipping_info' %}
                                         bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
@@ -1134,7 +1122,7 @@
             if (buyNowButton) {
                 buyNowButton.addEventListener('click', function () {
                     if (cart.length > 0) {
-                        window.location.href = "{% url 'dashboard:order_summary' %}";
+                        window.location.href = "{% url 'dashboard:shopping_cart' %}";
                     } else {
                         alert('Your cart is empty. Please add items before proceeding.');
                     }

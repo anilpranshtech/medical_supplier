@@ -129,7 +129,7 @@
     border: none;
     width: 100%;
     padding: 0.5rem 0;
-    color: #1f2937;
+    color: #6b7280;
     transition: all 0.2s ease-in-out;
     cursor: pointer;
 }
@@ -147,7 +147,7 @@
     display: block;
     padding: 4px 0;
     font-size: 0.95rem;
-    color: #4b5563;
+    color: #6b7280;
     text-decoration: none;
     transition: all 0.2s;
 }
@@ -200,7 +200,7 @@
         <!-- Category sidebar -->
         <div class="kt-category-grid">
             <div class="amazon-sidebar w-full md:w-1/4 pr-6">
-                <h2 class="text-base font-bold mb-4 uppercase pb-1">Category</h2>
+                <h2 class="text-base font-bold text-red-500 mb-4 uppercase pb-1">Category</h2>
                {% for category in categories %}
     <div class="mb-3">
         <button type="button" onclick="toggleCategory('cat-{{ category.id }}')" class="category-button">
@@ -282,12 +282,12 @@
                         
                         <!-- Product Details -->
                         <div class="kt-list-card-content">
-                            <h3 class="text-lg font-bold text-mono mb-1">
+                            <h3 class="text-lg font-bold text-gray-650 mb-1">
                                 <a href="#" data-kt-modal-toggle="#modal_shop_product_details">
                                     {{ product.name }}
                                 </a>
                             </h3>
-                            <p class="text-sm text-gray-600 mb-2">
+                            <p class="text-sm text-gray-300 mb-2">
                                 {{ product.description|default:"No description available"|truncatechars:200 }}
                             </p>
                             

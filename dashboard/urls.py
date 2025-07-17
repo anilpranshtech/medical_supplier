@@ -20,14 +20,14 @@ urlpatterns = [
     path('product-detail/', views.ProductDetailsView.as_view(), name='product_detail'),
    #cart
     path('add-to-cart/', CartAddView.as_view(), name='add_to_cart'),
-    path('shopping-cart/', ShoppingCartView.as_view(), name='shopping_cart'),
+    # path('order-summary/', OrderSummaryView.as_view(), name='order_summary'),
     path('remove-from-cart/', RemoveFromCartView.as_view(), name='remove_from_cart'),
    
     path('wish-list/', views.WishlistView.as_view(), name='wish_list'),
     path('wishlist/toggle/', views.WishlistToggleView.as_view(), name='toggle_wishlist'),
     path('wishlist/clear/',views.WishlistClearView.as_view(), name='clear_wishlist'),
     path('wishlist/products/', WishlistProductListView.as_view(), name='wishlist_product_list'),
-    path('order-summary/', views.OrderSummaryView.as_view(), name='order_summary'),
+    path('shopping-cart/', views.ShoppingCartView.as_view(), name='shopping_cart'),
     path('add-to-cart/', add_to_cart, name='add_to_cart'),
     path('remove-from-cart/', remove_from_cart, name='remove_from_cart'),
     path('shipping-info/', views.ShippingInfoView.as_view(), name='shipping_info'),

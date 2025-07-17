@@ -1,0 +1,99 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mx-auto py-10">
+    <h2 class="text-xl font-bold mb-5">Your Shopping Cart</h2>
+
+    {% if cart_items %}
+    <div class="grid grid-cols-4 gap-5">
+        {% for item in cart_items %}
+        <div id="cart-item-{{  item.product.id }}"
+             class="kt-card p-4 border border-gray-300 rounded-xl shadow-md bg-white w-[270px] h-[350px] relative">
+
+
+            <button class="absolute top-2 right-2 text-red-500 hover:text-red-700 remove-from-cart"
+                    data-item-id="{{  item.product.id}}">
+                <i class="ki-filled ki-cross text-lg"></i>
+            </button>
+
+            <div class="flex flex-col items-center">
+                <img src="{{ item.product.productimage_set.first.image.url }}"
+                     alt="{{ item.product.name }}"
+                     class="w-full h-40 object-cover rounded mb-3">
+                <h3 class="text-md font-semibold text-center">{{ item.product.name }}</h3>
+                <p class="text-sm text-gray-600 mt-1 flex items-center gap-2">
+                    <button class="decrease-btn px-2 py-1 bg-gray-200 rounded" data-product-id="{{ item.product.id }}">
+                        -
+                    </button>
+                    <span class="font-semibold quantity">{{ item.quantity }}</span>
+                    <button class="increase-btn px-2 py-1 bg-gray-200 rounded" data-product-id="{{ item.product.id }}">
+                        +
+                    </button>
+                </p>
+
+                <p class="text-sm font-bold text-gray-650 mt-1">${{ item.get_total_price }}</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="mt-6 text-right font-bold text-lg">
+        Total: ${{ total }}
+    </div>
+    {% else %}
+    <p class="text-gray-500 font-bold text-center">Your cart is empty.</p>
+    {% endif %}
+</div>
+
+<!-- Remove from Cart -->
+<script>
+    document.querySelectorAll('.remove-from-cart').forEach(button => {
+        button.addEventListener('click', function () {
+            const itemId = this.dataset.itemId;
+
+            fetch("{% url 'dashboard:remove_from_cart' %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `item_id=${itemId}`
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        document.getElementById(`cart-item-${itemId}`).remove();
+                        location.reload();
+                    } else {
+                        alert('Failed to remove item from cart');
+                    }
+                });
+        });
+    });
+    document.querySelectorAll('.increase-btn, .decrease-btn').forEach(button => {
+        button.addEventListener('click', function () {
+            const productId = this.dataset.productId;
+            const isIncrease = this.classList.contains('increase-btn');
+            const quantityChange = isIncrease ? 1 : -1;
+
+            fetch("{% url 'dashboard:add_to_cart' %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `product_id=${productId}&quantity=${quantityChange}`
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success' || data.status === 'removed') {
+                        location.reload();
+                    }
+                });
+        });
+    });
+</script>
+
+
+{% endblock %}

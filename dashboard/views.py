@@ -664,17 +664,17 @@ class ProductDetailsView(TemplateView):
 
 
 
-class ShoppingCartView(LoginRequiredMixin, TemplateView):
-    template_name = 'userdashboard/view/shopping_cart.html'
-    login_url = 'dashboard:login'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        cart_items = CartProduct.objects.filter(user=self.request.user).select_related('product')
-        total = sum(item.get_total_price() for item in cart_items)
-        context['cart_items'] = cart_items
-        context['total'] = total
-        return context
+# class OrderSummaryView(LoginRequiredMixin, TemplateView):
+#     template_name = 'userdashboard/view/cart_summary.html'
+#     login_url = 'dashboard:login'
+#
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         cart_items = CartProduct.objects.filter(user=self.request.user).select_related('product')
+#         total = sum(item.get_total_price() for item in cart_items)
+#         context['cart_items'] = cart_items
+#         context['total'] = total
+#         return context
     
 class CartAddView(LoginRequiredMixin, View):
     def get(self, request):
@@ -775,8 +775,8 @@ class WishlistProductListView(LoginRequiredMixin, View):
         return JsonResponse(data, safe=False)
 
 
-class OrderSummaryView(LoginRequiredMixin, TemplateView):
-    template_name = 'userdashboard/view/order_summary.html'
+class ShoppingCartView(LoginRequiredMixin, TemplateView):
+    template_name = 'userdashboard/view/shopping_cart.html'
     login_url = 'dashboard:login'
 
     def get_context_data(self, **kwargs):

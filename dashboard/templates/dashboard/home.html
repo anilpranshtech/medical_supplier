@@ -88,6 +88,27 @@
             color: white;
         }
     }
+
+    /* Loader styles */
+    .loader {
+        display: none;
+        border: 2px solid #ffffff;
+        border-top: 2px solid transparent;
+        border-radius: 50%;
+        width: 16px;
+        height: 16px;
+        animation: spin 1s linear infinite;
+        margin-left: 8px;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      .loading .loader {
+        display: inline-block;
+      }
 </style>
 
 <!-- Begin Medical Banner Slider -->
@@ -783,8 +804,7 @@
                             <input type="text" name="company_name" id="rfqCompanyName"
                                    class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                                    required aria-required="true">
-                            <p class="text-xs text-red-500 mt-1 hidden" id="rfqCompanyNameError">Company name is
-                                required.</p>
+                            <p class="text-xs text-red-500 mt-1 hidden" id="rfqCompanyNameError">Company name is required.</p>
                         </div>
                         <div>
                             <label for="rfqQuantity"
@@ -793,8 +813,7 @@
                             <input type="number" name="quantity" id="rfqQuantity"
                                    class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                                    min="1" required aria-required="true">
-                            <p class="text-xs text-red-500 mt-1 hidden" id="rfqQuantityError">Quantity must be at least
-                                1.</p>
+                            <p class="text-xs text-red-500 mt-1 hidden" id="rfqQuantityError">Quantity must be at least 1.</p>
                         </div>
                         <div>
                             <label for="rfqMessage"
@@ -806,13 +825,13 @@
                     </div>
                     <div class="kt-card-footer px-5 py-4 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700">
                         <button type="button"
-                                class="kt-btn kt-btn-outline kt-btn-sm text-gray-650 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                class="kt-btn kt-btn-outline kt-btn-sm text-gray-650 hover:bg-gray-900 dark:hover:bg-gray-700"
                                 onclick="closeRFQModal()">Cancel
                         </button>
-                        <button type="submit"
-                                class="kt-btn kt-btn-primary kt-btn-sm bg-blue-600 hover:bg-blue-700 text-white">Submit
-                            RFQ
-                        </button>
+                        <button type="submit" class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center" id="rfqSubmitBtn">
+                            Submit RFQ
+                            <span class="loader"></span>
+                          </button>
                     </div>
                 </form>
             </div>
