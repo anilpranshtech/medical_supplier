@@ -422,6 +422,13 @@ from django.core.paginator import Paginator
 class SearchResultsGridView(TemplateView):
     template_name = 'userdashboard/view/search_results_grid.html'
 
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            html = render_to_string(self.template_name, context, request=request)
+            return HttpResponse(html)
+        return super().get(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
@@ -434,6 +441,8 @@ class SearchResultsGridView(TemplateView):
         context['selected_category'] = None
         context['selected_sub_category'] = None
         context['selected_last_category'] = None
+        context['page_obj'] = None
+        context['total_products'] = 0
 
         # Categories & Subcategories 
         last_categories_with_products = ProductLastCategory.objects.annotate(
@@ -456,10 +465,10 @@ class SearchResultsGridView(TemplateView):
         if last_category_id:
             try:
                 last_category = ProductLastCategory.objects.get(id=last_category_id)
-            except ProductLastCategory.DoesNotExist:
-                last_category = None
+                context['selected_last_category'] = last_category
+                context['selected_sub_category'] = last_category.sub_category
+                context['selected_category'] = last_category.sub_category.category
 
-            if last_category:
                 products = Product.objects.filter(last_category=last_category)
 
                 # Sorting
@@ -477,11 +486,10 @@ class SearchResultsGridView(TemplateView):
                     'products': page_obj,
                     'page_obj': page_obj,
                     'paginator': paginator,
-                    'selected_last_category': last_category,
-                    'selected_sub_category': last_category.sub_category,
-                    'selected_category': last_category.sub_category.category,
                     'total_products': paginator.count,
                 })
+            except ProductLastCategory.DoesNotExist:
+                context['products'] = []
 
         elif sub_category_id:
             try:
@@ -490,7 +498,7 @@ class SearchResultsGridView(TemplateView):
                 context['selected_sub_category'] = sub_category
                 context['selected_category'] = sub_category.category
             except ProductSubCategory.DoesNotExist:
-                pass
+                context['last_categories'] = []
 
         elif category_id:
             try:
@@ -499,10 +507,10 @@ class SearchResultsGridView(TemplateView):
                 context['last_categories'] = last_categories_with_products.filter(sub_category__in=subcategories)
                 context['selected_category'] = category
             except ProductCategory.DoesNotExist:
-                pass
+                context['last_categories'] = []
 
         else:
-            context['products'] = None
+            context['products'] = []
 
         # Wishlist/Cart 
         if self.request.user.is_authenticated:

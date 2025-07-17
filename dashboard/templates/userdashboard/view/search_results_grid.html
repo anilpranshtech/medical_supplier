@@ -7,7 +7,7 @@
     }
     .kt-category-grid {
         display: grid;
-        grid-template-columns: 1fr 3fr;
+        grid-template-columns: 0.8fr 3.2fr; 
         gap: 20px;
         width: 100%;
     }
@@ -19,162 +19,149 @@
         height: fit-content;
     }
 
-  .kt-product-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr); 
-    gap: 20px;
-}
+    .kt-product-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr); 
+        gap: 20px;
+    }
 
-.kt-category-grid {
-    display: grid;
-    grid-template-columns: 0.8fr 3.2fr; 
-    gap: 20px;
-    width: 100%;
-}
-
-
-.amazon-sidebar {
-    border-right: 1px solid #e0e0e0;
-    padding-right: 16px;
-}
-.text-red-500 {
+    .amazon-sidebar {
+        border-right: 1px solid #e0e0e0;
+        padding-right: 16px;
+    }
+    .text-red-500 {
         color: #ef4444 !important;
     }
 
     .heart-icon {
         transition: color 0.2s ease-in-out;
     }  
-.rotate-180 {
+    .rotate-180 {
         transform: rotate(180deg);
     }
 
     .kt-select-wrapper {
-    position: relative; 
-}
+        position: relative; 
+    }
 
-.kt-select-dropdown {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    width: 100%;
-    background-color: white;
-    border: 1px solid #ccc;
-    margin-top: 4px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    z-index: 105;
-}
+    .kt-select-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        background-color: white;
+        border: 1px solid #ccc;
+        margin-top: 4px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        z-index: 105;
+    }
 
-.amazon-sidebar h2 {
-    font-size: 1.25rem;
-    font-weight: 700;
-    margin-bottom: 1.5rem;
-    text-transform: uppercase;
-    color: #111827;
-}
+    .amazon-sidebar h2 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        text-transform: uppercase;
+        color: #111827;
+    }
 
-.category-button {
-    font-size: 1.1rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: none;
-    border: none;
-    width: 100%;
-    padding: 0.5rem 0;
-    color: #1f2937;
-    transition: all 0.2s ease-in-out;
-    cursor: pointer;
-}
+    .category-button {
+        font-size: 1.1rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: none;
+        border: none;
+        width: 100%;
+        padding: 0.5rem 0;
+        color: #1f2937;
+        transition: all 0.2s ease-in-out;
+        cursor: pointer;
+    }
 
-.category-button:hover {
-    color: #3b82f6;
-}
+    .category-button:hover {
+        color: #3b82f6;
+    }
 
-.subcategory-list {
-    margin-left: 1.5rem;
-    margin-top: 0.25rem;
-}
+    .subcategory-list {
+        margin-left: 1.5rem;
+        margin-top: 0.25rem;
+    }
 
-.subcategory-list a {
-    display: block;
-    padding: 4px 0;
-    font-size: 0.95rem;
-    color: #4b5563;
-    text-decoration: none;
-    transition: all 0.2s;
-}
+    .subcategory-list a {
+        display: block;
+        padding: 4px 0;
+        font-size: 0.95rem;
+        color: #4b5563;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
 
-.subcategory-list a:hover {
-    color: #3b82f6;
-    
-}
-
-.rotate-180 {
-    transform: rotate(180deg);
-}
-
+    .subcategory-list a:hover {
+        color: #3b82f6;
+    }
 </style>
 
 <title>Search Results - Medical Supplies</title>
 <div class="kt-container-fixed mt-1" style="max-width: var(--custom-container-width, 90%);">
     <div class="flex flex-col items-stretch gap-7 mt-5 py-5">
-        <!-- <div class="flex items-center gap-3 w-full">
-            <div class="kt-input w-full">
-                <i class="ki-filled ki-magnifier"></i>
-                <input placeholder="" type="text" value="Medical Supplies" fdprocessedid="imlqyi">
-                <span class="kt-badge kt-badge-outline -me-1.5">⌘ K</span>
-            </div>
-            <button class="kt-dropdown-toggle kt-btn kt-btn-primary" data-kt-drawer-toggle="#drawers_shop_filter"
-                    fdprocessedid="g9axil">
-                <i class="ki-filled ki-filter"></i>
-                Filter
-            </button>
-        </div> -->
         <div class="flex flex-wrap items-center gap-5 justify-between mt-3">
-            {% if page_obj %}
-    <h3 class="text-sm text-mono font-medium">
-        {{ page_obj.start_index }} - {{ page_obj.end_index }} over {{ total_products }} results for
-        <span class="text-destructive">
-            {{ selected_last_category.name|default:selected_sub_category.name|default:selected_category.name|default:"Products" }}
-        </span>
-    </h3>
-{% endif %}
+            <h3 id="results-header" class="text-sm text-mono font-medium">
+                {% if page_obj %}
+                    {{ page_obj.start_index }} - {{ page_obj.end_index }} over {{ total_products }} results for
+                    <span class="text-destructive">
+                        {% if selected_last_category %}
+                            {{ selected_last_category.name }}
+                        {% elif selected_sub_category %}
+                            {{ selected_sub_category.name }}
+                        {% elif selected_category %}
+                            {{ selected_category.name }}
+                        {% else %}
+                            Products
+                        {% endif %}
+                    </span>
+                {% else %}
+                    0 - 0 over 0 results for
+                    <span class="text-destructive">
+                        {% if selected_last_category %}
+                            {{ selected_last_category.name }}
+                        {% elif selected_sub_category %}
+                            {{ selected_sub_category.name }}
+                        {% elif selected_category %}
+                            {{ selected_category.name }}
+                        {% else %}
+                            Products
+                        {% endif %}
+                    </span>
+                {% endif %}
+            </h3>
 
             <div class="flex items-center gap-2.5">
                 <div data-kt-select-wrapper="" class="kt-select-wrapper w-[175px] bg-background">
                     <div data-kt-select-display="" class="kt-select-display kt-select" tabindex="0" role="button"
-                         data-selected="0" aria-haspopup="listbox" aria-expanded="false" aria-label="Select an option"
-                         fdprocessedid="d8gn9b">
-                        Price Low to High
+                         data-selected="0" aria-haspopup="listbox" aria-expanded="false" aria-label="Select an option">
+                        {% if request.GET.sort_by == "1" %}
+                            Price High to Low
+                        {% elif request.GET.sort_by == "2" %}
+                            Price Low to High
+                        {% else %}
+                            Price Low to High
+                        {% endif %}
                     </div>
-
-                    
                     <div data-kt-select-dropdown="" class="kt-select-dropdown hidden" style="z-index: 105;">
                         <ul role="listbox" aria-label="Select an option" class="kt-select-options"
                             data-kt-select-options="true">
                             <li data-kt-select-option="" data-value="1" data-text="Price High to Low"
-                                class="kt-select-option selected" role="option" aria-selected="true">
+                                class="kt-select-option {% if request.GET.sort_by == '1' %}selected{% endif %}" role="option" aria-selected="true">
                                 <div class="kt-select-option-text" data-kt-text-container="true">Price High to Low</div>
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                     stroke-linecap="round" stroke-linejoin="round"
-                                     class="size-3.5 ms-auto hidden text-primary kt-select-option-selected:block">
-                                    <path d="M20 6 9 17l-5-5"></path>
-                                </svg>
                             </li>
                             <li data-kt-select-option="" data-value="2" data-text="Price Low to High"
-                                class="kt-select-option" role="option" aria-selected="false">
+                                class="kt-select-option {% if request.GET.sort_by == '2' %}selected{% endif %}" role="option" aria-selected="false">
                                 <div class="kt-select-option-text" data-kt-text-container="true">Price Low to High</div>
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                     stroke-linecap="round" stroke-linejoin="round"
-                                     class="size-3.5 ms-auto hidden text-primary kt-select-option-selected:block">
-                                    <path d="M20 6 9 17l-5-5"></path>
-                                </svg>
                             </li>
-                           </ul>
+                        </ul>
                     </div>
                 </div>
-              
                 <div class="kt-toggle-group" data-kt-tabs="true" data-kt-tabs-initialized="true">
                     <a class="kt-btn kt-btn-icon active" href="{% url 'dashboard:search_results_grid' %}?{{ request.GET.urlencode }}"
                        data-kt-tab-toggle="#shop1_grids">
@@ -184,288 +171,282 @@
                         <i class="ki-filled ki-row-horizontal"></i>
                     </a>
                 </div>
+            
             </div>
         </div>
 
-       <div class="kt-category-grid">
-    <!-- Category Column -->
-
-<div class="amazon-sidebar w-full md:w-1/4 pr-6">
-    <h2 class="text-base font-bold mb-4 uppercase pb-1">Category</h2>
-
-   
-{% for category in categories %}
-    <div class="mb-3">
-        <button type="button" onclick="toggleCategory('cat-{{ category.id }}')" class="category-button">
-            <span>{{ category.name }}</span>
-            <svg id="arrow-{{ category.id }}" class="w-4 h-4 transform transition-transform duration-200"
-                 xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-        </button>
-
-        <div id="cat-{{ category.id }}" class="subcategory-list hidden">
-            <ul>
-                {% for subcategory in category.productsubcategory_set.all %}
-                    {% for lastcategory in subcategory.productlastcategory_set.all %}
-                        {% if lastcategory.product_set.count > 0 %}
-                            <li>
-                                <a href="?last_category={{ lastcategory.id }}">• {{ lastcategory.name }}</a>
-                            </li>
-                        {% endif %}
-                    {% endfor %}
+        <div class="kt-category-grid">
+            <div class="amazon-sidebar w-full md:w-1/4 pr-6">
+                <h2 class="text-base font-bold mb-4 uppercase pb-1">Category</h2>
+                {% for category in categories %}
+                    <div class="mb-3">
+                        <button type="button" onclick="toggleCategory('cat-{{ category.id }}')" class="category-button">
+                            <span>{{ category.name }}</span>
+                            <svg id="arrow-{{ category.id }}" class="w-4 h-4 transform transition-transform duration-200"
+                                 xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        <div id="cat-{{ category.id }}" class="subcategory-list hidden">
+                            <ul>
+                                {% for subcategory in category.productsubcategory_set.all %}
+                                    {% for lastcategory in subcategory.productlastcategory_set.all %}
+                                        {% if lastcategory.product_set.count > 0 %}
+                                            <li>
+                                                <a href="#" data-last-category="{{ lastcategory.id }}" class="category-link">• {{ lastcategory.name }}</a>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
                 {% endfor %}
-            </ul>
-        </div>
-    </div>
-{% endfor %}
-
-
-</div>
-
-
-    <div class="kt-product-grid">
-        {% if last_categories %}
-            {% for lastcategory in last_categories %}
-            <div class="kt-card">
-                <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
-                    <div class="mb-2.5">
-                        <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[180px] mb-4 shadow-none">
-                            <img alt="{{ lastcategory.name }}" class="h-[180px] shrink-0"
-                                 src="{{ lastcategory.image.url|default:'/static/default_category_image.png' }}">
-                        </div>
-                        <a class="hover:text-primary text-sm font-medium text-bold text-mono px-2.5 leading-5.5 block"
-                           href="?last_category={{ lastcategory.id }}">
-                            {{ lastcategory.name }}
-                        </a>
-                    </div>
-                </div>
             </div>
-            {% endfor %}
-        {% else %}
-            <!-- Show products  -->
-            {% for product in products %}
-            <div class="kt-card" data-product='{
-                "name": "{{ product.name }}",
-                "image": "{{ product.image.url }}",
-                "description": "{{ product.description }}",
-                "sku": "{{ product.sku }}",
-                "category": "{{ product.last_category.sub_category.category.name }}",
-                "rating": {{ product.average_rating|default:0 }},
-                "price": "${{ product.price }}",
-                {% if product.discounted_price %}
-                "original_price": "${{ product.price }}",
-                "discount": "save {{ product.discount_percentage }}%",
-                {% endif %}
-                "more_info": "{{ product.additional_info }}"
-            }'>
-                <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
-                    <div class="mb-2.5">
-                        <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[180px] mb-4 shadow-none">
-                           {% with False as image_shown %}
-    {% for img in product.productimage_set.all %}
-        {% if img.is_main and not image_shown %}
-            <img alt="{{ product.name }}" class="h-[180px] shrink-0 cursor-pointer"
-                 src="{{ img.image.url }}" data-kt-modal-toggle="#modal_shop_product_details">
-            {% with True as image_shown %}{% endwith %}
-        {% endif %}
-    {% empty %}
-        <img src="/static/default_product.png" alt="Default Image" class="h-[180px] shrink-0">
-    {% endfor %}
-{% endwith %}
 
-                            <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
-                                    data-kt-wishlist-toggle="true" data-product-id="{{ product.id|default:'0' }}">
-                                  <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
-                            </button>
-                        </div>
-                        <a class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block"
-                           data-kt-modal-toggle="#modal_shop_product_details" href="#">
-                            {% if product.discounted_price %}
-                            <div class="flex items-center gap-2">
-                                <span>{{ product.name }}</span>
-
-                                <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">save {{ product.discount_percentage }}%</span>
-
+            <div class="kt-product-grid" id="product-grid">
+                {% if last_categories %}
+                    {% for lastcategory in last_categories %}
+                    <div class="kt-card">
+                        <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
+                            <div class="mb-2.5">
+                                <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[180px] mb-4 shadow-none">
+                                    <img alt="{{ lastcategory.name }}" class="h-[180px] shrink-0"
+                                         src="{{ lastcategory.image.url|default:'/static/default_category_image.png' }}">
+                                </div>
+                                <a class="hover:text-primary text-sm font-medium text-bold text-mono px-2.5 leading-5.5 block"
+                                   href="#" data-last-category="{{ lastcategory.id }}">
+                                    {{ lastcategory.name }}
+                                </a>
                             </div>
-                            {% else %}
-                            {{ product.name }}<br>
-                           
-                            {% endif %}
-                        </a>
+                        </div>
                     </div>
-                    <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
-                        {% if product.average_rating %}
-                        <span class="kt-badge
-                            {% if product.average_rating >= 4 %}kt-badge-success
-                            {% elif product.average_rating >= 2 %}kt-badge-warning
-                            {% else %}kt-badge-danger{% endif %} 
-                            kt-badge-sm rounded-full gap-1">
-                            <i class="ki-solid ki-star text-white -mt-0.5"></i> {{ product.average_rating|floatformat:1 }}
-                        </span>
+                    {% endfor %}
+                {% else %}
+                    {% for product in products %}
+                    <div class="kt-card" data-product='{
+                        "name": "{{ product.name }}",
+                        "image": "{{ product.image.url }}",
+                        "description": "{{ product.description }}",
+                        "sku": "{{ product.sku }}",
+                        "category": "{{ product.last_category.sub_category.category.name }}",
+                        "rating": {{ product.average_rating|default:0 }},
+                        "price": "${{ product.price }}",
+                        {% if product.discounted_price %}
+                        "original_price": "${{ product.price }}",
+                        "discount": "save {{ product.discount_percentage }}%",
                         {% endif %}
-                        <div class="flex items-center flex-wrap gap-1.5">
-                            {% if product.discounted_price %}
-                            <span class="text-xs font-normal text-secondary-foreground line-through pt-[1px]">${{ product.price }}</span>
-                            <span class="text-sm font-medium text-mono">${{ product.discounted_price }}</span>
-                            {% else %}
-                            <span class="text-sm font-medium text-mono">${{ product.price }}</span>
-                            {% endif %}
-                             {% if product.id in user_cart_ids %}
-
+                        "more_info": "{{ product.additional_info }}"
+                    }'>
+                        <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
+                            <div class="mb-2.5">
+                                <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[180px] mb-4 shadow-none">
+                                    {% with False as image_shown %}
+                                        {% for img in product.productimage_set.all %}
+                                            {% if img.is_main and not image_shown %}
+                                                <img alt="{{ product.name }}" class="h-[180px] shrink-0 cursor-pointer"
+                                                     src="{{ img.image.url }}" data-kt-modal-toggle="#modal_shop_product_details">
+                                                {% with True as image_shown %}{% endwith %}
+                                            {% endif %}
+                                        {% empty %}
+                                            <img src="/static/default_product.png" alt="Default Image" class="h-[180px] shrink-0">
+                                        {% endfor %}
+                                    {% endwith %}
+                                    <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
+                                            data-kt-wishlist-toggle="true" data-product-id="{{ product.id|default:'0' }}">
+                                        <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
+                                    </button>
+                                </div>
+                                <a class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block"
+                                   data-kt-modal-toggle="#modal_shop_product_details" href="#">
+                                    {% if product.discounted_price %}
+                                    <div class="flex items-center gap-2">
+                                        <span>{{ product.name }}</span>
+                                        <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">save {{ product.discount_percentage }}%</span>
+                                    </div>
+                                    {% else %}
+                                        {{ product.name }}<br>
+                                    {% endif %}
+                                </a>
+                            </div>
+                            <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
+                                {% if product.average_rating %}
+                                <span class="kt-badge
+                                    {% if product.average_rating >= 4 %}kt-badge-success
+                                    {% elif product.average_rating >= 2 %}kt-badge-warning
+                                    {% else %}kt-badge-danger{% endif %} 
+                                    kt-badge-sm rounded-full gap-1">
+                                    <i class="ki-solid ki-star text-white -mt-0.5"></i> {{ product.average_rating|floatformat:1 }}
+                                </span>
+                                {% endif %}
+                                <div class="flex items-center flex-wrap gap-1.5">
+                                    {% if product.discounted_price %}
+                                    <span class="text-xs font-normal text-secondary-foreground line-through pt-[1px]">${{ product.price }}</span>
+                                    <span class="text-sm font-medium text-mono">${{ product.discounted_price }}</span>
+                                    {% else %}
+                                    <span class="text-sm font-medium text-mono">${{ product.price }}</span>
+                                    {% endif %}
+                                    {% if product.id in user_cart_ids %}
                                         <button class="kt-btn kt-btn-outline kt-btn-sm ms-1" style="background:#3b82f6; color:white;" data-product-id="{{ product.id }}">
                                             In cart <i class="ki-filled ki-handcart text-white"></i>
                                         </button>
                                     {% else %}
-
                                         <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 add-to-cart-btn" data-product-id="{{ product.id }}">
                                             Add <i class="ki-filled ki-handcart"></i>
                                         </button>
-
                                     {% endif %}
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
-            {% empty %}
-            <div class="col-span-3 text-center font-medium py-10">
-                <p>No products found in this category.</p>
-            </div>
-            {% endfor %}
-            {% if page_obj.has_other_pages %}
-    <div class="col-span-4 mt-10 flex justify-center w-full">
-        <ul class="inline-flex items-center -space-x-px text-sm">
-            {% if page_obj.has_previous %}
-                <li>
-                    <a href="?{% if selected_last_category %}last_category={{ selected_last_category.id }}&{% elif selected_sub_category %}sub_category={{ selected_sub_category.id }}&{% elif selected_category %}category={{ selected_category.id }}&{% endif %}page={{ page_obj.previous_page_number }}"
-                       class="kt-btn kt-btn-outline me-2">
-                        Previous
-                    </a>
-                </li>
-            {% endif %}
-
-            {% for num in paginator.page_range %}
-                {% if page_obj.number == num %}
-                    <li><span class="kt-btn kt-btn-primary me-2">{{ num }}</span></li>
-                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                    <li>
-                        <a href="?{% if selected_last_category %}last_category={{ selected_last_category.id }}&{% elif selected_sub_category %}sub_category={{ selected_sub_category.id }}&{% elif selected_category %}category={{ selected_category.id }}&{% endif %}page={{ num }}"
-                           class="kt-btn kt-btn-outline me-2">
-                            {{ num }}
-                        </a>
-                    </li>
+                    {% empty %}
+                    <div class="col-span-3 text-center font-medium py-10">
+                        <p>No products found in this category.</p>
+                    </div>
+                    {% endfor %}
+                    {% if page_obj.has_other_pages %}
+                    <div class="col-span-4 mt-10 flex justify-center w-full">
+                        <ul class="inline-flex items-center -space-x-px text-sm" id="pagination">
+                            {% if page_obj.has_previous %}
+                                <li>
+                                    <a href="#" data-page="{{ page_obj.previous_page_number }}" class="kt-btn kt-btn-outline me-2 pagination-link">
+                                        Previous
+                                    </a>
+                                </li>
+                            {% endif %}
+                            {% for num in paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                    <li><span class="kt-btn kt-btn-primary me-2">{{ num }}</span></li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                    <li>
+                                        <a href="#" data-page="{{ num }}" class="kt-btn kt-btn-outline me-2 pagination-link">
+                                            {{ num }}
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            {% if page_obj.has_next %}
+                                <li>
+                                    <a href="#" data-page="{{ page_obj.next_page_number }}" class="kt-btn kt-btn-outline pagination-link">
+                                        Next
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                    {% endif %}
                 {% endif %}
-            {% endfor %}
-
-            {% if page_obj.has_next %}
-                <li>
-                    <a href="?{% if selected_last_category %}last_category={{ selected_last_category.id }}&{% elif selected_sub_category %}sub_category={{ selected_sub_category.id }}&{% elif selected_category %}category={{ selected_category.id }}&{% endif %}page={{ page_obj.next_page_number }}"
-                       class="kt-btn kt-btn-outline">
-                        Next
-                    </a>
-                </li>
-            {% endif %}
-        </ul>
+            </div>
+        </div>
     </div>
-{% endif %}
-
-        {% endif %}
-    </div>
-    
 </div>
 
 <script>
-// CSRF token setup
-  function getCookie(name) {
-      let cookieValue = null;
-      if (document.cookie && document.cookie !== '') {
-          const cookies = document.cookie.split(';');
-          for (let i = 0; i < cookies.length; i++) {
-              const cookie = cookies[i].trim();
-              if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                  cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                  break;
-              }
-          }
-      }
-      return cookieValue;
-  }
-  const csrftoken = getCookie('csrftoken');
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+const csrftoken = getCookie('csrftoken');
 
-  // Toggle only one open category at a time
-  function toggleCategory(id) {
-      // Close all categories first
-      document.querySelectorAll('[id^="cat-"]').forEach(el => el.classList.add('hidden'));
-      document.querySelectorAll('[id^="arrow-"]').forEach(arrow => arrow.classList.remove('rotate-180'));
+function toggleCategory(id) {
+    document.querySelectorAll('[id^="cat-"]').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('[id^="arrow-"]').forEach(arrow => arrow.classList.remove('rotate-180'));
 
-      const content = document.getElementById(id);
-      const arrow = document.getElementById("arrow-" + id.replace("cat-", ""));
+    const content = document.getElementById(id);
+    const arrow = document.getElementById("arrow-" + id.replace("cat-", ""));
+    const alreadyOpen = !content.classList.contains("hidden");
 
-      const alreadyOpen = !content.classList.contains("hidden");
+    if (!alreadyOpen) {
+        content.classList.remove("hidden");
+        arrow.classList.add("rotate-180");
+        localStorage.setItem('openCategory', id);
+    } else {
+        content.classList.add("hidden");
+        arrow.classList.remove("rotate-180");
+        localStorage.removeItem('openCategory');
+    }
+}
 
-      if (!alreadyOpen) {
-          content.classList.remove("hidden");
-          arrow.classList.add("rotate-180");
-          localStorage.setItem('openCategory', id);
-      } else {
-          content.classList.add("hidden");
-          arrow.classList.remove("rotate-180");
-          localStorage.removeItem('openCategory');
-      }
-  }
+document.addEventListener('DOMContentLoaded', () => {
+    const openId = localStorage.getItem('openCategory');
+    if (openId) {
+        const el = document.getElementById(openId);
+        const arrow = document.getElementById("arrow-" + openId.replace("cat-", ""));
+        if (el && arrow) {
+            el.classList.remove("hidden");
+            arrow.classList.add("rotate-180");
+        }
+    }
 
-  document.addEventListener('DOMContentLoaded', () => {
-      // Open last selected category
-      const openId = localStorage.getItem('openCategory');
-      if (openId) {
-          const el = document.getElementById(openId);
-          const arrow = document.getElementById("arrow-" + openId.replace("cat-", ""));
-          if (el && arrow) {
-              el.classList.remove("hidden");
-              arrow.classList.add("rotate-180");
-          }
-      }
-    })
-//add to cart
-    document.addEventListener('DOMContentLoaded', () => {
-              const markAsInCart = (btn) => {
-
-            btn.classList.remove('kt-btn-outline');
-            btn.classList.add('kt-btn-success');
-            btn.innerHTML = `In cart <i class="ki-filled ki-handcart"></i>`;
-        };
-document.querySelectorAll('.add-to-cart-btn').forEach(button => {
-            button.addEventListener('click', () => {
-                const productId = button.dataset.productId;
-
-                fetch("{% url 'dashboard:add_to_cart' %}", {
-                    method: "POST",
-                    headers: {
-                        "X-CSRFToken": csrftoken,
-                        "Content-Type": "application/x-www-form-urlencoded",
-                    },
-                    body: new URLSearchParams({
-                        product_id: productId,
-                        quantity: 1,
-                    }),
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.status === "success") {
-
-                        document
-                            .querySelectorAll(`.add-to-cart-btn[data-product-id="${productId}"]`)
-                            .forEach(markAsInCart);
-                    } else {
-                        alert("Something went wrong");
-                    }
-                })
-                .catch(err => console.error("Add to cart error:", err));
-            });
+    //  category selection
+    document.querySelectorAll('.category-link').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const lastCategoryId = link.dataset.lastCategory;
+            fetchProducts({ last_category: lastCategoryId, page: 1 });
         });
-
     });
- // Wishlist Toggle
+
+    // pagination
+    document.querySelectorAll('.pagination-link').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const page = link.dataset.page;
+            const params = new URLSearchParams(window.location.search);
+            fetchProducts({ page: page, sort_by: params.get('sort_by'), last_category: params.get('last_category') });
+        });
+    });
+
+    //  sorting
+    document.querySelectorAll('[data-kt-select-option]').forEach(option => {
+        option.addEventListener('click', () => {
+            const value = option.getAttribute('data-value');
+            fetchProducts({ sort_by: value, page: 1 });
+        });
+    });
+
+    // add to cart
+    document.querySelectorAll('.add-to-cart-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            const productId = button.dataset.productId;
+            fetch("{% url 'dashboard:add_to_cart' %}", {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": csrftoken,
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+                body: new URLSearchParams({
+                    product_id: productId,
+                    quantity: 1,
+                }),
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "success") {
+                    button.classList.remove('kt-btn-outline');
+                    button.classList.add('kt-btn-success');
+                    button.style.background = '#3b82f6';
+                    button.style.color = 'white';
+                    button.innerHTML = `In cart <i class="ki-filled ki-handcart text-white"></i>`;
+                } else {
+                    alert("Something went wrong");
+                }
+            })
+            .catch(err => console.error("Add to cart error:", err));
+        });
+    });
+
+    //  wishlist toggle
     document.querySelectorAll('.kt-wishlist-icon').forEach(button => {
         button.addEventListener('click', () => {
             const productId = button.dataset.productId || '0';
@@ -477,48 +458,31 @@ document.querySelectorAll('.add-to-cart-btn').forEach(button => {
                 },
                 body: `product_id=${productId}`
             })
-                .then(response => {
-                    if (response.status === 403) {
-                        alert('Please login to use wishlist.');
-                        window.location.href = '/login/';
-                        return;
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data) {
-                        const icon = button.querySelector('i');
-                        icon.classList.toggle('text-red-500', data.status === 'added');
-                    }
-                })
-                .catch(error => console.error('Wishlist toggle error:', error));
+            .then(response => {
+                if (response.status === 403) {
+                    alert('Please login to use wishlist.');
+                    window.location.href = '/login/';
+                    return;
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data) {
+                    const icon = button.querySelector('i');
+                    icon.classList.toggle('text-red-500', data.status === 'added');
+                }
+            })
+            .catch(error => console.error('Wishlist toggle error:', error));
         });
     });
-    //pricing filter
-document.addEventListener('DOMContentLoaded', () => {
+
+    // Dropdown handling
     const selectDisplay = document.querySelector('[data-kt-select-display]');
     const selectDropdown = document.querySelector('[data-kt-select-dropdown]');
-    const selectOptions = document.querySelectorAll('[data-kt-select-option]');
-
     selectDisplay.addEventListener('click', () => {
         selectDropdown.classList.toggle('hidden');
         selectDisplay.setAttribute('aria-expanded', selectDropdown.classList.contains('hidden') ? 'false' : 'true');
     });
-
-
-    selectOptions.forEach(option => {
-        option.addEventListener('click', () => {
-            const value = option.getAttribute('data-value');
-
-    
-            const params = new URLSearchParams(window.location.search);
-            params.set('sort_by', value);
-            params.set('page', 1);  
-
-            window.location.search = params.toString();
-        });
-    });
-
 
     document.addEventListener('click', (e) => {
         if (!selectDisplay.contains(e.target) && !selectDropdown.contains(e.target)) {
@@ -526,6 +490,112 @@ document.addEventListener('DOMContentLoaded', () => {
             selectDisplay.setAttribute('aria-expanded', 'false');
         }
     });
+
+    // products function
+    function fetchProducts(params) {
+        const urlParams = new URLSearchParams(window.location.search);
+        Object.keys(params).forEach(key => urlParams.set(key, params[key]));
+        const url = `{% url 'dashboard:search_results_grid' %}?${urlParams.toString()}`;
+
+        fetch(url, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const newProductGrid = doc.querySelector('#product-grid');
+            const newPagination = doc.querySelector('#pagination');
+            const newResultsHeader = doc.querySelector('#results-header');
+            const productGrid = document.querySelector('#product-grid');
+            const pagination = document.querySelector('#pagination');
+            const resultsHeader = document.querySelector('#results-header');
+
+            if (newProductGrid && productGrid) {
+                productGrid.innerHTML = newProductGrid.innerHTML;
+            }
+            if (newPagination && pagination) {
+                pagination.innerHTML = newPagination.innerHTML;
+            }
+            if (newResultsHeader && resultsHeader) {
+                resultsHeader.innerHTML = newResultsHeader.innerHTML;
+            }
+
+            // Reattach event listeners
+            document.querySelectorAll('.add-to-cart-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    const productId = button.dataset.productId;
+                    fetch("{% url 'dashboard:add_to_cart' %}", {
+                        method: "POST",
+                        headers: {
+                            "X-CSRFToken": csrftoken,
+                            "Content-Type": "application/x-www-form-urlencoded",
+                        },
+                        body: new URLSearchParams({
+                            product_id: productId,
+                            quantity: 1,
+                        }),
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.status === "success") {
+                            button.classList.remove('kt-btn-outline');
+                            button.classList.add('kt-btn-success');
+                            button.style.background = '#3b82f6';
+                            button.style.color = 'white';
+                            button.innerHTML = `In cart <i class="ki-filled ki-handcart text-white"></i>`;
+                        } else {
+                            alert("Something went wrong");
+                        }
+                    })
+                    .catch(err => console.error("Add to cart error:", err));
+                });
+            });
+
+            document.querySelectorAll('.kt-wishlist-icon').forEach(button => {
+                button.addEventListener('click', () => {
+                    const productId = button.dataset.productId || '0';
+                    fetch('/wishlist/toggle/', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrftoken,
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        body: `product_id=${productId}`
+                    })
+                    .then(response => {
+                        if (response.status === 403) {
+                            alert('Please login to use wishlist.');
+                            window.location.href = '/login/';
+                            return;
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data) {
+                            const icon = button.querySelector('i');
+                            icon.classList.toggle('text-red-500', data.status === 'added');
+                        }
+                    })
+                    .catch(error => console.error('Wishlist toggle error:', error));
+                });
+            });
+
+            document.querySelectorAll('.pagination-link').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const page = link.dataset.page;
+                    fetchProducts({ page: page, sort_by: urlParams.get('sort_by'), last_category: urlParams.get('last_category') });
+                });
+            });
+
+           
+            window.history.pushState({}, '', url);
+        })
+        .catch(error => console.error('Fetch products error:', error));
+    }
 });
 </script>
 {% endblock content %}
