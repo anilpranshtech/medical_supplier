@@ -410,40 +410,42 @@
                     </a>
 
                     <!-- Search Results -->
-                    <div class="kt-menu-item relative group" data-kt-menu-item-toggle="dropdown" data-kt-menu-item-trigger="hover">
-                        <a class="kt-menu-link flex items-center gap-2 px-3 py-2 text-2sm leading-none relative h-8.5 rounded-full border
-                            border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground"
-                           href="#">
-                            <i class="ki-filled ki-magnifier kt-step-icon"></i>
-                            <span class="text-sm">Search Results</span>
-                        </a>
-                        <div class="kt-menu-dropdown absolute w-48 bg-background dark:bg-gray-800 border border-border rounded-lg shadow-lg z-10 hidden group-hover:block mt-7 py-5 px-3">
-                            <div class="kt-menu-item">
-                                <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
-                                    {% if request.resolver_match.url_name == 'search_results_grid' %}
-                                        bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
-                                    {% else %}
-                                        border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
-                                    {% endif %}"
-                                   href="{% url 'dashboard:search_results_grid' %}">
-                                    <i class="ki-filled ki-grid kt-step-icon"></i>
-                                    <span class="text-sm">Grid View</span>
-                                </a>
-                            </div>
-                            <div class="kt-menu-item mt-3">
-                                <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
-                                    {% if request.resolver_match.url_name == 'search_results_list' %}
-                                        bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
-                                    {% else %}
-                                        border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
-                                    {% endif %}"
-                                   href="{% url 'dashboard:search_results_list' %}">
-                                    <i class="bi bi-card-checklist kt-step-icon"></i>
-                                    <span class="text-sm">List View</span>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
+                    {% comment %}
+<!--                    <div class="kt-menu-item relative group" data-kt-menu-item-toggle="dropdown" data-kt-menu-item-trigger="hover">-->
+<!--                        <a class="kt-menu-link flex items-center gap-2 px-3 py-2 text-2sm leading-none relative h-8.5 rounded-full border-->
+<!--                            border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground"-->
+<!--                           href="#">-->
+<!--                            <i class="ki-filled ki-magnifier kt-step-icon"></i>-->
+<!--                            <span class="text-sm">Search Results</span>-->
+<!--                        </a>-->
+<!--                        <div class="kt-menu-dropdown absolute w-48 bg-background dark:bg-gray-800 border border-border rounded-lg shadow-lg z-10 hidden group-hover:block mt-7 py-5 px-3">-->
+<!--                            <div class="kt-menu-item">-->
+<!--                                <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border-->
+<!--                                    {% if request.resolver_match.url_name == 'search_results_grid' %}-->
+<!--                                        bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary-->
+<!--                                    {% else %}-->
+<!--                                        border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground-->
+<!--                                    {% endif %}"-->
+<!--                                   href="{% url 'dashboard:search_results_grid' %}">-->
+<!--                                    <i class="ki-filled ki-grid kt-step-icon"></i>-->
+<!--                                    <span class="text-sm">Grid View</span>-->
+<!--                                </a>-->
+<!--                            </div>-->
+<!--                            <div class="kt-menu-item mt-3">-->
+<!--                                <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border-->
+<!--                                    {% if request.resolver_match.url_name == 'search_results_list' %}-->
+<!--                                        bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary-->
+<!--                                    {% else %}-->
+<!--                                        border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground-->
+<!--                                    {% endif %}"-->
+<!--                                   href="{% url 'dashboard:search_results_list' %}">-->
+<!--                                    <i class="bi bi-card-checklist kt-step-icon"></i>-->
+<!--                                    <span class="text-sm">List View</span>-->
+<!--                                </a>-->
+<!--                            </div>-->
+<!--                        </div>-->
+<!--                    </div>-->
+                    {% endcomment %}
 
                     <!-- Overlays -->
                     <div class="kt-menu-item relative group" data-kt-menu-item-toggle="dropdown" data-kt-menu-item-trigger="hover">
@@ -740,7 +742,7 @@
                     localStorage.setItem('theme', isDark ? 'dark' : 'light');
 
                     const opacitySlider = document.querySelector('#header-opacity-slider');
-                    const defaultOpacity = isDark ? 0.85 : 0.8;
+                    const defaultOpacity = isDark ? 1.0 : 1.0;
                     opacitySlider.value = defaultOpacity;
                     document.documentElement.style.setProperty('--header-opacity', defaultOpacity);
                     localStorage.setItem('header-opacity', defaultOpacity);

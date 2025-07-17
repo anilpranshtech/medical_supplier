@@ -200,7 +200,7 @@
         <div class="space-y-5">
             <div class="flex items-center justify-between gap-4">
                 <span class="text-lg font-medium text-mono">Special Offers</span>
-                <a class="kt-link" href="#">See All <i class="ki-filled ki-right text-xs"></i></a>
+                <a class="kt-link" href="{% url 'dashboard:search_results_grid' %}?{{ request.GET.urlencode }}">See All <i class="ki-filled ki-right text-xs"></i></a>
             </div>
             <div class="grid xl:grid-cols-2 gap-5 mb-2">
                 {% for product in special_offers %}
@@ -354,7 +354,7 @@
         <div class="space-y-4">
             <div class="flex items-center justify-between gap-4">
                 <span class="text-lg font-medium text-mono">New Arrivals</span>
-                <a class="kt-link" href="#">See All <i class="ki-filled ki-right text-xs"></i></a>
+                <a class="kt-link" href="{% url 'dashboard:search_results_grid' %}?{{ request.GET.urlencode }}">See All <i class="ki-filled ki-right text-xs"></i></a>
             </div>
             <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-2">
                 {% for product in recent_products %}
@@ -444,7 +444,7 @@
         <div class="space-y-4">
             <div class="flex items-center justify-between gap-4">
                 <span class="text-lg font-medium text-mono">Popular Medical Supplies</span>
-                <a class="kt-link" href="#">See All <i class="ki-filled ki-right text-xs"></i></a>
+                <a class="kt-link" href="{% url 'dashboard:search_results_grid' %}?{{ request.GET.urlencode }}">See All <i class="ki-filled ki-right text-xs"></i></a>
             </div>
             <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-2">
                 {% for product in popular_products %}
