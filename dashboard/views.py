@@ -34,7 +34,7 @@ from django.contrib import messages
 from django.views.generic import TemplateView, ListView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.hashers import make_password
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.views.generic.edit import *
 from datetime import date
 from django.db.models import F, Prefetch
@@ -520,7 +520,7 @@ class SearchResultsGridView(TemplateView):
             context['user_cart_ids'] = []
 
         return context
-    
+
 class SearchResultsListView(TemplateView):
     template_name = 'userdashboard/view/search_results_list.html'
 
@@ -672,17 +672,17 @@ class ProductDetailsView(TemplateView):
 
 
 
-class ShoppingCartView(LoginRequiredMixin, TemplateView):
-    template_name = 'userdashboard/view/shopping_cart.html'
-    login_url = 'dashboard:login'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        cart_items = CartProduct.objects.filter(user=self.request.user).select_related('product')
-        total = sum(item.get_total_price() for item in cart_items)
-        context['cart_items'] = cart_items
-        context['total'] = total
-        return context
+# class OrderSummaryView(LoginRequiredMixin, TemplateView):
+#     template_name = 'userdashboard/view/cart_summary.html'
+#     login_url = 'dashboard:login'
+#
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         cart_items = CartProduct.objects.filter(user=self.request.user).select_related('product')
+#         total = sum(item.get_total_price() for item in cart_items)
+#         context['cart_items'] = cart_items
+#         context['total'] = total
+#         return context
     
 class CartAddView(LoginRequiredMixin, View):
     def get(self, request):
@@ -783,8 +783,8 @@ class WishlistProductListView(LoginRequiredMixin, View):
         return JsonResponse(data, safe=False)
 
 
-class OrderSummaryView(LoginRequiredMixin, TemplateView):
-    template_name = 'userdashboard/view/order_summary.html'
+class ShoppingCartView(LoginRequiredMixin, TemplateView):
+    template_name = 'userdashboard/view/shopping_cart.html'
     login_url = 'dashboard:login'
 
     def get_context_data(self, **kwargs):
@@ -1161,11 +1161,16 @@ class OrderPlacedView(LoginRequiredMixin, TemplateView):
     login_url = 'dashboard:login'
 
     def dispatch(self, request, *args, **kwargs):
+        # Explicit check for authenticated user for safety
+        if not request.user.is_authenticated:
+            return redirect(self.login_url)
+
         # Ensure user has a recent payment with associated orders
         payment = Payment.objects.filter(user=request.user).order_by('-created_at').first()
         if not payment or not Orders.objects.filter(payment=payment, order_by=request.user).exists():
             messages.error(request, "No recent order found.")
             return redirect('dashboard:cart')
+
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
@@ -1178,57 +1183,64 @@ class OrderPlacedView(LoginRequiredMixin, TemplateView):
             context['error'] = "No payment found."
             return context
 
-        # Get orders with main image prefetched
+        # Prefetch only main product images
         main_image_prefetch = Prefetch(
             'product__productimage_set',
             queryset=ProductImage.objects.filter(is_main=True),
             to_attr='main_image'
         )
+
+        # Get all orders associated with the latest payment
         orders = Orders.objects.filter(
             order_by=user,
             payment=payment
-        ).select_related('product__brand', 'payment', 'order_to').prefetch_related(main_image_prefetch)
+        ).select_related(
+            'product__brand', 'payment', 'order_to'
+        ).prefetch_related(main_image_prefetch)
 
         if not orders.exists():
             context['error'] = "No orders found for this payment."
             return context
 
-        # Calculate order summary
+        # Order summary calculations
         subtotal = sum(order.price for order in orders) or Decimal('0.00')
         shipping = sum(order.shipping_fees for order in orders) or Decimal('0.00')
-        vat = Decimal('0.00')  # Adjust as per your VAT logic
+        vat = Decimal('0.00')  # Add VAT logic here if applicable
         total = subtotal + shipping + vat
 
-        # Delivery estimate (use max delivery time from products)
+        # Estimated delivery date (based on max delivery_time)
         max_delivery_days = max((order.product.delivery_time or 5) for order in orders)
         estimated_delivery = now().date() + timedelta(days=max_delivery_days)
 
-        # Payment method-specific info
+        # Get payment details (Stripe, Razorpay, or COD)
+        time_window = payment.created_at + timedelta(minutes=1)
         payment_method = payment.payment_method
         payment_details = None
-        time_window = payment.created_at + timedelta(minutes=1)
+
         if payment_method == "stripe":
             payment_details = StripePayment.objects.filter(
                 user=user,
-                created_at__gte=payment.created_at,
-                created_at__lte=time_window
+                created_at__range=(payment.created_at, time_window)
             ).order_by('-created_at').first()
         elif payment_method == "razorpay":
             payment_details = RazorpayPayment.objects.filter(
                 user=user,
-                created_at__gte=payment.created_at,
-                created_at__lte=time_window
+                created_at__range=(payment.created_at, time_window)
             ).order_by('-created_at').first()
         elif payment_method == "cod":
             payment_details = CODPayment.objects.filter(
                 user=user,
-                created_at__gte=payment.created_at,
-                created_at__lte=time_window
+                created_at__range=(payment.created_at, time_window)
             ).order_by('-created_at').first()
 
         # Default billing address
-        billing = CustomerBillingAddress.objects.filter(user=user, is_default=True, is_deleted=False).first()
+        billing = CustomerBillingAddress.objects.filter(
+            user=user,
+            is_default=True,
+            is_deleted=False
+        ).first()
 
+        # Final context update
         context.update({
             'payment': payment,
             'orders': orders,
@@ -1247,8 +1259,6 @@ class OrderPlacedView(LoginRequiredMixin, TemplateView):
         })
 
         return context
-
-
 class MyOrdersView(LoginRequiredMixin, TemplateView):
     template_name = 'userdashboard/view/my_orders.html'
     login_url = 'dashboard:login'  # or your login URL name
@@ -1517,70 +1527,38 @@ class UploadAvatarView(LoginRequiredMixin, View):
 
 
 class EditProfileView(LoginRequiredMixin, UpdateView):
-    template_name = 'pages/edit_profile.html'
-    form_class = ProfileForm
+    def post(self, request):
+        user = request.user
+        profile = user.profile
 
-    def get_object(self):
-        user = self.request.user
-        try:
-            return RetailProfile.objects.get(user=user)
-        except RetailProfile.DoesNotExist:
-            try:
-                return WholesaleBuyerProfile.objects.get(user=user)
-            except WholesaleBuyerProfile.DoesNotExist:
-                return SupplierProfile.objects.get(user=user)
+        # Get basic info
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        profile_type = request.POST.get('profile_type', '').strip()
 
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs['user'] = self.request.user
-        # Determine profile_type directly
-        user = self.request.user
-        profile_type = None
-        try:
-            profile = RetailProfile.objects.get(user=user)
-            phone = None
-            profile_type = 'retailer'
-        except RetailProfile.DoesNotExist:
-            try:
-                profile = WholesaleBuyerProfile.objects.get(user=user)
-                phone = None
-                profile_type = 'wholesaler'
-            except WholesaleBuyerProfile.DoesNotExist:
-                try:
-                    profile = SupplierProfile.objects.get(user=user)
-                    phone = None
-                    profile_type = 'supplier'
-                except SupplierProfile.DoesNotExist:
-                    pass
-        kwargs['profile_type'] = profile_type
-        return kwargs
+        # Validate
+        if not first_name or not last_name or not profile_type:
+            return JsonResponse({'status': 'error', 'message': 'All fields are required.'}, status=400)
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        # Reuse profile_type from get_form_kwargs logic
-        user = self.request.user
-        profile_type = None
-        try:
-            profile = RetailProfile.objects.get(user=user)
-            phone = None
-            profile_type = 'retailer'
-        except RetailProfile.DoesNotExist:
-            try:
-                profile = WholesaleBuyerProfile.objects.get(user=user)
-                phone = None
-                profile_type = 'wholesaler'
-            except WholesaleBuyerProfile.DoesNotExist:
-                try:
-                    profile = SupplierProfile.objects.get(user=user)
-                    phone = None
-                    profile_type = 'supplier'
-                except SupplierProfile.DoesNotExist:
-                    pass
-        context['profile_type'] = profile_type
-        return context
+        # Update user and profile
+        user.first_name = first_name
+        user.last_name = last_name
+        profile.profile_type = profile_type
 
-    def get_success_url(self):
-        return reverse_lazy('dashboard:user_profile')
+        if profile_type == 'doctor':
+            profile.speciality = request.POST.get('speciality', '').strip()
+            profile.company_name = ''
+        elif profile_type in ['medical_supplier', 'corporate', 'wholesaler', 'supplier']:
+            profile.company_name = request.POST.get('company_name', '').strip()
+            profile.speciality = ''
+        else:
+            profile.speciality = ''
+            profile.company_name = ''
+
+        user.save()
+        profile.save()
+
+        return JsonResponse({'status': 'success', 'message': 'Profile updated successfully.'})
 
 
 class EditEmailView(LoginRequiredMixin, View):
@@ -1673,7 +1651,7 @@ class VerifyOTPView(View):
 
         if not signup_data:
             messages.error(request, "Session expired. Please sign up again.")
-            return redirect('dashboard:user_signup')
+            return redirect('dashboard:login')
 
         phone = signup_data['phone']
         result = verify_mobile_otp(VERIFY_URL, TEXTDRIP_OTP_TOKEN, phone, otp)
@@ -1685,7 +1663,7 @@ class VerifyOTPView(View):
             if User.objects.filter(username=signup_data['email']).exists():
                 messages.error(request, "An account with this email already exists.")
                 request.session.pop('signup_data', None)
-                return redirect('dashboard:user_signup')
+                return redirect('dashboard:login')
 
             try:
                 User.objects.create_user(
@@ -1695,7 +1673,7 @@ class VerifyOTPView(View):
                 )
                 request.session.pop('signup_data', None)
                 messages.success(request, "Account created successfully.")
-                return redirect('dashboard:user_signin')
+                return redirect('dashboard:login')
             except Exception as e:
                 messages.error(request, f"Error creating account: {str(e)}")
                 return redirect('dashboard:user_signup')
@@ -1761,7 +1739,14 @@ class SignInView(View):
             return redirect('dashboard:home')
         else:
             messages.error(request, 'Invalid email or password.')
-            return redirect('dashboard:user_signin')
+            return redirect('dashboard:login')
+
+
+class LogoutView(View):
+    def get(self, request):
+        logout(request)
+        messages.success(request, "You have been logged out successfully.")
+        return redirect('dashboard:login')
 
 
 class PaymentView(View):
