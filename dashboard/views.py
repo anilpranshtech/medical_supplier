@@ -1153,11 +1153,16 @@ class OrderPlacedView(LoginRequiredMixin, TemplateView):
     login_url = 'dashboard:login'
 
     def dispatch(self, request, *args, **kwargs):
+        # Explicit check for authenticated user for safety
+        if not request.user.is_authenticated:
+            return redirect(self.login_url)
+
         # Ensure user has a recent payment with associated orders
         payment = Payment.objects.filter(user=request.user).order_by('-created_at').first()
         if not payment or not Orders.objects.filter(payment=payment, order_by=request.user).exists():
             messages.error(request, "No recent order found.")
             return redirect('dashboard:cart')
+
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
@@ -1170,57 +1175,64 @@ class OrderPlacedView(LoginRequiredMixin, TemplateView):
             context['error'] = "No payment found."
             return context
 
-        # Get orders with main image prefetched
+        # Prefetch only main product images
         main_image_prefetch = Prefetch(
             'product__productimage_set',
             queryset=ProductImage.objects.filter(is_main=True),
             to_attr='main_image'
         )
+
+        # Get all orders associated with the latest payment
         orders = Orders.objects.filter(
             order_by=user,
             payment=payment
-        ).select_related('product__brand', 'payment', 'order_to').prefetch_related(main_image_prefetch)
+        ).select_related(
+            'product__brand', 'payment', 'order_to'
+        ).prefetch_related(main_image_prefetch)
 
         if not orders.exists():
             context['error'] = "No orders found for this payment."
             return context
 
-        # Calculate order summary
+        # Order summary calculations
         subtotal = sum(order.price for order in orders) or Decimal('0.00')
         shipping = sum(order.shipping_fees for order in orders) or Decimal('0.00')
-        vat = Decimal('0.00')  # Adjust as per your VAT logic
+        vat = Decimal('0.00')  # Add VAT logic here if applicable
         total = subtotal + shipping + vat
 
-        # Delivery estimate (use max delivery time from products)
+        # Estimated delivery date (based on max delivery_time)
         max_delivery_days = max((order.product.delivery_time or 5) for order in orders)
         estimated_delivery = now().date() + timedelta(days=max_delivery_days)
 
-        # Payment method-specific info
+        # Get payment details (Stripe, Razorpay, or COD)
+        time_window = payment.created_at + timedelta(minutes=1)
         payment_method = payment.payment_method
         payment_details = None
-        time_window = payment.created_at + timedelta(minutes=1)
+
         if payment_method == "stripe":
             payment_details = StripePayment.objects.filter(
                 user=user,
-                created_at__gte=payment.created_at,
-                created_at__lte=time_window
+                created_at__range=(payment.created_at, time_window)
             ).order_by('-created_at').first()
         elif payment_method == "razorpay":
             payment_details = RazorpayPayment.objects.filter(
                 user=user,
-                created_at__gte=payment.created_at,
-                created_at__lte=time_window
+                created_at__range=(payment.created_at, time_window)
             ).order_by('-created_at').first()
         elif payment_method == "cod":
             payment_details = CODPayment.objects.filter(
                 user=user,
-                created_at__gte=payment.created_at,
-                created_at__lte=time_window
+                created_at__range=(payment.created_at, time_window)
             ).order_by('-created_at').first()
 
         # Default billing address
-        billing = CustomerBillingAddress.objects.filter(user=user, is_default=True, is_deleted=False).first()
+        billing = CustomerBillingAddress.objects.filter(
+            user=user,
+            is_default=True,
+            is_deleted=False
+        ).first()
 
+        # Final context update
         context.update({
             'payment': payment,
             'orders': orders,
@@ -1239,8 +1251,6 @@ class OrderPlacedView(LoginRequiredMixin, TemplateView):
         })
 
         return context
-
-
 class MyOrdersView(LoginRequiredMixin, TemplateView):
     template_name = 'userdashboard/view/my_orders.html'
     login_url = 'dashboard:login'  # or your login URL name
