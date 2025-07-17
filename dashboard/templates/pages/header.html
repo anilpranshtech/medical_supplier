@@ -272,14 +272,14 @@
             <div class="flex items-center gap-3 sm:gap-5 mr-5 px-5">
                 <button class="kt-btn kt-btn-ghost kt-btn-icon size-8 hover:bg-background hover:[&_i]:text-primary wishlist-drawer-toggle"
                         data-kt-drawer-toggle="#drawers_shop_wishlist">
-                    <i class="ki-filled ki-heart text-xl"></i>
+                    <i class="ki-filled ki-heart text-base text-xl"></i>
                 </button>
                 <button class="kt-btn kt-btn-ghost kt-btn-icon size-8 hover:bg-background hover:[&_i]:text-primary" data-kt-drawer-toggle="#drawers_shop_cart">
-                    <i class="ki-filled ki-handcart"></i>
+                    <i class="ki-filled ki-handcart text-base"></i>
                 </button>
                 <button class="kt-btn kt-btn-ghost kt-btn-icon size-8 hover:bg-background hover:[&_i]:text-primary"
                         data-kt-drawer-toggle="#notifications_drawer">
-                    <i class="ki-filled ki-notification-status text-lg"></i>
+                    <i class="ki-filled ki-notification-status text-base text-lg"></i>
                 </button>
                 <div class="relative group" data-kt-dropdown="true" data-kt-dropdown-offset="10px, 10px"
                      data-kt-dropdown-offset-rtl="-20px, 10px" data-kt-dropdown-placement="bottom-end"
@@ -310,47 +310,54 @@
                             <li>
                                 <a class="kt-dropdown-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary"
                                    href="{% url 'dashboard:user_profile' %}">
-                                    <i class="ki-filled ki-profile-circle"></i> My Profile
+                                    <i class="ki-filled ki-profile-circle text-base"></i> My Profile
                                 </a>
                             </li>
                             <li class="relative group" data-kt-dropdown="true" data-kt-dropdown-placement="right-start"
                                 data-kt-dropdown-trigger="hover">
                                 <button class="kt-dropdown-menu-toggle flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-secondary"
                                         data-kt-dropdown-toggle="true">
-                                    <i class="ki-filled ki-setting-2"></i> My Account
-                                    <span class="kt-dropdown-menu-indicator ml-auto"><i
-                                            class="ki-filled ki-right text-xs"></i></span>
+                                    <i class="ki-filled ki-setting-2 text-base"></i> My Account
+                                    <span class="kt-dropdown-menu-indicator ml-auto">
+                                        <i class="ki-filled ki-right text-base text-xs"></i>
+                                    </span>
                                 </button>
                                 <div class="kt-dropdown-menu w-[220px] bg-background dark:bg-gray-800 border border-border rounded-lg shadow-lg py-2 hidden absolute left-full top-0 ml-1 group-hover:block"
                                      data-kt-dropdown-menu="true">
                                     <ul class="kt-dropdown-menu-sub">
                                         <li>
                                             <a class="kt-dropdown-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary"
-                                               href="{% url 'dashboard:view_user_quotations' %}"><i class="bi bi-envelope-paper"></i>View Quotations</a>
+                                               href="{% url 'dashboard:view_user_quotations' %}">
+                                                <i class="bi bi-envelope-paper text-base"></i>
+                                                View Quotations
+                                            </a>
                                         </li>
                                         {% comment %}
                                         <li>
                                             <a class="kt-dropdown-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary"
-                                               href="#"><i class="ki-filled ki-icon"></i> Billing <span class="ml-auto"
-                                                                                                        data-kt-tooltip="true"
-                                                                                                        data-kt-tooltip-placement="top"><i
-                                                    class="ki-filled ki-information-2 text-base text-muted-foreground"></i><span
-                                                    class="kt-tooltip">Payment and subscription info</span></span></a>
+                                               href="#"><i class="ki-filled ki-icon text-base"></i> Billing
+                                                <span class="ml-auto"
+                                                      data-kt-tooltip="true"
+                                                      data-kt-tooltip-placement="top">
+                                                    <i class="ki-filled ki-information-2 text-base text-muted-foreground"></i>
+                                                    <span class="kt-tooltip">Payment and subscription info</span>
+                                                </span>
+                                            </a>
                                         </li>
                                         <li>
                                             <a class="kt-dropdown-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary"
-                                               href="#"><i class="ki-filled ki-medal-star"></i> Security</a>
+                                               href="#"><i class="ki-filled ki-medal-star text-base"></i> Security
+                                            </a>
                                         </li>
                                         <li>
                                             <div class="kt-dropdown-menu-separator border-t border-border my-1"></div>
                                         </li>
                                         <li>
                                             <a class="kt-dropdown-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary"
-                                               href="#"><i class="ki-filled ki-shield-tick"></i> Notifications <input checked
-                                                                                                                   class="ml-auto kt-switch"
-                                                                                                                   name="check"
-                                                                                                                   type="checkbox"
-                                                                                                                   value="1"/></a>
+                                               href="#"><i class="ki-filled ki-shield-tick text-base"></i> Notifications
+                                                <input checked class="ml-auto kt-switch" name="check" type="checkbox"
+                                                       value="1"/>
+                                            </a>
                                         </li>
                                         {% endcomment %}
                                     </ul>
@@ -359,7 +366,7 @@
                             <li>
                                 <a class="kt-dropdown-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary"
                                    href="{% url 'dashboard:request_role' %}">
-                                    <i class="ki-filled ki-profile-circle"></i> Become a Supplier
+                                    <i class="ki-filled ki-profile-circle text-base"></i> Become a Supplier
                                 </a>
                             </li>
                             <li>
@@ -368,25 +375,37 @@
                         </ul>
                         <div class="px-2.5 pt-1.5 mb-2.5 flex flex-col gap-3.5">
                             <div class="flex items-center justify-between">
-                                <span class="flex items-center gap-2"><i
-                                        class="ki-filled ki-moon text-base text-muted-foreground"></i><span
-                                        class="font-medium text-2sm">Dark Mode</span></span>
-                                <input class="kt-switch" data-kt-theme-switch-state="dark"
-                                       data-kt-theme-switch-toggle="true" name="check" type="checkbox" value="1"/>
+                                <span class="flex items-center gap-2"><i class="ki-filled ki-moon text-base text-muted-foreground"></i>
+                                    <span class="font-medium text-2sm">Dark Mode</span>
+                                </span>
+                                <input class="kt-switch" data-kt-theme-switch-state="dark" data-kt-theme-switch-toggle="true" name="check" type="checkbox" value="1"/>
                             </div>
                             <div class="opacity-slider-container">
                                 <span class="text-sm text-muted-foreground">Header Opacity</span>
                                 <input type="range" min="0.1" max="1" step="0.1" value="0.8" class="opacity-slider" id="header-opacity-slider"/>
                             </div>
+                            {% if user.is_authenticated %}
                             <a class="kt-btn kt-btn-outline justify-center w-full"
-                               href="{% url 'dashboard:login' %}">Log out</a>
+                               href="{% url 'dashboard:user_logout' %}">Log out
+                            </a>
+                            {% else %}
+                            <a class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700"
+                                href="{% url 'dashboard:login' %}">Sign In
+                            </a>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
+                {% if user.is_authenticated %}
                 <a class="kt-btn kt-btn-ghost kt-btn-icon size-8 hover:bg-background hover:[&_i]:text-primary"
-                   href="{% url 'dashboard:login' %}">
-                    <i class="ki-filled ki-exit-right"></i>
+                   href="{% url 'dashboard:user_logout' %}">
+                    <i class="ki-filled ki-exit-right text-base"></i>
                 </a>
+                {% else %}
+                <a class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700"
+                   href="{% url 'dashboard:login' %}">Sign In
+                </a>
+                {% endif %}
             </div>
         </header>
 
@@ -403,7 +422,7 @@
                             border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
                         {% endif %}"
                        href="{% url 'dashboard:home' %}">
-                        <i class="ki-filled ki-home kt-step-icon"></i>
+                        <i class="ki-filled ki-home text-base"></i>
                         <span class="text-sm">Home</span>
                     </a>
 
@@ -413,7 +432,7 @@
                         <a class="kt-menu-link flex items-center gap-2 px-3 py-2 text-2sm leading-none relative h-8.5 rounded-full border
                             border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground"
                            href="#">
-                            <i class="ki-filled ki-magnifier kt-step-icon"></i>
+                            <i class="ki-filled ki-magnifier text-base"></i>
                             <span class="text-sm">Search Results</span>
                         </a>
                         <div class="kt-menu-dropdown absolute w-48 bg-background dark:bg-gray-800 border border-border rounded-lg shadow-lg z-10 hidden group-hover:block mt-7 py-5 px-3">
@@ -425,7 +444,7 @@
                                         border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
                                     {% endif %}"
                                    href="{% url 'dashboard:search_results_grid' %}">
-                                    <i class="ki-filled ki-grid kt-step-icon"></i>
+                                    <i class="ki-filled ki-grid text-base"></i>
                                     <span class="text-sm">Grid View</span>
                                 </a>
                             </div>
@@ -437,7 +456,7 @@
                                         border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
                                     {% endif %}"
                                    href="{% url 'dashboard:search_results_list' %}">
-                                    <i class="bi bi-card-checklist kt-step-icon"></i>
+                                    <i class="bi bi-card-checklist text-base"></i>
                                     <span class="text-sm">List View</span>
                                 </a>
                             </div>
@@ -450,7 +469,7 @@
                         <a class="kt-menu-link flex items-center gap-2 px-3 py-2 text-2sm leading-none relative h-8.5 rounded-full border
                             border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground"
                            href="#">
-                            <i class="bi bi-exclude kt-step-icon"></i>
+                            <i class="bi bi-exclude text-base`"></i>
                             <span class="text-sm">Overlays</span>
                         </a>
                         <div class="kt-menu-dropdown absolute w-48 bg-background dark:bg-gray-800 border border-border rounded-lg shadow-lg z-10 hidden group-hover:block mt-7 py-5 px-3">
@@ -462,7 +481,7 @@
                                         border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
                                     {% endif %}"
                                    href="{% url 'dashboard:shopping_cart' %}">
-                                    <i class="ki-filled ki-basket kt-step-icon"></i>
+                                    <i class="ki-filled ki-basket text-base"></i>
                                     <span class="text-sm">Shopping Cart</span>
                                 </a>
                             </div>
@@ -474,7 +493,7 @@
                                         border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
                                     {% endif %}"
                                    href="{% url 'dashboard:wish_list' %}">
-                                    <i class="ki-filled ki-heart kt-step-icon"></i>
+                                    <i class="ki-filled ki-heart text-base"></i>
                                     <span class="text-sm">Wishlist</span>
                                 </a>
                             </div>
@@ -486,7 +505,7 @@
                         <a class="kt-menu-link flex items-center gap-2 px-3 py-2 text-2sm leading-none relative h-8.5 rounded-full border
                             border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground"
                            href="#">
-                            <i class="ki-filled ki-wallet kt-step-icon"></i>
+                            <i class="ki-filled ki-wallet text-base"></i>
                             <span class="text-sm">Checkout</span>
                         </a>
                         <div class="kt-menu-dropdown absolute w-40 bg-background dark:bg-gray-800 border border-border rounded-lg shadow-lg z-10 hidden group-hover:block mt-7 py-5 px-3">
@@ -498,7 +517,7 @@
                                         border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
                                     {% endif %}"
                                    href="{% url 'dashboard:shipping_info' %}">
-                                    <i class="ki-filled ki-delivery kt-step-icon"></i>
+                                    <i class="ki-filled ki-delivery text-base"></i>
                                     <span class="text-sm">Shipping Info</span>
                                 </a>
                             </div>
@@ -510,7 +529,7 @@
                                         border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
                                     {% endif %}"
                                    href="{% url 'dashboard:payment_method' %}">
-                                    <i class="bi bi-stripe kt-step-icon"></i>
+                                    <i class="ki-filled ki-two-credit-cart text-base"></i>
                                     <span class="text-sm">Payment Method</span>
                                 </a>
                             </div>
@@ -522,7 +541,7 @@
                                         border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
                                     {% endif %}"
                                    href="{% url 'dashboard:order_placed' %}">
-                                    <i class="ki-filled ki-check-circle kt-step-icon"></i>
+                                    <i class="ki-filled ki-cheque text-base"></i>
                                     <span class="text-sm">Order Placed</span>
                                 </a>
                             </div>
@@ -538,7 +557,7 @@
                                 border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
                             {% endif %}"
                            href="{% url 'dashboard:my_orders' %}">
-                            <i class="ki-filled ki-package kt-step-icon"></i>
+                            <i class="ki-filled ki-package text-base"></i>
                             <span class="text-sm">My Orders</span>
                         </a>
                     </div>

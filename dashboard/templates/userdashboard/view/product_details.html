@@ -221,7 +221,7 @@
       </div>
 <!-- Ratings Section -->
 <div class="ratings-section" style="margin-top: 30px;">
-    <h3 style="font-size: 18px; font-weight: 600; color: #4a555c;">RATINGS <span style="color: #7f91a0;">☆</span></h3>
+    <h3 style="font-size: 18px; font-weight: 600; color: #99a1af;">RATINGS <span style="color: #7f91a0;">☆</span></h3>
 
     <div style="display: flex; gap: 40px; margin-top: 20px; align-items: flex-start;">
 
@@ -229,7 +229,7 @@
             <div style="font-size: 38px; font-weight: 500; color: #0b7663; line-height: 1;">
                 {{ average_rating|default:"0.0" }}★
             </div>
-            <div style="font-size: 15px; color: #4a555c; margin-top: 6px;">
+            <div style="font-size: 15px; color: #99a1af; margin-top: 6px;">
                 {{ total_reviews }} Verified Buyer{{ total_reviews|pluralize }}
             </div>
         </div>
@@ -238,12 +238,12 @@
         <div style="flex-grow: 1; max-width: 300px; padding-left: 10px;">
             {% for i in "54321" %}
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                <span style="width: 24px; font-size: 15px; color: #4a555c;">{{ i }}★</span>
+                <span style="width: 24px; font-size: 15px; color: #99a1af;">{{ i }}★</span>
                 <div style="flex-grow: 1; background: #e0e0e0; height: 8px; border-radius: 4px; overflow: hidden;">
               <div style="width: {{ rating_counts|get:i|percentage:total_reviews|floatformat:"0" }}%; height: 100%; background: {% if i == '1' %}#ff4d4f{% elif i == '2' %}#ffc107{% else %}#0b7663{% endif %};"></div>
 
             </div>
-                <span style="width: 20px; font-size: 14px; color: #555; text-align: right;">
+                <span style="width: 20px; font-size: 14px; color: #99a1af; text-align: right;">
                     {{ rating_counts|get:i|default:"0" }}
                 </span>
             </div>
@@ -254,7 +254,7 @@
 
 <!-- Reviews Section -->
       <div class="mt-8">
-        <h4 class="text-lg font-semibold text-gray-600 dark:text-white">Customer Reviews ({{ total_reviews }})</h4>
+        <h4 class="text-lg font-semibold text-gray-400 dark:text-white">Customer Reviews ({{ total_reviews }})</h4>
         {% if reviews %}
         <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
           <div class="flex gap-4">
@@ -262,7 +262,7 @@
               {{ reviews.0.rating }}★
             </div>
             <div class="flex-1">
-              <p class="text-gray-800 dark:text-gray-200">{{ reviews.0.review|default:"No comment provided." }}</p>
+              <p class="text-gray-400 dark:text-gray-200">{{ reviews.0.review|default:"No comment provided." }}</p>
               {% if reviews.0.photo %}
               <img src="{{ reviews.0.photo.url }}" alt="Review Photo" class="w-24 h-auto rounded mt-2 shadow-sm" loading="lazy" />
               {% endif %}
@@ -279,7 +279,7 @@
               {{ review.rating }}★
             </div>
             <div class="flex-1">
-              <p class="text-gray-800 dark:text-gray-200">{{ review.review|default:"No comment provided." }}</p>
+              <p class="text-gray-400 dark:text-gray-200">{{ review.review|default:"No comment provided." }}</p>
               {% if review.photo %}
               <img src="{{ review.photo.url }}" alt="Review Photo" class="w-24 h-auto rounded mt-2 shadow-sm" loading="lazy" />
               {% endif %}

@@ -34,7 +34,7 @@ from django.contrib import messages
 from django.views.generic import TemplateView, ListView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.hashers import make_password
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.views.generic.edit import *
 from datetime import date
 from django.db.models import F, Prefetch
@@ -512,7 +512,7 @@ class SearchResultsGridView(TemplateView):
             context['user_cart_ids'] = []
 
         return context
-    
+
 class SearchResultsListView(TemplateView):
     template_name = 'userdashboard/view/search_results_list.html'
 
@@ -1753,7 +1753,14 @@ class SignInView(View):
             return redirect('dashboard:home')
         else:
             messages.error(request, 'Invalid email or password.')
-            return redirect('dashboard:user_signin')
+            return redirect('dashboard:login')
+
+
+class LogoutView(View):
+    def get(self, request):
+        logout(request)
+        messages.success(request, "You have been logged out successfully.")
+        return redirect('dashboard:login')
 
 
 class PaymentView(View):
