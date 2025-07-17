@@ -7,13 +7,13 @@
     .thumbSwiper {
         overflow: visible !important;
     }
-    
+
     .thumbSwiper .swiper-wrapper {
         transform: none !important;
         flex-wrap: wrap;
         gap: 8px;
     }
-    
+
     .thumbSwiper .swiper-slide {
         width: 64px !important;
         height: 64px;
@@ -26,7 +26,7 @@
     }
 
     .swiper-slide-thumb-active img {
-        border-color: #3b82f6; 
+        border-color: #3b82f6;
     }
     .product-specs p {
     display: flex;
@@ -105,138 +105,131 @@
             {{ product.name|default:'Product Not Found' }}
         </h1>
        {% if product %}
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- Product Images Section -->
-<div class="flex flex-col gap-4">
-    {% if product.main_image or other_images %}
-        <!-- Main Image Block -->
-        <div class="main-image-wrapper bg-gray-100 dark:bg-gray-650 rounded-lg shadow-md p-2">
-            <div class="swiper mainSwiper h-[500px] rounded-md overflow-hidden">
-                <div class="swiper-wrapper">
-                    {% if product.main_image %}
-                    <div class="swiper-slide">
-                        <img src="{{ product.main_image }}" alt="{{ product.name }}" class="w-full h-full object-cover" />
-                    </div>
-                    {% endif %}
-                    {% for img in other_images %}
-                    <div class="swiper-slide">
-                        <img src="{{ img.image.url }}" alt="Product Image" class="w-full h-full object-cover" />
-                    </div>
-                    {% endfor %}
-                </div>
-                <div class="swiper-button-prev"></div>
-                <div class="swiper-button-next"></div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <!-- Product Images Section -->
+    <div class="flex flex-col gap-4">
+      {% if product.main_image or other_images %}
+        <!-- Main Image -->
+        <div class="border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-lg overflow-hidden shadow-sm">
+          <div class="swiper mainSwiper h-[510px] sm:h-[510px]">
+            <div class="swiper-wrapper">
+              {% if product.main_image %}
+              <div class="swiper-slide">
+                <img src="{{ product.main_image }}" alt="{{ product.name }}" class="w-full h-full object-contain" loading="lazy" />
+              </div>
+              {% endif %}
+              {% for img in other_images %}
+              <div class="swiper-slide">
+                <img src="{{ img.image.url }}" alt="Product Image" class="w-full h-full object-contain" loading="lazy" />
+              </div>
+              {% endfor %}
             </div>
+            <div class="swiper-button-prev bg-white dark:bg-gray-800 shadow-md"></div>
+            <div class="swiper-button-next bg-white dark:bg-gray-800 shadow-md"></div>
+          </div>
         </div>
 
-        <!-- Thumbnail Block -->
-      
-            <div class="swiper thumbSwiper h-20">
-                <div class="swiper-wrapper flex-wrap justify-start">
-                    {% if product.main_image %}
-                    <div class="swiper-slide w-16 h-full cursor-pointer">
-                        <img src="{{ product.main_image }}" class="w-full h-full object-cover border rounded" />
-                    </div>
-                    {% endif %}
-                    {% for img in other_images %}
-                    <div class="swiper-slide w-16 h-full cursor-pointer">
-                        <img src="{{ img.image.url }}" class="w-full h-full object-cover border rounded" />
-                    </div>
-                    {% endfor %}
-                </div>
+        <!-- Thumbnails -->
+        <div class="swiper thumbSwiper h-20">
+          <div class="swiper-wrapper">
+            {% if product.main_image %}
+            <div class="swiper-slide w-16 h-16 cursor-pointer">
+              <img src="{{ product.main_image }}" alt="Thumbnail" class="w-full h-full object-cover border border-gray-200 dark:border-gray-700 rounded" loading="lazy" />
             </div>
-   
-    {% else %}
-        <div class="bg-white border rounded p-6 flex flex-col items-center justify-center text-red-500">
-            <img src="{% static 'default.png' %}" alt="Default Product Image" class="w-64 h-64 object-cover" />
-            <p class="mt-4">Image not available</p>
+            {% endif %}
+            {% for img in other_images %}
+            <div class="swiper-slide w-16 h-16 cursor-pointer">
+              <img src="{{ img.image.url }}" alt="Thumbnail" class="w-full h-full object-cover border border-gray-200 dark:border-gray-700 rounded" loading="lazy" />
+            </div>
+            {% endfor %}
+          </div>
         </div>
-    {% endif %}
-</div>
+      {% else %}
+        <div class="flex flex-col items-center justify-center border border-gray-200 dark:border-gray-700 rounded-lg p-6 bg-white dark:bg-gray-800 text-red-500">
+          <img src="{% static 'default.png' %}" alt="Default Product Image" class="w-48 h-48 object-cover" loading="lazy" />
+          <p class="mt-4">Image not available</p>
+        </div>
+      {% endif %}
+    </div>
 
-          
-<div id="product-extra-info">
-    <!-- Product Information -->
-    <h1><b>Product Information</b></h1>
-    <p class="text-gray-650 dark:text-gray-650 text-lg leading-relaxed">
+
+<!-- Product Details -->
+    <div>
+      <!-- Description -->
+      <h2 class="text-xl font-semibold text-gray-650 dark:text-white mb-3">Product Information</h2>
+      <p class="text-gray-650 dark:text-gray-650 text-base leading-relaxed mb-6">
         {{ product.description|default:'No description available' }}
-    </p>
+      </p>
 
-    <!-- Pricing  -->
-    <div class="flex items-center gap-4">
+    <!-- Pricing -->
+      <div class="flex items-center gap-4 mb-6">
         {% if product.original_price and product.original_price > product.price %}
-        <span class="text-sm font-medium text-gray-500 line-through">
-            ${{ product.original_price|floatformat:2 }}
+        <span class="text-base font-medium text-gray-650 line-through">
+          ${{ product.original_price|floatformat:2 }}
         </span>
         {% endif %}
         <span class="text-2xl font-bold text-gray-650 dark:text-white">
-            ${{ product.price|floatformat:2 }}
+          ${{ product.price|floatformat:2 }}
         </span>
         {% if product.offer_percentage and product.offer_percentage > 0 %}
         <span class="text-sm font-medium text-green-600 bg-green-100 px-2 py-1 rounded-full">
-            Save {{ product.offer_percentage|floatformat:0 }}%
+          Save {{ product.offer_percentage|floatformat:0 }}%
         </span>
         {% endif %}
-    </div>
+      </div>
 
     <!-- Buttons -->
     <div class="flex items-center gap-3 mt-4">
           {% if product.id in user_cart_ids %}
-
-                                        <button class="kt-btn kt-btn-outline kt-btn-sm ms-1" style="background:#3b82f6; color:white;" data-product-id="{{ product.id }}">
-                                            In cart <i class="ki-filled ki-handcart text-white"></i>
-                                        </button>
-                                    {% else %}
-
-                                        <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 add-to-cart-btn" data-product-id="{{ product.id }}">
-                                            Add <i class="ki-filled ki-handcart"></i>
-                                        </button>
-
-                                    {% endif %}
+        <button class="kt-btn kt-btn-outline kt-btn-sm ms-1" style="background:#3b82f6; color:white;" data-product-id="{{ product.id }}">
+            In cart <i class="ki-filled ki-handcart text-white"></i>
+        </button>
+        {% else %}
+        <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 add-to-cart-btn" data-product-id="{{ product.id }}">
+            Add <i class="ki-filled ki-handcart"></i>
+        </button>
+        {% endif %}
         <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-md"
                 data-kt-wishlist-toggle="true" data-product-id="{{ product.id|default:'0' }}">
             <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
         </button>
     </div>
-<!-- Additional Information  -->
-
-<div  id="additional-info-wrapper" class="mt-6 product-specs space-y-1 text-sm text-gray-650 dark:text-gray-300 border-t pt-4">
-    <h1 class="text-lg font-semibold mb-2">Additional Information</h1>
-
-   
-    <div id="additional-info-content" style="max-height: 150px; overflow: hidden; transition: max-height 0.3s ease;">
-        <p><strong>SKU:</strong> {{ product.supplier_sku|default:'N/A' }}</p>
-        <p><strong>Category:</strong> {{ product.category.name|default:'Uncategorized' }}</p>
-        <p><strong>Brand:</strong> {{ product.brand.name|default:'Unbranded' }}</p>
-        <p><strong>Product From:</strong> {{ product.product_from|default:'N/A' }}</p>
-        <p><strong>Condition:</strong> {{ product.get_condition_display }}</p>
-        <p><strong>Warranty:</strong> {{ product.get_warranty_display }}</p>
-        <p><strong>Tag:</strong> {{ product.get_tag_display }}</p>
-        <p><strong>Manufacture Date:</strong> {{ product.manufacture_date|date:"d M, Y"|default:'N/A' }}</p>
-        <p><strong>Expiration Days:</strong> {{ product.expiration_days|default:'N/A' }}</p>
-        <p><strong>Delivery Time:</strong> {{ product.delivery_time }} Days</p>
-        <p><strong>Return Time Limit:</strong> {{ product.return_time_limit }} Days</p>
-        <p><strong>Available Stock:</strong> {{ product.stock_quantity }}</p>
-        <p><strong>Low Stock Alert:</strong> {{ product.low_stock_alert }}</p>
-        <p><strong>Weight:</strong> {{ product.weight }} {{ product.weight_unit }}</p>
-    </div>
-
-    <!-- See More / See Less button -->
-    <button id="toggle-additional-info" class="text-blue-600 dark:text-blue-400 font-semibold mt-2 hover:underline">
-        See More
-    </button>
-</div>
+<!-- Additional Information -->
+      <div class="border-t border-gray-200 dark:border-gray-700 pt-4 mt-5">
+        <h2 class="text-xl font-semibold text-gray-650 dark:text-white mb-3">Additional Information</h2>
+        <div id="additional-info-content" class="text-sm text-gray-650 dark:text-gray-300 space-y-2 max-h-36 overflow-hidden transition-all duration-300">
+          <p class="flex justify-between"><span class="font-semibold">SKU:</span> {{ product.supplier_sku|default:'N/A' }}</p>
+          <p class="flex justify-between"><span class="font-semibold">Category:</span> {{ product.category.name|default:'Uncategorized' }}</p>
+          <p class="flex justify-between"><span class="font-semibold">Brand:</span> {{ product.brand.name|default:'Unbranded' }}</p>
+          <p class="flex justify-between"><span class="font-semibold">Product From:</span> {{ product.product_from|default:'N/A' }}</p>
+          <p class="flex justify-between"><span class="font-semibold">Condition:</span> {{ product.get_condition_display }}</p>
+          <p class="flex justify-between"><span class="font-semibold">Warranty:</span> {{ product.get_warranty_display }}</p>
+          <p class="flex justify-between"><span class="font-semibold">Tag:</span> {{ product.get_tag_display }}</p>
+          <p class="flex justify-between"><span class="font-semibold">Manufacture Date:</span> {{ product.manufacture_date|date:"d M, Y"|default:'N/A' }}</p>
+          <p class="flex justify-between"><span class="font-semibold">Expiration Days:</span> {{ product.expiration_days|default:'N/A' }}</p>
+          <p class="flex justify-between"><span class="font-semibold">Delivery Time:</span> {{ product.delivery_time }} Days</p>
+          <p class="flex justify-between"><span class="font-semibold">Return Time Limit:</span> {{ product.return_time_limit }} Days</p>
+          <p class="flex justify-between"><span class="font-semibold">Available Stock:</span> {{ product.stock_quantity }}</p>
+            {% comment %}
+          <p class="flex justify-between"><span class="font-semibold">Low Stock Alert:</span> {{ product.low_stock_alert }}</p>
+            {% endcomment %}
+          <p class="flex justify-between"><span class="font-semibold">Weight:</span> {{ product.weight }} {{ product.weight_unit }}</p>
+        </div>
+        <button id="toggle-additional-info" class="text-blue-600 dark:text-blue-400 font-semibold mt-2 hover:underline focus:outline-none" aria-expanded="false">
+          See More
+        </button>
+      </div>
 <!-- Ratings Section -->
 <div class="ratings-section" style="margin-top: 30px;">
-    <h3 style="font-size: 18px; font-weight: 600; color: #222;">RATINGS <span style="color: #7f91a0;">☆</span></h3>
+    <h3 style="font-size: 18px; font-weight: 600; color: #4a555c;">RATINGS <span style="color: #7f91a0;">☆</span></h3>
 
     <div style="display: flex; gap: 40px; margin-top: 20px; align-items: flex-start;">
-     
+
         <div style="min-width: 100px; text-align: center;">
             <div style="font-size: 38px; font-weight: 500; color: #0b7663; line-height: 1;">
                 {{ average_rating|default:"0.0" }}★
             </div>
-            <div style="font-size: 15px; color: #555; margin-top: 6px;">
+            <div style="font-size: 15px; color: #4a555c; margin-top: 6px;">
                 {{ total_reviews }} Verified Buyer{{ total_reviews|pluralize }}
             </div>
         </div>
@@ -245,7 +238,7 @@
         <div style="flex-grow: 1; max-width: 300px; padding-left: 10px;">
             {% for i in "54321" %}
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                <span style="width: 24px; font-size: 15px; color: #333;">{{ i }}★</span>
+                <span style="width: 24px; font-size: 15px; color: #4a555c;">{{ i }}★</span>
                 <div style="flex-grow: 1; background: #e0e0e0; height: 8px; border-radius: 4px; overflow: hidden;">
               <div style="width: {{ rating_counts|get:i|percentage:total_reviews|floatformat:"0" }}%; height: 100%; background: {% if i == '1' %}#ff4d4f{% elif i == '2' %}#ffc107{% else %}#0b7663{% endif %};"></div>
 
@@ -260,56 +253,41 @@
 </div>
 
 <!-- Reviews Section -->
-
-<div class="reviews-section" style="margin-top: 40px;" id="reviews-section">
-    <h4>Customer Reviews ({{ total_reviews }})</h4>
-
-    {% if reviews %}
-       <div class="review" style="border-top: 1px solid #ddd; padding: 15px 0; display: flex; gap: 20px; align-items: flex-start;">
-
-         <div class="review-rating" style="background: #0b7663; color: white; padding: 6px 10px; border-radius: 3px; font-weight: bold; min-width: 48px; height: fit-content; display: inline-block; text-align: center;">
-
-                {{ reviews.0.rating }}★
+      <div class="mt-8">
+        <h4 class="text-lg font-semibold text-gray-600 dark:text-white">Customer Reviews ({{ total_reviews }})</h4>
+        {% if reviews %}
+        <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+          <div class="flex gap-4">
+            <div class="bg-teal-600 text-white px-3 py-1 rounded text-sm font-bold w-12 text-center">
+              {{ reviews.0.rating }}★
             </div>
-            <div class="review-content" style="flex: 1;">
-                <p>{{ reviews.0.review|default:"No comment provided." }}</p>
-
-                {% if reviews.0.photo %}
-                    <div class="review-photo" style="margin: 10px 0;">
-                        <img src="{{ reviews.0.photo.url }}" alt="Review Photo"
-                             style="width: 100px; height: auto; border-radius: 6px; box-shadow: 0 0 5px rgba(0,0,0,0.1);">
-                             
-
-                    </div>
-                {% endif %}
-
-                <small>{{ reviews.0.user.username }} | {{ reviews.0.created_at|date:"d M Y" }}</small>
+            <div class="flex-1">
+              <p class="text-gray-800 dark:text-gray-200">{{ reviews.0.review|default:"No comment provided." }}</p>
+              {% if reviews.0.photo %}
+              <img src="{{ reviews.0.photo.url }}" alt="Review Photo" class="w-24 h-auto rounded mt-2 shadow-sm" loading="lazy" />
+              {% endif %}
+              <small class="text-gray-500 dark:text-gray-400">{{ reviews.0.user.username }} | {{ reviews.0.created_at|date:"d M Y" }}</small>
             </div>
+          </div>
         </div>
 
-        <!-- Hidden reviews -->
-      
-<div id="more-reviews" style="display: none;">
-    {% for review in reviews|slice:"1:" %}
-        <div class="review" style="border-top: 1px solid #ddd; padding: 15px 0; display: flex; gap: 20px; align-items: flex-start;">
-            <div class="review-rating" style=" background: #0b7663;   color: white; padding: 6px 10px; border-radius: 3px;font-weight: bold; min-width: 48px;height: fit-content;display: inline-block;text-align: center;">
-                {{ review.rating }}★
+        <!-- More Reviews -->
+        <div id="more-reviews" class="hidden">
+          {% for review in reviews|slice:"1:" %}
+          <div class="border-t border-gray-200 dark:border-gray-700 pt-4 flex gap-4">
+            <div class="bg-teal-600 text-white px-3 py-1 rounded text-sm font-bold w-12 text-center">
+              {{ review.rating }}★
             </div>
-            <div class="review-content" style="flex: 1;">
-                <p>{{ review.review|default:"No comment provided." }}</p>
-
-                {% if review.photo %}
-                    <div class="review-photo" style="margin: 10px 0;">
-                        <img src="{{ review.photo.url }}" alt="Review Photo"
-                             style="width: 100px; height: auto; border-radius: 6px; box-shadow: 0 0 5px rgba(0,0,0,0.1);">
-                    </div>
-                {% endif %}
-
-                <small>{{ review.user.username }} | {{ review.created_at|date:"d M Y" }}</small>
+            <div class="flex-1">
+              <p class="text-gray-800 dark:text-gray-200">{{ review.review|default:"No comment provided." }}</p>
+              {% if review.photo %}
+              <img src="{{ review.photo.url }}" alt="Review Photo" class="w-24 h-auto rounded mt-2 shadow-sm" loading="lazy" />
+              {% endif %}
+              <small class="text-gray-500 dark:text-gray-400">{{ review.user.username }} | {{ review.created_at|date:"d M Y" }}</small>
             </div>
+          </div>
+          {% endfor %}
         </div>
-    {% endfor %}
-</div>
 
         <!-- Toggle Buttons -->
         <a href="#" id="view-all-reviews-btn"
@@ -446,7 +424,7 @@ document.querySelectorAll('.add-to-cart-btn').forEach(button => {
                 .then(res => res.json())
                 .then(data => {
                     if (data.status === "success") {
-                    
+
                         document
                             .querySelectorAll(`.add-to-cart-btn[data-product-id="${productId}"]`)
                             .forEach(markAsInCart);
