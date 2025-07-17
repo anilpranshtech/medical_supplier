@@ -112,12 +112,6 @@ class PhoneForm(forms.ModelForm):
         model = CustomerBillingAddress
         fields = ['phone']
 
-    def clean_phone(self):
-        phone = self.cleaned_data['phone']
-        if not phone.startswith('+'):
-            raise forms.ValidationError("Phone number must start with '+' followed by country code.")
-        return phone
-
 
 class RetailProfileForm(forms.ModelForm):
     class Meta:

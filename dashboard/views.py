@@ -17,6 +17,7 @@ from django.views.decorators.http import require_POST
 from razorpay.errors import SignatureVerificationError
 
 from utils.handle_payments import create_orders_from_cart
+from utils.handle_user_profile import get_user_profile
 from .forms import *
 from .models import *
 import razorpay
@@ -1489,35 +1490,23 @@ class UserProfile(LoginRequiredMixin, TemplateView):
 
         return context
 
+
 class UploadAvatarView(LoginRequiredMixin, View):
     def post(self, request):
-        profile = None
-        try:
-            profile = RetailProfile.objects.get(user=self.request.user)
-        except RetailProfile.DoesNotExist:
-            try:
-                profile = WholesaleBuyerProfile.objects.get(user=self.request.user)
-            except WholesaleBuyerProfile.DoesNotExist:
-                try:
-                    profile = SupplierProfile.objects.get(user=self.request.user)
-                except SupplierProfile.DoesNotExist:
-                    pass
-
+        profile, _ = get_user_profile(request.user)
         if profile:
-            if 'avatar' in self.request.FILES:
-                profile.profile_picture = self.request.FILES['avatar']
+            if 'avatar' in request.FILES:
+                profile.profile_picture = request.FILES['avatar']
                 profile.save()
-                messages.success(self.request, "Avatar updated successfully.")
-            elif 'avatar_remove' in self.request.POST:
-                profile.profile_picture.delete()
-                profile.save()
-                messages.success(self.request, "Avatar removed successfully.")
+                messages.success(request, "Avatar updated successfully.")
+            elif 'avatar_remove' in request.POST:
+                if profile.profile_picture:
+                    profile.profile_picture.delete(save=True)
+                messages.success(request, "Avatar removed successfully.")
         else:
-            messages.error(self.request, "Profile not found.")
+            messages.error(request, "Profile not found.")
         return redirect('dashboard:user_profile')
 
-    def get(self, request):
-        return redirect('dashboard:user_profile')
 
 class EditProfileView(LoginRequiredMixin, UpdateView):
     template_name = 'pages/edit_profile.html'
@@ -1597,15 +1586,20 @@ class EditEmailView(LoginRequiredMixin, View):
 
 class EditPhoneView(LoginRequiredMixin, View):
     def post(self, request):
-        default_address = CustomerBillingAddress.objects.filter(user=self.request.user, is_default=True, is_deleted=False).first()
+        default_address = CustomerBillingAddress.objects.filter(
+            user=request.user, is_default=True, is_deleted=False
+        ).first()
+
         if not default_address:
-            default_address = CustomerBillingAddress.objects.filter(user=self.request.user, is_deleted=False).first()
+            default_address = CustomerBillingAddress.objects.filter(
+                user=request.user, is_deleted=False
+            ).first()
             if default_address:
                 default_address.is_default = True
                 default_address.save()
             else:
                 default_address = CustomerBillingAddress.objects.create(
-                    user=self.request.user,
+                    user=request.user,
                     address_title="Default Address",
                     customer_address1="Not set",
                     customer_city="Not set",
@@ -1614,11 +1608,16 @@ class EditPhoneView(LoginRequiredMixin, View):
                     customer_country="Not set",
                     is_default=True
                 )
+
         form = PhoneForm(request.POST, instance=default_address)
         if form.is_valid():
             form.save()
             return JsonResponse({'status': 'success', 'message': 'Phone number updated successfully.'})
-        return JsonResponse({'status': 'error', 'message': 'Failed to update phone number. Please check the form.'})
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Failed to update phone number.',
+            'errors': form.errors
+        })
 
 
 class SignUpView(View):

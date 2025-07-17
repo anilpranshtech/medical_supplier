@@ -272,6 +272,14 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    // Avatar auto-submit on file select
+    const avatarInput = document.querySelector('input[name="avatar"]');
+    if (avatarInput) {
+        avatarInput.addEventListener('change', function () {
+            this.form.submit();
+        });
+    }
+
     // Modal handling
     const modals = document.querySelectorAll('[data-kt-modal="true"]');
     const modalTriggers = document.querySelectorAll('[data-kt-modal-toggle]');
@@ -290,7 +298,9 @@ document.addEventListener('DOMContentLoaded', function () {
         dismiss.addEventListener('click', function () {
             const modal = this.closest('[data-kt-modal="true"]');
             modal.classList.add('hidden');
-            modal.querySelectorAll('input').forEach(input => input.value = input.type === 'checkbox' ? false : input.getAttribute('value') || '');
+            modal.querySelectorAll('input').forEach(input => {
+                input.value = input.type === 'checkbox' ? false : input.defaultValue || '';
+            });
         });
     });
 
@@ -298,12 +308,14 @@ document.addEventListener('DOMContentLoaded', function () {
         modal.addEventListener('click', function (e) {
             if (e.target === modal) {
                 modal.classList.add('hidden');
-                modal.querySelectorAll('input').forEach(input => input.value = input.type === 'checkbox' ? false : input.getAttribute('value') || '');
+                modal.querySelectorAll('input').forEach(input => {
+                    input.value = input.type === 'checkbox' ? false : input.defaultValue || '';
+                });
             }
         });
     });
 
-    // Form submission via AJAX
+    // AJAX form submissions for email/phone
     const forms = document.querySelectorAll('.kt-modal form');
     forms.forEach(form => {
         form.addEventListener('submit', function (e) {
@@ -313,7 +325,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 method: 'POST',
                 body: formData,
                 headers: {
-                    'X-CSRFToken': '{{ csrf_token }}'
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
                 }
             })
             .then(response => response.json())
@@ -322,7 +334,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     alert(data.message);
                     window.location.reload();
                 } else {
-                    alert(data.message);
+                    alert(data.message + (data.errors ? ": " + JSON.stringify(data.errors) : ""));
                 }
             })
             .catch(() => alert('An error occurred. Please try again.'));
