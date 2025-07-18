@@ -152,15 +152,15 @@
                             </a>
 
                             {% if request.user.is_authenticated %}
-                            <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
-                                    data-kt-wishlist-toggle="true"
-                                    data-product-id="{{ product.id }}">
-                                <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
-                            </button>
+                                <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
+                                        data-kt-wishlist-toggle="true"
+                                        data-product-id="{{ product.id }}">
+                                    <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
+                                </button>
                             {% else %}
-                            <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2 show-login-modal">
-                                 <i class="ki-filled ki-heart heart-icon text-xs"></i>
-                            </button>
+                                <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2 show-login-modal">
+                                     <i class="ki-filled ki-heart heart-icon text-xs"></i>
+                                </button>
 
                             {% endif %}
 
@@ -992,6 +992,14 @@
     const csrftoken = getCookie('csrftoken');
 
     // Wishlist Toggle
+    document.addEventListener('DOMContentLoaded', () => {
+    const toggleWishlistIcons = (productId, isAdded) => {
+        document.querySelectorAll(`.kt-wishlist-icon[data-product-id="${productId}"] i`)
+            .forEach(icon => {
+                icon.classList.toggle('text-red-500', isAdded);
+            });
+    };
+
     document.querySelectorAll('.kt-wishlist-icon').forEach(button => {
         button.addEventListener('click', () => {
             const productId = button.dataset.productId || '0';
@@ -1003,23 +1011,23 @@
                 },
                 body: `product_id=${productId}`
             })
-                .then(response => {
-                    if (response.status === 403) {
-                        alert('Please login to use wishlist.');
-                        window.location.href = '/login/';
-                        return;
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data) {
-                        const icon = button.querySelector('i');
-                        icon.classList.toggle('text-red-500', data.status === 'added');
-                    }
-                })
-                .catch(error => console.error('Wishlist toggle error:', error));
+            .then(response => {
+                if (response.status === 403) {
+                    alert('Please login to use wishlist.');
+                    window.location.href = '/login/';
+                    return;
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data) {
+                    toggleWishlistIcons(productId, data.status === 'added');
+                }
+            })
+            .catch(error => console.error('Wishlist toggle error:', error));
         });
     });
+});
 
     // Add to Cart
     document.addEventListener('DOMContentLoaded', () => {
