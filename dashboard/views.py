@@ -958,20 +958,14 @@ class PaymentMethodView(LoginRequiredMixin, View):
         return settings.STRIPE_PUBLISHABLE_KEY, settings.STRIPE_SECRET_KEY
 
     def get_context_data(self, request):
-        # Fetch cart items for the authenticated user
         cart_items = CartProduct.objects.filter(user=request.user).select_related('product')
-
-        # Calculate totals
         subtotal = sum(item.get_total_price() for item in cart_items) or Decimal('0.00')
-        shipping = Decimal('0.00')  # Adjust based on your shipping logic
-        vat = Decimal('0.00')       # Adjust based on your tax logic
+        shipping = Decimal('0.00')
+        vat = Decimal('0.00')
         total = subtotal + shipping + vat
-
-        # Get default billing address
         billing = CustomerBillingAddress.objects.filter(user=request.user, is_default=True, is_deleted=False).first()
 
-        # Prepare context
-        context = {
+        return {
             'cart_items': cart_items,
             'order_summary': {
                 'subtotal': subtotal,
@@ -981,15 +975,17 @@ class PaymentMethodView(LoginRequiredMixin, View):
             },
             'billing': billing
         }
-        return context
 
     def get(self, request):
         public_key, _ = self.get_stripe_key(request)
         context = self.get_context_data(request)
         total = context['order_summary']['total']
+        amount_in_paise = int(total * 100)
 
-        # Razorpay: Create Order (convert total to INR paise)
-        amount_in_paise = int(total * 100)  # Assuming total is in INR; adjust if needed
+        if amount_in_paise < 100:  # minimum amount is ₹1 = 100 paise
+            messages.error(request, "Your order total must be at least ₹1. Please add items to your cart.")
+            return redirect("dashboard:shopping_cart")
+
         client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
         razorpay_order = client.order.create({
             "amount": amount_in_paise,
@@ -1008,8 +1004,14 @@ class PaymentMethodView(LoginRequiredMixin, View):
     def post(self, request):
         context = self.get_context_data(request)
         total = context['order_summary']['total']
-        payment_method = request.POST.get("payment_method")
         user = request.user
+
+        MIN_ORDER_AMOUNT = Decimal('1.00')
+        if total < MIN_ORDER_AMOUNT:
+            messages.error(request, "Your order total must be at least $1. Please add more items to your cart.")
+            return redirect("dashboard:shopping_cart")  # redirect instead of raising error
+
+        payment_method = request.POST.get("payment_method")
 
         if payment_method == "cod":
             payment = Payment.objects.create(
@@ -1025,7 +1027,7 @@ class PaymentMethodView(LoginRequiredMixin, View):
                 name=user.get_full_name(),
                 amount=total,
                 paid=False,
-                cod_tracking_id="COD123456",  # Replace with dynamic tracking ID logic
+                cod_tracking_id="COD123456",  # replace with dynamic tracking ID logic
                 delivery_partner=delivery_partner
             )
 

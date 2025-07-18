@@ -96,6 +96,11 @@
         transition: color 0.2s ease-in-out;
     }
 
+    #additional-info-content {
+    transition: max-height 0.3s ease;
+    overflow: hidden;
+}
+
 </style>
 
 <div class="kt-container-fixed mt-1" style="max-width: var(--custom-container-width, 85%);">
@@ -403,16 +408,18 @@ const csrftoken = getCookie('csrftoken');
      document.addEventListener('DOMContentLoaded', function() {
         const content = document.getElementById('additional-info-content');
         const btn = document.getElementById('toggle-additional-info');
+        const collapsedHeight = '145px';
+        content.style.maxHeight = collapsedHeight;
 
-        btn.addEventListener('click', function() {
-            if (content.style.maxHeight && content.style.maxHeight !== '150px') {
-                // Collapse
-                content.style.maxHeight = '150px';
-                btn.textContent = 'See More';
-            } else {
-                // Expand
+        btn.addEventListener('click', function () {
+            const isCollapsed = content.style.maxHeight === collapsedHeight;
+
+            if (isCollapsed) {
                 content.style.maxHeight = content.scrollHeight + 'px';
                 btn.textContent = 'See Less';
+            } else {
+                content.style.maxHeight = collapsedHeight;
+                btn.textContent = 'See More';
             }
         });
     });
