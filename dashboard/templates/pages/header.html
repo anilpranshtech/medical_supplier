@@ -1285,7 +1285,7 @@
                 fetch('/add-to-cart/').then(res => res.json())
                 .then(data => {
                     if (data.cart.length > 0) {
-                        window.location.href = "/order-summary/";
+                        window.location.href = "/shopping-cart/";
                     } else {
                         showToast("Your cart is empty.", 'info');
                     }
