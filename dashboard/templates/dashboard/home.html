@@ -109,6 +109,17 @@
       .loading .loader {
         display: inline-block;
       }
+
+      #loginRequiredModal {
+        z-index: 9999;
+        backdrop-filter: blur(8px);
+        background-color: rgba(0, 0, 0, 0.4); /* darker backdrop */
+    }
+
+    .swiper-button-next,
+    .swiper-button-prev {
+        z-index: 10; /* must be below modal's z-index */
+    }
 </style>
 
 <!-- Begin Medical Banner Slider -->
@@ -240,6 +251,7 @@
                 <span class="text-lg font-medium text-mono">Special Offers</span>
                 <a class="kt-link" href="{% url 'dashboard:search_results_grid' %}?{{ request.GET.urlencode }}">See All <i class="ki-filled ki-right text-xs"></i></a>
             </div>
+
             <div class="grid xl:grid-cols-2 gap-5 mb-2">
                 {% for product in special_offers %}
                 {% if forloop.first %}
@@ -424,6 +436,7 @@
                 <span class="text-lg font-medium text-mono">New Arrivals</span>
                 <a class="kt-link" href="{% url 'dashboard:search_results_grid' %}?{{ request.GET.urlencode }}">See All <i class="ki-filled ki-right text-xs"></i></a>
             </div>
+
             <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-2">
                 {% for product in recent_products %}
                 <div class="kt-card">
@@ -945,7 +958,7 @@
 
         <!-- begin: Login Required Modal -->
         <div id="loginRequiredModal"
-             class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+             class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
              data-kt-modal="true" role="dialog" aria-labelledby="loginRequiredTitle" aria-modal="true">
             <div class="kt-card w-full max-w-[500px] rounded-xl border border-border bg-background shadow-2xl transition-transform duration-300 ease-in-out transform scale-95">
                 <div class="kt-card-header px-5 py-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">

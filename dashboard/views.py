@@ -1224,7 +1224,7 @@ class OrderPlacedView(LoginRequiredMixin, TemplateView):
         payment = Payment.objects.filter(user=request.user).order_by('-created_at').first()
         if not payment or not Orders.objects.filter(payment=payment, order_by=request.user).exists():
             messages.error(request, "No recent order found.")
-            return redirect('dashboard:cart')
+            return redirect('dashboard:shopping_cart')
 
         return super().dispatch(request, *args, **kwargs)
 
@@ -1314,6 +1314,8 @@ class OrderPlacedView(LoginRequiredMixin, TemplateView):
         })
 
         return context
+
+
 class MyOrdersView(LoginRequiredMixin, TemplateView):
     template_name = 'userdashboard/view/my_orders.html'
     login_url = 'dashboard:login'  # or your login URL name
@@ -1323,6 +1325,27 @@ class MyOrdersView(LoginRequiredMixin, TemplateView):
         user = self.request.user
         context['orders'] = Orders.objects.filter(order_by=user).select_related('product__brand').prefetch_related('product__productimage_set')
         return context
+
+
+class ReorderView(LoginRequiredMixin, View):
+    def post(self, request, order_id, *args, **kwargs):
+        order = get_object_or_404(Orders, id=order_id, order_by=request.user)
+        product = order.product
+        quantity = order.quantity
+
+        # Add or update item in cart
+        cart_item, created = CartProduct.objects.get_or_create(
+            user=request.user,
+            product=product,
+            defaults={'quantity': quantity}
+        )
+        if not created:
+            cart_item.quantity += quantity
+            cart_item.save()
+
+        messages.success(request, f"Added {quantity} x {product.name} to your cart.")
+        return redirect('dashboard:my_orders')  # Or redirect to cart page
+
 
 
 class OrderReceiptView(LoginRequiredMixin, TemplateView):

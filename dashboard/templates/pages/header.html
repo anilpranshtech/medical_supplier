@@ -990,8 +990,8 @@
 
             function updateCartIcons(onlyId = null) {
                 const selector = onlyId
-                    ? `button[data-product-id="${onlyId}"]:not([data-kt-wishlist-toggle])`
-                    : 'button[data-product-id]:not([data-kt-wishlist-toggle])';
+                    ? `.add-to-cart-btn[data-product-id="${onlyId}"]`
+                    : '.add-to-cart-btn[data-product-id]';
 
                 document.querySelectorAll(selector).forEach(button => {
                     const productId = parseInt(button.dataset.productId, 10);
@@ -1001,11 +1001,11 @@
                     });
 
                     if (inCart) {
-                        button.classList.remove('kt-btn-outline', 'add-to-cart-btn');
+                        button.classList.remove('kt-btn-outline');
                         button.classList.add('kt-btn-success');
                         button.innerHTML = 'In cart <i class="ki-filled ki-handcart"></i>';
                     } else {
-                        button.classList.add('kt-btn-outline', 'add-to-cart-btn');
+                        button.classList.add('kt-btn-outline');
                         button.classList.remove('kt-btn-success');
                         button.innerHTML = 'Add <i class="ki-filled ki-handcart"></i>';
                     }
@@ -1282,27 +1282,53 @@
                 });
 
                 document.querySelectorAll('.qty-increase, .qty-decrease').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        const id = btn.dataset.id;
-                        const isIncrement = btn.classList.contains('qty-increase');
-                        const qtyChange = isIncrement ? 1 : -1;
+        btn.addEventListener('click', () => {
+            const id = btn.dataset.id;
+            const isIncrement = btn.classList.contains('qty-increase');
+            const qtyChange = isIncrement ? 1 : -1;
 
-                        fetch('/add-to-cart/', {
-                            method: 'POST',
-                            headers: {
-                                'X-CSRFToken': getCSRFToken(),
-                                'Content-Type': 'application/x-www-form-urlencoded'
-                            },
-                            body: `product_id=${id}&quantity=${qtyChange}`
-                        }).then(res => res.json())
-                        .then(data => {
-                            if (data.status === 'success') {
-                                updateCartUI();
-                                updateCartIcons();
-                            }
-                        });
-                    });
-                });
+            const cartItem = btn.closest('.cart-item');
+            const qtySpan = cartItem?.querySelector('span.text-sm.font-medium');
+            const currentQty = qtySpan ? parseInt(qtySpan.textContent || '1', 10) : 1;
+
+            // 👇 If quantity is 1 and it's a decrease, remove instead
+            if (!isIncrement && currentQty === 1) {
+                fetch("{% url 'dashboard:remove_from_cart' %}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCSRFToken(),
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `item_id=${id}`
+                }).then(res => res.json())
+                  .then(data => {
+                      if (data.status === 'success') {
+                          updateCartUI();
+                          updateCartIcons(id);
+                      } else {
+                          console.warn('Remove failed:', data);
+                      }
+                  });
+                return;
+            }
+
+            // 🔄 Normal add-to-cart update
+            fetch('/add-to-cart/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCSRFToken(),
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: `product_id=${id}&quantity=${qtyChange}`
+            }).then(res => res.json())
+              .then(data => {
+                  if (data.status === 'success') {
+                      updateCartUI();
+                      updateCartIcons(id);
+                  }
+              });
+        });
+    });
             }
 
             document.querySelectorAll('[data-kt-drawer-toggle="#drawers_shop_cart"]').forEach(btn => {
@@ -1327,7 +1353,7 @@
                     if (data.cart.length > 0) {
                         window.location.href = "/shopping-cart/";
                     } else {
-                        showToast("Your cart is empty.", 'info');
+                        alert("Your cart is empty.", 'info');
                     }
                 });
             });
