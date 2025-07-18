@@ -983,7 +983,7 @@ class PaymentMethodView(LoginRequiredMixin, View):
         amount_in_paise = int(total * 100)
 
         if amount_in_paise < 100:  # minimum amount is ₹1 = 100 paise
-            messages.error(request, "Your order total must be at least ₹1. Please add items to your cart.")
+            messages.error(request, "Your order total must be at least ₹1/$1. Please add items to your cart.")
             return redirect("dashboard:shopping_cart")
 
         client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
