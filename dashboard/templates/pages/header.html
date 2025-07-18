@@ -729,6 +729,7 @@
     </div>
 
     <script>
+
         document.addEventListener('DOMContentLoaded', function () {
             // Theme toggle handler
             const themeToggle = document.querySelector('[data-kt-theme-switch-toggle="true"]');
@@ -754,6 +755,16 @@
                 });
             }
 
+            document.querySelectorAll('[data-kt-drawer-toggle="#drawers_shop_wishlist"]').forEach(button => {
+                button.addEventListener('click', function () {
+                    fetchWishlistFromServer(); // Refresh drawer each time it's opened
+                });
+            });
+
+            document.querySelector('#drawers_shop_wishlist')?.addEventListener('hide.bs.drawer', () => {
+                updateWishlistIcons();
+            });
+
             // Header opacity slider handler
             const opacitySlider = document.querySelector('#header-opacity-slider');
             if (opacitySlider) {
@@ -766,6 +777,8 @@
                     localStorage.setItem('header-opacity', this.value);
                 });
             }
+
+
 
             // Mobile menu toggle
             const mobileMenuToggle = document.querySelector('.kt-mobile-menu-toggle');
