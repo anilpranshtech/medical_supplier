@@ -1171,7 +1171,7 @@ class OrderPlacedView(LoginRequiredMixin, TemplateView):
         payment = Payment.objects.filter(user=request.user).order_by('-created_at').first()
         if not payment or not Orders.objects.filter(payment=payment, order_by=request.user).exists():
             messages.error(request, "No recent order found.")
-            return redirect('dashboard:cart')
+            return redirect('dashboard:shopping_cart')
 
         return super().dispatch(request, *args, **kwargs)
 
