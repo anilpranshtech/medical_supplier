@@ -418,7 +418,27 @@ class UploadProfilePictureView(LoginRequiredMixin, View):
 # ------------------------------------------------------------------------------------------------------------------------
 from django.db.models import Count, Prefetch
 from django.core.paginator import Paginator
+from django.db.models import Q
 
+
+
+class SearchSuggestionsView(View):
+    def get(self, request, *args, **kwargs):
+        query = request.GET.get('q', '').strip()
+        suggestions = []
+
+        if query:
+            query_terms = query.lower().split()
+            keyword_queries = Q()
+            for term in query_terms:
+                keyword_queries |= Q(keywords__icontains=term)
+            products = Product.objects.filter(keyword_queries).distinct()[:10]
+            suggestions = [
+                {'name': product.name, 'id': product.id}
+                for product in products
+            ]
+
+        return JsonResponse({'suggestions': suggestions})
 class SearchResultsGridView(TemplateView):
     template_name = 'userdashboard/view/search_results_grid.html'
 
@@ -437,14 +457,17 @@ class SearchResultsGridView(TemplateView):
         last_category_id = self.request.GET.get('last_category')
         sort_by = self.request.GET.get('sort_by')
         page = self.request.GET.get('page', 1)
+        search_query = self.request.GET.get('q', '').strip()
 
         context['selected_category'] = None
         context['selected_sub_category'] = None
         context['selected_last_category'] = None
         context['page_obj'] = None
         context['total_products'] = 0
+        context['search_query'] = search_query
+        context['is_search_active'] = bool(search_query)
 
-        # Categories & Subcategories 
+        # Categories & Subcategories
         last_categories_with_products = ProductLastCategory.objects.annotate(
             product_count=Count('product')
         ).filter(product_count__gt=0)
@@ -461,8 +484,33 @@ class SearchResultsGridView(TemplateView):
 
         context['categories'] = categories_with_products
 
-        # Handle products by last_category
-        if last_category_id:
+        # Handle search query
+        if search_query:
+            search_terms = search_query.lower().split()
+            query = Q()
+            for term in search_terms:
+                query |= Q(name__icontains=term) | Q(keywords__icontains=term)
+            
+            products = Product.objects.filter(query).distinct()
+
+            if sort_by == '1':
+                products = products.order_by('-price')
+            elif sort_by == '2':
+                products = products.order_by('price')
+            else:
+                products = products.order_by('-created_at')
+
+            paginator = Paginator(products, 16)
+            page_obj = paginator.get_page(page)
+
+            context.update({
+                'products': page_obj,
+                'page_obj': page_obj,
+                'paginator': paginator,
+                'total_products': paginator.count,
+            })
+
+        elif last_category_id:
             try:
                 last_category = ProductLastCategory.objects.get(id=last_category_id)
                 context['selected_last_category'] = last_category
@@ -471,7 +519,6 @@ class SearchResultsGridView(TemplateView):
 
                 products = Product.objects.filter(last_category=last_category)
 
-                # Sorting
                 if sort_by == '1':
                     products = products.order_by('-price')
                 elif sort_by == '2':
@@ -512,14 +559,20 @@ class SearchResultsGridView(TemplateView):
         else:
             context['products'] = []
 
-        # Wishlist/Cart 
         if self.request.user.is_authenticated:
             cart_ids = CartProduct.objects.filter(user=self.request.user).values_list('product_id', flat=True)
+            wishlist_ids = WishlistProduct.objects.filter(user=self.request.user).values_list('product_id', flat=True)
             context['user_cart_ids'] = list(cart_ids)
+            context['user_wishlist_ids'] = list(wishlist_ids)
         else:
             context['user_cart_ids'] = []
+            context['user_wishlist_ids'] = []
 
         return context
+
+
+
+
 
 class SearchResultsListView(TemplateView):
     template_name = 'userdashboard/view/search_results_list.html'

@@ -6,24 +6,30 @@
         color: #ff0000;
     }
     .kt-category-grid {
-        display: grid;
-        grid-template-columns: 0.8fr 3.2fr; 
-        gap: 20px;
-        width: 100%;
-    }
+    display: grid;
+    grid-template-columns: 0.8fr 3.2fr; 
+    gap: 20px;
+    width: 100%;
+}
 
-    .kt-category-column {
-        background-color: #f9f9f9;
-        padding: 15px;
-        border: 1px solid #e0e0e0;
-        height: fit-content;
-    }
+.kt-category-column {
+    background-color: #f9f9f9;
+    padding: 15px;
+    border: 1px solid #e0e0e0;
+    height: fit-content;
+}
 
-    .kt-product-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr); 
-        gap: 20px;
-    }
+.kt-product-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); 
+    gap: 20px;
+    width: 100%;
+}
+
+/* When sidebar is hidden (during search) */
+.amazon-sidebar[style*="display: none"] + .kt-product-grid {
+    grid-column: 1 / -1; /* Make product grid span full width */
+}
 
     .amazon-sidebar {
         border-right: 1px solid #e0e0e0;
@@ -105,12 +111,16 @@
 <title>Search Results - Medical Supplies</title>
 <div class="kt-container-fixed mt-1" style="max-width: var(--custom-container-width, 90%);">
     <div class="flex flex-col items-stretch gap-7 mt-5 py-5">
+       
+       
         <div class="flex flex-wrap items-center gap-5 justify-between mt-3">
             <h3 id="results-header" class="text-sm text-mono font-medium">
                 {% if page_obj %}
                     {{ page_obj.start_index }} - {{ page_obj.end_index }} over {{ total_products }} results for
                     <span class="text-destructive">
-                        {% if selected_last_category %}
+                        {% if search_query %}
+                            "{{ search_query }}"
+                        {% elif selected_last_category %}
                             {{ selected_last_category.name }}
                         {% elif selected_sub_category %}
                             {{ selected_sub_category.name }}
@@ -123,7 +133,9 @@
                 {% else %}
                     0 - 0 over 0 results for
                     <span class="text-destructive">
-                        {% if selected_last_category %}
+                        {% if search_query %}
+                            "{{ search_query }}"
+                        {% elif selected_last_category %}
                             {{ selected_last_category.name }}
                         {% elif selected_sub_category %}
                             {{ selected_sub_category.name }}
@@ -167,16 +179,15 @@
                        data-kt-tab-toggle="#shop1_grids">
                         <i class="ki-filled ki-category"></i>
                     </a>
-                    <a class="kt-btn kt-btn-icon" data-kt-tab-toggle="#shop1_lists" href="{%url 'dashboard:search_results_list' %}">
+                    <a class="kt-btn kt-btn-icon" data-kt-tab-toggle="#shop1_lists" href="{% url 'dashboard:search_results_list' %}">
                         <i class="ki-filled ki-row-horizontal"></i>
                     </a>
                 </div>
-            
             </div>
         </div>
 
         <div class="kt-category-grid">
-            <div class="amazon-sidebar w-full md:w-1/4 pr-6">
+            <div class="amazon-sidebar w-full md:w-1/4 pr-6" style="{% if is_search_active %}display: none;{% endif %}">
                 <h2 class="text-base font-bold mb-4 uppercase pb-1">Category</h2>
                 {% for category in categories %}
                     <div class="mb-3">
@@ -212,7 +223,7 @@
                             <div class="mb-2.5">
                                 <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[180px] mb-4 shadow-none">
                                     <img alt="{{ lastcategory.name }}" class="h-[180px] shrink-0"
-                                         src="{{ lastcategory.image.url|default:'/static/default_category_image.png' }}">
+                                         src="{% static 'default_category_image.png' %}">
                                 </div>
                                 <a class="hover:text-primary text-sm font-medium text-bold text-mono px-2.5 leading-5.5 block"
                                    href="#" data-last-category="{{ lastcategory.id }}">
@@ -226,17 +237,15 @@
                     {% for product in products %}
                     <div class="kt-card" data-product='{
                         "name": "{{ product.name }}",
-                        "image": "{{ product.image.url }}",
-                        "description": "{{ product.description }}",
-                        "sku": "{{ product.sku }}",
+                        "image": "{% for img in product.productimage_set.all %}{% if img.is_main %}{{ img.image.url }}{% endif %}{% empty %}{% static 'default_product.png' %}{% endfor %}",
+                        "description": "{{ product.description|truncatewords:20 }}",
+                        "sku": "{{ product.supplier_sku }}",
                         "category": "{{ product.last_category.sub_category.category.name }}",
-                        "rating": {{ product.average_rating|default:0 }},
-                        "price": "${{ product.price }}",
-                        {% if product.discounted_price %}
-                        "original_price": "${{ product.price }}",
-                        "discount": "save {{ product.discount_percentage }}%",
+                        "price": "${{ product.price|floatformat:2 }}"
+                        {% if product.offer_percentage and product.offer_active %}
+                        ,"original_price": "${{ product.price|floatformat:2 }}",
+                        "discount": "save {{ product.offer_percentage }}%"
                         {% endif %}
-                        "more_info": "{{ product.additional_info }}"
                     }'>
                         <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
                             <div class="mb-2.5">
@@ -249,7 +258,7 @@
                                                 {% with True as image_shown %}{% endwith %}
                                             {% endif %}
                                         {% empty %}
-                                            <img src="/static/default_product.png" alt="Default Image" class="h-[180px] shrink-0">
+                                            <img src="{% static 'default_product.png' %}" alt="Default Image" class="h-[180px] shrink-0">
                                         {% endfor %}
                                     {% endwith %}
                                     <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
@@ -259,10 +268,10 @@
                                 </div>
                                 <a class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block"
                                    data-kt-modal-toggle="#modal_shop_product_details" href="#">
-                                    {% if product.discounted_price %}
+                                    {% if product.offer_percentage and product.offer_active %}
                                     <div class="flex items-center gap-2">
                                         <span>{{ product.name }}</span>
-                                        <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">save {{ product.discount_percentage }}%</span>
+                                        <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">save {{ product.offer_percentage }}%</span>
                                     </div>
                                     {% else %}
                                         {{ product.name }}<br>
@@ -270,21 +279,12 @@
                                 </a>
                             </div>
                             <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
-                                {% if product.average_rating %}
-                                <span class="kt-badge
-                                    {% if product.average_rating >= 4 %}kt-badge-success
-                                    {% elif product.average_rating >= 2 %}kt-badge-warning
-                                    {% else %}kt-badge-danger{% endif %} 
-                                    kt-badge-sm rounded-full gap-1">
-                                    <i class="ki-solid ki-star text-white -mt-0.5"></i> {{ product.average_rating|floatformat:1 }}
-                                </span>
-                                {% endif %}
                                 <div class="flex items-center flex-wrap gap-1.5">
-                                    {% if product.discounted_price %}
-                                    <span class="text-xs font-normal text-secondary-foreground line-through pt-[1px]">${{ product.price }}</span>
-                                    <span class="text-sm font-medium text-mono">${{ product.discounted_price }}</span>
+                                    {% if product.offer_percentage and product.offer_active %}
+                                    <span class="text-xs font-normal text-secondary-foreground line-through pt-[1px]">${{ product.price|floatformat:2 }}</span>
+                                    <span class="text-sm font-medium text-mono">${{ product.discounted_price|floatformat:2 }}</span>
                                     {% else %}
-                                    <span class="text-sm font-medium text-mono">${{ product.price }}</span>
+                                    <span class="text-sm font-medium text-mono">${{ product.price|floatformat:2 }}</span>
                                     {% endif %}
                                     {% if product.id in user_cart_ids %}
                                         <button class="kt-btn kt-btn-outline kt-btn-sm ms-1" style="background:#3b82f6; color:white;" data-product-id="{{ product.id }}">
@@ -301,7 +301,7 @@
                     </div>
                     {% empty %}
                     <div class="col-span-3 text-center font-medium py-10">
-                        <p>No products found in this category.</p>
+                        <p>No products found{% if search_query %} for "{{ search_query }}"{% endif %}.</p>
                     </div>
                     {% endfor %}
                     {% if page_obj.has_other_pages %}
@@ -358,6 +358,94 @@ function getCookie(name) {
 }
 const csrftoken = getCookie('csrftoken');
 
+// Event delegation for dynamic elements
+document.addEventListener('click', function(e) {
+    // Handle category links
+    if (e.target.closest('.category-link')) {
+        e.preventDefault();
+        const link = e.target.closest('.category-link');
+        const lastCategoryId = link.dataset.lastCategory;
+        const sidebar = document.querySelector('.amazon-sidebar');
+        sidebar.style.display = ''; // Show sidebar on category click
+        fetchProducts({ last_category: lastCategoryId, page: 1 });
+    }
+    
+    // Handle pagination 
+    if (e.target.closest('.pagination-link')) {
+        e.preventDefault();
+        const link = e.target.closest('.pagination-link');
+        const page = link.dataset.page;
+        const params = new URLSearchParams(window.location.search);
+        fetchProducts({ 
+            page: page, 
+            sort_by: params.get('sort_by'), 
+            last_category: params.get('last_category'), 
+            q: params.get('q') 
+        });
+    }
+    
+    // Handle add to cart buttons
+    if (e.target.closest('.add-to-cart-btn')) {
+        const button = e.target.closest('.add-to-cart-btn');
+        const productId = button.dataset.productId;
+        
+        fetch("{% url 'dashboard:add_to_cart' %}", {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": csrftoken,
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: new URLSearchParams({
+                product_id: productId,
+                quantity: 1,
+            }),
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === "success") {
+                button.classList.remove('kt-btn-outline');
+                button.style.background = '#3b82f6';
+                button.style.color = 'white';
+                button.innerHTML = `In cart <i class="ki-filled ki-handcart text-white"></i>`;
+                button.removeEventListener('click', addToCartHandler); // Remove old listener
+            } else {
+                alert("Something went wrong");
+            }
+        })
+        .catch(err => console.error("Add to cart error:", err));
+    }
+    
+    // Handle wishlist buttons
+    if (e.target.closest('.kt-wishlist-icon')) {
+        const button = e.target.closest('.kt-wishlist-icon');
+        const productId = button.dataset.productId || '0';
+        
+        fetch("{% url 'dashboard:toggle_wishlist' %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: `product_id=${productId}`
+        })
+        .then(response => {
+            if (response.status === 403) {
+                alert('Please login to use wishlist.');
+                window.location.href = '/login/';
+                return;
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data) {
+                const icon = button.querySelector('i');
+                icon.classList.toggle('text-red-500', data.status === 'added');
+            }
+        })
+        .catch(error => console.error('Wishlist toggle error:', error));
+    }
+});
+
 function toggleCategory(id) {
     document.querySelectorAll('[id^="cat-"]').forEach(el => el.classList.add('hidden'));
     document.querySelectorAll('[id^="arrow-"]').forEach(arrow => arrow.classList.remove('rotate-180'));
@@ -377,6 +465,7 @@ function toggleCategory(id) {
     }
 }
 
+// Initialize on DOM load
 document.addEventListener('DOMContentLoaded', () => {
     const openId = localStorage.getItem('openCategory');
     if (openId) {
@@ -388,214 +477,96 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    //  category selection
-    document.querySelectorAll('.category-link').forEach(link => {
-        link.addEventListener('click', (e) => {
+    // Search form submission
+    const searchForm = document.getElementById('search-form');
+    const sidebar = document.querySelector('.amazon-sidebar');
+    if (searchForm) {
+        searchForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const lastCategoryId = link.dataset.lastCategory;
-            fetchProducts({ last_category: lastCategoryId, page: 1 });
+            const searchQuery = document.getElementById('search-input').value.trim();
+            if (searchQuery) {
+                sidebar.style.display = 'none'; 
+            }
+            fetchProducts({ q: searchQuery, page: 1 });
         });
-    });
+    }
 
-    // pagination
-    document.querySelectorAll('.pagination-link').forEach(link => {
-        link.addEventListener('click', (e) => {
-            e.preventDefault();
-            const page = link.dataset.page;
-            const params = new URLSearchParams(window.location.search);
-            fetchProducts({ page: page, sort_by: params.get('sort_by'), last_category: params.get('last_category') });
-        });
-    });
-
-    //  sorting
-    document.querySelectorAll('[data-kt-select-option]').forEach(option => {
-        option.addEventListener('click', () => {
-            const value = option.getAttribute('data-value');
-            fetchProducts({ sort_by: value, page: 1 });
-        });
-    });
-
-    // add to cart
-    document.querySelectorAll('.add-to-cart-btn').forEach(button => {
-        button.addEventListener('click', () => {
-            const productId = button.dataset.productId;
-            fetch("{% url 'dashboard:add_to_cart' %}", {
-                method: "POST",
-                headers: {
-                    "X-CSRFToken": csrftoken,
-                    "Content-Type": "application/x-www-form-urlencoded",
-                },
-                body: new URLSearchParams({
-                    product_id: productId,
-                    quantity: 1,
-                }),
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === "success") {
-                    button.classList.remove('kt-btn-outline');
-                    button.classList.add('kt-btn-success');
-                    button.style.background = '#3b82f6';
-                    button.style.color = 'white';
-                    button.innerHTML = `In cart <i class="ki-filled ki-handcart text-white"></i>`;
-                } else {
-                    alert("Something went wrong");
-                }
-            })
-            .catch(err => console.error("Add to cart error:", err));
-        });
-    });
-
-    //  wishlist toggle
-    document.querySelectorAll('.kt-wishlist-icon').forEach(button => {
-        button.addEventListener('click', () => {
-            const productId = button.dataset.productId || '0';
-            fetch('/wishlist/toggle/', {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': csrftoken,
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: `product_id=${productId}`
-            })
-            .then(response => {
-                if (response.status === 403) {
-                    alert('Please login to use wishlist.');
-                    window.location.href = '/login/';
-                    return;
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data) {
-                    const icon = button.querySelector('i');
-                    icon.classList.toggle('text-red-500', data.status === 'added');
-                }
-            })
-            .catch(error => console.error('Wishlist toggle error:', error));
-        });
-    });
-
-    // Dropdown handling
+    // Sorting dropdown
     const selectDisplay = document.querySelector('[data-kt-select-display]');
     const selectDropdown = document.querySelector('[data-kt-select-dropdown]');
-    selectDisplay.addEventListener('click', () => {
-        selectDropdown.classList.toggle('hidden');
-        selectDisplay.setAttribute('aria-expanded', selectDropdown.classList.contains('hidden') ? 'false' : 'true');
-    });
+    if (selectDisplay) {
+        selectDisplay.addEventListener('click', () => {
+            selectDropdown.classList.toggle('hidden');
+            selectDisplay.setAttribute('aria-expanded', selectDropdown.classList.contains('hidden') ? 'false' : 'true');
+        });
 
+        // Handle sorting option selection
+        document.querySelectorAll('[data-kt-select-option]').forEach(option => {
+            option.addEventListener('click', () => {
+                const value = option.getAttribute('data-value');
+                const params = new URLSearchParams(window.location.search);
+                fetchProducts({ 
+                    sort_by: value, 
+                    page: 1, 
+                    last_category: params.get('last_category'), 
+                    q: params.get('q') 
+                });
+            });
+        });
+    }
+
+    // Close dropdown when clicking outside
     document.addEventListener('click', (e) => {
-        if (!selectDisplay.contains(e.target) && !selectDropdown.contains(e.target)) {
+        if (selectDisplay && !selectDisplay.contains(e.target) && 
+            selectDropdown && !selectDropdown.contains(e.target)) {
             selectDropdown.classList.add('hidden');
             selectDisplay.setAttribute('aria-expanded', 'false');
         }
     });
-
-    // products function
-    function fetchProducts(params) {
-        const urlParams = new URLSearchParams(window.location.search);
-        Object.keys(params).forEach(key => urlParams.set(key, params[key]));
-        const url = `{% url 'dashboard:search_results_grid' %}?${urlParams.toString()}`;
-
-        fetch(url, {
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => response.text())
-        .then(html => {
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            const newProductGrid = doc.querySelector('#product-grid');
-            const newPagination = doc.querySelector('#pagination');
-            const newResultsHeader = doc.querySelector('#results-header');
-            const productGrid = document.querySelector('#product-grid');
-            const pagination = document.querySelector('#pagination');
-            const resultsHeader = document.querySelector('#results-header');
-
-            if (newProductGrid && productGrid) {
-                productGrid.innerHTML = newProductGrid.innerHTML;
-            }
-            if (newPagination && pagination) {
-                pagination.innerHTML = newPagination.innerHTML;
-            }
-            if (newResultsHeader && resultsHeader) {
-                resultsHeader.innerHTML = newResultsHeader.innerHTML;
-            }
-
-            // Reattach event listeners
-            document.querySelectorAll('.add-to-cart-btn').forEach(button => {
-                button.addEventListener('click', () => {
-                    const productId = button.dataset.productId;
-                    fetch("{% url 'dashboard:add_to_cart' %}", {
-                        method: "POST",
-                        headers: {
-                            "X-CSRFToken": csrftoken,
-                            "Content-Type": "application/x-www-form-urlencoded",
-                        },
-                        body: new URLSearchParams({
-                            product_id: productId,
-                            quantity: 1,
-                        }),
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.status === "success") {
-                            button.classList.remove('kt-btn-outline');
-                            button.classList.add('kt-btn-success');
-                            button.style.background = '#3b82f6';
-                            button.style.color = 'white';
-                            button.innerHTML = `In cart <i class="ki-filled ki-handcart text-white"></i>`;
-                        } else {
-                            alert("Something went wrong");
-                        }
-                    })
-                    .catch(err => console.error("Add to cart error:", err));
-                });
-            });
-
-            document.querySelectorAll('.kt-wishlist-icon').forEach(button => {
-                button.addEventListener('click', () => {
-                    const productId = button.dataset.productId || '0';
-                    fetch('/wishlist/toggle/', {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRFToken': csrftoken,
-                            'Content-Type': 'application/x-www-form-urlencoded'
-                        },
-                        body: `product_id=${productId}`
-                    })
-                    .then(response => {
-                        if (response.status === 403) {
-                            alert('Please login to use wishlist.');
-                            window.location.href = '/login/';
-                            return;
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        if (data) {
-                            const icon = button.querySelector('i');
-                            icon.classList.toggle('text-red-500', data.status === 'added');
-                        }
-                    })
-                    .catch(error => console.error('Wishlist toggle error:', error));
-                });
-            });
-
-            document.querySelectorAll('.pagination-link').forEach(link => {
-                link.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const page = link.dataset.page;
-                    fetchProducts({ page: page, sort_by: urlParams.get('sort_by'), last_category: urlParams.get('last_category') });
-                });
-            });
-
-           
-            window.history.pushState({}, '', url);
-        })
-        .catch(error => console.error('Fetch products error:', error));
-    }
 });
+
+// Fetch products function
+function fetchProducts(params) {
+    const urlParams = new URLSearchParams(window.location.search);
+    Object.keys(params).forEach(key => {
+        if (params[key]) {
+            urlParams.set(key, params[key]);
+        } else {
+            urlParams.delete(key);
+        }
+    });
+    const url = `{% url 'dashboard:search_results_grid' %}?${urlParams.toString()}`;
+
+    fetch(url, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.text())
+    .then(html => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const newProductGrid = doc.querySelector('#product-grid');
+        const newPagination = doc.querySelector('#pagination');
+        const newResultsHeader = doc.querySelector('#results-header');
+        
+        if (newProductGrid) {
+            document.querySelector('#product-grid').innerHTML = newProductGrid.innerHTML;
+        }
+        if (newPagination) {
+            const paginationContainer = document.querySelector('#pagination');
+            if (paginationContainer) {
+                paginationContainer.innerHTML = newPagination.innerHTML;
+            }
+        }
+        if (newResultsHeader) {
+            document.querySelector('#results-header').innerHTML = newResultsHeader.innerHTML;
+        }
+
+        // Update URL without reload
+        window.history.pushState({}, '', url);
+    })
+    .catch(error => console.error('Fetch products error:', error));
+}
 </script>
 {% endblock content %}
