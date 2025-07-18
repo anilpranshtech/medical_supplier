@@ -1261,6 +1261,8 @@ class OrderPlacedView(LoginRequiredMixin, TemplateView):
         })
 
         return context
+
+
 class MyOrdersView(LoginRequiredMixin, TemplateView):
     template_name = 'userdashboard/view/my_orders.html'
     login_url = 'dashboard:login'  # or your login URL name
@@ -1270,6 +1272,27 @@ class MyOrdersView(LoginRequiredMixin, TemplateView):
         user = self.request.user
         context['orders'] = Orders.objects.filter(order_by=user).select_related('product__brand').prefetch_related('product__productimage_set')
         return context
+
+
+class ReorderView(LoginRequiredMixin, View):
+    def post(self, request, order_id, *args, **kwargs):
+        order = get_object_or_404(Orders, id=order_id, order_by=request.user)
+        product = order.product
+        quantity = order.quantity
+
+        # Add or update item in cart
+        cart_item, created = CartProduct.objects.get_or_create(
+            user=request.user,
+            product=product,
+            defaults={'quantity': quantity}
+        )
+        if not created:
+            cart_item.quantity += quantity
+            cart_item.save()
+
+        messages.success(request, f"Added {quantity} x {product.name} to your cart.")
+        return redirect('dashboard:my_orders')  # Or redirect to cart page
+
 
 
 class OrderReceiptView(LoginRequiredMixin, TemplateView):
