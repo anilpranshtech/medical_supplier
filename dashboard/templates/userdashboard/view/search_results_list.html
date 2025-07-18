@@ -8,7 +8,7 @@
     }
     .kt-category-grid {
         display: grid;
-        grid-template-columns: 0.8fr 3.2fr; 
+        grid-template-columns: 0.8fr 3.2fr;
         gap: 20px;
         width: 100%;
     }
@@ -18,7 +18,7 @@
         grid-template-columns: 1fr;
         gap: 15px;
     }
-    
+
     .kt-list-card {
         display: flex;
         flex-direction: row;
@@ -27,38 +27,38 @@
         border: 1px solid #e0e0e0;
         border-radius: 8px;
     }
-    
+
     .kt-list-card-image {
         width: 120px;
         height: 120px;
         object-fit: contain;
         margin-right: 20px;
     }
-    
+
     .kt-list-card-content {
         flex: 1;
     }
-    
+
     .kt-list-card-actions {
         display: flex;
         flex-direction: column;
         align-items: flex-end;
         min-width: 150px;
     }
-    
+
     @media (max-width: 768px) {
         .kt-list-card {
             flex-direction: column;
             align-items: flex-start;
         }
-        
+
         .kt-list-card-image {
             width: 100%;
             height: auto;
             margin-right: 0;
             margin-bottom: 15px;
         }
-        
+
         .kt-list-card-actions {
             width: 100%;
             align-items: flex-start;
@@ -76,13 +76,13 @@
 
     .heart-icon {
         transition: color 0.2s ease-in-out;
-    }  
+    }
     .rotate-180 {
         transform: rotate(180deg);
     }
 
     .kt-select-wrapper {
-        position: relative; 
+        position: relative;
     }
 
     .kt-select-dropdown {
@@ -292,7 +292,7 @@
                                 {% endfor %}
                             {% endwith %}
                         </div>
-                        
+
                         <!-- Product Details -->
                         <div class="kt-list-card-content">
                             <h3 class="text-lg font-bold text-gray-650 mb-1">
@@ -300,28 +300,28 @@
                                     {{ product.name }}
                                 </a>
                             </h3>
-                            <p class="text-sm text-gray-300 mb-2">
+                            <p class="text-sm text-gray-200 mb-2">
                                 {{ product.description|default:"No description available"|truncatechars:200 }}
                             </p>
-                            
+
                             <div class="flex items-center gap-4">
                                 {% if product.average_rating %}
-                                <span class="kt-badge 
+                                <span class="kt-badge
                                     {% if product.average_rating >= 4 %}kt-badge-success
                                     {% elif product.average_rating >= 2 %}kt-badge-warning
-                                    {% else %}kt-badge-danger{% endif %} 
+                                    {% else %}kt-badge-danger{% endif %}
                                     kt-badge-sm rounded-full gap-1">
-                                    <i class="ki-solid ki-star text-white -mt-0.5"></i> 
+                                    <i class="ki-solid ki-star text-white -mt-0.5"></i>
                                     {{ product.average_rating|floatformat:1 }}
                                 </span>
                                 {% endif %}
-                                
+
                                 <span class="text-xs font-normal text-secondary-foreground">
                                     SKU: <span class="font-medium">{{ product.sku }}</span>
                                 </span>
                             </div>
                         </div>
-                        
+
                         <!-- Price and Actions -->
                         <div class="kt-list-card-actions">
                             <div class="text-right mb-3">
@@ -343,22 +343,22 @@
                                     </span>
                                 {% endif %}
                             </div>
-                            
+
                             <div class="flex items-center gap-2">
                                 <button class="kt-btn kt-btn-outline kt-btn-sm kt-wishlist-icon"
-                                        data-kt-wishlist-toggle="true" 
+                                        data-kt-wishlist-toggle="true"
                                         data-product-id="{{ product.id|default:'0' }}">
                                     <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
                                 </button>
-                                
+
                                 {% if product.id in user_cart_ids %}
-                                    <button class="kt-btn kt-btn-primary kt-btn-sm" 
-                                            style="background:#3b82f6; color:white;" 
+                                    <button class="kt-btn kt-btn-primary kt-btn-sm"
+                                            style="background:#3b82f6; color:white;"
                                             data-product-id="{{ product.id }}">
                                         In cart <i class="ki-filled ki-handcart text-white"></i>
                                     </button>
                                 {% else %}
-                                    <button class="kt-btn kt-btn-primary kt-btn-sm add-to-cart-btn" 
+                                    <button class="kt-btn kt-btn-primary kt-btn-sm add-to-cart-btn"
                                             data-product-id="{{ product.id }}">
                                         Add to cart <i class="ki-filled ki-handcart"></i>
                                     </button>
@@ -668,7 +668,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             });
 
-          
+
             window.history.pushState({}, '', url);
         })
         .catch(error => console.error('Fetch products error:', error));
