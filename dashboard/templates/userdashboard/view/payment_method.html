@@ -70,7 +70,7 @@
                                         <strong>Note:</strong> Cash on Delivery - Pay cash on the time of Delivery
                                     </div>
                                     <div class="mx-5 mt-7 mb-7">
-                                        <button class="kt-btn kt-btn-primary w-full" type="submit">Place COD Order</button>
+                                        <button class="kt-btn kt-btn-primary w-full" type="submit">Cash on Delivery</button>
                                     </div>
                                 </form>
                             </div>
@@ -130,7 +130,7 @@
                                     </div>
                                     <div class="mx-5">
                                         <button class="kt-btn kt-btn-danger w-full mt-4 mb-5" type="submit">
-                                            Pay with Stripe (USD {{ order_summary.total|floatformat:2 }})
+                                            Pay with Stripe (USD ${{ order_summary.total|floatformat:2 }})
                                         </button>
                                     </div>
                                 </form>
@@ -152,7 +152,7 @@
                                     <input type="hidden" id="razorpay_signature" name="razorpay_signature">
                                     <div class="mx-5 mb-5">
                                         <button type="button" id="rzp-button" class="kt-btn kt-btn-primary w-full">
-                                            Pay with Razorpay (₹{{ order_summary.total|floatformat:2 }})
+                                            Pay with Razorpay (INR ₹{{ order_summary.total|floatformat:2 }})
                                         </button>
                                     </div>
                                 </form>

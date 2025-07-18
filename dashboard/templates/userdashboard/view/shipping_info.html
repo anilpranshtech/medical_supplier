@@ -187,9 +187,9 @@
             </div>
             <!-- End of Container -->
             <!-- begin: Add Address Modal -->
-            <div class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+            <div class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 mt-7 py-10"
                  data-kt-modal="true" id="modal_add_address">
-                <div class="kt-card w-full max-w-[500px] rounded-xl border border-border bg-background">
+                <div class="kt-card w-full max-w-[500px] rounded-xl border border-border bg-background mx-auto my-auto">
                     <form method="post" action="{% url 'dashboard:add_address' %}">
                         {% csrf_token %}
                         <div class="kt-card-header px-5 flex items-center justify-between">
@@ -258,8 +258,8 @@
             </div>
             <!-- end: Add Address Modal -->
             <!-- begin: Edit Address Modal -->
-            <div class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-                 data-kt-modal="true" id="modal_edit_address">
+            <div class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 mt-7 py-10"
+                 data-kt-modal="true" id="modal_edit_address" style="backdrop-filter: blur(4px);">
                 <div class="kt-card w-full max-w-[500px] rounded-xl border border-border bg-background">
                     <form method="post" action="{% url 'dashboard:edit_address' 0 %}" id="edit-address-form">
                         {% csrf_token %}
@@ -323,10 +323,9 @@
                 </div>
             </div>
             <!-- end: Edit Address Modal -->
-
             <!-- begin: Remove Address Modal -->
-            <div class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-                 data-kt-modal="true" id="modal_remove_address">
+            <div class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 mt-7 py-10"
+                 data-kt-modal="true" id="modal_remove_address" style="backdrop-filter: blur(4px);">
                 <div class="kt-card w-full max-w-[400px] rounded-xl border border-border bg-background">
                     <form method="post" action="{% url 'dashboard:remove_address' 0 %}" id="remove-address-form">
                         {% csrf_token %}
@@ -350,10 +349,16 @@
                 </div>
             </div>
             <!-- end: Remove Address Modal -->
-
         </main>
     </div>
 </div>
+
+<style>
+    .kt-modal {
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+    }
+</style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -399,6 +404,22 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
+    // Remove Modal Dismiss Handling
+    const removeModal = document.getElementById('modal_remove_address');
+    const removeModalDismissButtons = removeModal.querySelectorAll('[data-kt-modal-dismiss="true"]');
+
+    removeModalDismissButtons.forEach(dismiss => {
+        dismiss.addEventListener('click', () => {
+            removeModal.classList.add('hidden');
+        });
+    });
+
+    removeModal.addEventListener('click', function (e) {
+        if (e.target === removeModal) {
+            removeModal.classList.add('hidden');
+        }
+    });
+
     // Handle select address buttons
     document.querySelectorAll('[data-kt-action="select"]').forEach(button => {
         button.addEventListener('click', function () {
@@ -432,6 +453,12 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('edit-address-id').value = addressId;
             document.getElementById('edit-address-title').value = title;
             document.getElementById('edit-address-line1').value = lines[1]?.textContent.trim();
+            document.getElementById('edit-address-line2').value = lines[2]?.textContent.trim() || '';
+            document.getElementById('edit-city').value = lines[lines.length - 3]?.textContent.split(',')[0]?.trim() || '';
+            document.getElementById('edit-state').value = lines[lines.length - 3]?.textContent.split(',')[1]?.split(' ')[1]?.trim() || '';
+            document.getElementById('edit-postal').value = lines[lines.length - 3]?.textContent.split(',')[1]?.split(' ')[2]?.trim() || '';
+            document.getElementById('edit-country').value = lines[lines.length - 2]?.textContent.trim() || '';
+            document.getElementById('edit-phone').value = lines[lines.length - 1]?.textContent.replace('Phone number: ', '').trim() || '';
 
             const form = document.getElementById('edit-address-form');
             form.action = `{% url 'dashboard:edit_address' 0 %}`.replace("0", addressId);

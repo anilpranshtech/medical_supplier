@@ -81,7 +81,7 @@
                 <h3 class="text-lg font-bold text-gray-650 mb-1">
                     {{ item.product.name }}
                 </h3>
-                <p class="text-sm text-gray-200 mb-2">
+                <p class="text-sm text-gray-100 mb-2">
                     {{ item.product.description|default:"No description available"|truncatechars:200 }}
                 </p>
                 <div class="flex items-center gap-4">
@@ -126,19 +126,19 @@
                 <div class="flex items-center gap-2">
                     <button class="kt-btn kt-btn-outline kt-btn-sm kt-wishlist-icon"
                             data-product-id="{{ item.product.id }}">
-                        <i class="ki-filled ki-heart heart-icon text-red-500"></i>
+                        <i class="ki-filled ki-heart heart-icon text-red-500 text-base"></i>
                     </button>
 
                     {% if item.product.id in user_cart_ids %}
                     <button class="kt-btn kt-btn-sm"
                             style="background:#3b82f6; color:white;"
                             data-product-id="{{ item.product.id }}">
-                        In cart <i class="ki-filled ki-handcart text-white"></i>
+                        In cart <i class="ki-filled ki-handcart text-white text-base"></i>
                     </button>
                     {% else %}
-                    <button class="kt-btn kt-btn-sm add-to-cart-btn"
+                    <button class="kt-btn kt-btn-primary kt-btn-sm add-to-cart-btn"
                             data-product-id="{{ item.product.id }}">
-                        Add to cart <i class="ki-filled ki-handcart"></i>
+                        Add to cart <i class="ki-filled ki-handcart text-base"></i>
                     </button>
                     {% endif %}
                 </div>
