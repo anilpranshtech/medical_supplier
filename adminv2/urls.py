@@ -32,11 +32,16 @@ urlpatterns = [
     path("cart/update-quantity/", UpdateCartQuantityView.as_view(), name="update_cart_quantity"),
     path("cart/delete-item/", DeleteCartItemView.as_view(), name="delete_cart_item"),
 
-    
+
     path('adminv2/login/', AdminloginView.as_view(), name='admin_login'),
     path('logout/', LogoutView.as_view(), name='admin_logout'),
     
     # user profile
+    path('users/', UserListView.as_view(), name='user_list'),
+    path('users/add/', UserAddView.as_view(), name='add_user'),
+    path('users/edit/<int:pk>/', UserEditView.as_view(), name='edit_user'),
+    path('users/<int:pk>/', UserDetailView.as_view(), name='user_detail'),
+    path('users/delete/<int:pk>/', UserDeleteView.as_view(), name='delete_user'),
     path('user-profile/', UserProfileView.as_view(), name='user_profile'),
     path('overview/', UserOverView.as_view(), name='overview_list'),
     path('settings/', AdminSettingView.as_view(), name='profile_setting'),

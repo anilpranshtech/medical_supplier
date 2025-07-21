@@ -1,8 +1,10 @@
 import json
 
 from django.conf import settings
+from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail, EmailMessage
 from django.template.loader import render_to_string
+from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.shortcuts import render,redirect
@@ -21,7 +23,7 @@ from django.http import JsonResponse, HttpResponseServerError
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.hashers import check_password
 from datetime import timezone, datetime 
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django.utils.dateparse import parse_date
 from django.utils.timezone import localtime
 from django.db.models.functions import Coalesce,TruncDay
@@ -616,7 +618,274 @@ class AdminloginView(View):
             messages.error(request, "User with this email does not exist.")
 
         return render(request, 'adminv2/sign-in.html')
-    
+
+
+@method_decorator(login_required, name='dispatch')
+class UserListView(ListView):
+    model = User
+    template_name = 'adminv2/user_list.html'
+    context_object_name = 'users'
+    ordering = ['-date_joined']
+
+    def get_queryset(self):
+        # Get all users
+        queryset = super().get_queryset()
+
+        # Filter by role
+        selected_role = self.request.GET.get('role', '')
+        if selected_role == 'retailer':
+            queryset = queryset.filter(retailprofile__isnull=False)
+        elif selected_role == 'wholesaler':
+            queryset = queryset.filter(wholesalebuyerprofile__isnull=False)
+        elif selected_role == 'supplier':
+            queryset = queryset.filter(supplierprofile__isnull=False)
+
+        # Search functionality
+        search_query = self.request.GET.get('search', '')
+        if search_query:
+            queryset = queryset.filter(
+                username__icontains=search_query
+            ) | queryset.filter(
+                email__icontains=search_query
+            ) | queryset.filter(
+                first_name__icontains=search_query
+            ) | queryset.filter(
+                last_name__icontains=search_query
+            )
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Get statistics
+        total_users = User.objects.count()
+        retail_users = RetailProfile.objects.count()
+        wholesale_users = WholesaleBuyerProfile.objects.count()
+        supplier_users = SupplierProfile.objects.count()
+
+        # Add to context
+        context['total_users'] = total_users
+        context['retail_users'] = retail_users
+        context['wholesale_users'] = wholesale_users
+        context['supplier_users'] = supplier_users
+        context['selected_role'] = self.request.GET.get('role', '')
+        context['search_query'] = self.request.GET.get('search', '')
+
+        return context
+
+
+@method_decorator(login_required, name='dispatch')
+class UserAddView(CreateView):
+    model = User
+    template_name = 'adminv2/user_add.html'
+    success_url = reverse_lazy('adminv2:user_list')
+
+    class Form(forms.ModelForm):
+        password = forms.CharField(widget=forms.PasswordInput)
+        role = forms.ChoiceField(choices=[
+            ('retailer', 'Retailer'),
+            ('wholesaler', 'Wholesaler'),
+            ('supplier', 'Supplier'),
+        ], required=True)
+
+        class Meta:
+            model = User
+            fields = ['username', 'email', 'first_name', 'last_name', 'password']
+
+    form_class = Form
+
+    def form_valid(self, form):
+        with transaction.atomic():
+            # Save the user
+            user = form.save(commit=False)
+            user.set_password(form.cleaned_data['password'])
+            user.save()
+
+            # Create profile based on selected role
+            role = form.cleaned_data['role']
+            if role == 'retailer':
+                RetailProfile.objects.create(user=user)
+            elif role == 'wholesaler':
+                WholesaleBuyerProfile.objects.create(
+                    user=user,
+                    company_name='Default Company',  # Required field
+                    gst_number='N/A',  # Required field
+                    department='N/A',  # Required field
+                    purchase_capacity=0  # Required field
+                )
+            elif role == 'supplier':
+                SupplierProfile.objects.create(
+                    user=user,
+                    company_name='Default Company',  # Required field
+                    license_number='N/A'  # Required field
+                )
+
+        return super().form_valid(form)
+
+
+@method_decorator(login_required, name='dispatch')
+class UserEditView(UpdateView):
+    model = User
+    template_name = 'adminv2/user_edit.html'
+    success_url = reverse_lazy('adminv2:user_list')
+
+    class Form(forms.ModelForm):
+        password = forms.CharField(widget=forms.PasswordInput, required=False,
+                                   help_text="Leave blank to keep current password")
+        role = forms.ChoiceField(choices=[
+            ('none', 'None'),
+            ('retailer', 'Retailer'),
+            ('wholesaler', 'Wholesaler'),
+            ('supplier', 'Supplier'),
+        ], required=True)
+
+        # Profile fields
+        age = forms.IntegerField(required=False, help_text="Required for Retailer role")
+        medical_needs = forms.CharField(widget=forms.Textarea, required=False)
+        profile_picture_retail = forms.ImageField(required=False)
+        company_name_wholesale = forms.CharField(max_length=255, required=False,
+                                                 help_text="Required for Wholesaler role")
+        gst_number = forms.CharField(max_length=50, required=False)
+        department = forms.CharField(max_length=100, required=False)
+        purchase_capacity = forms.IntegerField(required=False, help_text="Monthly purchase capacity")
+        profile_picture_wholesale = forms.ImageField(required=False)
+        company_name_supplier = forms.CharField(max_length=255, required=False, help_text="Required for Supplier role")
+        license_number = forms.CharField(max_length=100, required=False)
+        is_verified = forms.BooleanField(required=False)
+        profile_picture_supplier = forms.ImageField(required=False)
+
+        class Meta:
+            model = User
+            fields = ['username', 'email', 'first_name', 'last_name', 'password']
+
+        def clean(self):
+            cleaned_data = super().clean()
+            role = cleaned_data.get('role')
+
+            if role == 'retailer':
+                if not cleaned_data.get('age'):
+                    self.add_error('age', 'Age is required for Retailer role')
+            elif role == 'wholesaler':
+                if not cleaned_data.get('company_name_wholesale'):
+                    self.add_error('company_name_wholesale', 'Company name is required for Wholesaler role')
+                if not cleaned_data.get('gst_number'):
+                    self.add_error('gst_number', 'GST number is required for Wholesaler role')
+                if not cleaned_data.get('department'):
+                    self.add_error('department', 'Department is required for Wholesaler role')
+                if not cleaned_data.get('purchase_capacity'):
+                    self.add_error('purchase_capacity', 'Purchase capacity is required for Wholesaler role')
+            elif role == 'supplier':
+                if not cleaned_data.get('company_name_supplier'):
+                    self.add_error('company_name_supplier', 'Company name is required for Supplier role')
+                if not cleaned_data.get('license_number'):
+                    self.add_error('license_number', 'License number is required for Supplier role')
+            return cleaned_data
+
+    form_class = Form
+
+    def get_initial(self):
+        initial = super().get_initial()
+        user = self.get_object()
+
+        # Set initial role
+        if RetailProfile.objects.filter(user=user).exists():
+            initial['role'] = 'retailer'
+            retail_profile = RetailProfile.objects.get(user=user)
+            initial['age'] = retail_profile.age
+            initial['medical_needs'] = retail_profile.medical_needs
+        elif WholesaleBuyerProfile.objects.filter(user=user).exists():
+            initial['role'] = 'wholesaler'
+            wholesale_profile = WholesaleBuyerProfile.objects.get(user=user)
+            initial['company_name_wholesale'] = wholesale_profile.company_name
+            initial['gst_number'] = wholesale_profile.gst_number
+            initial['department'] = wholesale_profile.department
+            initial['purchase_capacity'] = wholesale_profile.purchase_capacity
+        elif SupplierProfile.objects.filter(user=user).exists():
+            initial['role'] = 'supplier'
+            supplier_profile = SupplierProfile.objects.get(user=user)
+            initial['company_name_supplier'] = supplier_profile.company_name
+            initial['license_number'] = supplier_profile.license_number
+            initial['is_verified'] = supplier_profile.is_verified
+        else:
+            initial['role'] = 'none'
+
+        return initial
+
+    def form_valid(self, form):
+        with transaction.atomic():
+            user = form.save(commit=False)
+            if form.cleaned_data['password']:
+                user.set_password(form.cleaned_data['password'])
+            user.save()
+
+            # Handle profile updates
+            role = form.cleaned_data['role']
+
+            # Delete existing profiles
+            RetailProfile.objects.filter(user=user).delete()
+            WholesaleBuyerProfile.objects.filter(user=user).delete()
+            SupplierProfile.objects.filter(user=user).delete()
+
+            # Create or update profile based on role
+            if role == 'retailer':
+                RetailProfile.objects.create(
+                    user=user,
+                    age=form.cleaned_data.get('age'),
+                    medical_needs=form.cleaned_data.get('medical_needs'),
+                    profile_picture=form.cleaned_data.get('profile_picture_retail')
+                )
+            elif role == 'wholesaler':
+                WholesaleBuyerProfile.objects.create(
+                    user=user,
+                    company_name=form.cleaned_data.get('company_name_wholesale'),
+                    gst_number=form.cleaned_data.get('gst_number'),
+                    department=form.cleaned_data.get('department'),
+                    purchase_capacity=form.cleaned_data.get('purchase_capacity'),
+                    profile_picture=form.cleaned_data.get('profile_picture_wholesale')
+                )
+            elif role == 'supplier':
+                SupplierProfile.objects.create(
+                    user=user,
+                    company_name=form.cleaned_data.get('company_name_supplier'),
+                    license_number=form.cleaned_data.get('license_number'),
+                    is_verified=form.cleaned_data.get('is_verified'),
+                    profile_picture=form.cleaned_data.get('profile_picture_supplier')
+                )
+
+        return super().form_valid(form)
+
+
+@method_decorator(login_required, name='dispatch')
+class UserDetailView(DetailView):
+    model = User
+    template_name = 'adminv2/user_detail.html'
+    context_object_name = 'user'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.get_object()
+
+        # Add profile information to context
+        context['retail_profile'] = RetailProfile.objects.filter(user=user).first()
+        context['wholesale_profile'] = WholesaleBuyerProfile.objects.filter(user=user).first()
+        context['supplier_profile'] = SupplierProfile.objects.filter(user=user).first()
+
+        return context
+
+
+@method_decorator(login_required, name='dispatch')
+@method_decorator(csrf_exempt, name='dispatch')
+class UserDeleteView(View):
+    def post(self, request, pk):
+        try:
+            user = get_object_or_404(User, pk=pk)
+            user.delete()
+            return JsonResponse({'success': True})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
 class OrderListingView(View):
     def get(self, request):
         status_filter = request.GET.get('status')

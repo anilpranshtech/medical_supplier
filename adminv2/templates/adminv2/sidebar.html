@@ -29,7 +29,15 @@
                   </div>
 
                   <div class="menu-sub menu-sub-accordion">
-                           <div class="menu-item {% if request.resolver_match.url_name == 'order_listing' %} here show {% endif %}">
+                           <div class="menu-item {% if request.resolver_match.url_name == 'user_list' %} here show {% endif %}">
+                               <a class="menu-link" href="{% url 'adminv2:user_list' %}">
+                                  <span class="menu-bullet">
+                                      <span class="bullet bullet-dot"></span>
+                                  </span>
+                                   <span class="menu-title">User List</span>
+                              </a>
+                          </div>
+                      <div class="menu-item {% if request.resolver_match.url_name == 'order_listing' %} here show {% endif %}">
                                <a class="menu-link" href="{% url 'adminv2:order_listing' %}">
                                   <span class="menu-bullet">
                                       <span class="bullet bullet-dot"></span>
