@@ -22,6 +22,7 @@
         background: white;
         margin-left: auto;
         margin-right: auto;
+        margin-top: 1.75rem;
     }
 
     .kt-slider {
@@ -71,6 +72,25 @@
         right: 12px;
     }
 
+    /* Section Container */
+    .section-container {
+        max-width: var(--custom-container-width, 90%);
+        margin-left: auto;
+        margin-right: auto;
+        margin-bottom: 1.5rem;
+    }
+
+    /* Blur effect for background when modal is open */
+    .modal-open {
+        filter: blur(8px);
+        transition: filter 0.3s ease-in-out;
+    }
+
+    /* Ensure modal content is not blurred */
+    .kt-modal {
+        filter: none !important;
+    }
+
     /* Responsive adjustments */
     @media (max-width: 1599px) {
         .kt-slider-container {
@@ -99,159 +119,152 @@
         height: 16px;
         animation: spin 1s linear infinite;
         margin-left: 8px;
-      }
+    }
 
-      @keyframes spin {
+    @keyframes spin {
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
-      }
+    }
 
-      .loading .loader {
+    .loading .loader {
         display: inline-block;
-      }
+    }
 
-      #loginRequiredModal {
+    #loginRequiredModal, #rfqModal {
         z-index: 9999;
         backdrop-filter: blur(8px);
-        background-color: rgba(0, 0, 0, 0.4); /* darker backdrop */
+        background-color: rgba(0, 0, 0, 0.4);
     }
 
     .swiper-button-next,
     .swiper-button-prev {
-        z-index: 10; /* must be below modal's z-index */
+        z-index: 10;
     }
 </style>
 
 <!-- Begin Medical Banner Slider -->
 <div class="kt-slider-container mt-7">
     <div class="kt-slider" id="slider">
-        <!-- Slide 1 -->
         <a href="#" class="kt-slide">
             <img src="{% static 'metronic/tailwind/dist/assets/media/banners/medical_banner.jpg' %}"
                  alt="Protective Masks"/>
         </a>
-        <!-- Slide 2 -->
         <a href="#" class="kt-slide">
             <img src="{% static 'metronic/tailwind/dist/assets/media/banners/medical_banner2.jpg' %}"
                  alt="Hand Sanitizers"/>
         </a>
-        <!-- Slide 3 -->
         <a href="#" class="kt-slide">
             <img src="{% static 'metronic/tailwind/dist/assets/media/banners/medical_banner3.jpg' %}"
                  alt="Home Health Checkup Kits"/>
         </a>
     </div>
-    <!-- Navigation Buttons -->
     <button class="kt-nav-btn kt-nav-btn-left" onclick="prevSlide()" aria-label="Previous Slide">‹</button>
     <button class="kt-nav-btn kt-nav-btn-right" onclick="nextSlide()" aria-label="Next Slide">›</button>
 </div>
 <!-- End Medical Banner Slider -->
 
-<div class="kt-container-fixed mt-1" style="max-width: var(--custom-container-width, 90%);">
-    <div class="grid grid-cols-1 gap-6 mt-5 py-5">
-        <!-- begin: Featured Products -->
-        <div class="grid sm:grid-cols-4 xl:grid-cols-7 gap-5 mb-2">
-            {% for product in featured_products %}
-            <div class="kt-card">
-                <div class="kt-card-content flex flex-col justify-between p-2 gap-3">
-                    <div>
-                        <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[200px] mb-2 shadow-none">
-                            <a href="{% url 'dashboard:product_detail' product.id %}" class="block">
-                                <img alt="{{ product.name|default:'Unnamed Product' }}"
-                                     class="h-[150px] shrink-0 object-contain cursor-pointer"
-                                     src="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"/>
-                            </a>
-
-                            {% if request.user.is_authenticated %}
-                                <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
-                                        data-kt-wishlist-toggle="true"
+<!-- Begin Sections -->
+<div class="kt-container-fixed" style="max-width: var(--custom-container-width, 90%);">
+    <!-- Featured Products -->
+    <div class="section-container">
+        <div class="grid grid-cols-1 gap-6 mt-5 py-5">
+            <div class="grid sm:grid-cols-4 xl:grid-cols-7 gap-5 mb-2">
+                {% for product in featured_products %}
+                <div class="kt-card">
+                    <div class="kt-card-content flex flex-col justify-between p-2 gap-3">
+                        <div>
+                            <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[200px] mb-2 shadow-none">
+                                <a href="{% url 'dashboard:product_detail' product.id %}" class="block">
+                                    <img alt="{{ product.name|default:'Unnamed Product' }}"
+                                         class="h-[150px] shrink-0 object-contain cursor-pointer"
+                                         src="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"/>
+                                </a>
+                                {% if request.user.is_authenticated %}
+                                    <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
+                                            data-kt-wishlist-toggle="true"
+                                            data-product-id="{{ product.id }}">
+                                        <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
+                                    </button>
+                                {% else %}
+                                    <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2 show-login-modal">
+                                        <i class="ki-filled ki-heart heart-icon text-xs"></i>
+                                    </button>
+                                {% endif %}
+                            </div>
+                            <h3 class="text-sm font-semibold text-gray-650 leading-snug truncate hover:text-primary transition">
+                                {{ product.name }}
+                            </h3>
+                            <p class="text-xs text-mono mt-1 line-clamp-2">
+                                {{ product.description|default:"No description available"|truncatechars:120 }}
+                            </p>
+                            {% if product.delivery_date %}
+                            <p class="text-xs text-green-600 mt-0.5">
+                                Delivery by: <strong>{{ product.delivery_date }}</strong>
+                            </p>
+                            {% endif %}
+                        </div>
+                        <div class="flex items-center justify-between flex-wrap gap-2 px-1 pb-1">
+                            <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1">
+                                <i class="ki-solid ki-star text-white -mt-0.5"></i> {{ product.rating|default:"4.5" }}
+                            </span>
+                            <div class="flex items-center flex-nowrap gap-1 whitespace-nowrap">
+                                {% if product.original_price and product.original_price > product.price %}
+                                <span class="text-xs font-normal text-secondary-foreground line-through">
+                                    ${{ product.original_price|floatformat:2 }}
+                                </span>
+                                {% endif %}
+                                <span class="text-sm font-medium text-mono">${{ product.price|floatformat:2 }}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center flex-wrap gap-2 px-1">
+                            {% if user.is_authenticated %}
+                                {% if product.id in user_cart_ids %}
+                                <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1"
+                                        style="background:#3b82f6; color:white;" data-product-id="{{ product.id }}">
+                                    In cart <i class="ki-filled ki-handcart text-white text-xs"></i>
+                                </button>
+                                {% else %}
+                                <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 add-to-cart-btn"
                                         data-product-id="{{ product.id }}">
-                                    <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
+                                    Add <i class="ki-filled ki-handcart text-xs"></i>
                                 </button>
+                                {% endif %}
                             {% else %}
-                                <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2 show-login-modal">
-                                     <i class="ki-filled ki-heart heart-icon text-xs"></i>
+                                <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 show-login-modal">
+                                    Add <i class="ki-filled ki-handcart text-xs"></i>
                                 </button>
-
                             {% endif %}
-
+                            {% if request.user.is_authenticated %}
+                                {% if product.show_rfq or product.Both %}
+                                <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 open-rfq-modal"
+                                        data-product-id="{{ product.id }}"
+                                        data-product-name="{{ product.name }}"
+                                        data-product-price="{{ product.price }}"
+                                        data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
+                                        data-quantity="1">
+                                    RFQ <i class="ki-solid ki-file-text text-xs"></i>
+                                </button>
+                                {% endif %}
+                            {% endif %}
                         </div>
-
-                        <h3 class="text-sm font-semibold text-gray-650 leading-snug truncate hover:text-primary transition">
-                            {{ product.name }}
-                        </h3>
-
-                        <p class="text-xs text-mono mt-1 line-clamp-2">
-                            {{ product.description|default:"No description available"|truncatechars:120 }}
-                        </p>
-
-                        {% if product.delivery_date %}
-                        <p class="text-xs text-green-600 mt-0.5">
-                            Delivery by: <strong>{{ product.delivery_date }}</strong>
-                        </p>
-                        {% endif %}
-                    </div>
-
-                    <div class="flex items-center justify-between flex-wrap gap-2 px-1 pb-1">
-                    <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1">
-                        <i class="ki-solid ki-star text-white -mt-0.5"></i> {{ product.rating|default:"4.5" }}
-                    </span>
-
-                        <div class="flex items-center flex-nowrap gap-1 whitespace-nowrap">
-                            {% if product.original_price and product.original_price > product.price %}
-                            <span class="text-xs font-normal text-secondary-foreground line-through">
-                        ${{ product.original_price|floatformat:2 }}
-                    </span>
-                            {% endif %}
-                            <span class="text-sm font-medium text-mono">${{ product.price|floatformat:2 }}</span>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center flex-wrap gap-2 px-1">
-                        {% if user.is_authenticated %}
-                            {% if product.id in user_cart_ids %}
-                            <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1"
-                                    style="background:#3b82f6; color:white;" data-product-id="{{ product.id }}">
-                                In cart <i class="ki-filled ki-handcart text-white text-xs"></i>
-                            </button>
-                            {% else %}
-                            <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 add-to-cart-btn"
-                                    data-product-id="{{ product.id }}">
-                                Add <i class="ki-filled ki-handcart text-xs"></i>
-                            </button>
-                            {% endif %}
-                        {% else %}
-                            <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 show-login-modal">
-                                Add <i class="ki-filled ki-handcart text-xs"></i>
-                            </button>
-                        {% endif %}
-
-                        {% if request.user.is_authenticated %}
-                            {% if product.show_rfq or product.Both %}
-                            <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 open-rfq-modal"
-                                    data-product-id="{{ product.id }}"
-                                    data-product-name="{{ product.name }}"
-                                    data-product-price="{{ product.price }}"
-                                    data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
-                                    data-quantity="1">
-                                RFQ <i class="ki-solid ki-file-text text-xs"></i>
-                            </button>
-                            {% endif %}
-                        {% endif %}
                     </div>
                 </div>
+                {% empty %}
+                <div class="col-span-full text-center py-10 text-gray-400">
+                    No featured products available at the moment.
+                </div>
+                {% endfor %}
             </div>
-            {% endfor %}
         </div>
-        <!-- end: Featured Products -->
+    </div>
 
-        <!-- begin: Special Offers -->
+    <!-- Special Offers -->
+    <div class="section-container">
         <div class="space-y-5">
             <div class="flex items-center justify-between gap-4">
-                <span class="text-lg font-medium text-mono">Special Offers</span>
+                <span class="text-lg font-medium text-gray-100">Special Offers</span>
                 <a class="kt-link" href="{% url 'dashboard:search_results_grid' %}?{{ request.GET.urlencode }}">See All <i class="ki-filled ki-right text-xs"></i></a>
             </div>
-
             <div class="grid xl:grid-cols-2 gap-5 mb-2">
                 {% for product in special_offers %}
                 {% if forloop.first %}
@@ -269,22 +282,21 @@
                                 <div class="flex items-center gap-4">
                                     {% if request.user.is_authenticated %}
                                         {% if product.id in user_cart_ids %}
-                                            <button class="kt-btn kt-btn-outline kt-btn-sm ms-1"
-                                                    style="background:#3b82f6; color:white;" data-product-id="{{ product.id }}">
-                                                In cart <i class="ki-filled ki-handcart text-white"></i>
-                                            </button>
+                                        <button class="kt-btn kt-btn-outline kt-btn-sm ms-1"
+                                                style="background:#3b82f6; color:white;" data-product-id="{{ product.id }}">
+                                            In cart <i class="ki-filled ki-handcart text-white"></i>
+                                        </button>
                                         {% else %}
-                                            <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 add-to-cart-btn"
-                                                    data-product-id="{{ product.id }}">
-                                                Add <i class="ki-filled ki-handcart"></i>
-                                            </button>
+                                        <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 add-to-cart-btn"
+                                                data-product-id="{{ product.id }}">
+                                            Add <i class="ki-filled ki-handcart"></i>
+                                        </button>
                                         {% endif %}
                                     {% else %}
                                         <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 show-login-modal">
                                             Add <i class="ki-filled ki-handcart text-xs"></i>
                                         </button>
                                     {% endif %}
-
                                     {% if request.user.is_authenticated %}
                                         {% if product.show_rfq or product.Both %}
                                         <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 open-rfq-modal"
@@ -297,7 +309,6 @@
                                         </button>
                                         {% endif %}
                                     {% endif %}
-
                                     {% if request.user.is_authenticated %}
                                         <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm"
                                                 data-kt-wishlist-toggle="true"
@@ -306,14 +317,13 @@
                                         </button>
                                     {% else %}
                                         <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm show-login-modal">
-                                             <i class="ki-filled ki-heart heart-icon text-xs"></i>
+                                            <i class="ki-filled ki-heart heart-icon text-xs"></i>
                                         </button>
                                     {% endif %}
-
                                     {% if product.original_price and product.original_price > product.price %}
                                     <span class="text-base font-normal text-secondary-foreground line-through pt-[1px]">
-                                                    ${{ product.original_price|floatformat:2 }}
-                                                </span>
+                                        ${{ product.original_price|floatformat:2 }}
+                                    </span>
                                     {% endif %}
                                     <span class="text-base font-semibold text-mono">${{ product.price|floatformat:2 }}</span>
                                 </div>
@@ -338,7 +348,7 @@
                 </div>
                 <div class="lg:col-span-1">
                     <div class="grid sm:grid-cols-2 gap-5 items-stretch">
-                        {% else %}
+                {% else %}
                         <div class="kt-card h-full bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-950">
                             <div class="kt-card-content flex flex-col items-center justify-center px-5 pb-0">
                                 <a href="{% url 'dashboard:product_detail' product.id %}" class="block">
@@ -362,28 +372,25 @@
                                     <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">save {{ product.offer_percentage|floatformat:0 }}%</span>
                                     {% endif %}
                                 </div>
-                                <span class="text-base font-medium text-mono mb-3">{{ product.name|default:'Unnamed Product' }}</span>
+                                <span class="text-base font-medium text-mono mb-เกมจากค่าย PG Slot ในประเทศไทย3">{{ product.name|default:'Unnamed Product' }}</span>
                                 <div class="flex items-center gap-2.5 mb-2.5">
-
                                     {% if request.user.is_authenticated %}
-
                                         {% if product.id in user_cart_ids %}
-                                            <button class="kt-btn kt-btn-outline kt-btn-sm ms-1"
-                                                    style="background:#3b82f6; color:white;" data-product-id="{{ product.id }}">
-                                                In cart <i class="ki-filled ki-handcart text-white"></i>
-                                            </button>
-                                            {% else %}
-                                            <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 add-to-cart-btn"
-                                                    data-product-id="{{ product.id }}">
-                                                Add <i class="ki-filled ki-handcart"></i>
-                                            </button>
+                                        <button class="kt-btn kt-btn-outline kt-btn-sm ms-1"
+                                                style="background:#3b82f6; color:white;" data-product-id="{{ product.id }}">
+                                            In cart <i class="ki-filled ki-handcart text-white"></i>
+                                        </button>
+                                        {% else %}
+                                        <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 add-to-cart-btn"
+                                                data-product-id="{{ product.id }}">
+                                            Add <i class="ki-filled ki-handcart"></i>
+                                        </button>
                                         {% endif %}
                                     {% else %}
                                         <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 show-login-modal">
                                             Add <i class="ki-filled ki-handcart text-xs"></i>
                                         </button>
                                     {% endif %}
-
                                     {% if request.user.is_authenticated %}
                                         {% if product.show_rfq or product.Both %}
                                         <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 open-rfq-modal"
@@ -396,14 +403,7 @@
                                         </button>
                                         {% endif %}
                                     {% endif %}
-
-
                                     <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm"
-                                            data-kt-wishlist-toggle="true"
-                                            data-product-id="{{ product.id|default:'0' }}">
-                                        <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
-                                    </button>
-                                    <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
                                             data-kt-wishlist-toggle="true"
                                             data-product-id="{{ product.id|default:'0' }}">
                                         <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
@@ -411,32 +411,32 @@
                                 </div>
                                 {% if product.original_price and product.original_price > product.price %}
                                 <span class="text-sm font-normal text-secondary-foreground line-through pt-[1px]">
-                                        ${{ product.original_price|floatformat:2 }}
-                                    </span>
+                                    ${{ product.original_price|floatformat:2 }}
+                                </span>
                                 {% endif %}
                             </div>
                         </div>
-                        {% endif %}
-                        {% empty %}
-                        <div class="col-span-full text-center py-10 text-gray-500">
-                            No special offers available at the moment.
-                        </div>
-                        {% endfor %}
-                        {% if special_offers and special_offers|length > 1 %}
+                {% endif %}
+                {% empty %}
+                <div class="col-span-full text-center py-10 text-gray-400">
+                    No special offers available at the moment.
+                </div>
+                {% endfor %}
+                {% if special_offers and special_offers|length > 1 %}
                     </div>
                 </div>
                 {% endif %}
             </div>
         </div>
-        <!-- end: Special Offers -->
+    </div>
 
-        <!-- begin: New Arrivals -->
+    <!-- New Arrivals -->
+    <div class="section-container">
         <div class="space-y-4">
             <div class="flex items-center justify-between gap-4">
-                <span class="text-lg font-medium text-mono">New Arrivals</span>
+                <span class="text-lg font-medium text-gray-100">New Arrivals</span>
                 <a class="kt-link" href="{% url 'dashboard:search_results_grid' %}?{{ request.GET.urlencode }}">See All <i class="ki-filled ki-right text-xs"></i></a>
             </div>
-
             <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-2">
                 {% for product in recent_products %}
                 <div class="kt-card">
@@ -458,7 +458,6 @@
                                          data-product-original-price="{{ product.original_price|default:'' }}"
                                          data-product-discount="{{ product.offer_percentage|default:'' }}"/>
                                 </a>
-
                                 {% if request.user.is_authenticated %}
                                     <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
                                             data-kt-wishlist-toggle="true"
@@ -466,14 +465,11 @@
                                         <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
                                     </button>
                                 {% else %}
-                                        <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2 show-login-modal">
-                                             <i class="ki-filled ki-heart heart-icon text-xs"></i>
-                                        </button>
+                                    <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2 show-login-modal">
+                                        <i class="ki-filled ki-heart heart-icon text-xs"></i>
+                                    </button>
                                 {% endif %}
-
                             </div>
-
-
                             <h3 class="text-lg font-bold text-gray-650 leading-snug truncate hover:text-primary transition">
                                 {{ product.name }}
                             </h3>
@@ -485,40 +481,36 @@
                                 Delivery by: <strong>{{ product.delivery_date }}</strong>
                             </p>
                             {% endif %}
-
                         </div>
                         <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
-                                <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1">
-                                    <i class="ki-solid ki-star text-white -mt-0.5"></i>
-                                    {{ product.rating|default:"4.5" }}
-                                </span>
+                            <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1">
+                                <i class="ki-solid ki-star text-white -mt-0.5"></i>
+                                {{ product.rating|default:"4.5" }}
+                            </span>
                             <div class="flex items-center flex-wrap gap-1.5">
                                 {% if product.original_price and product.original_price > product.price %}
                                 <span class="text-xs font-normal text-secondary-foreground line-through pt-[1px]">
-                                            ${{ product.original_price|floatformat:2 }}
-                                        </span>
+                                    ${{ product.original_price|floatformat:2 }}
+                                </span>
                                 {% endif %}
                                 <span class="text-sm font-medium text-mono">${{ product.price|floatformat:2 }}</span>
-
-
                                 {% if request.user.is_authenticated %}
                                     {% if product.id in user_cart_ids %}
-                                        <button class="kt-btn kt-btn-outline kt-btn-sm ms-1"
-                                                style="background:#3b82f6; color:white;" data-product-id="{{ product.id }}">
-                                            In cart <i class="ki-filled ki-handcart text-white"></i>
-                                        </button>
+                                    <button class="kt-btn kt-btn-outline kt-btn-sm ms-1"
+                                            style="background:#3b82f6; color:white;" data-product-id="{{ product.id }}">
+                                        In cart <i class="ki-filled ki-handcart text-white"></i>
+                                    </button>
                                     {% else %}
-                                        <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 add-to-cart-btn"
-                                                data-product-id="{{ product.id }}">
-                                            Add <i class="ki-filled ki-handcart"></i>
-                                        </button>
+                                    <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 add-to-cart-btn"
+                                            data-product-id="{{ product.id }}">
+                                        Add <i class="ki-filled ki-handcart"></i>
+                                    </button>
                                     {% endif %}
                                 {% else %}
                                     <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 show-login-modal">
                                         Add <i class="ki-filled ki-handcart text-xs"></i>
                                     </button>
                                 {% endif %}
-
                                 {% if request.user.is_authenticated %}
                                     {% if product.show_rfq or product.Both %}
                                     <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 open-rfq-modal"
@@ -531,20 +523,24 @@
                                     </button>
                                     {% endif %}
                                 {% endif %}
-
                             </div>
                         </div>
                     </div>
                 </div>
+                {% empty %}
+                <div class="col-span-full text-center py-10 text-gray-400">
+                    No new arrivals available at the moment.
+                </div>
                 {% endfor %}
             </div>
         </div>
-        <!-- end: New Arrivals -->
+    </div>
 
-        <!-- begin: Popular Medical Supplies -->
+    <!-- Popular Medical Supplies -->
+    <div class="section-container">
         <div class="space-y-4">
             <div class="flex items-center justify-between gap-4">
-                <span class="text-lg font-medium text-mono">Popular Medical Supplies</span>
+                <span class="text-lg font-medium text-gray-100">Popular Medical Supplies</span>
                 <a class="kt-link" href="{% url 'dashboard:search_results_grid' %}?{{ request.GET.urlencode }}">See All <i class="ki-filled ki-right text-xs"></i></a>
             </div>
             <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-2">
@@ -568,7 +564,6 @@
                                          data-product-original-price="{{ product.original_price|default:'' }}"
                                          data-product-discount="{{ product.offer_percentage|default:'' }}"/>
                                 </a>
-
                                 {% if request.user.is_authenticated %}
                                     <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
                                             data-kt-wishlist-toggle="true"
@@ -576,13 +571,11 @@
                                         <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
                                     </button>
                                 {% else %}
-                                        <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2 show-login-modal">
-                                             <i class="ki-filled ki-heart heart-icon text-xs"></i>
-                                        </button>
+                                    <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2 show-login-modal">
+                                        <i class="ki-filled ki-heart heart-icon text-xs"></i>
+                                    </button>
                                 {% endif %}
-
                             </div>
-
                             <h3 class="text-lg font-bold text-gray-650 leading-snug truncate hover:text-primary transition">
                                 {{ product.name }}
                             </h3>
@@ -594,21 +587,19 @@
                                 Delivery by: <strong>{{ product.delivery_date }}</strong>
                             </p>
                             {% endif %}
-
                         </div>
                         <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
-                                <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1">
-                                    <i class="ki-solid ki-star text-white -mt-0.5"></i>
-                                    {{ product.rating|default:"4.5" }}
-                                </span>
+                            <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1">
+                                <i class="ki-solid ki-star text-white -mt-0.5"></i>
+                                {{ product.rating|default:"4.5" }}
+                            </span>
                             <div class="flex items-center flex-wrap gap-1.5">
                                 {% if product.original_price and product.original_price > product.price %}
                                 <span class="text-xs font-normal text-secondary-foreground line-through pt-[1px]">
-                                            ${{ product.original_price|floatformat:2 }}
-                                        </span>
+                                    ${{ product.original_price|floatformat:2 }}
+                                </span>
                                 {% endif %}
                                 <span class="text-sm font-medium text-mono">${{ product.price|floatformat:2 }}</span>
-
                                 {% if request.user.is_authenticated %}
                                     {% if product.id in user_cart_ids %}
                                     <button class="kt-btn kt-btn-outline kt-btn-sm ms-1"
@@ -626,7 +617,6 @@
                                         Add <i class="ki-filled ki-handcart text-xs"></i>
                                     </button>
                                 {% endif %}
-
                                 {% if request.user.is_authenticated %}
                                     {% if product.show_rfq or product.Both %}
                                     <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 open-rfq-modal"
@@ -639,20 +629,24 @@
                                     </button>
                                     {% endif %}
                                 {% endif %}
-
                             </div>
                         </div>
                     </div>
                 </div>
+                {% empty %}
+                <div class="col-span-full text-center py-10 text-gray-400">
+                    No popular medical supplies available at the moment.
+                </div>
                 {% endfor %}
             </div>
         </div>
-        <!-- end: Popular Medical Supplies -->
+    </div>
 
-        <!-- begin: Limited-Time Deals -->
+    <!-- Limited-Time Deals -->
+    <div class="section-container">
         <div class="space-y-4">
             <div class="flex items-center justify-between gap-4">
-                <span class="text-lg font-medium text-mono">Limited-Time Deals</span>
+                <span class="text-lg font-medium text-gray-100">Limited-Time Deals</span>
                 <a class="kt-btn kt-btn-sm kt-btn-ghost kt-btn-primary" href="#">See All <i
                         class="ki-filled ki-right"></i></a>
             </div>
@@ -683,15 +677,12 @@
                                             data-product-id="{{ product.id|default:'0' }}">
                                         <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
                                     </button>
-
                                 {% else %}
-                                        <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2 show-login-modal">
-                                             <i class="ki-filled ki-heart heart-icon text-xs"></i>
-                                        </button>
+                                    <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2 show-login-modal">
+                                        <i class="ki-filled ki-heart heart-icon text-xs"></i>
+                                    </button>
                                 {% endif %}
-
                             </div>
-
                             <h3 class="text-lg font-bold text-gray-650 leading-snug truncate hover:text-primary transition">
                                 {{ product.name }}
                             </h3>
@@ -703,21 +694,19 @@
                                 Delivery by: <strong>{{ product.delivery_date }}</strong>
                             </p>
                             {% endif %}
-
                         </div>
                         <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
-                                <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1">
-                                    <i class="ki-solid ki-star text-white -mt-0.5"></i>
-                                    {{ product.rating|default:"4.5" }}
-                                </span>
+                            <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1">
+                                <i class="ki-solid ki-star text-white -mt-0.5"></i>
+                                {{ product.rating|default:"4.5" }}
+                            </span>
                             <div class="flex items-center flex-wrap gap-1.5">
                                 {% if product.original_price and product.original_price > product.price %}
                                 <span class="text-xs font-normal text-secondary-foreground line-through pt-[1px]">
-                                            ${{ product.original_price|floatformat:2 }}
-                                        </span>
+                                    ${{ product.original_price|floatformat:2 }}
+                                </span>
                                 {% endif %}
                                 <span class="text-sm font-medium text-mono">${{ product.price|floatformat:2 }}</span>
-
                                 {% if request.user.is_authenticated %}
                                     {% if product.id in user_cart_ids %}
                                     <button class="kt-btn kt-btn-outline kt-btn-sm ms-1"
@@ -735,7 +724,6 @@
                                         Add <i class="ki-filled ki-handcart text-xs"></i>
                                     </button>
                                 {% endif %}
-
                                 {% if request.user.is_authenticated %}
                                     {% if product.show_rfq or product.Both %}
                                     <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 open-rfq-modal"
@@ -748,17 +736,21 @@
                                     </button>
                                     {% endif %}
                                 {% endif %}
-
                             </div>
                         </div>
                     </div>
                 </div>
+                {% empty %}
+                <div class="col-span-full text-center py-10 text-gray-400">
+                    No limited-time deals available at the moment.
+                </div>
                 {% endfor %}
             </div>
         </div>
-        <!-- end: Limited-Time Deals -->
+    </div>
 
-        <!-- begin: Benefits -->
+    <!-- Benefits -->
+    <div class="section-container">
         <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-2">
             <div class="kt-card">
                 <div class="kt-card-content flex items-center gap-3.5 px-5">
@@ -841,150 +833,146 @@
                 </div>
             </div>
         </div>
-        <!-- end: Benefits -->
+    </div>
 
-        <!-- begin: Product Details Modal -->
-        <div class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-             data-kt-modal="true" id="modal_shop_product_details">
-            <div class="kt-card w-full max-w-[500px] h-full rounded-xl border border-border bg-background">
-                <div class="kt-card-header px-5 flex items-center justify-between">
-                    <h3 class="kt-card-title">Product Details</h3>
-                    <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" data-kt-modal-dismiss="true">
-                        <i class="ki-filled ki-cross text-base"></i>
-                    </button>
+    <!-- Product Details Modal -->
+    <div class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+         data-kt-modal="true" id="modal_shop_product_details">
+        <div class="kt-card w-full max-w-[500px] h-full rounded-xl border border-border bg-background">
+            <div class="kt-card-header px-5 flex items-center justify-between">
+                <h3 class="kt-card-title">Product Details</h3>
+                <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" data-kt-modal-dismiss="true">
+                    <i class="ki-filled ki-cross text-base"></i>
+                </button>
+            </div>
+            <div class="kt-card-content flex flex-col space-y-3 p-5 kt-scrollable-y-auto">
+                <div class="kt-card relative items-center justify-center bg-accent/50 mb-6.5 h-[280px] shadow-none">
+                    <span class="kt-badge kt-badge-destructive kt-badge-sm absolute top-4 end-4 uppercase product-discount hidden"></span>
+                    <img alt="" class="w-[250px] h-[250px] object-cover product-image"/>
                 </div>
-                <div class="kt-card-content flex flex-col space-y-3 p-5 kt-scrollable-y-auto">
-                    <div class="kt-card relative items-center justify-center bg-accent/50 mb-6.5 h-[280px] shadow-none">
-                        <span class="kt-badge kt-badge-destructive kt-badge-sm absolute top-4 end-4 uppercase product-discount hidden"></span>
-                        <img alt="" class="w-[250px] h-[250px] object-cover product-image"/>
+                <span class="text-base font-medium text-mono product-name"></span>
+                <span class="text-sm font-normal text-foreground block mb-7 product-description"></span>
+                <div class="flex flex-col gap-2.5">
+                    <div class="flex items-center gap-2.5">
+                        <span class="text-xs font-normal text-foreground min-w-14">SKU</span>
+                        <span class="text-xs font-medium text-foreground product-sku"></span>
                     </div>
-                    <span class="text-base font-medium text-mono product-name"></span>
-                    <span class="text-sm font-normal text-foreground block mb-7 product-description"></span>
-                    <div class="flex flex-col gap-2.5">
-                        <div class="flex items-center gap-2.5">
-                            <span class="text-xs font-normal text-foreground min-w-14">SKU</span>
-                            <span class="text-xs font-medium text-foreground product-sku"></span>
-                        </div>
-                        <div class="flex items-center gap-2.5">
-                            <span class="text-xs font-normal text-foreground min-w-14">Category</span>
-                            <span class="text-xs font-medium text-foreground product-category"></span>
-                        </div>
-                        <div class="flex items-center gap-2.5">
-                            <span class="text-xs font-normal text-foreground min-w-14">Rating</span>
-                            <div class="kt-rating product-rating"></div>
-                        </div>
-                        <div class="flex items-center gap-2.5">
-                            <span class="text-xs font-normal text-foreground min-w-14">More Info</span>
-                            <span class="text-xs font-normal text-foreground product-more-info"></span>
-                        </div>
+                    <div class="flex items-center gap-2.5">
+                        <span class="text-xs font-normal text-foreground min-w-14">Category</span>
+                        <span class="text-xs font-medium text-foreground product-category"></span>
                     </div>
-                    <div class="flex items-center justify-end gap-2">
-                        <span class="text-base font-normal text-secondary-foreground line-through product-original-price hidden"></span>
-                        <span class="text-lg font-medium text-mono product-price"></span>
+                    <div class="flex items-center gap-2.5">
+                        <span class="text-xs font-normal text-foreground min-w-14">Rating</span>
+                        <div class="kt-rating product-rating"></div>
+                    </div>
+                    <div class="flex items-center gap-2.5">
+                        <span class="text-xs font-normal text-foreground min-w-14">More Info</span>
+                        <span class="text-xs font-normal text-foreground product-more-info"></span>
                     </div>
                 </div>
-                <div class="kt-card-footer px-5">
-                    <button class="kt-btn kt-btn-primary grow" data-kt-drawer-toggle="#drawers_shop_cart">
-                        <i class="ki-filled ki-handcart"></i> Add to Cart
-                    </button>
+                <div class="flex items-center justify-end gap-2">
+                    <span class="text-base font-normal text-secondary-foreground line-through product-original-price hidden"></span>
+                    <span class="text-lg font-medium text-mono product-price"></span>
                 </div>
             </div>
-        </div>
-        <!-- end: Product Details Modal -->
-
-        <!-- begin: RFQ Modal -->
-        <div id="rfqModal"
-             class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-             data-kt-modal="true" role="dialog" aria-labelledby="rfqModalTitle" aria-modal="true">
-            <div class="kt-card w-full max-w-[600px] rounded-xl border border-border bg-background shadow-2xl transition-transform duration-300 ease-in-out transform scale-95">
-                <div class="kt-card-header px-5 py-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
-                    <h2 id="rfqModalTitle" class="text-xl font-bold text-mono">Request for Quotation</h2>
-                    <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" onclick="closeRFQModal()"
-                            aria-label="Close modal">
-                        <i class="ki-filled ki-cross text-base text-gray-500 hover:text-red-500"></i>
-                    </button>
-                </div>
-                <form method="POST" action="{% url 'dashboard:rfq_submit' %}" id="rfqForm">
-                    {% csrf_token %}
-                    <div class="kt-card-content flex flex-col space-y-4 p-5">
-                        <input type="hidden" name="product_id" id="rfqProductId">
-                        <div>
-                            <label for="rfqProductName"
-                                   class="block text-sm font-medium text-gray-650 dark:text-gray-300 mb-1">Product</label>
-                            <input type="text" id="rfqProductName"
-                                   class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 bg-gray-100 dark:bg-gray-800 text-gray-650 dark:text-gray-300 cursor-not-allowed"
-                                   disabled>
-                        </div>
-                        <div>
-                            <label for="rfqCompanyName"
-                                   class="block text-sm font-medium text-gray-650 dark:text-gray-300 mb-1">Company Name
-                                <span class="text-red-500">*</span></label>
-                            <input type="text" name="company_name" id="rfqCompanyName"
-                                   class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
-                                   required aria-required="true">
-                            <p class="text-xs text-red-500 mt-1 hidden" id="rfqCompanyNameError">Company name is required.</p>
-                        </div>
-                        <div>
-                            <label for="rfqQuantity"
-                                   class="block text-sm font-medium text-gray-650 dark:text-gray-300 mb-1">Quantity
-                                <span class="text-red-500">*</span></label>
-                            <input type="number" name="quantity" id="rfqQuantity"
-                                   class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
-                                   min="1" required aria-required="true">
-                            <p class="text-xs text-red-500 mt-1 hidden" id="rfqQuantityError">Quantity must be at least 1.</p>
-                        </div>
-                        <div>
-                            <label for="rfqMessage"
-                                   class="block text-sm font-medium text-gray-650 dark:text-gray-300 mb-1">Message</label>
-                            <textarea name="message" id="rfqMessage"
-                                      class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
-                                      rows="4" placeholder="Add any additional details..."></textarea>
-                        </div>
-                    </div>
-                    <div class="kt-card-footer px-5 py-4 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700">
-                        <button type="button"
-                                class="kt-btn kt-btn-outline kt-btn-sm text-gray-650 hover:bg-gray-900 dark:hover:bg-gray-700"
-                                onclick="closeRFQModal()">Cancel
-                        </button>
-                        <button type="submit" class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center" id="rfqSubmitBtn">
-                            Submit RFQ
-                            <span class="loader"></span>
-                          </button>
-                    </div>
-                </form>
+            <div class="kt-card-footer px-5">
+                <button class="kt-btn kt-btn-primary grow" data-kt-drawer-toggle="#drawers_shop_cart">
+                    <i class="ki-filled ki-handcart"></i> Add to Cart
+                </button>
             </div>
         </div>
-        <!-- end: RFQ Modal -->
+    </div>
 
-        <!-- begin: Login Required Modal -->
-        <div id="loginRequiredModal"
-             class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
-             data-kt-modal="true" role="dialog" aria-labelledby="loginRequiredTitle" aria-modal="true">
-            <div class="kt-card w-full max-w-[500px] rounded-xl border border-border bg-background shadow-2xl transition-transform duration-300 ease-in-out transform scale-95">
-                <div class="kt-card-header px-5 py-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
-                    <h2 id="loginRequiredTitle" class="text-xl font-bold text-mono">Login Required</h2>
-                    <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" onclick="closeLoginModal()" aria-label="Close modal">
-                        <i class="ki-filled ki-cross text-base text-gray-500 hover:text-red-500"></i>
-                    </button>
-                </div>
-                <div class="kt-card-content p-5 text-center space-y-4">
-                    <p class="text-gray-700 dark:text-gray-300 text-sm">
-                        You must be logged in to perform this action.
-                    </p>
+    <!-- RFQ Modal -->
+    <div id="rfqModal"
+         class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+         data-kt-modal="true" role="dialog" aria-labelledby="rfqModalTitle" aria-modal="true">
+        <div class="kt-card w-full max-w-[600px] rounded-xl border border-border bg-background shadow-2xl transition-transform duration-300 ease-in-out transform scale-95">
+            <div class="kt-card-header px-5 py-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
+                <h2 id="rfqModalTitle" class="text-xl font-bold text-mono">Request for Quotation</h2>
+                <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" onclick="closeRFQModal()"
+                        aria-label="Close modal">
+                    <i class="ki-filled ki-cross text-base text-gray-500 hover:text-red-500"></i>
+                </button>
+            </div>
+            <form method="POST" action="{% url 'dashboard:rfq_submit' %}" id="rfqForm">
+                {% csrf_token %}
+                <div class="kt-card-content flex flex-col space-y-4 p-5">
+                    <input type="hidden" name="product_id" id="rfqProductId">
+                    <div>
+                        <label for="rfqProductName"
+                               class="block text-sm font-medium text-gray-650 dark:text-gray-300 mb-1">Product</label>
+                        <input type="text" id="rfqProductName"
+                               class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 bg-gray-100 dark:bg-gray-800 text-gray-650 dark:text-gray-300 cursor-not-allowed"
+                               disabled>
+                    </div>
+                    <div>
+                        <label for="rfqCompanyName"
+                               class="block text-sm font-medium text-gray-650 dark:text-gray-300 mb-1">Company Name
+                            <span class="text-red-500">*</span></label>
+                        <input type="text" name="company_name" id="rfqCompanyName"
+                               class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                               required aria-required="true">
+                        <p class="text-xs text-red-500 mt-1 hidden" id="rfqCompanyNameError">Company name is required.</p>
+                    </div>
+                    <div>
+                        <label for="rfqQuantity"
+                               class="block text-sm font-medium text-gray-650 dark:text-gray-300 mb-1">Quantity
+                            <span class="text-red-500">*</span></label>
+                        <input type="number" name="quantity" id="rfqQuantity"
+                               class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                               min="1" required aria-required="true">
+                        <p class="text-xs text-red-500 mt-1 hidden" id="rfqQuantityError">Quantity must be at least 1.</p>
+                    </div>
+                    <div>
+                        <label for="rfqMessage"
+                               class="block text-sm font-medium text-gray-650 dark:text-gray-300 mb-1">Message</label>
+                        <textarea name="message" id="rfqMessage"
+                                  class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                                  rows="4" placeholder="Add any additional details..."></textarea>
+                    </div>
                 </div>
                 <div class="kt-card-footer px-5 py-4 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700">
-                    <button type="button" class="kt-btn kt-btn-outline kt-btn-sm text-gray-650 hover:bg-gray-900 dark:hover:bg-gray-700" onclick="closeLoginModal()">Cancel</button>
-                    <a href="{% url 'dashboard:login' %}" class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center">
-                        Login
-                    </a>
+                    <button type="button"
+                            class="kt-btn kt-btn-outline kt-btn-sm text-gray-650 hover:bg-gray-900 dark:hover:bg-gray-700"
+                            onclick="closeRFQModal()">Cancel
+                    </button>
+                    <button type="submit" class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center" id="rfqSubmitBtn">
+                        Submit RFQ
+                        <span class="loader"></span>
+                    </button>
                 </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Login Required Modal -->
+    <div id="loginRequiredModal"
+         class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
+         data-kt-modal="true" role="dialog" aria-labelledby="loginRequiredTitle" aria-modal="true">
+        <div class="kt-card w-full max-w-[500px] rounded-xl border border-border bg-background shadow-2xl transition-transform duration-300 ease-in-out transform scale-95">
+            <div class="kt-card-header px-5 py-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
+                <h2 id="loginRequiredTitle" class="text-xl font-bold text-gray-100">Login Required</h2>
+                <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" onclick="closeLoginModal()" aria-label="Close modal">
+                    <i class="ki-filled ki-cross text-base text-gray-500 hover:text-red-500"></i>
+                </button>
+            </div>
+            <div class="kt-card-content p-5 text-center space-y-4">
+                <p class="text-gray-300 dark:text-gray-300 text-sm">
+                    You must be logged in to perform this action.
+                </p>
+            </div>
+            <div class="kt-card-footer px-5 py-4 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700">
+                <button type="button" class="kt-btn kt-btn-outline kt-btn-sm text-gray-650 hover:bg-gray-900 dark:hover:bg-gray-700" onclick="closeLoginModal()">Cancel</button>
+                <a href="{% url 'dashboard:login' %}" class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center">
+                    Login
+                </a>
             </div>
         </div>
-
     </div>
 </div>
 
-<!-- begin: JavaScript -->
+<!-- JavaScript -->
 <script>
     // CSRF Token Helper
     function getCookie(name) {
@@ -1006,41 +994,40 @@
 
     // Wishlist Toggle
     document.addEventListener('DOMContentLoaded', () => {
-    const toggleWishlistIcons = (productId, isAdded) => {
-        document.querySelectorAll(`.kt-wishlist-icon[data-product-id="${productId}"] i`)
-            .forEach(icon => {
-                icon.classList.toggle('text-red-500', isAdded);
-            });
-    };
+        const toggleWishlistIcons = (productId, isAdded) => {
+            document.querySelectorAll(`.kt-wishlist-icon[data-product-id="${productId}"] i`)
+                .forEach(icon => {
+                    icon.classList.toggle('text-red-500', isAdded);
+                });
+        };
 
-    document.querySelectorAll('.kt-wishlist-icon').forEach(button => {
-        button.addEventListener('click', () => {
-            const productId = button.dataset.productId || '0';
-            fetch('/wishlist/toggle/', {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': csrftoken,
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: `product_id=${productId}`
-            })
-            .then(response => {
-                if (response.status === 403) {
-                    alert('Please login to use wishlist.');
-                    window.location.href = '/login/';
-                    return;
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data) {
-                    toggleWishlistIcons(productId, data.status === 'added');
-                }
-            })
-            .catch(error => console.error('Wishlist toggle error:', error));
+        document.querySelectorAll('.kt-wishlist-icon').forEach(button => {
+            button.addEventListener('click', () => {
+                const productId = button.dataset.productId || '0';
+                fetch('/wishlist/toggle/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrftoken,
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `product_id=${productId}`
+                })
+                .then(response => {
+                    if (response.status === 403) {
+                        openLoginModal();
+                        return;
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data) {
+                        toggleWishlistIcons(productId, data.status === 'added');
+                    }
+                })
+                .catch(error => console.error('Wishlist toggle error:', error));
+            });
         });
     });
-});
 
     // Add to Cart
     document.addEventListener('DOMContentLoaded', () => {
@@ -1064,17 +1051,17 @@
                         quantity: 1,
                     }),
                 })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.status === "success") {
-                            document
-                                .querySelectorAll(`.add-to-cart-btn[data-product-id="${productId}"]`)
-                                .forEach(markAsInCart);
-                        } else {
-                            alert("Something went wrong");
-                        }
-                    })
-                    .catch(err => console.error("Add to cart error:", err));
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === "success") {
+                        document
+                            .querySelectorAll(`.add-to-cart-btn[data-product-id="${productId}"]`)
+                            .forEach(markAsInCart);
+                    } else {
+                        alert("Something went wrong");
+                    }
+                })
+                .catch(err => console.error("Add to cart error:", err));
             });
         });
     });
@@ -1099,7 +1086,7 @@
     }
 
     if (slider) {
-        setInterval(nextSlide, 5000); // Auto slide every 5 seconds
+        setInterval(nextSlide, 5000);
     }
 
     // RFQ Modal
@@ -1123,8 +1110,7 @@
         });
     });
 
-<!--  Login required for add to cart and wishlist  -->
-
+    // Login Required Modal
     function openLoginModal() {
         const modal = document.getElementById('loginRequiredModal');
         modal.classList.remove('hidden');
@@ -1142,8 +1128,5 @@
             button.addEventListener('click', openLoginModal);
         });
     });
-
 </script>
-<!-- end: JavaScript -->
-
 {% endblock %}
