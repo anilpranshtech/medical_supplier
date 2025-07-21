@@ -14,6 +14,7 @@ from django.contrib.auth import logout
 from django.views.generic import *
 from adminv2.forms import *
 from adminv2.models import *
+from dashboard.mixins import SupplierPermissionMixin
 from dashboard.models import *
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth import authenticate, login
@@ -35,7 +36,7 @@ from calendar import monthrange
 
 
 
-class HomeView(LoginRequiredMixin, View):
+class HomeView(LoginRequiredMixin, SupplierPermissionMixin, View):
     login_url = 'adminv2:admin_login'
 
     def get(self, request):
@@ -180,7 +181,7 @@ class HomeView(LoginRequiredMixin, View):
         }
         return render(request, 'adminv2/home.html', context)
 
-class ProductsView(LoginRequiredMixin,View):
+class ProductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
     template = 'adminv2/products.html'
     def get(self, request):
         products = Product.objects.all()
@@ -192,7 +193,7 @@ class ProductsView(LoginRequiredMixin,View):
         return render(request, self.template, {'products': products})
     
     
-class AddproductsView(LoginRequiredMixin, View):
+class AddproductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
     template = 'adminv2/add-product.html'
 
     def get(self, request):
@@ -354,7 +355,7 @@ class AddproductsView(LoginRequiredMixin, View):
    
 
     
-class EditproductsView(LoginRequiredMixin, View):
+class EditproductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
     template = 'adminv2/edit-product.html'
 
     def get(self, request, pk):
@@ -507,7 +508,7 @@ class EditproductsView(LoginRequiredMixin, View):
         
    
     
-class DeleteProductImageView(LoginRequiredMixin, View):
+class DeleteProductImageView(LoginRequiredMixin, SupplierPermissionMixin, View):
     def post(self, request, pk):
         image = get_object_or_404(ProductImage, pk=pk)
         product_id = image.product.id
@@ -517,7 +518,7 @@ class DeleteProductImageView(LoginRequiredMixin, View):
     def get(self, request, pk):
         return self.post(request, pk)
     
-class DeleteProductView(LoginRequiredMixin,View):
+class DeleteProductView(LoginRequiredMixin, SupplierPermissionMixin, View):
     def post(self, request, pk):
         try:
             product = get_object_or_404(Product, pk=pk)
@@ -528,7 +529,7 @@ class DeleteProductView(LoginRequiredMixin,View):
             messages.error(request, "Faild to delect product.")
             return JsonResponse({'success': False})
    
-class CreateProductCategoryView(View):
+class CreateProductCategoryView(SupplierPermissionMixin, View):
     def post(self, request):
         name = request.POST.get('name')
         if not name:
@@ -543,7 +544,7 @@ class CreateProductCategoryView(View):
         messages.success(request, f"Category '{name}' created successfully.")
         return redirect('adminv2:add_product')
 
-class CreateProductSubCategoryView(View):
+class CreateProductSubCategoryView(SupplierPermissionMixin, View):
     def post(self, request):
         name = request.POST.get('name')
         category_id = request.POST.get('category')
@@ -560,7 +561,7 @@ class CreateProductSubCategoryView(View):
             messages.success(request, f"Sub-category '{name}' created successfully.")
         return redirect('adminv2:add_product')
     
-class CreateProductLastCategoryView(View):
+class CreateProductLastCategoryView(SupplierPermissionMixin, View):
     def post(self, request):
         name = request.POST.get('name')
         sub_category_id = request.POST.get('sub_category')
@@ -576,7 +577,7 @@ class CreateProductLastCategoryView(View):
             messages.success(request, f"Last category '{name}' created successfully.")
         return redirect('adminv2:add_product')
     
-class GetSubcategoriesView(View):
+class GetSubcategoriesView(SupplierPermissionMixin, View):
     def get(self, request, *args, **kwargs):
         category_id = request.GET.get('category_id')
         if category_id:
@@ -584,7 +585,7 @@ class GetSubcategoriesView(View):
             return JsonResponse(list(subcats), safe=False)
         return JsonResponse([], safe=False)
 
-class GetLastCategoriesView(View):
+class GetLastCategoriesView(SupplierPermissionMixin, View):
     def get(self, request, *args, **kwargs):
         sub_id = request.GET.get('sub_id')
         if sub_id:
@@ -594,7 +595,7 @@ class GetLastCategoriesView(View):
 
 
 
-class AdminloginView(View):
+class AdminloginView(SupplierPermissionMixin, View):
     def get(self, request):
         return render(request, 'adminv2/sign-in.html')
 
@@ -621,7 +622,7 @@ class AdminloginView(View):
 
 
 @method_decorator(login_required, name='dispatch')
-class UserListView(ListView):
+class UserListView(SupplierPermissionMixin, ListView):
     model = User
     template_name = 'adminv2/user_list.html'
     context_object_name = 'users'
@@ -676,7 +677,7 @@ class UserListView(ListView):
 
 
 @method_decorator(login_required, name='dispatch')
-class UserAddView(CreateView):
+class UserAddView(SupplierPermissionMixin, CreateView):
     model = User
     template_name = 'adminv2/user_add.html'
     success_url = reverse_lazy('adminv2:user_list')
@@ -725,7 +726,7 @@ class UserAddView(CreateView):
 
 
 @method_decorator(login_required, name='dispatch')
-class UserEditView(UpdateView):
+class UserEditView(SupplierPermissionMixin, UpdateView):
     model = User
     template_name = 'adminv2/user_edit.html'
     success_url = reverse_lazy('adminv2:user_list')
@@ -857,7 +858,7 @@ class UserEditView(UpdateView):
 
 
 @method_decorator(login_required, name='dispatch')
-class UserDetailView(DetailView):
+class UserDetailView(SupplierPermissionMixin, DetailView):
     model = User
     template_name = 'adminv2/user_detail.html'
     context_object_name = 'user'
@@ -876,7 +877,7 @@ class UserDetailView(DetailView):
 
 @method_decorator(login_required, name='dispatch')
 @method_decorator(csrf_exempt, name='dispatch')
-class UserDeleteView(View):
+class UserDeleteView(SupplierPermissionMixin, View):
     def post(self, request, pk):
         try:
             user = get_object_or_404(User, pk=pk)
@@ -886,7 +887,7 @@ class UserDeleteView(View):
             return JsonResponse({'success': False, 'error': str(e)}, status=400)
 
 
-class OrderListingView(View):
+class OrderListingView(SupplierPermissionMixin, View):
     def get(self, request):
         status_filter = request.GET.get('status')
 
@@ -910,7 +911,7 @@ class OrderListingView(View):
         return render(request, 'adminv2/order-listing.html', context)
 
     
-class OrderDetailesView(View):
+class OrderDetailesView(SupplierPermissionMixin, View):
     def get(self, request, pk):
         order = get_object_or_404(Orders, pk=pk)
         product = order.product
@@ -937,21 +938,21 @@ class OrderDetailesView(View):
         }
         return render(request, 'adminv2/order-detailes.html', context)
     
-class OrderDeleteView(View):
+class OrderDeleteView(SupplierPermissionMixin, View):
     def post(self, request, pk):
         order = get_object_or_404(Orders, pk=pk)
         order.delete()
         return JsonResponse({'success': True})
 
-class UserProfileView(View):
+class UserProfileView(SupplierPermissionMixin, View):
     def get(self, request):
         return render(request, 'adminv2/user-profile.html')
 
-class UserOverView(View):
+class UserOverView(SupplierPermissionMixin, View):
     def get(self, request):
         return render(request, 'adminv2/overview.html')
 
-class AdminSettingView(View):
+class AdminSettingView(SupplierPermissionMixin, View):
     def get(self, request):
         return render(request, 'adminv2/settings.html')
 
@@ -990,7 +991,7 @@ class AdminSettingView(View):
 
             return redirect('adminv2:profile_setting')
 
-class CompanyDetailsView(LoginRequiredMixin, View):
+class CompanyDetailsView(LoginRequiredMixin, SupplierPermissionMixin, View):
     template = "adminv2/company_details.html"
 
     def get(self, request, *args, **kwargd):
@@ -1036,7 +1037,7 @@ class CompanyDetailsView(LoginRequiredMixin, View):
             messages.error(request, "Failed to update company details. Please try again.")
             return redirect("adminv2:company_details")
 
-class WishlistProductView(LoginRequiredMixin,View):
+class WishlistProductView(LoginRequiredMixin, SupplierPermissionMixin, View):
     template = 'adminv2/wishlist_product.html'
 
     def get(self, request, *args, **kwargs):
@@ -1092,7 +1093,7 @@ class WishlistProductView(LoginRequiredMixin,View):
                 messages.error(request, "Faild to remove, please try again")
                 return redirect('adminv2:wishlist_products_list')
 
-class CartProductsView(LoginRequiredMixin, View):
+class CartProductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
     template = "adminv2/cart_product.html"
 
     def get(self, request, *args, **kwargs):
@@ -1112,7 +1113,7 @@ class CartProductsView(LoginRequiredMixin, View):
             return HttpResponseServerError("Something went wrong loading your cart.")
 
 @method_decorator(csrf_exempt, name='dispatch')
-class UpdateCartQuantityView(LoginRequiredMixin, View):
+class UpdateCartQuantityView(LoginRequiredMixin, SupplierPermissionMixin, View):
     def post(self, request):
         data = json.loads(request.body)
         product_id = data.get("product_id")
@@ -1132,7 +1133,7 @@ class UpdateCartQuantityView(LoginRequiredMixin, View):
         })
 
 @method_decorator(csrf_exempt, name='dispatch')
-class DeleteCartItemView(LoginRequiredMixin, View):
+class DeleteCartItemView(LoginRequiredMixin, SupplierPermissionMixin, View):
     def post(self, request):
         data = json.loads(request.body)
         product_id = data.get("product_id")
@@ -1151,7 +1152,7 @@ class DeleteCartItemView(LoginRequiredMixin, View):
         except CartProduct.DoesNotExist:
             return JsonResponse({"success": False, "message": "Item not found"}, status=404)
 
-class MarkNotificationReadView(View):
+class MarkNotificationReadView(SupplierPermissionMixin, View):
     def post(self, request, pk):
         try:
             notif = Notification.objects.get(pk=pk)
@@ -1161,7 +1162,7 @@ class MarkNotificationReadView(View):
         except Notification.DoesNotExist:
             return JsonResponse({'error': 'Notification not found'}, status=404)
 
-class ClearAllNotificationsView(LoginRequiredMixin, View):
+class ClearAllNotificationsView(LoginRequiredMixin, SupplierPermissionMixin, View):
     def post(self, request, *args, **kwargs):
         if request.user.is_superuser:
             Notification.objects.all().delete()
@@ -1170,7 +1171,7 @@ class ClearAllNotificationsView(LoginRequiredMixin, View):
             return JsonResponse({'status': 'unauthorized'}, status=403)
 
 
-class MarkNotificationReadView(View):
+class MarkNotificationReadView(SupplierPermissionMixin, View):
     def post(self, request, pk):
         notif = Notification.objects.get(pk=pk)
         notif.is_read = True
@@ -1182,13 +1183,13 @@ class MarkNotificationReadView(View):
         })
 
 
-class LogoutView(View):
+class LogoutView(SupplierPermissionMixin, View):
     def get(self, request):
         logout(request)
         return redirect('adminv2:admin_login') 
 
 
-class RFQListView(LoginRequiredMixin, ListView):
+class RFQListView(LoginRequiredMixin, SupplierPermissionMixin, ListView):
     template_name = 'adminv2/rfq_list.html'
     context_object_name = 'rfqs'
 
@@ -1201,7 +1202,7 @@ class RFQListView(LoginRequiredMixin, ListView):
         return RFQRequest.objects.none()
 
 
-class SupplierQuotationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+class SupplierQuotationUpdateView(LoginRequiredMixin, SupplierPermissionMixin, UpdateView):
     model = RFQRequest
     form_class = SupplierRFQQuotationForm
     template_name = 'adminv2/rfq_quotation_form.html'
@@ -1246,24 +1247,3 @@ class SupplierQuotationUpdateView(LoginRequiredMixin, UserPassesTestMixin, Updat
 
     def test_func(self):
         return self.request.user.is_staff or self.request.user.is_superuser
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
