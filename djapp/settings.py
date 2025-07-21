@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     # 'bootstrap4',
     'dashboard',
     'adminv2',
+    'adminv3',
 ]
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
