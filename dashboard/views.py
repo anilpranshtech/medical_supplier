@@ -785,6 +785,16 @@ class RemoveFromCartView(View):
         except CartProduct.DoesNotExist:
             return JsonResponse({'status': 'error', 'message': 'Item not found'})
 
+def clearcart(request):
+    if request.method == 'POST':
+        user = request.user
+        CartProduct.objects.filter(user=user).delete()
+        return JsonResponse({'status': 'success'})
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
+
+
+
 class WishlistToggleView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         product_id = request.POST.get('product_id')

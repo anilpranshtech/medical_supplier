@@ -1282,35 +1282,35 @@
                 });
 
                 document.querySelectorAll('.qty-increase, .qty-decrease').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const id = btn.dataset.id;
-            const isIncrement = btn.classList.contains('qty-increase');
-            const qtyChange = isIncrement ? 1 : -1;
+                btn.addEventListener('click', () => {
+                    const id = btn.dataset.id;
+                    const isIncrement = btn.classList.contains('qty-increase');
+                    const qtyChange = isIncrement ? 1 : -1;
 
-            const cartItem = btn.closest('.cart-item');
-            const qtySpan = cartItem?.querySelector('span.text-sm.font-medium');
-            const currentQty = qtySpan ? parseInt(qtySpan.textContent || '1', 10) : 1;
+                    const cartItem = btn.closest('.cart-item');
+                    const qtySpan = cartItem?.querySelector('span.text-sm.font-medium');
+                    const currentQty = qtySpan ? parseInt(qtySpan.textContent || '1', 10) : 1;
 
-            // 👇 If quantity is 1 and it's a decrease, remove instead
-            if (!isIncrement && currentQty === 1) {
-                fetch("{% url 'dashboard:remove_from_cart' %}", {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': getCSRFToken(),
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    body: `item_id=${id}`
-                }).then(res => res.json())
-                  .then(data => {
-                      if (data.status === 'success') {
-                          updateCartUI();
-                          updateCartIcons(id);
-                      } else {
-                          console.warn('Remove failed:', data);
-                      }
-                  });
-                return;
-            }
+                    // 👇 If quantity is 1 and it's a decrease, remove instead
+                    if (!isIncrement && currentQty === 1) {
+                        fetch("{% url 'dashboard:remove_from_cart' %}", {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': getCSRFToken(),
+                                'Content-Type': 'application/x-www-form-urlencoded'
+                            },
+                            body: `item_id=${id}`
+                        }).then(res => res.json())
+                          .then(data => {
+                              if (data.status === 'success') {
+                                  updateCartUI();
+                                  updateCartIcons(id);
+                              } else {
+                                  console.warn('Remove failed:', data);
+                              }
+                          });
+                        return;
+                    }
 
             // 🔄 Normal add-to-cart update
             fetch('/add-to-cart/', {
@@ -1336,16 +1336,21 @@
             });
 
             clearBtn?.addEventListener('click', () => {
-                fetch('/api/cart/clear/', {
-                    method: 'POST',
-                    headers: { 'X-CSRFToken': getCSRFToken() }
-                }).then(res => res.json()).then(data => {
-                    if (data.status === 'success') {
-                        updateCartUI();
-                        updateCartIcons();
-                    }
-                });
+            fetch('{% url "dashboard:clear_cart_items" %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCSRFToken(),
+                    'X-Requested-With': 'XMLHttpRequest' // Optional but good to add
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    updateCartUI();
+                    updateCartIcons();
+                }
             });
+        });
 
             buyNowBtn?.addEventListener('click', () => {
                 fetch('/add-to-cart/').then(res => res.json())
