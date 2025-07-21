@@ -512,7 +512,7 @@
         const togglePasswordButtons = document.querySelectorAll('.toggle-password');
         togglePasswordButtons.forEach(button => {
             button.addEventListener('click', function () {
-                const input = this.previousElementSibling;
+                const input = this.parentElement.querySelector('input');
                 const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
                 input.setAttribute('type', type);
 
