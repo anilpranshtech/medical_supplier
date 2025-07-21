@@ -179,23 +179,36 @@ class CustomLoginView(FormView):
 
 import re
 
-
 class RegistrationView(View):
-    template_name = "dashboard/register.html"
+    register_template = "dashboard/register.html"
+    otp_template = "userdashboard/auth/verify_otp.html"
+    recaptcha_secret = '6LdTHV8rAAAAAIgLr2wdtdtWExTS6xJpUpD8qEzh'
 
     def get(self, request):
-        return render(request, self.template_name)
+        step = request.session.get("step", "register")
+        template = self.otp_template if step == "verify_otp" else self.register_template
+        return render(request, template)
 
     def post(self, request):
+        step = request.session.get("step", "register")
+
+        if step == "register":
+            return self.handle_registration(request)
+        elif step == "verify_otp":
+            return self.handle_otp_verification(request)
+        else:
+            messages.error(request, "Invalid registration step.")
+            return redirect('dashboard:register')
+
+    def handle_registration(self, request):
         errors = {}
 
-        # Step 1: reCAPTCHA
+        # Step 1: reCAPTCHA verification
         recaptcha_response = request.POST.get('g-recaptcha-response')
-        recaptcha_secret = '6LdTHV8rAAAAAIgLr2wdtdtWExTS6xJpUpD8qEzh'
         recaptcha_result = requests.post(
             'https://www.google.com/recaptcha/api/siteverify',
             data={
-                'secret': recaptcha_secret,
+                'secret': self.recaptcha_secret,
                 'response': recaptcha_response
             }
         ).json()
@@ -203,7 +216,7 @@ class RegistrationView(View):
         if not recaptcha_result.get('success'):
             errors['recaptcha'] = 'Invalid reCAPTCHA. Please try again.'
 
-        # Collect form data
+        # Step 2: Collect and validate data
         first_name = request.POST.get('first_name')
         last_name = request.POST.get('last_name')
         email = request.POST.get('email')
@@ -213,27 +226,20 @@ class RegistrationView(View):
         user_type = request.POST.get('user_type')
         buyer_type = request.POST.get('buyer_type')
 
-        # Step 3: Basic field validations
-        if not first_name:
-            errors['first_name'] = 'First name is required.'
-        if not last_name:
-            errors['last_name'] = 'Last name is required.'
-        if not email:
-            errors['email'] = 'Email is required.'
-        if not phone:
-            errors['phone'] = 'Phone number is required.'
-        if not password:
-            errors['password'] = 'Password is required.'
-        if not confirm_password:
-            errors['confirm_password'] = 'Confirm password is required.'
+        # Basic validations
+        if not first_name: errors['first_name'] = 'First name is required.'
+        if not last_name: errors['last_name'] = 'Last name is required.'
+        if not email: errors['email'] = 'Email is required.'
+        if not phone: errors['phone'] = 'Phone number is required.'
+        if not password: errors['password'] = 'Password is required.'
+        if not confirm_password: errors['confirm_password'] = 'Confirm password is required.'
 
-        # Step 4: Email format & existing user
-        if email and not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
+        if email and not re.match(r'^[\w\.-]+@[\w\.-]+\.\w+$', email):
             errors['email'] = 'Invalid email format.'
         elif email and User.objects.filter(username=email).exists():
             errors['email'] = 'An account with this email already exists.'
 
-        # Step 5: Password strength
+        # Password strength
         if password:
             if len(password) < 8:
                 errors['password'] = 'Password must be at least 8 characters.'
@@ -246,27 +252,25 @@ class RegistrationView(View):
             if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
                 errors['password'] = 'Must include a special character.'
 
-        # Step 6: Password match
         if password and confirm_password and password != confirm_password:
             errors['confirm_password'] = 'Passwords do not match.'
 
-        # Step 7: If errors → show messages
         if errors:
             for field, message in errors.items():
                 messages.error(request, message, extra_tags=field)
-            return render(request, self.template_name, {
+            return render(request, self.register_template, {
                 'form_data': request.POST
             })
 
-        # Step 8: Send OTP
+        # Send OTP
         otp_response = send_phone_otp(phone, TEXTDRIP_OTP_TOKEN)
         if "error" in otp_response:
             messages.error(request, otp_response["error"], extra_tags='phone')
-            return render(request, self.template_name, {
+            return render(request, self.register_template, {
                 'form_data': request.POST
             })
 
-        # Step 9: Save in session
+        # Save signup data in session
         request.session['signup_data'] = {
             'first_name': first_name,
             'last_name': last_name,
@@ -284,16 +288,10 @@ class RegistrationView(View):
             'department': request.POST.get('department'),
             'purchase_capacity': request.POST.get('purchase_capacity'),
         }
+        request.session['step'] = "verify_otp"
+        return redirect('dashboard:register')
 
-        return redirect('dashboard:verify_otp')
-
-class VerifyOTPView(View):
-    template_name = 'userdashboard/auth/verify_otp.html'
-
-    def get(self, request):
-        return render(request, self.template_name)
-
-    def post(self, request):
+    def handle_otp_verification(self, request):
         otp = request.POST.get('otp')
         signup_data = request.session.get('signup_data')
 
@@ -305,14 +303,13 @@ class VerifyOTPView(View):
         result = verify_mobile_otp(VERIFY_URL, TEXTDRIP_OTP_TOKEN, phone, otp)
 
         if result.get("success") or result.get("status") is True:
-            # Double-check user doesn't exist
+            # Check for duplicate email again
             if User.objects.filter(username=signup_data['email']).exists():
                 messages.error(request, "An account with this email already exists.")
-                request.session.pop('signup_data', None)
+                request.session.flush()
                 return redirect('dashboard:register')
 
             try:
-                # Create user
                 user = User.objects.create_user(
                     username=signup_data['email'],
                     email=signup_data['email'],
@@ -321,27 +318,18 @@ class VerifyOTPView(View):
                     last_name=signup_data['last_name']
                 )
 
-                # Create profile based on user_type
                 if signup_data['user_type'] == 'supplier':
                     SupplierProfile.objects.create(
                         user=user,
                         company_name=signup_data['supplier_company_name'],
                         license_number=signup_data['license_number']
                     )
-                    messages.success(request, "Supplier account created successfully.")
-
                 elif signup_data['buyer_type'] == 'retailer':
-                    try:
-                        age = int(signup_data['age'] or 0)
-                    except ValueError:
-                        age = 0
                     RetailProfile.objects.create(
                         user=user,
-                        age=age,
+                        age=int(signup_data['age'] or 0),
                         medical_needs=signup_data['medical_needs'] or ''
                     )
-                    messages.success(request, "Retailer user created. Please update your profile.")
-
                 elif signup_data['user_type'] == 'wholesale' or signup_data['buyer_type'] == 'wholesaler':
                     WholesaleBuyerProfile.objects.create(
                         user=user,
@@ -350,16 +338,13 @@ class VerifyOTPView(View):
                         department=signup_data['department'],
                         purchase_capacity=signup_data['purchase_capacity']
                     )
-                    messages.success(request, "Wholesaler account created successfully.")
-
                 else:
                     messages.error(request, "Invalid user type.")
                     user.delete()
-                    request.session.pop('signup_data', None)
+                    request.session.flush()
                     return redirect('dashboard:register')
 
-                # Clean up session
-                request.session.pop('signup_data', None)
+                request.session.flush()
                 messages.success(request, "Account created successfully.")
                 return redirect('dashboard:login')
 
@@ -368,7 +353,7 @@ class VerifyOTPView(View):
                 return redirect('dashboard:register')
         else:
             messages.error(request, result.get("message", "OTP verification failed."))
-            return redirect('dashboard:verify_otp')
+            return render(request, self.otp_template)
 
 
 class UserProfileView(LoginRequiredMixin, TemplateView):
