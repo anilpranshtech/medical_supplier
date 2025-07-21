@@ -271,7 +271,7 @@
              class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center"
              style="backdrop-filter: blur(8px); background-color: rgba(0, 0, 0, 0.3);">
             <div class="kt-card w-full max-w-[500px] max-h-[90vh] overflow-y-auto rounded-xl border border-border bg-background shadow-lg">
-                <form method="post" action="{% url 'dashboard:edit_profile' %}">
+                <form method="post" id="edit-name-form" action="{% url 'dashboard:edit_profile' %}">
                     {% csrf_token %}
                     <div class="kt-card-header px-5 flex items-center justify-between">
                         <h3 class="kt-card-title">Edit Name & Profile</h3>

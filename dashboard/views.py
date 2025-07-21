@@ -1599,40 +1599,46 @@ class UploadAvatarView(LoginRequiredMixin, View):
         return redirect('dashboard:user_profile')
 
 
-class EditProfileView(LoginRequiredMixin, UpdateView):
+class EditProfileView(LoginRequiredMixin, View):
     def post(self, request):
         user = request.user
-        profile = user.profile
 
-        # Get basic info
+        # Detect profile type and get profile
+        profile = None
+        profile_type = None
+        if hasattr(user, 'retailprofile'):
+            profile = user.retailprofile
+            profile_type = 'retailer'
+        elif hasattr(user, 'wholesalebuyerprofile'):
+            profile = user.wholesalebuyerprofile
+            profile_type = 'wholesaler'
+        elif hasattr(user, 'supplierprofile'):
+            profile = user.supplierprofile
+            profile_type = 'supplier'
+        else:
+            return JsonResponse({'status': 'error', 'message': 'Profile not found.'}, status=400)
+
+        # Get input fields
         first_name = request.POST.get('first_name', '').strip()
         last_name = request.POST.get('last_name', '').strip()
-        profile_type = request.POST.get('profile_type', '').strip()
+        company_name = request.POST.get('company_name', '').strip()
 
-        # Validate
-        if not first_name or not last_name or not profile_type:
-            return JsonResponse({'status': 'error', 'message': 'All fields are required.'}, status=400)
+        # Basic validation
+        if not first_name or not last_name:
+            return JsonResponse({'status': 'error', 'message': 'First and last name are required.'}, status=400)
 
-        # Update user and profile
+        # Update User model
         user.first_name = first_name
         user.last_name = last_name
-        profile.profile_type = profile_type
-
-        if profile_type == 'doctor':
-            profile.speciality = request.POST.get('speciality', '').strip()
-            profile.company_name = ''
-        elif profile_type in ['medical_supplier', 'corporate', 'wholesaler', 'supplier']:
-            profile.company_name = request.POST.get('company_name', '').strip()
-            profile.speciality = ''
-        else:
-            profile.speciality = ''
-            profile.company_name = ''
-
         user.save()
+
+        # Update profile's company_name (if applicable)
+        if profile_type in ['wholesaler', 'supplier']:
+            profile.company_name = company_name
+
         profile.save()
 
         return JsonResponse({'status': 'success', 'message': 'Profile updated successfully.'})
-
 
 class EditEmailView(LoginRequiredMixin, View):
     def post(self, request):
