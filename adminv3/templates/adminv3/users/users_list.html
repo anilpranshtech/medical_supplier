@@ -61,6 +61,8 @@ Users
                                     Add User
                                 </button>
 
+                                {% include "adminv3/snippets/models/add_new_user.html" %}
+
                             </div>
                         </div>
 
@@ -83,6 +85,7 @@ Users
                                             <td class="text-center">
                                                 <span class="fw-bold">{{ user.email }}</span>
                                             </td>
+
 
                                             <td class="text-center">
                                                 {% if user.is_active %}
@@ -134,10 +137,7 @@ Users
                                                             <a href="{% url 'adminv3:user_detail' user.id %}" class="menu-link px-3">View</a>
                                                         </div>
 
-                                                        <div class="menu-item px-3">
-                                                            <a href="{% url 'adminv2:delete_user' user.id %}" class="menu-link px-3 delete-user-btn"
-                                                               data-id="{{ user.id }}">Delete</a>
-                                                        </div>
+                                                        
                                                     </div>
                                                 </div>
                                             </td>
@@ -235,5 +235,167 @@ Users
             }
         });
     });
+
+
+document.getElementById('_model_add_new_user').addEventListener('shown.bs.modal', function () {
+    document.querySelector('#_model_add_new_user input[name="user_first_name"]').focus();
+});
+
+
+<!--  Add user JS -->
+var KTModalUserAddNewAccount = (function () {
+    var form, submitButton, validator, modal, modalEl;
+
+    var handleForm = function () {
+        if (!form || !submitButton) {
+            console.error('Form or submitButton not found.');
+            return;
+        }
+
+        validator = FormValidation.formValidation(form, {
+            fields: {
+                user_first_name: {
+                    validators: {
+                        notEmpty: { message: 'Field is required' },
+                        regexp: {
+                            regexp: /^[a-zA-Z]{1,30}$/,
+                            message: 'Only letters allowed, max 30 characters',
+                        },
+                    },
+                },
+                user_last_name: {
+                    validators: {
+                        notEmpty: { message: 'Field is required' },
+                        regexp: {
+                            regexp: /^[a-zA-Z]{1,30}$/,
+                            message: 'Only letters allowed, max 30 characters',
+                        },
+                    },
+                },
+                user_username: {
+                    validators: {
+                        notEmpty: { message: 'Field is required' },
+                        regexp: {
+                            regexp: /^[a-zA-Z0-9]{7,30}$/,
+                            message: 'Alphanumeric, 7–30 characters',
+                        },
+                    },
+                },
+                user_email_address: {
+                    validators: {
+                        notEmpty: { message: 'Email is required' },
+                        emailAddress: {
+                            message: 'Enter a valid email address',
+                        },
+                    },
+                },
+                new_password: {
+                    validators: {
+                        notEmpty: { message: 'Password is required' },
+                        stringLength: {
+                            min: 8,
+                            max: 64,
+                            message: 'Password must be 8–64 characters',
+                        },
+                    },
+                },
+                confirm_password: {
+                    validators: {
+                        notEmpty: { message: 'Confirmation is required' },
+                        identical: {
+                            compare: function () {
+                                return form.querySelector('[name="new_password"]').value;
+                            },
+                            message: 'Passwords do not match',
+                        },
+                    },
+                },
+            },
+            plugins: {
+                trigger: new FormValidation.plugins.Trigger(),
+                bootstrap: new FormValidation.plugins.Bootstrap5({
+                    rowSelector: '.fv-row',
+                    eleInvalidClass: 'is-invalid',
+                    eleValidClass: '', // avoid green styling
+                }),
+            },
+        });
+
+        submitButton.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            if (validator) {
+                validator.validate().then(function (status) {
+                    if (status === 'Valid') {
+                        submitButton.setAttribute('data-kt-indicator', 'on');
+                        submitButton.disabled = true;
+
+                        $.ajax({
+                            url: form.getAttribute('data-url'),
+                            method: 'POST',
+                            dataType: 'json',
+                            headers: { 'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val() },
+                            data: $(form).serialize(),
+                            success: function (response) {
+                                submitButton.removeAttribute('data-kt-indicator');
+                                submitButton.disabled = false;
+
+                                Swal.fire({
+                                    text: response.message || 'User created successfully!',
+                                    icon: 'success',
+                                    buttonsStyling: false,
+                                    confirmButtonText: 'Ok, got it!',
+                                    customClass: {
+                                        confirmButton: 'btn btn-primary',
+                                    },
+                                }).then(function () {
+                                    var redirectUrl = form.getAttribute('data-kt-redirect-url');
+                                    if (redirectUrl) {
+                                        window.location.href = redirectUrl;
+                                    } else {
+                                        location.reload();
+                                    }
+                                });
+                            },
+                            error: function (xhr) {
+                                submitButton.removeAttribute('data-kt-indicator');
+                                submitButton.disabled = false;
+
+                                const response = xhr.responseJSON;
+                                Swal.fire({
+                                    text: response?.message || 'Please check the fields and try again.',
+                                    icon: 'error',
+                                    buttonsStyling: false,
+                                    confirmButtonText: 'Ok, got it!',
+                                    customClass: {
+                                        confirmButton: 'btn fw-bold btn-light-primary',
+                                    },
+                                });
+                            },
+                        });
+                    }
+                });
+            }
+        });
+    };
+
+    return {
+        init: function () {
+            modalEl = document.querySelector('#_model_add_new_user');
+            if (!modalEl) return;
+
+            modal = new bootstrap.Modal(modalEl);
+            form = document.querySelector('#_model_add_new_user_form');
+            submitButton = document.querySelector('#_model_add_new_user_submit');
+
+            handleForm();
+        },
+    };
+})();
+
+KTUtil.onDOMContentLoaded(function () {
+    KTModalUserAddNewAccount.init();
+});
+
 </script>
 {% endblock page_only_scripts %}

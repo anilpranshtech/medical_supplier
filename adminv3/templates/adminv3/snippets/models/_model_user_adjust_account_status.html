@@ -1,0 +1,63 @@
+<div class="modal fade" id="_model_user_adjust_account_status" tabindex="-1" aria-hidden="true">
+    <!--begin::Modal dialog-->
+    <div class="modal-dialog modal-dialog-centered mw-650px">
+        <!--begin::Modal content-->
+        <div class="modal-content">
+            <!--begin::Modal header-->
+            <div class="modal-header" >
+                <!--begin::Modal title-->
+                <h2 class="fw-bold">Update User Account Status </h2>
+
+                <!--end::Modal title-->
+                <!--begin::Close-->
+                <div class="btn btn-icon btn-sm btn-active-icon-primary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-lg fs-3"></i>
+                </div>
+                <!--end::Close-->
+            </div>
+            <!--end::Modal header-->
+            <!--begin::Modal body-->
+            <div class="modal-body py-10 px-lg-17" >
+                <!--begin::Alert-->
+                <div class="alert  bg-light-primary d-flex flex-column flex-sm-row p-3 mb-10">
+                    <!--begin::Icon-->
+                    <i class="bi bi-bell-fill fs-1 text-primary me-4 mb-5 mb-sm-0">
+                        <span class="path1"></span><span class="path2"></span><span class="path3"></span>
+                    </i>
+
+                    <div class="d-flex flex-column pe-0 pe-sm-10">
+
+                        <h4 class="fw-semibold">Alert Note:</h4>
+
+                        <span>Once the 'Administrator' or 'Staff' updates the status to <b>Inactive</b>, users will no longer be able to access the site.</span>
+
+                    </div>
+
+                </div>
+
+                <form id="_model_user_adjust_account_status_form" class="form" method="POST" novalidate="novalidate" data-url="{% url 'adminv3:user_update_account_status' user.id %}" data-kt-redirect-url="{% url 'adminv3:user_detail' user.id %}">
+                    {% csrf_token %}
+
+                    <div class="fv-row mb-7">
+
+                        <label class="required fs-6 fw-semibold mb-2 ">Account Status</label>
+
+                        <select name="account_status" aria-label="Select account status" data-control="select2" data-placeholder="Select account status..." class="form-select form-select-solid" data-dropdown-parent="#_model_user_adjust_account_status_form">
+                            <option value="active" {% if user.is_active %}selected{% endif %}>Active</option>
+                            <option value="inactive" {% if not user.is_active %}selected{% endif %}>Inactive</option>
+                        </select>
+
+                    </div>
+
+                <div class="modal-footer flex-center">
+                    <button type="submit" id="_model_user_adjust_account_status_submit" class="btn btn-primary">
+                        <span class="indicator-label">Update Status</span>
+
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+</div>

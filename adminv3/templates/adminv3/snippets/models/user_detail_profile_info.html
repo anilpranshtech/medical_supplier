@@ -1,0 +1,59 @@
+<div id="kt_user_view_details" class="collapse show">
+    <div class="pb-5 fs-6">
+        <!--begin::Details item-->
+        <div class="fw-bold mt-5">  Account Username</div>
+        <div class="text-gray-600">{{user.username}}</div>
+        <!--begin::Details item-->
+        <!--begin::Details item-->
+        <div class="fw-bold mt-5">Account Email</div>
+        <div class="text-gray-600">
+            <span class="text-gray-600 text-hover-primary">{{user.email}}</span>
+        </div>
+
+
+        <div class="fw-bold mt-5">First Name</div>
+        <div class="text-gray-600">
+            <span class="text-gray-600 text-hover-primary">{{ user.first_name | default:"-"}}</span>
+        </div>
+
+        <div class="fw-bold mt-5">Last Name</div>
+        <div class="text-gray-600">
+            <span class="text-gray-600 text-hover-primary">{{ user.last_name | default:"-"}}</span>
+        </div>
+
+
+
+        <div class="fw-bold mt-5">Account Status</div>
+        <div class="text-gray-600">
+            {% if user.is_active %}
+                <span class="text-success"> Active </span>
+            {% else %}
+                <span class="text-danger">Inactive</span>
+            {% endif %}
+
+        </div>
+
+        <div class="fw-bold mt-5">Account Type</div>
+        <div class="text-gray-600">
+            {% if retail_profile %}
+                Retailer
+            {% elif wholesale_profile %}
+                Wholeseler
+            {% elif supplier_profile %}
+                Supplier
+            {% else %}
+                User
+            {% endif %}
+
+        </div>
+
+
+        <div class="fw-bold mt-5">Joined At</div>
+        <div class="text-gray-600">{{user.date_joined|date:"F d Y P" }}</div>
+
+        <div class="fw-bold mt-5">Last Login</div>
+        <div class="text-gray-600">{{user.last_login|date:"F d Y P" | default:"Never Logged In"  }}</div>
+
+
+    </div>
+</div>

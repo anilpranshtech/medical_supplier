@@ -1,10 +1,12 @@
-{% extends 'adminv2/base.html' %}
+{% extends 'adminv3/adminv3_base.html' %}
 {% load static %}
+
 
 {% block content %}
 <!--begin::Main-->
 <div class="app-main flex-column flex-row-fluid" id="kt_app_main">
     <!--begin::Content wrapper-->
+    {% comment %}
     <div class="d-flex flex-column flex-column-fluid">
         <!--begin::Content-->
         <div id="kt_app_content" class="app-content flex-column-fluid">
@@ -202,6 +204,808 @@
         <!--end::Content-->
     </div>
     <!--end::Content wrapper-->
+    {% endcomment %}
+
+    <div class="d-flex flex-column flex-lg-row me-10">
+        <!-- LEFT MENU       -->
+        <div class="flex-column flex-lg-row-auto w-lg-250px w-xl-350px mb-10">
+            <div class="card mb-5 mb-xl-8">
+                <div class="card-body">
+                    <div class="d-flex flex-center flex-column py-5">
+
+                        <a href="#" class="fs-3 text-gray-800 text-hover-primary fw-bold mb-3">{{ user }}</a>
+
+                        <div class="mb-9">
+
+                            <div class="badge badge-lg badge-light-primary d-inline">
+                                {% if user.is_superuser %}
+                                    Admin
+                                {% elif user.is_staff and not user.is_superuser %}
+                                    Staff
+                                {% else %}
+                                    User
+                                {% endif %}
+                            </div>
+
+
+                        </div>
+
+
+                    </div>
+
+                    <div class="d-flex flex-stack fs-4 py-3">
+                        <div class="fw-bold rotate collapsible" data-bs-toggle="collapse" href="#kt_user_view_details"
+                             role="button" aria-expanded="false" aria-controls="kt_user_view_details">Details
+                            <span class="ms-2 rotate-180">
+                            <i class="bi bi-caret-down-fill text-black fs-3"></i>
+                        </span></div>
+
+                        <span data-bs-toggle="tooltip" data-bs-trigger="hover" title="Edit customer details">
+                            <button class="btn btn-sm btn-light-primary" data-bs-toggle="modal"
+                                    data-bs-target="#_model_user_profile_update">Edit</button>
+                        </span>
+
+                    </div>
+
+                    <div class="separator"></div>
+
+                    {% include "adminv3/snippets/models/user_detail_profile_info.html" %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!--  RIGHT MENU  -->
+        <div class="flex-lg-row-fluid ms-lg-15">
+
+            <!-- Profile section  -->
+            <div class="card mb-5 ">
+
+                <div class="card-header border-0">
+                    <div class="card-title">
+                        <h2>Profile</h2>
+                    </div>
+                </div>
+
+                <div class="card-body pt-0 pb-5">
+
+                <div class="table-responsive">
+                    <!--begin::Table-->
+                    <table class="table align-middle table-row-dashed gy-5"
+                           id="kt_table_users_login_session">
+                        <tbody class="fs-6 fw-semibold text-gray-600">
+                        <tr>
+                            <td>Email</td>
+                            <td>{{user.email}}</td>
+
+                            <td class="text-end">
+                                <a href="#" class="btn btn-sm btn-flex btn-light-primary"
+                                   data-bs-toggle="modal" data-bs-target="#_model_user_change_email">
+                                    <i class="bi bi-pencil fs-3"></i>Change Email</a>
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td>Password</td>
+                            <td>******</td>
+
+                            <td class="text-end">
+                                <a href="#" class="btn btn-sm btn-flex btn-light-primary"
+                                   data-bs-toggle="modal" data-bs-target="#_model_user_change_password">
+                                    <i class="bi bi-pencil fs-3"></i>Change Password</a>
+                            </td>
+
+
+                        </tr>
+                        <tr>
+                            <td>Role</td>
+                            <td>{% if user.is_superuser %}
+                                    Admin
+                                {% elif user.is_staff and not user.is_superuser %}
+                                    Staff
+                                {% else %}
+                                    User
+                                {% endif %} </td>
+
+                            {% if request.user.is_superuser %}
+                            <td class="text-end">
+                                <a href="#" class="btn btn-sm btn-flex btn-light-primary"
+                                   data-bs-toggle="modal" data-bs-target="#_model_user_update_role">
+                                    <i class="bi bi-pencil fs-3"></i>Update Role</a>
+                            </td>
+                            {% endif %}
+
+                        </tr>
+
+                        </tbody>
+                    </table>
+
+                </div>
+
+            </div>
+
+            </div>
+
+            <!--  Permission section  -->
+            <div class="card pt-4 mb-6 ">
+                <div class="card-header border-0">
+                    <div class="card-title flex-column">
+                        <h2>Permissions</h2>
+                        <div class="fs-6 fw-semibold text-muted">Displaying the user's permission groups and
+                            their access levels.
+                        </div>
+                    </div>
+
+                    {% if request.user.is_superuser %}
+                    <div class="card-toolbar">
+                        <a href="#" class="btn btn-sm btn-flex btn-light-primary" data-bs-toggle="modal"
+                           data-bs-target="#_model_user_modify_permission_groups">
+                            <i class="bi bi-pencil fs-3"></i>Modify Groups</a>
+                    </div>
+                    {% endif %}
+
+                </div>
+
+                <div class="card-body pt-0">
+                    {% for permission_group in user_permission_groups %}
+                    <button class="btn btn-light btn-sm me-5 px-5">
+                        {{permission_group.name}} <span class="badge badge-circle badge-danger ms-2">{{permission_group.permissions.count}}</span>
+                    </button>
+                    {% empty %}
+                    <h4>No Permissions</h4>
+                    {% endfor %}
+
+                </div>
+
+            </div>
+
+            <!--   Account status section -->
+            <div class="card pt-4 mb-6 ">
+                <div class="card-header border-0">
+
+                    <div class="card-title">
+                        <h2 class="fw-bold">Account Status</h2>
+                    </div>
+
+                    {% if request.user.is_superuser %}
+                    <div class="card-toolbar">
+                        <a href="#" class="btn btn-sm btn-flex btn-light-primary" data-bs-toggle="modal"
+                           data-bs-target="#_model_user_adjust_account_status">
+                            <i class="bi bi-pencil fs-3"></i>Adjust Status</a>
+                    </div>
+                    {% endif %}
+
+                </div>
+
+                <div class="card-body pt-0">
+
+                    {% if user.is_active %}
+                    <h3 class="text-success"> Active </h3>
+                    {% else %}
+                    <h3 class="text-danger">Inactive</h3>
+                    {% endif %}
+                </div>
+
+            </div>
+
+            <!--   Account delete         -->
+            <div class="card pt-4 mb-6 pb-7">
+                <div class="card-header border-0">
+                    <div class="card-title flex-column">
+                        <h2>Account Deletion</h2>
+                        <div class="fs-6 fw-semibold text-muted">Deleting account is a permanent action and
+                            cannot be undone.
+                        </div>
+                    </div>
+
+                    <div class="card-toolbar">
+                        <a href="#" class="btn btn-sm btn-flex btn-danger"
+                           onClick="deleteUserAccount('{{ user.id }}', this)">
+                            <i class="bi bi-pencil fs-3"></i>Delete Account</a>
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
 </div>
 <!--end::Main-->
+
+{% include "adminv3/snippets/models/_model_user_profile_update.html" %}
+{% include "adminv3/snippets/models/_model_user_change_email.html" %}
+{% include "adminv3/snippets/models/_model_user_change_password.html" %}
+{% include "adminv3/snippets/models/_model_user_update_role.html" %}
+
+{% include "adminv3/snippets/models/_model_user_adjust_account_status.html" %}
+
+
 {% endblock %}
+
+{% block page_only_scripts %}
+
+<script>
+
+<!-- Left portion profile update  -->
+    var KTModalUserUpdateProfile = (function () {
+        var form, submitButton, validator, modal, modalEl;
+
+        var handleForm = function () {
+            if (!form || !submitButton) {
+                console.error('Form or submitButton not found.');
+                return;
+            }
+
+            validator = FormValidation.formValidation(form, {
+                fields: {
+                    user_first_name: {
+                        validators: {
+                            notEmpty: { message: 'First name is required' },
+                            regexp: {
+                                regexp: /^[a-zA-Z]{1,30}$/,
+                                message: 'Only letters allowed, max 30 characters',
+                            },
+                        },
+                    },
+                    user_last_name: {
+                        validators: {
+                            notEmpty: { message: 'Last name is required' },
+                            regexp: {
+                                regexp: /^[a-zA-Z]{1,30}$/,
+                                message: 'Only letters allowed, max 30 characters',
+                            },
+                        },
+                    },
+                },
+                plugins: {
+                    trigger: new FormValidation.plugins.Trigger(),
+                    bootstrap: new FormValidation.plugins.Bootstrap5({
+                        rowSelector: '.fv-row',
+                        eleInvalidClass: 'is-invalid',
+                        eleValidClass: '',
+                    }),
+                },
+            });
+
+            submitButton.addEventListener('click', function (e) {
+                e.preventDefault();
+
+                if (validator) {
+                    validator.validate().then(function (status) {
+                        if (status === 'Valid') {
+                            submitButton.setAttribute('data-kt-indicator', 'on');
+                            submitButton.disabled = true;
+
+                            $.ajax({
+                                url: form.getAttribute('data-url'),
+                                method: 'POST',
+                                dataType: 'json',
+                                headers: {
+                                    'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val(),
+                                    'X-Requested-With': 'XMLHttpRequest'
+                                },
+                                data: $(form).serialize(),
+                                success: function (response) {
+                                    submitButton.removeAttribute('data-kt-indicator');
+                                    submitButton.disabled = false;
+
+                                    Swal.fire({
+                                        text: response.message || 'Profile updated successfully!',
+                                        icon: 'success',
+                                        buttonsStyling: false,
+                                        confirmButtonText: 'Ok, got it!',
+                                        customClass: {
+                                            confirmButton: 'btn btn-primary',
+                                        },
+                                    }).then(function () {
+                                        location.reload();
+                                    });
+                                },
+                                error: function (xhr) {
+                                    submitButton.removeAttribute('data-kt-indicator');
+                                    submitButton.disabled = false;
+
+                                    const response = xhr.responseJSON;
+                                    Swal.fire({
+                                        text: response?.message || 'Please check the fields and try again.',
+                                        icon: 'error',
+                                        buttonsStyling: false,
+                                        confirmButtonText: 'Ok, got it!',
+                                        customClass: {
+                                            confirmButton: 'btn fw-bold btn-light-primary',
+                                        },
+                                    });
+                                },
+                            });
+                        }
+                    });
+                }
+            });
+        };
+
+        return {
+            init: function () {
+                modalEl = document.querySelector('#_model_user_profile_update');
+                if (!modalEl) return;
+
+                modal = new bootstrap.Modal(modalEl);
+                form = document.querySelector('#_model_user_profile_update_form');
+                submitButton = document.querySelector('#_model_user_profile_update_submit');
+
+                handleForm();
+            },
+        };
+    })();
+
+    KTUtil.onDOMContentLoaded(function () {
+        KTModalUserUpdateProfile.init();
+    });
+
+<!--  Email update   -->
+
+var KTModalUserChangeEmail = (function () {
+    var form, submitButton, modal, modalEl;
+
+    var handleForm = function () {
+        if (!form || !submitButton) {
+            console.error('Form or submitButton not found.');
+            return;
+        }
+
+        submitButton.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            const emailInput = form.querySelector('input[name="user_new_email"]');
+            const newEmail = emailInput.value.trim();
+
+            if (!newEmail || !newEmail.includes('@')) {
+                Swal.fire({
+                    text: 'Please enter a valid email address.',
+                    icon: 'error',
+                    buttonsStyling: false,
+                    confirmButtonText: 'Ok, got it!',
+                    customClass: {
+                        confirmButton: 'btn fw-bold btn-light-primary',
+                    },
+                });
+                return;
+            }
+
+            // UI loading state
+            submitButton.setAttribute('data-kt-indicator', 'on');
+            submitButton.disabled = true;
+
+            $.ajax({
+                url: form.getAttribute('data-url'),
+                method: 'POST',
+                dataType: 'json',
+                headers: {
+                    'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val(),
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                data: $(form).serialize(),
+                success: function (response) {
+                    submitButton.removeAttribute('data-kt-indicator');
+                    submitButton.disabled = false;
+
+                    Swal.fire({
+                        text: response.message || 'Email updated successfully!',
+                        icon: 'success',
+                        buttonsStyling: false,
+                        confirmButtonText: 'Ok, got it!',
+                        customClass: {
+                            confirmButton: 'btn btn-primary',
+                        },
+                    }).then(function () {
+                        var redirectUrl = form.getAttribute('data-kt-redirect-url');
+                        if (redirectUrl) {
+                            window.location.href = redirectUrl;
+                        } else {
+                            location.reload();
+                        }
+                    });
+                },
+                error: function (xhr) {
+                    submitButton.removeAttribute('data-kt-indicator');
+                    submitButton.disabled = false;
+
+                    const response = xhr.responseJSON;
+                    Swal.fire({
+                        text: response?.message || 'Please check the details and try again.',
+                        icon: 'error',
+                        buttonsStyling: false,
+                        confirmButtonText: 'Ok, got it!',
+                        customClass: {
+                            confirmButton: 'btn fw-bold btn-light-primary',
+                        },
+                    });
+                }
+            });
+        });
+    };
+
+    return {
+        init: function () {
+            modalEl = document.querySelector('#_model_user_change_email');
+            if (!modalEl) return;
+
+            modal = new bootstrap.Modal(modalEl);
+            form = document.querySelector('#_model_user_change_email_form');
+            submitButton = document.querySelector('#_model_user_change_email_submit');
+
+            handleForm();
+        }
+    };
+})();
+
+KTUtil.onDOMContentLoaded(function () {
+    KTModalUserChangeEmail.init();
+});
+
+<!-- password update -->
+
+var KTModalUserChangePassword = (function () {
+    var form, submitButton, modalEl, modal;
+
+    var handleSubmit = function () {
+        submitButton.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            const newPassword = form.querySelector('input[name="new_password"]').value;
+            const confirmPassword = form.querySelector('input[name="confirm_password"]').value;
+
+            if (!newPassword || !confirmPassword || newPassword.length < 8 || newPassword !== confirmPassword) {
+                Swal.fire({
+                    text: 'Passwords must match and be at least 8 characters.',
+                    icon: 'error',
+                    buttonsStyling: false,
+                    confirmButtonText: 'Ok, got it!',
+                    customClass: {
+                        confirmButton: 'btn btn-light-primary'
+                    }
+                });
+                return;
+            }
+
+            // Show loader
+            submitButton.setAttribute('data-kt-indicator', 'on');
+            submitButton.disabled = true;
+
+            $.ajax({
+                url: form.getAttribute('data-url'),
+                method: 'POST',
+                dataType: 'json',
+                headers: {
+                    'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val(),
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                data: $(form).serialize(),
+                success: function (response) {
+                    submitButton.removeAttribute('data-kt-indicator');
+                    submitButton.disabled = false;
+
+                    Swal.fire({
+                        text: response.message || 'Password changed successfully!',
+                        icon: 'success',
+                        buttonsStyling: false,
+                        confirmButtonText: 'Ok, got it!',
+                        customClass: {
+                            confirmButton: 'btn btn-primary',
+                        },
+                    }).then(function () {
+                        let redirectUrl = form.getAttribute('data-kt-redirect-url');
+                        if (redirectUrl) {
+                            window.location.href = redirectUrl;
+                        } else {
+                            location.reload();
+                        }
+                    });
+                },
+                error: function (xhr) {
+                    submitButton.removeAttribute('data-kt-indicator');
+                    submitButton.disabled = false;
+
+                    const response = xhr.responseJSON;
+                    Swal.fire({
+                        text: response?.message || 'Something went wrong. Please try again.',
+                        icon: 'error',
+                        buttonsStyling: false,
+                        confirmButtonText: 'Ok, got it!',
+                        customClass: {
+                            confirmButton: 'btn btn-light-primary',
+                        },
+                    });
+                }
+            });
+        });
+    };
+
+    return {
+        init: function () {
+            modalEl = document.querySelector('#_model_user_change_password');
+            if (!modalEl) return;
+
+            modal = new bootstrap.Modal(modalEl);
+            form = document.querySelector('#_model_user_change_password_form');
+            submitButton = document.querySelector('#_model_user_change_password_submit');
+
+            if (form && submitButton) {
+                handleSubmit();
+            }
+        }
+    };
+})();
+
+KTUtil.onDOMContentLoaded(function () {
+    KTModalUserChangePassword.init();
+});
+
+<!-- Update role  -->
+
+var KTModalUserUpdateRole = (function () {
+    var form, submitButton, modal, modalEl;
+
+    var handleForm = function () {
+        if (!form || !submitButton) {
+            console.error('Form or submitButton not found.');
+            return;
+        }
+
+        submitButton.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            // Optional: Add simple validation
+            const roleValue = form.querySelector('select[name="account_role"]').value;
+            if (!roleValue) {
+                Swal.fire({
+                    text: 'Please select a role.',
+                    icon: 'error',
+                    buttonsStyling: false,
+                    confirmButtonText: 'Ok, got it!',
+                    customClass: {
+                        confirmButton: 'btn fw-bold btn-light-primary',
+                    },
+                });
+                return;
+            }
+
+            // UI indicator and disable
+            submitButton.setAttribute('data-kt-indicator', 'on');
+            submitButton.disabled = true;
+
+            $.ajax({
+                url: form.getAttribute('data-url'),
+                method: 'POST',
+                dataType: 'json',
+                headers: {
+                    'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val(),
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                data: $(form).serialize(),
+                success: function (response) {
+                    submitButton.removeAttribute('data-kt-indicator');
+                    submitButton.disabled = false;
+
+                    Swal.fire({
+                        text: response.message || 'Role updated successfully!',
+                        icon: 'success',
+                        buttonsStyling: false,
+                        confirmButtonText: 'Ok, got it!',
+                        customClass: {
+                            confirmButton: 'btn btn-primary',
+                        },
+                    }).then(function () {
+                        var redirectUrl = form.getAttribute('data-kt-redirect-url');
+                        if (redirectUrl) {
+                            window.location.href = redirectUrl;
+                        } else {
+                            location.reload();
+                        }
+                    });
+                },
+                error: function (xhr) {
+                    submitButton.removeAttribute('data-kt-indicator');
+                    submitButton.disabled = false;
+
+                    const response = xhr.responseJSON;
+                    Swal.fire({
+                        text: response?.message || 'Please check the role and try again.',
+                        icon: 'error',
+                        buttonsStyling: false,
+                        confirmButtonText: 'Ok, got it!',
+                        customClass: {
+                            confirmButton: 'btn fw-bold btn-light-primary',
+                        },
+                    });
+                }
+            });
+        });
+    };
+
+    return {
+        init: function () {
+            modalEl = document.querySelector('#_model_user_update_role');
+            if (!modalEl) return;
+
+            modal = new bootstrap.Modal(modalEl);
+            form = document.querySelector('#_model_user_update_role_form');
+            submitButton = document.querySelector('#_model_user_update_role_submit');
+
+            handleForm();
+        }
+    };
+})();
+
+KTUtil.onDOMContentLoaded(function () {
+    KTModalUserUpdateRole.init();
+});
+
+<!--  Update Account status  -->
+var KTModalUserUpdateAccountStatus = (function () {
+    var form, submitButton, modal, modalEl;
+
+    var handleForm = function () {
+        if (!form || !submitButton) {
+            console.error('Form or submitButton not found.');
+            return;
+        }
+
+        submitButton.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            const statusValue = form.querySelector('select[name="account_status"]').value;
+            if (!statusValue) {
+                Swal.fire({
+                    text: 'Please select an account status.',
+                    icon: 'error',
+                    buttonsStyling: false,
+                    confirmButtonText: 'Ok, got it!',
+                    customClass: {
+                        confirmButton: 'btn fw-bold btn-light-primary',
+                    },
+                });
+                return;
+            }
+
+            submitButton.setAttribute('data-kt-indicator', 'on');
+            submitButton.disabled = true;
+
+            $.ajax({
+                url: form.getAttribute('data-url'),
+                method: 'POST',
+                dataType: 'json',
+                headers: {
+                    'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val(),
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                data: $(form).serialize(),
+                success: function (response) {
+                    submitButton.removeAttribute('data-kt-indicator');
+                    submitButton.disabled = false;
+
+                    Swal.fire({
+                        text: response.message || 'Account status updated successfully!',
+                        icon: 'success',
+                        buttonsStyling: false,
+                        confirmButtonText: 'Ok, got it!',
+                        customClass: {
+                            confirmButton: 'btn btn-primary',
+                        },
+                    }).then(function () {
+                        const redirectUrl = form.getAttribute('data-kt-redirect-url');
+                        if (redirectUrl) {
+                            window.location.href = redirectUrl;
+                        } else {
+                            location.reload();
+                        }
+                    });
+                },
+                error: function (xhr) {
+                    submitButton.removeAttribute('data-kt-indicator');
+                    submitButton.disabled = false;
+
+                    const response = xhr.responseJSON;
+                    Swal.fire({
+                        text: response?.message || 'Something went wrong. Please try again.',
+                        icon: 'error',
+                        buttonsStyling: false,
+                        confirmButtonText: 'Ok, got it!',
+                        customClass: {
+                            confirmButton: 'btn fw-bold btn-light-primary',
+                        },
+                    });
+                }
+            });
+        });
+    };
+
+    return {
+        init: function () {
+            modalEl = document.querySelector('#_model_user_adjust_account_status');
+            if (!modalEl) return;
+
+            modal = new bootstrap.Modal(modalEl);
+            form = document.querySelector('#_model_user_adjust_account_status_form');
+            submitButton = document.querySelector('#_model_user_adjust_account_status_submit');
+
+            handleForm();
+        }
+    };
+})();
+
+KTUtil.onDOMContentLoaded(function () {
+    KTModalUserUpdateAccountStatus.init();
+});
+
+<!-- Account delete  -->
+
+function deleteUserAccount(userId, button) {
+    Swal.fire({
+        title: "Are you sure you want to delete the user account?",
+        text: "You are about to delete this user account.",
+        icon: "warning",
+        showCancelButton: true,
+        buttonsStyling: false,
+        confirmButtonText: "Yes, delete!",
+        cancelButtonText: "No, cancel",
+        customClass: {
+            confirmButton: "btn fw-bold btn-danger",
+            cancelButton: "btn fw-bold btn-light-primary"
+        },
+
+    }).then((result) => {
+        if (result.isConfirmed) {
+            button.textContent = 'Please wait...';
+            button.disabled = true;
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            $.ajax({
+                url: `/admin_v3/users/${userId}/delete/`,  // Important: include userId in URL
+                type: 'POST',
+                data: {
+                    csrfmiddlewaretoken: csrfToken
+                },
+                success: function(response) {
+                    Swal.fire({
+                        text: "Account deleted successfully!",
+                        icon: "success",
+                        buttonsStyling: false,
+                        confirmButtonText: "OK",
+                        customClass: {
+                            confirmButton: "btn fw-bold btn-primary"
+                        }
+                    }).then(() => {
+                        window.location.href = '{% url "adminv3:user_accounts" %}';
+                    });
+                },
+                error: function(xhr, status, error) {
+                    var response = xhr.responseJSON;
+                    var errorMessage = response && response.message ? response.message : "An error occurred: " + error;
+                    Swal.fire({
+                        text: errorMessage,
+                        icon: "error",
+                        buttonsStyling: false,
+                        confirmButtonText: "OK",
+                        customClass: {
+                            confirmButton: "btn fw-bold btn-danger"
+                        }
+                    });
+                    button.textContent = 'Delete Account';
+                    button.disabled = false;
+                }
+            });
+        }
+    });
+}
+
+
+</script>
+{% endblock page_only_scripts %}
+
