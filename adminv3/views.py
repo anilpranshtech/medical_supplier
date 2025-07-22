@@ -1,15 +1,14 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import JsonResponse
+from django.http import JsonResponse, Http404, HttpResponse
 from django.shortcuts import render, get_object_or_404
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic import ListView
 
 from adminv3.mixins import StaffAccountRequiredMixin
-
-from django.contrib.auth.models import User
-
+from django.contrib.auth.models import User, Group, Permission
+from django.contrib.contenttypes.models import ContentType
 from adminv3.utils import requestParamsToDict
 from dashboard.models import RetailProfile, WholesaleBuyerProfile, SupplierProfile
 
@@ -341,14 +340,165 @@ class User_Accounts_AddNewUser(StaffAccountRequiredMixin, View):
         return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
 
 
+GROUP_PERMISSIONS_MODELS_LIST = ['user', 'orders', 'product']
 
 class PermissionsUsers(LoginRequiredMixin, StaffAccountRequiredMixin, View):
-    template_name = 'adminv3/users/permissions.html'
+    template_name = 'adminv3/permissions/permissions.html'
 
-    def get(self, request):
+    def get(self, request, *args, **kwargs):
+        skipped_permissions = []
 
-        return render(request, self.template_name)
 
+        groups = Group.objects.all().order_by('pk')
+        permissions_by_model = {}
+        for model_name in GROUP_PERMISSIONS_MODELS_LIST:
+            content_types = ContentType.objects.filter(model=model_name)
+            model_permissions = Permission.objects.filter(content_type__in=content_types)
+
+            permissions_by_model[model_name] = [_ for _ in model_permissions if not _.codename in skipped_permissions]
+
+
+        context = {
+            'groups': groups,
+            'permissions_by_model': permissions_by_model
+        }
+
+        return render(request, self.template_name, context)
+
+
+class User_Permissions_AddNewGroup(StaffAccountRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        if not request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=405)
+
+        post_data = request.POST
+        group_name = post_data.get('group_name', None)
+
+        if not group_name:
+            return JsonResponse({'status': 'error', 'message': 'Check details and try again!'}, status=400)
+
+        if Group.objects.filter(name=group_name).exists():
+            return JsonResponse({'status': 'error', 'message': 'Group is already exist!'}, status=400)
+
+        try:
+            permissions = [perm for model in GROUP_PERMISSIONS_MODELS_LIST for perm in post_data.getlist(model) if
+                           perm != 'all']
+            if len(permissions) < 1:
+                return JsonResponse({'status': 'error', 'message': 'At least 1 permission is required!'}, status=400)
+
+            group_obj = Group.objects.create(name=group_name)
+            permission_objs = Permission.objects.filter(codename__in=permissions)
+            group_obj.permissions.add(*permission_objs)
+
+            return JsonResponse({'status': 'valid', 'message': 'Group has been added.'}, status=200)
+        except:
+            return JsonResponse({'status': 'error', 'message': 'Check details and try again!'}, status=400)
+
+
+class User_Permissions_DeleteGroup(View):
+
+    def post(self, request, *args, **kwargs):
+        try:
+            id = request.POST.get('group_id')
+            group_obj = Group.objects.get(pk=id)
+        except Group.DoesNotExist:
+            raise Http404()
+
+        # check if group is assigned to any user then throw error
+        if User.objects.filter(groups=group_obj).exists():
+            return JsonResponse(
+                {'message': f"Cannot delete the group '{group_obj.name}' because it is assigned to users."}, status=400)
+
+        try:
+
+            group_obj.delete()
+            return JsonResponse({'message': 'success'}, status=200)
+        except:
+            pass
+        return JsonResponse({'status': 'error'}, status=400)
+
+
+class User_Permissions_EditGroup(StaffAccountRequiredMixin, View):
+
+    def get(self, request, *args, **kwargs):
+        try:
+            if request.headers.get('HX-Request'):
+                id = kwargs['UID']
+
+
+                print('group id_____ ---', id)
+
+                skipped_permissions = [
+                               ]
+
+                group_obj = get_object_or_404(Group, pk=id)
+
+                permissions_by_model = {}
+
+                for model_name in GROUP_PERMISSIONS_MODELS_LIST:
+                    content_types = ContentType.objects.filter(model=model_name)
+                    model_permissions = Permission.objects.filter(content_type__in=content_types)
+
+                    filtered_permissions = [p for p in model_permissions if p.codename not in skipped_permissions]
+
+                    group_permissions = set(group_obj.permissions.values_list('codename', flat=True))
+
+                    all_selected = all(p.codename in group_permissions for p in filtered_permissions)
+
+                    permissions_by_model[model_name] = {
+                        'permissions': filtered_permissions,
+                        'all_selected': all_selected
+                    }
+
+                context = {
+                    'group': group_obj,
+                    'permissions_by_model': permissions_by_model,
+                    'group_permissions': list(group_obj.permissions.values_list('codename', flat=True))
+                }
+
+
+                return render(request, 'adminv3/permissions/snippets/form/_form_permission_group_edit.html', context)
+
+        except Exception as e:
+
+            return HttpResponse("Something went wrong! Contact Support", status=500, content_type="text/html")
+
+
+    def post(self, request, *args, **kwargs):
+        if not request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=405)
+
+        id = kwargs['UID']
+        group_obj = get_object_or_404(Group, pk=id)
+
+        post_data = request.POST
+        group_name = post_data.get('group_name', None)
+
+        if not group_name:
+            return JsonResponse({'status': 'error', 'message': 'Check details and try again!'}, status=400)
+
+        try:
+            group_obj.permissions.clear()
+            group_obj.name = group_name
+
+            permissions = [
+                perm for model in GROUP_PERMISSIONS_MODELS_LIST
+                for perm in post_data.getlist(f'{model}_permissions[]') if perm != 'all'
+            ]
+
+            print(f"Gathered permissions: {permissions}")
+
+            if len(permissions) < 1:
+                return JsonResponse({'status': 'error', 'message': 'At least 1 permission is required!'}, status=400)
+
+            permission_objs = Permission.objects.filter(codename__in=permissions)
+            group_obj.permissions.add(*permission_objs)
+            group_obj.save()
+            return JsonResponse({'status': 'valid', 'message': 'Group has been updated.'}, status=200)
+
+        except Exception as e:
+
+            return JsonResponse({'status': 'error', 'message': 'Check details and try again!'}, status=400)
 
 
 class ProductsListView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
