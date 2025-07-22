@@ -13,12 +13,12 @@
 
         <div class="fw-bold mt-5">First Name</div>
         <div class="text-gray-600">
-            <span class="text-gray-600 text-hover-primary">{{ user.first_name | default:"-"}}</span>
+            <span class="text-gray-600 text-hover-primary">{{ user.first_name | default:"---"}}</span>
         </div>
 
         <div class="fw-bold mt-5">Last Name</div>
         <div class="text-gray-600">
-            <span class="text-gray-600 text-hover-primary">{{ user.last_name | default:"-"}}</span>
+            <span class="text-gray-600 text-hover-primary">{{ user.last_name | default:"---"}}</span>
         </div>
 
 
@@ -46,6 +46,51 @@
             {% endif %}
 
         </div>
+
+        {% if retail_profile %}
+            <div class="fw-bold mt-5">Age</div>
+            <div class="text-gray-600">
+                {{ retail_profile.age|default:"---" }}
+            </div>
+
+            <div class="fw-bold mt-5">Medical Needs</div>
+            <div class="text-gray-600">
+                {{ retail_profile.medical_needs|default:"---" }}
+            </div>
+
+        {% elif wholesale_profile %}
+            <div class="fw-bold mt-5">Company Name</div>
+            <div class="text-gray-600">
+                {{ wholesale_profile.company_name }}
+            </div>
+
+            <div class="fw-bold mt-5">GST Number</div>
+            <div class="text-gray-600">
+                {{ wholesale_profile.gst_number|default:"---"  }}
+            </div>
+
+            <div class="fw-bold mt-5">Department</div>
+            <div class="text-gray-600">
+                {{ wholesale_profile.department|default:"---"}}
+            </div>
+
+            <div class="fw-bold mt-5">Purchase Capacity</div>
+            <div class="text-gray-600">
+                {{ wholesale_profile.purchase_capacity |default:"---" }}
+            </div>
+
+        {% elif supplier_profile %}
+            <div class="fw-bold mt-5">Company Name</div>
+            <div class="text-gray-600">
+                {{ supplier_profile.company_name }}
+            </div>
+
+            <div class="fw-bold mt-5">License Number</div>
+            <div class="text-gray-600">
+                {% if supplier_profile.license_number  %}
+                {{ supplier_profile.license_number }} {% else %} --- {% endif %}
+            </div>
+        {% endif %}
 
 
         <div class="fw-bold mt-5">Joined At</div>

@@ -184,7 +184,8 @@ class HomeView(LoginRequiredMixin, SupplierPermissionMixin, View):
 class ProductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
     template = 'adminv2/products.html'
     def get(self, request):
-        products = Product.objects.all()
+        user = request.user
+        products = Product.objects.filter(created_by=user)
 
         for product in products:
             image = ProductImage.objects.filter(product=product).first()

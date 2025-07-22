@@ -6,11 +6,12 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic import ListView
 
+from adminv3.filters import QS_filter_user
 from adminv3.mixins import StaffAccountRequiredMixin
 from django.contrib.auth.models import User, Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from adminv3.utils import requestParamsToDict
-from dashboard.models import RetailProfile, WholesaleBuyerProfile, SupplierProfile
+from dashboard.models import RetailProfile, WholesaleBuyerProfile, SupplierProfile, Product, ProductImage
 
 
 class HomeView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
@@ -24,53 +25,27 @@ class UsersAccounts(LoginRequiredMixin, StaffAccountRequiredMixin, ListView):
     template_name = 'adminv3/users/users_list.html'
     model = User
     context_object_name = 'users'
-    ordering = ['-date_joined']
     paginate_by = 25
 
     def get_queryset(self):
-
-        queryset = super().get_queryset()
-
-        # Filter by role
-        selected_role = self.request.GET.get('role', '')
-        if selected_role == 'retailer':
-            queryset = queryset.filter(retailprofile__isnull=False)
-        elif selected_role == 'wholesaler':
-            queryset = queryset.filter(wholesalebuyerprofile__isnull=False)
-        elif selected_role == 'supplier':
-            queryset = queryset.filter(supplierprofile__isnull=False)
-
-        # Search functionality
-        search_query = self.request.GET.get('search', '')
-        if search_query:
-            queryset = queryset.filter(
-                username__icontains=search_query
-            ) | queryset.filter(
-                email__icontains=search_query
-            ) | queryset.filter(
-                first_name__icontains=search_query
-            ) | queryset.filter(
-                last_name__icontains=search_query
-            )
-
-        return queryset
+        filter_dict = requestParamsToDict(self.request, get_params=True)
+        return QS_filter_user(filter_dict)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        # Get statistics
-        total_users = User.objects.count()
-        retail_users = RetailProfile.objects.count()
-        wholesale_users = WholesaleBuyerProfile.objects.count()
-        supplier_users = SupplierProfile.objects.count()
+        # Summary counts
+        context['total_users'] = User.objects.count()
+        context['retail_users'] = RetailProfile.objects.count()
+        context['wholesale_users'] = WholesaleBuyerProfile.objects.count()
+        context['supplier_users'] = SupplierProfile.objects.count()
 
-        # Add to context
-        context['total_users'] = total_users
-        context['retail_users'] = retail_users
-        context['wholesale_users'] = wholesale_users
-        context['supplier_users'] = supplier_users
-        context['selected_role'] = self.request.GET.get('role', '')
-        context['search_query'] = self.request.GET.get('search', '')
+        # Add filter values back to template
+        context['selected_role'] = self.request.GET.get('user_type', '')
+        context['account_status'] = self.request.GET.get('account_status', '')
+        context['account_role'] = self.request.GET.get('account_role', '')
+        context['sort_by'] = self.request.GET.get('sort_by', '')
+        context['search_query'] = self.request.GET.get('search_by', '')
 
         return context
 
@@ -80,12 +55,16 @@ class UserDetailView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
 
     def get(self, request, *args, **kwargs):
         user = get_object_or_404(User, pk=kwargs['pk'])
+        user_permission_groups = user.groups.all()
+        permission_group_list = Group.objects.all()
 
         context = {
             'user': user,
             'retail_profile': RetailProfile.objects.filter(user=user).first(),
             'wholesale_profile': WholesaleBuyerProfile.objects.filter(user=user).first(),
             'supplier_profile': SupplierProfile.objects.filter(user=user).first(),
+            'user_permission_groups': user_permission_groups,
+            'permission_group_list': permission_group_list,
         }
         return render(request, self.template_name, context)
 
@@ -248,6 +227,35 @@ class User_Accounts_Delete_Account(StaffAccountRequiredMixin, View):
             return JsonResponse({'status': 'valid', 'message': 'Account has been deleted.'}, status=200)
         except Exception as e:
             print(f"Error while terminating task: {str(e)}")
+
+        return JsonResponse({'status': 'error', 'message': 'Check details and try again!'}, status=400)
+
+
+class User_Accounts_Modify_Permission_Groups(StaffAccountRequiredMixin, View):
+
+    def post(self, request, *args, **kwargs):
+        user_id = kwargs.get('pk')
+        post_dict = request.POST
+
+        user_obj = User.objects.get(pk=user_id)
+
+        if not request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=405)
+
+        try:
+            user_modify_groups_list = request.POST.getlist('user_modify_groups_list')
+            selected_group_ids = [int(_) for _ in user_modify_groups_list if _.isdigit()]
+
+            user_obj.groups.clear()
+
+            new_groups = Group.objects.filter(id__in=selected_group_ids)
+            user_obj.groups.add(*new_groups)
+
+
+            return JsonResponse({'status': 'valid', 'message': 'Permission Groups has been updated.'}, status=200)
+        except Exception as e:
+            print("error  --",e)
+            pass
 
         return JsonResponse({'status': 'error', 'message': 'Check details and try again!'}, status=400)
 
@@ -425,11 +433,7 @@ class User_Permissions_EditGroup(StaffAccountRequiredMixin, View):
             if request.headers.get('HX-Request'):
                 id = kwargs['UID']
 
-
-                print('group id_____ ---', id)
-
-                skipped_permissions = [
-                               ]
+                skipped_permissions = [ ]
 
                 group_obj = get_object_or_404(Group, pk=id)
 
@@ -456,11 +460,9 @@ class User_Permissions_EditGroup(StaffAccountRequiredMixin, View):
                     'group_permissions': list(group_obj.permissions.values_list('codename', flat=True))
                 }
 
-
                 return render(request, 'adminv3/permissions/snippets/form/_form_permission_group_edit.html', context)
 
         except Exception as e:
-
             return HttpResponse("Something went wrong! Contact Support", status=500, content_type="text/html")
 
 
@@ -505,6 +507,12 @@ class ProductsListView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
     template_name = 'adminv3/products/products_list.html'
 
     def get(self, request):
+        user = request.user
+        products = Product.objects.all().order_by('-created_at')
 
-        return render(request, self.template_name)
+        for product in products:
+            image = ProductImage.objects.filter(product=product).first()
+            product.image_url = image.image.url if image else '/static/adminv2/media/stock/ecommerce/placeholder.png'
+
+        return render(request, self.template_name, {'products': products})
 

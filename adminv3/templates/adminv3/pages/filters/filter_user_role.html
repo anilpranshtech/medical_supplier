@@ -1,0 +1,11 @@
+<div class="col-md-6 col-lg-6 col-xl-4 col-xxl-3">
+    <label class="fs-6 form-label fw-bold text-gray-900">Account Role</label>
+
+    <select class="form-select form-select-solid" data-hide-search="true" name="account_role" data-control="select2" >
+        <option value="all" {% if request.GET.account_role == 'all' %} selected {% endif %}>All</option>
+        <option value="administrator" {% if request.GET.account_role == 'administrator' %} selected {% endif %}>Admin</option>
+        <option value="staff" {% if request.GET.account_role == 'staff' %} selected {% endif %}>Staff</option>
+        <option value="users" {% if request.GET.account_role == 'users' %} selected {% endif %}>User</option>
+    </select>
+    <!--end::Select-->
+</div>

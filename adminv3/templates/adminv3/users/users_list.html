@@ -19,14 +19,32 @@ Users
         <div id="kt_app_content" class="app-content flex-column-fluid mx-5">
             <div id="kt_app_content_container" class="app-container container-fluid">
 
+                <form action="{% url 'adminv3:user_accounts' %}" method='GET'>
+                    <div class="card mb-7">
+                        <div class="card-body">
+                            {% include "adminv3/pages/filters/filter_sort_by.html" %}
+                            {% include "adminv3/pages/filters/filter_search_by.html"  with show_advance_search_link=True search_help_text='Choices: User Email' search_placeholder_text='Search' %}
+                                <div class="collapse" id="kt_advanced_search_form">
 
-                <div class="card card-flush mb-5">
-                    <div class="card-body">
-                        <h1>
-                            Users List
-                        </h1>
+                                  <div class="separator separator-dashed mt-9 mb-6"></div>
+
+                                  <div class="row g-8 mb-8">
+                                      <div class="col-xxl-12">
+
+                                          <div class="row g-8">
+                                            {% include "adminv3/pages/filters/filter_account_status.html" %}
+                                            {% include "adminv3/pages/filters/filter_account_type.html" %}
+                                            {% include "adminv3/pages/filters/filter_user_role.html" %}
+                                          </div>
+                                      </div>
+                                  </div>
+
+                              </div>
+                        </div>
+
                     </div>
-                </div>
+
+                </form>
 
 
                 <div class="card card-flush mt-5 mb-3">
@@ -51,11 +69,7 @@ Users
                                     </form>
                                 </div>
 
-                                {% comment %}
-                                <a href="{% url 'adminv2:add_user' %}" class="btn btn-primary">
-                                    Add User
-                                </a>
-                                {% endcomment %}
+
 
                                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#_model_add_new_user">
                                     Add User

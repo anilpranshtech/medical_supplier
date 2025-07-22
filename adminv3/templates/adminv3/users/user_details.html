@@ -5,208 +5,7 @@
 {% block content %}
 <!--begin::Main-->
 <div class="app-main flex-column flex-row-fluid" id="kt_app_main">
-    <!--begin::Content wrapper-->
-    {% comment %}
-    <div class="d-flex flex-column flex-column-fluid">
-        <!--begin::Content-->
-        <div id="kt_app_content" class="app-content flex-column-fluid">
-            <!--begin::Content container-->
-            <div id="kt_app_content_container" class="app-container container-fluid">
-                <!--begin::Basic info-->
-                <div class="card mb-5 mb-xl-10">
-                    <!--begin::Card header-->
-                    <div class="card-header border-0 cursor-pointer" role="button" data-bs-toggle="collapse" data-bs-target="#kt_account_profile_details" aria-expanded="true" aria-controls="kt_account_profile_details">
-                        <!--begin::Card title-->
-                        <div class="card-title m-0">
-                            <h3 class="fw-bold m-0">User Details: {{ user.username }}</h3>
-                        </div>
-                        <!--end::Card title-->
-                        <!--begin::Card toolbar-->
-
-                        <!--end::Card toolbar-->
-                    </div>
-                    <!--begin::Card header-->
-                    <!--begin::Content-->
-                    <div id="kt_account_settings_profile_details" class="collapse show">
-                        <!--begin::Card body-->
-                        <div class="card-body border-top p-9">
-                            <!--begin::Basic Information-->
-                            <div class="row mb-6">
-                                <label class="col-lg-4 col-form-label fw-semibold fs-6">Username</label>
-                                <div class="col-lg-8 fv-row">
-                                    <span class="fw-bold fs-6">{{ user.username }}</span>
-                                </div>
-                            </div>
-                            <div class="row mb-6">
-                                <label class="col-lg-4 col-form-label fw-semibold fs-6">Full Name</label>
-                                <div class="col-lg-8 fv-row">
-                                    <span class="fw-bold fs-6">{{ user.get_full_name|default:"Not provided" }}</span>
-                                </div>
-                            </div>
-                            <div class="row mb-6">
-                                <label class="col-lg-4 col-form-label fw-semibold fs-6">Email</label>
-                                <div class="col-lg-8 fv-row">
-                                    <span class="fw-bold fs-6">{{ user.email }}</span>
-                                </div>
-                            </div>
-                            <div class="row mb-6">
-                                <label class="col-lg-4 col-form-label fw-semibold fs-6">Status</label>
-                                <div class="col-lg-8 fv-row">
-                                    {% if user.is_active %}
-                                        <span class="badge badge-light-success">Active</span>
-                                    {% else %}
-                                        <span class="badge badge-light-danger">Inactive</span>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="row mb-6">
-                                <label class="col-lg-4 col-form-label fw-semibold fs-6">Date Joined</label>
-                                <div class="col-lg-8 fv-row">
-                                    <span class="fw-bold fs-6">{{ user.date_joined|date:"d M Y" }}</span>
-                                </div>
-                            </div>
-                            <!--end::Basic Information-->
-                            {% if retail_profile %}
-                            <!--begin::Retail Profile-->
-                            <div class="separator separator-dashed my-6"></div>
-                            <div class="row mb-6">
-                                <label class="col-lg-4 col-form-label fw-semibold fs-6">Role</label>
-                                <div class="col-lg-8 fv-row">
-                                    <span class="fw-bold fs-6">Retailer</span>
-                                </div>
-                            </div>
-                            <div class="row mb-6">
-                                <label class="col-lg-4 col-form-label fw-semibold fs-6">Age</label>
-                                <div class="col-lg-8 fv-row">
-                                    <span class="fw-bold fs-6">{{ retail_profile.age|default:"Not provided" }}</span>
-                                </div>
-                            </div>
-                            <div class="row mb-6">
-                                <label class="col-lg-4 col-form-label fw-semibold fs-6">Medical Needs</label>
-                                <div class="col-lg-8 fv-row">
-                                    <span class="fw-bold fs-6">{{ retail_profile.medical_needs|default:"Not provided" }}</span>
-                                </div>
-                            </div>
-                            <div class="row mb-6">
-                                <label class="col-lg-4 col-form-label fw-semibold fs-6">Profile Picture</label>
-                                <div class="col-lg-8 fv-row">
-                                    {% if retail_profile.profile_picture %}
-                                        <img src="{{ retail_profile.profile_picture.url }}" alt="Profile Picture" style="max-width: 100px;">
-                                    {% else %}
-                                        <span class="fw-bold fs-6">Not provided</span>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <!--end::Retail Profile-->
-                            {% endif %}
-                            {% if wholesale_profile %}
-                            <!--begin::Wholesale Profile-->
-                            <div class="separator separator-dashed my-6"></div>
-                            <div class="row mb-6">
-                                <label class="col-lg-4 col-form-label fw-semibold fs-6">Role</label>
-                                <div class="col-lg-8 fv-row">
-                                    <span class="fw-bold fs-6">Wholesaler</span>
-                                </div>
-                            </div>
-                            <div class="row mb-6">
-                                <label class="col-lg-4 col-form-label fw-semibold fs-6">Company Name</label>
-                                <div class="col-lg-8 fv-row">
-                                    <span class="fw-bold fs-6">{{ wholesale_profile.company_name }}</span>
-                                </div>
-                            </div>
-                            <div class="row mb-6">
-                                <label class="col-lg-4 col-form-label fw-semibold fs-6">GST Number</label>
-                                <div class="col-lg-8 fv-row">
-                                    <span class="fw-bold fs-6">{{ wholesale_profile.gst_number }}</span>
-                                </div>
-                            </div>
-                            <div class="row mb-6">
-                                <label class="col-lg-4 col-form-label fw-semibold fs-6">Department</label>
-                                <div class="col-lg-8 fv-row">
-                                    <span class="fw-bold fs-6">{{ wholesale_profile.department }}</span>
-                                </div>
-                            </div>
-                            <div class="row mb-6">
-                                <label class="col-lg-4 col-form-label fw-semibold fs-6">Purchase Capacity</label>
-                                <div class="col-lg-8 fv-row">
-                                    <span class="fw-bold fs-6">{{ wholesale_profile.purchase_capacity }}</span>
-                                </div>
-                            </div>
-                            <div class="row mb-6">
-                                <label class="col-lg-4 col-form-label fw-semibold fs-6">Profile Picture</label>
-                                <div class="col-lg-8 fv-row">
-                                    {% if wholesale_profile.profile_picture %}
-                                        <img src="{{ wholesale_profile.profile_picture.url }}" alt="Profile Picture" style="max-width: 100px;">
-                                    {% else %}
-                                        <span class="fw-bold fs-6">Not provided</span>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <!--end::Wholesale Profile-->
-                            {% endif %}
-                            {% if supplier_profile %}
-                            <!--begin::Supplier Profile-->
-                            <div class="separator separator-dashed my-6"></div>
-                            <div class="row mb-6">
-                                <label class="col-lg-4 col-form-label fw-semibold fs-6">Role</label>
-                                <div class="col-lg-8 fv-row">
-                                    <span class="fw-bold fs-6">Supplier</span>
-                                </div>
-                            </div>
-                            <div class="row mb-6">
-                                <label class="col-lg-4 col-form-label fw-semibold fs-6">Company Name</label>
-                                <div class="col-lg-8 fv-row">
-                                    <span class="fw-bold fs-6">{{ supplier_profile.company_name }}</span>
-                                </div>
-                            </div>
-                            <div class="row mb-6">
-                                <label class="col-lg-4 col-form-label fw-semibold fs-6">License Number</label>
-                                <div class="col-lg-8 fv-row">
-                                    <span class="fw-bold fs-6">{{ supplier_profile.license_number }}</span>
-                                </div>
-                            </div>
-                            <div class="row mb-6">
-                                <label class="col-lg-4 col-form-label fw-semibold fs-6">Verified</label>
-                                <div class="col-lg-8 fv-row">
-                                    {% if supplier_profile.is_verified %}
-                                        <span class="badge badge-light-success">Verified</span>
-                                    {% else %}
-                                        <span class="badge badge-light-danger">Not Verified</span>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="row mb-6">
-                                <label class="col-lg-4 col-form-label fw-semibold fs-6">Profile Picture</label>
-                                <div class="col-lg-8 fv-row">
-                                    {% if supplier_profile.profile_picture %}
-                                        <img src="{{ supplier_profile.profile_picture.url }}" alt="Profile Picture" style="max-width: 100px;">
-                                    {% else %}
-                                        <span class="fw-bold fs-6">Not provided</span>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <!--end::Supplier Profile-->
-                            {% endif %}
-                        </div>
-                        <!--end::Card body-->
-                        <!--begin::Actions-->
-                        <div class="card-footer d-flex justify-content-end py-6 px-9">
-                            <a href="{% url 'adminv3:user_accounts' %}" class="btn btn-primary">Back to List</a>
-                        </div>
-                        <!--end::Actions-->
-                    </div>
-                    <!--end::Content-->
-                </div>
-                <!--end::Basic info-->
-            </div>
-            <!--end::Content container-->
-        </div>
-        <!--end::Content-->
-    </div>
-    <!--end::Content wrapper-->
-    {% endcomment %}
-
-    <div class="d-flex flex-column flex-lg-row me-10">
+    <div class="d-flex flex-column flex-lg-row me-10 mt-10">
         <!-- LEFT MENU       -->
         <div class="flex-column flex-lg-row-auto w-lg-250px w-xl-350px mb-10">
             <div class="card mb-5 mb-xl-8">
@@ -226,11 +25,7 @@
                                     User
                                 {% endif %}
                             </div>
-
-
                         </div>
-
-
                     </div>
 
                     <div class="d-flex flex-stack fs-4 py-3">
@@ -425,7 +220,7 @@
 {% include "adminv3/snippets/models/_model_user_update_role.html" %}
 
 {% include "adminv3/snippets/models/_model_user_adjust_account_status.html" %}
-
+{% include "adminv3/snippets/models/_model_user_modify_permission_groups.html" %}
 
 {% endblock %}
 
@@ -1004,6 +799,139 @@ function deleteUserAccount(userId, button) {
         }
     });
 }
+
+
+<!--  User modify permission group  -->
+
+var KTModalModifyUserGroups = (function () {
+    var submitButton, validator, form, modal, modalEl;
+
+    // Handle form validation and submission
+    var handleForm = function () {
+
+        // Initialize form validation rules
+        if (!form || !submitButton) {
+            console.error('Form or submitButton not found.');
+            return;
+        }
+
+        validator = FormValidation.formValidation(form, {
+            fields: {
+                user_modify_groups_list: {
+                    validators: {
+                        notEmpty: {
+                            message: 'The field is required'
+                        },
+                    }
+                },
+            },
+            plugins: {
+                trigger: new FormValidation.plugins.Trigger(),
+                bootstrap: new FormValidation.plugins.Bootstrap5({
+                    rowSelector: '.fv-row',
+                    eleInvalidClass: 'is-invalid',
+                    eleValidClass: ''
+                }),
+            },
+        });
+
+        // Action buttons
+        submitButton.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            // Validate form before submit
+            if (validator) {
+                validator.validate().then(function (status) {
+                    if (status === 'Valid') {
+                        submitButton.setAttribute('data-kt-indicator', 'on');
+                        submitButton.disabled = true;
+
+                        $.ajax({
+                            url: form.getAttribute('data-url'),
+                            method: 'POST',
+                            dataType: 'json',
+                            headers: { 'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val() },
+                            data: $(form).serialize(),
+                            success: function (response) {
+                                submitButton.removeAttribute('data-kt-indicator');
+                                submitButton.disabled = false;
+
+                                Swal.fire({
+                                    text: response.message,
+                                    icon: 'success',
+                                    buttonsStyling: false,
+                                    confirmButtonText: 'Ok, got it!',
+                                    customClass: {
+                                        confirmButton: 'btn btn-primary',
+                                    },
+                                }).then(function (result) {
+                                    var redirectUrl = form.getAttribute('data-kt-redirect-url');
+                                    if (redirectUrl) {
+                                        location.href = redirectUrl;
+                                    }
+                                });
+                            },
+                            error: function (xhr, status, error) {
+                                submitButton.removeAttribute('data-kt-indicator');
+                                submitButton.disabled = false;
+                                form.reset();
+
+                                var response = xhr.responseJSON;
+                                var errorMessage = response && response.message ? response.message : 'Please enter valid details and try again.';
+
+                                Swal.fire({
+                                    text: errorMessage,
+                                    icon: 'error',
+                                    buttonsStyling: false,
+                                    confirmButtonText: 'Ok, got it!',
+                                    customClass: {
+                                        confirmButton: 'btn fw-bold btn-light-primary',
+                                    },
+                                }).then(function () {
+                                    KTUtil.scrollTop();
+                                });
+                            },
+                        });
+                    }
+                }).catch(function (error) {
+                    Swal.fire({
+                        text: 'Something went wrong! contact support.',
+                        icon: 'error',
+                        buttonsStyling: false,
+                        confirmButtonText: 'Ok, got it!',
+                        customClass: {
+                            confirmButton: 'btn fw-bold btn-light-primary',
+                        },
+                    }).then(function () {
+                        KTUtil.scrollTop();
+                    });
+                });
+            }
+        });
+    };
+
+    return {
+        init: function () {
+            modalEl = document.querySelector('#_model_user_modify_permission_groups');
+
+            if (!modalEl) {
+                console.error('Modal element not found.');
+                return;
+            }
+
+            modal = new bootstrap.Modal(modalEl);
+            form = document.querySelector('#_model_user_modify_permission_groups_form');
+            submitButton = document.getElementById('_model_user_modify_permission_groups_submit');
+
+            handleForm();
+        },
+    };
+})();
+
+// On document ready
+KTUtil.onDOMContentLoaded(function () {
+    KTModalModifyUserGroups.init();
+});
 
 
 </script>

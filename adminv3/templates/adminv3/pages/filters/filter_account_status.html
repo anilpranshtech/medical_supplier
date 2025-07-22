@@ -1,0 +1,10 @@
+<div class="col-md-6 col-lg-6 col-xl-4 col-xxl-3">
+    <label class="fs-6 form-label fw-bold text-gray-900">Account Status</label>
+
+    <select class="form-select form-select-solid" data-hide-search="true" name="account_status" data-control="select2">
+        <option value="all" {% if request.GET.account_status == 'all' %} selected {% endif %}>All</option>
+        <option value="active" {% if request.GET.account_status == 'active' %} selected {% endif %}>Active</option>
+        <option value="inactive" {% if request.GET.account_status == 'inactive' %} selected {% endif %}>Inactive</option>
+    </select>
+
+</div>

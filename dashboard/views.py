@@ -318,25 +318,36 @@ class RegistrationView(View):
                     last_name=signup_data['last_name']
                 )
 
-                if signup_data['user_type'] == 'supplier':
+                # Save phone to user model if using a custom user model with phone
+                if hasattr(user, 'phone'):
+                    user.phone = phone
+                    user.save()
+
+                user_type = signup_data.get('user_type')
+                buyer_type = signup_data.get('buyer_type')
+
+                if user_type == 'supplier':
                     SupplierProfile.objects.create(
                         user=user,
-                        company_name=signup_data['supplier_company_name'],
-                        license_number=signup_data['license_number']
+                        phone=phone,
+                        company_name=signup_data.get('supplier_company_name', ''),
+                        license_number=signup_data.get('license_number', '')
                     )
-                elif signup_data['buyer_type'] == 'retailer':
+                elif buyer_type == 'retailer':
                     RetailProfile.objects.create(
                         user=user,
-                        age=int(signup_data['age'] or 0),
-                        medical_needs=signup_data['medical_needs'] or ''
+                        phone=phone,
+                        age=int(signup_data.get('age') or 0),
+                        medical_needs=signup_data.get('medical_needs', '')
                     )
-                elif signup_data['user_type'] == 'wholesale' or signup_data['buyer_type'] == 'wholesaler':
+                elif user_type == 'wholesale' or buyer_type == 'wholesaler':
                     WholesaleBuyerProfile.objects.create(
                         user=user,
-                        company_name=signup_data['company_name'],
-                        gst_number=signup_data['gst_number'],
-                        department=signup_data['department'],
-                        purchase_capacity=signup_data['purchase_capacity']
+                        phone=phone,
+                        company_name=signup_data.get('company_name', ''),
+                        gst_number=signup_data.get('gst_number', ''),
+                        department=signup_data.get('department', ''),
+                        purchase_capacity=int(signup_data.get('purchase_capacity') or 0)
                     )
                 else:
                     messages.error(request, "Invalid user type.")

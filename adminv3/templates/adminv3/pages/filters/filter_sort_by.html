@@ -1,0 +1,8 @@
+<div class="d-flex justify-content-end" style="width: 15%;float: right;">
+
+    <select class="form-select form-select-solid" data-control="select2" data-placeholder="Sort By" data-hide-search="true" name='sort_by'>
+        <option value="desc_created" {% if request.GET.sort_by == 'desc_created' %}selected{% endif %}>Desc (Created)</option>
+        <option value="asc_created" {% if request.GET.sort_by == 'asc_created' %}selected{% endif %}>Asc (Created)</option>
+    </select>
+
+</div>
