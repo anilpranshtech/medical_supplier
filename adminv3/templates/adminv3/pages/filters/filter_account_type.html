@@ -1,0 +1,12 @@
+<div class="col-md-6 col-lg-6 col-xl-4 col-xxl-3">
+    <label class="fs-6 form-label fw-bold text-gray-900">Account Type</label>
+
+    <select class="form-select form-select-solid" data-hide-search="true" name="account_type" data-control="select2">
+        <option value="all" {% if request.GET.account_type == 'all' %} selected {% endif %}>All</option>
+        <option value="retailer" {% if request.GET.account_type == 'retailer' %} selected {% endif %}>Retailer</option>
+        <option value="wholesaler" {% if request.GET.account_type == 'wholesaler' %} selected {% endif %}>Wholesaler</option>
+        <option value="supplier" {% if request.GET.account_type == 'supplier' %} selected {% endif %}>Supplier</option>
+    </select>
+
+</div>
+

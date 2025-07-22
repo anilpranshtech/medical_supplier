@@ -19,6 +19,34 @@ Products
 
             <div id="kt_app_content_container" class="app-container  container-fluid ">
 
+                <form action="" method='GET'>
+                    <!--begin::Card-->
+                    <div class="card mb-7">
+                        <!--begin::Card body-->
+                        <div class="card-body">
+                            {% include "adminv3/pages/filters/filter_sort_by.html" %}
+                            {% include "adminv3/pages/filters/filter_search_by.html"  with show_advance_search_link=True search_help_text='Choices: Product, Supplier ' search_placeholder_text='Search' %}
+                                <div class="collapse" id="kt_advanced_search_form">
+
+                                  <div class="separator separator-dashed mt-9 mb-6"></div>
+
+                                  <div class="row g-8 mb-8">
+
+                                      <div class="col-xxl-12">
+
+                                          <div class="row g-8">
+
+                                          </div>
+                                      </div>
+                                  </div>
+                              </div>
+                        </div>
+
+                    </div>
+
+                </form>
+
+
                 <div class="card card-flush ">
 
                     <div class="card-header flex-wrap align-items-center py-5 gap-4">

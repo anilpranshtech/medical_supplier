@@ -6,6 +6,7 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic import ListView
 
+from adminv3.filters import QS_filter_user
 from adminv3.mixins import StaffAccountRequiredMixin
 from django.contrib.auth.models import User, Group, Permission
 from django.contrib.contenttypes.models import ContentType
@@ -24,53 +25,27 @@ class UsersAccounts(LoginRequiredMixin, StaffAccountRequiredMixin, ListView):
     template_name = 'adminv3/users/users_list.html'
     model = User
     context_object_name = 'users'
-    ordering = ['-date_joined']
     paginate_by = 25
 
     def get_queryset(self):
-
-        queryset = super().get_queryset()
-
-        # Filter by role
-        selected_role = self.request.GET.get('role', '')
-        if selected_role == 'retailer':
-            queryset = queryset.filter(retailprofile__isnull=False)
-        elif selected_role == 'wholesaler':
-            queryset = queryset.filter(wholesalebuyerprofile__isnull=False)
-        elif selected_role == 'supplier':
-            queryset = queryset.filter(supplierprofile__isnull=False)
-
-        # Search functionality
-        search_query = self.request.GET.get('search', '')
-        if search_query:
-            queryset = queryset.filter(
-                username__icontains=search_query
-            ) | queryset.filter(
-                email__icontains=search_query
-            ) | queryset.filter(
-                first_name__icontains=search_query
-            ) | queryset.filter(
-                last_name__icontains=search_query
-            )
-
-        return queryset
+        filter_dict = requestParamsToDict(self.request, get_params=True)
+        return QS_filter_user(filter_dict)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        # Get statistics
-        total_users = User.objects.count()
-        retail_users = RetailProfile.objects.count()
-        wholesale_users = WholesaleBuyerProfile.objects.count()
-        supplier_users = SupplierProfile.objects.count()
+        # Summary counts
+        context['total_users'] = User.objects.count()
+        context['retail_users'] = RetailProfile.objects.count()
+        context['wholesale_users'] = WholesaleBuyerProfile.objects.count()
+        context['supplier_users'] = SupplierProfile.objects.count()
 
-        # Add to context
-        context['total_users'] = total_users
-        context['retail_users'] = retail_users
-        context['wholesale_users'] = wholesale_users
-        context['supplier_users'] = supplier_users
-        context['selected_role'] = self.request.GET.get('role', '')
-        context['search_query'] = self.request.GET.get('search', '')
+        # Add filter values back to template
+        context['selected_role'] = self.request.GET.get('user_type', '')
+        context['account_status'] = self.request.GET.get('account_status', '')
+        context['account_role'] = self.request.GET.get('account_role', '')
+        context['sort_by'] = self.request.GET.get('sort_by', '')
+        context['search_query'] = self.request.GET.get('search_by', '')
 
         return context
 
