@@ -33,7 +33,6 @@
                                                 <form method="post" enctype="multipart/form-data" action="{% url 'dashboard:upload_avatar' %}">
                                                     {% csrf_token %}
                                                     <input accept=".png, .jpg, .jpeg" name="avatar" type="file">
-                                                    {% comment %}
                                                     <input name="avatar_remove" type="hidden">
                                                     <button class="kt-image-input-remove"
                                                             data-kt-image-input-remove="true" data-kt-tooltip="true"
@@ -45,7 +44,6 @@
                                                             Click to remove or revert
                                                         </span>
                                                     </button>
-                                                    {% endcomment %}
                                                     <button type="submit" class="hidden">Upload</button>
                                                 </form>
                                                 <div class="kt-image-input-placeholder border-2 border-green-500 kt-image-input-empty:border-input"
