@@ -25,6 +25,7 @@
 #search-suggestions li:hover {
     background-color: #f3f4f6;
 }
+
     </style>
     <title>Header with Dark/Light Mode and Transparency Control</title>
     <script>
@@ -249,6 +250,27 @@
             border-radius: 0 0 0.375rem 0.375rem;
             font-weight: 600;
         }
+        #clear-search {
+        cursor: pointer;
+        border: none;
+        outline: none;
+    }
+
+    #clear-search:hover i {
+        color: #374151; /* Darker gray on hover */
+    }
+
+    #search-suggestions {
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    #search-suggestions li {
+        padding: 0.5rem 1rem;
+    }
+
+    #search-suggestions li:hover {
+        background-color: #f3f4f6;
+    }
     </style>
 </head>
 <body>
@@ -268,45 +290,31 @@
                     <i class="ki-filled ki-menu"></i>
                 </button>
             </div>
-        <!-- search bar -->
-<div class="flex-1 px-4 sm:px-8">
-    <div class="w-full max-w-2xl mx-auto">
-        <form class="relative" id="search-form" action="{% url 'dashboard:search_results_grid' %}">
-            <div class="relative">
-                <input type="text" name="q" id="search-input"
-                       class="w-full h-10 px-4 pr-28 text-sm rounded-full border
-                              border-gray-300 dark:border-gray-700
-                              focus:outline-none focus:ring-2 focus:ring-primary
-                              bg-white dark:bg-gray-800
-                              text-gray-900 dark:text-gray-100
-                              placeholder-gray-500 dark:placeholder-gray-400 transition-colors"
-                       placeholder="Search products..." value="{{ search_query|default:'' }}" autocomplete="off" />
-                <div id="search-suggestions" class="kt-select-dropdown hidden w-full bg-white border border-gray-300 rounded-md mt-1 shadow-lg z-50">
-                    <ul id="suggestions-list" class="max-h-60 overflow-y-auto"></ul>
-                </div>
-                {% if search_query %}
-                    <a href="{% url 'dashboard:search_results_grid' %}" class="absolute right-20 top-1/2 -translate-y-1/2 px-2">
-                        <i class="ki-filled ki-cross text-gray-500"></i>
-                    </a>
-                {% endif %}
+       
+<!-- Search Bar -->
+<div class="flex-1 max-w-2xl mx-4">
+    <form class="relative" id="search-form" action="{% url 'dashboard:search_results_grid' %}">
+        <div class="relative">
+            <input type="text" name="q" id="search-input"
+                   class="w-full h-10 px-4 pr-16 text-sm rounded-full border
+                          border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary
+                          bg-white text-gray-900 placeholder-gray-500 transition-colors"
+                   placeholder="Search products..." value="{{ search_query|default:'' }}" autocomplete="off" />
+            <div id="search-suggestions" class="absolute top-full left-0 w-full bg-white border border-gray-300 rounded-md mt-1 shadow-lg z-50 max-h-60 overflow-y-auto hidden">
+                <ul id="suggestions-list" class="list-none p-0"></ul>
+            </div>
+            <div class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center space-x-2">
                 <button type="submit"
-                        class="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5
-                               text-sm font-medium rounded-full
-                               text-white bg-primary hover:bg-primary/90
-                               transition-all">
+                        class="px-3 py-1.5 text-sm font-medium rounded-full text-white bg-primary hover:bg-primary/90 transition-all">
                     <i class="ki-filled ki-magnifier mr-1"></i>Search
                 </button>
+                <button type="button" id="clear-search" class="w-6 h-6 flex items-center justify-center rounded-full bg-gray-200 hover:bg-gray-300 transition-colors" style="display: none;">
+                    <i class="ki-filled ki-cross text-gray-600 text-lg"></i>
+                </button>
             </div>
-        </form>
-    </div>
+        </div>
+    </form>
 </div>
-
-
-
-
-
-
-
 
             <!-- Header Right: Actions and User Profile -->
             <div class="flex items-center gap-3 sm:gap-5 mr-5 px-5">
@@ -1468,10 +1476,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (categoryList && searchInput.value.trim() !== '') {
             categoryList.style.display = 'none';
         } else if (categoryList) {
-            categoryList.style.display = ''; // Show again if search is empty
+            categoryList.style.display = ''; 
         }
     });
 });
     </script>
+    
 </body>
 </html>

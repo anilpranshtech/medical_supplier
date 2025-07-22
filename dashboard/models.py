@@ -147,13 +147,20 @@ class Product(models.Model):
     created_by = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
+    def discounted_price(self):
+        if self.offer_active and self.offer_percentage and self.price:
+            discount_amount = self.price * (self.offer_percentage / 100)
+            return self.price - discount_amount
+        return self.price
+
     def __str__(self):
         return self.name
 
     class Meta:
         ordering = ['-created_at']
         verbose_name = verbose_name_plural = "Product"
-
+    
+    
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     image = models.ImageField(upload_to='product_images/')
