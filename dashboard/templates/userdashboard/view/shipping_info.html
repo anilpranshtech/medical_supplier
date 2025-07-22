@@ -260,7 +260,7 @@
             <!-- begin: Edit Address Modal -->
             <div class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 mt-7 py-10"
                  data-kt-modal="true" id="modal_edit_address" style="backdrop-filter: blur(4px);">
-                <div class="kt-card w-full max-w-[500px] rounded-xl border border-border bg-background">
+                <div class="kt-card w-full max-w-[500px] rounded-xl border border-border bg-background mt-7">
                     <form method="post" action="{% url 'dashboard:edit_address' 0 %}" id="edit-address-form">
                         {% csrf_token %}
                         <input type="hidden" name="address_id" id="edit-address-id">

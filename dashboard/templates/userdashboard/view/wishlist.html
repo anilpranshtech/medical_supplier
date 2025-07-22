@@ -8,11 +8,13 @@
     .kt-wishlist-icon.active i.ki-filled.ki-heart {
         color: #ff0000;
     }
+
     .kt-product-list {
         display: grid;
         grid-template-columns: 1fr;
         gap: 15px;
     }
+
     .kt-list-card {
         display: flex;
         flex-direction: row;
@@ -21,72 +23,86 @@
         border: 1px solid #e0e0e0;
         border-radius: 8px;
     }
+
     .kt-list-card-image {
         width: 120px;
         height: 120px;
         object-fit: contain;
         margin-right: 20px;
     }
+
     .kt-list-card-content {
         flex: 1;
     }
+
     .kt-list-card-actions {
         display: flex;
         flex-direction: column;
         align-items: flex-end;
         min-width: 150px;
     }
+
     @media (max-width: 768px) {
         .kt-list-card {
             flex-direction: column;
             align-items: flex-start;
         }
+
         .kt-list-card-image {
             width: 100%;
             height: auto;
             margin-right: 0;
             margin-bottom: 15px;
         }
+
         .kt-list-card-actions {
             width: 100%;
             align-items: flex-start;
             margin-top: 15px;
         }
     }
+
     .text-red-500 {
         color: #ef4444 !important;
     }
+
     .heart-icon {
         transition: color 0.2s ease-in-out;
     }
 </style>
+<div class="kt-container-fixed mt-7">
+    <!-- begin: grid -->
+    <div class="grid xl:grid-cols-1 gap-5 lg:gap-9">
+        <!-- begin: Card -->
 
-<div class="kt-container-fixed mt-1" style="max-width: var(--custom-container-width, 90%);">
-    <div class="flex items-center justify-between mt-5 py-5">
-        <h1 class="text-xl font-bold">Your Wishlist</h1>
-        <button class="kt-btn kt-btn-primary kt-btn-sm" id="wishlist-clear">Clear Wishlist</button>
-    </div>
+        <div class="lg:col-span-1">
+            <div class="kt-card">
+                <div class="kt-container-fixed mt-1" style="max-width: var(--custom-container-width, 90%);">
+                    <div class="flex items-center justify-between mt-5 py-5">
+                        <h1 class="text-xl font-bold">Your Wishlist</h1>
+                        <button class="kt-btn kt-btn-primary kt-btn-sm" id="wishlist-clear">Clear Wishlist</button>
+                    </div>
 
-    <div class="kt-product-list" id="wishlist-items">
-        {% for item in wishlist_items %}
-        <div id="wish-{{ item.product.id }}" class="kt-list-card">
-            <!-- Product Image -->
-            <div class="kt-list-card-image">
-                <img alt="{{ item.product.name }}" class="h-full w-full object-contain"
-                     src="{{ item.product.main_image.url|default:'/static/default_product.png' }}">
-            </div>
+                    <div class="kt-product-list mb-7" id="wishlist-items">
+                        {% for item in wishlist_items %}
+                        <div id="wish-{{ item.product.id }}" class="kt-list-card">
+                            <!-- Product Image -->
+                            <div class="kt-list-card-image">
+                                <img alt="{{ item.product.name }}" class="h-full w-full object-contain"
+                                     src="{{ item.product.main_image.url|default:'/static/default_product.png' }}">
+                            </div>
 
-            <!-- Product Details -->
-            <div class="kt-list-card-content">
-                <h3 class="text-lg font-bold text-gray-650 mb-1">
-                    {{ item.product.name }}
-                </h3>
-                <p class="text-sm text-gray-100 mb-2">
-                    {{ item.product.description|default:"No description available"|truncatechars:200 }}
-                </p>
-                <div class="flex items-center gap-4">
-                    {% if item.product.average_rating %}
-                    <span class="kt-badge
+                            <!-- Product Details -->
+                            <div class="kt-list-card-content">
+                                <h3 class="text-lg font-bold text-gray-650 mb-1">
+                                    {{ item.product.name }}
+                                </h3>
+                                <p class="text-sm text-gray-100 mb-2">
+                                    {{ item.product.description|default:"No description available"|truncatechars:200 }}
+                                </p>
+                                <div class="flex items-center gap-4">
+                                    {% if item.product.average_rating %}
+                                    <span class="kt-badge
                         {% if item.product.average_rating >= 4 %}kt-badge-success
                         {% elif item.product.average_rating >= 2 %}kt-badge-warning
                         {% else %}kt-badge-danger{% endif %}
@@ -94,157 +110,161 @@
                         <i class="ki-solid ki-star text-white -mt-0.5"></i>
                         {{ item.product.average_rating|floatformat:1 }}
                     </span>
-                    {% endif %}
-                    <span class="text-xs font-normal text-secondary-foreground">
+                                    {% endif %}
+                                    <span class="text-xs font-normal text-secondary-foreground">
                         SKU: <span class="font-medium">{{ item.product.sku }}</span>
                     </span>
-                </div>
-            </div>
+                                </div>
+                            </div>
 
-            <!-- Price and Actions -->
-            <div class="kt-list-card-actions">
-                <div class="text-right mb-3">
-                    {% if item.product.discounted_price %}
-                    <span class="text-xs font-normal text-secondary-foreground line-through">
+                            <!-- Price and Actions -->
+                            <div class="kt-list-card-actions">
+                                <div class="text-right mb-3">
+                                    {% if item.product.discounted_price %}
+                                    <span class="text-xs font-normal text-secondary-foreground line-through">
                         ${{ item.product.price }}
                     </span>
-                    <div class="flex items-center gap-2">
+                                    <div class="flex items-center gap-2">
                         <span class="text-lg font-bold text-mono">
                             ${{ item.product.discounted_price }}
                         </span>
-                        <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">
+                                        <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">
                             save {{ item.product.discount_percentage }}%
                         </span>
-                    </div>
-                    {% else %}
-                    <span class="text-lg font-bold text-mono">
+                                    </div>
+                                    {% else %}
+                                    <span class="text-lg font-bold text-mono">
                         ${{ item.product.price }}
                     </span>
-                    {% endif %}
-                </div>
+                                    {% endif %}
+                                </div>
 
-                <div class="flex items-center gap-2">
-                    <button class="kt-btn kt-btn-outline kt-btn-sm kt-wishlist-icon"
-                            data-product-id="{{ item.product.id }}">
-                        <i class="ki-filled ki-heart heart-icon text-red-500 text-base"></i>
-                    </button>
+                                <div class="flex items-center gap-2">
+                                    <button class="kt-btn kt-btn-outline kt-btn-sm kt-wishlist-icon"
+                                            data-product-id="{{ item.product.id }}">
+                                        <i class="ki-filled ki-heart heart-icon text-red-500 text-base"></i>
+                                    </button>
 
-                    {% if item.product.id in user_cart_ids %}
-                    <button class="kt-btn kt-btn-sm"
-                            style="background:#3b82f6; color:white;"
-                            data-product-id="{{ item.product.id }}">
-                        In cart <i class="ki-filled ki-handcart text-white text-base"></i>
-                    </button>
-                    {% else %}
-                    <button class="kt-btn kt-btn-primary kt-btn-sm add-to-cart-btn"
-                            data-product-id="{{ item.product.id }}">
-                        Add to cart <i class="ki-filled ki-handcart text-base"></i>
-                    </button>
-                    {% endif %}
+                                    {% if item.product.id in user_cart_ids %}
+                                    <button class="kt-btn kt-btn-sm"
+                                            style="background:#3b82f6; color:white;"
+                                            data-product-id="{{ item.product.id }}">
+                                        In cart <i class="ki-filled ki-handcart text-white text-base"></i>
+                                    </button>
+                                    {% else %}
+                                    <button class="kt-btn kt-btn-primary kt-btn-sm add-to-cart-btn"
+                                            data-product-id="{{ item.product.id }}">
+                                        Add to cart <i class="ki-filled ki-handcart text-base"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="col-span-full">
+                            <p class="text-gray-500 font-bold text-center">No items in wishlist.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
         </div>
-        {% empty %}
-        <div class="col-span-full">
-            <p class="text-gray-500 font-bold text-center">No items in wishlist.</p>
-        </div>
-        {% endfor %}
     </div>
 </div>
-
 <script>
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
             }
         }
+        return cookieValue;
     }
-    return cookieValue;
-}
-const csrftoken = getCookie('csrftoken');
 
-document.querySelectorAll('.kt-wishlist-icon').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const pid = btn.dataset.productId;
-        fetch("{% url 'dashboard:toggle_wishlist' %}", {
+    const csrftoken = getCookie('csrftoken');
+
+    document.querySelectorAll('.kt-wishlist-icon').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const pid = btn.dataset.productId;
+            fetch("{% url 'dashboard:toggle_wishlist' %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `product_id=${pid}`
+            })
+                .then(response => {
+                    if (response.status === 403) {
+                        alert('Please login to use wishlist.');
+                        window.location.href = '/login/';
+                        return;
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.status === 'removed') {
+                        const card = document.getElementById(`wish-${pid}`);
+                        if (card) card.remove();
+                        if (!document.querySelector('#wishlist-items .kt-list-card')) {
+                            document.getElementById('wishlist-items').innerHTML = '<p class="text-gray-500 font-bold text-center">No items in wishlist.</p>';
+                        }
+                    }
+                })
+                .catch(error => console.error('Wishlist toggle error:', error));
+        });
+    });
+
+    document.getElementById('wishlist-clear').addEventListener('click', () => {
+        fetch("{% url 'dashboard:clear_wishlist' %}", {
             method: 'POST',
             headers: {
                 'X-CSRFToken': csrftoken,
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: `product_id=${pid}`
-        })
-        .then(response => {
-            if (response.status === 403) {
-                alert('Please login to use wishlist.');
-                window.location.href = '/login/';
-                return;
             }
-            return response.json();
         })
-        .then(data => {
-            if (data.status === 'removed') {
-                const card = document.getElementById(`wish-${pid}`);
-                if (card) card.remove();
-                if (!document.querySelector('#wishlist-items .kt-list-card')) {
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'cleared') {
                     document.getElementById('wishlist-items').innerHTML = '<p class="text-gray-500 font-bold text-center">No items in wishlist.</p>';
                 }
-            }
-        })
-        .catch(error => console.error('Wishlist toggle error:', error));
+            })
+            .catch(error => console.error('Wishlist clear error:', error));
     });
-});
 
-document.getElementById('wishlist-clear').addEventListener('click', () => {
-    fetch("{% url 'dashboard:clear_wishlist' %}", {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': csrftoken,
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.status === 'cleared') {
-            document.getElementById('wishlist-items').innerHTML = '<p class="text-gray-500 font-bold text-center">No items in wishlist.</p>';
-        }
-    })
-    .catch(error => console.error('Wishlist clear error:', error));
-});
-
-document.querySelectorAll('.add-to-cart-btn').forEach(button => {
-    button.addEventListener('click', () => {
-        const productId = button.dataset.productId;
-        fetch("{% url 'dashboard:add_to_cart' %}", {
-            method: "POST",
-            headers: {
-                "X-CSRFToken": csrftoken,
-                "Content-Type": "application/x-www-form-urlencoded",
-            },
-            body: new URLSearchParams({
-                product_id: productId,
-                quantity: 1,
-            }),
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.status === "success") {
-                button.classList.remove('kt-btn-primary');
-                button.classList.add('kt-btn-success');
-                button.style.background = '#3b82f6';
-                button.style.color = 'white';
-                button.innerHTML = `In cart <i class="ki-filled ki-handcart text-white"></i>`;
-            } else {
-                alert("Something went wrong");
-            }
-        })
-        .catch(err => console.error("Add to cart error:", err));
+    document.querySelectorAll('.add-to-cart-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            const productId = button.dataset.productId;
+            fetch("{% url 'dashboard:add_to_cart' %}", {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": csrftoken,
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+                body: new URLSearchParams({
+                    product_id: productId,
+                    quantity: 1,
+                }),
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === "success") {
+                        button.classList.remove('kt-btn-primary');
+                        button.classList.add('kt-btn-success');
+                        button.style.background = '#3b82f6';
+                        button.style.color = 'white';
+                        button.innerHTML = `In cart <i class="ki-filled ki-handcart text-white"></i>`;
+                    } else {
+                        alert("Something went wrong");
+                    }
+                })
+                .catch(err => console.error("Add to cart error:", err));
+        });
     });
-});
 </script>
 {% endblock %}

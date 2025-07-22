@@ -113,7 +113,7 @@ class HomeView(TemplateView):
 
         # Featured Products
         all_ids = list(Product.objects.filter(is_active=True).values_list('id', flat=True))
-        random_ids = random.sample(all_ids, min(len(all_ids), 7))
+        random_ids = random.sample(all_ids, min(len(all_ids), 8))
         featured_products = Product.objects.filter(id__in=random_ids)
         for product in featured_products:
             main_img = ProductImage.objects.filter(product=product, is_main=True).first()

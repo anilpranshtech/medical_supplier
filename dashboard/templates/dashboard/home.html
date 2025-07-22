@@ -74,7 +74,7 @@
 
     /* Section Container */
     .section-container {
-        max-width: var(--custom-container-width, 90%);
+        max-width: var(--custom-container-width, 100%);
         margin-left: auto;
         margin-right: auto;
         margin-bottom: 1.5rem;
@@ -140,6 +140,12 @@
     .swiper-button-prev {
         z-index: 10;
     }
+
+    @media (min-width: 80rem) {
+    .xl\:grid-cols-8 {
+        grid-template-columns: repeat(8, minmax(0, 1fr));
+    }
+}
 </style>
 
 <!-- Begin Medical Banner Slider -->
@@ -168,8 +174,8 @@
     <!-- Featured Products -->
     <div class="section-container">
         <div class="grid grid-cols-1 gap-6 mt-5 py-5">
-            <div class="grid sm:grid-cols-4 xl:grid-cols-7 gap-5 mb-2">
-                {% for product in featured_products %}
+            <div class="grid sm:grid-cols-4 xl:grid-cols-8 gap-5 mb-2">
+                {% for product in featured_products|slice:":8" %}
                 <div class="kt-card">
                     <div class="kt-card-content flex flex-col justify-between p-2 gap-3">
                         <div>
@@ -647,8 +653,7 @@
         <div class="space-y-4">
             <div class="flex items-center justify-between gap-4">
                 <span class="text-lg font-medium text-gray-100">Limited-Time Deals</span>
-                <a class="kt-btn kt-btn-sm kt-btn-ghost kt-btn-primary" href="#">See All <i
-                        class="ki-filled ki-right"></i></a>
+                <a class="kt-link" href="{% url 'dashboard:search_results_grid' %}?{{ request.GET.urlencode }}">See All <i class="ki-filled ki-right text-xs"></i></a>
             </div>
             <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-2">
                 {% for product in limited_products %}

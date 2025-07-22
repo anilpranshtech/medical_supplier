@@ -300,7 +300,7 @@
                         </form>
                     </div>
                 </div>
-            
+
             <!-- Header Right: Actions and User Profile -->
             <div class="flex items-center gap-3 sm:gap-5 mr-5 px-5">
                 <button class="kt-btn kt-btn-ghost kt-btn-icon size-8 hover:bg-background hover:[&_i]:text-primary wishlist-drawer-toggle"
@@ -444,7 +444,7 @@
         </header>
 
         <!-- Bottom Header -->
-        <header class="flex items-center h-[50px] px-4 sm:px-6 transition-[height] shrink-0 mt-1 mb-1">
+        <header class="flex items-center h-[50px] px-10 sm:px-6 transition-[height] shrink-0 mt-1 mb-1">
             <div class="container flex justify-center items-center gap-3.5">
                 <div class="kt-nav-menu flex items-center gap-7 sm:gap-6 flex-wrap">
 
@@ -1436,7 +1436,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const searchForm = document.getElementById('search-form');
     const searchInput = document.getElementById('search-input');
     const clearSearch = document.getElementById('clear-search');
-    
+
     // Hide category list when searching
     searchForm.addEventListener('submit', function() {
         // Assuming your category list has an ID 'category-list'
@@ -1445,7 +1445,7 @@ document.addEventListener('DOMContentLoaded', function() {
             categoryList.style.display = 'none';
         }
     });
-    
+
     // Clear search functionality
     if (clearSearch) {
         clearSearch.addEventListener('click', function(e) {
@@ -1454,7 +1454,7 @@ document.addEventListener('DOMContentLoaded', function() {
             window.location.href = "{% url 'dashboard:search_results_grid' %}";
         });
     }
-    
+
     // Optional: Hide category list when user starts typing
     searchInput.addEventListener('input', function() {
         const categoryList = document.getElementById('category-list');

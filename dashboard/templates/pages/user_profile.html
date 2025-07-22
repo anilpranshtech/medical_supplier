@@ -34,16 +34,24 @@
                                                     {% csrf_token %}
                                                     <input accept=".png, .jpg, .jpeg" name="avatar" type="file">
                                                     <input name="avatar_remove" type="hidden">
-                                                    <button class="kt-image-input-remove"
-                                                            data-kt-image-input-remove="true" data-kt-tooltip="true"
-                                                            data-kt-tooltip-placement="right"
-                                                            data-kt-tooltip-trigger="hover" type="button"
-                                                            data-kt-tooltip-initialized="true">
-                                                        <i class="ki-filled ki-cross"></i>
-                                                        <span class="kt-tooltip" data-kt-tooltip-content="true">
-                                                            Click to remove or revert
-                                                        </span>
+                                                    <div class="relative">
+                                                    <!-- Image preview -->
+                                                    <div class="kt-image-input-placeholder ...">
+                                                        <div class="kt-image-input-preview ..."></div>
+                                                    </div>
+
+                                                    <!-- Remove button styled to float -->
+                                                    <button type="button"
+                                                        class="absolute top-0 right-0 bg-white/80 hover:bg-white p-1 rounded-full shadow"
+                                                        data-kt-image-input-remove="true"
+                                                        data-kt-tooltip="true"
+                                                        data-kt-tooltip-placement="right"
+                                                        data-kt-tooltip-trigger="hover"
+                                                        data-kt-tooltip-initialized="true">
+                                                        <i class="ki-filled ki-cross text-red-500 text-xs"></i>
                                                     </button>
+                                                </div>
+
                                                     <button type="submit" class="hidden">Upload</button>
                                                 </form>
                                                 <div class="kt-image-input-placeholder border-2 border-green-500 kt-image-input-empty:border-input"
