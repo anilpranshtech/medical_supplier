@@ -425,7 +425,7 @@
 {% include "adminv3/snippets/models/_model_user_update_role.html" %}
 
 {% include "adminv3/snippets/models/_model_user_adjust_account_status.html" %}
-
+{% include "adminv3/snippets/models/_model_user_modify_permission_groups.html" %}
 
 {% endblock %}
 
@@ -1004,6 +1004,139 @@ function deleteUserAccount(userId, button) {
         }
     });
 }
+
+
+<!--  User modify permission group  -->
+
+var KTModalModifyUserGroups = (function () {
+    var submitButton, validator, form, modal, modalEl;
+
+    // Handle form validation and submission
+    var handleForm = function () {
+
+        // Initialize form validation rules
+        if (!form || !submitButton) {
+            console.error('Form or submitButton not found.');
+            return;
+        }
+
+        validator = FormValidation.formValidation(form, {
+            fields: {
+                user_modify_groups_list: {
+                    validators: {
+                        notEmpty: {
+                            message: 'The field is required'
+                        },
+                    }
+                },
+            },
+            plugins: {
+                trigger: new FormValidation.plugins.Trigger(),
+                bootstrap: new FormValidation.plugins.Bootstrap5({
+                    rowSelector: '.fv-row',
+                    eleInvalidClass: 'is-invalid',
+                    eleValidClass: ''
+                }),
+            },
+        });
+
+        // Action buttons
+        submitButton.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            // Validate form before submit
+            if (validator) {
+                validator.validate().then(function (status) {
+                    if (status === 'Valid') {
+                        submitButton.setAttribute('data-kt-indicator', 'on');
+                        submitButton.disabled = true;
+
+                        $.ajax({
+                            url: form.getAttribute('data-url'),
+                            method: 'POST',
+                            dataType: 'json',
+                            headers: { 'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val() },
+                            data: $(form).serialize(),
+                            success: function (response) {
+                                submitButton.removeAttribute('data-kt-indicator');
+                                submitButton.disabled = false;
+
+                                Swal.fire({
+                                    text: response.message,
+                                    icon: 'success',
+                                    buttonsStyling: false,
+                                    confirmButtonText: 'Ok, got it!',
+                                    customClass: {
+                                        confirmButton: 'btn btn-primary',
+                                    },
+                                }).then(function (result) {
+                                    var redirectUrl = form.getAttribute('data-kt-redirect-url');
+                                    if (redirectUrl) {
+                                        location.href = redirectUrl;
+                                    }
+                                });
+                            },
+                            error: function (xhr, status, error) {
+                                submitButton.removeAttribute('data-kt-indicator');
+                                submitButton.disabled = false;
+                                form.reset();
+
+                                var response = xhr.responseJSON;
+                                var errorMessage = response && response.message ? response.message : 'Please enter valid details and try again.';
+
+                                Swal.fire({
+                                    text: errorMessage,
+                                    icon: 'error',
+                                    buttonsStyling: false,
+                                    confirmButtonText: 'Ok, got it!',
+                                    customClass: {
+                                        confirmButton: 'btn fw-bold btn-light-primary',
+                                    },
+                                }).then(function () {
+                                    KTUtil.scrollTop();
+                                });
+                            },
+                        });
+                    }
+                }).catch(function (error) {
+                    Swal.fire({
+                        text: 'Something went wrong! contact support.',
+                        icon: 'error',
+                        buttonsStyling: false,
+                        confirmButtonText: 'Ok, got it!',
+                        customClass: {
+                            confirmButton: 'btn fw-bold btn-light-primary',
+                        },
+                    }).then(function () {
+                        KTUtil.scrollTop();
+                    });
+                });
+            }
+        });
+    };
+
+    return {
+        init: function () {
+            modalEl = document.querySelector('#_model_user_modify_permission_groups');
+
+            if (!modalEl) {
+                console.error('Modal element not found.');
+                return;
+            }
+
+            modal = new bootstrap.Modal(modalEl);
+            form = document.querySelector('#_model_user_modify_permission_groups_form');
+            submitButton = document.getElementById('_model_user_modify_permission_groups_submit');
+
+            handleForm();
+        },
+    };
+})();
+
+// On document ready
+KTUtil.onDOMContentLoaded(function () {
+    KTModalModifyUserGroups.init();
+});
 
 
 </script>

@@ -73,6 +73,7 @@
                           </a>
                       </div>
 
+                      {% if request.user.is_superuser %}
                       <div class="menu-item {% if request.resolver_match.url_name == 'user_permissions' %} here show {% endif %}">
                            <a class="menu-link" href="{% url 'adminv3:user_permissions' %}">
                               <span class="menu-bullet">
@@ -81,6 +82,7 @@
                                <span class="menu-title">permissions</span>
                           </a>
                       </div>
+                      {% endif %}
 
                   </div>
 

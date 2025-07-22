@@ -80,12 +80,16 @@ class UserDetailView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
 
     def get(self, request, *args, **kwargs):
         user = get_object_or_404(User, pk=kwargs['pk'])
+        user_permission_groups = user.groups.all()
+        permission_group_list = Group.objects.all()
 
         context = {
             'user': user,
             'retail_profile': RetailProfile.objects.filter(user=user).first(),
             'wholesale_profile': WholesaleBuyerProfile.objects.filter(user=user).first(),
             'supplier_profile': SupplierProfile.objects.filter(user=user).first(),
+            'user_permission_groups': user_permission_groups,
+            'permission_group_list': permission_group_list,
         }
         return render(request, self.template_name, context)
 
@@ -248,6 +252,35 @@ class User_Accounts_Delete_Account(StaffAccountRequiredMixin, View):
             return JsonResponse({'status': 'valid', 'message': 'Account has been deleted.'}, status=200)
         except Exception as e:
             print(f"Error while terminating task: {str(e)}")
+
+        return JsonResponse({'status': 'error', 'message': 'Check details and try again!'}, status=400)
+
+
+class User_Accounts_Modify_Permission_Groups(StaffAccountRequiredMixin, View):
+
+    def post(self, request, *args, **kwargs):
+        user_id = kwargs.get('pk')
+        post_dict = request.POST
+
+        user_obj = User.objects.get(pk=user_id)
+
+        if not request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=405)
+
+        try:
+            user_modify_groups_list = request.POST.getlist('user_modify_groups_list')
+            selected_group_ids = [int(_) for _ in user_modify_groups_list if _.isdigit()]
+
+            user_obj.groups.clear()
+
+            new_groups = Group.objects.filter(id__in=selected_group_ids)
+            user_obj.groups.add(*new_groups)
+
+
+            return JsonResponse({'status': 'valid', 'message': 'Permission Groups has been updated.'}, status=200)
+        except Exception as e:
+            print("error  --",e)
+            pass
 
         return JsonResponse({'status': 'error', 'message': 'Check details and try again!'}, status=400)
 
