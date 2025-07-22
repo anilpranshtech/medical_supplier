@@ -143,7 +143,7 @@
     }
 </style>
 
-<title>Search Results - Medical Supplies</title>
+<title>Category Results - Medical Supplies</title>
 <div class="kt-container-fixed mt-1" style="max-width: var(--custom-container-width, 90%);">
     <div class="flex flex-col items-stretch gap-7 mt-5 py-5">
         <div class="flex flex-wrap items-center gap-5 justify-between mt-3">
@@ -228,7 +228,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                             </svg>
                         </button>
-                        <div id="cat-{{ category.id }}" class="subcategory-list hidden">
+                        <div id="cat-{{ category.id }}" class="subcategory-list {% if forloop.first %}block{% else %}hidden{% endif %}">
                             <ul>
                                 {% for subcategory in category.productsubcategory_set.all %}
                                     {% for lastcategory in subcategory.productlastcategory_set.all %}
@@ -266,29 +266,30 @@
                     {% for product in products %}
                     <div class="kt-list-card" data-product='{
                         "name": "{{ product.name }}",
-                        "image": "{{ product.image.url }}",
-                        "description": "{{ product.description }}",
-                        "sku": "{{ product.sku }}",
+                        "image": "{% for img in product.productimage_set.all %}{% if img.is_main %}{{ img.image.url }}{% endif %}{% empty %}{% static 'default_product.png' %}{% endfor %}",
+                        "description": "{{ product.description|truncatewords:20 }}",
                         "category": "{{ product.last_category.sub_category.category.name }}",
-                        "rating": {{ product.average_rating|default:0 }},
-                        "price": "${{ product.price }}",
-                        {% if product.discounted_price %}
-                        "original_price": "${{ product.price }}",
-                        "discount": "save {{ product.discount_percentage }}%",
+                        "price": "${{ product.price|floatformat:2 }}",
+                        {% if product.offer_percentage and product.offer_active %}
+                        "original_price": "${{ product.price|floatformat:2 }}",
+                        "discount": "save {{ product.offer_percentage }}%"
                         {% endif %}
-                        "more_info": "{{ product.additional_info }}"
                     }'>
                         <!-- Product Image -->
                         <div class="kt-list-card-image">
                             {% with False as image_shown %}
                                 {% for img in product.productimage_set.all %}
                                     {% if img.is_main and not image_shown %}
-                                        <img alt="{{ product.name }}" class="h-full w-full object-contain cursor-pointer"
-                                             src="{{ img.image.url }}" data-kt-modal-toggle="#modal_shop_product_details">
+                                        <a href="{% url 'dashboard:product_detail' product.id %}" class="block">
+                                            <img alt="{{ product.name }}" class="h-full w-full object-contain cursor-pointer"
+                                                 src="{{ img.image.url }}">
+                                        </a>
                                         {% with True as image_shown %}{% endwith %}
                                     {% endif %}
                                 {% empty %}
-                                    <img src="/static/default_product.png" alt="Default Image" class="h-full w-full object-contain">
+                                    <a href="{% url 'dashboard:product_detail' product.id %}" class="block">
+                                        <img src="{% static 'default_product.png' %}" alt="Default Image" class="h-full w-full object-contain">
+                                    </a>
                                 {% endfor %}
                             {% endwith %}
                         </div>
@@ -296,8 +297,14 @@
                         <!-- Product Details -->
                         <div class="kt-list-card-content">
                             <h3 class="text-lg font-bold text-gray-650 mb-1">
-                                <a href="#" data-kt-modal-toggle="#modal_shop_product_details">
-                                    {{ product.name }}
+                                <a href="{% url 'dashboard:product_detail' product.id %}" class="hover:text-primary">
+                                    {% if product.offer_percentage and product.offer_active %}
+                                        <div class="flex items-center gap-2">
+                                            <span>{{ product.name }}</span>
+                                        </div>
+                                    {% else %}
+                                        {{ product.name }}
+                                    {% endif %}
                                 </a>
                             </h3>
                             <p class="text-sm text-gray-200 mb-2">
@@ -315,31 +322,25 @@
                                     {{ product.average_rating|floatformat:1 }}
                                 </span>
                                 {% endif %}
-
-                                <span class="text-xs font-normal text-secondary-foreground">
-                                    SKU: <span class="font-medium">{{ product.sku }}</span>
-                                </span>
                             </div>
                         </div>
 
                         <!-- Price and Actions -->
                         <div class="kt-list-card-actions">
                             <div class="text-right mb-3">
-                                {% if product.discounted_price %}
+                                {% if product.offer_percentage and product.offer_active %}
                                     <span class="text-xs font-normal text-secondary-foreground line-through">
-                                        ${{ product.price }}
+                                        ${{ product.price|floatformat:2 }}
                                     </span>
                                     <div class="flex items-center gap-2">
                                         <span class="text-lg font-bold text-mono">
-                                            ${{ product.discounted_price }}
+                                            ${{ product.discounted_price|floatformat:2 }}
                                         </span>
-                                        <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">
-                                            save {{ product.discount_percentage }}%
-                                        </span>
+                                        <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">save {{ product.offer_percentage }}%</span>
                                     </div>
                                 {% else %}
                                     <span class="text-lg font-bold text-mono">
-                                        ${{ product.price }}
+                                        ${{ product.price|floatformat:2 }}
                                     </span>
                                 {% endif %}
                             </div>
@@ -368,7 +369,7 @@
                     </div>
                     {% empty %}
                     <div class="col-span-3 text-center py-10">
-                        <p>No products found in this category.</p>
+                        <p>No products found.</p>
                     </div>
                     {% endfor %}
                     {% if page_obj.has_other_pages %}
@@ -426,36 +427,41 @@ function getCookie(name) {
 const csrftoken = getCookie('csrftoken');
 
 function toggleCategory(id) {
-    document.querySelectorAll('[id^="cat-"]').forEach(el => el.classList.add('hidden'));
-    document.querySelectorAll('[id^="arrow-"]').forEach(arrow => arrow.classList.remove('rotate-180'));
-
     const content = document.getElementById(id);
     const arrow = document.getElementById("arrow-" + id.replace("cat-", ""));
     const alreadyOpen = !content.classList.contains("hidden");
 
+    // Close all categories
+    document.querySelectorAll('[id^="cat-"]').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('[id^="arrow-"]').forEach(arrow => arrow.classList.remove('rotate-180'));
+
+    // Toggle the clicked category
     if (!alreadyOpen) {
         content.classList.remove("hidden");
         arrow.classList.add("rotate-180");
-        localStorage.setItem('openCategory', id);
-    } else {
-        content.classList.add("hidden");
-        arrow.classList.remove("rotate-180");
-        localStorage.removeItem('openCategory');
     }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    const openId = localStorage.getItem('openCategory');
-    if (openId) {
-        const el = document.getElementById(openId);
-        const arrow = document.getElementById("arrow-" + openId.replace("cat-", ""));
-        if (el && arrow) {
-            el.classList.remove("hidden");
-            arrow.classList.add("rotate-180");
+    // Open the first category and fetch its first last category products
+    const firstCategory = document.querySelector('[id^="cat-"]');
+    if (firstCategory) {
+        const firstCategoryId = firstCategory.id;
+        const firstArrow = document.getElementById("arrow-" + firstCategoryId.replace("cat-", ""));
+        if (firstCategory && firstArrow) {
+            firstCategory.classList.remove("hidden");
+            firstArrow.classList.add("rotate-180");
+            
+            // Find the first last category with products
+            const firstLastCategoryLink = firstCategory.querySelector('.category-link[data-last-category]');
+            if (firstLastCategoryLink) {
+                const firstLastCategoryId = firstLastCategoryLink.dataset.lastCategory;
+                fetchProducts({ last_category: firstLastCategoryId, page: 1 });
+            }
         }
     }
 
-    // category selection
+    // Category selection
     document.querySelectorAll('.category-link').forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
@@ -464,25 +470,38 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    //  pagination
+    // Pagination
     document.querySelectorAll('.pagination-link').forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
             const page = link.dataset.page;
             const params = new URLSearchParams(window.location.search);
-            fetchProducts({ page: page, sort_by: params.get('sort_by'), last_category: params.get('last_category') });
+            fetchProducts({ 
+                page: page, 
+                sort_by: params.get('sort_by'), 
+                last_category: params.get('last_category'),
+                category: params.get('category'),
+                sub_category: params.get('sub_category')
+            });
         });
     });
 
-    // sorting
+    // Sorting
     document.querySelectorAll('[data-kt-select-option]').forEach(option => {
         option.addEventListener('click', () => {
             const value = option.getAttribute('data-value');
-            fetchProducts({ sort_by: value, page: 1 });
+            const params = new URLSearchParams(window.location.search);
+            fetchProducts({ 
+                sort_by: value, 
+                page: 1, 
+                last_category: params.get('last_category'),
+                category: params.get('category'),
+                sub_category: params.get('sub_category')
+            });
         });
     });
 
-    //  add to cart
+    // Add to cart
     document.querySelectorAll('.add-to-cart-btn').forEach(button => {
         button.addEventListener('click', () => {
             const productId = button.dataset.productId;
@@ -513,11 +532,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // wishlist toggle
+    // Wishlist toggle
     document.querySelectorAll('.kt-wishlist-icon').forEach(button => {
         button.addEventListener('click', () => {
             const productId = button.dataset.productId || '0';
-            fetch('/wishlist/toggle/', {
+            fetch("{% url 'dashboard:toggle_wishlist' %}", {
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': csrftoken,
@@ -560,10 +579,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    //  products function
+    // Fetch products function
     function fetchProducts(params) {
         const urlParams = new URLSearchParams(window.location.search);
-        Object.keys(params).forEach(key => urlParams.set(key, params[key]));
+        Object.keys(params).forEach(key => {
+            if (params[key]) {
+                urlParams.set(key, params[key]);
+            } else {
+                urlParams.delete(key);
+            }
+        });
         const url = `{% url 'dashboard:search_results_list' %}?${urlParams.toString()}`;
 
         fetch(url, {
@@ -626,7 +651,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.kt-wishlist-icon').forEach(button => {
                 button.addEventListener('click', () => {
                     const productId = button.dataset.productId || '0';
-                    fetch('/wishlist/toggle/', {
+                    fetch("{% url 'dashboard:toggle_wishlist' %}", {
                         method: 'POST',
                         headers: {
                             'X-CSRFToken': csrftoken,
@@ -656,7 +681,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 link.addEventListener('click', (e) => {
                     e.preventDefault();
                     const page = link.dataset.page;
-                    fetchProducts({ page: page, sort_by: urlParams.get('sort_by'), last_category: urlParams.get('last_category') });
+                    const params = new URLSearchParams(window.location.search);
+                    fetchProducts({ 
+                        page: page, 
+                        sort_by: params.get('sort_by'), 
+                        last_category: params.get('last_category'),
+                        category: params.get('category'),
+                        sub_category: params.get('sub_category')
+                    });
                 });
             });
 
@@ -667,7 +699,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     fetchProducts({ last_category: lastCategoryId, page: 1 });
                 });
             });
-
 
             window.history.pushState({}, '', url);
         })

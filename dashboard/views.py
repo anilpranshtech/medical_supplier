@@ -435,6 +435,7 @@ class SearchSuggestionsView(View):
             ]
 
         return JsonResponse({'suggestions': suggestions})
+    
 class SearchResultsGridView(TemplateView):
     template_name = 'userdashboard/view/search_results_grid.html'
 
@@ -565,9 +566,6 @@ class SearchResultsGridView(TemplateView):
             context['user_wishlist_ids'] = []
 
         return context
-
-
-
 
 
 class SearchResultsListView(TemplateView):
