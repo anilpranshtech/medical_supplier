@@ -1136,9 +1136,9 @@ class PaymentMethodView(LoginRequiredMixin, View):
 
                 card_details = charge.payment_method_details.get("card") if charge.payment_method_details else None
 
-                CustomerBillingAddress.objects.update_or_create(
-                    user=user,
-                    defaults={
+                latest_address = CustomerBillingAddress.objects.filter(user=user, is_deleted=False).order_by('-id').first()
+                if latest_address:
+                    for attr, value in {
                         "customer_name": crd_name,
                         "customer_address1": request.POST.get("customer_address1"),
                         "customer_address2": request.POST.get("customer_address2"),
@@ -1154,8 +1154,12 @@ class PaymentMethodView(LoginRequiredMixin, View):
                             "exp_month": card_details.exp_month,
                             "exp_year": card_details.exp_year
                         }) if card_details else None
-                    }
-                )
+                    }.items():
+                        setattr(latest_address, attr, value)
+                    latest_address.save()
+                else:
+                    # fallback to create
+                    CustomerBillingAddress.objects.create(...)
 
                 messages.success(request, "Stripe Payment successful.")
                 return redirect("dashboard:order_placed")
