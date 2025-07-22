@@ -1,3 +1,5 @@
+{% load adminv3_tags %}
+
 <div id="kt_app_header" class="app-header d-flex ">
     <div class="app-container container-fluid d-flex align-items-center justify-content-between"
          id="kt_app_header_container">
@@ -16,16 +18,42 @@
 
 
         <div class="d-flex flex-lg-grow-1 flex-stack" id="kt_app_header_wrapper">
+
+            <div id="kt_header_search" class="header-search d-flex align-items-start ms-4 w-lg-800px"
+                 data-kt-search-keypress="true" data-kt-search-min-length="2" data-kt-search-enter="enter"
+                 data-kt-search-layout="menu" data-kt-search-responsive="true" data-kt-menu-trigger="auto"
+                 data-kt-menu-permanent="true" data-kt-menu-placement="bottom-start">
+
+                <button class="btn btn-sm position-relative mx-3 fw-bolder" style="background:#ffcccc ;color: #ff0000; width:190px;">
+                    Total Users <br>{% tag_total_users %}
+                </button>
+                <button class="btn btn-sm position-relative mx-3 fw-bolder" style="background:#e6ccff ;color: #8c1aff; width:190px;">
+                    Active Users <br>{% tag_total_active_users %}
+                </button>
+                <button class="btn btn-sm position-relative mx-3 fw-bolder" style="background:#cce6ff ;color: #0066cc; width:190px;">
+                    Retailer <br> {% tag_total_retailer %}
+                </button>
+                <button class="btn btn-sm position-relative mx-3 fw-bolder" style="background:#fff0b3 ;color: #e69900 ; width:190px;">
+                    Wholesaler <br> {% tag_total_wholesaler %}
+                </button>
+
+                <button class="btn btn-sm position-relative mx-3 fw-bolder"
+                        onclick="window.location='';" style="background:#c2f0c2; color:#29a329; width:190px;">
+                    Supplier <br> {% tag_total_suppliers %}
+                </button>
+            </div>
+
             <div class="app-header-wrapper d-flex align-items-center justify-content-around justify-content-lg-between flex-wrap gap-6 gap-lg-0 mb-6 mb-lg-0"
                  data-kt-swapper="true" data-kt-swapper-mode="{default: 'prepend', lg: 'prepend'}"
                  data-kt-swapper-parent="{default: '#kt_app_content_container', lg: '#kt_app_header_wrapper'}">
                 <div class="d-none d-md-block h-40px border-start border-gray-200 mx-10"></div>
             </div>
+
             <div class="app-navbar flex-shrink-0 gap-2 gap-lg-4">
 
-
-                <!--  User menu  -->
                 <div class="app-navbar-item" id="kt_header_user_menu_toggle">
+
+                     <!--  User menu  -->
                     <div class="cursor-pointer symbol symbol-40px py-2 px-2 bg-light shadow-sm"
                          data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-attach="parent"
                          data-kt-menu-placement="bottom-end">
@@ -74,63 +102,8 @@
 
                         <div class="separator my-2"></div>
 
-                        <div class="menu-item px-5">
-                            <a href="{% url 'adminv2:overview_list' %}"
-                               class="menu-link px-5">
-                                My Profile
-                            </a>
-                        </div>
-                        <div class="menu-item px-5" data-kt-menu-trigger="{default: 'click', lg: 'hover'}"
-                             data-kt-menu-placement="left-start" data-kt-menu-offset="-15px, 0">
-                            <a href="#" class="menu-link px-5">
-                                <span class="menu-title">My Subscription</span>
-                                <span class="menu-arrow"></span>
-
-                                <div class="menu-item px-5">
-                                    <a href="{% url 'adminv2:order_listing' %}"
-                                       class="menu-link px-5">
-                                        My Orders
-                                    </a>
-                                </div>
-
-                                <div class="menu-sub menu-sub-dropdown w-175px py-4">
-
-                                    <div class="menu-item px-3">
-                                        <a href="https://preview.keenthemes.com/metronic8/demo58/account/billing.html"
-                                           class="menu-link px-5">
-                                            Billing
-                                        </a>
-                                    </div>
 
 
-                                    <div class="menu-item px-3">
-                                        <a href="https://preview.keenthemes.com/metronic8/demo58/account/statements.html"
-                                           class="menu-link d-flex flex-stack px-5">
-                                            Statements
-
-                                            <span class="ms-2 lh-0" data-bs-toggle="tooltip"
-                                                  title="View your statements">
-                                            <i class="ki-outline ki-information-5 fs-5"></i> </span>
-                                        </a>
-                                    </div>
-
-                                    <div class="separator my-2"></div>
-
-                                    <div class="menu-item px-3">
-                                        <div class="menu-content px-3">
-                                            <label
-                                                    class="form-check form-switch form-check-custom form-check-solid">
-                                                <input class="form-check-input w-30px h-20px" type="checkbox"
-                                                       value="1" checked="checked" name="notifications"/>
-                                                <span class="form-check-label text-muted fs-7">
-                                                Notifications
-                                            </span>
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </a>
-                        </div>
                         <div class="menu-item px-5">
                             <a href="{% url 'adminv2:products_list' %}"
                                class="menu-link px-5">

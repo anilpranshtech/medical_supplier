@@ -10,7 +10,7 @@ from adminv3.mixins import StaffAccountRequiredMixin
 from django.contrib.auth.models import User, Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from adminv3.utils import requestParamsToDict
-from dashboard.models import RetailProfile, WholesaleBuyerProfile, SupplierProfile
+from dashboard.models import RetailProfile, WholesaleBuyerProfile, SupplierProfile, Product, ProductImage
 
 
 class HomeView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
@@ -458,11 +458,7 @@ class User_Permissions_EditGroup(StaffAccountRequiredMixin, View):
             if request.headers.get('HX-Request'):
                 id = kwargs['UID']
 
-
-                print('group id_____ ---', id)
-
-                skipped_permissions = [
-                               ]
+                skipped_permissions = [ ]
 
                 group_obj = get_object_or_404(Group, pk=id)
 
@@ -489,11 +485,9 @@ class User_Permissions_EditGroup(StaffAccountRequiredMixin, View):
                     'group_permissions': list(group_obj.permissions.values_list('codename', flat=True))
                 }
 
-
                 return render(request, 'adminv3/permissions/snippets/form/_form_permission_group_edit.html', context)
 
         except Exception as e:
-
             return HttpResponse("Something went wrong! Contact Support", status=500, content_type="text/html")
 
 
@@ -538,6 +532,12 @@ class ProductsListView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
     template_name = 'adminv3/products/products_list.html'
 
     def get(self, request):
+        user = request.user
+        products = Product.objects.all().order_by('-created_at')
 
-        return render(request, self.template_name)
+        for product in products:
+            image = ProductImage.objects.filter(product=product).first()
+            product.image_url = image.image.url if image else '/static/adminv2/media/stock/ecommerce/placeholder.png'
+
+        return render(request, self.template_name, {'products': products})
 

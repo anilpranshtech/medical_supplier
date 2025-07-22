@@ -34,7 +34,7 @@ urlpatterns = [
     path('users/permissions/<UID>/edit/', User_Permissions_EditGroup.as_view(), name='user_permissions_edit_group'),
 
 
-    # Products pages
+    # Products urls
     path('products/list/', ProductsListView.as_view(), name='products_list'),
 
 ]
