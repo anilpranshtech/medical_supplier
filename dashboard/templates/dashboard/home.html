@@ -258,7 +258,7 @@
         </div>
     </div>
 
-    <!-- Special Offers -->
+   <!-- Special Offers -->
     <div class="section-container">
         <div class="space-y-5">
             <div class="flex items-center justify-between gap-4">
@@ -273,7 +273,7 @@
                         <div class="kt-card-content flex items-center flex-wrap sm:flex-nowrap justify-between gap-5 lg:gap-9 lg:px-7.5 p-5">
                             <div class="flex flex-col">
                                 <div class="mb-3">
-                                    {% if product.offer_percentage and product.offer_percentage > 0 %}
+                                    {% if product.offer_active and product.offer_percentage %}
                                     <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">save {{ product.offer_percentage|floatformat:0 }}%</span>
                                     {% endif %}
                                 </div>
@@ -302,7 +302,7 @@
                                         <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 open-rfq-modal"
                                                 data-product-id="{{ product.id }}"
                                                 data-product-name="{{ product.name }}"
-                                                data-product-price="{{ product.price }}"
+                                                data-product-price="{{ product.discounted_price|floatformat:2 }}"
                                                 data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
                                                 data-quantity="1">
                                             RFQ <i class="ki-solid ki-file-text"></i>
@@ -320,12 +320,14 @@
                                             <i class="ki-filled ki-heart heart-icon text-xs"></i>
                                         </button>
                                     {% endif %}
-                                    {% if product.original_price and product.original_price > product.price %}
+                                    {% if product.offer_active and product.offer_percentage %}
                                     <span class="text-base font-normal text-secondary-foreground line-through pt-[1px]">
-                                        ${{ product.original_price|floatformat:2 }}
+                                        ${{ product.price|floatformat:2 }}
                                     </span>
-                                    {% endif %}
+                                    <span class="text-base font-semibold text-mono">${{ product.discounted_price|floatformat:2 }}</span>
+                                    {% else %}
                                     <span class="text-base font-semibold text-mono">${{ product.price|floatformat:2 }}</span>
+                                    {% endif %}
                                 </div>
                             </div>
                             <a href="{% url 'dashboard:product_detail' product.id %}" class="block">
@@ -339,9 +341,9 @@
                                      data-product-category="{{ product.category|default:'Uncategorized' }}"
                                      data-product-rating="{{ product.rating|default:'4.5' }}"
                                      data-product-more-info="{{ product.more_info|default:'No additional info' }}"
-                                     data-product-price="{{ product.price|default:'0.00' }}"
-                                     data-product-original-price="{{ product.original_price|default:'' }}"
-                                     data-product-discount="{{ product.offer_percentage|default:'' }}"/>
+                                     data-product-price="{{ product.discounted_price|floatformat:2 }}"
+                                     data-product-original-price="{% if product.offer_active and product.offer_percentage %}{{ product.price|floatformat:2 }}{% endif %}"
+                                     data-product-discount="{% if product.offer_active and product.offer_percentage %}save {{ product.offer_percentage|floatformat:0 }}%{% endif %}"/>
                             </a>
                         </div>
                     </div>
@@ -362,17 +364,22 @@
                                          data-product-category="{{ product.category|default:'Uncategorized' }}"
                                          data-product-rating="{{ product.rating|default:'4.5' }}"
                                          data-product-more-info="{{ product.more_info|default:'No additional info' }}"
-                                         data-product-price="{{ product.price|default:'0.00' }}"
-                                         data-product-original-price="{{ product.original_price|default:'' }}"
-                                         data-product-discount="{{ product.offer_percentage|default:'' }}"/>
+                                         data-product-price="{{ product.discounted_price|floatformat:2 }}"
+                                         data-product-original-price="{% if product.offer_active and product.offer_percentage %}{{ product.price|floatformat:2 }}{% endif %}"
+                                         data-product-discount="{% if product.offer_active and product.offer_percentage %}save {{ product.offer_percentage|floatformat:0 }}%{% endif %}"/>
                                 </a>
                                 <div class="mb-3.5">
-                                    <span class="text-sm font-medium text-mono">${{ product.price|floatformat:2 }}</span>
-                                    {% if product.offer_percentage and product.offer_percentage > 0 %}
+                                    {% if product.offer_active and product.offer_percentage %}
+                                        <span class="text-sm font-normal text-secondary-foreground line-through pt-[1px]">
+                                    ${{ product.price|floatformat:2 }}
+                                </span>
+                                    <span class="text-sm font-medium text-mono">${{ product.discounted_price|floatformat:2 }}</span>
                                     <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">save {{ product.offer_percentage|floatformat:0 }}%</span>
+                                    {% else %}
+                                    <span class="text-sm font-medium text-mono">${{ product.price|floatformat:2 }}</span>
                                     {% endif %}
                                 </div>
-                                <span class="text-base font-medium text-mono mb-เกมจากค่าย PG Slot ในประเทศไทย3">{{ product.name|default:'Unnamed Product' }}</span>
+                                <span class="text-base font-medium text-mono mb-3">{{ product.name|default:'Unnamed Product' }}</span>
                                 <div class="flex items-center gap-2.5 mb-2.5">
                                     {% if request.user.is_authenticated %}
                                         {% if product.id in user_cart_ids %}
@@ -396,7 +403,7 @@
                                         <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 open-rfq-modal"
                                                 data-product-id="{{ product.id }}"
                                                 data-product-name="{{ product.name }}"
-                                                data-product-price="{{ product.price }}"
+                                                data-product-price="{{ product.discounted_price|floatformat:2 }}"
                                                 data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
                                                 data-quantity="1">
                                             RFQ <i class="ki-solid ki-file-text"></i>
@@ -409,10 +416,8 @@
                                         <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
                                     </button>
                                 </div>
-                                {% if product.original_price and product.original_price > product.price %}
-                                <span class="text-sm font-normal text-secondary-foreground line-through pt-[1px]">
-                                    ${{ product.original_price|floatformat:2 }}
-                                </span>
+                                {% if product.offer_active and product.offer_percentage %}
+                            
                                 {% endif %}
                             </div>
                         </div>
