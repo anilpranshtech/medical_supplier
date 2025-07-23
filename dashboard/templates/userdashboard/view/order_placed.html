@@ -1,5 +1,7 @@
 {% extends "pages/base.html" %}
 {% load static %}
+{% load custom_filters %}
+
 {% block content %}
 <div class="kt-container-fixed mt-1" style="max-width: var(--custom-container-width, 85%);">
     <div class="flex flex-col items-stretch gap-7 mt-5 py-5">
@@ -49,65 +51,78 @@
                         <!-- Left Side: Order Details -->
                         <div class="lg:col-span-2 space-y-5">
                             <div class="kt-card">
-                                <div class="kt-card-header px-5">
-                                    <h3 class="kt-card-title">Order Confirmation</h3>
-                                </div>
-                                <div class="kt-card-content px-0 py-5 space-y-2">
-                                    <div class="px-5">
-                                        <h4 class="text-lg font-semibold text-mono mb-3">Thank you for your order!</h4>
-                                        <p class="text-sm text-secondary-foreground">
-                                            Your order{% if order_ids|length > 1 %}s{% endif %}
-                                            #{{ order_ids|join:", #" }}
-                                            {% if order_ids|length > 1 %}have{% else %}has{% endif %} been placed successfully.
-                                        </p>
-                                        <p class="text-sm text-secondary-foreground">
-                                            Order Date: {{ order_date|date:"F j, Y, g:i A" }}
-                                        </p>
-                                        <p class="text-sm text-secondary-foreground">
-                                            Estimated Delivery: {{ estimated_delivery|date:"F j, Y" }}
-                                        </p>
+                                <div class="kt-card-header justify-start bg-muted/70 gap-9 h-auto py-5">
+                                    <div class="flex flex-col gap-1.5">
+                                        <span class="text-xs font-normal text-secondary-foreground">Order ID</span>
+                                        <span class="text-sm font-medium text-mono">{{ order_id|default:"N/A" }}</span>
                                     </div>
-                                    <div class="border-b border-border mb-4 mt-5"></div>
-                                    <div class="px-5">
-                                        <h4 class="text-sm font-medium text-mono mb-3">Order Items</h4>
-                                        {% for order in orders %}
-                                            <div class="flex items-start gap-4 mb-4">
-                                                {% if order.product.main_image %}
-                                                    <img src="{{ order.product.main_image.0.image.url }}" alt="{{ order.product.name }}"
-                                                         class="w-16 h-16 object-cover rounded">
-                                                {% else %}
-                                                    <div class="w-16 h-16 bg-muted rounded flex items-center justify-center">
-                                                        <span class="text-xs text-muted-foreground">No Image</span>
+                                    <div class="flex flex-col gap-1.5">
+                                        <span class="text-xs font-normal text-secondary-foreground">Order Placed</span>
+                                        <span class="text-sm font-medium text-mono">{{ order_date|date:"d F, Y"|default:"N/A" }}</span>
+                                    </div>
+                                    <div class="flex flex-col gap-1.5">
+                                        <span class="text-xs font-normal text-secondary-foreground">Total</span>
+                                        <span class="text-sm font-medium text-mono">{{ currency_symbol }} {{ order_summary.total|floatformat:2|default:"0.00" }}</span>
+                                    </div>
+                                    <div class="flex flex-col gap-1.5">
+                                        <span class="text-xs font-normal text-secondary-foreground">Ship to</span>
+                                        <span class="text-sm font-medium text-mono">{{ billing.customer_name|default:user.get_full_name|default:"N/A" }}</span>
+                                    </div>
+                                    <div class="flex flex-col gap-1.5">
+                                        <span class="text-xs font-normal text-secondary-foreground">Estimated Delivery</span>
+                                        <span class="text-sm font-medium text-mono">{{ estimated_delivery|date:"d F, Y"|default:"N/A" }}</span>
+                                    </div>
+                                </div>
+                                <div class="kt-card-content p-5 lg:p-7.5 space-y-5">
+                                    {% for item in order_items %}
+                                        <div class="kt-card">
+                                            <div class="kt-card-content flex items-center flex-wrap justify-between gap-4.5 p-2 pe-5">
+                                                <div class="flex items-center gap-3.5">
+                                                    <div class="kt-card flex items-center justify-center bg-accent/50 h-[70px] w-[90px] shadow-none">
+                                                        {% if item.product.main_image %}
+                                                            <img alt="{{ item.product.name|default:'Product' }}" class="cursor-pointer h-[70px]" src="{{ item.product.main_image.0.image.url }}">
+                                                        {% else %}
+                                                            <img alt="placeholder" class="cursor-pointer h-[70px]" src="{% static 'metronic/tailwind/dist/assets/media/store/client/600x600/placeholder.png' %}">
+                                                        {% endif %}
                                                     </div>
-                                                {% endif %}
-                                                <div class="flex-1">
-                                                    <h5 class="text-sm font-medium">{{ order.product.name }}</h5>
-                                                    <p class="text-xs text-secondary-foreground">
-                                                        Brand: {{ order.product.brand.name|default:"N/A" }}
-                                                    </p>
-                                                    <p class="text-xs text-secondary-foreground">
-                                                        Quantity: {{ order.quantity }}
-                                                    </p>
-                                                    <p class="text-xs text-secondary-foreground">
-                                                        Price: {{ order.payment_currency }} {{ order.price|floatformat:2 }}
-                                                    </p>
-                                                    <p class="text-xs text-secondary-foreground">
-                                                        Status: {{ order.get_status_display }}
-                                                    </p>
+                                                    <div class="flex flex-col gap-1">
+                                                        <a class="hover:text-primary text-sm font-medium text-mono leading-5.5" href="#">{{ item.product.name|default:"N/A" }}</a>
+                                                        <div class="flex items-center gap-1.5">
+                                                            <span class="text-xs font-normal text-secondary-foreground uppercase">
+                                                                SKU: <span class="text-xs font-medium text-foreground">{{ item.product.supplier_sku|default:"N/A" }}</span>
+                                                            </span>
+                                                            {% if item.product.offer_active and item.product.offer_percentage %}
+                                                                <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">Save {{ item.product.offer_percentage|floatformat:0 }}%</span>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="flex flex-col gap-1.5">
+                                                    <span class="text-xs font-normal text-secondary-foreground text-end">{{ item.quantity }} x</span>
+                                                    <div class="flex items-center flex-wrap gap-1.5">
+                                                        {% if item.product.offer_active and item.product.offer_percentage %}
+                                                            <span class="text-sm font-normal text-secondary-foreground line-through">
+                                                                {{ currency_symbol }} {{ item.product.price|floatformat:2 }}
+                                                            </span>
+                                                        {% endif %}
+                                                        <span class="text-sm font-semibold text-mono">
+                                                            {{ currency_symbol }} {{ item.quantity|multiply:item.price|floatformat:2 }}
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        {% endfor %}
-                                    </div>
+                                        </div>
+                                    {% empty %}
+                                        <div class="text-center text-sm text-secondary-foreground">
+                                            No items in this order.
+                                        </div>
+                                    {% endfor %}
                                 </div>
                             </div>
                             <!-- Navigation -->
                             <div class="flex justify-end items-center flex-wrap gap-3">
-                                <a class="kt-btn kt-btn-outline" href="{% url 'dashboard:my_orders' %}">
-                                    View All Orders
-                                </a>
-                                <a class="kt-btn kt-btn-primary" href="{% url 'dashboard:home' %}">
-                                    Continue Shopping
-                                </a>
+                                <a class="kt-btn kt-btn-outline" href="{% url 'dashboard:my_orders' %}">View All Orders</a>
+                                <a class="kt-btn kt-btn-primary" href="{% url 'dashboard:home' %}">Continue Shopping</a>
                             </div>
                         </div>
 
@@ -124,23 +139,23 @@
                                             {% if billing %}
                                                 Shipping to {{ billing.address_title|default:"Default Address" }}
                                             {% else %}
-                                                No shipping address selected
+                                                <a href="{% url 'dashboard:shipping_info' %}" class="text-primary">Select a shipping address</a>
                                             {% endif %}
                                         </span>
                                         <div class="flex flex-col gap-1 text-xs font-normal text-secondary-foreground">
                                             {% if billing %}
-                                                <span>{{ billing.customer_name|default:user.get_full_name }}</span>
-                                                <span>{{ billing.customer_address1 }}</span>
+                                                <span>{{ billing.customer_name|default:user.get_full_name|default:"N/A" }}</span>
+                                                <span>{{ billing.customer_address1|default:"N/A" }}</span>
                                                 {% if billing.customer_address2 %}
                                                     <span>{{ billing.customer_address2 }}</span>
                                                 {% endif %}
-                                                <span>{{ billing.customer_city }}, {{ billing.customer_state }} {{ billing.customer_postal_code }}</span>
-                                                <span>{{ billing.customer_country }}</span>
+                                                <span>{{ billing.customer_city|default:"N/A" }}, {{ billing.customer_state|default:"N/A" }} {{ billing.customer_postal_code|default:"N/A" }}</span>
+                                                <span>{{ billing.customer_country|default:"N/A" }}</span>
                                                 {% if billing.phone %}
                                                     <span>Phone: {{ billing.phone }}</span>
                                                 {% endif %}
                                             {% else %}
-                                                <span>Please select an address</span>
+                                                <span>No address selected. Please add one.</span>
                                             {% endif %}
                                         </div>
                                     </div>
@@ -149,14 +164,14 @@
                                     <div class="flex flex-col px-5">
                                         <span class="text-sm font-medium text-mono mb-1.5">Payment Details</span>
                                         <div class="flex flex-col gap-1 text-xs font-normal text-secondary-foreground">
-                                            <span>Payment Method: {{ payment_method|title }}</span>
+                                            <span>Payment Method: {{ payment_method|title|default:"N/A" }}</span>
                                             {% if payment_details %}
                                                 {% if payment_method == "stripe" %}
-                                                    <span>Card: {{ billing.old_card_info|default:"N/A" }}</span>
-                                                    <span>Charge ID: {{ payment_details.stripe_charge_id }}</span>
+                                                    <span>Card: {{ payment_details.card_last4|default:"N/A" }}</span>
+                                                    <span>Charge ID: {{ payment_details.stripe_charge_id|default:"N/A" }}</span>
                                                 {% elif payment_method == "razorpay" %}
-                                                    <span>Payment ID: {{ payment_details.razorpay_payment_id }}</span>
-                                                    <span>Order ID: {{ payment_details.razorpay_order_id }}</span>
+                                                    <span>Payment ID: {{ payment_details.razorpay_payment_id|default:"N/A" }}</span>
+                                                    <span>Order ID: {{ payment_details.razorpay_order_id|default:"N/A" }}</span>
                                                 {% elif payment_method == "cod" %}
                                                     <span>Tracking ID: {{ payment_details.cod_tracking_id|default:"Pending" }}</span>
                                                     <span>Delivery Partner: {{ payment_details.delivery_partner.name|default:"N/A" }}</span>
@@ -171,20 +186,20 @@
                                     <span class="text-sm font-medium block text-mono mb-3.5 px-5">Price Details</span>
                                     <div class="flex justify-between items-center px-5">
                                         <span class="text-sm font-normal text-secondary-foreground">Subtotal</span>
-                                        <span class="text-sm font-medium text-mono">{{ payment.payment_currency }} {{ order_summary.subtotal|floatformat:2 }}</span>
+                                        <span class="text-sm font-medium text-mono">{{ currency_symbol }} {{ order_summary.subtotal|floatformat:2|default:"0.00" }}</span>
                                     </div>
                                     <div class="flex justify-between items-center px-5">
                                         <span class="text-sm font-normal text-secondary-foreground">Shipping</span>
-                                        <span class="text-sm font-medium text-mono">{{ payment.payment_currency }} {{ order_summary.shipping|floatformat:2 }}</span>
+                                        <span class="text-sm font-medium text-mono">{{ currency_symbol }} {{ order_summary.shipping|floatformat:2|default:"0.00" }}</span>
                                     </div>
                                     <div class="flex justify-between items-center px-5">
                                         <span class="text-sm font-normal text-secondary-foreground">VAT</span>
-                                        <span class="text-sm font-medium text-mono">{{ payment.payment_currency }} {{ order_summary.vat|floatformat:2 }}</span>
+                                        <span class="text-sm font-medium text-mono">{{ currency_symbol }} {{ order_summary.vat|floatformat:2|default:"0.00" }}</span>
                                     </div>
                                     <div class="border-b border-border mb-4 mt-5"></div>
                                     <div class="flex justify-between items-center px-5">
                                         <span class="text-sm font-normal text-secondary-foreground">Total</span>
-                                        <span class="text-base font-semibold text-mono">{{ payment.payment_currency }} {{ order_summary.total|floatformat:2 }}</span>
+                                        <span class="text-base font-semibold text-mono">{{ currency_symbol }} {{ order_summary.total|floatformat:2|default:"0.00" }}</span>
                                     </div>
                                 </div>
                             </div>

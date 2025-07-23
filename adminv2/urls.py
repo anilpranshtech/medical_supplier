@@ -24,8 +24,8 @@ urlpatterns = [
     
     #order
     path('orderlist/', OrderListingView.as_view(), name='order_listing'),
-    path('order-detail/<int:pk>/', OrderDetailesView.as_view(), name='order_detail'),
-    path('orders/delete/<int:pk>/', OrderDeleteView.as_view(), name='delete_order'),
+    path('order-detail/<slug:order_id>/', OrderDetailsView.as_view(), name='order_detail'),
+    path('orders/delete/<slug:order_id>/', OrderDeleteView.as_view(), name='order_delete'),
 
     # Cart
     path('cart/products', CartProductsView.as_view(), name='cart_product_list'),

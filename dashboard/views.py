@@ -1,5 +1,7 @@
 from decimal import Decimal
 from io import BytesIO
+
+from django.db import transaction
 from xhtml2pdf import pisa
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
@@ -1266,7 +1268,7 @@ class PaymentMethodView(LoginRequiredMixin, View):
     def get_context_data(self, request):
         cart_items = CartProduct.objects.filter(user=request.user).select_related('product')
         subtotal = sum(item.get_total_price() for item in cart_items) or Decimal('0.00')
-        shipping = Decimal('0.00')
+        shipping = Decimal('24.60')
         vat = Decimal('0.00')
         total = subtotal + shipping + vat
         billing = CustomerBillingAddress.objects.filter(user=request.user, is_default=True, is_deleted=False).first()
@@ -1279,7 +1281,8 @@ class PaymentMethodView(LoginRequiredMixin, View):
                 'vat': vat,
                 'total': total
             },
-            'billing': billing
+            'billing': billing,
+            'currency_symbol': 'USD'
         }
 
     def get(self, request):
@@ -1288,7 +1291,7 @@ class PaymentMethodView(LoginRequiredMixin, View):
         total = context['order_summary']['total']
         amount_in_paise = int(total * 100)
 
-        if amount_in_paise < 100:  # minimum amount is ₹1 = 100 paise
+        if amount_in_paise < 100:
             messages.error(request, "Your order total must be at least ₹1/$1. Please add items to your cart.")
             return redirect("dashboard:shopping_cart")
 
@@ -1311,161 +1314,190 @@ class PaymentMethodView(LoginRequiredMixin, View):
         context = self.get_context_data(request)
         total = context['order_summary']['total']
         user = request.user
+        if not user or not user.is_authenticated:
+            logger.error("Unauthenticated user attempted payment")
+            messages.error(request, "You must be logged in to process payment.")
+            return redirect("dashboard:login")
+
+        if not context['billing']:
+            logger.error(f"No billing address for user {user.id}")
+            messages.error(request, "Please select a billing address.")
+            return redirect("dashboard:shipping_info")
 
         MIN_ORDER_AMOUNT = Decimal('1.00')
         if total < MIN_ORDER_AMOUNT:
+            logger.error(f"Order total {total} is less than minimum {MIN_ORDER_AMOUNT} for user {user.id}")
             messages.error(request, "Your order total must be at least $1. Please add more items to your cart.")
-            return redirect("dashboard:shopping_cart")  # redirect instead of raising error
+            return redirect("dashboard:shopping_cart")
 
         payment_method = request.POST.get("payment_method")
+        logger.info(f"Processing {payment_method} payment for user {user.id}, total: {total}")
 
-        if payment_method == "cod":
-            payment = Payment.objects.create(
-                name=user.get_full_name(),
-                amount=total,
-                payment_method="cod",
-                paid=False
-            )
+        try:
+            with transaction.atomic():
+                if payment_method == "cod":
+                    payment = Payment.objects.create(
+                        user=user,
+                        name=user.get_full_name() or user.email,
+                        amount=total,
+                        payment_method="cod",
+                        paid=False
+                    )
+                    logger.info(f"Created COD Payment {payment.id} for user {user.id}")
 
-            delivery_partner, _ = DeliveryPartner.objects.get_or_create(name="Delhivery")
-            CODPayment.objects.create(
-                user=request.user,
-                name=user.get_full_name(),
-                amount=total,
-                paid=False,
-                cod_tracking_id="COD123456",  # replace with dynamic tracking ID logic
-                delivery_partner=delivery_partner
-            )
+                    delivery_partner, _ = DeliveryPartner.objects.get_or_create(name="Delhivery")
+                    CODPayment.objects.create(
+                        user=user,
+                        name=user.get_full_name() or user.email,
+                        amount=total,
+                        paid=False,
+                        cod_tracking_id="COD123456",  # Replace with dynamic tracking ID
+                        delivery_partner=delivery_partner
+                    )
 
-            create_orders_from_cart(user, payment_type="cod", payment_status="unpaid")
+                    order = create_orders_from_cart(user, payment_type="cod", payment_status="unpaid", payment=payment)
+                    messages.success(request, "COD Order placed.")
+                    return redirect("dashboard:order_placed")
 
-            messages.success(request, "COD Order placed.")
-            return redirect("dashboard:order_placed")
+                elif payment_method == "stripe":
+                    _, stripe_secret = self.get_stripe_key(request)
+                    stripe.api_key = stripe_secret
 
-        elif payment_method == "stripe":
-            _, stripe_secret = self.get_stripe_key(request)
-            stripe.api_key = stripe_secret
+                    token = request.POST.get("stripeToken")
+                    crd_name = request.POST.get("crd_name")
 
-            token = request.POST.get("stripeToken")
-            crd_name = request.POST.get("crd_name")
+                    customer = stripe.Customer.create(
+                        email=user.email,
+                        name=crd_name,
+                        source=token
+                    )
+                    charge = stripe.Charge.create(
+                        customer=customer.id,
+                        amount=int(total * 100),
+                        currency="usd",
+                        description="Product Payment"
+                    )
 
-            try:
-                customer = stripe.Customer.create(
-                    email=user.email,
-                    name=crd_name,
-                    source=token
-                )
-                charge = stripe.Charge.create(
-                    customer=customer.id,
-                    amount=int(total * 100),  # Convert to cents
-                    currency="usd",
-                    description="Product Payment"
-                )
+                    payment = Payment.objects.create(
+                        user=user,
+                        name=crd_name,
+                        amount=total,
+                        payment_method="stripe",
+                        paid=True
+                    )
+                    logger.info(f"Created Stripe Payment {payment.id} for user {user.id}")
 
-                payment = Payment.objects.create(
-                    name=crd_name,
-                    amount=total,
-                    payment_method="stripe",
-                    paid=True,
-                    customer_id=customer.id
-                )
+                    StripePayment.objects.create(
+                        user=user,
+                        name=crd_name,
+                        amount=total,
+                        paid=True,
+                        customer_id=customer.id,
+                        stripe_charge_id=charge.id,
+                        stripe_customer_id=customer.id,
+                        stripe_signature=charge.payment_method,
+                    )
 
-                StripePayment.objects.create(
-                    user=request.user,
-                    name=crd_name,
-                    amount=total,
-                    paid=True,
-                    customer_id=customer.id,
-                    stripe_charge_id=charge.id,
-                    stripe_customer_id=customer.id,
-                    stripe_signature=charge.payment_method
-                )
+                    order = create_orders_from_cart(user, payment_type="stripe", payment_status="paid", payment=payment)
+                    card_details = charge.payment_method_details.get("card") if charge.payment_method_details else None
 
-                create_orders_from_cart(user, payment_type="stripe", payment_status="paid")
+                    latest_address = CustomerBillingAddress.objects.filter(user=user, is_deleted=False).order_by('-id').first()
+                    if latest_address:
+                        for attr, value in {
+                            "customer_name": crd_name,
+                            "customer_address1": request.POST.get("customer_address1"),
+                            "customer_address2": request.POST.get("customer_address2"),
+                            "customer_city": request.POST.get("customer_city"),
+                            "customer_state": request.POST.get("customer_state"),
+                            "customer_postal_code": request.POST.get("customer_postal_code"),
+                            "customer_country": request.POST.get("customer_country"),
+                            "customer_country_code": request.POST.get("customer_country_code"),
+                            "is_old": True,
+                            "old_card": json.dumps({
+                                "brand": card_details.brand,
+                                "last4": card_details.last4,
+                                "exp_month": card_details.exp_month,
+                                "exp_year": card_details.exp_year
+                            }) if card_details else None
+                        }.items():
+                            if value:
+                                setattr(latest_address, attr, value)
+                        latest_address.save()
+                    else:
+                        CustomerBillingAddress.objects.create(
+                            user=user,
+                            customer_name=crd_name,
+                            customer_address1=request.POST.get("customer_address1"),
+                            customer_address2=request.POST.get("customer_address2"),
+                            customer_city=request.POST.get("customer_city"),
+                            customer_state=request.POST.get("customer_state"),
+                            customer_postal_code=request.POST.get("customer_postal_code"),
+                            customer_country=request.POST.get("customer_country"),
+                            customer_country_code=request.POST.get("customer_country_code"),
+                            is_old=True,
+                            old_card=json.dumps({
+                                "brand": card_details.brand,
+                                "last4": card_details.last4,
+                                "exp_month": card_details.exp_month,
+                                "exp_year": card_details.exp_year
+                            }) if card_details else None,
+                            is_default=True
+                        )
 
-                card_details = charge.payment_method_details.get("card") if charge.payment_method_details else None
+                    messages.success(request, "Stripe Payment successful.")
+                    return redirect("dashboard:order_placed")
 
-                latest_address = CustomerBillingAddress.objects.filter(user=user, is_deleted=False).order_by('-id').first()
-                if latest_address:
-                    for attr, value in {
-                        "customer_name": crd_name,
-                        "customer_address1": request.POST.get("customer_address1"),
-                        "customer_address2": request.POST.get("customer_address2"),
-                        "customer_city": request.POST.get("customer_city"),
-                        "customer_state": request.POST.get("customer_state"),
-                        "customer_postal_code": request.POST.get("customer_postal_code"),
-                        "customer_country": request.POST.get("customer_country"),
-                        "customer_country_code": request.POST.get("customer_country_code"),
-                        "is_old": True,
-                        "old_card": json.dumps({
-                            "brand": card_details.brand,
-                            "last4": card_details.last4,
-                            "exp_month": card_details.exp_month,
-                            "exp_year": card_details.exp_year
-                        }) if card_details else None
-                    }.items():
-                        setattr(latest_address, attr, value)
-                    latest_address.save()
+                elif payment_method == "razorpay":
+                    razorpay_payment_id = request.POST.get("razorpay_payment_id")
+                    razorpay_order_id = request.POST.get("razorpay_order_id")
+                    razorpay_signature = request.POST.get("razorpay_signature")
+
+                    if not razorpay_payment_id:
+                        logger.error(f"Razorpay payment failed for user {user.id}: No payment ID")
+                        messages.error(request, "Razorpay payment failed.")
+                        return redirect("dashboard:payment_method")
+
+                    client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+                    params_dict = {
+                        "razorpay_order_id": razorpay_order_id,
+                        "razorpay_payment_id": razorpay_payment_id,
+                        "razorpay_signature": razorpay_signature
+                    }
+
+                    client.utility.verify_payment_signature(params_dict)
+
+                    payment = Payment.objects.create(
+                        user=user,
+                        name=user.get_full_name() or user.email,
+                        amount=total,
+                        payment_method="razorpay",
+                        paid=True
+                    )
+                    logger.info(f"Created Razorpay Payment {payment.id} for user {user.id}")
+
+                    RazorpayPayment.objects.create(
+                        user=user,
+                        name=user.get_full_name() or user.email,
+                        amount=total,
+                        paid=True,
+                        razorpay_payment_id=razorpay_payment_id,
+                        razorpay_order_id=razorpay_order_id,
+                        razorpay_signature=razorpay_signature
+                    )
+
+                    order = create_orders_from_cart(user, payment_type="razorpay", payment_status="paid", payment=payment)
+                    messages.success(request, "Razorpay Payment successful.")
+                    return redirect("dashboard:order_placed")
+
                 else:
-                    # fallback to create
-                    CustomerBillingAddress.objects.create(...)
+                    logger.error(f"Invalid payment method {payment_method} for user {user.id}")
+                    messages.error(request, "Invalid payment method.")
+                    return redirect("dashboard:payment_method")
 
-                messages.success(request, "Stripe Payment successful.")
-                return redirect("dashboard:order_placed")
-
-            except Exception as e:
-                messages.error(request, f"Stripe payment failed: {e}")
-                return redirect("dashboard:payment_method")
-
-        elif payment_method == "razorpay":
-            razorpay_payment_id = request.POST.get("razorpay_payment_id")
-            razorpay_order_id = request.POST.get("razorpay_order_id")
-            razorpay_signature = request.POST.get("razorpay_signature")
-
-            if not razorpay_payment_id:
-                messages.error(request, "Razorpay payment failed.")
-                return redirect("dashboard:payment_method")
-
-            # Signature verification
-            client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
-            params_dict = {
-                "razorpay_order_id": razorpay_order_id,
-                "razorpay_payment_id": razorpay_payment_id,
-                "razorpay_signature": razorpay_signature
-            }
-
-            try:
-                client.utility.verify_payment_signature(params_dict)
-            except SignatureVerificationError:
-                messages.error(request, "Signature verification failed.")
-                return redirect("dashboard:payment_method")
-
-            payment = Payment.objects.create(
-                name=user.get_full_name(),
-                amount=total,
-                payment_method="razorpay",
-                paid=True
-            )
-
-            RazorpayPayment.objects.create(
-                user=request.user,
-                name=user.get_full_name(),
-                amount=total,
-                paid=True,
-                razorpay_payment_id=razorpay_payment_id,
-                razorpay_order_id=razorpay_order_id,
-                razorpay_signature=razorpay_signature
-            )
-
-            create_orders_from_cart(user, payment_type="razorpay", payment_status="paid")
-
-            messages.success(request, "Razorpay Payment successful.")
-            return redirect("dashboard:order_placed")
-
-        else:
-            messages.error(request, "Invalid payment method.")
+        except Exception as e:
+            logger.error(f"Payment processing failed for user {user.id}: {str(e)}", exc_info=True)
+            messages.error(request, f"Payment processing failed: {str(e)}")
             return redirect("dashboard:payment_method")
-
 
 
 class OrderPlacedView(LoginRequiredMixin, TemplateView):
@@ -1473,16 +1505,32 @@ class OrderPlacedView(LoginRequiredMixin, TemplateView):
     login_url = 'dashboard:login'
 
     def dispatch(self, request, *args, **kwargs):
-        # Explicit check for authenticated user for safety
         if not request.user.is_authenticated:
+            logger.warning(f"Unauthenticated access attempt to OrderPlacedView")
             return redirect(self.login_url)
 
-        # Ensure user has a recent payment with associated orders
         payment = Payment.objects.filter(user=request.user).order_by('-created_at').first()
-        if not payment or not Orders.objects.filter(payment=payment, order_by=request.user).exists():
+        if not payment:
+            logger.error(f"No payment found for user {request.user.id}")
+            messages.error(request, "No recent payment found.")
+            return redirect('dashboard:shopping_cart')
+
+        order_exists = Order.objects.filter(payment=payment, user=request.user).exists()
+        if not order_exists:
+            logger.error(
+                f"No order found for payment {payment.id} (method: {payment.payment_method}, created: {payment.created_at}) and user {request.user.id}")
+            recent_order = Order.objects.filter(user=request.user).order_by('-created_at').first()
+            if recent_order:
+                logger.warning(
+                    f"Fallback: Found recent order {recent_order.order_id} for user {request.user.id}, but not linked to payment {payment.id}")
+            all_orders = Order.objects.filter(user=request.user).values('id', 'order_id', 'payment_id', 'created_at')
+            all_payments = Payment.objects.filter(user=request.user).values('id', 'payment_method', 'created_at')
+            logger.debug(f"All orders for user {request.user.id}: {list(all_orders)}")
+            logger.debug(f"All payments for user {request.user.id}: {list(all_payments)}")
             messages.error(request, "No recent order found.")
             return redirect('dashboard:shopping_cart')
 
+        logger.info(f"Found order for payment {payment.id} and user {request.user.id}")
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
@@ -1492,40 +1540,47 @@ class OrderPlacedView(LoginRequiredMixin, TemplateView):
         # Get the most recent payment
         payment = Payment.objects.filter(user=user).order_by('-created_at').first()
         if not payment:
+            logger.error(f"No payment found for user {user.id} in get_context_data")
             context['error'] = "No payment found."
             return context
 
-        # Prefetch only main product images
+        # Prefetch main product images
         main_image_prefetch = Prefetch(
-            'product__productimage_set',
+            'items__product__productimage_set',
             queryset=ProductImage.objects.filter(is_main=True),
             to_attr='main_image'
         )
 
-        # Get all orders associated with the latest payment
-        orders = Orders.objects.filter(
-            order_by=user,
+        # Get the most recent order
+        order = Order.objects.filter(
+            user=user,
             payment=payment
         ).select_related(
-            'product__brand', 'payment', 'order_to'
-        ).prefetch_related(main_image_prefetch)
+            'payment'
+        ).prefetch_related(main_image_prefetch).first()
 
-        if not orders.exists():
-            context['error'] = "No orders found for this payment."
-            return context
+        if not order:
+            logger.error(f"No order found for payment {payment.id} and user {user.id} in get_context_data")
+            # Fallback: Try recent order for user
+            order = Order.objects.filter(user=user).order_by('-created_at').first()
+            if order:
+                logger.warning(f"Fallback: Using recent order {order.order_id} for user {user.id}, not linked to payment {payment.id}")
+            else:
+                context['error'] = "No order found for this payment."
+                return context
 
         # Order summary calculations
-        subtotal = sum(order.price for order in orders) or Decimal('0.00')
-        shipping = sum(order.shipping_fees for order in orders) or Decimal('0.00')
-        vat = Decimal('0.00')  # Add VAT logic here if applicable
+        subtotal = sum(item.price * item.quantity for item in order.items.all()) or Decimal('0.00')
+        shipping = order.shipping_fees or Decimal('24.60')
+        vat = Decimal('0.00')
         total = subtotal + shipping + vat
 
-        # Estimated delivery date (based on max delivery_time)
-        max_delivery_days = max((order.product.delivery_time or 5) for order in orders)
-        estimated_delivery = now().date() + timedelta(days=max_delivery_days)
+        # Estimated delivery date
+        max_delivery_days = max((item.product.delivery_time or 5) for item in order.items.all())
+        estimated_delivery = timezone.now().date() + timedelta(days=max_delivery_days)
 
-        # Get payment details (Stripe, Razorpay, or COD)
-        time_window = payment.created_at + timedelta(minutes=1)
+        # Payment details
+        time_window = payment.created_at + timedelta(minutes=10)
         payment_method = payment.payment_method
         payment_details = None
 
@@ -1545,63 +1600,86 @@ class OrderPlacedView(LoginRequiredMixin, TemplateView):
                 created_at__range=(payment.created_at, time_window)
             ).order_by('-created_at').first()
 
-        # Default billing address
+        # Billing address
         billing = CustomerBillingAddress.objects.filter(
             user=user,
             is_default=True,
             is_deleted=False
         ).first()
 
-        # Final context update
+        # Context update
         context.update({
             'payment': payment,
-            'orders': orders,
+            'order': order,
+            'order_items': order.items.all(),
             'order_summary': {
                 'subtotal': subtotal,
                 'shipping': shipping,
                 'vat': vat,
                 'total': total
             },
-            'order_ids': [order.id for order in orders],
+            'order_id': order.order_id,
             'order_date': payment.created_at,
             'estimated_delivery': estimated_delivery,
             'payment_method': payment_method,
             'payment_details': payment_details,
-            'billing': billing
+            'billing': billing,
+            'currency_symbol': 'USD' if payment_method in ['stripe', 'cod'] else 'INR'
         })
 
+        logger.info(f"Loaded order {order.order_id} for user {user.id} with payment {payment.id}, items: {order.items.count()}")
         return context
 
 
 class MyOrdersView(LoginRequiredMixin, TemplateView):
     template_name = 'userdashboard/view/my_orders.html'
-    login_url = 'dashboard:login'  # or your login URL name
+    login_url = 'dashboard:login'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
-        context['orders'] = Orders.objects.filter(order_by=user).select_related('product__brand').prefetch_related('product__productimage_set')
+
+        # Prefetch main product images for OrderItems
+        main_image_prefetch = Prefetch(
+            'items__product__productimage_set',
+            queryset=ProductImage.objects.filter(is_main=True),
+            to_attr='main_image'
+        )
+
+        # Fetch all orders for the user
+        orders = Order.objects.filter(user=user).select_related('payment').prefetch_related(main_image_prefetch).order_by('-created_at')
+        context['orders'] = orders
+        logger.info(f"Fetched {orders.count()} orders for user {user.id}")
         return context
 
 
 class ReorderView(LoginRequiredMixin, View):
+    login_url = 'dashboard:login'
+
     def post(self, request, order_id, *args, **kwargs):
-        order = get_object_or_404(Orders, id=order_id, order_by=request.user)
-        product = order.product
-        quantity = order.quantity
+        order = get_object_or_404(Order, id=order_id, user=request.user)
 
-        # Add or update item in cart
-        cart_item, created = CartProduct.objects.get_or_create(
-            user=request.user,
-            product=product,
-            defaults={'quantity': quantity}
-        )
-        if not created:
-            cart_item.quantity += quantity
-            cart_item.save()
+        # Get all OrderItems for the order
+        order_items = OrderItem.objects.filter(order=order)
+        if not order_items.exists():
+            logger.error(f"No items found for order {order_id} and user {request.user.id}")
+            messages.error(request, "No items found in this order.")
+            return redirect('dashboard:my_orders')
 
-        messages.success(request, f"Added {quantity} x {product.name} to your cart.")
-        return redirect('dashboard:my_orders')  # Or redirect to cart page
+        # Add each item to the cart
+        for item in order_items:
+            cart_item, created = CartProduct.objects.get_or_create(
+                user=request.user,
+                product=item.product,
+                defaults={'quantity': item.quantity}
+            )
+            if not created:
+                cart_item.quantity += item.quantity
+                cart_item.save()
+            logger.info(f"Added {item.quantity} x {item.product.name} to cart for user {request.user.id}")
+
+        messages.success(request, f"Added items from order {order.order_id} to your cart.")
+        return redirect('dashboard:shopping_cart')  # Or redirect to cart page
 
 
 
@@ -1614,23 +1692,33 @@ class OrderReceiptView(LoginRequiredMixin, TemplateView):
         user = self.request.user
         order_id = self.kwargs.get('pk')
 
+        # Prefetch main product images for OrderItems
+        main_image_prefetch = Prefetch(
+            'items__product__productimage_set',
+            queryset=ProductImage.objects.filter(is_main=True),
+            to_attr='main_image'
+        )
+
         # Fetch the specific order for the authenticated user
         try:
-            order = Orders.objects.get(id=order_id, order_by=user)
-        except Orders.DoesNotExist:
+            order = Order.objects.filter(id=order_id, user=user).select_related('payment').prefetch_related(main_image_prefetch).get()
+        except Order.DoesNotExist:
+            logger.error(f"Order {order_id} not found for user {user.id}")
             context['error'] = "Order not found or you don't have permission to view it."
             return context
 
         # Fetch related payment details
         payment = order.payment
-        payment_method = payment.payment_method if payment else order.payment_type.lower()
+        payment_method = payment.payment_method if payment else order.items.first().payment_type.lower()
 
         # Determine payment details based on payment method
         payment_details = None
         if payment_method == "stripe":
-            payment_details = StripePayment.objects.filter(user=user, stripe_charge_id__isnull=False).order_by('-created_at').first()
+            payment_details = StripePayment.objects.filter(
+                user=user,
+                created_at__range=(payment.created_at, payment.created_at + timedelta(minutes=5))
+            ).order_by('-created_at').first()
             if payment_details and payment_details.stripe_customer_id:
-                # Extract card details from CustomerBillingAddress.old_card
                 billing_with_card = CustomerBillingAddress.objects.filter(user=user, is_old=True, is_deleted=False).first()
                 if billing_with_card and billing_with_card.old_card:
                     try:
@@ -1641,47 +1729,56 @@ class OrderReceiptView(LoginRequiredMixin, TemplateView):
                 else:
                     payment_details.card_last4 = 'N/A'
         elif payment_method == "razorpay":
-            payment_details = RazorpayPayment.objects.filter(user=user, razorpay_payment_id__isnull=False).order_by('-created_at').first()
+            payment_details = RazorpayPayment.objects.filter(
+                user=user,
+                created_at__range=(payment.created_at, payment.created_at + timedelta(minutes=5))
+            ).order_by('-created_at').first()
         elif payment_method == "cod":
-            payment_details = CODPayment.objects.filter(user=user, cod_tracking_id__isnull=False).order_by('-created_at').first()
+            payment_details = CODPayment.objects.filter(
+                user=user,
+                created_at__range=(payment.created_at, payment.created_at + timedelta(minutes=5))
+            ).order_by('-created_at').first()
 
         # Prepare order item details
-        product_image = ProductImage.objects.filter(product=order.product, is_main=True).first()
-        item = {
-            'product': order.product,
-            'quantity': order.quantity,
-            'sku': order.product.supplier_sku,
-            'total_price': order.price,  # Price already reflects quantity * product.price
-            'image_url': product_image.image.url if product_image else None,
-        }
+        items = []
+        for order_item in order.items.all():
+            product_image = order_item.product.main_image[0] if order_item.product.main_image else None
+            items.append({
+                'product': order_item.product,
+                'quantity': order_item.quantity,
+                'sku': order_item.product.supplier_sku,
+                'total_price': order_item.price * order_item.quantity,
+                'image_url': product_image.image.url if product_image else None,
+            })
 
         # Fetch billing address
         billing = CustomerBillingAddress.objects.filter(user=user, is_default=True, is_deleted=False).first()
 
         # Calculate order totals for summary
-        related_orders = Orders.objects.filter(order_by=user, payment=order.payment).select_related('product')
-        subtotal = sum(o.price for o in related_orders) if related_orders else order.price
-        shipping = order.shipping_fees or 0
+        subtotal = sum(item.price * item.quantity for item in order.items.all()) or Decimal('0.00')
+        shipping = order.shipping_fees or Decimal('0.00')
         vat = Decimal('0.00')  # Adjust if VAT logic is implemented
         total = subtotal + shipping + vat
 
         context.update({
             'order': order,
-            'items': [item],  # Single item for this order
+            'items': items,
             'order_summary': {
                 'subtotal': subtotal,
                 'shipping': shipping,
                 'vat': vat,
                 'total': total,
             },
-            'order_total': order.price,
+            'order_total': total,
             'order_date': order.created_at,
             'billing': billing,
-            'estimated_delivery': order.created_at.date() + timedelta(days=5),
+            'estimated_delivery': order.created_at.date() + timedelta(days=max((item.product.delivery_time or 5) for item in order.items.all())),
             'payment_method': payment_method,
             'payment_details': payment_details,
+            'currency_symbol': 'USD' if payment_method in ['stripe', 'cod'] else 'INR'
         })
 
+        logger.info(f"Order receipt loaded for order {order.order_id} and user {user.id}")
         return context
 
 
@@ -1690,17 +1787,32 @@ class DownloadReceiptView(LoginRequiredMixin, View):
 
     def get(self, request, pk):
         user = request.user
+
+        # Prefetch main product images for OrderItems
+        main_image_prefetch = Prefetch(
+            'items__product__productimage_set',
+            queryset=ProductImage.objects.filter(is_main=True),
+            to_attr='main_image'
+        )
+
+        # Fetch the specific order
         try:
-            order = Orders.objects.get(id=pk, order_by=user)
-        except Orders.DoesNotExist:
+            order = Order.objects.filter(id=pk, user=user).select_related('payment').prefetch_related(main_image_prefetch).get()
+        except Order.DoesNotExist:
+            logger.error(f"Order {pk} not found for user {user.id}")
             return HttpResponse("Order not found or unauthorized", status=404)
 
+        # Fetch related payment details
         payment = order.payment
-        payment_method = payment.payment_method if payment else order.payment_type.lower()
+        payment_method = payment.payment_method if payment else order.items.first().payment_type.lower()
 
+        # Determine payment details
         payment_details = None
         if payment_method == "stripe":
-            payment_details = StripePayment.objects.filter(user=user, stripe_charge_id__isnull=False).order_by('-created_at').first()
+            payment_details = StripePayment.objects.filter(
+                user=user,
+                created_at__range=(payment.created_at, payment.created_at + timedelta(minutes=5))
+            ).order_by('-created_at').first()
             if payment_details and payment_details.stripe_customer_id:
                 billing_with_card = CustomerBillingAddress.objects.filter(user=user, is_old=True, is_deleted=False).first()
                 if billing_with_card and billing_with_card.old_card:
@@ -1712,41 +1824,53 @@ class DownloadReceiptView(LoginRequiredMixin, View):
                 else:
                     payment_details.card_last4 = 'N/A'
         elif payment_method == "razorpay":
-            payment_details = RazorpayPayment.objects.filter(user=user, razorpay_payment_id__isnull=False).order_by('-created_at').first()
+            payment_details = RazorpayPayment.objects.filter(
+                user=user,
+                created_at__range=(payment.created_at, payment.created_at + timedelta(minutes=5))
+            ).order_by('-created_at').first()
         elif payment_method == "cod":
-            payment_details = CODPayment.objects.filter(user=user, cod_tracking_id__isnull=False).order_by('-created_at').first()
+            payment_details = CODPayment.objects.filter(
+                user=user,
+                created_at__range=(payment.created_at, payment.created_at + timedelta(minutes=5))
+            ).order_by('-created_at').first()
 
-        product_image = ProductImage.objects.filter(product=order.product, is_main=True).first()
-        item = {
-            'product': order.product,
-            'quantity': order.quantity,
-            'sku': order.product.supplier_sku,
-            'total_price': order.price,
-            'image_url': request.build_absolute_uri(product_image.image.url) if product_image else None,
-        }
+        # Prepare order item details
+        items = []
+        for order_item in order.items.all():
+            product_image = order_item.product.main_image[0] if order_item.product.main_image else None
+            items.append({
+                'product': order_item.product,
+                'quantity': order_item.quantity,
+                'sku': order_item.product.supplier_sku,
+                'total_price': order_item.price * order_item.quantity,
+                'image_url': request.build_absolute_uri(product_image.image.url) if product_image else None,
+            })
 
+        # Fetch billing address
         billing = CustomerBillingAddress.objects.filter(user=user, is_default=True, is_deleted=False).first()
-        related_orders = Orders.objects.filter(order_by=user, payment=order.payment).select_related('product')
-        subtotal = sum(o.price for o in related_orders) if related_orders else order.price
-        shipping = order.shipping_fees or 0
+
+        # Calculate order totals
+        subtotal = sum(item.price * item.quantity for item in order.items.all()) or Decimal('0.00')
+        shipping = order.shipping_fees or Decimal('0.00')
         vat = Decimal('0.00')
         total = subtotal + shipping + vat
 
         context = {
             'order': order,
-            'items': [item],
+            'items': items,
             'order_summary': {
                 'subtotal': subtotal,
                 'shipping': shipping,
                 'vat': vat,
                 'total': total,
             },
-            'order_total': order.price,
+            'order_total': total,
             'order_date': order.created_at,
             'billing': billing,
-            'estimated_delivery': order.created_at.date() + timedelta(days=5),
+            'estimated_delivery': order.created_at.date() + timedelta(days=max((item.product.delivery_time or 5) for item in order.items.all())),
             'payment_method': payment_method,
             'payment_details': payment_details,
+            'currency_symbol': 'USD' if payment_method in ['stripe', 'cod'] else 'INR'
         }
 
         html_string = render_to_string('userdashboard/view/order_receipt_pdf.html', context)
@@ -1755,10 +1879,12 @@ class DownloadReceiptView(LoginRequiredMixin, View):
         result = BytesIO()
         pdf = pisa.CreatePDF(src=html_string, dest=result)
         if pdf.err:
+            logger.error(f"Failed to generate PDF for order {order.order_id}: {pdf.err}")
             return HttpResponse('Error generating PDF', status=500)
 
         response = HttpResponse(result.getvalue(), content_type='application/pdf')
-        response['Content-Disposition'] = f'attachment; filename="order_receipt_{order.id}.pdf"'
+        response['Content-Disposition'] = f'attachment; filename="order_receipt_{order.order_id}.pdf"'
+        logger.info(f"Generated PDF receipt for order {order.order_id} and user {user.id}")
         return response
 
 
@@ -1817,7 +1943,7 @@ class UserProfile(LoginRequiredMixin, TemplateView):
             context['default_address'] = None
 
         # Order summary
-        orders = Orders.objects.filter(order_by=user)
+        orders = Order.objects.filter(order_by=user)
         context['total_orders'] = orders.count()
         context['pending_orders'] = orders.filter(status='pending').count()
         context['delivered_orders'] = orders.filter(status='delivered').count()

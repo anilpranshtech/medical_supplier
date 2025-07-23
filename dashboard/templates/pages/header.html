@@ -331,14 +331,11 @@
             <form class="relative" id="search-form" action="{% url 'dashboard:search_results_grid' %}" method="GET">
                 <div class="relative flex items-center">
                     <!-- Input -->
-                    <input type="text"
-                           name="q"
-                           id="search-input"
-                           class="w-full h-10 px-4 pr-28 text-sm rounded-full border
-                        border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500
-                        bg-white dark:bg-gray-800 text-gray-650 dark:text-gray-100
-                        placeholder-gray-500 dark:placeholder-gray-400 transition-colors"
-                        placeholder="Search products..." value="{{ search_query|default:'' }}" autocomplete="off" />
+                    <input type="text" name="q" id="search-input" class="w-full h-10 px-4 pr-28 text-sm rounded-full
+                    border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500
+                    bg-white dark:bg-gray-800 text-gray-650 dark:text-gray-100 placeholder-gray-500
+                    dark:placeholder-gray-400 transition-colors" placeholder="Search products..."
+                    value="{{ search_query|default:'' }}" autocomplete="off" />
 
                     <!-- Clear button -->
                     {% if search_query %}

@@ -1,53 +1,74 @@
 from django.db import transaction
 import logging
+import uuid
 from django.utils import timezone
 from decimal import Decimal
 from dashboard.models import *
 
 logger = logging.getLogger(__name__)
 
-def create_orders_from_cart(user, payment_type, payment_status):
-    with transaction.atomic():
+def generate_order_id():
+    import uuid
+    return f"X{uuid.uuid4().hex[:6].upper()}-S{timezone.now().strftime('%y')}"
+
+def create_orders_from_cart(user, payment_type, payment_status, payment):
+    try:
+        # Verify cart items
         cart_items = CartProduct.objects.filter(user=user).select_related('product')
-        default_billing = CustomerBillingAddress.objects.filter(user=user, is_default=True, is_deleted=False).first()
+        if not cart_items.exists():
+            logger.error(f"No cart items found for user {user.id}")
+            raise ValueError("Cart is empty")
 
-        # Calculate total for Payment object
-        total = sum(item.get_total_price() for item in cart_items) or Decimal('0.00')
-        payment = Payment.objects.create(
-            user=user,
-            name=user.get_full_name(),
-            amount=total,
-            payment_method=payment_type,
-            paid=(payment_status == 'paid')
-        )
+        # Verify billing address
+        billing = CustomerBillingAddress.objects.filter(user=user, is_default=True, is_deleted=False).first()
+        if not billing:
+            logger.error(f"No default billing address found for user {user.id}")
+            raise ValueError("No default billing address found")
 
-        for item in cart_items:
-            if not item.product.created_by:
-                logger.error(f"Product {item.product.id} has no created_by user.")
-                continue
-            if not hasattr(item.product.created_by, 'supplierprofile'):
-                logger.warning(f"Product {item.product.id} created by non-supplier user {item.product.created_by}.")
-                continue
+        # Calculate totals
+        subtotal = sum(item.get_total_price() for item in cart_items)
+        shipping_fees = Decimal('24.60')  # Matches $512.60 - $488.00 from order_placed.html
+        total = subtotal + shipping_fees
 
-            Orders.objects.create(
-                order_by=user,
-                order_to=item.product.created_by,
-                product=item.product,
-                quantity=item.quantity,
-                price=item.get_total_price(),
-                phone_number=default_billing.phone if default_billing and default_billing.phone else "Not provided",
+        # Create Order within transaction
+        with transaction.atomic():
+            order = Order.objects.create(
+                user=user,
                 payment=payment,
-                payment_type=payment_type,
-                payment_status=payment_status,
-                payment_currency="INR" if payment_type == "razorpay" else "USD",
-                shipping_fees=0,
-                shipping_type="Standard",
-                shipping_full_address=default_billing.customer_address1 if default_billing else "No address provided",
-                shipping_city=default_billing.customer_city if default_billing else "No city provided",
-                shipping_country=default_billing.customer_country if default_billing else "No country provided",
-                status="processing",
+                order_id=generate_order_id(),
+                shipping_fees=shipping_fees,
+                shipping_type='Standard Shipping',
+                shipping_full_address=billing.customer_address1 + (f", {billing.customer_address2}" if billing.customer_address2 else ""),
+                shipping_city=billing.customer_city,
+                shipping_country=billing.customer_country,
+                status='pending',
                 created_at=timezone.now()
             )
+            logger.info(f"Created Order {order.order_id} (ID: {order.id}) for user {user.id} with payment {payment.id}")
 
-        cart_items.delete()
-        return payment
+            # Create OrderItem entries
+            for item in cart_items:
+                OrderItem.objects.create(
+                    order=order,
+                    order_by=user,
+                    order_to=item.product.created_by,
+                    product=item.product,
+                    quantity=item.quantity,
+                    price=item.product.discounted_price(),
+                    payment_type=payment_type,
+                    payment_status=payment_status,
+                    payment_currency='USD' if payment_type in ['stripe', 'cod'] else 'INR',
+                    phone_number=billing.phone,
+                    status='pending'
+                )
+                logger.info(f"Created OrderItem for product {item.product.id} (quantity: {item.quantity}) in Order {order.order_id}")
+
+            # Clear the cart
+            cart_items.delete()
+            logger.info(f"Cleared cart for user {user.id}")
+
+            return order
+
+    except Exception as e:
+        logger.error(f"Failed to create order for user {user.id}: {str(e)}", exc_info=True)
+        raise
