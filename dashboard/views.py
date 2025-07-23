@@ -155,27 +155,32 @@ class CustomLoginView(FormView):
         user = authenticate(username=email, password=password)
 
         if user is not None:
+            # Role validation
             if user_type == 'supplier':
                 if not hasattr(user, 'supplierprofile'):
-                    form.add_error(None, "This account is not registered as a supplier.")
+                    form.add_error(None, f"{email} is not registered as a supplier.")
                     return self.form_invalid(form)
             elif user_type == 'buyer':
                 if buyer_type == 'retailer' and not hasattr(user, 'retailprofile'):
-                    form.add_error(None, "This account is not registered as a retailer.")
+                    form.add_error(None, f"{email} is not registered as a retailer.")
                     return self.form_invalid(form)
                 elif buyer_type == 'wholesaler' and not hasattr(user, 'wholesalebuyerprofile'):
-                    form.add_error(None, "This account is not registered as a wholesaler.")
+                    form.add_error(None, f"{email} is not registered as a wholesaler.")
                     return self.form_invalid(form)
 
+            # Login and set role
             login(self.request, user)
             if user_type == 'supplier':
                 self.request.session['user_role'] = 'supplier'
             else:
                 self.request.session['user_role'] = buyer_type
 
+            # Success message
+            messages.success(self.request, f"Welcome back, {email}!")
+
             return redirect(self.get_success_url())
         else:
-            form.add_error(None, "Invalid email or password.")
+            form.add_error(None, f"Invalid credentials for {email}.")
             return self.form_invalid(form)
 
     def get_success_url(self):
@@ -1976,15 +1981,20 @@ class VerifyOTPView(View):
 
 class ResendOTPView(View):
     def post(self, request):
+        if request.headers.get('x-requested-with') != 'XMLHttpRequest':
+            return JsonResponse({'message': 'Invalid request.'}, status=400)
+
         signup_data = request.session.get('signup_data')
         if not signup_data:
-            return JsonResponse({'message': 'Session expired. Please sign up again.'}, status=400)
+            return JsonResponse({'success': False, 'message': 'Session expired. Please sign up again.'}, status=400)
 
-        phone = signup_data['phone']
+        phone = signup_data.get('phone')
         otp_response = send_phone_otp(phone, TEXTDRIP_OTP_TOKEN)
+
         if "error" in otp_response:
-            return JsonResponse({'message': otp_response["error"]}, status=400)
-        return JsonResponse({'message': 'OTP resent successfully!'})
+            return JsonResponse({'success': False, 'message': otp_response["error"]}, status=400)
+
+        return JsonResponse({'success': True, 'message': 'OTP resent successfully.'})
 
 
 class CustomPasswordResetView(PasswordResetView):
@@ -2038,7 +2048,7 @@ class LogoutView(View):
     def get(self, request):
         logout(request)
         messages.success(request, "You have been logged out successfully.")
-        return redirect('dashboard:login')
+        return redirect('dashboard:home')
 
 
 class PaymentView(View):
