@@ -6,12 +6,13 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic import ListView
 
-from adminv3.filters import QS_filter_user
+from adminv3.filters import QS_filter_user, QS_Products_filter
 from adminv3.mixins import StaffAccountRequiredMixin
 from django.contrib.auth.models import User, Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from adminv3.utils import requestParamsToDict
-from dashboard.models import RetailProfile, WholesaleBuyerProfile, SupplierProfile, Product, ProductImage
+from dashboard.models import RetailProfile, WholesaleBuyerProfile, SupplierProfile, Product, ProductImage, \
+    ProductCategory
 
 
 class HomeView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
@@ -503,16 +504,38 @@ class User_Permissions_EditGroup(StaffAccountRequiredMixin, View):
             return JsonResponse({'status': 'error', 'message': 'Check details and try again!'}, status=400)
 
 
-class ProductsListView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
+# class ProductsListView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
+#     template_name = 'adminv3/products/products_list.html'
+#
+#
+#     def get(self, request):
+#         user = request.user
+#         products = Product.objects.all().order_by('-created_at')
+#
+#         for product in products:
+#             image = ProductImage.objects.filter(product=product).first()
+#             product.image_url = image.image.url if image else '/static/adminv2/media/stock/ecommerce/placeholder.png'
+#
+#         return render(request, self.template_name, {'products': products})
+
+class ProductsListView(LoginRequiredMixin,StaffAccountRequiredMixin, ListView):
+    model = Product
     template_name = 'adminv3/products/products_list.html'
+    context_object_name = "products"
+    paginate_by = 25
 
-    def get(self, request):
-        user = request.user
-        products = Product.objects.all().order_by('-created_at')
+    def get_queryset(self):
+        filter_dict = requestParamsToDict(self.request, get_params=True)
+        qs = QS_Products_filter(filter_dict)
 
-        for product in products:
+        for product in qs:
             image = ProductImage.objects.filter(product=product).first()
             product.image_url = image.image.url if image else '/static/adminv2/media/stock/ecommerce/placeholder.png'
 
-        return render(request, self.template_name, {'products': products})
+        return qs
 
+    def get_context_data(self, **kwargs):
+
+        context = super().get_context_data(**kwargs)
+        context['category'] = ProductCategory.objects.all()
+        return context

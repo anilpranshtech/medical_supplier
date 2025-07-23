@@ -5,10 +5,6 @@
 Products
 {% endblock title %}
 
-{% block extra_css_start %}
-
-{% endblock extra_css_start %}
-
 
 {% block content %}
 
@@ -19,26 +15,26 @@ Products
 
             <div id="kt_app_content_container" class="app-container  container-fluid ">
 
-                <form action="" method='GET'>
-                    <!--begin::Card-->
+                <form action=" " method='GET'>
                     <div class="card mb-7">
-                        <!--begin::Card body-->
                         <div class="card-body">
                             {% include "adminv3/pages/filters/filter_sort_by.html" %}
-                            {% include "adminv3/pages/filters/filter_search_by.html"  with show_advance_search_link=True search_help_text='Choices: Product, Supplier ' search_placeholder_text='Search' %}
+                            {% include "adminv3/pages/filters/filter_search_by.html"  with show_advance_search_link=True search_help_text='Choices: Product, Supplier' search_placeholder_text='Search' %}
                                 <div class="collapse" id="kt_advanced_search_form">
 
                                   <div class="separator separator-dashed mt-9 mb-6"></div>
 
                                   <div class="row g-8 mb-8">
-
                                       <div class="col-xxl-12">
 
                                           <div class="row g-8">
+                                            {% include "adminv3/pages/filters/filter_product_category.html" %}
+                                            {% include "adminv3/pages/filters/filter_product_status.html" %}
 
                                           </div>
                                       </div>
                                   </div>
+
                               </div>
                         </div>
 
@@ -49,37 +45,9 @@ Products
 
                 <div class="card card-flush ">
 
-                    <div class="card-header flex-wrap align-items-center py-5 gap-4">
 
-                        <!-- Search Input -->
-                        <div class="card-title w-100 w-md-auto">
-                            <div class="d-flex align-items-center position-relative">
-                                <i class="fas fa-search fs-3 position-absolute ms-4"></i>
-                                <input type="text" id="search-order"
-                                       class="form-control form-control-solid ps-12 w-100 w-md-250px"
-                                       placeholder="Search Order">
-                            </div>
-                        </div>
 
-                        <!-- Toolbar -->
-                        <div class="card-toolbar d-flex flex-wrap justify-content-md-end align-items-center gap-3 w-100 w-md-auto mt-4 mt-md-0">
-
-                            <!-- Fixed Width Dropdown -->
-                            <div style="min-width: 150px; flex-shrink: 0;">
-                                <select class="form-select form-select-solid" data-control="select2"
-                                        data-hide-search="true" data-placeholder="Status"
-                                        data-kt-ecommerce-product-filter="status">
-                                    <option selected value="all">All</option>
-                                    <option value="published">Published</option>
-                                    <option value="scheduled">Scheduled</option>
-                                    <option value="inactive">Inactive</option>
-                                </select>
-                            </div>
-
-                        </div>
-                    </div>
-
-                    <div class="card-body pt-0 table-responsive">
+                    <div class="card-body  table-responsive">
 
                         <table id="kt_ecommerce_sales_table" class="table align-middle table-row-dashed fs-6 gy-5">
 
@@ -91,6 +59,7 @@ Products
                                 <th class="text-center min-w-100px">Price</th>
                                 <th class="text-center min-w-70px">Qty</th>
                                 <th class="text-center min-w-100px">Status</th>
+                                <th class="text-center min-w-100px">Created At</th>
                                 <th class="text-center min-w-70px">Actions</th>
                             </tr>
                             </thead>
@@ -147,6 +116,12 @@ Products
                                 </td>
 
                                 <td class="text-center">
+                                    <div class="badge badge-light fw-bold" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ product.created_at|date:'F d Y P' }}">
+                                        {{ product.created_at|date:'F d Y' | default:'---' }}
+                                    </div>
+                                </td>
+
+                                <td class="text-center">
                                     <a href="#"
                                        class="btn btn-sm btn-light btn-flex btn-center btn-active-light-primary"
                                        data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">
@@ -179,6 +154,8 @@ Products
 
                     </div>
                 </div>
+                {% include "adminv3/pages/pagination.html" %}
+
             </div>
         </div>
 
@@ -189,7 +166,6 @@ Products
 
 
 {% block page_only_scripts %}
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     // Client-side table row filter
     document.addEventListener("DOMContentLoaded", function () {
