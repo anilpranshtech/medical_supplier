@@ -35,10 +35,12 @@
                             <i class="bi bi-caret-down-fill text-black fs-3"></i>
                         </span></div>
 
+                        {% if "auth.change_user" in user_permissions_list  %}
                         <span data-bs-toggle="tooltip" data-bs-trigger="hover" title="Edit customer details">
                             <button class="btn btn-sm btn-light-primary" data-bs-toggle="modal"
                                     data-bs-target="#_model_user_profile_update">Edit</button>
                         </span>
+                        {% endif %}
 
                     </div>
 
@@ -76,22 +78,27 @@
                             <td>Email</td>
                             <td>{{user.email}}</td>
 
+
+                            {% if "auth.can_change_user_email" in user_permissions_list  %}
                             <td class="text-end">
                                 <a href="#" class="btn btn-sm btn-flex btn-light-primary"
                                    data-bs-toggle="modal" data-bs-target="#_model_user_change_email">
                                     <i class="bi bi-pencil fs-3"></i>Change Email</a>
                             </td>
+                            {% endif %}
 
                         </tr>
                         <tr>
                             <td>Password</td>
                             <td>******</td>
 
+                            {% if "auth.change_user_password" in user_permissions_list  %}
                             <td class="text-end">
                                 <a href="#" class="btn btn-sm btn-flex btn-light-primary"
                                    data-bs-toggle="modal" data-bs-target="#_model_user_change_password">
                                     <i class="bi bi-pencil fs-3"></i>Change Password</a>
                             </td>
+                            {% endif %}
 
 
                         </tr>
@@ -196,11 +203,13 @@
                         </div>
                     </div>
 
+                    {% if "auth.delete_user" in user_permissions_list  %}
                     <div class="card-toolbar">
                         <a href="#" class="btn btn-sm btn-flex btn-danger"
                            onClick="deleteUserAccount('{{ user.id }}', this)">
                             <i class="bi bi-pencil fs-3"></i>Delete Account</a>
                     </div>
+                    {% endif %}
 
 
                 </div>

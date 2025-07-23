@@ -1,5 +1,12 @@
 {% extends "pages/base.html" %}
 {% load static %}
+
+<style>
+    .card-element{
+        background-color : #4ac1f7;
+    }
+</style>
+
 {% block content %}
 <div class="kt-container-fixed mt-1" style="max-width: var(--custom-container-width, 85%);">
     <div class="flex flex-col items-stretch gap-7 mt-5 py-5">
@@ -97,7 +104,7 @@
                                             <input type="text" name="crd_name" required placeholder="Cardholder's Name"
                                                    class="kt-input w-full"
                                                    {% if billing %}value="{{ billing.customer_name|default:user.get_full_name }}"{% endif %}/>
-                                            <div id="card-element" class="border p-3 rounded bg-muted/10"></div>
+                                            <div id="card-element" class="border p-3 rounded"></div>
                                             <input type="text" name="customer_address1" required placeholder="Address line 1"
                                                    class="kt-input w-full"
                                                    {% if billing %}value="{{ billing.customer_address1|default:'' }}"{% endif %}/>

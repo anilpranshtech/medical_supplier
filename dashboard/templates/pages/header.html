@@ -4,27 +4,27 @@
 <head>
     <style>
         #search-suggestions {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    width: 100%;
-    background-color: white;
-    border: 1px solid #ccc;
-    border-radius: 0.375rem;
-    margin-top: 4px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    z-index: 105;
-}
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 0.375rem;
+            margin-top: 4px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 105;
+        }
 
-#search-suggestions li {
-    padding: 8px 16px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
+        #search-suggestions li {
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
 
-#search-suggestions li:hover {
-    background-color: #f3f4f6;
-}
+        #search-suggestions li:hover {
+            background-color: #f3f4f6;
+        }
 
     </style>
     <title>Header with Dark/Light Mode and Transparency Control</title>
@@ -94,6 +94,7 @@
             gap: 0.5rem;
             padding: 0.5rem;
         }
+
         .opacity-slider {
             width: 100px;
             accent-color: var(--primary);
@@ -102,9 +103,11 @@
         .kt-menu-dropdown {
             display: none;
         }
+
         .group:hover .kt-menu-dropdown {
             display: block !important;
         }
+
         .kt-menu-item[data-kt-menu-item-toggle="dropdown"] .kt-menu-dropdown {
             position: absolute;
             background: rgba(var(--background-rgb, 255, 255, 255), var(--header-opacity));
@@ -115,12 +118,14 @@
             min-width: 200px;
             backdrop-filter: blur(10px);
         }
+
         @media (max-width: 768px) {
             .kt-menu-item[data-kt-menu-item-toggle="dropdown"] .kt-menu-dropdown {
                 position: static;
                 width: 100%;
                 box-shadow: none;
             }
+
             .kt-menu-item[data-kt-menu-item-toggle="dropdown"].active .kt-menu-dropdown {
                 display: block;
             }
@@ -129,54 +134,70 @@
         .bg-background {
             background: rgba(var(--background-rgb, 255, 255, 255), var(--header-opacity));
         }
+
         .text-foreground {
             color: var(--foreground);
         }
+
         .text-secondary-foreground {
             color: var(--secondary-foreground);
         }
+
         .text-muted-foreground {
             color: var(--muted-foreground);
         }
+
         .border-border {
             border-color: var(--border);
         }
+
         .hover\:text-primary:hover {
             color: var(--primary);
         }
+
         .text-mono {
             color: var(--mono);
         }
+
         .hover\:bg-secondary:hover {
             background: var(--secondary);
         }
+
         .bg-muted\/70 {
             background: var(--secondary);
             opacity: 0.7;
         }
+
         .kt-btn-secondary {
             background: var(--secondary);
         }
+
         .kt-btn-ghost:hover {
             background: var(--secondary);
         }
+
         .kt-btn-ghost:hover i {
             color: var(--primary);
         }
+
         .kt-dropdown-menu {
             background: rgba(var(--background-rgb, 255, 255, 255), var(--header-opacity));
             border: 1px solid var(--border);
             backdrop-filter: blur(10px);
         }
+
         .kt-card {
             background: var(--secondary);
         }
+
         .kt-switch:checked {
             background: var(--primary);
         }
+
         .dark\:bg-gray-900 {
             background: rgba(var(--background-rgb, 9, 9, 9), var(--header-opacity)); /* Updated to #090909 */
         }
+
         .dark\:bg-gray-800 {
             background: var(--secondary);
         }
@@ -184,10 +205,12 @@
         .kt-mobile-menu-toggle {
             display: none;
         }
+
         @media (max-width: 768px) {
             .kt-mobile-menu-toggle {
                 display: flex;
             }
+
             .kt-nav-menu {
                 display: none;
                 flex-direction: column;
@@ -200,17 +223,21 @@
                 z-index: 10;
                 backdrop-filter: blur(10px);
             }
+
             .kt-nav-menu.active {
                 display: flex;
             }
         }
+
         @media (max-width: 640px) {
             .kt-card-content img {
                 max-height: 120px;
             }
+
             .kt-card-content h3 {
                 font-size: 1.2rem;
             }
+
             .wishlist-drawer-toggle {
                 font-size: 1rem;
             }
@@ -220,16 +247,20 @@
             cursor: pointer;
             transition: color 0.3s;
         }
+
         .kt-wishlist-icon.active {
             color: #ff0000;
         }
+
         .kt-wishlist-icon:hover {
             color: #cc0000;
         }
+
         .wishlist-item-img {
             object-fit: cover;
             border-radius: 4px;
         }
+
         .remove-cart-item {
             background-color: #ef4444;
             color: white;
@@ -237,12 +268,15 @@
             padding: 0.25rem 0.5rem;
             transition: background-color 0.3s;
         }
+
         .remove-cart-item:hover {
             background-color: #dc2626;
         }
+
         .remove-cart-item i {
             font-size: 1rem;
         }
+
         .cart-total {
             background-color: var(--secondary);
             padding: 1rem;
@@ -250,669 +284,699 @@
             border-radius: 0 0 0.375rem 0.375rem;
             font-weight: 600;
         }
+
         #clear-search {
-        cursor: pointer;
-        border: none;
-        outline: none;
-    }
+            cursor: pointer;
+            border: none;
+            outline: none;
+        }
 
-    #clear-search:hover i {
-        color: #374151; /* Darker gray on hover */
-    }
+        #clear-search:hover i {
+            color: #374151; /* Darker gray on hover */
+        }
 
-    #search-suggestions {
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
+        #search-suggestions {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
 
-    #search-suggestions li {
-        padding: 0.5rem 1rem;
-    }
+        #search-suggestions li {
+            padding: 0.5rem 1rem;
+        }
 
-    #search-suggestions li:hover {
-        background-color: #f3f4f6;
-    }
+        #search-suggestions li:hover {
+            background-color: #f3f4f6;
+        }
     </style>
 </head>
 <body>
-    <!-- Rest of your HTML remains unchanged -->
-    <div class="w-full header-container border-b border-border z-20 fixed top-0">
-        <!-- Top Header -->
-        <header class="flex items-center justify-between h-[50px] px-4 sm:px-6 transition-[height] shrink-0 mx-5 px-5 mt-3">
-            <!-- Header Left: Logo -->
-            <div class="flex items-center gap-4 sm:gap-5 pl-4 sm:pl-5 mx-5 px-5">
-                <a href="#">
-                    <img class="size-10"
-                         src="https://keenthemes.com/static/metronic/tailwind/dist/assets/media/app/mini-logo-circle-success.svg"
-                         alt="Logo"/>
-                </a>
-                <span class="text-sm sm:text-base font-semibold">Medical-Supplement's</span>
-                <button class="kt-mobile-menu-toggle kt-btn kt-btn-icon kt-btn-secondary rounded-full size-8 flex items-center justify-center sm:hidden">
-                    <i class="ki-filled ki-menu"></i>
-                </button>
-            </div>
-       
-<!-- Search Bar -->
-<div class="flex-1 max-w-2xl mx-4">
-    <form class="relative" id="search-form" action="{% url 'dashboard:search_results_grid' %}">
-        <div class="relative">
-            <input type="text" name="q" id="search-input"
-                   class="w-full h-10 px-4 pr-16 text-sm rounded-full border
-                          border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary
-                          bg-white text-gray-900 placeholder-gray-500 transition-colors"
-                   placeholder="Search products..." value="{{ search_query|default:'' }}" autocomplete="off" />
-            <div id="search-suggestions" class="absolute top-full left-0 w-full bg-white border border-gray-300 rounded-md mt-1 shadow-lg z-50 max-h-60 overflow-y-auto hidden">
-                <ul id="suggestions-list" class="list-none p-0"></ul>
-            </div>
-            <div class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center space-x-2">
-                <button type="submit"
-                        class="px-3 py-1.5 text-sm font-medium rounded-full text-white bg-primary hover:bg-primary/90 transition-all">
-                    <i class="ki-filled ki-magnifier mr-1"></i>Search
-                </button>
-                <button type="button" id="clear-search" class="w-6 h-6 flex items-center justify-center rounded-full bg-gray-200 hover:bg-gray-300 transition-colors" style="display: none;">
-                    <i class="ki-filled ki-cross text-gray-600 text-lg"></i>
-                </button>
-            </div>
+<!-- Rest of your HTML remains unchanged -->
+<div class="w-full header-container border-b border-border z-20 fixed top-0">
+    <!-- Top Header -->
+    <header class="flex items-center justify-between h-[50px] px-4 sm:px-6 transition-[height] shrink-0 mx-5 px-5 mt-3">
+        <!-- Header Left: Logo -->
+        <div class="flex items-center gap-4 sm:gap-5 pl-4 sm:pl-5 mx-5 px-5">
+            <a href="#">
+                <img class="size-10"
+                     src="https://keenthemes.com/static/metronic/tailwind/dist/assets/media/app/mini-logo-circle-success.svg"
+                     alt="Logo"/>
+            </a>
+            <span class="text-sm sm:text-base font-semibold">Medical-Supplement's</span>
+            <button class="kt-mobile-menu-toggle kt-btn kt-btn-icon kt-btn-secondary rounded-full size-8 flex items-center justify-center sm:hidden">
+                <i class="ki-filled ki-menu"></i>
+            </button>
         </div>
-    </form>
-</div>
 
-            <!-- Header Right: Actions and User Profile -->
-            <div class="flex items-center gap-3 sm:gap-5 mr-5 px-5">
-                <button class="kt-btn kt-btn-ghost kt-btn-icon size-8 hover:bg-background hover:[&_i]:text-primary wishlist-drawer-toggle"
-                        data-kt-drawer-toggle="#drawers_shop_wishlist">
-                    <i class="ki-filled ki-heart text-base text-xl"></i>
-                </button>
-                <button class="kt-btn kt-btn-ghost kt-btn-icon size-8 hover:bg-background hover:[&_i]:text-primary" data-kt-drawer-toggle="#drawers_shop_cart">
-                    <i class="ki-filled ki-handcart text-base"></i>
-                </button>
-                <button class="kt-btn kt-btn-ghost kt-btn-icon size-8 hover:bg-background hover:[&_i]:text-primary"
-                        data-kt-drawer-toggle="#notifications_drawer">
-                    <i class="ki-filled ki-notification-status text-base text-lg"></i>
-                </button>
-                <div class="border-e border-border h-6 hidden md:block"></div>
-                <div class="relative group" data-kt-dropdown="true" data-kt-dropdown-offset="10px, 10px"
-                     data-kt-dropdown-offset-rtl="-20px, 10px" data-kt-dropdown-placement="bottom-end"
-                     data-kt-dropdown-trigger="click">
-                    <div class="cursor-pointer" data-kt-dropdown-toggle="true">
-                        <img alt="User Avatar" class="size-9 rounded-full border-2 border-mono/25"
-                            src="{% if header_avatar_url %}{{ header_avatar_url }}{% else %}{% static 'metronic/tailwind/dist/assets/media/avatars/default-avatar.png' %}{% endif %}" />
-                    </div>
-                    <div class="kt-dropdown-menu w-[250px] bg-background dark:bg-gray-800 border border-border rounded-lg shadow-lg py-2 z-10 hidden group-[data-kt-dropdown-toggle='true']:block"
-                         data-kt-dropdown-menu="true">
-                        <div class="flex items-center justify-between px-2.5 py-1.5 gap-1.5">
-                            <div class="flex items-center gap-2">
-                                <img alt="User Avatar" class="size-9 rounded-full border-2 border-green-500"
-                                    src="{% if header_avatar_url %}{{ header_avatar_url }}{% else %}{% static 'metronic/tailwind/dist/assets/media/avatars/default-avatar.png' %}{% endif %}" />
-                                <div class="flex flex-col gap-1.5">
-                                    <span class="text-sm text-foreground font-semibold">{{request.user.first_name}} {{request.user.last_name}}</span>
-                                    <a class="text-xs text-secondary-foreground hover:text-primary font-medium"
-                                       href="https://keenthemes.com/metronic/tailwind/demo10/account/home/get-started">
-                                        {{request.user.email}}
-                                    </a>
-                                </div>
+        <!-- Search Bar -->
+        <div class="flex-1 max-w-2xl mx-4">
+            <form class="relative" id="search-form" action="{% url 'dashboard:search_results_grid' %}" method="GET">
+                <div class="relative flex items-center">
+                    <!-- Input -->
+                    <input type="text"
+                           name="q"
+                           id="search-input"
+                           class="w-full h-10 px-4 pr-28 text-sm rounded-full border
+                        border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500
+                        bg-white dark:bg-gray-800 text-gray-650 dark:text-gray-100
+                        placeholder-gray-500 dark:placeholder-gray-400 transition-colors"
+                        placeholder="Search products..." value="{{ search_query|default:'' }}" autocomplete="off" />
+
+                    <!-- Clear button -->
+                    {% if search_query %}
+                    <a href="{% url 'dashboard:search_results_grid' %}"
+                       class="absolute right-10 top-1/2 -translate-y-1/2 px-1 text-gray-400 hover:text-black dark:hover:text-white">
+                        <i class="ki-filled ki-cross text-base"></i>
+                    </a>
+                    {% endif %}
+
+                    <!-- Search button -->
+                    <button type="submit"
+                            aria-label="Search"
+                            class="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full transition-colors
+                                   bg-blue-600 hover:bg-blue-500 text-white">
+                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none"
+                             viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Suggestions dropdown -->
+                <div id="search-suggestions"
+                     class="absolute left-0 w-full mt-2 bg-white text-gray-900 border border-gray-300
+                            rounded-lg shadow-lg z-50 hidden
+                            dark:bg-gray-800 dark:text-white dark:border-gray-700">
+                    <ul id="suggestions-list" class="max-h-60 overflow-y-auto text-sm"></ul>
+                </div>
+            </form>
+        </div>
+
+
+
+        <!-- Header Right: Actions and User Profile -->
+        <div class="flex items-center gap-3 sm:gap-5 mr-5 px-5">
+            <button class="kt-btn kt-btn-ghost kt-btn-icon size-8 hover:bg-background hover:[&_i]:text-primary wishlist-drawer-toggle"
+                    data-kt-drawer-toggle="#drawers_shop_wishlist">
+                <i class="ki-filled ki-heart text-base text-xl"></i>
+            </button>
+            <button class="kt-btn kt-btn-ghost kt-btn-icon size-8 hover:bg-background hover:[&_i]:text-primary"
+                    data-kt-drawer-toggle="#drawers_shop_cart">
+                <i class="ki-filled ki-handcart text-base"></i>
+            </button>
+            <button class="kt-btn kt-btn-ghost kt-btn-icon size-8 hover:bg-background hover:[&_i]:text-primary"
+                    data-kt-drawer-toggle="#notifications_drawer">
+                <i class="ki-filled ki-notification-status text-base text-lg"></i>
+            </button>
+            <div class="border-e border-border h-6 hidden md:block"></div>
+            <div class="relative group" data-kt-dropdown="true" data-kt-dropdown-offset="10px, 10px"
+                 data-kt-dropdown-offset-rtl="-20px, 10px" data-kt-dropdown-placement="bottom-end"
+                 data-kt-dropdown-trigger="click">
+                <div class="cursor-pointer" data-kt-dropdown-toggle="true">
+                    <img alt="User Avatar" class="size-9 rounded-full border-2 border-mono/25"
+                         src="{% if header_avatar_url %}{{ header_avatar_url }}{% else %}{% static 'metronic/tailwind/dist/assets/media/avatars/default-avatar.png' %}{% endif %}"/>
+                </div>
+                <div class="kt-dropdown-menu w-[250px] bg-background dark:bg-gray-800 border border-border rounded-lg shadow-lg py-2 z-10 hidden group-[data-kt-dropdown-toggle='true']:block"
+                     data-kt-dropdown-menu="true">
+                    <div class="flex items-center justify-between px-2.5 py-1.5 gap-1.5">
+                        <div class="flex items-center gap-2">
+                            <img alt="User Avatar" class="size-9 rounded-full border-2 border-green-500"
+                                 src="{% if header_avatar_url %}{{ header_avatar_url }}{% else %}{% static 'metronic/tailwind/dist/assets/media/avatars/default-avatar.png' %}{% endif %}"/>
+                            <div class="flex flex-col gap-1.5">
+                                <span class="text-sm text-foreground font-semibold">{{request.user.first_name}} {{request.user.last_name}}</span>
+                                <a class="text-xs text-secondary-foreground hover:text-primary font-medium"
+                                   href="https://keenthemes.com/metronic/tailwind/demo10/account/home/get-started">
+                                    {{request.user.email}}
+                                </a>
                             </div>
                         </div>
-                        <ul class="kt-dropdown-menu-sub">
-                            <li>
-                                <div class="kt-dropdown-menu-separator border-t border-border my-1"></div>
-                            </li>
-                            <li>
-                                <a class="kt-dropdown-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary"
-                                   href="{% url 'dashboard:user_profile' %}">
-                                    <i class="ki-filled ki-profile-circle text-base"></i> My Profile
-                                </a>
-                            </li>
-                            <li class="relative group" data-kt-dropdown="true" data-kt-dropdown-placement="right-start"
-                                data-kt-dropdown-trigger="hover">
-                                <button class="kt-dropdown-menu-toggle flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-secondary"
-                                        data-kt-dropdown-toggle="true">
-                                    <i class="ki-filled ki-setting-2 text-base"></i> My Account
-                                    <span class="kt-dropdown-menu-indicator ml-auto">
+                    </div>
+                    <ul class="kt-dropdown-menu-sub">
+                        <li>
+                            <div class="kt-dropdown-menu-separator border-t border-border my-1"></div>
+                        </li>
+                        <li>
+                            <a class="kt-dropdown-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary"
+                               href="{% url 'dashboard:user_profile' %}">
+                                <i class="ki-filled ki-profile-circle text-base"></i> My Profile
+                            </a>
+                        </li>
+                        <li class="relative group" data-kt-dropdown="true" data-kt-dropdown-placement="right-start"
+                            data-kt-dropdown-trigger="hover">
+                            <button class="kt-dropdown-menu-toggle flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-secondary"
+                                    data-kt-dropdown-toggle="true">
+                                <i class="ki-filled ki-setting-2 text-base"></i> My Account
+                                <span class="kt-dropdown-menu-indicator ml-auto">
                                         <i class="ki-filled ki-right text-base text-xs"></i>
                                     </span>
-                                </button>
-                                <div class="kt-dropdown-menu w-[220px] bg-background dark:bg-gray-800 border border-border rounded-lg shadow-lg py-2 hidden absolute left-full top-0 ml-1 group-hover:block"
-                                     data-kt-dropdown-menu="true">
-                                    <ul class="kt-dropdown-menu-sub">
-                                        <li>
-                                            <a class="kt-dropdown-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary"
-                                               href="{% url 'dashboard:view_user_quotations' %}">
-                                                <i class="bi bi-envelope-paper text-base"></i>
-                                                View Quotations
-                                            </a>
-                                        </li>
-                                        {% comment %}
-                                        <li>
-                                            <a class="kt-dropdown-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary"
-                                               href="#"><i class="ki-filled ki-icon text-base"></i> Billing
-                                                <span class="ml-auto"
-                                                      data-kt-tooltip="true"
-                                                      data-kt-tooltip-placement="top">
+                            </button>
+                            <div class="kt-dropdown-menu w-[220px] bg-background dark:bg-gray-800 border border-border rounded-lg shadow-lg py-2 hidden absolute left-full top-0 ml-1 group-hover:block"
+                                 data-kt-dropdown-menu="true">
+                                <ul class="kt-dropdown-menu-sub">
+                                    <li>
+                                        <a class="kt-dropdown-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary"
+                                           href="{% url 'dashboard:view_user_quotations' %}">
+                                            <i class="bi bi-envelope-paper text-base"></i>
+                                            View Quotations
+                                        </a>
+                                    </li>
+                                    {% comment %}
+                                    <li>
+                                        <a class="kt-dropdown-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary"
+                                           href="#"><i class="ki-filled ki-icon text-base"></i> Billing
+                                            <span class="ml-auto"
+                                                  data-kt-tooltip="true"
+                                                  data-kt-tooltip-placement="top">
                                                     <i class="ki-filled ki-information-2 text-base text-muted-foreground"></i>
                                                     <span class="kt-tooltip">Payment and subscription info</span>
                                                 </span>
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a class="kt-dropdown-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary"
-                                               href="#"><i class="ki-filled ki-medal-star text-base"></i> Security
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <div class="kt-dropdown-menu-separator border-t border-border my-1"></div>
-                                        </li>
-                                        <li>
-                                            <a class="kt-dropdown-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary"
-                                               href="#"><i class="ki-filled ki-shield-tick text-base"></i> Notifications
-                                                <input checked class="ml-auto kt-switch" name="check" type="checkbox"
-                                                       value="1"/>
-                                            </a>
-                                        </li>
-                                        {% endcomment %}
-                                    </ul>
-                                </div>
-                            </li>
-                            <li>
-                                <a class="kt-dropdown-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary"
-                                   href="{% url 'dashboard:request_role' %}">
-                                    <i class="ki-filled ki-profile-circle text-base"></i> Become a Supplier
-                                </a>
-                            </li>
-                            <li>
-                                <div class="kt-dropdown-menu-separator border-t border-border my-1"></div>
-                            </li>
-                        </ul>
-                        <div class="px-2.5 pt-1.5 mb-2.5 flex flex-col gap-3.5">
-                            <div class="flex items-center justify-between">
-                                <span class="flex items-center gap-2"><i class="ki-filled ki-moon text-base text-muted-foreground"></i>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="kt-dropdown-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary"
+                                           href="#"><i class="ki-filled ki-medal-star text-base"></i> Security
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <div class="kt-dropdown-menu-separator border-t border-border my-1"></div>
+                                    </li>
+                                    <li>
+                                        <a class="kt-dropdown-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary"
+                                           href="#"><i class="ki-filled ki-shield-tick text-base"></i> Notifications
+                                            <input checked class="ml-auto kt-switch" name="check" type="checkbox"
+                                                   value="1"/>
+                                        </a>
+                                    </li>
+                                    {% endcomment %}
+                                </ul>
+                            </div>
+                        </li>
+                        <li>
+                            <a class="kt-dropdown-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary"
+                               href="{% url 'dashboard:request_role' %}">
+                                <i class="ki-filled ki-profile-circle text-base"></i> Become a Supplier
+                            </a>
+                        </li>
+                        <li>
+                            <div class="kt-dropdown-menu-separator border-t border-border my-1"></div>
+                        </li>
+                    </ul>
+                    <div class="px-2.5 pt-1.5 mb-2.5 flex flex-col gap-3.5">
+                        <div class="flex items-center justify-between">
+                                <span class="flex items-center gap-2"><i
+                                        class="ki-filled ki-moon text-base text-muted-foreground"></i>
                                     <span class="font-medium text-2sm">Dark Mode</span>
                                 </span>
-                                <input class="kt-switch" data-kt-theme-switch-state="dark" data-kt-theme-switch-toggle="true" name="check" type="checkbox" value="1"/>
-                            </div>
-                            <div class="opacity-slider-container">
-                                <span class="text-sm text-muted-foreground">Header Opacity</span>
-                                <input type="range" min="0.1" max="1" step="0.1" value="0.8" class="opacity-slider" id="header-opacity-slider"/>
-                            </div>
-                            {% if user.is_authenticated %}
-                            <a class="kt-btn kt-btn-outline justify-center w-full"
-                               href="{% url 'dashboard:user_logout' %}">Log out
-                            </a>
-                            {% else %}
-                            <a class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700"
-                                href="{% url 'dashboard:login' %}">Sign In
-                            </a>
-                            {% endif %}
+                            <input class="kt-switch" data-kt-theme-switch-state="dark"
+                                   data-kt-theme-switch-toggle="true" name="check" type="checkbox" value="1"/>
                         </div>
+                        <div class="opacity-slider-container">
+                            <span class="text-sm text-muted-foreground">Header Opacity</span>
+                            <input type="range" min="0.1" max="1" step="0.1" value="0.8" class="opacity-slider"
+                                   id="header-opacity-slider"/>
+                        </div>
+                        {% if user.is_authenticated %}
+                        <a class="kt-btn kt-btn-outline justify-center w-full"
+                           href="{% url 'dashboard:user_logout' %}">Log out
+                        </a>
+                        {% else %}
+                        <a class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700"
+                           href="{% url 'dashboard:login' %}">Sign In
+                        </a>
+                        {% endif %}
                     </div>
                 </div>
-                {% if user.is_authenticated %}
-                <a class="kt-btn kt-btn-ghost kt-btn-icon size-8 hover:bg-background hover:[&_i]:text-primary"
-                   href="{% url 'dashboard:user_logout' %}">
-                    <i class="ki-filled ki-exit-right text-base"></i>
-                </a>
-                {% else %}
-                <a class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700"
-                   href="{% url 'dashboard:login' %}">Sign In
-                </a>
-                {% endif %}
             </div>
-        </header>
+            {% if user.is_authenticated %}
+            <a class="kt-btn kt-btn-ghost kt-btn-icon size-8 hover:bg-background hover:[&_i]:text-primary"
+               href="{% url 'dashboard:user_logout' %}">
+                <i class="ki-filled ki-exit-right text-base"></i>
+            </a>
+            {% else %}
+            <a class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700"
+               href="{% url 'dashboard:login' %}">Sign In
+            </a>
+            {% endif %}
+        </div>
+    </header>
 
-        <!-- Bottom Header -->
-        <header class="flex items-center h-[50px] px-4 sm:px-6 transition-[height] shrink-0 mt-1 mb-1">
-            <div class="container flex justify-center items-center gap-3.5">
-                <div class="kt-nav-menu flex items-center gap-7 sm:gap-6 flex-wrap">
+    <!-- Bottom Header -->
+    <header class="flex items-center h-[50px] px-10 sm:px-6 transition-[height] shrink-0 mt-1 mb-1">
+        <div class="container flex justify-center items-center gap-3.5">
+            <div class="kt-nav-menu flex items-center gap-7 sm:gap-6 flex-wrap">
 
-                    <!-- Home -->
-                    <a class="kt-menu-link flex items-center gap-2 px-3 py-2 text-2sm leading-none relative h-8.5 rounded-full border
+                <!-- Home -->
+                <a class="kt-menu-link flex items-center gap-2 px-3 py-2 text-2sm leading-none relative h-8.5 rounded-full border
                         {% if request.resolver_match.url_name == 'home' %}
                             bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
                         {% else %}
                             border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
                         {% endif %}"
-                       href="{% url 'dashboard:home' %}">
-                        <i class="ki-filled ki-home text-base"></i>
-                        <span class="text-sm">Home</span>
-                    </a>
-                    <div class="border-e border-border h-6 hidden md:block"></div>
+                   href="{% url 'dashboard:home' %}">
+                    <i class="ki-filled ki-home text-base"></i>
+                    <span class="text-sm">Home</span>
+                </a>
+                <div class="border-e border-border h-6 hidden md:block"></div>
 
-                    <!-- Search Results -->
-                    {% comment %}
-                    <div class="kt-menu-item relative group" data-kt-menu-item-toggle="dropdown" data-kt-menu-item-trigger="hover">
-                        <a class="kt-menu-link flex items-center gap-2 px-3 py-2 text-2sm leading-none relative h-8.5 rounded-full border
+                <!-- Search Results -->
+                {% comment %}
+                <div class="kt-menu-item relative group" data-kt-menu-item-toggle="dropdown"
+                     data-kt-menu-item-trigger="hover">
+                    <a class="kt-menu-link flex items-center gap-2 px-3 py-2 text-2sm leading-none relative h-8.5 rounded-full border
                             border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground"
-                           href="#">
-                            <i class="ki-filled ki-magnifier text-base"></i>
-                            <span class="text-sm">Search Results</span>
-                        </a>
-                        <div class="kt-menu-dropdown absolute w-48 bg-background dark:bg-gray-800 border border-border rounded-lg shadow-lg z-10 hidden group-hover:block mt-7 py-5 px-3">
-                            <div class="kt-menu-item">
-                                <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
+                       href="#">
+                        <i class="ki-filled ki-magnifier text-base"></i>
+                        <span class="text-sm">Search Results</span>
+                    </a>
+                    <div class="kt-menu-dropdown absolute w-48 bg-background dark:bg-gray-800 border border-border rounded-lg shadow-lg z-10 hidden group-hover:block mt-7 py-5 px-3">
+                        <div class="kt-menu-item">
+                            <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
                                     {% if request.resolver_match.url_name == 'search_results_grid' %}
                                         bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
                                     {% else %}
                                         border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
                                     {% endif %}"
-                                   href="{% url 'dashboard:search_results_grid' %}">
-                                    <i class="ki-filled ki-grid text-base"></i>
-                                    <span class="text-sm">Grid View</span>
-                                </a>
-                            </div>
-                            <div class="kt-menu-item mt-3">
-                                <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
+                               href="{% url 'dashboard:search_results_grid' %}">
+                                <i class="ki-filled ki-grid text-base"></i>
+                                <span class="text-sm">Grid View</span>
+                            </a>
+                        </div>
+                        <div class="kt-menu-item mt-3">
+                            <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
                                     {% if request.resolver_match.url_name == 'search_results_list' %}
                                         bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
                                     {% else %}
                                         border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
                                     {% endif %}"
-                                   href="{% url 'dashboard:search_results_list' %}">
-                                    <i class="bi bi-card-checklist text-base"></i>
-                                    <span class="text-sm">List View</span>
-                                </a>
-                            </div>
+                               href="{% url 'dashboard:search_results_list' %}">
+                                <i class="bi bi-card-checklist text-base"></i>
+                                <span class="text-sm">List View</span>
+                            </a>
                         </div>
                     </div>
-                    {% endcomment %}
+                </div>
+                {% endcomment %}
 
-                    <!-- Overlays -->
-                    <div class="kt-menu-item relative group" data-kt-menu-item-toggle="dropdown" data-kt-menu-item-trigger="hover">
-                        <a class="kt-menu-link flex items-center gap-2 px-3 py-2 text-2sm leading-none relative h-8.5 rounded-full border
+                <!-- Overlays -->
+                <div class="kt-menu-item relative group" data-kt-menu-item-toggle="dropdown"
+                     data-kt-menu-item-trigger="hover">
+                    <a class="kt-menu-link flex items-center gap-2 px-3 py-2 text-2sm leading-none relative h-8.5 rounded-full border
                             border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground"
-                           href="#">
-                            <i class="bi bi-exclude text-base`"></i>
-                            <span class="text-sm">Overlays</span>
-                        </a>
-                        <div class="kt-menu-dropdown absolute w-48 bg-background dark:bg-gray-800 border border-border rounded-lg shadow-lg z-10 hidden group-hover:block mt-7 py-5 px-3">
-                            <div class="kt-menu-item">
-                                <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
+                       href="#">
+                        <i class="bi bi-exclude text-base`"></i>
+                        <span class="text-sm">Overlays</span>
+                    </a>
+                    <div class="kt-menu-dropdown absolute w-48 bg-background dark:bg-gray-800 border border-border rounded-lg shadow-lg z-10 hidden group-hover:block mt-7 py-5 px-3">
+                        <div class="kt-menu-item">
+                            <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
                                     {% if request.resolver_match.url_name == 'shopping_cart' %}
                                         bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
                                     {% else %}
                                         border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
                                     {% endif %}"
-                                   href="{% url 'dashboard:shopping_cart' %}">
-                                    <i class="ki-filled ki-basket text-base"></i>
-                                    <span class="text-sm">Shopping Cart</span>
-                                </a>
-                            </div>
-                            <div class="kt-menu-item mt-3">
-                                <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
+                               href="{% url 'dashboard:shopping_cart' %}">
+                                <i class="ki-filled ki-basket text-base"></i>
+                                <span class="text-sm">Shopping Cart</span>
+                            </a>
+                        </div>
+                        <div class="kt-menu-item mt-3">
+                            <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
                                     {% if request.resolver_match.url_name == 'wish_list' %}
                                         bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
                                     {% else %}
                                         border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
                                     {% endif %}"
-                                   href="{% url 'dashboard:wish_list' %}">
-                                    <i class="ki-filled ki-heart text-base"></i>
-                                    <span class="text-sm">Wishlist</span>
-                                </a>
-                            </div>
+                               href="{% url 'dashboard:wish_list' %}">
+                                <i class="ki-filled ki-heart text-base"></i>
+                                <span class="text-sm">Wishlist</span>
+                            </a>
                         </div>
                     </div>
+                </div>
 
-                    <div class="border-e border-border h-6 hidden md:block"></div>
-                    <!-- Checkout -->
-                    <div class="kt-menu-item relative group" data-kt-menu-item-toggle="dropdown" data-kt-menu-item-trigger="hover">
-                        <a class="kt-menu-link flex items-center gap-2 px-3 py-2 text-2sm leading-none relative h-8.5 rounded-full border
+                <div class="border-e border-border h-6 hidden md:block"></div>
+                <!-- Checkout -->
+                <div class="kt-menu-item relative group" data-kt-menu-item-toggle="dropdown"
+                     data-kt-menu-item-trigger="hover">
+                    <a class="kt-menu-link flex items-center gap-2 px-3 py-2 text-2sm leading-none relative h-8.5 rounded-full border
                             border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground"
-                           href="#">
-                            <i class="ki-filled ki-wallet text-base"></i>
-                            <span class="text-sm">Checkout</span>
-                        </a>
-                        <div class="kt-menu-dropdown absolute w-40 bg-background dark:bg-gray-800 border border-border rounded-lg shadow-lg z-10 hidden group-hover:block mt-7 py-5 px-3">
-                            <div class="kt-menu-item">
-                                <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
+                       href="#">
+                        <i class="ki-filled ki-wallet text-base"></i>
+                        <span class="text-sm">Checkout</span>
+                    </a>
+                    <div class="kt-menu-dropdown absolute w-40 bg-background dark:bg-gray-800 border border-border rounded-lg shadow-lg z-10 hidden group-hover:block mt-7 py-5 px-3">
+                        <div class="kt-menu-item">
+                            <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
                                     {% if request.resolver_match.url_name == 'shipping_info' %}
                                         bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
                                     {% else %}
                                         border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
                                     {% endif %}"
-                                   href="{% url 'dashboard:shipping_info' %}">
-                                    <i class="ki-filled ki-delivery text-base"></i>
-                                    <span class="text-sm">Shipping Info</span>
-                                </a>
-                            </div>
-                            <div class="kt-menu-item mt-3">
-                                <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
+                               href="{% url 'dashboard:shipping_info' %}">
+                                <i class="ki-filled ki-delivery text-base"></i>
+                                <span class="text-sm">Shipping Info</span>
+                            </a>
+                        </div>
+                        <div class="kt-menu-item mt-3">
+                            <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
                                     {% if request.resolver_match.url_name == 'payment_method' %}
                                         bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
                                     {% else %}
                                         border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
                                     {% endif %}"
-                                   href="{% url 'dashboard:payment_method' %}">
-                                    <i class="ki-filled ki-two-credit-cart text-base"></i>
-                                    <span class="text-sm">Payment Method</span>
-                                </a>
-                            </div>
-                            <div class="kt-menu-item mt-3">
-                                <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
+                               href="{% url 'dashboard:payment_method' %}">
+                                <i class="ki-filled ki-two-credit-cart text-base"></i>
+                                <span class="text-sm">Payment Method</span>
+                            </a>
+                        </div>
+                        <div class="kt-menu-item mt-3">
+                            <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
                                     {% if request.resolver_match.url_name == 'order_placed' %}
                                         bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
                                     {% else %}
                                         border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
                                     {% endif %}"
-                                   href="{% url 'dashboard:order_placed' %}">
-                                    <i class="ki-filled ki-cheque text-base"></i>
-                                    <span class="text-sm">Order Placed</span>
-                                </a>
-                            </div>
+                               href="{% url 'dashboard:order_placed' %}">
+                                <i class="ki-filled ki-cheque text-base"></i>
+                                <span class="text-sm">Order Placed</span>
+                            </a>
                         </div>
                     </div>
+                </div>
 
-                    <div class="border-e border-border h-6 hidden md:block"></div>
-                    <!-- My Orders -->
-                    <div class="kt-menu-item relative">
-                        <a class="kt-menu-link flex items-center gap-2 px-3 py-2 text-2sm leading-none relative h-8.5 rounded-full border
+                <div class="border-e border-border h-6 hidden md:block"></div>
+                <!-- My Orders -->
+                <div class="kt-menu-item relative">
+                    <a class="kt-menu-link flex items-center gap-2 px-3 py-2 text-2sm leading-none relative h-8.5 rounded-full border
                             {% if request.resolver_match.url_name == 'my_orders' %}
                                 bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
                             {% else %}
                                 border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
                             {% endif %}"
-                           href="{% url 'dashboard:my_orders' %}">
-                            <i class="ki-filled ki-package text-base"></i>
-                            <span class="text-sm">My Orders</span>
+                       href="{% url 'dashboard:my_orders' %}">
+                        <i class="ki-filled ki-package text-base"></i>
+                        <span class="text-sm">My Orders</span>
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </header>
+
+    <!-- Notifications Drawer -->
+    <div class="hidden kt-drawer kt-drawer-end card flex-col max-w-[90%] w-[400px] sm:w-[450px] top-5 bottom-5 end-5 rounded-xl border border-border"
+         data-kt-drawer="true" data-kt-drawer-container="body" id="notifications_drawer">
+        <div class="flex items-center justify-between gap-2.5 text-sm text-mono font-semibold px-5 py-2.5 border-b border-b-border"
+             id="notifications_header">
+            Notifications
+            <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-dim shrink-0" data-kt-drawer-dismiss="true">
+                <i class="ki-filled ki-cross"></i>
+            </button>
+        </div>
+        <div class="kt-tabs kt-tabs-line justify-between px-5 mb-2" data-kt-tabs="true" id="notifications_tabs">
+            <div class="flex items-center gap-3 sm:gap-5">
+                <button class="kt-tab-toggle py-3 active" data-kt-tab-toggle="#notifications_tab_all">All</button>
+                <button class="kt-tab-toggle py-3 relative" data-kt-tab-toggle="#notifications_tab_inbox">
+                    Inbox
+                    <span class="rounded-full bg-green-500 size-[5px] absolute top-2 end-0 transform translate-y-1/2 translate-x-full"></span>
+                </button>
+                <button class="kt-tab-toggle py-3" data-kt-tab-toggle="#notifications_tab_team">Team</button>
+                <button class="kt-tab-toggle py-3" data-kt-tab-toggle="#notifications_tab_following">Following</button>
+            </div>
+            <div class="kt-menu" data-kt-menu="true">
+                <button class="kt-menu-toggle kt-btn kt-btn-icon kt-btn-ghost">
+                    <i class="ki-filled ki-setting-2"></i>
+                </button>
+                <div class="kt-menu-dropdown kt-menu-default w-full max-w-[175px]" data-kt-menu-dismiss="true">
+                    <div class="kt-menu-item">
+                        <a class="kt-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary" href="#">
+                            <i class="ki-filled ki-document"></i>
+                            <span class="kt-menu-title">View</span>
                         </a>
                     </div>
-
-                </div>
-            </div>
-        </header>
-
-        <!-- Notifications Drawer -->
-        <div class="hidden kt-drawer kt-drawer-end card flex-col max-w-[90%] w-[400px] sm:w-[450px] top-5 bottom-5 end-5 rounded-xl border border-border"
-             data-kt-drawer="true" data-kt-drawer-container="body" id="notifications_drawer">
-            <div class="flex items-center justify-between gap-2.5 text-sm text-mono font-semibold px-5 py-2.5 border-b border-b-border"
-                 id="notifications_header">
-                Notifications
-                <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-dim shrink-0" data-kt-drawer-dismiss="true">
-                    <i class="ki-filled ki-cross"></i>
-                </button>
-            </div>
-            <div class="kt-tabs kt-tabs-line justify-between px-5 mb-2" data-kt-tabs="true" id="notifications_tabs">
-                <div class="flex items-center gap-3 sm:gap-5">
-                    <button class="kt-tab-toggle py-3 active" data-kt-tab-toggle="#notifications_tab_all">All</button>
-                    <button class="kt-tab-toggle py-3 relative" data-kt-tab-toggle="#notifications_tab_inbox">
-                        Inbox
-                        <span class="rounded-full bg-green-500 size-[5px] absolute top-2 end-0 transform translate-y-1/2 translate-x-full"></span>
-                    </button>
-                    <button class="kt-tab-toggle py-3" data-kt-tab-toggle="#notifications_tab_team">Team</button>
-                    <button class="kt-tab-toggle py-3" data-kt-tab-toggle="#notifications_tab_following">Following</button>
-                </div>
-                <div class="kt-menu" data-kt-menu="true">
-                    <button class="kt-menu-toggle kt-btn kt-btn-icon kt-btn-ghost">
-                        <i class="ki-filled ki-setting-2"></i>
-                    </button>
-                    <div class="kt-menu-dropdown kt-menu-default w-full max-w-[175px]" data-kt-menu-dismiss="true">
-                        <div class="kt-menu-item">
-                            <a class="kt-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary" href="#">
-                                <i class="ki-filled ki-document"></i>
-                                <span class="kt-menu-title">View</span>
-                            </a>
+                    <div class="kt-menu-item" data-kt-menu-item-offset="-15px, 0"
+                         data-kt-menu-item-placement="right-start" data-kt-menu-item-toggle="dropdown"
+                         data-kt-menu-item-trigger="click|lg:hover">
+                        <div class="kt-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary">
+                            <i class="ki-filled ki-notification-status"></i>
+                            <span class="kt-menu-title">Export</span>
+                            <span class="kt-menu-arrow"><i
+                                    class="ki-filled ki-right text-xs rtl:transform rtl:rotate-180"></i></span>
                         </div>
-                        <div class="kt-menu-item" data-kt-menu-item-offset="-15px, 0"
-                             data-kt-menu-item-placement="right-start" data-kt-menu-item-toggle="dropdown"
-                             data-kt-menu-item-trigger="click|lg:hover">
-                            <div class="kt-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary">
-                                <i class="ki-filled ki-notification-status"></i>
-                                <span class="kt-menu-title">Export</span>
-                                <span class="kt-menu-arrow"><i
-                                        class="ki-filled ki-right text-xs rtl:transform rtl:rotate-180"></i></span>
+                        <div class="kt-menu-dropdown kt-menu-default w-full max-w-[175px]">
+                            <div class="kt-menu-item">
+                                <a class="kt-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary"
+                                   href="https://keenthemes.com/metronic/tailwind/demo10/account/home/settings-sidebar">
+                                    <i class="ki-filled ki-sms"></i>
+                                    <span class="kt-menu-title">Email</span>
+                                </a>
                             </div>
-                            <div class="kt-menu-dropdown kt-menu-default w-full max-w-[175px]">
-                                <div class="kt-menu-item">
-                                    <a class="kt-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary"
-                                       href="https://keenthemes.com/metronic/tailwind/demo10/account/home/settings-sidebar">
-                                        <i class="ki-filled ki-sms"></i>
-                                        <span class="kt-menu-title">Email</span>
-                                    </a>
-                                </div>
-                                <div class="kt-menu-item">
-                                    <a class="kt-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary"
-                                       href="https://keenthemes.com/metronic/tailwind/demo10/account/home/settings-sidebar">
-                                        <i class="ki-filled ki-message-notify"></i>
-                                        <span class="kt-menu-title">SMS</span>
-                                    </a>
-                                </div>
-                                <div class="kt-menu-item">
-                                    <a class="kt-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary"
-                                       href="https://keenthemes.com/metronic/tailwind/demo10/account/home/settings-sidebar">
-                                        <i class="ki-filled ki-notification-status"></i>
-                                        <span class="kt-menu-title">Push</span>
-                                    </a>
-                                </div>
+                            <div class="kt-menu-item">
+                                <a class="kt-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary"
+                                   href="https://keenthemes.com/metronic/tailwind/demo10/account/home/settings-sidebar">
+                                    <i class="ki-filled ki-message-notify"></i>
+                                    <span class="kt-menu-title">SMS</span>
+                                </a>
+                            </div>
+                            <div class="kt-menu-item">
+                                <a class="kt-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary"
+                                   href="https://keenthemes.com/metronic/tailwind/demo10/account/home/settings-sidebar">
+                                    <i class="ki-filled ki-notification-status"></i>
+                                    <span class="kt-menu-title">Push</span>
+                                </a>
                             </div>
                         </div>
-                        <div class="kt-menu-item">
-                            <a class="kt-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary" href="#">
-                                <i class="ki-filled ki-pencil"></i>
-                                <span class="kt-menu-title">Edit</span>
-                            </a>
-                        </div>
-                        <div class="kt-menu-item">
-                            <a class="kt-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary" href="#">
-                                <i class="ki-filled ki-trash"></i>
-                                <span class="kt-menu-title">Delete</span>
-                            </a>
-                        </div>
+                    </div>
+                    <div class="kt-menu-item">
+                        <a class="kt-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary" href="#">
+                            <i class="ki-filled ki-pencil"></i>
+                            <span class="kt-menu-title">Edit</span>
+                        </a>
+                    </div>
+                    <div class="kt-menu-item">
+                        <a class="kt-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary" href="#">
+                            <i class="ki-filled ki-trash"></i>
+                            <span class="kt-menu-title">Delete</span>
+                        </a>
                     </div>
                 </div>
             </div>
-            <div class="grow flex flex-col" id="notifications_tab_all">
-                <div class="grow kt-scrollable-y-auto" data-kt-scrollable="true" data-kt-scrollable-dependencies="#header"
-                     data-kt-scrollable-max-height="auto" data-kt-scrollable-offset="150px">
-                    <div class="grow flex flex-col gap-5 pt-3 pb-4 divider-y divider-border">
-                        <div class="flex grow gap-2.5 px-5">
-                            <div class="kt-avatar size-8">
-                                <div class="kt-avatar-image">
-                                    <img alt="avatar"
-                                         src="{% static 'metronic/tailwind/dist/assets/media/avatars/300-4.png' %}"/>
-                                </div>
-                                <div class="kt-avatar-indicator -end-2 -bottom-2">
-                                    <div class="kt-avatar-status kt-avatar-status-online size-2.5"></div>
-                                </div>
+        </div>
+        <div class="grow flex flex-col" id="notifications_tab_all">
+            <div class="grow kt-scrollable-y-auto" data-kt-scrollable="true" data-kt-scrollable-dependencies="#header"
+                 data-kt-scrollable-max-height="auto" data-kt-scrollable-offset="150px">
+                <div class="grow flex flex-col gap-5 pt-3 pb-4 divider-y divider-border">
+                    <div class="flex grow gap-2.5 px-5">
+                        <div class="kt-avatar size-8">
+                            <div class="kt-avatar-image">
+                                <img alt="avatar"
+                                     src="{% static 'metronic/tailwind/dist/assets/media/avatars/300-4.png' %}"/>
                             </div>
-                            <div class="flex flex-col gap-3.5">
-                                <div class="flex flex-col gap-1">
-                                    <div class="text-sm font-medium">
-                                        <a class="hover:text-primary text-mono font-semibold" href="#">Joe Lincoln</a>
-                                        <span class="text-secondary-foreground"> mentioned you in </span>
-                                        <a class="hover:text-primary text-primary" href="#">Latest Trends</a>
-                                        <span class="text-secondary-foreground"> topic</span>
-                                    </div>
-                                    <span class="flex items-center text-xs font-medium text-muted-foreground">
+                            <div class="kt-avatar-indicator -end-2 -bottom-2">
+                                <div class="kt-avatar-status kt-avatar-status-online size-2.5"></div>
+                            </div>
+                        </div>
+                        <div class="flex flex-col gap-3.5">
+                            <div class="flex flex-col gap-1">
+                                <div class="text-sm font-medium">
+                                    <a class="hover:text-primary text-mono font-semibold" href="#">Joe Lincoln</a>
+                                    <span class="text-secondary-foreground"> mentioned you in </span>
+                                    <a class="hover:text-primary text-primary" href="#">Latest Trends</a>
+                                    <span class="text-secondary-foreground"> topic</span>
+                                </div>
+                                <span class="flex items-center text-xs font-medium text-muted-foreground">
                                         18 mins ago
                                         <span class="rounded-full size-1 bg-mono/30 mx-1.5"></span>
                                         Web Design 2024
                                     </span>
+                            </div>
+                            <div class="kt-card shadow-none flex flex-col gap-2.5 p-3.5 rounded-lg bg-muted/70">
+                                <div class="text-sm font-semibold text-secondary-foreground mb-px">
+                                    <a class="hover:text-primary text-mono font-semibold" href="#">@Cody</a>
+                                    <span class="text-secondary-foreground font-medium">For an expert opinion, check out what Mike has to say on this topic!</span>
                                 </div>
-                                <div class="kt-card shadow-none flex flex-col gap-2.5 p-3.5 rounded-lg bg-muted/70">
-                                    <div class="text-sm font-semibold text-secondary-foreground mb-px">
-                                        <a class="hover:text-primary text-mono font-semibold" href="#">@Cody</a>
-                                        <span class="text-secondary-foreground font-medium">For an expert opinion, check out what Mike has to say on this topic!</span>
-                                    </div>
-                                    <div class="kt-input">
-                                        <input placeholder="Reply" type="text" value=""/>
-                                        <button class="kt-btn kt-btn-ghost kt-btn-icon size-6 -me-1.5">
-                                            <i class="ki-filled ki-picture"></i>
-                                        </button>
-                                    </div>
+                                <div class="kt-input">
+                                    <input placeholder="Reply" type="text" value=""/>
+                                    <button class="kt-btn kt-btn-ghost kt-btn-icon size-6 -me-1.5">
+                                        <i class="ki-filled ki-picture"></i>
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="border-b border-b-border"></div>
-                <div class="grid grid-cols-2 p-5 gap-2.5" id="notifications_all_footer">
-                    <button class="kt-btn kt-btn-outline justify-center">Archive all</button>
-                    <button class="kt-btn kt-btn-outline justify-center">Mark all as read</button>
-                </div>
             </div>
-        </div>
-
-        <!-- Wishlist Drawer -->
-        <div class="hidden kt-drawer kt-drawer-end card flex-col max-w-[90%] w-[600px] top-5 bottom-5 end-5 rounded-xl border border-border"
-             data-kt-drawer="true" data-kt-drawer-container="body" id="drawers_shop_wishlist">
-            <div class="kt-card-header px-5">
-                <h3 class="kt-card-title">Wishlist</h3>
-                <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" data-kt-drawer-dismiss="true">
-                    <i class="ki-filled ki-cross text-base"></i>
-                </button>
-            </div>
-            <div class="kt-card-content flex flex-col p-5 kt-scrollable-y-auto">
-                <div id="wishlist-items" class="flex flex-col gap-4"></div>
-            </div>
-        </div>
-
-        <!-- Add to Cart Drawer -->
-        <div class="hidden kt-drawer kt-drawer-end card flex-col max-w-[90%] w-[600px] top-5 bottom-5 end-5 rounded-xl border border-border"
-             data-kt-drawer="true" data-kt-drawer-container="body" id="drawers_shop_cart">
-            <div class="kt-card-header px-5">
-                <h3 class="kt-card-title">Cart</h3>
-                <button id="cart-close-btn" class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" data-kt-drawer-dismiss="true">
-                    <i class="ki-filled ki-cross text-base"></i>
-                </button>
-            </div>
-            <div class="kt-card-content flex flex-col p-5 kt-scrollable-y-auto" id="cart-items"></div>
-            <div class="kt-card-footer px-5 py-3 flex justify-between gap-3">
-                <button class="kt-btn kt-btn-outline w-1/2" id="cart-clear">Clear Cart</button>
-                <button class="kt-btn kt-btn-primary w-1/2" id="buy-now">Buy Now</button>
+            <div class="border-b border-b-border"></div>
+            <div class="grid grid-cols-2 p-5 gap-2.5" id="notifications_all_footer">
+                <button class="kt-btn kt-btn-outline justify-center">Archive all</button>
+                <button class="kt-btn kt-btn-outline justify-center">Mark all as read</button>
             </div>
         </div>
     </div>
 
-    <script>
+    <!-- Wishlist Drawer -->
+    <div class="hidden kt-drawer kt-drawer-end card flex-col max-w-[90%] w-[600px] top-5 bottom-5 end-5 rounded-xl border border-border"
+         data-kt-drawer="true" data-kt-drawer-container="body" id="drawers_shop_wishlist">
+        <div class="kt-card-header px-5">
+            <h3 class="kt-card-title">Wishlist</h3>
+            <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" data-kt-drawer-dismiss="true">
+                <i class="ki-filled ki-cross text-base"></i>
+            </button>
+        </div>
+        <div class="kt-card-content flex flex-col p-5 kt-scrollable-y-auto">
+            <div id="wishlist-items" class="flex flex-col gap-4"></div>
+        </div>
+    </div>
 
-        document.addEventListener('DOMContentLoaded', function () {
-            // Theme toggle handler
-            const themeToggle = document.querySelector('[data-kt-theme-switch-toggle="true"]');
-            if (themeToggle) {
-                const savedTheme = localStorage.getItem('theme') || 'light';
-                themeToggle.checked = savedTheme === 'dark';
+    <!-- Add to Cart Drawer -->
+    <div class="hidden kt-drawer kt-drawer-end card flex-col max-w-[90%] w-[600px] top-5 bottom-5 end-5 rounded-xl border border-border"
+         data-kt-drawer="true" data-kt-drawer-container="body" id="drawers_shop_cart">
+        <div class="kt-card-header px-5">
+            <h3 class="kt-card-title">Cart</h3>
+            <button id="cart-close-btn" class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0"
+                    data-kt-drawer-dismiss="true">
+                <i class="ki-filled ki-cross text-base"></i>
+            </button>
+        </div>
+        <div class="kt-card-content flex flex-col p-5 kt-scrollable-y-auto" id="cart-items"></div>
+        <div class="kt-card-footer px-5 py-3 flex justify-between gap-3">
+            <button class="kt-btn kt-btn-outline w-1/2" id="cart-clear">Clear Cart</button>
+            <button class="kt-btn kt-btn-primary w-1/2" id="buy-now">Buy Now</button>
+        </div>
+    </div>
+</div>
 
-                themeToggle.addEventListener('change', function () {
-                    const isDark = this.checked;
-                    const lightBackgroundRgb = '255, 255, 255';
-                    const darkBackgroundRgb = '9, 9, 9'; // Updated to #090909
-                    const backgroundRgb = isDark ? darkBackgroundRgb : lightBackgroundRgb;
+<script>
 
-                    document.documentElement.setAttribute('data-kt-theme', isDark ? 'dark' : 'light');
-                    document.documentElement.style.setProperty('--background-rgb', backgroundRgb);
-                    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    document.addEventListener('DOMContentLoaded', function () {
+        // Theme toggle handler
+        const themeToggle = document.querySelector('[data-kt-theme-switch-toggle="true"]');
+        if (themeToggle) {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            themeToggle.checked = savedTheme === 'dark';
 
-                    const opacitySlider = document.querySelector('#header-opacity-slider');
-                    const defaultOpacity = isDark ? 1.0 : 1.0;
-                    opacitySlider.value = defaultOpacity;
-                    document.documentElement.style.setProperty('--header-opacity', defaultOpacity);
-                    localStorage.setItem('header-opacity', defaultOpacity);
-                });
-            }
+            themeToggle.addEventListener('change', function () {
+                const isDark = this.checked;
+                const lightBackgroundRgb = '255, 255, 255';
+                const darkBackgroundRgb = '9, 9, 9'; // Updated to #090909
+                const backgroundRgb = isDark ? darkBackgroundRgb : lightBackgroundRgb;
 
-            document.querySelectorAll('[data-kt-drawer-toggle="#drawers_shop_wishlist"]').forEach(button => {
-                button.addEventListener('click', function () {
-                    fetchWishlistFromServer(); // Refresh drawer each time it's opened
-                });
+                document.documentElement.setAttribute('data-kt-theme', isDark ? 'dark' : 'light');
+                document.documentElement.style.setProperty('--background-rgb', backgroundRgb);
+                localStorage.setItem('theme', isDark ? 'dark' : 'light');
+
+                const opacitySlider = document.querySelector('#header-opacity-slider');
+                const defaultOpacity = isDark ? 1.0 : 1.0;
+                opacitySlider.value = defaultOpacity;
+                document.documentElement.style.setProperty('--header-opacity', defaultOpacity);
+                localStorage.setItem('header-opacity', defaultOpacity);
             });
+        }
 
-            document.querySelector('#drawers_shop_wishlist')?.addEventListener('hide.bs.drawer', () => {
-                updateWishlistIcons();
+        document.querySelectorAll('[data-kt-drawer-toggle="#drawers_shop_wishlist"]').forEach(button => {
+            button.addEventListener('click', function () {
+                fetchWishlistFromServer(); // Refresh drawer each time it's opened
             });
+        });
 
-            // Header opacity slider handler
-            const opacitySlider = document.querySelector('#header-opacity-slider');
-            if (opacitySlider) {
-                const savedOpacity = localStorage.getItem('header-opacity') || (localStorage.getItem('theme') === 'dark' ? '0.85' : '0.8');
-                opacitySlider.value = savedOpacity;
-                document.documentElement.style.setProperty('--header-opacity', savedOpacity);
+        document.querySelector('#drawers_shop_wishlist')?.addEventListener('hide.bs.drawer', () => {
+            updateWishlistIcons();
+        });
 
-                opacitySlider.addEventListener('input', function () {
-                    document.documentElement.style.setProperty('--header-opacity', this.value);
-                    localStorage.setItem('header-opacity', this.value);
-                });
-            }
+        // Header opacity slider handler
+        const opacitySlider = document.querySelector('#header-opacity-slider');
+        if (opacitySlider) {
+            const savedOpacity = localStorage.getItem('header-opacity') || (localStorage.getItem('theme') === 'dark' ? '0.85' : '0.8');
+            opacitySlider.value = savedOpacity;
+            document.documentElement.style.setProperty('--header-opacity', savedOpacity);
+
+            opacitySlider.addEventListener('input', function () {
+                document.documentElement.style.setProperty('--header-opacity', this.value);
+                localStorage.setItem('header-opacity', this.value);
+            });
+        }
 
 
+        // Mobile menu toggle
+        const mobileMenuToggle = document.querySelector('.kt-mobile-menu-toggle');
+        const navMenu = document.querySelector('.kt-nav-menu');
+        if (mobileMenuToggle && navMenu) {
+            mobileMenuToggle.addEventListener('click', () => {
+                navMenu.classList.toggle('active');
+            });
+        }
 
-            // Mobile menu toggle
-            const mobileMenuToggle = document.querySelector('.kt-mobile-menu-toggle');
-            const navMenu = document.querySelector('.kt-nav-menu');
-            if (mobileMenuToggle && navMenu) {
-                mobileMenuToggle.addEventListener('click', () => {
-                    navMenu.classList.toggle('active');
-                });
-            }
-
-            // Utility functions
-            function safeParseJSON(data) {
-                try {
-                    return typeof data === 'string' ? JSON.parse(data) : data;
-                } catch (e) {
-                    console.error('Error parsing JSON:', e);
-                    return null;
-                }
-            }
-
-            function getCSRFToken() {
-                return document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1];
-            }
-
-            // Wishlist and Cart logic
-            let cart = [];
+        // Utility functions
+        function safeParseJSON(data) {
             try {
-                cart = JSON.parse(localStorage.getItem('cart')) || [];
+                return typeof data === 'string' ? JSON.parse(data) : data;
             } catch (e) {
-                localStorage.setItem('cart', JSON.stringify([]));
+                console.error('Error parsing JSON:', e);
+                return null;
+            }
+        }
+
+        function getCSRFToken() {
+            return document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1];
+        }
+
+        // Wishlist and Cart logic
+        let cart = [];
+        try {
+            cart = JSON.parse(localStorage.getItem('cart')) || [];
+        } catch (e) {
+            localStorage.setItem('cart', JSON.stringify([]));
+        }
+
+        let wishlist = [];
+
+        function fetchWishlistFromServer() {
+            fetch('/wishlist/products/')
+                .then(response => response.json())
+                .then(data => {
+                    wishlist = data;
+                    localStorage.setItem('wishlist', JSON.stringify(wishlist));
+                    updateWishlistUI();
+                    updateWishlistIcons();
+                })
+                .catch(error => console.error('Error fetching wishlist:', error));
+        }
+
+        function fetchCartFromServer() {
+            fetch('/add-to-cart/')
+                .then(response => response.json())
+                .then(data => {
+                    const serverCart = data.cart || [];
+                    cart = serverCart.map(item => JSON.stringify({
+                        id: item.id,
+                        name: item.name,
+                        price: item.price,
+                        quantity: item.quantity,
+                        image: item.image,
+                        sku: item.id
+                    }));
+                    localStorage.setItem('cart', JSON.stringify(cart));
+                    updateCartUI();
+                })
+                .catch(error => {
+                    console.error('Error syncing cart:', error);
+                });
+        }
+
+        function updateWishlistUI() {
+            const wishlistContainer = document.querySelector('#drawers_shop_wishlist #wishlist-items');
+            if (!wishlistContainer) return;
+
+            wishlistContainer.innerHTML = '';
+
+            if (wishlist.length === 0) {
+                wishlistContainer.innerHTML = '<p class="text-sm text-foreground text-center font-monospace mt-5">Your wishlist is empty.</p>';
+                return;
             }
 
-            let wishlist = [];
-
-            function fetchWishlistFromServer() {
-                fetch('/wishlist/products/')
-                    .then(response => response.json())
-                    .then(data => {
-                        wishlist = data;
-                        localStorage.setItem('wishlist', JSON.stringify(wishlist));
-                        updateWishlistUI();
-                        updateWishlistIcons();
-                    })
-                    .catch(error => console.error('Error fetching wishlist:', error));
-            }
-
-            function fetchCartFromServer() {
-                fetch('/add-to-cart/')
-                    .then(response => response.json())
-                    .then(data => {
-                        const serverCart = data.cart || [];
-                        cart = serverCart.map(item => JSON.stringify({
-                            id: item.id,
-                            name: item.name,
-                            price: item.price,
-                            quantity: item.quantity,
-                            image: item.image,
-                            sku: item.id
-                        }));
-                        localStorage.setItem('cart', JSON.stringify(cart));
-                        updateCartUI();
-                    })
-                    .catch(error => {
-                        console.error('Error syncing cart:', error);
-                    });
-            }
-
-            function updateWishlistUI() {
-                const wishlistContainer = document.querySelector('#drawers_shop_wishlist #wishlist-items');
-                if (!wishlistContainer) return;
-
-                wishlistContainer.innerHTML = '';
-
-                if (wishlist.length === 0) {
-                    wishlistContainer.innerHTML = '<p class="text-sm text-foreground text-center font-monospace mt-5">Your wishlist is empty.</p>';
-                    return;
-                }
-
-                wishlist.forEach(product => {
-                    const wishlistItem = document.createElement('div');
-                    wishlistItem.classList.add('flex', 'items-center', 'gap-4', 'p-3', 'border', 'border-border', 'rounded-md', 'mb-2');
-                    wishlistItem.innerHTML = `
+            wishlist.forEach(product => {
+                const wishlistItem = document.createElement('div');
+                wishlistItem.classList.add('flex', 'items-center', 'gap-4', 'p-3', 'border', 'border-border', 'rounded-md', 'mb-2');
+                wishlistItem.innerHTML = `
                         <img src="${product.image}" alt="${product.name}" class="w-16 h-16 wishlist-item-img">
                         <div class="flex-1">
                             <h4 class="text-sm font-medium text-mono">${product.name}</h4>
@@ -927,40 +991,40 @@
                             </button>
                         </div>
                     `;
-                    wishlistContainer.appendChild(wishlistItem);
-                });
+                wishlistContainer.appendChild(wishlistItem);
+            });
 
-                document.querySelectorAll('.remove-wishlist-item').forEach(button => {
-                    button.addEventListener('click', function () {
-                        const productId = this.getAttribute('data-id');
-                        wishlist = wishlist.filter(item => item.id != productId);
-                        localStorage.setItem('wishlist', JSON.stringify(wishlist));
-                        updateWishlistUI();
-                        updateWishlistIcons();
+            document.querySelectorAll('.remove-wishlist-item').forEach(button => {
+                button.addEventListener('click', function () {
+                    const productId = this.getAttribute('data-id');
+                    wishlist = wishlist.filter(item => item.id != productId);
+                    localStorage.setItem('wishlist', JSON.stringify(wishlist));
+                    updateWishlistUI();
+                    updateWishlistIcons();
 
-                        fetch('/wishlist/toggle/', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/x-www-form-urlencoded',
-                                'X-CSRFToken': getCSRFToken()
-                            },
-                            body: `product_id=${productId}`
-                        });
+                    fetch('/wishlist/toggle/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-CSRFToken': getCSRFToken()
+                        },
+                        body: `product_id=${productId}`
                     });
                 });
+            });
 
-                document.querySelectorAll('.wishlist-add-to-cart').forEach(button => {
-                    button.addEventListener('click', function () {
-                        const productId = this.getAttribute('data-id');
+            document.querySelectorAll('.wishlist-add-to-cart').forEach(button => {
+                button.addEventListener('click', function () {
+                    const productId = this.getAttribute('data-id');
 
-                        fetch('/add-to-cart/', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/x-www-form-urlencoded',
-                                'X-CSRFToken': getCSRFToken()
-                            },
-                            body: `product_id=${productId}&quantity=1`
-                        })
+                    fetch('/add-to-cart/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-CSRFToken': getCSRFToken()
+                        },
+                        body: `product_id=${productId}&quantity=1`
+                    })
                         .then(response => response.json())
                         .then(data => {
                             if (data.status === 'success' || data.status === 'updated') {
@@ -980,69 +1044,69 @@
                             console.error('Add to cart failed:', error);
                             alert('Error adding product to cart');
                         });
-                    });
                 });
-            }
+            });
+        }
 
-            function updateWishlistIcons() {
-                document.querySelectorAll('[data-kt-wishlist-toggle="true"]').forEach(button => {
-                    const productId = parseInt(button.dataset.productId);
-                    const icon = button.querySelector('i.heart-icon');
-                    const isInWishlist = wishlist.some(item => item.id === productId);
+        function updateWishlistIcons() {
+            document.querySelectorAll('[data-kt-wishlist-toggle="true"]').forEach(button => {
+                const productId = parseInt(button.dataset.productId);
+                const icon = button.querySelector('i.heart-icon');
+                const isInWishlist = wishlist.some(item => item.id === productId);
 
-                    if (isInWishlist) {
-                        icon?.classList.add('text-red-500');
-                        button.classList.add('active');
-                    } else {
-                        icon?.classList.remove('text-red-500');
-                        button.classList.remove('active');
-                    }
+                if (isInWishlist) {
+                    icon?.classList.add('text-red-500');
+                    button.classList.add('active');
+                } else {
+                    icon?.classList.remove('text-red-500');
+                    button.classList.remove('active');
+                }
+            });
+        }
+
+        function updateCartIcons(onlyId = null) {
+            const selector = onlyId
+                ? `.add-to-cart-btn[data-product-id="${onlyId}"]`
+                : '.add-to-cart-btn[data-product-id]';
+
+            document.querySelectorAll(selector).forEach(button => {
+                const productId = parseInt(button.dataset.productId, 10);
+                const inCart = cart.some(item => {
+                    const parsed = safeParseJSON(item);
+                    return parsed?.id === productId;
                 });
-            }
 
-            function updateCartIcons(onlyId = null) {
-                const selector = onlyId
-                    ? `.add-to-cart-btn[data-product-id="${onlyId}"]`
-                    : '.add-to-cart-btn[data-product-id]';
+                if (inCart) {
+                    button.classList.remove('kt-btn-outline');
+                    button.classList.add('kt-btn-success');
+                    button.innerHTML = 'In cart <i class="ki-filled ki-handcart"></i>';
+                } else {
+                    button.classList.add('kt-btn-outline');
+                    button.classList.remove('kt-btn-success');
+                    button.innerHTML = 'Add <i class="ki-filled ki-handcart"></i>';
+                }
+            });
+        }
 
-                document.querySelectorAll(selector).forEach(button => {
-                    const productId = parseInt(button.dataset.productId, 10);
-                    const inCart = cart.some(item => {
-                        const parsed = safeParseJSON(item);
-                        return parsed?.id === productId;
-                    });
+        function updateCartUI() {
+            const cartContainer = document.querySelector('#cart-items');
+            if (cartContainer) {
+                cartContainer.innerHTML = '';
+                if (cart.length === 0) {
+                    cartContainer.innerHTML = '<p class="text-sm text-foreground">Your cart is empty.</p>';
+                    return;
+                }
 
-                    if (inCart) {
-                        button.classList.remove('kt-btn-outline');
-                        button.classList.add('kt-btn-success');
-                        button.innerHTML = 'In cart <i class="ki-filled ki-handcart"></i>';
-                    } else {
-                        button.classList.add('kt-btn-outline');
-                        button.classList.remove('kt-btn-success');
-                        button.innerHTML = 'Add <i class="ki-filled ki-handcart"></i>';
-                    }
-                });
-            }
+                let totalPrice = 0;
+                cart.forEach(item => {
+                    const product = safeParseJSON(item);
+                    if (!product) return;
 
-            function updateCartUI() {
-                const cartContainer = document.querySelector('#cart-items');
-                if (cartContainer) {
-                    cartContainer.innerHTML = '';
-                    if (cart.length === 0) {
-                        cartContainer.innerHTML = '<p class="text-sm text-foreground">Your cart is empty.</p>';
-                        return;
-                    }
+                    let quantity = parseInt(product.quantity) || 1;
 
-                    let totalPrice = 0;
-                    cart.forEach(item => {
-                        const product = safeParseJSON(item);
-                        if (!product) return;
-
-                        let quantity = parseInt(product.quantity) || 1;
-
-                        const cartItem = document.createElement('div');
-                        cartItem.classList.add('flex', 'items-center', 'gap-4', 'p-3', 'border', 'border-border', 'rounded-md', 'mb-2');
-                        cartItem.innerHTML = `
+                    const cartItem = document.createElement('div');
+                    cartItem.classList.add('flex', 'items-center', 'gap-4', 'p-3', 'border', 'border-border', 'rounded-md', 'mb-2');
+                    cartItem.innerHTML = `
                             <img src="${product.image}" alt="${product.name}" class="w-12 h-12 object-cover rounded">
                             <div class="flex-1">
                                 <h4 class="text-sm font-medium text-mono">${product.name}</h4>
@@ -1057,113 +1121,113 @@
                                 </button>
                             </div>
                         `;
-                        cartContainer.appendChild(cartItem);
+                    cartContainer.appendChild(cartItem);
 
-                        const itemPrice = parseFloat(product.price.replace('$', '')) || 0;
-                        totalPrice += itemPrice * quantity;
-                    });
+                    const itemPrice = parseFloat(product.price.replace('$', '')) || 0;
+                    totalPrice += itemPrice * quantity;
+                });
 
-                    const totalElement = document.createElement('div');
-                    totalElement.classList.add('cart-total', 'flex', 'items-center', 'justify-between');
-                    totalElement.innerHTML = `
+                const totalElement = document.createElement('div');
+                totalElement.classList.add('cart-total', 'flex', 'items-center', 'justify-between');
+                totalElement.innerHTML = `
                         <span class="text-sm font-medium text-mono">Total</span>
                         <span class="text-sm font-semibold text-mono">$${totalPrice.toFixed(2)}</span>
                     `;
-                    cartContainer.appendChild(totalElement);
+                cartContainer.appendChild(totalElement);
 
-                    document.querySelectorAll('.qty-increment').forEach(button => {
-                        button.addEventListener('click', function () {
-                            const sku = this.getAttribute('data-sku');
-                            const itemIndex = cart.findIndex(item => safeParseJSON(item)?.sku === sku);
-                            if (itemIndex !== -1) {
-                                const product = safeParseJSON(cart[itemIndex]);
-                                let quantity = parseInt(product.quantity) || 1;
-                                quantity += 1;
-                                cart[itemIndex] = JSON.stringify({ ...product, quantity });
+                document.querySelectorAll('.qty-increment').forEach(button => {
+                    button.addEventListener('click', function () {
+                        const sku = this.getAttribute('data-sku');
+                        const itemIndex = cart.findIndex(item => safeParseJSON(item)?.sku === sku);
+                        if (itemIndex !== -1) {
+                            const product = safeParseJSON(cart[itemIndex]);
+                            let quantity = parseInt(product.quantity) || 1;
+                            quantity += 1;
+                            cart[itemIndex] = JSON.stringify({...product, quantity});
+                            localStorage.setItem('cart', JSON.stringify(cart));
+                            updateCartUI();
+                            updateCartIcons();
+                        }
+                    });
+                });
+
+                document.querySelectorAll('.qty-decrement').forEach(button => {
+                    button.addEventListener('click', function () {
+                        const sku = this.getAttribute('data-sku');
+                        const itemIndex = cart.findIndex(item => safeParseJSON(item)?.sku === sku);
+                        if (itemIndex !== -1) {
+                            const product = safeParseJSON(cart[itemIndex]);
+                            let quantity = parseInt(product.quantity) || 1;
+                            if (quantity > 1) {
+                                quantity -= 1;
+                                cart[itemIndex] = JSON.stringify({...product, quantity});
                                 localStorage.setItem('cart', JSON.stringify(cart));
                                 updateCartUI();
                                 updateCartIcons();
                             }
-                        });
-                    });
-
-                    document.querySelectorAll('.qty-decrement').forEach(button => {
-                        button.addEventListener('click', function () {
-                            const sku = this.getAttribute('data-sku');
-                            const itemIndex = cart.findIndex(item => safeParseJSON(item)?.sku === sku);
-                            if (itemIndex !== -1) {
-                                const product = safeParseJSON(cart[itemIndex]);
-                                let quantity = parseInt(product.quantity) || 1;
-                                if (quantity > 1) {
-                                    quantity -= 1;
-                                    cart[itemIndex] = JSON.stringify({ ...product, quantity });
-                                    localStorage.setItem('cart', JSON.stringify(cart));
-                                    updateCartUI();
-                                    updateCartIcons();
-                                }
-                            }
-                        });
-                    });
-
-                    document.querySelectorAll('.remove-cart-item').forEach(button => {
-                        button.addEventListener('click', function () {
-                            const sku = this.getAttribute('data-sku');
-                            cart = cart.filter(item => safeParseJSON(item)?.sku !== sku);
-                            localStorage.setItem('cart', JSON.stringify(cart));
-                            updateCartUI();
-                            updateCartIcons();
-                        });
-                    });
-                }
-            }
-
-            // Add to cart event listener
-            document.querySelectorAll('[data-kt-drawer-toggle="#drawers_shop_cart"]').forEach(button => {
-                button.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    const card = this.closest('.kt-card');
-                    let productData;
-                    if (card) {
-                        productData = card.getAttribute('data-product');
-                    } else {
-                        productData = this.getAttribute('data-product');
-                    }
-                    const product = safeParseJSON(productData);
-                    if (product) {
-                        const existingItemIndex = cart.findIndex(item => {
-                            const cartProduct = safeParseJSON(item);
-                            return cartProduct && cartProduct.sku === product.sku;
-                        });
-                        if (existingItemIndex === -1) {
-                            cart.push(productData);
-                            console.log(`${product.name} added to cart`);
-                        } else {
-                            console.log(`${product.name} is already in cart`);
                         }
+                    });
+                });
+
+                document.querySelectorAll('.remove-cart-item').forEach(button => {
+                    button.addEventListener('click', function () {
+                        const sku = this.getAttribute('data-sku');
+                        cart = cart.filter(item => safeParseJSON(item)?.sku !== sku);
                         localStorage.setItem('cart', JSON.stringify(cart));
                         updateCartUI();
                         updateCartIcons();
-                    }
+                    });
                 });
+            }
+        }
+
+        // Add to cart event listener
+        document.querySelectorAll('[data-kt-drawer-toggle="#drawers_shop_cart"]').forEach(button => {
+            button.addEventListener('click', function (e) {
+                e.preventDefault();
+                const card = this.closest('.kt-card');
+                let productData;
+                if (card) {
+                    productData = card.getAttribute('data-product');
+                } else {
+                    productData = this.getAttribute('data-product');
+                }
+                const product = safeParseJSON(productData);
+                if (product) {
+                    const existingItemIndex = cart.findIndex(item => {
+                        const cartProduct = safeParseJSON(item);
+                        return cartProduct && cartProduct.sku === product.sku;
+                    });
+                    if (existingItemIndex === -1) {
+                        cart.push(productData);
+                        console.log(`${product.name} added to cart`);
+                    } else {
+                        console.log(`${product.name} is already in cart`);
+                    }
+                    localStorage.setItem('cart', JSON.stringify(cart));
+                    updateCartUI();
+                    updateCartIcons();
+                }
             });
+        });
 
-            // Wishlist toggle button event listeners
-            document.querySelectorAll('[data-kt-wishlist-toggle="true"]').forEach(button => {
-                button.addEventListener('click', function (e) {
-                    e.preventDefault();
+        // Wishlist toggle button event listeners
+        document.querySelectorAll('[data-kt-wishlist-toggle="true"]').forEach(button => {
+            button.addEventListener('click', function (e) {
+                e.preventDefault();
 
-                    const card = this.closest('.kt-card');
-                    const product = safeParseJSON(card?.getAttribute('data-product'));
-                    if (!product) return;
+                const card = this.closest('.kt-card');
+                const product = safeParseJSON(card?.getAttribute('data-product'));
+                if (!product) return;
 
-                    fetch('/wishlist/toggle/', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                            'X-CSRFToken': getCSRFToken()
-                        },
-                        body: `product_id=${product.id}`
-                    })
+                fetch('/wishlist/toggle/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': getCSRFToken()
+                    },
+                    body: `product_id=${product.id}`
+                })
                     .then(response => response.json())
                     .then(data => {
                         if (data.status === 'added') {
@@ -1175,73 +1239,73 @@
                         updateWishlistUI();
                         updateWishlistIcons();
                     });
-                });
             });
+        });
 
-            document.querySelector('#wishlist-clear')?.addEventListener('click', () => {
-                fetch('/wishlist/clear/', {
-                    method: 'POST',
-                    headers: { 'X-CSRFToken': getCSRFToken() }
-                }).then(() => {
-                    wishlist = [];
-                    localStorage.setItem('wishlist', JSON.stringify(wishlist));
-                    updateWishlistUI();
-                    updateWishlistIcons();
-                });
+        document.querySelector('#wishlist-clear')?.addEventListener('click', () => {
+            fetch('/wishlist/clear/', {
+                method: 'POST',
+                headers: {'X-CSRFToken': getCSRFToken()}
+            }).then(() => {
+                wishlist = [];
+                localStorage.setItem('wishlist', JSON.stringify(wishlist));
+                updateWishlistUI();
+                updateWishlistIcons();
             });
+        });
 
-            // Clear cart button
-            const clearCartButton = document.querySelector('#cart-clear');
-            if (clearCartButton) {
-                clearCartButton.addEventListener('click', function () {
-                    cart = [];
-                    localStorage.setItem('cart', JSON.stringify(cart));
-                    updateCartUI();
-                    updateCartIcons();
-                });
-            }
+        // Clear cart button
+        const clearCartButton = document.querySelector('#cart-clear');
+        if (clearCartButton) {
+            clearCartButton.addEventListener('click', function () {
+                cart = [];
+                localStorage.setItem('cart', JSON.stringify(cart));
+                updateCartUI();
+                updateCartIcons();
+            });
+        }
 
-            // Buy Now
-            const buyNowButton = document.getElementById('buy-now');
-            if (buyNowButton) {
-                buyNowButton.addEventListener('click', function () {
-                    if (cart.length > 0) {
-                        window.location.href = "{% url 'dashboard:shopping_cart' %}";
-                    } else {
-                        alert('Your cart is empty. Please add items before proceeding.');
+        // Buy Now
+        const buyNowButton = document.getElementById('buy-now');
+        if (buyNowButton) {
+            buyNowButton.addEventListener('click', function () {
+                if (cart.length > 0) {
+                    window.location.href = "{% url 'dashboard:shopping_cart' %}";
+                } else {
+                    alert('Your cart is empty. Please add items before proceeding.');
+                }
+            });
+        }
+
+        // Cart-specific logic
+        const cartItemsContainer = document.getElementById('cart-items');
+        const clearBtn = document.getElementById('cart-clear');
+        const buyNowBtn = document.getElementById('buy-now');
+
+        function showToast(message, type = 'info') {
+            alert(`${type.toUpperCase()}: ${message}`);
+        }
+
+        function updateCartUI() {
+            fetch('/add-to-cart/')
+                .then(res => res.json())
+                .then(data => {
+                    cartItemsContainer.innerHTML = '';
+                    if (!data.cart || data.cart.length === 0) {
+                        cartItemsContainer.innerHTML = '<p class="text-sm text-muted text-center font-monospace mt-5">🛒 Your cart is empty.</p>';
+                        return;
                     }
-                });
-            }
 
-            // Cart-specific logic
-            const cartItemsContainer = document.getElementById('cart-items');
-            const clearBtn = document.getElementById('cart-clear');
-            const buyNowBtn = document.getElementById('buy-now');
+                    let total = 0;
+                    data.cart.forEach(item => {
+                        const price = parseFloat(item.price);
+                        const quantity = parseInt(item.quantity);
+                        const subtotal = price * quantity;
+                        total += subtotal;
 
-            function showToast(message, type = 'info') {
-                alert(`${type.toUpperCase()}: ${message}`);
-            }
-
-            function updateCartUI() {
-                fetch('/add-to-cart/')
-                    .then(res => res.json())
-                    .then(data => {
-                        cartItemsContainer.innerHTML = '';
-                        if (!data.cart || data.cart.length === 0) {
-                            cartItemsContainer.innerHTML = '<p class="text-sm text-muted text-center font-monospace mt-5">🛒 Your cart is empty.</p>';
-                            return;
-                        }
-
-                        let total = 0;
-                        data.cart.forEach(item => {
-                            const price = parseFloat(item.price);
-                            const quantity = parseInt(item.quantity);
-                            const subtotal = price * quantity;
-                            total += subtotal;
-
-                            const cartItem = document.createElement('div');
-                            cartItem.className = 'flex items-center justify-between p-3 border border-border rounded-md mb-2';
-                            cartItem.innerHTML = `
+                        const cartItem = document.createElement('div');
+                        cartItem.className = 'flex items-center justify-between p-3 border border-border rounded-md mb-2';
+                        cartItem.innerHTML = `
                                 <div class="flex gap-3 items-center">
                                     <img src="${item.image}" alt="${item.name}" class="w-12 h-12 object-cover rounded border" />
                                     <div>
@@ -1258,30 +1322,30 @@
                                     </button>
                                 </div>
                             `;
-                            cartItemsContainer.appendChild(cartItem);
-                        });
-
-                        const totalElement = document.createElement('div');
-                        totalElement.className = 'mt-3 border-t pt-3 flex justify-between font-semibold text-sm';
-                        totalElement.innerHTML = `<span>Total</span><span>$${total.toFixed(2)}</span>`;
-                        cartItemsContainer.appendChild(totalElement);
-
-                        attachEvents();
+                        cartItemsContainer.appendChild(cartItem);
                     });
-            }
 
-            function attachEvents() {
-                document.querySelectorAll('.remove-cart-item').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        const id = btn.dataset.id;
-                        fetch("{% url 'dashboard:remove_from_cart' %}", {
-                            method: 'POST',
-                            headers: {
-                                'X-CSRFToken': getCSRFToken(),
-                                'Content-Type': 'application/x-www-form-urlencoded'
-                            },
-                            body: `item_id=${id}`
-                        }).then(res => res.json())
+                    const totalElement = document.createElement('div');
+                    totalElement.className = 'mt-3 border-t pt-3 flex justify-between font-semibold text-sm';
+                    totalElement.innerHTML = `<span>Total</span><span>$${total.toFixed(2)}</span>`;
+                    cartItemsContainer.appendChild(totalElement);
+
+                    attachEvents();
+                });
+        }
+
+        function attachEvents() {
+            document.querySelectorAll('.remove-cart-item').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const id = btn.dataset.id;
+                    fetch("{% url 'dashboard:remove_from_cart' %}", {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': getCSRFToken(),
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        body: `item_id=${id}`
+                    }).then(res => res.json())
                         .then(data => {
                             if (data.status === 'success') {
                                 updateCartUI();
@@ -1290,10 +1354,10 @@
                                 console.warn('Remove failed:', data);
                             }
                         });
-                    });
                 });
+            });
 
-                document.querySelectorAll('.qty-increase, .qty-decrease').forEach(btn => {
+            document.querySelectorAll('.qty-increase, .qty-decrease').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const id = btn.dataset.id;
                     const isIncrement = btn.classList.contains('qty-increase');
@@ -1313,41 +1377,41 @@
                             },
                             body: `item_id=${id}`
                         }).then(res => res.json())
-                          .then(data => {
-                              if (data.status === 'success') {
-                                  updateCartUI();
-                                  updateCartIcons(id);
-                              } else {
-                                  console.warn('Remove failed:', data);
-                              }
-                          });
+                            .then(data => {
+                                if (data.status === 'success') {
+                                    updateCartUI();
+                                    updateCartIcons(id);
+                                } else {
+                                    console.warn('Remove failed:', data);
+                                }
+                            });
                         return;
                     }
 
-            // 🔄 Normal add-to-cart update
-            fetch('/add-to-cart/', {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': getCSRFToken(),
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: `product_id=${id}&quantity=${qtyChange}`
-            }).then(res => res.json())
-              .then(data => {
-                  if (data.status === 'success') {
-                      updateCartUI();
-                      updateCartIcons(id);
-                  }
-              });
-        });
-    });
-            }
-
-            document.querySelectorAll('[data-kt-drawer-toggle="#drawers_shop_cart"]').forEach(btn => {
-                btn.addEventListener('click', updateCartUI);
+                    // 🔄 Normal add-to-cart update
+                    fetch('/add-to-cart/', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': getCSRFToken(),
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        body: `product_id=${id}&quantity=${qtyChange}`
+                    }).then(res => res.json())
+                        .then(data => {
+                            if (data.status === 'success') {
+                                updateCartUI();
+                                updateCartIcons(id);
+                            }
+                        });
+                });
             });
+        }
 
-            clearBtn?.addEventListener('click', () => {
+        document.querySelectorAll('[data-kt-drawer-toggle="#drawers_shop_cart"]').forEach(btn => {
+            btn.addEventListener('click', updateCartUI);
+        });
+
+        clearBtn?.addEventListener('click', () => {
             fetch('{% url "dashboard:clear_cart_items" %}', {
                 method: 'POST',
                 headers: {
@@ -1355,17 +1419,17 @@
                     'X-Requested-With': 'XMLHttpRequest' // Optional but good to add
                 }
             })
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    updateCartUI();
-                    updateCartIcons();
-                }
-            });
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        updateCartUI();
+                        updateCartIcons();
+                    }
+                });
         });
 
-            buyNowBtn?.addEventListener('click', () => {
-                fetch('/add-to-cart/').then(res => res.json())
+        buyNowBtn?.addEventListener('click', () => {
+            fetch('/add-to-cart/').then(res => res.json())
                 .then(data => {
                     if (data.cart.length > 0) {
                         window.location.href = "/shopping-cart/";
@@ -1373,114 +1437,115 @@
                         alert("Your cart is empty.", 'info');
                     }
                 });
-            });
-
-            // Initialize
-            fetchWishlistFromServer();
-            fetchCartFromServer();
         });
+
+        // Initialize
+        fetchWishlistFromServer();
+        fetchCartFromServer();
+    });
     //searchbar
     document.addEventListener('DOMContentLoaded', () => {
-    // ... existing code ...
+        // ... existing code ...
 
-    const searchInput = document.getElementById('search-input');
-    const suggestionsContainer = document.getElementById('search-suggestions');
-    const suggestionsList = document.getElementById('suggestions-list');
+        const searchInput = document.getElementById('search-input');
+        const suggestionsContainer = document.getElementById('search-suggestions');
+        const suggestionsList = document.getElementById('suggestions-list');
 
-    if (searchInput && suggestionsContainer && suggestionsList) {
-        searchInput.addEventListener('input', debounce(function() {
-            const query = searchInput.value.trim();
-            if (query.length < 2) {
-                suggestionsContainer.classList.add('hidden');
-                suggestionsList.innerHTML = '';
-                return;
-            }
-
-            fetch(`{% url 'dashboard:search_suggestions' %}?q=${encodeURIComponent(query)}`, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                suggestionsList.innerHTML = '';
-                if (data.suggestions && data.suggestions.length > 0) {
-                    data.suggestions.forEach(item => {
-                        const li = document.createElement('li');
-                        li.className = 'px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm text-gray-900';
-                        li.textContent = item.name;
-                        li.addEventListener('click', () => {
-                            searchInput.value = item.name;
-                            suggestionsContainer.classList.add('hidden');
-                            fetchProducts({ q: item.name, page: 1 });
-                        });
-                        suggestionsList.appendChild(li);
-                    });
-                    suggestionsContainer.classList.remove('hidden');
-                } else {
+        if (searchInput && suggestionsContainer && suggestionsList) {
+            searchInput.addEventListener('input', debounce(function () {
+                const query = searchInput.value.trim();
+                if (query.length < 2) {
                     suggestionsContainer.classList.add('hidden');
+                    suggestionsList.innerHTML = '';
+                    return;
                 }
-            })
-            .catch(error => console.error('Search suggestions error:', error));
-        }, 300));
-    }
 
-    // Hide suggestions when clicking outside
-    document.addEventListener('click', (e) => {
-        if (!searchInput.contains(e.target) && !suggestionsContainer.contains(e.target)) {
-            suggestionsContainer.classList.add('hidden');
+                fetch(`{% url 'dashboard:search_suggestions' %}?q=${encodeURIComponent(query)}`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        suggestionsList.innerHTML = '';
+                        if (data.suggestions && data.suggestions.length > 0) {
+                            data.suggestions.forEach(item => {
+                                const li = document.createElement('li');
+                                li.className = 'px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm text-gray-900';
+                                li.textContent = item.name;
+                                li.addEventListener('click', () => {
+                                    searchInput.value = item.name;
+                                    suggestionsContainer.classList.add('hidden');
+                                    fetchProducts({q: item.name, page: 1});
+                                });
+                                suggestionsList.appendChild(li);
+                            });
+                            suggestionsContainer.classList.remove('hidden');
+                        } else {
+                            suggestionsContainer.classList.add('hidden');
+                        }
+                    })
+                    .catch(error => console.error('Search suggestions error:', error));
+            }, 300));
         }
-    });
 
-    // ... other existing code ...
-});
-
-// Debounce function
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
-}
-document.addEventListener('DOMContentLoaded', function() {
-    const searchForm = document.getElementById('search-form');
-    const searchInput = document.getElementById('search-input');
-    const clearSearch = document.getElementById('clear-search');
-    
-    // Hide category list when searching
-    searchForm.addEventListener('submit', function() {
-        // Assuming your category list has an ID 'category-list'
-        const categoryList = document.getElementById('category-list');
-        if (categoryList) {
-            categoryList.style.display = 'none';
-        }
-    });
-    
-    // Clear search functionality
-    if (clearSearch) {
-        clearSearch.addEventListener('click', function(e) {
-            e.preventDefault();
-            searchInput.value = '';
-            window.location.href = "{% url 'dashboard:search_results_grid' %}";
+        // Hide suggestions when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!searchInput.contains(e.target) && !suggestionsContainer.contains(e.target)) {
+                suggestionsContainer.classList.add('hidden');
+            }
         });
-    }
-    
-    // Optional: Hide category list when user starts typing
-    searchInput.addEventListener('input', function() {
-        const categoryList = document.getElementById('category-list');
-        if (categoryList && searchInput.value.trim() !== '') {
-            categoryList.style.display = 'none';
-        } else if (categoryList) {
-            categoryList.style.display = ''; 
-        }
+
+        // ... other existing code ...
     });
-});
-    </script>
-    
+
+    // Debounce function
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchForm = document.getElementById('search-form');
+        const searchInput = document.getElementById('search-input');
+        const clearSearch = document.getElementById('clear-search');
+
+        // Hide category list when searching
+        searchForm.addEventListener('submit', function () {
+            // Assuming your category list has an ID 'category-list'
+            const categoryList = document.getElementById('category-list');
+            if (categoryList) {
+                categoryList.style.display = 'none';
+            }
+        });
+
+        // Clear search functionality
+        if (clearSearch) {
+            clearSearch.addEventListener('click', function (e) {
+                e.preventDefault();
+                searchInput.value = '';
+                window.location.href = "{% url 'dashboard:search_results_grid' %}";
+            });
+        }
+
+        // Optional: Hide category list when user starts typing
+        searchInput.addEventListener('input', function () {
+            const categoryList = document.getElementById('category-list');
+            if (categoryList && searchInput.value.trim() !== '') {
+                categoryList.style.display = 'none';
+            } else if (categoryList) {
+                categoryList.style.display = '';
+            }
+        });
+    });
+</script>
+
 </body>
 </html>

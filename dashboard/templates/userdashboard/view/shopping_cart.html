@@ -45,8 +45,8 @@
             <!-- Container -->
             <div class="kt-container-fixed">
                 <!-- begin: grid -->
-                <div class="grid grid-cols-1 xl:grid-cols-3 gap-5 lg:gap-9 mb-5 lg:mb-10">
-                    <div class="col-span-2 space-y-5">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-9 mb-5 lg:mb-10">
+                    <div class="col-span-1 lg:col-span-2 space-y-5">
                         <div class="kt-card">
                             <div class="kt-card-content p-5">
                                 <h2 class="text-lg font-medium text-foreground text-center">Shopping Cart</h2>
@@ -59,7 +59,7 @@
                                 </div>
 
                                 {% if cart_items %}
-                                <div class="grid sm:grid-cols-1 gap-5">
+                                <div class="grid grid-cols-1 gap-5">
                                     {% for item in cart_items %}
                                     <div class="kt-card" id="cart-item-{{ item.product.id }}" data-product='{
                                         "name": "{{ item.product.name|escapejs }}",
@@ -72,24 +72,24 @@
                                         "discount": {% if item.product.offer_percentage and item.product.offer_active %}"save {{ item.product.offer_percentage }}%"{% else %}""{% endif %},
                                         "more_info": "{{ item.product.pcs_per_unit|default:'1'|escapejs }} pcs per unit"
                                     }'>
-                                        <div class="kt-card-content flex items-center flex-wrap justify-between gap-4.5 p-2 pe-5 relative">
+                                        <div class="kt-card-content flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4.5 p-2 pe-5 relative">
                                             <!-- Remove Button -->
                                             <button class="absolute top-2 right-2 text-red-500 hover:text-red-700 remove-from-cart"
                                                     data-item-id="{{ item.product.id }}">
                                                 <i class="ki-filled ki-cross text-lg"></i>
                                             </button>
-                                            <div class="flex items-center gap-3.5">
+                                            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3.5 w-full sm:w-auto">
                                                 <div class="kt-card flex items-center justify-center bg-accent/50 h-[70px] w-[90px] shadow-none">
                                                     <img alt="{{ item.product.name|escapejs }}" class="cursor-pointer h-[70px]"
                                                          data-kt-modal-toggle="#modal_shop_product_details"
                                                          src="{{ item.product.productimage_set.first.image.url }}">
                                                 </div>
-                                                <div class="flex flex-col gap-1">
+                                                <div class="flex flex-col gap-1 w-full">
                                                     <a class="hover:text-primary text-sm font-medium text-mono leading-5.5"
                                                        data-kt-modal-toggle="#modal_shop_product_details" href="#">
                                                         {{ item.product.name }}
                                                     </a>
-                                                    <div class="flex items-center gap-1.5">
+                                                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-1.5">
                                                         <span class="text-xs font-normal text-secondary-foreground uppercase">
                                                             sku:
                                                             <span class="text-xs font-medium text-foreground">
@@ -104,13 +104,13 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="flex flex-col gap-1.5">
-                                                <div class="flex items-center gap-2">
+                                            <div class="flex flex-col gap-1.5 w-full sm:w-auto">
+                                                <div class="flex items-center gap-2 justify-end">
                                                     <button class="decrease-btn px-2 py-1 bg-gray-200 rounded" data-product-id="{{ item.product.id }}">-</button>
                                                     <span class="text-xs font-normal text-secondary-foreground text-end quantity">{{ item.quantity }}</span>
                                                     <button class="increase-btn px-2 py-1 bg-gray-200 rounded" data-product-id="{{ item.product.id }}">+</button>
                                                 </div>
-                                                <div class="flex items-center flex-wrap gap-1.5">
+                                                <div class="flex items-center flex-wrap gap-1.5 justify-end">
                                                     {% if item.product.offer_percentage and item.product.offer_active %}
                                                     <span class="text-sm font-normal text-secondary-foreground line-through">
                                                         ${{ item.product.price }}
@@ -202,7 +202,7 @@
             <!-- Product Details Modal -->
             <div class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
                  data-kt-modal="true" id="modal_shop_product_details">
-                <div class="kt-card w-full max-w-[500px] h-full rounded-xl border border-border bg-background">
+                <div class="kt-card w-full max-w-[500px] sm:h-auto rounded-xl border border-border bg-background">
                     <div class="kt-card-header px-5 flex items-center justify-between">
                         <h3 class="kt-card-title">Product Details</h3>
                         <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" data-kt-modal-dismiss="true">
@@ -212,7 +212,7 @@
                     <div class="kt-card-content flex flex-col space-y-3 p-5 kt-scrollable-y-auto">
                         <div class="kt-card relative items-center justify-center bg-accent/50 mb-6.5 h-[280px] shadow-none">
                             <span class="kt-badge kt-badge-destructive kt-badge-sm absolute top-4 end-4 uppercase product-discount hidden"></span>
-                            <img alt="" class="h-[280px] product-image"/>
+                            <img alt="" class="h-[280px] w-full object-contain product-image"/>
                         </div>
                         <span class="text-base font-medium text-mono product-name"></span>
                         <span class="text-sm font-normal text-foreground block mb-7 product-description"></span>
