@@ -4,7 +4,6 @@
     <select class="form-select form-select-solid" data-hide-search="true" name="product_status" data-control="select2">
         <option value="all" {% if request.GET.product_status == 'all' %} selected {% endif %}>All</option>
         <option value="published" {% if request.GET.product_status == 'published' %} selected {% endif %}>Published</option>
-        <option value="scheduled" {% if request.GET.product_status == 'scheduled' %} selected {% endif %}>Scheduled</option>
         <option value="inactive" {% if request.GET.product_status == 'inactive' %} selected {% endif %}>Draft</option>
     </select>
 

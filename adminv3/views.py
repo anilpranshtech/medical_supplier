@@ -1,7 +1,9 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db import IntegrityError
 from django.http import JsonResponse, Http404, HttpResponse
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
+from django.utils.dateparse import parse_date
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic import ListView
@@ -12,7 +14,7 @@ from django.contrib.auth.models import User, Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from adminv3.utils import requestParamsToDict
 from dashboard.models import RetailProfile, WholesaleBuyerProfile, SupplierProfile, Product, ProductImage, \
-    ProductCategory
+    ProductCategory, ProductLastCategory, ProductSubCategory, Brand
 
 
 class HomeView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
@@ -539,3 +541,375 @@ class ProductsListView(LoginRequiredMixin,StaffAccountRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['category'] = ProductCategory.objects.all()
         return context
+
+
+class AddproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
+    template = 'adminv3/products/add_product.html'
+
+    def get(self, request):
+        context = {
+            'categories': ProductCategory.objects.all(),
+            'subcategories': ProductSubCategory.objects.all(),
+            'lastcategories': ProductLastCategory.objects.all(),
+        }
+        return render(request, self.template, context)
+
+    def post(self, request):
+        data = request.POST
+        files = request.FILES
+        name = data.get('product_name')
+        description = data.get('product_description')
+        selling_countries = data.get('selling_countries')
+        price = self._parse_float(data.get('price'))
+        stock_quantity = self._parse_int(data.get('product_quantity'), min_value=0)
+        commission = self._parse_float(data.get('commission_percentage'), 0, 100)
+        offer_percentage = self._parse_float(data.get('offer_percentage'), 0, 100)
+        pcs_per_unit = self._parse_int(data.get('pcs_per_unit'), min_value=1)
+        min_order_qty = self._parse_int(data.get('min_order_qty'), min_value=1)
+        low_stock_alert = self._parse_int(data.get('low_stock_alert'), min_value=0)
+        expiration_days = self._parse_int(data.get('expiration_days'), min_value=0)
+        return_time = self._parse_int(data.get('return_time_limit'), min_value=0)
+        delivery_time = self._parse_int(data.get('delivery_time'), min_value=0)
+        weight = self._parse_float(data.get('weight'), min_value=0)
+        manufacture_date = self._parse_date(data.get('manufacture_date'))
+        expiry_date = self._parse_date(data.get('expiry_date'))
+        offer_start = self._parse_date(data.get('offer_start'))
+        offer_end = self._parse_date(data.get('offer_end'))
+        button_type = data.get('button_type')
+        show_add_to_cart = button_type in ['both', 'cart']
+        show_rfq = button_type in ['both', 'rfq']
+        both_selected = button_type == 'both'
+
+
+        if offer_start and offer_end and offer_end < offer_start:
+            messages.warning(request, "Offer end date cannot be before start date.")
+
+        # Set offer active based on user role
+        if request.user.is_superuser:
+            offer_active = data.get('offer_active') == 'on'
+        else:
+            offer_active = False
+
+        ask_admin_to_publish = data.get('ask_admin_to_publish') == 'on'
+
+        brand_name = data.get('brand')
+        brand = None
+        if brand_name:
+            brand, _ = Brand.objects.get_or_create(name=brand_name)
+
+        try:
+            product = Product.objects.create(
+                name=name or '',
+                description=description or '',
+                price=price or 0,
+                stock_quantity=stock_quantity or 0,
+                brand=brand,
+                category=self._get_object(ProductCategory, data.get('category')),
+                sub_category=self._get_object(ProductSubCategory, data.get('sub_category')),
+                last_category=self._get_object(ProductLastCategory, data.get('last_category')),
+                product_from=data.get('product_from'),
+                warranty=data.get('warranty'),
+                condition=data.get('condition'),
+                manufacture_date=manufacture_date,
+                expiry_date=expiry_date,
+                weight=weight or 0,
+                selling_countries=selling_countries,
+                weight_unit=data.get('weight_unit'),
+                barcode=data.get('barcode'),
+                commission_percentage=commission or 0,
+                return_time_limit=return_time or 0,
+                delivery_time=delivery_time or 0,
+                keywords=data.get('keywords'),
+                brochure=files.get('brochure'),
+                supplier_sku=data.get('supplier_sku'),
+                pcs_per_unit=pcs_per_unit or 1,
+                min_order_qty=min_order_qty or 1,
+                low_stock_alert=low_stock_alert or 0,
+                expiration_days=expiration_days or 0,
+                tag=data.get('tag'),
+                offer_percentage=offer_percentage or 0,
+                offer_start=offer_start,
+                offer_end=offer_end,
+                offer_active=offer_active,
+                ask_admin_to_publish=ask_admin_to_publish,
+                is_active=(data.get('is_active') == 'True'),
+                show_add_to_cart=show_add_to_cart,
+                show_rfq=show_rfq,
+                Both=both_selected,
+                created_by=request.user
+            )
+
+
+            main_image = files.get('main_image')
+            if main_image:
+                ProductImage.objects.create(product=product, image=main_image, is_main=True)
+
+            gallery_images = files.getlist('gallery_images')
+            for img in gallery_images:
+                ProductImage.objects.create(product=product, image=img, is_main=False)
+
+            messages.success(request, "Product added successfully.")
+            return redirect('adminv3:products_list')
+
+        except IntegrityError as e:
+            messages.error(request, f"Integrity error: {e}")
+        except Exception as e:
+            messages.error(request, f"Error: {e}")
+
+        return self._render_form_with_context(request, data)
+
+    def _parse_float(self, val, min_value=None, max_value=None):
+        if not val:
+            return None
+        try:
+            f = float(val)
+            if (min_value is not None and f < min_value) or (max_value is not None and f > max_value):
+                return None
+            return f
+        except:
+            return None
+
+    def _parse_int(self, val, min_value=None):
+        if not val:
+            return None
+        try:
+            i = int(val)
+            if min_value is not None and i < min_value:
+                return None
+            return i
+        except:
+            return None
+
+    def _parse_date(self, val):
+        try:
+            return parse_date(val)
+        except:
+            return None
+
+    def _get_object(self, model, pk):
+        if not pk:
+            return None
+        try:
+            return model.objects.get(id=pk)
+        except model.DoesNotExist:
+            return None
+
+    def _render_form_with_context(self, request, data):
+        return render(request, self.template, {
+            'categories': ProductCategory.objects.all(),
+            'subcategories': ProductSubCategory.objects.all(),
+            'lastcategories': ProductLastCategory.objects.all(),
+            **data.dict()
+        })
+
+
+class EditproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
+    template = 'adminv3/products/edit_product.html'
+
+    def get(self, request, pk):
+        product = get_object_or_404(Product, pk=pk)
+        product_images = ProductImage.objects.filter(product=product)
+        main_image = product_images.filter(is_main=True).first()
+        gallery_images = product_images.filter(is_main=False)
+        categories = ProductCategory.objects.all()
+        subcategories = ProductSubCategory.objects.filter(category=product.category) if product.category else ProductSubCategory.objects.none()
+        lastcategories = ProductLastCategory.objects.filter(sub_category=product.sub_category) if product.sub_category else ProductLastCategory.objects.none()
+        selling_countries = product.selling_countries if product.selling_countries else ''
+        brochure_url = product.brochure.url if product.brochure else None
+
+        context = {
+
+            'pk': pk,
+            'product': product,
+            'product_name': product.name,
+            'product_description': product.description,
+            'price': product.price,
+            'product_quantity': product.stock_quantity,
+            'product_from': product.product_from,
+            'selling_countries': selling_countries,
+            'warranty': product.warranty,
+            'condition': product.condition,
+            'return_time_limit': product.return_time_limit,
+            'manufacture_date': product.manufacture_date.strftime('%Y-%m-%d') if product.manufacture_date else '',
+            'expiry_date': product.expiry_date.strftime('%Y-%m-%d') if product.expiry_date else '',
+            'weight': product.weight,
+            'weight_unit': product.weight_unit,
+            'delivery_time': product.delivery_time,
+            'commission_percentage': product.commission_percentage,
+            'barcode': product.barcode,
+            'keywords': product.keywords,
+            'supplier_sku': product.supplier_sku,
+            'pcs_per_unit': product.pcs_per_unit,
+            'min_order_qty': product.min_order_qty,
+            'low_stock_alert': product.low_stock_alert,
+            'expiration_days': product.expiration_days,
+            'tag': product.tag,
+            'offer_percentage': product.offer_percentage,
+            'offer_start': product.offer_start.strftime('%Y-%m-%d') if product.offer_start else '',
+            'offer_end': product.offer_end.strftime('%Y-%m-%d') if product.offer_end else '',
+            'is_active': 'True' if product.is_active else 'False',
+            'brand': product.brand.name if product.brand else '',
+            'categories': categories,
+            'category_id': product.category.id if product.category else None,
+            'selected_sub_category': product.sub_category.id if product.sub_category else None,
+            'selected_sub_category_name': product.sub_category.name if product.sub_category else '',
+            'selected_last_category': product.last_category.id if product.last_category else None,
+            'selected_last_category_name': product.last_category.name if product.last_category else '',
+            'main_image_url': main_image.image.url if main_image else None,
+            'gallery_images': gallery_images,
+            'brochure_url': brochure_url,
+            'subcategories': subcategories,
+            'lastcategories': lastcategories,
+        }
+        return render(request, self.template, context)
+
+    def post(self, request, pk):
+        try:
+            product = get_object_or_404(Product, pk=pk)
+            product.name = request.POST.get('product_name')
+            product.description = request.POST.get('product_description')
+            product.price = request.POST.get('price')
+            product.stock_quantity = request.POST.get('product_quantity')
+            product.product_from = request.POST.get('product_from')
+            product.selling_countries = request.POST.get('selling_countries', '')
+            product.warranty = request.POST.get('warranty', 'none')
+            product.condition = request.POST.get('condition', 'new')
+            product.return_time_limit = request.POST.get('return_time_limit')
+            product.manufacture_date = request.POST.get('manufacture_date')
+            product.expiry_date = request.POST.get('expiry_date')
+            product.weight = request.POST.get('weight')
+            product.weight_unit = request.POST.get('weight_unit', 'gm')
+            product.delivery_time = request.POST.get('delivery_time')
+            product.commission_percentage = request.POST.get('commission_percentage')
+            product.barcode = request.POST.get('barcode')
+            product.keywords = request.POST.get('keywords')
+            product.supplier_sku = request.POST.get('supplier_sku')
+            product.pcs_per_unit = request.POST.get('pcs_per_unit')
+            product.min_order_qty = request.POST.get('min_order_qty')
+            product.low_stock_alert = request.POST.get('low_stock_alert')
+            product.expiration_days = request.POST.get('expiration_days')
+            product.tag = request.POST.get('tag', 'none')
+
+            offer_percentage = request.POST.get('offer_percentage')
+            if offer_percentage:
+                product.offer_percentage = offer_percentage
+
+            start_offer = request.POST.get('offer_start')
+            end_offer = request.POST.get('offer_end')
+
+            if start_offer:
+                product.offer_start = start_offer
+
+            if end_offer:
+                product.offer_end = end_offer
+
+            product.is_active = request.POST.get('is_active') == 'True'
+            category_id = request.POST.get('category')
+            if category_id:
+                try:
+                    product.category = ProductCategory.objects.get(pk=category_id)
+                except ProductCategory.DoesNotExist:
+                    product.category = None
+            sub_category_id = request.POST.get('sub_category')
+            if sub_category_id:
+                try:
+                    product.sub_category = ProductSubCategory.objects.get(pk=sub_category_id)
+                except ProductSubCategory.DoesNotExist:
+                    product.sub_category = None
+            last_category_id = request.POST.get('last_category')
+            if last_category_id:
+                try:
+                    product.last_category = ProductLastCategory.objects.get(pk=last_category_id)
+                except ProductLastCategory.DoesNotExist:
+                    product.last_category = None
+
+            if 'main_image' in request.FILES:
+                ProductImage.objects.filter(product=product, is_main=True).delete()
+                ProductImage.objects.create(
+                    product=product,
+                    image=request.FILES['main_image'],
+                    is_main=True
+                )
+            if 'gallery_images' in request.FILES:
+                for image in request.FILES.getlist('gallery_images'):
+                    ProductImage.objects.create(
+                        product=product,
+                        image=image,
+                        is_main=False
+                    )
+            brand_name = request.POST.get('brand')
+            if brand_name:
+                    brand_obj, created = Brand.objects.get_or_create(name=brand_name)
+                    product.brand = brand_obj
+
+            if 'brochure' in request.FILES:
+                product.brochure = request.FILES['brochure']
+
+            product.save()
+
+            messages.success(request, 'Product updated successfully!')
+        except Exception as e:
+            print('exception in edit product --- ',e)
+            messages.error(request, 'Issue in Product updated !')
+
+        return redirect('adminv3:products_list')
+
+
+class CreateProductCategoryView(StaffAccountRequiredMixin, View):
+    def post(self, request):
+        name = request.POST.get('name')
+        if not name:
+            messages.error(request, "Category name is required.")
+            return redirect('adminv3:add_product')
+
+        if ProductCategory.objects.filter(name__iexact=name).exists():
+            messages.warning(request, "This category already exists.")
+            return redirect('adminv3:add_product')
+
+        ProductCategory.objects.create(name=name)
+        messages.success(request, f"Category '{name}' created successfully.")
+        return redirect('adminv3:add_product')
+
+class CreateProductSubCategoryView(StaffAccountRequiredMixin, View):
+    def post(self, request):
+        name = request.POST.get('name')
+        category_id = request.POST.get('category')
+        if not name or not category_id:
+            messages.error(request, "Sub-category name and parent category are required.")
+        elif ProductSubCategory.objects.filter(name__iexact=name).exists():
+            messages.warning(request, "This sub-category already exists.")
+        else:
+            ProductSubCategory.objects.create(
+                name=name,
+                category_id=category_id
+            )
+
+            messages.success(request, f"Sub-category '{name}' created successfully.")
+        return redirect('adminv3:add_product')
+
+class CreateProductLastCategoryView(StaffAccountRequiredMixin, View):
+    def post(self, request):
+        name = request.POST.get('name')
+        sub_category_id = request.POST.get('sub_category')
+        if not name or not sub_category_id:
+            messages.error(request, "Last category name and parent sub-category are required.")
+        elif ProductLastCategory.objects.filter(name__iexact=name).exists():
+            messages.warning(request, "This last category already exists.")
+        else:
+            ProductLastCategory.objects.create(
+                name=name,
+                sub_category_id=sub_category_id
+            )
+            messages.success(request, f"Last category '{name}' created successfully.")
+        return redirect('adminv3:add_product')
+
+
+class DeleteProductImageView(StaffAccountRequiredMixin, View):
+    def post(self, request, pk):
+        image = get_object_or_404(ProductImage, pk=pk)
+        product_id = image.product.id
+        image.delete()
+        return redirect('adminv3:edit_product', pk=product_id)
+
+    def get(self, request, pk):
+        return self.post(request, pk)
