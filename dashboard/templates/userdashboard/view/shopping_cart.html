@@ -116,9 +116,14 @@
                                                         ${{ item.product.price }}
                                                     </span>
                                                     {% endif %}
-                                                    <span class="text-sm font-semibold text-mono">
-                                                        ${{ item.get_total_price }}
-                                                    </span>
+                                                                                                       <span class="text-sm font-semibold text-mono">
+    {% if item.product.offer_active and item.product.offer_percentage %}
+       
+        <span>${{ item.get_total_price|floatformat:2 }}</span>
+    {% else %}
+        <span>${{ item.get_total_price|floatformat:2 }}</span>
+    {% endif %}
+</span>
                                                 </div>
                                             </div>
                                         </div>

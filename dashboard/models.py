@@ -334,8 +334,8 @@ class CartProduct(models.Model):
         return f"{self.quantity} x {self.product.name} for {self.user}"
 
     def get_total_price(self):
-        return self.quantity * self.product.price
-
+        return self.quantity * self.product.discounted_price()
+ 
     class Meta:
         unique_together = ('user', 'product')
         ordering = ["-created_at"]
