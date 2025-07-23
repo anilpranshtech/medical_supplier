@@ -97,9 +97,9 @@
         {% endif %}
 
           <!-- Products  -->
-           {% if "dashboard.view_product" in user_permissions_list  %}
+           {% if "dashboard.view_product" in user_permissions_list or "dashboard.view_order" in user_permissions_list  %}
           <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="right-start"
-               class="menu-item py-2 {% if request.resolver_match.url_name == 'products_list' %} here show {% endif %}">
+               class="menu-item py-2 {% if request.resolver_match.url_name == 'products_list' or request.resolver_match.url_name == 'orders_list'%} here show {% endif %}">
               <span class="menu-link menu-center">
                   <span class="menu-icon me-0">
                       <i class="fas fa-cubes fs-1"></i>
@@ -124,6 +124,20 @@
                                   <span class="bullet bullet-dot"></span>
                               </span>
                                <span class="menu-title">Products List</span>
+                          </a>
+                      </div>
+
+                  </div>
+                  {% endif %}
+
+                 {% if "dashboard.view_order" in user_permissions_list  %}
+                 <div class="menu-sub menu-sub-accordion">
+                       <div class="menu-item {% if request.resolver_match.url_name == 'orders_list' %} here show {% endif %}">
+                           <a class="menu-link" href="{% url 'adminv3:orders_list' %}">
+                              <span class="menu-bullet">
+                                  <span class="bullet bullet-dot"></span>
+                              </span>
+                               <span class="menu-title">Orders List</span>
                           </a>
                       </div>
 

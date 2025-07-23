@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import IntegrityError
+from django.db.models import Prefetch, F, Sum
 from django.http import JsonResponse, Http404, HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils.dateparse import parse_date
@@ -9,15 +10,17 @@ from django.views import View
 from django.views.generic import ListView
 
 from adminv3.filters import QS_filter_user, QS_Products_filter
-from adminv3.mixins import StaffAccountRequiredMixin
+from adminv3.mixins import StaffAccountRequiredMixin, PermissionRequiredMixin
 from django.contrib.auth.models import User, Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from adminv3.utils import requestParamsToDict
 from dashboard.models import RetailProfile, WholesaleBuyerProfile, SupplierProfile, Product, ProductImage, \
-    ProductCategory, ProductLastCategory, ProductSubCategory, Brand
+    ProductCategory, ProductLastCategory, ProductSubCategory, Brand, Order, OrderItem
+from django.conf import settings
 
 
 class HomeView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
+    login_url = 'dashboard:login'
     template_name = 'adminv3/home.html'
 
     def get(self, request):
@@ -26,7 +29,8 @@ class HomeView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
         return render(request, self.template_name)
 
 
-class UsersAccounts(LoginRequiredMixin, StaffAccountRequiredMixin, ListView):
+class UsersAccounts(LoginRequiredMixin, PermissionRequiredMixin, StaffAccountRequiredMixin, ListView):
+    required_permissions = ('auth.view_user',)
     template_name = 'adminv3/users/users_list.html'
     model = User
     context_object_name = 'users'
@@ -354,13 +358,13 @@ class User_Accounts_AddNewUser(StaffAccountRequiredMixin, View):
         return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
 
 
-GROUP_PERMISSIONS_MODELS_LIST = ['user', 'product']
+GROUP_PERMISSIONS_MODELS_LIST = ['user', 'product', 'order']
 
 class PermissionsUsers(LoginRequiredMixin, StaffAccountRequiredMixin, View):
     template_name = 'adminv3/permissions/permissions.html'
 
     def get(self, request, *args, **kwargs):
-        skipped_permissions = []
+        skipped_permissions = ['delete_order', 'add_order', 'change_order']
 
 
         groups = Group.objects.all().order_by('pk')
@@ -439,7 +443,7 @@ class User_Permissions_EditGroup(StaffAccountRequiredMixin, View):
             if request.headers.get('HX-Request'):
                 id = kwargs['UID']
 
-                skipped_permissions = [ ]
+                skipped_permissions = ['delete_order', 'add_order', 'change_order']
 
                 group_obj = get_object_or_404(Group, pk=id)
 
@@ -523,7 +527,8 @@ class User_Permissions_EditGroup(StaffAccountRequiredMixin, View):
 #
 #         return render(request, self.template_name, {'products': products})
 
-class ProductsListView(LoginRequiredMixin,StaffAccountRequiredMixin, ListView):
+class ProductsListView(LoginRequiredMixin,StaffAccountRequiredMixin, PermissionRequiredMixin, ListView):
+    required_permissions = ('dashboard.view_product',)
     model = Product
     template_name = 'adminv3/products/products_list.html'
     context_object_name = "products"
@@ -925,3 +930,158 @@ class DeleteProductImageView(StaffAccountRequiredMixin, View):
 
     def get(self, request, pk):
         return self.post(request, pk)
+
+
+class OrderListingView(StaffAccountRequiredMixin, PermissionRequiredMixin, View):
+    template_name = 'adminv3/orders/orders_list.html'
+    required_permissions = ('dashboard.view_order',)
+
+    # def get(self, request):
+    #     status_filter = request.GET.get('status')
+    #
+    #     order = Order.objects.all()
+    #     if status_filter and status_filter != '':
+    #         order = order.filter(status=status_filter)
+    #
+    #     total_orders = Order.objects.count()
+    #     completed_orders = Order.objects.filter(status='completed').count()
+    #     pending_orders = Order.objects.filter(status='pending').count()
+    #     cancelled_orders = Order.objects.filter(status='cancelled').count()
+    #
+    #     context = {
+    #         'orders': order,
+    #         'total_orders': total_orders,
+    #         'completed_orders': completed_orders,
+    #         'pending_orders': pending_orders,
+    #         'cancelled_orders': cancelled_orders,
+    #         'selected_status': status_filter,
+    #     }
+    #     return render(request, self.template_name, context)
+    def get(self, request):
+        status_filter = request.GET.get('status')
+        supplier = request.user
+
+        # Filter order items for the current supplier and annotate item totals
+        item_queryset = OrderItem.objects.filter(order_to=supplier).annotate(
+            item_total=F('price') * F('quantity')
+        )
+
+        # Fetch orders where items belong to the current supplier
+        orders = Order.objects.filter(
+            items__order_to=supplier
+        ).distinct().select_related('user', 'payment').prefetch_related(
+            Prefetch('items', queryset=item_queryset, to_attr='filtered_items')
+        )
+
+        # Apply status filter if selected
+        if status_filter:
+            orders = orders.filter(status=status_filter)
+
+        # Totals and phone mapping
+        order_totals = {}
+        order_phones = {}
+
+        for order in orders:
+            total = 0
+            phone_number = "---"
+            for item in order.filtered_items:
+                total += float(item.item_total or 0)
+                if item.phone_number and phone_number == "---":
+                    phone_number = item.phone_number  # Get first valid phone
+            order_totals[order.pk] = total
+            order_phones[order.pk] = phone_number
+
+        # Status counters
+        total_orders = orders.count()
+        completed_orders = orders.filter(status='completed').count()
+        pending_orders = orders.filter(status='pending').count()
+        cancelled_orders = orders.filter(status='cancelled').count()
+
+        context = {
+            'orders': orders,
+            'order_totals': order_totals,  # key = order.pk, value = total price
+            'order_phones': order_phones,  # key = order.pk, value = phone number
+            'total_orders': total_orders,
+            'completed_orders': completed_orders,
+            'pending_orders': pending_orders,
+            'cancelled_orders': cancelled_orders,
+            'selected_status': status_filter or '',
+        }
+
+        return render(request, self.template_name, context)
+
+
+class OrderDetailesView(StaffAccountRequiredMixin, View):
+    template_name = 'adminv3/orders/order_details.html'
+
+    # def get(self, request, pk):
+    #     order = get_object_or_404(Order, pk=pk)
+    #     product = order.product
+    #     brand = product.brand.name if product.brand else '-'
+    #     user = order.order_by
+    #
+    #     subtotal = float(order.price) * order.quantity
+    #     commission = (float(order.price) * float(product.commission_percentage) / 100) * order.quantity
+    #     shipping_fee = float(order.shipping_fees) if order.shipping_fees else 0
+    #
+    #     grand_total = subtotal - commission + shipping_fee
+    #
+    #     context = {
+    #         'order': order,
+    #         'product': product,
+    #         'brand': brand,
+    #         'user': user,
+    #         'subtotal': round(subtotal, 2),
+    #         'total_commission': round(commission, 2),
+    #         'shipping_fee': round(shipping_fee, 2),
+    #         'grand_total': round(grand_total, 2),
+    #
+    #     }
+    #     return render(request, self.template_name, context)
+
+    def get(self, request, order_id):
+        supplier = request.user
+        order = get_object_or_404(
+            Order.objects.filter(items__order_to=supplier).distinct().select_related('user', 'payment').prefetch_related(
+                Prefetch('items', queryset=OrderItem.objects.select_related('product', 'order_by', 'order_to').prefetch_related(
+                    Prefetch('product__productimage_set', queryset=ProductImage.objects.filter(is_main=True), to_attr='main_image')
+                ))
+            ),
+            order_id=order_id
+        )
+
+        # Calculate totals for supplier's order items
+        order_items = order.items.filter(order_to=supplier)
+        if not order_items.exists():
+            logger.warning(f"Supplier {supplier.id} attempted to view order {order.id} with no relevant items")
+            messages.error(request, "You do not have permission to view this order.")
+            return redirect('adminv2:order_listing')
+
+        subtotal = order_items.aggregate(
+            total=Sum(F('price') * F('quantity'))
+        )['total'] or 0.0
+
+        commission = order_items.aggregate(
+            total=Sum((F('price') * F('product__commission_percentage') / 100) * F('quantity'))
+        )['total'] or 0.0
+
+        shipping_fee = float(order.shipping_fees) if order.shipping_fees else 0.0
+        grand_total = float(subtotal) - float(commission) + shipping_fee
+
+        context = {
+            'order': order,
+            'order_items': order_items,
+            'subtotal': round(float(subtotal), 2),
+            'total_commission': round(float(commission), 2),
+            'shipping_fee': round(shipping_fee, 2),
+            'grand_total': round(grand_total, 2),
+            'user': order.user,
+        }
+
+        return render(request, self.template_name , context)
+
+class OrderDeleteView(StaffAccountRequiredMixin, View):
+    def post(self, request, pk):
+        order = get_object_or_404(Order, pk=pk)
+        order.delete()
+        return JsonResponse({'success': True})
