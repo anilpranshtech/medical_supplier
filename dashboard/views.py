@@ -1278,7 +1278,7 @@ def create_orders_from_cart(user, payment_type, payment_status, payment):
 
         # Calculate totals
         subtotal = sum(item.get_total_price() for item in cart_items)
-        shipping_fees = Decimal('24.60')  # Matches $512.60 - $488.00 from order_placed.html
+        shipping_fees = Decimal('00.00')  # Matches $512.60 - $488.00 from order_placed.html
         total = subtotal + shipping_fees
 
         # Create Order within transaction
@@ -1335,7 +1335,7 @@ class PaymentMethodView(LoginRequiredMixin, View):
     def get_context_data(self, request):
         cart_items = CartProduct.objects.filter(user=request.user).select_related('product')
         subtotal = sum(item.get_total_price() for item in cart_items) or Decimal('0.00')
-        shipping = Decimal('24.60')
+        shipping = Decimal('00.00')
         vat = Decimal('0.00')
         total = subtotal + shipping + vat
         billing = CustomerBillingAddress.objects.filter(user=request.user, is_default=True, is_deleted=False).first()
