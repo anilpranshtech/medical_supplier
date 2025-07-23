@@ -328,28 +328,50 @@
 
         <!-- Search Bar -->
         <div class="flex-1 max-w-2xl mx-4">
-            <form class="relative" id="search-form" action="{% url 'dashboard:search_results_grid' %}">
-                <div class="relative">
-                    <input type="text" name="q" id="search-input" class="w-full h-10 px-4 pr-28 text-sm rounded-full border
-                        border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary
+            <form class="relative" id="search-form" action="{% url 'dashboard:search_results_grid' %}" method="GET">
+                <div class="relative flex items-center">
+                    <!-- Input -->
+                    <input type="text"
+                           name="q"
+                           id="search-input"
+                           class="w-full h-10 px-4 pr-28 text-sm rounded-full border
+                        border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500
                         bg-white dark:bg-gray-800 text-gray-650 dark:text-gray-100
                         placeholder-gray-500 dark:placeholder-gray-400 transition-colors"
                         placeholder="Search products..." value="{{ search_query|default:'' }}" autocomplete="off" />
-                        <div id="search-suggestions" class="kt-select-dropdown hidden w-full bg-white border border-gray-300 rounded-md mt-1 shadow-lg z-50">
-                            <ul id="suggestions-list" class="max-h-60 overflow-y-auto"></ul>
-                        </div>
-                        {% if search_query %}
-                            <a href="{% url 'dashboard:search_results_grid' %}" class="absolute right-20 top-1/2 -translate-y-1/2 px-2">
-                                <i class="ki-filled ki-cross text-gray-500"></i>
-                            </a>
-                        {% endif %}
-                    <button type="submit" class="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5
-                        text-sm font-medium rounded-full text-white bg-primary hover:bg-primary/90 transition-all">
-                            <i class="ki-filled ki-magnifier mr-1"></i>Search
+
+                    <!-- Clear button -->
+                    {% if search_query %}
+                    <a href="{% url 'dashboard:search_results_grid' %}"
+                       class="absolute right-10 top-1/2 -translate-y-1/2 px-1 text-gray-400 hover:text-black dark:hover:text-white">
+                        <i class="ki-filled ki-cross text-base"></i>
+                    </a>
+                    {% endif %}
+
+                    <!-- Search button -->
+                    <button type="submit"
+                            aria-label="Search"
+                            class="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full transition-colors
+                                   bg-blue-600 hover:bg-blue-500 text-white">
+                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none"
+                             viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z" />
+                        </svg>
                     </button>
+                </div>
+
+                <!-- Suggestions dropdown -->
+                <div id="search-suggestions"
+                     class="absolute left-0 w-full mt-2 bg-white text-gray-900 border border-gray-300
+                            rounded-lg shadow-lg z-50 hidden
+                            dark:bg-gray-800 dark:text-white dark:border-gray-700">
+                    <ul id="suggestions-list" class="max-h-60 overflow-y-auto text-sm"></ul>
                 </div>
             </form>
         </div>
+
+
 
         <!-- Header Right: Actions and User Profile -->
         <div class="flex items-center gap-3 sm:gap-5 mr-5 px-5">
