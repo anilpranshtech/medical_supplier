@@ -32,9 +32,12 @@ Users
                                             {% include "adminv3/pages/filters/filter_account_status.html" %}
                                             {% include "adminv3/pages/filters/filter_account_type.html" %}
                                             {% include "adminv3/pages/filters/filter_user_role.html" %}
+                                            {% include "adminv3/pages/filters/filter_permission_group.html" %}
                                           </div>
                                       </div>
                                   </div>
+
+
                               </div>
                         </div>
                     </div>
@@ -47,12 +50,14 @@ Users
 
                             <div class="card-toolbar flex-row-fluid justify-content-end gap-5">
 
+
+                                {% if "auth.add_user" in user_permissions_list  %}
                                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#_model_add_new_user">
                                     Add User
                                 </button>
 
                                 {% include "adminv3/snippets/models/add_new_user.html" %}
-
+                                {% endif %}
                             </div>
                         </div>
 

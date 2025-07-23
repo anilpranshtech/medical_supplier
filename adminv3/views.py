@@ -21,6 +21,8 @@ class HomeView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
     template_name = 'adminv3/home.html'
 
     def get(self, request):
+        if not request.user.is_authenticated:
+            return redirect('dashboard:login')
         return render(request, self.template_name)
 
 
@@ -49,6 +51,7 @@ class UsersAccounts(LoginRequiredMixin, StaffAccountRequiredMixin, ListView):
         context['account_role'] = self.request.GET.get('account_role', '')
         context['sort_by'] = self.request.GET.get('sort_by', '')
         context['search_query'] = self.request.GET.get('search_by', '')
+        context['permission_groups'] = Group.objects.all()
 
         return context
 
@@ -351,7 +354,7 @@ class User_Accounts_AddNewUser(StaffAccountRequiredMixin, View):
         return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
 
 
-GROUP_PERMISSIONS_MODELS_LIST = ['user', 'orders', 'product']
+GROUP_PERMISSIONS_MODELS_LIST = ['user', 'product']
 
 class PermissionsUsers(LoginRequiredMixin, StaffAccountRequiredMixin, View):
     template_name = 'adminv3/permissions/permissions.html'
@@ -854,6 +857,15 @@ class EditproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
 
         return redirect('adminv3:products_list')
 
+class DeleteProductView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
+    def post(self, request, pk):
+        try:
+            product = get_object_or_404(Product, pk=pk)
+            product.delete()
+            messages.success(request, "Product deleted successfully")
+        except Exception as e:
+            messages.error(request, "Failed to delete product.")
+        return redirect('adminv3:products_list')  # or wherever the list is
 
 class CreateProductCategoryView(StaffAccountRequiredMixin, View):
     def post(self, request):

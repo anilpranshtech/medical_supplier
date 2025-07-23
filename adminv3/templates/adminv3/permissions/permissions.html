@@ -64,7 +64,7 @@ Permissions
                             <!--end::Card body-->
                             <!--begin::Card footer-->
                             <div class="card-footer flex-wrap items-right pt-0">
-                                <a href="" class="btn btn-primary btn-sm my-1 me-2">View Users</a>
+                                <a href="{% url 'adminv3:user_accounts' %}?permission_group={{group.id}}" class="btn btn-primary btn-sm my-1 me-2">View Users</a>
                                 <button  type="button" class="btn btn-success btn-sm my-1 me-2" data-bs-toggle="modal" data-bs-target="#_model_edit_permission_group"
                                     hx-get="{% url 'adminv3:user_permissions_edit_group' group.id %}"
                                     hx-trigger="click"

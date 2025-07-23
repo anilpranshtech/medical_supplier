@@ -10,6 +10,7 @@ def QS_filter_user(filter_dict={}):
     account_role = filter_dict.get('account_role', 'all')  # administrator/staff/users
     user_type = filter_dict.get('account_type', 'all')  # retailer/wholesaler/supplier
     sort_by = filter_dict.get('sort_by', 'desc_created')
+    permission_group = filter_dict.get('permission_group', 'all')
 
     filters = Q()
 
@@ -39,6 +40,13 @@ def QS_filter_user(filter_dict={}):
         filters &= Q(wholesalebuyerprofile__isnull=False)
     elif user_type == 'supplier':
         filters &= Q(supplierprofile__isnull=False)
+
+    if permission_group and permission_group != 'all':
+        try:
+            group_id = int(permission_group)
+            filters &= Q(groups__id=group_id)
+        except ValueError:
+            pass
 
     ordering = '-date_joined' if sort_by == 'desc_created' else 'date_joined'
 
