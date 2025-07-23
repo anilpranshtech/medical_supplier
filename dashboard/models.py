@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 
-from utils.handle_payments import generate_order_id
+
 
 
 class RetailProfile(models.Model):
