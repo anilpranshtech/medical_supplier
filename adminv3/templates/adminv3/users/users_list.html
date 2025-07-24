@@ -35,6 +35,13 @@ Users
                                             {% include "adminv3/pages/filters/filter_permission_group.html" %}
                                           </div>
                                       </div>
+
+                                      <div class="col-xxl-12">
+                                          <div class="row g-8">
+                                            {% include "adminv3/pages/filters/filter_created_date_range_picker.html" %}
+                                          </div>
+                                      </div>
+
                                   </div>
 
 
@@ -163,6 +170,9 @@ Users
 {% endblock content %}
 
 {% block page_only_scripts %}
+{% include "adminv3/pages/filters/filter_created_date_range_picker_js.html" %}
+
+
 <script>
     // Search functionality
     document.addEventListener("DOMContentLoaded", function () {

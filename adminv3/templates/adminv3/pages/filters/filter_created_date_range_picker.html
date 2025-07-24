@@ -1,0 +1,7 @@
+<div class="col-lg-3">
+    <label class="fs-6 form-label fw-bold text-gray-900">Created Date Range</label>
+    <div class="fv-row w-100 flex-md-root fv-plugins-icon-container">
+        <input class="form-control form-control-solid date_picker_selector" placeholder="Select a Date" name="created_date" id="created_date_picker" {% if request.GET.created_date %} value="{{ request.GET.created_date }}" {% endif %} autocomplete="off"/>
+    </div>
+</div>
+

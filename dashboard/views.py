@@ -3,17 +3,20 @@ from io import BytesIO
 
 from django.db import transaction
 from xhtml2pdf import pisa
+
 from django.conf import settings
-from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
 from django.http import HttpResponse, JsonResponse
-from django.contrib.auth.views import *
-from django.template import TemplateDoesNotExist
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib import messages
 from django.template.loader import render_to_string
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.utils.html import strip_tags
-from django.utils.timezone import now
+from django.utils.timezone import now, timezone
+from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from razorpay.errors import SignatureVerificationError
@@ -25,22 +28,8 @@ from .forms import *
 from .models import *
 import razorpay
 import stripe
-from django.utils import timezone
-import uuid
-from djapp.settings import TEXTDRIP_OTP_TOKEN
-from utils.handle_textdrip_otp import send_phone_otp, verify_mobile_otp, VERIFY_URL
-from .forms import EmailOnlyLoginForm, CustomPasswordResetForm, CustomSetPasswordForm
-from django.views import View
-from django.shortcuts import render, redirect
-from django.contrib.auth.models import User
-from django.contrib import messages
-from django.views.generic import TemplateView, ListView
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.contrib.auth.hashers import make_password
-from django.contrib.auth import authenticate, login, logout
-from django.views.generic.edit import *
-from datetime import date
-from django.db.models import F, Prefetch
+
+from datetime import date, timedelta
 import random
 import re
 import requests
@@ -195,193 +184,6 @@ class CustomLoginView(FormView):
     def get_success_url(self):
         return reverse_lazy('dashboard:home')
 
-
-# class RegistrationView(View):
-#     register_template = "dashboard/register.html"
-#     otp_template = "userdashboard/auth/verify_otp.html"
-#     recaptcha_secret = '6LdTHV8rAAAAAIgLr2wdtdtWExTS6xJpUpD8qEzh'
-#
-#     def get(self, request):
-#         step = request.session.get("step", "register")
-#         template = self.otp_template if step == "verify_otp" else self.register_template
-#         return render(request, template)
-#
-#     def post(self, request):
-#         step = request.session.get("step", "register")
-#
-#         if step == "register":
-#             return self.handle_registration(request)
-#         elif step == "verify_otp":
-#             return self.handle_otp_verification(request)
-#         else:
-#             messages.error(request, "Invalid registration step.")
-#             return redirect('dashboard:register')
-#
-#     def handle_registration(self, request):
-#         errors = {}
-#
-#         # Step 1: reCAPTCHA verification
-#         recaptcha_response = request.POST.get('g-recaptcha-response')
-#         recaptcha_result = requests.post(
-#             'https://www.google.com/recaptcha/api/siteverify',
-#             data={
-#                 'secret': self.recaptcha_secret,
-#                 'response': recaptcha_response
-#             }
-#         ).json()
-#
-#         if not recaptcha_result.get('success'):
-#             errors['recaptcha'] = 'Invalid reCAPTCHA. Please try again.'
-#
-#         # Step 2: Collect and validate data
-#         first_name = request.POST.get('first_name')
-#         last_name = request.POST.get('last_name')
-#         email = request.POST.get('email')
-#         password = request.POST.get('password')
-#         confirm_password = request.POST.get('confirm_password')
-#         phone = request.POST.get('phone')
-#         user_type = request.POST.get('user_type')
-#         buyer_type = request.POST.get('buyer_type')
-#
-#         # Basic validations
-#         if not first_name: errors['first_name'] = 'First name is required.'
-#         if not last_name: errors['last_name'] = 'Last name is required.'
-#         if not email: errors['email'] = 'Email is required.'
-#         if not phone: errors['phone'] = 'Phone number is required.'
-#         if not password: errors['password'] = 'Password is required.'
-#         if not confirm_password: errors['confirm_password'] = 'Confirm password is required.'
-#
-#         if email and not re.match(r'^[\w\.-]+@[\w\.-]+\.\w+$', email):
-#             errors['email'] = 'Invalid email format.'
-#         elif email and User.objects.filter(username=email).exists():
-#             errors['email'] = 'An account with this email already exists.'
-#
-#         # Password strength
-#         if password:
-#             if len(password) < 8:
-#                 errors['password'] = 'Password must be at least 8 characters.'
-#             if not re.search(r'[A-Z]', password):
-#                 errors['password'] = 'Must include an uppercase letter.'
-#             if not re.search(r'[a-z]', password):
-#                 errors['password'] = 'Must include a lowercase letter.'
-#             if not re.search(r'[0-9]', password):
-#                 errors['password'] = 'Must include a number.'
-#             if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
-#                 errors['password'] = 'Must include a special character.'
-#
-#         if password and confirm_password and password != confirm_password:
-#             errors['confirm_password'] = 'Passwords do not match.'
-#
-#         if errors:
-#             for field, message in errors.items():
-#                 messages.error(request, message, extra_tags=field)
-#             return render(request, self.register_template, {
-#                 'form_data': request.POST
-#             })
-#
-#         # Send OTP
-#         otp_response = send_phone_otp(phone, TEXTDRIP_OTP_TOKEN)
-#         if "error" in otp_response:
-#             messages.error(request, otp_response["error"], extra_tags='phone')
-#             return render(request, self.register_template, {
-#                 'form_data': request.POST
-#             })
-#
-#         # Save signup data in session
-#         request.session['signup_data'] = {
-#             'first_name': first_name,
-#             'last_name': last_name,
-#             'email': email,
-#             'password': password,
-#             'phone': phone,
-#             'user_type': user_type,
-#             'buyer_type': buyer_type,
-#             'supplier_company_name': request.POST.get('supplier_company_name'),
-#             'license_number': request.POST.get('license_number'),
-#             'age': request.POST.get('age'),
-#             'medical_needs': request.POST.get('medical_needs'),
-#             'company_name': request.POST.get('company_name'),
-#             'gst_number': request.POST.get('gst_number'),
-#             'department': request.POST.get('department'),
-#             'purchase_capacity': request.POST.get('purchase_capacity'),
-#         }
-#         request.session['step'] = "verify_otp"
-#         return redirect('dashboard:register')
-#
-#     def handle_otp_verification(self, request):
-#         otp = request.POST.get('otp')
-#         signup_data = request.session.get('signup_data')
-#
-#         if not signup_data:
-#             messages.error(request, "Session expired. Please sign up again.")
-#             return redirect('dashboard:register')
-#
-#         phone = signup_data['phone']
-#         result = verify_mobile_otp(VERIFY_URL, TEXTDRIP_OTP_TOKEN, phone, otp)
-#
-#         if result.get("success") or result.get("status") is True:
-#             # Check for duplicate email again
-#             if User.objects.filter(username=signup_data['email']).exists():
-#                 messages.error(request, "An account with this email already exists.")
-#                 request.session.flush()
-#                 return redirect('dashboard:register')
-#
-#             try:
-#                 user = User.objects.create_user(
-#                     username=signup_data['email'],
-#                     email=signup_data['email'],
-#                     password=signup_data['password'],
-#                     first_name=signup_data['first_name'],
-#                     last_name=signup_data['last_name']
-#                 )
-#
-#                 # Save phone to user model if using a custom user model with phone
-#                 if hasattr(user, 'phone'):
-#                     user.phone = phone
-#                     user.save()
-#
-#                 user_type = signup_data.get('user_type')
-#                 buyer_type = signup_data.get('buyer_type')
-#
-#                 if user_type == 'supplier':
-#                     SupplierProfile.objects.create(
-#                         user=user,
-#                         phone=phone,
-#                         company_name=signup_data.get('supplier_company_name', ''),
-#                         license_number=signup_data.get('license_number', '')
-#                     )
-#                 elif buyer_type == 'retailer':
-#                     RetailProfile.objects.create(
-#                         user=user,
-#                         phone=phone,
-#                         age=int(signup_data.get('age') or 0),
-#                         medical_needs=signup_data.get('medical_needs', '')
-#                     )
-#                 elif user_type == 'wholesale' or buyer_type == 'wholesaler':
-#                     WholesaleBuyerProfile.objects.create(
-#                         user=user,
-#                         phone=phone,
-#                         company_name=signup_data.get('company_name', ''),
-#                         gst_number=signup_data.get('gst_number', ''),
-#                         department=signup_data.get('department', ''),
-#                         purchase_capacity=int(signup_data.get('purchase_capacity') or 0)
-#                     )
-#                 else:
-#                     messages.error(request, "Invalid user type.")
-#                     user.delete()
-#                     request.session.flush()
-#                     return redirect('dashboard:register')
-#
-#                 request.session.flush()
-#                 messages.success(request, "Account created successfully.")
-#                 return redirect('dashboard:login')
-#
-#             except Exception as e:
-#                 messages.error(request, f"Error creating account: {str(e)}")
-#                 return redirect('dashboard:register')
-#         else:
-#             messages.error(request, result.get("message", "OTP verification failed."))
-#             return render(request, self.otp_template)
 
 
 
@@ -630,7 +432,6 @@ class UploadProfilePictureView(LoginRequiredMixin, View):
         return redirect('profile')
 
 
-# ------------------------------------------------------------------------------------------------------------------------
 class SearchSuggestionsView(View):
     def get(self, request, *args, **kwargs):
         query = request.GET.get('q', '').strip()
@@ -1710,17 +1511,14 @@ class MyOrdersView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         user = self.request.user
 
-        # Prefetch main product images for OrderItems
         main_image_prefetch = Prefetch(
             'items__product__productimage_set',
             queryset=ProductImage.objects.filter(is_main=True),
             to_attr='main_image'
         )
 
-        # Fetch all orders
         orders_qs = Order.objects.filter(user=user).select_related('payment').prefetch_related(main_image_prefetch).order_by('-created_at')
 
-        # Add pagination
         paginator = Paginator(orders_qs, 2)
         page_number = self.request.GET.get('page')
         page_obj = paginator.get_page(page_number)
@@ -2370,6 +2168,9 @@ class PaymentStatusView(View):
             return render(request, self.template_name, {'status': True})
         except SignatureVerificationError:
             return render(request, self.template_name, {'status': False, 'error': 'Signature verification failed'})
+
+
+# ------------------------------------------------------------------------------------------------------------------------
 
 
 class RequestRoleView(LoginRequiredMixin, View):

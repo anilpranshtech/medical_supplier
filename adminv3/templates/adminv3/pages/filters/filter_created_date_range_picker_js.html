@@ -1,0 +1,41 @@
+<script>
+    var start = moment();
+    var end = moment();
+    function cb(start, end) {
+        //alert(start + " | " + end);
+        const start_date = start.format("MM/DD/YYYY");
+        const end_date = end.format("MM/DD/YYYY");
+        let dateRange;  // Declare the variable outside of the blocks
+
+        if (start_date && start_date !== 'Invalid date') {
+            dateRange = start_date + " - " + end_date;
+        } else {
+            dateRange = end_date;
+        }
+        console.log(dateRange);
+
+        $("#created_date_picker").val(dateRange);
+
+    }
+
+    $("#created_date_picker").daterangepicker({
+        autoUpdateInput: false,
+        startDate: start,
+        endDate: end,
+        locale: {
+            format: 'MM/DD/YYYY'
+        },
+        ranges: {
+        "Today": [moment().utcOffset(600).startOf('day'), moment().utcOffset(600).endOf('day')],
+        "Yesterday": [moment().subtract(1, "days"), moment().subtract(1, "days")],
+        "Last 7 Days": [moment().subtract(6, "days"), moment()],
+        "Last 15 Days": [moment().subtract(14, "days"), moment()],
+        "Last 30 Days": [moment().subtract(29, "days"), moment()],
+        "Last 45 Days": [moment().subtract(44, "days"), moment()],
+        "Last 60 Days": [moment().subtract(59, "days"), moment()],
+        "Last 90 Days": [moment().subtract(89, "days"), moment()],
+        "This Month": [moment().startOf("month"), moment().endOf("month")],
+        "Last Month": [moment().subtract(1, "month").startOf("month"), moment().subtract(1, "month").endOf("month")],
+        }
+    }, cb);
+</script>
