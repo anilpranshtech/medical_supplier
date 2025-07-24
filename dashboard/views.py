@@ -1,49 +1,53 @@
 from decimal import Decimal
 from io import BytesIO
 from xhtml2pdf import pisa
+
 from django.conf import settings
-from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
 from django.http import HttpResponse, JsonResponse
-from django.contrib.auth.views import *
-from django.template import TemplateDoesNotExist
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib import messages
 from django.template.loader import render_to_string
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.utils.html import strip_tags
-from django.utils.timezone import now
+from django.utils.timezone import now, timezone
+from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
-from razorpay.errors import SignatureVerificationError
+from django.views.generic import TemplateView, ListView
+from django.views.generic.edit import *
 
-from utils.handle_payments import create_orders_from_cart
-from utils.handle_user_profile import get_user_profile
-from .forms import *
-from .models import *
+from django.shortcuts import render, redirect, get_object_or_404
+
+from django.db.models import Prefetch, Avg, Count, Q
+from django.core.paginator import Paginator
+
+from razorpay.errors import SignatureVerificationError
 import razorpay
 import stripe
-from django.utils import timezone
-import uuid
-from djapp.settings import TEXTDRIP_OTP_TOKEN
-from utils.handle_textdrip_otp import send_phone_otp, verify_mobile_otp, VERIFY_URL
-from .forms import EmailOnlyLoginForm, CustomPasswordResetForm, CustomSetPasswordForm
-from django.views import View
-from django.shortcuts import render, redirect
-from django.contrib.auth.models import User
-from django.contrib import messages
-from django.views.generic import TemplateView, ListView
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.contrib.auth.hashers import make_password
-from django.contrib.auth import authenticate, login, logout
-from django.views.generic.edit import *
-from datetime import date
-from django.db.models import F, Prefetch
+
+from datetime import date, timedelta
 import random
 import requests
-from django.http import JsonResponse
-from datetime import date, timedelta
-from django.shortcuts import get_object_or_404
-from django.db.models import Avg
+import logging
+import re
+
+from djapp.settings import TEXTDRIP_OTP_TOKEN
+from utils.handle_textdrip_otp import send_phone_otp, verify_mobile_otp, VERIFY_URL
+from utils.handle_payments import create_orders_from_cart
+from utils.handle_user_profile import get_user_profile
+
+from .forms import (
+    EmailOnlyLoginForm,
+    CustomPasswordResetForm,
+    CustomSetPasswordForm,
+)
+from .models import *
+
+logger = logging.getLogger(__name__)
 
 
 class HomeView(TemplateView):
@@ -177,7 +181,7 @@ class CustomLoginView(FormView):
         return reverse_lazy('dashboard:home')
 
 
-import re
+
 
 class RegistrationView(View):
     register_template = "dashboard/register.html"
@@ -409,12 +413,6 @@ class UploadProfilePictureView(LoginRequiredMixin, View):
             profile.save()
 
         return redirect('profile')
-
-
-# ------------------------------------------------------------------------------------------------------------------------
-from django.db.models import Count, Prefetch
-from django.core.paginator import Paginator
-from django.db.models import Q
 
 
 
@@ -1905,9 +1903,7 @@ class PaymentStatusView(View):
 
 
 # ------------------------------------------------------------------------------------------------------------------------
-import logging
-from .forms import *
-logger = logging.getLogger(__name__)
+
 
 class RequestRoleView(LoginRequiredMixin, View):
     template_name = 'userdashboard/seller/request_role.html'
