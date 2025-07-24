@@ -9,29 +9,30 @@
 </style>
 
 {% block content %}
-<div class="kt-container-fixed mt-1" style="max-width: var(--custom-container-width, 85%);">
+<div class="kt-container-fixed" style="max-width: var(--custom-container-width, 75%);">
     <div class="flex flex-col items-stretch gap-7 mt-5 py-5">
         <main class="grow" role="content">
             <!-- Container -->
+            <div class="kt-card">
             <div class="kt-container-fixed">
-                <h2 class="text-xl font-bold mb-5">My Orders</h2>
+                <h2 class="text-xl font-bold mb-6 mt-7">My Orders</h2>
                 <!-- begin: grid -->
-                <div class="grid xl:grid-cols-1 gap-5 lg:gap-9">
+                <div class="grid xl:grid-cols-0 gap-0 lg:gap-0">
                     {% for order in orders %}
                     <div class="lg:col-span-1">
-                        <div class="kt-card">
+                        <div class="kt-card mb-7">
                             <div class="kt-card-header justify-start bg-muted/70 gap-9 h-auto py-5">
                                 <div class="flex flex-col gap-1.5">
-                                    <span class="text-xs font-normal text-secondary-foreground">Order ID</span>
-                                    <span class="text-sm font-medium text-mono">{{ order.order_id }}</span>
+                                    <span class="text-xs font-medium text-grey-650">Order ID</span>
+                                    <span class="text-sm font-bold text-mono">{{ order.order_id }}</span>
                                 </div>
                                 <div class="flex flex-col gap-1.5">
-                                    <span class="text-xs font-normal text-secondary-foreground">Order placed</span>
-                                    <span class="text-sm font-medium text-mono">{{ order.created_at|date:"d M, Y" }}</span>
+                                    <span class="text-xs font-medium text-grey-650">Order placed</span>
+                                    <span class="text-sm font-bold text-mono">{{ order.created_at|date:"d M, Y" }}</span>
                                 </div>
                                 <div class="flex flex-col gap-1.5">
-                                    <span class="text-xs font-normal text-secondary-foreground">Total</span>
-                                    <span class="text-sm font-medium text-mono">
+                                    <span class="text-xs font-medium text-grey-650">Total</span>
+                                    <span class="text-sm font-bold text-mono">
                                         {{ order.payment.payment_currency|default:"USD" }}
                                         {% with subtotal=order.items.all|length|floatformat:2 shipping=order.shipping_fees|floatformat:2 %}
                                             {{ subtotal|add:shipping|floatformat:2 }}
@@ -39,12 +40,12 @@
                                     </span>
                                 </div>
                                 <div class="flex flex-col gap-1.5">
-                                    <span class="text-xs font-normal text-secondary-foreground">Ship to</span>
-                                    <span class="text-sm font-medium text-mono">{{ order.shipping_full_address }}</span>
+                                    <span class="text-xs font-medium text-grey-650">Ship to</span>
+                                    <span class="text-sm font-bold text-mono">{{ order.shipping_full_address }}</span>
                                 </div>
                                 <div class="flex flex-col gap-1.5">
-                                    <span class="text-xs font-normal text-secondary-foreground">Status</span>
-                                    <span class="text-sm font-medium text-mono">{{ order.status|title }}</span>
+                                    <span class="text-xs font-medium text-grey-650">Status</span>
+                                    <span class="text-sm font-bold text-mono">{{ order.status|title }}</span>
                                 </div>
                                 <div class="flex flex-col gap-2">
                                     <a href="{% url 'dashboard:order_receipt' order.id %}" class="kt-btn kt-btn-primary">
@@ -67,7 +68,7 @@
                                     {% with item_count=order.items.all|length %}
                                         <div class="space-y-3" id="items-container-{{ forloop.counter }}">
                                             {% for item in order.items.all %}
-                                                <div class="kt-card order-item {% if forloop.counter0 >= 1 %}hidden{% endif %}">
+                                                <div class="kt-card order-item {% if forloop.counter0 >= 1 %}hidden{% endif %} mb-7">
                                                     <div class="kt-card-content flex items-center flex-wrap justify-between gap-4.5 p-2 pe-5">
                                                         <div class="flex items-center gap-3.5">
                                                             <div class="kt-card flex items-center justify-center bg-accent/50 h-[70px] w-[90px] shadow-none">
@@ -105,7 +106,7 @@
                                             {% endfor %}
                                         </div>
                                         {% if item_count > 1 %}
-                                            <div class="text-center mt-2">
+                                            <div class="text-center mt-3">
                                                 <button
                                                     type="button"
                                                     class="kt-btn kt-btn-outline text-sm toggle-btn"
@@ -127,9 +128,10 @@
                     {% endfor %}
                     <!-- end: Card -->
                 </div>
-                <!-- end: grid -->
-                {% include "pages/pagination.html" %}
             </div>
+                <!-- end: grid -->
+            </div>
+             {% include "pages/pagination.html" %}
             <!-- End of Container -->
         </main>
     </div>
