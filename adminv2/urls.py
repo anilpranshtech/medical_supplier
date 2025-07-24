@@ -55,6 +55,11 @@ urlpatterns = [
     #RFQ Request for Quotation
     path('rfq/', RFQListView.as_view(), name='rfq_list'),
     path('rfq/<int:pk>/quote/', SupplierQuotationUpdateView.as_view(), name='rfq_quote'),
+
+    #Banner Upload
+    path('banner-list/', BannerListView.as_view(), name='banner_list'),
+    path('banner-upload/', BannerCreateView.as_view(), name='banner_upload'),
+    path('banner-edit/<int:pk>/', BannerUpdateView.as_view(), name='banner_edit'),
     
 
 ]

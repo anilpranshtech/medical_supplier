@@ -44,6 +44,7 @@ from django.db.models import F, Prefetch
 import random
 import re
 import requests
+from adminv2.models import *
 from django.http import JsonResponse
 from datetime import date, timedelta
 from django.shortcuts import get_object_or_404
@@ -144,6 +145,8 @@ class HomeView(TemplateView):
         else:
             context['user_wishlist_ids'] = []
             context['user_cart_ids'] = []
+
+        context['banners'] = Banner.objects.filter(is_active=True)
 
         return context
 

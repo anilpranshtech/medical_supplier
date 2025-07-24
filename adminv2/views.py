@@ -1326,3 +1326,41 @@ class SupplierQuotationUpdateView(LoginRequiredMixin, SupplierPermissionMixin, U
 
     def test_func(self):
         return self.request.user.is_staff or self.request.user.is_superuser
+
+
+class BannerListView(LoginRequiredMixin, SupplierPermissionMixin, TemplateView):
+    template_name = 'adminv2/banner_list.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = BannerForm()
+        context['banners'] = Banner.objects.all().order_by('order')
+        return context
+
+
+class BannerCreateView(LoginRequiredMixin, SupplierPermissionMixin, View):
+    def get(self, request):
+        form = BannerForm()
+        return render(request, 'adminv2/banner_upload.html', {'form': form})
+
+    def post(self, request):
+        form = BannerForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            return redirect('adminv2:banner_list')
+        return render(request, 'adminv2/banner_upload.html', {'form': form})
+
+
+class BannerUpdateView(LoginRequiredMixin, SupplierPermissionMixin, View):
+    def get(self, request, pk):
+        banner = get_object_or_404(Banner, pk=pk)
+        form = BannerForm(instance=banner)
+        return render(request, 'adminv2/banner_edit.html', {'form': form, 'object': banner})
+
+    def post(self, request, pk):
+        banner = get_object_or_404(Banner, pk=pk)
+        form = BannerForm(request.POST, request.FILES, instance=banner)
+        if form.is_valid():
+            form.save()
+            return redirect('adminv2:banner_list')
+        return render(request, 'adminv2/banner_edit.html', {'form': form, 'object': banner})

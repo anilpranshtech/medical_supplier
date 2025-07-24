@@ -1,6 +1,6 @@
 from django import forms
 from dashboard.models import RFQRequest
-
+from .models import *
 
 class SupplierRFQQuotationForm(forms.ModelForm):
     class Meta:
@@ -21,3 +21,10 @@ class SupplierRFQQuotationForm(forms.ModelForm):
             'supplier_notes': 'Additional Notes',
             'quote_attached_file': 'Attach Quotation File',
         }
+
+
+
+class BannerForm(forms.ModelForm):
+    class Meta:
+        model = Banner
+        fields = ['title', 'image', 'link', 'is_active', 'order']

@@ -151,18 +151,11 @@
 <!-- Begin Medical Banner Slider -->
 <div class="kt-slider-container mt-7">
     <div class="kt-slider" id="slider">
-        <a href="#" class="kt-slide">
-            <img src="{% static 'metronic/tailwind/dist/assets/media/banners/medical_banner.jpg' %}"
-                 alt="Protective Masks"/>
-        </a>
-        <a href="#" class="kt-slide">
-            <img src="{% static 'metronic/tailwind/dist/assets/media/banners/medical_banner2.jpg' %}"
-                 alt="Hand Sanitizers"/>
-        </a>
-        <a href="#" class="kt-slide">
-            <img src="{% static 'metronic/tailwind/dist/assets/media/banners/medical_banner3.jpg' %}"
-                 alt="Home Health Checkup Kits"/>
-        </a>
+        {% for banner in banners %}
+            <a href="{{ banner.link|default:'#' }}" class="kt-slide">
+                <img src="{{ banner.image.url }}" alt="{{ banner.title }}">
+            </a>
+        {% endfor %}
     </div>
     <button class="kt-nav-btn kt-nav-btn-left" onclick="prevSlide()" aria-label="Previous Slide">‹</button>
     <button class="kt-nav-btn kt-nav-btn-right" onclick="nextSlide()" aria-label="Next Slide">›</button>
@@ -968,7 +961,7 @@
                 </button>
             </div>
             <div class="kt-card-content p-5 text-center space-y-4">
-                <p class="text-gray-300 dark:text-gray-300 text-sm">
+                <p class="text-gray-650 dark:text-gray-300 text-sm">
                     You must be logged in to perform this action.
                 </p>
             </div>
