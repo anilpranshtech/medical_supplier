@@ -328,13 +328,16 @@
 
             <!-- Header Right: Actions and User Profile -->
             <div class="flex items-center gap-3 sm:gap-5 mr-5 px-5">
-                <button class="kt-btn kt-btn-ghost kt-btn-icon size-8 hover:bg-background hover:[&_i]:text-primary wishlist-drawer-toggle"
-                        data-kt-drawer-toggle="#drawers_shop_wishlist">
-                    <i class="ki-filled ki-heart text-base text-xl"></i>
-                </button>
-                <button class="kt-btn kt-btn-ghost kt-btn-icon size-8 hover:bg-background hover:[&_i]:text-primary" data-kt-drawer-toggle="#drawers_shop_cart">
-                    <i class="ki-filled ki-handcart text-base"></i>
-                </button>
+           <a href="{% url 'dashboard:wish_list' %}"
+   class="kt-btn kt-btn-ghost kt-btn-icon size-8 hover:bg-background hover:[&_i]:text-primary">
+    <i class="ki-filled ki-heart text-base text-xl"></i>
+</a>
+
+                <a href="{% url 'dashboard:shopping_cart' %}"
+   class="kt-btn kt-btn-ghost kt-btn-icon size-8 hover:bg-background hover:[&_i]:text-primary">
+    <i class="ki-filled ki-handcart text-base"></i>
+</a>
+
                 <button class="kt-btn kt-btn-ghost kt-btn-icon size-8 hover:bg-background hover:[&_i]:text-primary"
                         data-kt-drawer-toggle="#notifications_drawer">
                     <i class="ki-filled ki-notification-status text-base text-lg"></i>
@@ -781,6 +784,7 @@
                 <button id="cart-close-btn" class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" data-kt-drawer-dismiss="true">
                     <i class="ki-filled ki-cross text-base"></i>
                 </button>
+                
             </div>
             <div class="kt-card-content flex flex-col p-5 kt-scrollable-y-auto" id="cart-items"></div>
             <div class="kt-card-footer px-5 py-3 flex justify-between gap-3">

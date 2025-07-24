@@ -2,46 +2,85 @@
 {% load static %}
 {% block content %}
 <style>
+  
     .kt-wishlist-icon.active i.ki-filled.ki-heart {
         color: #ff0000;
     }
+
     .kt-category-grid {
         display: grid;
-        grid-template-columns: 0.8fr 3.2fr; 
+        grid-template-columns: 1fr; 
         gap: 20px;
         width: 100%;
     }
+
     .kt-category-column {
         background-color: #f9f9f9;
         padding: 15px;
         border: 1px solid #e0e0e0;
         height: fit-content;
     }
+
     .kt-product-grid {
         display: grid;
-        grid-template-columns: repeat(4, 1fr); 
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Flexible columns */
         gap: 20px;
         width: 100%;
     }
-    .amazon-sidebar[style*="display: none"] + .kt-product-grid {
+
+    .amazon-sidebar[style*="display: none"] + .kt-product-grid,
+    .amazon-sidebar.hidden + .kt-product-grid {
         grid-column: 1 / -1;
     }
+
     .amazon-sidebar {
         border-right: 1px solid #e0e0e0;
         padding-right: 16px;
+        transition: transform 0.3s ease-in-out;
     }
+
+    .amazon-sidebar.hidden {
+        transform: translateX(-100%);
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 80%;
+        max-width: 300px;
+        z-index: 1000;
+        overflow-y: auto;
+    }
+
+    .sidebar-toggle {
+        display: none;
+        position: fixed;
+        top: 1rem;
+        left: 1rem;
+        z-index: 1001;
+        background: #3b82f6;
+        color: white;
+        padding: 0.5rem;
+        border-radius: 0.25rem;
+        cursor: pointer;
+    }
+
     .text-red-500 {
         color: #ef4444 !important;
     }
+
     .heart-icon {
         transition: color 0.2s ease-in-out;
-    }  
+    }
+
     .rotate-180 {
         transform: rotate(180deg);
     }
+
     .kt-select-wrapper {
-        position: relative; 
+        position: relative;
+        width: 175px;
     }
+
     .kt-select-dropdown {
         position: absolute;
         top: 100%;
@@ -53,6 +92,7 @@
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         z-index: 105;
     }
+
     .amazon-sidebar h2 {
         font-size: 1.25rem;
         font-weight: 700;
@@ -60,6 +100,7 @@
         text-transform: uppercase;
         color: #111827;
     }
+
     .category-button {
         font-size: 1.1rem;
         font-weight: 600;
@@ -74,13 +115,16 @@
         transition: all 0.2s ease-in-out;
         cursor: pointer;
     }
+
     .category-button:hover {
         color: #3b82f6;
     }
+
     .subcategory-list {
         margin-left: 1.5rem;
         margin-top: 0.25rem;
     }
+
     .subcategory-list a {
         display: block;
         padding: 4px 0;
@@ -89,39 +133,61 @@
         text-decoration: none;
         transition: all 0.2s;
     }
+
     .subcategory-list a:hover {
         color: #3b82f6;
     }
+
     #clear-search {
         cursor: pointer;
         border: none;
         outline: none;
     }
+
     #clear-search:hover i {
         color: #374151;
     }
+
     #search-suggestions {
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        max-height: 200px;
+        overflow-y: auto;
     }
+
     #search-suggestions li {
         padding: 0.5rem 1rem;
     }
+
     #search-suggestions li:hover {
         background-color: #f3f4f6;
     }
-    /* Add RFQ Modal Styles from Homepage */
+
     #rfqModal {
         z-index: 9999;
         backdrop-filter: blur(8px);
         background-color: rgba(0, 0, 0, 0.4);
+        overflow-y: auto;
+        padding: 1rem;
     }
+
     .modal-open {
         filter: blur(8px);
         transition: filter 0.3s ease-in-out;
     }
+
     .kt-modal {
         filter: none !important;
     }
+
+    .kt-card {
+        width: 100%;
+    }
+
+    .kt-card-content img {
+        max-width: 100%;
+        height: auto;
+    }
+
     .loader {
         display: none;
         border: 2px solid #ffffff;
@@ -132,17 +198,99 @@
         animation: spin 1s linear infinite;
         margin-left: 8px;
     }
+
     @keyframes spin {
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
     }
+
     .loading .loader {
         display: inline-block;
+    }
+
+   
+    @media (min-width: 768px) {
+        .kt-category-grid {
+            grid-template-columns: 0.8fr 3.2fr; 
+        }
+
+        .amazon-sidebar {
+            position: static;
+            transform: none;
+            width: auto;
+        }
+
+        .sidebar-toggle {
+            display: none; 
+        }
+    }
+
+    @media (max-width: 767px) {
+        .kt-container-fixed {
+            padding: 0 0.5rem;
+        }
+
+        .kt-product-grid {
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); 
+        }
+
+        .sidebar-toggle {
+            display: block; 
+        }
+
+        .amazon-sidebar {
+            display: block;
+        }
+
+        .kt-select-wrapper {
+            width: 150px;
+        }
+
+        .kt-card-content {
+            padding: 0.5rem;
+        }
+
+        .kt-card-content img {
+            height: 120px; 
+        }
+
+        #rfqModal .kt-card {
+            max-width: 90%;
+        }
+
+        .kt-btn {
+            padding: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .amazon-sidebar h2 {
+            font-size: 1rem;
+        }
+
+        .category-button {
+            font-size: 0.9rem;
+        }
+
+        .subcategory-list a {
+            font-size: 0.85rem;
+        }
+    }
+
+    @media (min-width: 1024px) {
+        .kt-product-grid {
+            grid-template-columns: repeat(4, 1fr); 
+        }
+
+        .kt-card-content img {
+            height: 180px; 
+        }
     }
 </style>
 
 <title>Search Results - Medical Supplies</title>
 <div class="kt-container-fixed mt-1" style="max-width: var(--custom-container-width, 90%);">
+  
+
     <div class="flex flex-col items-stretch gap-7 mt-5 py-5">
         <!-- Results Header and Sorting -->
         <div class="flex flex-wrap items-center gap-5 justify-between mt-3">
@@ -338,7 +486,7 @@
                                                     data-product-price="{{ product.discounted_price|default:product.price|floatformat:2 }}"
                                                     data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
                                                     data-quantity="1">
-                                                RFQ <i class="ki-solid ki-file-text"></i>
+                                                RFQ <i class="ki-filled ki-directbox-default text-xs"></i>
                                             </button>
                                         {% endif %}
                                     {% endif %}
@@ -387,7 +535,7 @@
         </div>
     </div>
 
-    <!-- RFQ Modal (Copied from Homepage) -->
+    <!-- RFQ Modal -->
     <div id="rfqModal"
          class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
          data-kt-modal="true" role="dialog" aria-labelledby="rfqModalTitle" aria-modal="true">
@@ -452,7 +600,7 @@
 </div>
 
 <script>
-// CSRF Token Helper (Unchanged)
+// CSRF Token Helper
 function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
@@ -469,22 +617,49 @@ function getCookie(name) {
 }
 const csrftoken = getCookie('csrftoken');
 
+// Sidebar Toggle for Mobile
+document.addEventListener('DOMContentLoaded', () => {
+    const sidebar = document.querySelector('.amazon-sidebar');
+    const toggleButton = document.querySelector('.sidebar-toggle');
+
+    if (toggleButton && sidebar) {
+        toggleButton.addEventListener('click', () => {
+            sidebar.classList.toggle('hidden');
+        });
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth < 768 && !sidebar.contains(e.target) && !toggleButton.contains(e.target)) {
+                sidebar.classList.add('hidden');
+            }
+        });
+    }
+});
+
+// Existing Event Listeners
 document.addEventListener('click', function(e) {
+    const sidebar = document.querySelector('.amazon-sidebar');
+    const toggleButton = document.querySelector('.sidebar-toggle');
+
     // Handle clear search button
     if (e.target.closest('#clear-search')) {
         e.preventDefault();
         const searchInput = document.getElementById('search-input');
         const clearButton = document.getElementById('clear-search');
-        const sidebar = document.querySelector('.amazon-sidebar');
 
         if (searchInput) {
-            searchInput.value = ''; // Clear the search input
+            searchInput.value = '';
         }
         if (clearButton) {
-            clearButton.style.display = 'none'; // Hide the clear button
+            clearButton.style.display = 'none';
         }
         if (sidebar) {
-            sidebar.style.display = ''; // Show sidebar
+            sidebar.style.display = '';
+            sidebar.classList.remove('hidden');
+        }
+        if (toggleButton && window.innerWidth < 768) {
+            sidebar.classList.add('hidden');
+            toggleButton.style.display = 'block';
         }
 
         // Reset to first category's products
@@ -493,14 +668,11 @@ document.addEventListener('click', function(e) {
             const firstCategoryId = firstCategory.id;
             const firstArrow = document.getElementById("arrow-" + firstCategoryId.replace("cat-", ""));
             if (firstCategory && firstArrow) {
-                // Close all categories
                 document.querySelectorAll('[id^="cat-"]').forEach(el => el.classList.add('hidden'));
                 document.querySelectorAll('[id^="arrow-"]').forEach(arrow => arrow.classList.remove('rotate-180'));
-                // Open the first category
                 firstCategory.classList.remove("hidden");
                 firstArrow.classList.add("rotate-180");
                 
-                // Find the first last category with products
                 const firstLastCategoryLink = firstCategory.querySelector('.category-link[data-last-category]');
                 if (firstLastCategoryLink) {
                     const firstLastCategoryId = firstLastCategoryLink.dataset.lastCategory;
@@ -519,9 +691,12 @@ document.addEventListener('click', function(e) {
         e.preventDefault();
         const link = e.target.closest('.category-link');
         const lastCategoryId = link.dataset.lastCategory;
-        const sidebar = document.querySelector('.amazon-sidebar');
         if (sidebar) {
-            sidebar.style.display = ''; // Show sidebar
+            sidebar.style.display = '';
+            sidebar.classList.remove('hidden');
+        }
+        if (toggleButton && window.innerWidth < 768) {
+            sidebar.classList.add('hidden');
         }
         fetchProducts({ last_category: lastCategoryId, page: 1 });
     }
@@ -563,7 +738,7 @@ document.addEventListener('click', function(e) {
                 button.style.background = '#3b82f6';
                 button.style.color = 'white';
                 button.innerHTML = `In cart <i class="ki-filled ki-handcart text-white"></i>`;
-                button.onclick = null; // Remove click handler
+                button.onclick = null;
             } else {
                 alert("Something went wrong");
             }
@@ -601,7 +776,7 @@ document.addEventListener('click', function(e) {
         .catch(error => console.error('Wishlist toggle error:', error));
     }
 
-    // Handle RFQ Modal Open (Added from Homepage)
+    // Handle RFQ Modal Open
     if (e.target.closest('.open-rfq-modal')) {
         const button = e.target.closest('.open-rfq-modal');
         const productId = button.getAttribute('data-product-id');
@@ -618,17 +793,15 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// Toggle Category Function (Unchanged)
+// Toggle Category Function
 function toggleCategory(id) {
     const content = document.getElementById(id);
     const arrow = document.getElementById("arrow-" + id.replace("cat-", ""));
     const alreadyOpen = !content.classList.contains("hidden");
 
-    // Close all categories
     document.querySelectorAll('[id^="cat-"]').forEach(el => el.classList.add('hidden'));
     document.querySelectorAll('[id^="arrow-"]').forEach(arrow => arrow.classList.remove('rotate-180'));
 
-    // Toggle the clicked category
     if (!alreadyOpen) {
         content.classList.remove("hidden");
         arrow.classList.add("rotate-180");
@@ -638,35 +811,42 @@ function toggleCategory(id) {
     }
 }
 
-// RFQ Modal Close Function (Added from Homepage)
+// RFQ Modal Close Function
 function closeRFQModal() {
     document.getElementById('rfqModal').classList.add('hidden');
 }
 
-// Initialize on DOM load (Updated to include RFQ modal initialization)
+// Initialize on DOM load
 document.addEventListener('DOMContentLoaded', () => {
     const searchQuery = new URLSearchParams(window.location.search).get('q');
     const searchInput = document.getElementById('search-input');
     const clearButton = document.getElementById('clear-search');
     const sidebar = document.querySelector('.amazon-sidebar');
+    const toggleButton = document.querySelector('.sidebar-toggle');
 
-    // Initialize search input and clear button
     if (searchQuery && searchInput && clearButton) {
         searchInput.value = searchQuery;
         clearButton.style.display = 'block';
         if (sidebar) {
-            sidebar.style.display = 'none'; // Hide sidebar only if search query exists in URL
+            sidebar.style.display = 'none';
+            sidebar.classList.add('hidden');
+        }
+        if (toggleButton) {
+            toggleButton.style.display = 'block';
         }
     } else if (clearButton) {
         clearButton.style.display = 'none';
     }
 
-    // Initialize sidebar and default category
     if (!searchQuery) {
         if (sidebar) {
-            sidebar.style.display = ''; // Show sidebar by default
+            sidebar.style.display = '';
+            sidebar.classList.remove('hidden');
         }
-        // Open the first category and fetch its products
+        if (toggleButton && window.innerWidth < 768) {
+            sidebar.classList.add('hidden');
+            toggleButton.style.display = 'block';
+        }
         const firstCategory = document.querySelector('[id^="cat-"]');
         if (firstCategory) {
             const firstCategoryId = firstCategory.id;
@@ -675,7 +855,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 firstCategory.classList.remove("hidden");
                 firstArrow.classList.add("rotate-180");
                 
-                // Find the first last category with products
                 const firstLastCategoryLink = firstCategory.querySelector('.category-link[data-last-category]');
                 if (firstLastCategoryLink) {
                     const firstLastCategoryId = firstLastCategoryLink.dataset.lastCategory;
@@ -685,24 +864,31 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Search form submission
     const searchForm = document.getElementById('search-form');
     if (searchForm) {
         searchForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const searchQuery = searchInput ? searchInput.value.trim() : '';
             if (searchQuery && sidebar && clearButton) {
-                sidebar.style.display = 'none'; // Hide sidebar only on form submission
+                sidebar.style.display = 'none';
+                sidebar.classList.add('hidden');
                 clearButton.style.display = 'block';
+                if (toggleButton) {
+                    toggleButton.style.display = 'block';
+                }
             } else if (sidebar && clearButton) {
                 sidebar.style.display = '';
+                sidebar.classList.remove('hidden');
                 clearButton.style.display = 'none';
+                if (toggleButton && window.innerWidth < 768) {
+                    sidebar.classList.add('hidden');
+                    toggleButton.style.display = 'block';
+                }
             }
             fetchProducts({ q: searchQuery, page: 1 });
         });
     }
 
-    // Sorting dropdown
     const selectDisplay = document.querySelector('[data-kt-select-display]');
     const selectDropdown = document.querySelector('[data-kt-select-dropdown]');
     if (selectDisplay && selectDropdown) {
@@ -711,25 +897,20 @@ document.addEventListener('DOMContentLoaded', () => {
             selectDisplay.setAttribute('aria-expanded', selectDropdown.classList.contains('hidden') ? 'false' : 'true');
         });
 
-        // Handle sorting option selection
         document.querySelectorAll('[data-kt-select-option]').forEach(option => {
             option.addEventListener('click', () => {
                 const value = option.getAttribute('data-value');
                 const text = option.getAttribute('data-text');
-                // Update dropdown display text and data-selected attribute
                 selectDisplay.textContent = text;
                 selectDisplay.setAttribute('data-selected', value);
-                // Update selected state in dropdown
                 document.querySelectorAll('[data-kt-select-option]').forEach(opt => {
                     opt.classList.remove('selected');
                     opt.setAttribute('aria-selected', 'false');
                 });
                 option.classList.add('selected');
                 option.setAttribute('aria-selected', 'true');
-                // Close dropdown
                 selectDropdown.classList.add('hidden');
                 selectDisplay.setAttribute('aria-expanded', 'false');
-                // Fetch products with new sort option
                 const params = new URLSearchParams(window.location.search);
                 fetchProducts({ 
                     sort_by: value, 
@@ -741,7 +922,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Close dropdown when clicking outside
     document.addEventListener('click', (e) => {
         if (selectDisplay && !selectDisplay.contains(e.target) && 
             selectDropdown && !selectDropdown.contains(e.target)) {
@@ -750,7 +930,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Input event to show/hide clear button and fetch suggestions
     if (searchInput) {
         searchInput.addEventListener('input', () => {
             const value = searchInput.value.trim();
@@ -758,7 +937,7 @@ document.addEventListener('DOMContentLoaded', () => {
             else if (clearButton) clearButton.style.display = 'none';
 
             if (value.length > 2) {
-                fetch('/api/suggestions/?q=' + encodeURIComponent(value)) // Replace with your API endpoint
+                fetch('/api/suggestions/?q=' + encodeURIComponent(value))
                     .then(response => response.json())
                     .then(data => {
                         const suggestionsList = document.getElementById('suggestions-list');
@@ -778,7 +957,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Handle suggestion selection
     const suggestionsList = document.getElementById('suggestions-list');
     if (suggestionsList) {
         suggestionsList.addEventListener('click', (e) => {
@@ -790,20 +968,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 const sidebar = document.querySelector('.amazon-sidebar');
 
                 if (searchInput) searchInput.value = suggestion;
-                if (clearButton) clearButton.style.display = 'block'; // Show clear button
-                document.getElementById('search-suggestions').classList.add('hidden'); // Hide suggestions dropdown
-
-                // Hide sidebar and fetch products for the selected suggestion
+                if (clearButton) clearButton.style.display = 'block';
+                document.getElementById('search-suggestions').classList.add('hidden');
                 if (sidebar) {
-                    sidebar.style.display = 'none'; // Hide the category sidebar
+                    sidebar.style.display = 'none';
+                    sidebar.classList.add('hidden');
                 }
-                fetchProducts({ q: suggestion, page: 1 }); // Fetch products for the selected suggestion
+                if (toggleButton) {
+                    toggleButton.style.display = 'block';
+                }
+                fetchProducts({ q: suggestion, page: 1 });
             }
         });
     }
 });
 
-// Fetch products function (Unchanged)
+// Fetch products function
 function fetchProducts(params) {
     const urlParams = new URLSearchParams();
     Object.keys(params).forEach(key => {
@@ -827,34 +1007,29 @@ function fetchProducts(params) {
         const newResultsHeader = doc.querySelector('#results-header');
         const newSelectDisplay = doc.querySelector('[data-kt-select-display]');
         
-        // Update product grid
         if (newProductGrid) {
             const productGrid = document.querySelector('#product-grid');
             if (productGrid) {
                 productGrid.innerHTML = newProductGrid.innerHTML;
             }
         }
-        // Update pagination
         if (newPagination) {
             const paginationContainer = document.querySelector('#pagination');
             if (paginationContainer) {
                 paginationContainer.innerHTML = newPagination.innerHTML;
             }
         }
-        // Update results header
         if (newResultsHeader) {
             const resultsHeader = document.querySelector('#results-header');
             if (resultsHeader) {
                 resultsHeader.innerHTML = newResultsHeader.innerHTML;
             }
         }
-        // Update dropdown display
         if (newSelectDisplay) {
             const selectDisplay = document.querySelector('[data-kt-select-display]');
             if (selectDisplay) {
                 selectDisplay.textContent = newSelectDisplay.textContent;
                 selectDisplay.setAttribute('data-selected', newSelectDisplay.getAttribute('data-selected'));
-                // Update selected state in dropdown
                 const sortBy = urlParams.get('sort_by') || '2';
                 document.querySelectorAll('[data-kt-select-option]').forEach(opt => {
                     opt.classList.remove('selected');
@@ -867,7 +1042,6 @@ function fetchProducts(params) {
             }
         }
 
-        // Update URL without reload
         window.history.pushState({}, '', url);
     })
     .catch(error => console.error('Fetch products error:', error));
