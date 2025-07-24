@@ -180,6 +180,7 @@ class Order(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders')
     payment = models.ForeignKey('Payment', on_delete=models.SET_NULL, null=True, blank=True, related_name='order')
     order_id = models.CharField(max_length=50, unique=True)  # e.g., X319330-S24
+    phone_number = models.CharField(max_length=20, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     shipping_fees = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
