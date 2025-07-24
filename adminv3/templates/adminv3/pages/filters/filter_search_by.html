@@ -8,10 +8,23 @@
 
 
         <div class="d-flex align-items-center">
-            <button type="submit" class="btn btn-primary me-5" style="margin-left: -14px;">Search</button>
-            {% if show_advance_search_link %}
-                <a href="#" id="kt_horizontal_search_advanced_link" class="btn btn-link" data-bs-toggle="collapse" data-bs-target="#kt_advanced_search_form">Advanced Search</a>
+            <!-- Search button -->
+            <button type="submit" class="btn btn-primary me-3 " style="margin-left: -14px;">Search</button>
+
+            {% if request.GET and request.GET.urlencode %}
+                <a href="{{ request.path }}" class="btn btn-primary me-3 mx-1 " style="margin-left: -14px;">Clear Filters</a>
             {% endif %}
+
+            <!-- Advanced Search Toggle (optional) -->
+            {% if show_advance_search_link %}
+                <a href="#" id="kt_horizontal_search_advanced_link" class="btn btn-link me-3"
+                   data-bs-toggle="collapse" data-bs-target="#kt_advanced_search_form">
+                    Advanced Search
+                </a>
+            {% endif %}
+
+            <!-- Clear Filters button (shown only if any filter is applied) -->
+
         </div>
     </div>
 
