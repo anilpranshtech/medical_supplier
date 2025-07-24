@@ -121,8 +121,14 @@
                             </div>
                             <!-- Navigation -->
                             <div class="flex justify-end items-center flex-wrap gap-3">
-                                <a class="kt-btn kt-btn-outline" href="{% url 'dashboard:my_orders' %}">View All Orders</a>
-                                <a class="kt-btn kt-btn-primary" href="{% url 'dashboard:home' %}">Continue Shopping</a>
+                                <a class="kt-btn kt-btn-outline" href="{% url 'dashboard:my_orders' %}">
+                                    <i class="ki-filled ki-parcel text-base"></i>
+                                    View All Orders
+                                </a>
+                                <a class="kt-btn kt-btn-primary" href="{% url 'dashboard:home' %}">
+                                    <i class="ki-filled ki-handcart text-base"></i>
+                                    Continue Shopping
+                                </a>
                             </div>
                         </div>
 

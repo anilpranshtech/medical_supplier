@@ -116,14 +116,14 @@
                                                         ${{ item.product.price }}
                                                     </span>
                                                     {% endif %}
-                                                                                                       <span class="text-sm font-semibold text-mono">
-    {% if item.product.offer_active and item.product.offer_percentage %}
-       
-        <span>${{ item.get_total_price|floatformat:2 }}</span>
-    {% else %}
-        <span>${{ item.get_total_price|floatformat:2 }}</span>
-    {% endif %}
-</span>
+                                                    <span class="text-sm font-semibold text-mono">
+                                                        {% if item.product.offer_active and item.product.offer_percentage %}
+
+                                                            <span>${{ item.get_total_price|floatformat:2 }}</span>
+                                                        {% else %}
+                                                            <span>${{ item.get_total_price|floatformat:2 }}</span>
+                                                        {% endif %}
+                                                    </span>
                                                 </div>
                                             </div>
                                         </div>
@@ -137,7 +137,12 @@
                         </div>
                         <div class="flex justify-end items-center flex-wrap gap-3">
                             <a class="kt-btn kt-btn-outline" fdprocessedid="1zln6" href="{% url 'dashboard:home' %}">
+                                <i class="ki-filled ki-cross text-base"></i>
                                 Cancel
+                            </a>
+                            <a class="kt-btn kt-btn-primary" href="{% url 'dashboard:home' %}">
+                                <i class="ki-filled ki-plus text-base"></i>
+                                Add Items
                             </a>
                             <a class="kt-btn kt-btn-primary"
                                href="{% url 'dashboard:shipping_info' %}">

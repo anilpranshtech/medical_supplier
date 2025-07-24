@@ -42,14 +42,18 @@
                                     <span class="text-sm font-medium text-mono">{{ order.status|title }}</span>
                                 </div>
                                 <div class="flex flex-col gap-2">
-                                    <a href="{% url 'dashboard:order_receipt' order.id %}" class="kt-btn kt-btn-sm kt-btn-primary">
+                                    <a href="{% url 'dashboard:order_receipt' order.id %}" class="kt-btn kt-btn-primary">
+                                        <i class="ki-filled ki-cheque text-base"></i>
                                         View Receipt
                                     </a>
                                 </div>
                                 <div>
                                     <form method="post" action="{% url 'dashboard:reorder' order.id %}">
                                         {% csrf_token %}
-                                        <button type="submit" class="kt-btn kt-btn-sm kt-btn-destructive">Reorder</button>
+                                        <button type="submit" class="kt-btn kt-btn-destructive">
+                                            <i class="ki-filled ki-parcel text-base"></i>
+                                            Reorder
+                                        </button>
                                     </form>
                                 </div>
                             </div>

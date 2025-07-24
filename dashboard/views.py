@@ -1971,70 +1971,78 @@ class UserProfile(LoginRequiredMixin, TemplateView):
         # Get user profile and type
         profile = None
         profile_type = None
+
         try:
             profile = RetailProfile.objects.get(user=user)
-            phone = None
             profile_type = 'retailer'
         except RetailProfile.DoesNotExist:
             try:
                 profile = WholesaleBuyerProfile.objects.get(user=user)
-                phone = None
                 profile_type = 'wholesaler'
             except WholesaleBuyerProfile.DoesNotExist:
                 try:
                     profile = SupplierProfile.objects.get(user=user)
-                    phone = None
                     profile_type = 'supplier'
                 except SupplierProfile.DoesNotExist:
                     pass
+
         context['profile'] = profile
         context['profile_type'] = profile_type
 
-        # Get phone number
-        phone = None
-        if profile_type == 'doctor':
-            phone = profile.phone_number
-        elif profile_type == 'medical_supplier':
-            phone = profile.phone_details
-        elif profile_type in ('corporate', 'wholesaler'):
-            phone = None
+        # Phone
+        phone = profile.phone if profile else None
         context['phone'] = phone or 'Not set'
 
-        # Get avatar
-        avatar = None
-        if profile_type in ('medical_supplier', 'retailer', 'wholesaler', 'supplier'):
-            avatar = profile.profile_picture
+        # Avatar (profile picture)
+        avatar = profile.profile_picture if profile else None
         context['avatar'] = avatar
 
-        # Get default address
+        # Default billing address
         try:
-            default_address = CustomerBillingAddress.objects.get(user=user, is_default=True , is_deleted=False)
-            context['default_address'] = default_address
+            default_address = CustomerBillingAddress.objects.get(user=user, is_default=True, is_deleted=False)
         except CustomerBillingAddress.DoesNotExist:
-            context['default_address'] = None
+            default_address = None
+        context['default_address'] = default_address
 
         # Order summary
-        orders = Order.objects.filter(order_by=user)
-        context['total_orders'] = orders.count()
-        context['pending_orders'] = orders.filter(status='pending').count()
-        context['delivered_orders'] = orders.filter(status='delivered').count()
-        context['cancelled_orders'] = orders.filter(status='cancelled').count()
+        orders = Order.objects.filter(user=user)
+        context.update({
+            'total_orders': orders.count(),
+            'pending_orders': orders.filter(status='pending').count(),
+            'delivered_orders': orders.filter(status='delivered').count(),
+            'cancelled_orders': orders.filter(status='cancelled').count(),
+        })
 
         # Wishlist count
         context['wishlist_count'] = WishlistProduct.objects.filter(user=user).count()
 
-        # Payment method (get most recent paid payment)
+        # Latest payment info
         stripe_payment = StripePayment.objects.filter(user=user, paid=True).order_by('-created_at').first()
         razorpay_payment = RazorpayPayment.objects.filter(user=user, paid=True).order_by('-created_at').first()
         cod_payment = CODPayment.objects.filter(user=user, paid=True).order_by('-created_at').first()
 
         latest_payment = None
+
         if stripe_payment:
-            latest_payment = {'type': 'Stripe', 'details': f"{stripe_payment.name} ending in {stripe_payment.stripe_customer_id[-4:]}", 'created_at': stripe_payment.created_at}
+            latest_payment = {
+                'type': 'Stripe',
+                'details': f"{stripe_payment.name} ending in {stripe_payment.stripe_customer_id[-4:]}",
+                'created_at': stripe_payment.created_at
+            }
+
         if razorpay_payment and (not latest_payment or razorpay_payment.created_at > latest_payment['created_at']):
-            latest_payment = {'type': 'Razorpay', 'details': f"{razorpay_payment.name} ending in {razorpay_payment.razorpay_payment_id[-4:]}", 'created_at': razorpay_payment.created_at}
+            latest_payment = {
+                'type': 'Razorpay',
+                'details': f"{razorpay_payment.name} ending in {razorpay_payment.razorpay_payment_id[-4:]}",
+                'created_at': razorpay_payment.created_at
+            }
+
         if cod_payment and (not latest_payment or cod_payment.created_at > latest_payment['created_at']):
-            latest_payment = {'type': 'COD', 'details': f"COD - {cod_payment.name}", 'created_at': cod_payment.created_at}
+            latest_payment = {
+                'type': 'COD',
+                'details': f"COD - {cod_payment.name}",
+                'created_at': cod_payment.created_at
+            }
 
         context['payment_method'] = latest_payment
 

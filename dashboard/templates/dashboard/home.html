@@ -241,7 +241,7 @@
                                         data-product-price="{{ product.price }}"
                                         data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
                                         data-quantity="1">
-                                    RFQ <i class="ki-solid ki-file-text text-xs"></i>
+                                    RFQ <i class="ki-filled ki-directbox-default text-xs"></i>
                                 </button>
                                 {% endif %}
                             {% endif %}
@@ -304,7 +304,7 @@
                                                 data-product-price="{{ product.discounted_price|floatformat:2 }}"
                                                 data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
                                                 data-quantity="1">
-                                            RFQ <i class="ki-solid ki-file-text"></i>
+                                            RFQ <i class="ki-filled ki-directbox-default"></i>
                                         </button>
                                         {% endif %}
                                     {% endif %}
@@ -405,7 +405,7 @@
                                                 data-product-price="{{ product.discounted_price|floatformat:2 }}"
                                                 data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
                                                 data-quantity="1">
-                                            RFQ <i class="ki-solid ki-file-text"></i>
+                                            RFQ <i class="ki-filled ki-directbox-default"></i>
                                         </button>
                                         {% endif %}
                                     {% endif %}
@@ -523,7 +523,7 @@
                                             data-product-price="{{ product.price }}"
                                             data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
                                             data-quantity="1">
-                                        RFQ <i class="ki-solid ki-file-text"></i>
+                                        RFQ <i class="ki-filled ki-directbox-default"></i>
                                     </button>
                                     {% endif %}
                                 {% endif %}
@@ -629,7 +629,7 @@
                                             data-product-price="{{ product.price }}"
                                             data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
                                             data-quantity="1">
-                                        RFQ <i class="ki-solid ki-file-text"></i>
+                                        RFQ <i class="ki-filled ki-directbox-default"></i>
                                     </button>
                                     {% endif %}
                                 {% endif %}
@@ -735,7 +735,7 @@
                                             data-product-price="{{ product.price }}"
                                             data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
                                             data-quantity="1">
-                                        RFQ <i class="ki-solid ki-file-text"></i>
+                                        RFQ <i class="ki-filled ki-directbox-default"></i>
                                     </button>
                                     {% endif %}
                                 {% endif %}
@@ -938,9 +938,10 @@
                 <div class="kt-card-footer px-5 py-4 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700">
                     <button type="button"
                             class="kt-btn kt-btn-outline kt-btn-sm text-gray-650 hover:bg-gray-900 dark:hover:bg-gray-700"
-                            onclick="closeRFQModal()">Cancel
+                            onclick="closeRFQModal()"><i class="ki-filled ki-cross"></i>Cancel
                     </button>
                     <button type="submit" class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center" id="rfqSubmitBtn">
+                        <i class="ki-filled ki-directbox-default"></i>
                         Submit RFQ
                         <span class="loader"></span>
                     </button>
