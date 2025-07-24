@@ -178,23 +178,31 @@
       <p class="text-gray-650 dark:text-gray-650 text-base leading-relaxed mb-6">
         {{ product.description|default:'No description available' }}
       </p>
+<span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">save {{ product.offer_percentage|floatformat:0 }}%</span>
+   <div class="flex items-center gap-4 mb-6">
+    
+    {% if product.offer_active and product.offer_percentage and product.offer_percentage > 0 %}
+     
+        <!-- Show original price as struck-through -->
+        <span class="text-base font-medium text-gray-500 line-through">
+            ${{ product.price|floatformat:2 }}
+        </span>
 
-    <!-- Pricing -->
-      <div class="flex items-center gap-4 mb-6">
-        {% if product.original_price and product.original_price > product.price %}
-        <span class="text-base font-medium text-gray-650 line-through">
-          ${{ product.original_price|floatformat:2 }}
-        </span>
-        {% endif %}
+        <!-- Show discounted price -->
         <span class="text-2xl font-bold text-gray-650 dark:text-white">
-          ${{ product.price|floatformat:2 }}
+            ${{ product.discounted_price|floatformat:2 }}
         </span>
-        {% if product.offer_percentage and product.offer_percentage > 0 %}
-        <span class="text-sm font-medium text-green-600 bg-green-100 px-2 py-1 rounded-full">
-          Save {{ product.offer_percentage|floatformat:0 }}%
+
+        <!-- Discount percentage badge -->
+         
+    {% else %}
+        <!-- No offer: show regular price only -->
+        <span class="text-2xl font-bold text-gray-650 dark:text-white">
+            ${{ product.price|floatformat:2 }}
         </span>
-        {% endif %}
-      </div>
+    {% endif %}
+</div>
+
 
     <!-- Buttons -->
     <div class="flex items-center gap-3 mt-4">
