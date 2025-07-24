@@ -25,58 +25,46 @@ Users
                             {% include "adminv3/pages/filters/filter_sort_by.html" %}
                             {% include "adminv3/pages/filters/filter_search_by.html"  with show_advance_search_link=True search_help_text='Choices: User Email' search_placeholder_text='Search' %}
                                 <div class="collapse" id="kt_advanced_search_form">
-
                                   <div class="separator separator-dashed mt-9 mb-6"></div>
-
                                   <div class="row g-8 mb-8">
                                       <div class="col-xxl-12">
-
                                           <div class="row g-8">
                                             {% include "adminv3/pages/filters/filter_account_status.html" %}
                                             {% include "adminv3/pages/filters/filter_account_type.html" %}
                                             {% include "adminv3/pages/filters/filter_user_role.html" %}
+                                            {% include "adminv3/pages/filters/filter_permission_group.html" %}
                                           </div>
                                       </div>
+
+                                      <div class="col-xxl-12">
+                                          <div class="row g-8">
+                                            {% include "adminv3/pages/filters/filter_created_date_range_picker.html" %}
+                                          </div>
+                                      </div>
+
                                   </div>
+
 
                               </div>
                         </div>
-
                     </div>
-
                 </form>
 
 
                 <div class="card card-flush mt-5 mb-3">
-                    <div class="table-responsive">
+
                         <div class="card-header align-items-center py-5 gap-2 gap-md-5">
-                            <div class="card-title">
-                                <div class="d-flex align-items-center position-relative my-1">
-                                    <i class="fas fa-search fs-3 position-absolute ms-4"></i>
-                                    <input type="text" id="search-user" class="form-control form-control-solid w-250px ps-12" placeholder="Search User" value="{{ search_query }}">
-                                </div>
-                            </div>
 
                             <div class="card-toolbar flex-row-fluid justify-content-end gap-5">
-                                <div class="w-100 mw-150px">
-                                    <form method="get" id="filterForm">
-                                        <select name="role" class="form-select form-select-solid" data-control="select2" data-hide-search="true" onchange="document.getElementById('filterForm').submit();">
-                                            <option value="">All</option>
-                                            <option value="retailer" {% if selected_role == 'retailer' %}selected{% endif %}>Retailer</option>
-                                            <option value="wholesaler" {% if selected_role == 'wholesaler' %}selected{% endif %}>Wholesaler</option>
-                                            <option value="supplier" {% if selected_role == 'supplier' %}selected{% endif %}>Supplier</option>
-                                        </select>
-                                    </form>
-                                </div>
 
 
-
+                                {% if "auth.add_user" in user_permissions_list  %}
                                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#_model_add_new_user">
                                     Add User
                                 </button>
 
                                 {% include "adminv3/snippets/models/add_new_user.html" %}
-
+                                {% endif %}
                             </div>
                         </div>
 
@@ -166,9 +154,8 @@ Users
                             </div>
                         </div>
 
-                    </div>
-                </div>
 
+                </div>
 
                 {% include "adminv3/pages/pagination.html" %}
 
@@ -183,6 +170,9 @@ Users
 {% endblock content %}
 
 {% block page_only_scripts %}
+{% include "adminv3/pages/filters/filter_created_date_range_picker_js.html" %}
+
+
 <script>
     // Search functionality
     document.addEventListener("DOMContentLoaded", function () {

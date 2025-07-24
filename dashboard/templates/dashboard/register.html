@@ -329,7 +329,7 @@
             </div>
         {% endif %}
 
-        <form method="post" class="space-y-5">
+        <form method="post" class="space-y-5" id="registrationForm" novalidate>
             {% csrf_token %}
             <input type="hidden" name="user_type" id="user_type_input" value="{{ form_data.user_type|default:'buyer' }}">
 
@@ -733,5 +733,58 @@
         {% endif %}
     });
 </script>
+<script>
+document.querySelector("form").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const form = this;
+    const formData = new FormData(form);
+
+    fetch(form.action || window.location.href, {
+        method: "POST",
+        headers: {
+            "X-Requested-With": "XMLHttpRequest"
+        },
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) return response.json().then(err => Promise.reject(err));
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            // Redirect or update UI based on response
+            if (data.redirect === "verify_otp") {
+                window.location.href = window.location.href;  // reload page to show OTP screen
+            } else if (data.redirect) {
+                window.location.href = data.redirect;
+            }
+        }
+    })
+    .catch(err => {
+        // Clear existing errors
+        document.querySelectorAll(".error-message").forEach(el => el.style.display = "none");
+        document.querySelectorAll(".input-error").forEach(el => el.classList.remove("input-error"));
+
+        // Display new errors
+        if (err.errors) {
+            for (const field in err.errors) {
+                const errorEl = document.getElementById(`${field}_error`);
+                const inputEl = document.getElementById(field);
+                if (errorEl) {
+                    errorEl.textContent = err.errors[field];
+                    errorEl.style.display = "block";
+                }
+                if (inputEl) {
+                    inputEl.classList.add("input-error");
+                }
+            }
+        } else {
+            alert("Something went wrong. Please try again.");
+        }
+    });
+});
+</script>
+
 </body>
 </html>

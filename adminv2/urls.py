@@ -24,8 +24,8 @@ urlpatterns = [
     
     #order
     path('orderlist/', OrderListingView.as_view(), name='order_listing'),
-    path('order-detail/<int:pk>/', OrderDetailesView.as_view(), name='order_detail'),
-    path('orders/delete/<int:pk>/', OrderDeleteView.as_view(), name='delete_order'),
+    path('order-detail/<slug:order_id>/', OrderDetailsView.as_view(), name='order_detail'),
+    path('orders/delete/<slug:order_id>/', OrderDeleteView.as_view(), name='order_delete'),
 
     # Cart
     path('cart/products', CartProductsView.as_view(), name='cart_product_list'),
@@ -55,6 +55,11 @@ urlpatterns = [
     #RFQ Request for Quotation
     path('rfq/', RFQListView.as_view(), name='rfq_list'),
     path('rfq/<int:pk>/quote/', SupplierQuotationUpdateView.as_view(), name='rfq_quote'),
+
+    #Banner Upload
+    path('banner-list/', BannerListView.as_view(), name='banner_list'),
+    path('banner-upload/', BannerCreateView.as_view(), name='banner_upload'),
+    path('banner-edit/<int:pk>/', BannerUpdateView.as_view(), name='banner_edit'),
     
 
 ]

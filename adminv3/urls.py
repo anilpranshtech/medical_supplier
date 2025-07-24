@@ -36,5 +36,20 @@ urlpatterns = [
 
     # Products urls
     path('products/list/', ProductsListView.as_view(), name='products_list'),
+    path('products/add/', AddproductsView.as_view(), name='add_product'),
+    path('products/edit/<int:pk>/', EditproductsView.as_view(), name='edit_product'),
+    path('products/delete/<int:pk>/', DeleteProductView.as_view(), name='delete_product'),
+
+    # categories urls
+    path('categories/create/', CreateProductCategoryView.as_view(), name='create_category'),
+    path('create-sub-category/', CreateProductSubCategoryView.as_view(), name='create_subcategory'),
+    path('create-last-category/', CreateProductLastCategoryView.as_view(), name='create_lastcategory'),
+    path('delete-product-image/<int:pk>/', DeleteProductImageView.as_view(), name='delete_product_image'),
+
+    # Orders Urls
+    path('orders/list/', OrderListingView.as_view(), name='orders_list'),
+    path('order/detail/<slug:order_id>/', OrderDetailesView.as_view(), name='orders_detail'),
+    path('orders/delete/<int:pk>/', OrderDeleteView.as_view(), name='order_delete'),
+
 
 ]

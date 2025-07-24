@@ -151,18 +151,11 @@
 <!-- Begin Medical Banner Slider -->
 <div class="kt-slider-container mt-7">
     <div class="kt-slider" id="slider">
-        <a href="#" class="kt-slide">
-            <img src="{% static 'metronic/tailwind/dist/assets/media/banners/medical_banner.jpg' %}"
-                 alt="Protective Masks"/>
-        </a>
-        <a href="#" class="kt-slide">
-            <img src="{% static 'metronic/tailwind/dist/assets/media/banners/medical_banner2.jpg' %}"
-                 alt="Hand Sanitizers"/>
-        </a>
-        <a href="#" class="kt-slide">
-            <img src="{% static 'metronic/tailwind/dist/assets/media/banners/medical_banner3.jpg' %}"
-                 alt="Home Health Checkup Kits"/>
-        </a>
+        {% for banner in banners %}
+            <a href="{{ banner.link|default:'#' }}" class="kt-slide">
+                <img src="{{ banner.image.url }}" alt="{{ banner.title }}">
+            </a>
+        {% endfor %}
     </div>
     <button class="kt-nav-btn kt-nav-btn-left" onclick="prevSlide()" aria-label="Previous Slide">‹</button>
     <button class="kt-nav-btn kt-nav-btn-right" onclick="nextSlide()" aria-label="Next Slide">›</button>
@@ -248,7 +241,7 @@
                                         data-product-price="{{ product.price }}"
                                         data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
                                         data-quantity="1">
-                                    RFQ <i class="ki-solid ki-file-text text-xs"></i>
+                                    RFQ <i class="ki-filled ki-directbox-default text-xs"></i>
                                 </button>
                                 {% endif %}
                             {% endif %}
@@ -264,7 +257,7 @@
         </div>
     </div>
 
-    <!-- Special Offers -->
+   <!-- Special Offers -->
     <div class="section-container">
         <div class="space-y-5">
             <div class="flex items-center justify-between gap-4">
@@ -279,7 +272,7 @@
                         <div class="kt-card-content flex items-center flex-wrap sm:flex-nowrap justify-between gap-5 lg:gap-9 lg:px-7.5 p-5">
                             <div class="flex flex-col">
                                 <div class="mb-3">
-                                    {% if product.offer_percentage and product.offer_percentage > 0 %}
+                                    {% if product.offer_active and product.offer_percentage %}
                                     <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">save {{ product.offer_percentage|floatformat:0 }}%</span>
                                     {% endif %}
                                 </div>
@@ -308,10 +301,10 @@
                                         <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 open-rfq-modal"
                                                 data-product-id="{{ product.id }}"
                                                 data-product-name="{{ product.name }}"
-                                                data-product-price="{{ product.price }}"
+                                                data-product-price="{{ product.discounted_price|floatformat:2 }}"
                                                 data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
                                                 data-quantity="1">
-                                            RFQ <i class="ki-solid ki-file-text"></i>
+                                            RFQ <i class="ki-filled ki-directbox-default"></i>
                                         </button>
                                         {% endif %}
                                     {% endif %}
@@ -326,12 +319,14 @@
                                             <i class="ki-filled ki-heart heart-icon text-xs"></i>
                                         </button>
                                     {% endif %}
-                                    {% if product.original_price and product.original_price > product.price %}
+                                    {% if product.offer_active and product.offer_percentage %}
                                     <span class="text-base font-normal text-secondary-foreground line-through pt-[1px]">
-                                        ${{ product.original_price|floatformat:2 }}
+                                        ${{ product.price|floatformat:2 }}
                                     </span>
-                                    {% endif %}
+                                    <span class="text-base font-semibold text-mono">${{ product.discounted_price|floatformat:2 }}</span>
+                                    {% else %}
                                     <span class="text-base font-semibold text-mono">${{ product.price|floatformat:2 }}</span>
+                                    {% endif %}
                                 </div>
                             </div>
                             <a href="{% url 'dashboard:product_detail' product.id %}" class="block">
@@ -345,9 +340,9 @@
                                      data-product-category="{{ product.category|default:'Uncategorized' }}"
                                      data-product-rating="{{ product.rating|default:'4.5' }}"
                                      data-product-more-info="{{ product.more_info|default:'No additional info' }}"
-                                     data-product-price="{{ product.price|default:'0.00' }}"
-                                     data-product-original-price="{{ product.original_price|default:'' }}"
-                                     data-product-discount="{{ product.offer_percentage|default:'' }}"/>
+                                     data-product-price="{{ product.discounted_price|floatformat:2 }}"
+                                     data-product-original-price="{% if product.offer_active and product.offer_percentage %}{{ product.price|floatformat:2 }}{% endif %}"
+                                     data-product-discount="{% if product.offer_active and product.offer_percentage %}save {{ product.offer_percentage|floatformat:0 }}%{% endif %}"/>
                             </a>
                         </div>
                     </div>
@@ -368,17 +363,22 @@
                                          data-product-category="{{ product.category|default:'Uncategorized' }}"
                                          data-product-rating="{{ product.rating|default:'4.5' }}"
                                          data-product-more-info="{{ product.more_info|default:'No additional info' }}"
-                                         data-product-price="{{ product.price|default:'0.00' }}"
-                                         data-product-original-price="{{ product.original_price|default:'' }}"
-                                         data-product-discount="{{ product.offer_percentage|default:'' }}"/>
+                                         data-product-price="{{ product.discounted_price|floatformat:2 }}"
+                                         data-product-original-price="{% if product.offer_active and product.offer_percentage %}{{ product.price|floatformat:2 }}{% endif %}"
+                                         data-product-discount="{% if product.offer_active and product.offer_percentage %}save {{ product.offer_percentage|floatformat:0 }}%{% endif %}"/>
                                 </a>
                                 <div class="mb-3.5">
-                                    <span class="text-sm font-medium text-mono">${{ product.price|floatformat:2 }}</span>
-                                    {% if product.offer_percentage and product.offer_percentage > 0 %}
+                                    {% if product.offer_active and product.offer_percentage %}
+                                        <span class="text-sm font-normal text-secondary-foreground line-through pt-[1px]">
+                                    ${{ product.price|floatformat:2 }}
+                                </span>
+                                    <span class="text-sm font-medium text-mono">${{ product.discounted_price|floatformat:2 }}</span>
                                     <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">save {{ product.offer_percentage|floatformat:0 }}%</span>
+                                    {% else %}
+                                    <span class="text-sm font-medium text-mono">${{ product.price|floatformat:2 }}</span>
                                     {% endif %}
                                 </div>
-                                <span class="text-base font-medium text-mono mb-เกมจากค่าย PG Slot ในประเทศไทย3">{{ product.name|default:'Unnamed Product' }}</span>
+                                <span class="text-base font-medium text-mono mb-3">{{ product.name|default:'Unnamed Product' }}</span>
                                 <div class="flex items-center gap-2.5 mb-2.5">
                                     {% if request.user.is_authenticated %}
                                         {% if product.id in user_cart_ids %}
@@ -402,10 +402,10 @@
                                         <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 open-rfq-modal"
                                                 data-product-id="{{ product.id }}"
                                                 data-product-name="{{ product.name }}"
-                                                data-product-price="{{ product.price }}"
+                                                data-product-price="{{ product.discounted_price|floatformat:2 }}"
                                                 data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
                                                 data-quantity="1">
-                                            RFQ <i class="ki-solid ki-file-text"></i>
+                                            RFQ <i class="ki-filled ki-directbox-default"></i>
                                         </button>
                                         {% endif %}
                                     {% endif %}
@@ -415,10 +415,8 @@
                                         <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
                                     </button>
                                 </div>
-                                {% if product.original_price and product.original_price > product.price %}
-                                <span class="text-sm font-normal text-secondary-foreground line-through pt-[1px]">
-                                    ${{ product.original_price|floatformat:2 }}
-                                </span>
+                                {% if product.offer_active and product.offer_percentage %}
+                            
                                 {% endif %}
                             </div>
                         </div>
@@ -525,7 +523,7 @@
                                             data-product-price="{{ product.price }}"
                                             data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
                                             data-quantity="1">
-                                        RFQ <i class="ki-solid ki-file-text"></i>
+                                        RFQ <i class="ki-filled ki-directbox-default"></i>
                                     </button>
                                     {% endif %}
                                 {% endif %}
@@ -631,7 +629,7 @@
                                             data-product-price="{{ product.price }}"
                                             data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
                                             data-quantity="1">
-                                        RFQ <i class="ki-solid ki-file-text"></i>
+                                        RFQ <i class="ki-filled ki-directbox-default"></i>
                                     </button>
                                     {% endif %}
                                 {% endif %}
@@ -737,7 +735,7 @@
                                             data-product-price="{{ product.price }}"
                                             data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
                                             data-quantity="1">
-                                        RFQ <i class="ki-solid ki-file-text"></i>
+                                        RFQ <i class="ki-filled ki-directbox-default"></i>
                                     </button>
                                     {% endif %}
                                 {% endif %}
@@ -940,9 +938,10 @@
                 <div class="kt-card-footer px-5 py-4 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700">
                     <button type="button"
                             class="kt-btn kt-btn-outline kt-btn-sm text-gray-650 hover:bg-gray-900 dark:hover:bg-gray-700"
-                            onclick="closeRFQModal()">Cancel
+                            onclick="closeRFQModal()"><i class="ki-filled ki-cross"></i>Cancel
                     </button>
                     <button type="submit" class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center" id="rfqSubmitBtn">
+                        <i class="ki-filled ki-directbox-default"></i>
                         Submit RFQ
                         <span class="loader"></span>
                     </button>
@@ -963,7 +962,7 @@
                 </button>
             </div>
             <div class="kt-card-content p-5 text-center space-y-4">
-                <p class="text-gray-300 dark:text-gray-300 text-sm">
+                <p class="text-gray-650 dark:text-gray-300 text-sm">
                     You must be logged in to perform this action.
                 </p>
             </div>

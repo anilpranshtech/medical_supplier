@@ -1,7 +1,8 @@
 from datetime import timedelta
 
+from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
-
+from django.shortcuts import redirect
 
 
 def superuser_required(user):
@@ -18,3 +19,12 @@ def staff_required(user):
 class StaffAccountRequiredMixin(UserPassesTestMixin):
     def test_func(self):
         return staff_required(self.request.user)
+
+
+class PermissionRequiredMixin:
+    required_permissions = []
+    def dispatch(self, request, *args, **kwargs):
+        if not all(request.user.has_perm(perm) for perm in self.required_permissions):
+            messages.error(request, 'You do not have permission to perform this action.')
+            return redirect('adminv3:admin_v3_home')
+        return super().dispatch(request, *args, **kwargs)

@@ -28,11 +28,12 @@ from django.db import IntegrityError, transaction
 from django.utils.dateparse import parse_date
 from django.utils.timezone import localtime
 from django.db.models.functions import Coalesce,TruncDay
-from django.db.models import Sum, F, DecimalField
+from django.db.models import Sum, F, DecimalField, Prefetch
 from django.utils import timezone
 from datetime import timedelta
 from calendar import monthrange
-
+import logging
+logger = logging.getLogger(__name__)
 
 
 
@@ -40,18 +41,28 @@ class HomeView(LoginRequiredMixin, SupplierPermissionMixin, View):
     login_url = 'adminv2:admin_login'
 
     def get(self, request):
-        user = request.user
-        supplier_orders = Orders.objects.filter(order_to=user)
-        total_orders = supplier_orders.count()
-        subtotal = supplier_orders.annotate(
-            product_total=F('product__price') * F('quantity')
+        supplier = request.user
+
+        # Query orders for supplier's products
+        supplier_order_items = OrderItem.objects.filter(order_to=supplier).select_related(
+            'order', 'order_by', 'order_to', 'product__category'
+        )
+        orders = Order.objects.filter(items__order_to=supplier).distinct().select_related('user', 'payment')
+
+        # Total orders
+        total_orders = orders.count()
+
+        # Subtotal for supplier's items
+        subtotal = supplier_order_items.annotate(
+            product_total=F('price') * F('quantity')
         ).aggregate(
             total=Coalesce(Sum('product_total'), 0, output_field=DecimalField())
         )['total']
 
-        top_categories = supplier_orders.annotate(
+        # Top categories
+        top_categories = supplier_order_items.annotate(
             category_name=F('product__category__name'),
-            product_total=F('product__price') * F('quantity')
+            product_total=F('price') * F('quantity')
         ).values('category_name').annotate(
             total_sales=Sum('product_total')
         ).order_by('-total_sales')[:3]
@@ -72,95 +83,98 @@ class HomeView(LoginRequiredMixin, SupplierPermissionMixin, View):
                 'color': color_map.get(raw_color, raw_color)
             })
 
+        # Monthly sales data
         now = timezone.now()
         first_day = now.replace(day=1)
         last_day = now.replace(day=monthrange(now.year, now.month)[1])
-        
-        daily_sales = Orders.objects.filter(
-            order_to=user,
-            created_at__date__range=(first_day.date(), last_day.date())
+
+        daily_sales = supplier_order_items.filter(
+            order__created_at__date__range=(first_day.date(), last_day.date())
         ).annotate(
-            day=TruncDay('created_at'),
-            product_total=F('product__price') * F('quantity')
+            day=TruncDay('order__created_at'),
+            product_total=F('price') * F('quantity')
         ).values('day').annotate(
             total_sales=Sum('product_total')
         ).order_by('day')
-        discounted_daily_sales = Orders.objects.filter(
-            order_to=user,
-            created_at__date__range=(first_day.date(), last_day.date()),
+
+        discounted_daily_sales = supplier_order_items.filter(
+            order__created_at__date__range=(first_day.date(), last_day.date()),
             product__offer_active=True
         ).annotate(
-            day=TruncDay('created_at'),
-            product_total=F('product__price') * F('quantity')
+            day=TruncDay('order__created_at'),
+            product_total=F('price') * F('quantity')
         ).values('day').annotate(
             total_sales=Sum('product_total')
         ).order_by('day')
+
         days_in_month = (last_day - first_day).days + 1
         sales_data = [0] * days_in_month
         discounted_sales_data = [0] * days_in_month
         labels = []
-        
+
         current_date = first_day
         for i in range(days_in_month):
             labels.append(current_date.strftime('%d'))
             current_date += timedelta(days=1)
-        
+
         for sale in daily_sales:
             day_index = (sale['day'].date() - first_day.date()).days
             if 0 <= day_index < days_in_month:
-                sales_data[day_index] = float(sale['total_sales'])
+                sales_data[day_index] = float(sale['total_sales'] or 0)
+
         for sale in discounted_daily_sales:
             day_index = (sale['day'].date() - first_day.date()).days
             if 0 <= day_index < days_in_month:
-                discounted_sales_data[day_index] = float(sale['total_sales'])
+                discounted_sales_data[day_index] = float(sale['total_sales'] or 0)
 
         this_month_sales = sum(sales_data)
         this_month_discounted_sales = sum(discounted_sales_data)
+
+        # Previous month sales
         previous_month = first_day - timedelta(days=1)
         previous_month_first_day = previous_month.replace(day=1)
         previous_month_last_day = previous_month.replace(day=monthrange(previous_month.year, previous_month.month)[1])
-        
-        previous_month_discounted_sales = Orders.objects.filter(
-            order_to=user,
-            created_at__date__range=(previous_month_first_day.date(), previous_month_last_day.date()),
+
+        previous_month_discounted_sales = supplier_order_items.filter(
+            order__created_at__date__range=(previous_month_first_day.date(), previous_month_last_day.date()),
             product__offer_active=True
         ).annotate(
-            product_total=F('product__price') * F('quantity')
+            product_total=F('price') * F('quantity')
         ).aggregate(
             total=Coalesce(Sum('product_total'), 0, output_field=DecimalField())
         )['total']
-        
-        if previous_month_discounted_sales > 0:
-            growth_percentage = ((this_month_discounted_sales - float(previous_month_discounted_sales)) / 
-                                float(previous_month_discounted_sales)) * 100
-        else:
-            growth_percentage = 0
-        this_month_customers = Orders.objects.filter(
-            order_to=user,
-            created_at__date__range=(first_day.date(), last_day.date())
+
+        growth_percentage = (
+            ((this_month_discounted_sales - float(previous_month_discounted_sales)) /
+             float(previous_month_discounted_sales)) * 100
+            if previous_month_discounted_sales > 0 else 0
+        )
+
+        # This month customers
+        this_month_customers = supplier_order_items.filter(
+            order__created_at__date__range=(first_day.date(), last_day.date())
         ).values('order_by').distinct().count()
-        
-        
-        
-        this_month_orders = Orders.objects.filter(
-            order_to=user,
+
+        # This month orders
+        this_month_orders = orders.filter(
             created_at__date__range=(first_day.date(), last_day.date())
         ).count()
 
         # This week orders
         today = timezone.now()
         start_of_week = today - timedelta(days=today.weekday())  # Monday
-        end_of_week = start_of_week + timedelta(days=6)          # Sunday
+        end_of_week = start_of_week + timedelta(days=6)  # Sunday
 
-        this_week_orders = Orders.objects.filter(
-            order_to=user,
+        this_week_orders = orders.filter(
             created_at__date__range=(start_of_week.date(), end_of_week.date())
         ).count()
 
-        recent_orders = Orders.objects.filter(order_to=user).select_related('product', 'order_by').order_by('-created_at')[:6]
+        # Recent orders
+        recent_orders = supplier_order_items.select_related('order', 'product', 'order_by').order_by('-order__created_at')[:6]
+
         context = {
             'total_orders': total_orders,
-            'subtotal': subtotal,
+            'subtotal': float(subtotal),
             'categories_data': categories_data,
             'this_month_customers': this_month_customers,
             'this_month_orders': this_month_orders,
@@ -175,11 +189,13 @@ class HomeView(LoginRequiredMixin, SupplierPermissionMixin, View):
                 'labels': labels,
                 'data': discounted_sales_data,
                 'total': this_month_discounted_sales,
-                'growth_percentage': growth_percentage,
+                'growth_percentage': round(growth_percentage, 2),
                 'previous_month_total': float(previous_month_discounted_sales)
             }
         }
+        logger.info(f"Supplier {supplier.id} accessed dashboard: {total_orders} orders, {this_month_sales} sales")
         return render(request, 'adminv2/home.html', context)
+
 
 class ProductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
     template = 'adminv2/products.html'
@@ -891,58 +907,120 @@ class UserDeleteView(SupplierPermissionMixin, View):
 class OrderListingView(SupplierPermissionMixin, View):
     def get(self, request):
         status_filter = request.GET.get('status')
+        supplier = request.user
 
-        orders = Orders.objects.select_related('order_by', 'product')
-        if status_filter and status_filter != '':
+        # Filter order items for the current supplier and annotate item totals
+        item_queryset = OrderItem.objects.filter(order_to=supplier).annotate(
+            item_total=F('price') * F('quantity')
+        )
+
+        # Fetch orders where items belong to the current supplier
+        orders = Order.objects.filter(
+            items__order_to=supplier
+        ).distinct().select_related('user', 'payment').prefetch_related(
+            Prefetch('items', queryset=item_queryset, to_attr='filtered_items')
+        )
+
+        # Apply status filter if selected
+        if status_filter:
             orders = orders.filter(status=status_filter)
 
-        total_orders = Orders.objects.count()
-        completed_orders = Orders.objects.filter(status='completed').count()
-        pending_orders = Orders.objects.filter(status='pending').count()
-        cancelled_orders = Orders.objects.filter(status='cancelled').count()
+        # Totals and phone mapping
+        order_totals = {}
+        order_phones = {}
+
+        for order in orders:
+            total = 0
+            phone_number = "---"
+            for item in order.filtered_items:
+                total += float(item.item_total or 0)
+                if item.phone_number and phone_number == "---":
+                    phone_number = item.phone_number  # Get first valid phone
+            order_totals[order.pk] = total
+            order_phones[order.pk] = phone_number
+
+        # Status counters
+        total_orders = orders.count()
+        completed_orders = orders.filter(status='completed').count()
+        pending_orders = orders.filter(status='pending').count()
+        cancelled_orders = orders.filter(status='cancelled').count()
 
         context = {
             'orders': orders,
+            'order_totals': order_totals,  # key = order.pk, value = total price
+            'order_phones': order_phones,  # key = order.pk, value = phone number
             'total_orders': total_orders,
             'completed_orders': completed_orders,
             'pending_orders': pending_orders,
             'cancelled_orders': cancelled_orders,
-            'selected_status': status_filter,
+            'selected_status': status_filter or '',
         }
+
+        logger.info(f"Supplier {supplier.id} viewed order listing with status filter: {status_filter}")
         return render(request, 'adminv2/order-listing.html', context)
 
-    
-class OrderDetailesView(SupplierPermissionMixin, View):
-    def get(self, request, pk):
-        order = get_object_or_404(Orders, pk=pk)
-        product = order.product
-        brand = product.brand.name if product.brand else '-'
-        user = order.order_by 
-        
-        subtotal = float(order.price) * order.quantity
-        commission = (float(order.price) * float(product.commission_percentage) / 100) * order.quantity
-        shipping_fee = float(order.shipping_fees) if order.shipping_fees else 0
 
-        grand_total = subtotal - commission + shipping_fee
-        
-        
+class OrderDetailsView(SupplierPermissionMixin, View):
+    def get(self, request, order_id):
+        supplier = request.user
+        order = get_object_or_404(
+            Order.objects.filter(items__order_to=supplier).distinct().select_related('user', 'payment').prefetch_related(
+                Prefetch('items', queryset=OrderItem.objects.select_related('product', 'order_by', 'order_to').prefetch_related(
+                    Prefetch('product__productimage_set', queryset=ProductImage.objects.filter(is_main=True), to_attr='main_image')
+                ))
+            ),
+            order_id=order_id
+        )
+
+        # Calculate totals for supplier's order items
+        order_items = order.items.filter(order_to=supplier)
+        if not order_items.exists():
+            logger.warning(f"Supplier {supplier.id} attempted to view order {order.id} with no relevant items")
+            messages.error(request, "You do not have permission to view this order.")
+            return redirect('adminv2:order_listing')
+
+        subtotal = order_items.aggregate(
+            total=Sum(F('price') * F('quantity'))
+        )['total'] or 0.0
+
+        commission = order_items.aggregate(
+            total=Sum((F('price') * F('product__commission_percentage') / 100) * F('quantity'))
+        )['total'] or 0.0
+
+        shipping_fee = float(order.shipping_fees) if order.shipping_fees else 0.0
+        grand_total = float(subtotal) - float(commission) + shipping_fee
+
         context = {
             'order': order,
-            'product': product,
-            'brand': brand,
-            'user': user,
-            'subtotal': round(subtotal, 2),
-            'total_commission': round(commission, 2),
+            'order_items': order_items,
+            'subtotal': round(float(subtotal), 2),
+            'total_commission': round(float(commission), 2),
             'shipping_fee': round(shipping_fee, 2),
             'grand_total': round(grand_total, 2),
-           
+            'user': order.user,
         }
-        return render(request, 'adminv2/order-detailes.html', context)
-    
+        logger.info(f"Supplier {supplier.id} viewed details for order {order.order_id}")
+        return render(request, 'adminv2/order-details.html', context)
+
+
 class OrderDeleteView(SupplierPermissionMixin, View):
-    def post(self, request, pk):
-        order = get_object_or_404(Orders, pk=pk)
-        order.delete()
+    def post(self, request, order_id):
+        supplier = request.user
+        order = get_object_or_404(
+            Order.objects.filter(items__order_to=supplier).distinct(),
+            order_id=order_id
+        )
+
+        # Check if supplier has items in this order
+        if not order.items.filter(order_to=supplier).exists():
+            logger.warning(f"Supplier {supplier.id} attempted to delete order {order.id} with no relevant items")
+            return JsonResponse({'success': False, 'error': 'You do not have permission to delete this order'}, status=403)
+
+        # Soft delete by updating status to 'cancelled'
+        order.status = 'cancelled'
+        order.save()
+        order.items.filter(order_to=supplier).update(status='cancelled')
+        logger.info(f"Supplier {supplier.id} cancelled order {order.order_id}")
         return JsonResponse({'success': True})
 
 class UserProfileView(SupplierPermissionMixin, View):
@@ -1248,3 +1326,41 @@ class SupplierQuotationUpdateView(LoginRequiredMixin, SupplierPermissionMixin, U
 
     def test_func(self):
         return self.request.user.is_staff or self.request.user.is_superuser
+
+
+class BannerListView(LoginRequiredMixin, SupplierPermissionMixin, TemplateView):
+    template_name = 'adminv2/banner_list.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = BannerForm()
+        context['banners'] = Banner.objects.all().order_by('order')
+        return context
+
+
+class BannerCreateView(LoginRequiredMixin, SupplierPermissionMixin, View):
+    def get(self, request):
+        form = BannerForm()
+        return render(request, 'adminv2/banner_upload.html', {'form': form})
+
+    def post(self, request):
+        form = BannerForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            return redirect('adminv2:banner_list')
+        return render(request, 'adminv2/banner_upload.html', {'form': form})
+
+
+class BannerUpdateView(LoginRequiredMixin, SupplierPermissionMixin, View):
+    def get(self, request, pk):
+        banner = get_object_or_404(Banner, pk=pk)
+        form = BannerForm(instance=banner)
+        return render(request, 'adminv2/banner_edit.html', {'form': form, 'object': banner})
+
+    def post(self, request, pk):
+        banner = get_object_or_404(Banner, pk=pk)
+        form = BannerForm(request.POST, request.FILES, instance=banner)
+        if form.is_valid():
+            form.save()
+            return redirect('adminv2:banner_list')
+        return render(request, 'adminv2/banner_edit.html', {'form': form, 'object': banner})

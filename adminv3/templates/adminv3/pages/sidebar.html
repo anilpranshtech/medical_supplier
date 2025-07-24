@@ -45,6 +45,7 @@
           </div>
 
           <!-- Users  -->
+         {% if "auth.view_user" in user_permissions_list  %}
           <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="right-start"
                class="menu-item py-2 {% if request.resolver_match.url_name == 'user_accounts'  or request.resolver_match.url_name == 'user_permissions'  %} here show {% endif %}">
               <span class="menu-link menu-center">
@@ -52,6 +53,7 @@
                       <i class="bi bi-people-fill fs-1"></i>
                   </span>
               </span>
+
 
              <div class="menu-sub menu-sub-dropdown px-2 py-4 w-250px mh-75 overflow-auto">
                    <div class="menu-item {% if request.resolver_match.url_name == 'user_accounts' %} active {% endif %}">
@@ -64,7 +66,9 @@
                   </div>
 
                   <div class="menu-sub menu-sub-accordion">
-                       <div class="menu-item {% if request.resolver_match.url_name == 'user_accounts' %} here show {% endif %}">
+
+                      {% if "auth.view_user" in user_permissions_list  %}
+                      <div class="menu-item {% if request.resolver_match.url_name == 'user_accounts' %} here show {% endif %}">
                            <a class="menu-link" href="{% url 'adminv3:user_accounts' %}">
                               <span class="menu-bullet">
                                   <span class="bullet bullet-dot"></span>
@@ -72,6 +76,7 @@
                                <span class="menu-title">User List</span>
                           </a>
                       </div>
+                      {% endif %}
 
                       {% if request.user.is_superuser %}
                       <div class="menu-item {% if request.resolver_match.url_name == 'user_permissions' %} here show {% endif %}">
@@ -89,10 +94,12 @@
               </div>
 
           </div>
+        {% endif %}
 
           <!-- Products  -->
+           {% if "dashboard.view_product" in user_permissions_list or "dashboard.view_order" in user_permissions_list  %}
           <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="right-start"
-               class="menu-item py-2 {% if request.resolver_match.url_name == 'products_list' %} here show {% endif %}">
+               class="menu-item py-2 {% if request.resolver_match.url_name == 'products_list' or request.resolver_match.url_name == 'orders_list'%} here show {% endif %}">
               <span class="menu-link menu-center">
                   <span class="menu-icon me-0">
                       <i class="fas fa-cubes fs-1"></i>
@@ -109,6 +116,7 @@
 
                   </div>
 
+                 {% if "dashboard.view_product" in user_permissions_list  %}
                   <div class="menu-sub menu-sub-accordion">
                        <div class="menu-item {% if request.resolver_match.url_name == 'products_list' %} here show {% endif %}">
                            <a class="menu-link" href="{% url 'adminv3:products_list' %}">
@@ -120,11 +128,26 @@
                       </div>
 
                   </div>
+                  {% endif %}
+
+                 {% if "dashboard.view_order" in user_permissions_list  %}
+                 <div class="menu-sub menu-sub-accordion">
+                       <div class="menu-item {% if request.resolver_match.url_name == 'orders_list' %} here show {% endif %}">
+                           <a class="menu-link" href="{% url 'adminv3:orders_list' %}">
+                              <span class="menu-bullet">
+                                  <span class="bullet bullet-dot"></span>
+                              </span>
+                               <span class="menu-title">Orders List</span>
+                          </a>
+                      </div>
+
+                  </div>
+                 {% endif %}
 
               </div>
 
           </div>
-
+            {% endif %}
 
 
 

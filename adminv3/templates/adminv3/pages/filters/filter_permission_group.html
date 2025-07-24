@@ -1,0 +1,11 @@
+<div class="col-md-6 col-lg-4 col-xl-3 mb-3">
+    <label class="fs-6 form-label fw-bold text-gray-900">Permission Group</label>
+    <select class="form-select form-select-solid" name="permission_group" data-control="select2">
+        <option value="all" {% if request.GET.permission_group == 'all' %}selected{% endif %}>All</option>
+        {% for group in permission_groups %}
+            <option value="{{ group.id }}" {% if request.GET.permission_group == group.id|stringformat:"s" %}selected{% endif %}>
+                {{ group.name }}
+            </option>
+        {% endfor %}
+    </select>
+</div>

@@ -92,15 +92,13 @@
     .subcategory-list a:hover {
         color: #3b82f6;
     }
-
-    /* Search bar styles */
     #clear-search {
         cursor: pointer;
         border: none;
         outline: none;
     }
     #clear-search:hover i {
-        color: #374151; /* Darker gray on hover */
+        color: #374151;
     }
     #search-suggestions {
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -111,12 +109,41 @@
     #search-suggestions li:hover {
         background-color: #f3f4f6;
     }
+    /* Add RFQ Modal Styles from Homepage */
+    #rfqModal {
+        z-index: 9999;
+        backdrop-filter: blur(8px);
+        background-color: rgba(0, 0, 0, 0.4);
+    }
+    .modal-open {
+        filter: blur(8px);
+        transition: filter 0.3s ease-in-out;
+    }
+    .kt-modal {
+        filter: none !important;
+    }
+    .loader {
+        display: none;
+        border: 2px solid #ffffff;
+        border-top: 2px solid transparent;
+        border-radius: 50%;
+        width: 16px;
+        height: 16px;
+        animation: spin 1s linear infinite;
+        margin-left: 8px;
+    }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    .loading .loader {
+        display: inline-block;
+    }
 </style>
 
 <title>Search Results - Medical Supplies</title>
 <div class="kt-container-fixed mt-1" style="max-width: var(--custom-container-width, 90%);">
     <div class="flex flex-col items-stretch gap-7 mt-5 py-5">
-      
         <!-- Results Header and Sorting -->
         <div class="flex flex-wrap items-center gap-5 justify-between mt-3">
             <h3 id="results-header" class="text-sm text-mono font-medium">
@@ -152,11 +179,10 @@
                     </span>
                 {% endif %}
             </h3>
-
             <div class="flex items-center gap-2.5">
                 <div data-kt-select-wrapper="" class="kt-select-wrapper w-[175px] bg-background">
                     <div data-kt-select-display="" class="kt-select-display kt-select" tabindex="0" role="button"
-                         data-selected="0" aria-haspopup="listbox" aria-expanded="false" aria-label="Select an option">
+                         data-selected="{% if request.GET.sort_by == '1' %}1{% elif request.GET.sort_by == '2' %}2{% else %}2{% endif %}" aria-haspopup="listbox" aria-expanded="false" aria-label="Select an option">
                         {% if request.GET.sort_by == "1" %}
                             Price High to Low
                         {% elif request.GET.sort_by == "2" %}
@@ -169,11 +195,11 @@
                         <ul role="listbox" aria-label="Select an option" class="kt-select-options"
                             data-kt-select-options="true">
                             <li data-kt-select-option="" data-value="1" data-text="Price High to Low"
-                                class="kt-select-option {% if request.GET.sort_by == '1' %}selected{% endif %}" role="option" aria-selected="true">
+                                class="kt-select-option {% if request.GET.sort_by == '1' %}selected{% endif %}" role="option" aria-selected="{% if request.GET.sort_by == '1' %}true{% else %}false{% endif %}">
                                 <div class="kt-select-option-text" data-kt-text-container="true">Price High to Low</div>
                             </li>
                             <li data-kt-select-option="" data-value="2" data-text="Price Low to High"
-                                class="kt-select-option {% if request.GET.sort_by == '2' %}selected{% endif %}" role="option" aria-selected="false">
+                                class="kt-select-option {% if request.GET.sort_by == '2' %}selected{% endif %}" role="option" aria-selected="{% if request.GET.sort_by == '2' %}true{% else %}false{% endif %}">
                                 <div class="kt-select-option-text" data-kt-text-container="true">Price Low to High</div>
                             </li>
                         </ul>
@@ -184,16 +210,15 @@
                        data-kt-tab-toggle="#shop1_grids">
                         <i class="ki-filled ki-category"></i>
                     </a>
-                    <a class="kt-btn kt-btn-icon" data-kt-tab-toggle="#shop1_lists" href="{% url 'dashboard:search_results_list' %}">
+                    <a class="kt-btn kt-btn-icon" data-kt-tab-toggle="#shop1_lists" href="{% url 'dashboard:search_results_list' %}?{{ request.GET.urlencode }}">
                         <i class="ki-filled ki-row-horizontal"></i>
                     </a>
                 </div>
             </div>
         </div>
-
         <!-- Category and Product Grid -->
         <div class="kt-category-grid">
-            <div class="amazon-sidebar w-full md:w-1/4 pr-6" style="{% if is_search_active %}display: none;{% endif %}">
+            <div class="amazon-sidebar w-full md:w-1/4 pr-6">
                 <h2 class="text-base font-bold mb-4 uppercase pb-1">Category</h2>
                 {% for category in categories %}
                     <div class="mb-3">
@@ -220,7 +245,6 @@
                     </div>
                 {% endfor %}
             </div>
-
             <div class="kt-product-grid" id="product-grid">
                 {% if last_categories %}
                     {% for lastcategory in last_categories %}
@@ -305,6 +329,19 @@
                                             Add <i class="ki-filled ki-handcart"></i>
                                         </button>
                                     {% endif %}
+                                    <!-- Add RFQ Button for Authenticated Users -->
+                                    {% if request.user.is_authenticated %}
+                                        {% if product.show_rfq or product.Both %}
+                                            <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 open-rfq-modal"
+                                                    data-product-id="{{ product.id }}"
+                                                    data-product-name="{{ product.name }}"
+                                                    data-product-price="{{ product.discounted_price|default:product.price|floatformat:2 }}"
+                                                    data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
+                                                    data-quantity="1">
+                                                RFQ <i class="ki-solid ki-file-text"></i>
+                                            </button>
+                                        {% endif %}
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
@@ -349,9 +386,73 @@
             </div>
         </div>
     </div>
+
+    <!-- RFQ Modal (Copied from Homepage) -->
+    <div id="rfqModal"
+         class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+         data-kt-modal="true" role="dialog" aria-labelledby="rfqModalTitle" aria-modal="true">
+        <div class="kt-card w-full max-w-[600px] rounded-xl border border-border bg-background shadow-2xl transition-transform duration-300 ease-in-out transform scale-95">
+            <div class="kt-card-header px-5 py-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
+                <h2 id="rfqModalTitle" class="text-xl font-bold text-mono">Request for Quotation</h2>
+                <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" onclick="closeRFQModal()"
+                        aria-label="Close modal">
+                    <i class="ki-filled ki-cross text-base text-gray-500 hover:text-red-500"></i>
+                </button>
+            </div>
+            <form method="POST" action="{% url 'dashboard:rfq_submit' %}" id="rfqForm">
+                {% csrf_token %}
+                <div class="kt-card-content flex flex-col space-y-4 p-5">
+                    <input type="hidden" name="product_id" id="rfqProductId">
+                    <div>
+                        <label for="rfqProductName"
+                               class="block text-sm font-medium text-gray-650 dark:text-gray-300 mb-1">Product</label>
+                        <input type="text" id="rfqProductName"
+                               class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 bg-gray-100 dark:bg-gray-800 text-gray-650 dark:text-gray-300 cursor-not-allowed"
+                               disabled>
+                    </div>
+                    <div>
+                        <label for="rfqCompanyName"
+                               class="block text-sm font-medium text-gray-650 dark:text-gray-300 mb-1">Company Name
+                            <span class="text-red-500">*</span></label>
+                        <input type="text" name="company_name" id="rfqCompanyName"
+                               class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                               required aria-required="true">
+                        <p class="text-xs text-red-500 mt-1 hidden" id="rfqCompanyNameError">Company name is required.</p>
+                    </div>
+                    <div>
+                        <label for="rfqQuantity"
+                               class="block text-sm font-medium text-gray-650 dark:text-gray-300 mb-1">Quantity
+                            <span class="text-red-500">*</span></label>
+                        <input type="number" name="quantity" id="rfqQuantity"
+                               class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                               min="1" required aria-required="true">
+                        <p class="text-xs text-red-500 mt-1 hidden" id="rfqQuantityError">Quantity must be at least 1.</p>
+                    </div>
+                    <div>
+                        <label for="rfqMessage"
+                               class="block text-sm font-medium text-gray-650 dark:text-gray-300 mb-1">Message</label>
+                        <textarea name="message" id="rfqMessage"
+                                  class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                                  rows="4" placeholder="Add any additional details..."></textarea>
+                    </div>
+                </div>
+                <div class="kt-card-footer px-5 py-4 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700">
+                    <button type="button"
+                            class="kt-btn kt-btn-outline kt-btn-sm text-gray-650 hover:bg-gray-900 dark:hover:bg-gray-700"
+                            onclick="closeRFQModal()">Cancel
+                    </button>
+                    <button type="submit" class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center" id="rfqSubmitBtn">
+                        Submit RFQ
+                        <span class="loader"></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 <script>
+// CSRF Token Helper (Unchanged)
 function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
@@ -367,7 +468,6 @@ function getCookie(name) {
     return cookieValue;
 }
 const csrftoken = getCookie('csrftoken');
-
 
 document.addEventListener('click', function(e) {
     // Handle clear search button
@@ -500,8 +600,25 @@ document.addEventListener('click', function(e) {
         })
         .catch(error => console.error('Wishlist toggle error:', error));
     }
+
+    // Handle RFQ Modal Open (Added from Homepage)
+    if (e.target.closest('.open-rfq-modal')) {
+        const button = e.target.closest('.open-rfq-modal');
+        const productId = button.getAttribute('data-product-id');
+        const productName = button.getAttribute('data-product-name');
+        const companyName = button.getAttribute('data-company-name');
+        const quantity = button.getAttribute('data-quantity');
+
+        document.getElementById('rfqProductId').value = productId;
+        document.getElementById('rfqProductName').value = productName;
+        document.getElementById('rfqCompanyName').value = companyName;
+        document.getElementById('rfqQuantity').value = quantity;
+
+        document.getElementById('rfqModal').classList.remove('hidden');
+    }
 });
 
+// Toggle Category Function (Unchanged)
 function toggleCategory(id) {
     const content = document.getElementById(id);
     const arrow = document.getElementById("arrow-" + id.replace("cat-", ""));
@@ -521,7 +638,12 @@ function toggleCategory(id) {
     }
 }
 
-// Initialize on DOM load
+// RFQ Modal Close Function (Added from Homepage)
+function closeRFQModal() {
+    document.getElementById('rfqModal').classList.add('hidden');
+}
+
+// Initialize on DOM load (Updated to include RFQ modal initialization)
 document.addEventListener('DOMContentLoaded', () => {
     const searchQuery = new URLSearchParams(window.location.search).get('q');
     const searchInput = document.getElementById('search-input');
@@ -532,6 +654,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (searchQuery && searchInput && clearButton) {
         searchInput.value = searchQuery;
         clearButton.style.display = 'block';
+        if (sidebar) {
+            sidebar.style.display = 'none'; // Hide sidebar only if search query exists in URL
+        }
     } else if (clearButton) {
         clearButton.style.display = 'none';
     }
@@ -539,7 +664,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize sidebar and default category
     if (!searchQuery) {
         if (sidebar) {
-            sidebar.style.display = ''; 
+            sidebar.style.display = ''; // Show sidebar by default
         }
         // Open the first category and fetch its products
         const firstCategory = document.querySelector('[id^="cat-"]');
@@ -558,8 +683,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         }
-    } else if (sidebar) {
-        sidebar.style.display = 'none'; // Hide sidebar for search
     }
 
     // Search form submission
@@ -569,7 +692,7 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const searchQuery = searchInput ? searchInput.value.trim() : '';
             if (searchQuery && sidebar && clearButton) {
-                sidebar.style.display = 'none';
+                sidebar.style.display = 'none'; // Hide sidebar only on form submission
                 clearButton.style.display = 'block';
             } else if (sidebar && clearButton) {
                 sidebar.style.display = '';
@@ -582,7 +705,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Sorting dropdown
     const selectDisplay = document.querySelector('[data-kt-select-display]');
     const selectDropdown = document.querySelector('[data-kt-select-dropdown]');
-    if (selectDisplay) {
+    if (selectDisplay && selectDropdown) {
         selectDisplay.addEventListener('click', () => {
             selectDropdown.classList.toggle('hidden');
             selectDisplay.setAttribute('aria-expanded', selectDropdown.classList.contains('hidden') ? 'false' : 'true');
@@ -592,6 +715,21 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('[data-kt-select-option]').forEach(option => {
             option.addEventListener('click', () => {
                 const value = option.getAttribute('data-value');
+                const text = option.getAttribute('data-text');
+                // Update dropdown display text and data-selected attribute
+                selectDisplay.textContent = text;
+                selectDisplay.setAttribute('data-selected', value);
+                // Update selected state in dropdown
+                document.querySelectorAll('[data-kt-select-option]').forEach(opt => {
+                    opt.classList.remove('selected');
+                    opt.setAttribute('aria-selected', 'false');
+                });
+                option.classList.add('selected');
+                option.setAttribute('aria-selected', 'true');
+                // Close dropdown
+                selectDropdown.classList.add('hidden');
+                selectDisplay.setAttribute('aria-expanded', 'false');
+                // Fetch products with new sort option
                 const params = new URLSearchParams(window.location.search);
                 fetchProducts({ 
                     sort_by: value, 
@@ -647,17 +785,25 @@ document.addEventListener('DOMContentLoaded', () => {
             const li = e.target.closest('li');
             if (li) {
                 const suggestion = li.textContent;
+                const searchInput = document.getElementById('search-input');
+                const clearButton = document.getElementById('clear-search');
+                const sidebar = document.querySelector('.amazon-sidebar');
+
                 if (searchInput) searchInput.value = suggestion;
-                if (sidebar) sidebar.style.display = 'none'; // Hide sidebar on suggestion selection
                 if (clearButton) clearButton.style.display = 'block'; // Show clear button
                 document.getElementById('search-suggestions').classList.add('hidden'); // Hide suggestions dropdown
-                fetchProducts({ q: suggestion, page: 1 }); // Trigger search with selected suggestion
+
+                // Hide sidebar and fetch products for the selected suggestion
+                if (sidebar) {
+                    sidebar.style.display = 'none'; // Hide the category sidebar
+                }
+                fetchProducts({ q: suggestion, page: 1 }); // Fetch products for the selected suggestion
             }
         });
     }
 });
 
-// Fetch products function
+// Fetch products function (Unchanged)
 function fetchProducts(params) {
     const urlParams = new URLSearchParams();
     Object.keys(params).forEach(key => {
@@ -679,23 +825,45 @@ function fetchProducts(params) {
         const newProductGrid = doc.querySelector('#product-grid');
         const newPagination = doc.querySelector('#pagination');
         const newResultsHeader = doc.querySelector('#results-header');
+        const newSelectDisplay = doc.querySelector('[data-kt-select-display]');
         
+        // Update product grid
         if (newProductGrid) {
             const productGrid = document.querySelector('#product-grid');
             if (productGrid) {
                 productGrid.innerHTML = newProductGrid.innerHTML;
             }
         }
+        // Update pagination
         if (newPagination) {
             const paginationContainer = document.querySelector('#pagination');
             if (paginationContainer) {
                 paginationContainer.innerHTML = newPagination.innerHTML;
             }
         }
+        // Update results header
         if (newResultsHeader) {
             const resultsHeader = document.querySelector('#results-header');
             if (resultsHeader) {
                 resultsHeader.innerHTML = newResultsHeader.innerHTML;
+            }
+        }
+        // Update dropdown display
+        if (newSelectDisplay) {
+            const selectDisplay = document.querySelector('[data-kt-select-display]');
+            if (selectDisplay) {
+                selectDisplay.textContent = newSelectDisplay.textContent;
+                selectDisplay.setAttribute('data-selected', newSelectDisplay.getAttribute('data-selected'));
+                // Update selected state in dropdown
+                const sortBy = urlParams.get('sort_by') || '2';
+                document.querySelectorAll('[data-kt-select-option]').forEach(opt => {
+                    opt.classList.remove('selected');
+                    opt.setAttribute('aria-selected', 'false');
+                    if (opt.getAttribute('data-value') === sortBy) {
+                        opt.classList.add('selected');
+                        opt.setAttribute('aria-selected', 'true');
+                    }
+                });
             }
         }
 

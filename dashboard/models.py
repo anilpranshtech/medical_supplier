@@ -5,6 +5,8 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 
 
+
+
 class RetailProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     profile_picture = models.ImageField(upload_to='profile_pics/', null=True, blank=True)
@@ -173,8 +175,49 @@ class ProductImage(models.Model):
         ordering = ['-created_at']
         verbose_name = verbose_name_plural = "Product Image"
 
-class Orders(models.Model):
 
+class Order(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders')
+    payment = models.ForeignKey('Payment', on_delete=models.SET_NULL, null=True, blank=True, related_name='order')
+    order_id = models.CharField(max_length=50, unique=True)  # e.g., X319330-S24
+    phone_number = models.CharField(max_length=20, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    shipping_fees = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    shipping_type = models.CharField(max_length=100, default='Shipping')
+    shipping_full_address = models.TextField(null=True, blank=True)
+    shipping_city = models.CharField(max_length=100, null=True, blank=True)
+    shipping_country = models.CharField(max_length=100, null=True, blank=True)
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ('pending', 'Pending'),
+            ('completed', 'Completed'),
+            ('processing', 'Processing'),
+            ('shipped', 'Shipped'),
+            ('delivered', 'Delivered'),
+            ('delivering', 'Delivering'),
+            ('cancelled', 'Cancelled'),
+            ('refunded', 'Refunded'),
+            ('failed', 'Failed')
+        ],
+        default='pending'
+    )
+
+    def save(self, *args, **kwargs):
+        if not self.order_id:
+            self.order_id = generate_order_id()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Order {self.order_id}"
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = verbose_name_plural = "Order"
+
+# Renamed Orders to OrderItem
+class OrderItem(models.Model):
     ORDER_STATUS_CHOICES = [
         ('pending', 'Pending'),
         ('completed', 'Completed'),
@@ -192,42 +235,27 @@ class Orders(models.Model):
         ('unpaid', 'Unpaid')
     ]
 
-    order_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders_placed')
-    order_to = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders_received')
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
+    order_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='order_items_placed')
+    order_to = models.ForeignKey(User, on_delete=models.CASCADE, related_name='order_items_received')
+    product = models.ForeignKey('Product', on_delete=models.CASCADE)
     quantity = models.IntegerField(default=1)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=20, choices=ORDER_STATUS_CHOICES, default='pending')
-
-     # Customer Info
     phone_number = models.CharField(max_length=20, blank=True, null=True)
-    # order_reference = models.CharField(max_length=20, blank=True, null=True)
-
-    # Payment info
-    payment = models.ForeignKey('Payment', on_delete=models.CASCADE, null=True, blank=True, related_name='orders')
     payment_type = models.CharField(max_length=50, default='BANK TRANSFER')
     payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='unpaid')
     payment_currency = models.CharField(max_length=10, default='USD')
 
-    # Shipping info
-    shipping_fees = models.PositiveIntegerField(default=0)
-    shipping_type = models.CharField(max_length=100, default='Shipping')
-
-    # Address info
-    shipping_full_address = models.TextField(null=True,blank=True)
-    shipping_city = models.CharField(max_length=100,null=True,blank=True)
-    shipping_country = models.CharField(max_length=100,null=True,blank=True)
-
-
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
-    updated_at = models.DateTimeField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
+
+    def __str__(self):
+        return f"OrderItem #{self.pk} - {self.product.name} x {self.quantity} in Order {self.order.order_id}"
 
     class Meta:
         ordering = ['-created_at']
-        verbose_name = verbose_name_plural = "Order"
-
-    def __str__(self):
-        return f"Order #{self.pk} - {self.product.name} x {self.quantity}"
+        verbose_name = verbose_name_plural = "Order Item"
 
 
 class CustomerBillingAddress(models.Model):
@@ -307,8 +335,8 @@ class CartProduct(models.Model):
         return f"{self.quantity} x {self.product.name} for {self.user}"
 
     def get_total_price(self):
-        return self.quantity * self.product.price
-
+        return self.quantity * self.product.discounted_price()
+ 
     class Meta:
         unique_together = ('user', 'product')
         ordering = ["-created_at"]

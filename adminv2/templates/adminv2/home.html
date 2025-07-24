@@ -1,327 +1,254 @@
 {% extends 'adminv2/base.html' %}
 {% load static %}
+{% load custom_filters %}
 
 {% block extra_css_start %}
-
 {% endblock extra_css_start %}
 
-
 {% block content %}
-
-<div id="kt_app_content_container" class="app-container  container-fluid ">
-    <!-- First row  -->
+<div id="kt_app_content_container" class="app-container container-fluid">
+    <!-- First row -->
     <div class="row gx-5 gx-xl-10 mb-xl-10 mt-7 py-7 mx-5">
-
-        <!--  First column    -->
+        <!-- First column -->
         <div class="col-md-6 col-lg-6 col-xl-6 col-xxl-3 mb-10">
-            <!--  First card  -->
+            <!-- First card -->
             <div class="card card-flush h-md-50 mb-5 mb-xl-10">
-                 <div class="card-header pt-5">
-                     <div class="card-title d-flex flex-column">
-                         <div class="d-flex align-items-center">
-                             <span class="fs-4 fw-semibold text-gray-500 me-1 align-self-start">$</span>
-
-                          <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2">${{ subtotal|floatformat:2 }}</span>
-
-
+                <div class="card-header pt-5">
+                    <div class="card-title d-flex flex-column">
+                        <div class="d-flex align-items-center">
+                            <span class="fs-4 fw-semibold text-gray-500 me-1 align-self-start">$</span>
+                            <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2">${{ subtotal|floatformat:2 }}</span>
                             <span class="badge badge-light-success fs-base">
                                 <i class="bi bi-arrow-up-short fs-5 text-success ms-n1"></i>
-                                2.2%
+                                {{ discounted_sales_data.growth_percentage|floatformat:1 }}%
                             </span>
-                         </div>
-
+                        </div>
                         <span class="text-gray-500 pt-1 fw-semibold fs-6">Expected Earnings</span>
-                     </div>
-                 </div>
-
-                 <div class="card-body pt-2 pb-4 d-flex align-items-center">
-                     <div class="d-flex flex-center me-5 pt-2">
-                        <div>
+                    </div>
+                </div>
+                <div class="card-body pt-2 pb-4 d-flex align-items-center">
+                    <div class="d-flex flex-center me-5 pt-2">
                         <canvas id="categorySalesChart" width="70" height="70"></canvas>
                     </div>
-                    </div>
-
                     <div class="d-flex flex-column content-justify-center w-100">
-                         <div class="d-flex fs-6 fw-semibold align-items-center">
-                             <div class="d-flex flex-column content-justify-center w-100">
-    {% for category in categories_data %}
-    <div class="d-flex fs-6 fw-semibold align-items-center {% if not forloop.first %}my-3{% endif %}">
-        <div class="bullet w-8px h-6px rounded-2 me-3" 
-             style="background-color: {{ category.color }}"></div>
-        <div class="text-gray-500 flex-grow-1 me-4">{{ category.name }}</div>
-        <div class="fw-bolder text-gray-700 text-xxl-end">${{ category.total_sales|floatformat:2 }}</div>
-    </div>
-    {% empty %}
-    <div class="d-flex fs-6 fw-semibold align-items-center">
-        <div class="text-gray-500 flex-grow-1 me-4">No sales data available</div>
-    </div>
-    {% endfor %}
-</div>
-
-                            
-                         </div>
-
-                        
-
-                        
-                     </div>
-                 </div>
-             </div>
-
-            <!--  Second card  -->
-            <div class="card card-flush h-md-50 mb-xl-10">
-                 <div class="card-header pt-5">
-                     <div class="card-title d-flex flex-column">
-                         <div class="d-flex align-items-center">
-                           <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2">{{ this_month_orders }}</span>
-
-
-                            <span class="badge badge-light-danger fs-base">
-                                <i class="bi bi-arrow-down-short Orders This week fs-5 text-danger ms-n1"></i>
-                                2.2%
-                            </span>
-                         </div>
-
-                        <span class="text-gray-500 pt-1 fw-semibold fs-6">Orders This Month</span>
-                     </div>
-                 </div>
-
-                <div class="card-body d-flex align-items-end pt-0">
-                     <div class="d-flex align-items-center flex-column mt-3 w-100">
-                        <div class="d-flex justify-content-between w-100 mt-auto mb-2">
-                            <span class="fw-bolder fs-6 text-gray-900">1,048 to Goal</span>
-                            <span class="fw-bold fs-6 text-gray-500">62%</span>
+                        {% for category in categories_data %}
+                        <div class="d-flex fs-6 fw-semibold align-items-center {% if not forloop.first %}my-3{% endif %}">
+                            <div class="bullet w-8px h-6px rounded-2 me-3" style="background-color: {{ category.color }}"></div>
+                            <div class="text-gray-500 flex-grow-1 me-4">{{ category.name }}</div>
+                            <div class="fw-bolder text-gray-700 text-xxl-end">${{ category.total_sales|floatformat:2 }}</div>
                         </div>
-
-                        <div class="h-8px mx-3 w-100 bg-light-success rounded">
-                            <div class="bg-success rounded h-8px" role="progressbar" style="width: 62%;" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+                        {% empty %}
+                        <div class="d-flex fs-6 fw-semibold align-items-center">
+                            <div class="text-gray-500 flex-grow-1 me-4">No sales data available</div>
                         </div>
+                        {% endfor %}
                     </div>
-                 </div>
-             </div>
-        </div>
-
-        <!--  Second column    -->
-        <div class="col-md-6 col-lg-6 col-xl-6 col-xxl-3 mb-10">
-
-            <!--  First card  -->
+                </div>
+            </div>
+            <!-- Second card -->
             <div class="card card-flush h-md-50 mb-xl-10">
-
-                 <div class="card-header pt-5">
-                     <div class="card-title d-flex flex-column">
-                         <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2"> {{ this_month_customers|floatformat:0 }}%</span>
-
-                        <span class="text-gray-500 pt-1 fw-semibold fs-6">New Customers This Month</span>
-                     </div>
-                 </div>
-
-                 <div class="card-body d-flex flex-column justify-content-end pe-0">
-                     <span class="fs-6 fw-bolder text-gray-800 d-block mb-2">Today’s Heroes</span>
-
-                     <div class="symbol-group symbol-hover flex-nowrap">
-                        <div class="symbol symbol-35px symbol-circle" data-bs-toggle="tooltip" data-bs-original-title="Alan Warden" data-kt-initialized="1">
-                                        <span class="symbol-label bg-warning text-inverse-warning fw-bold">A</span>
-                                </div>
-
-
-                         <a href="#" class="symbol symbol-35px symbol-circle" data-bs-toggle="modal" data-bs-target="#kt_modal_view_users">
-                            <span class="symbol-label bg-light text-gray-400 fs-8 fw-bold">+42</span>
-                         </a>
-                    </div>
-                 </div>
-             </div>
-
-            <!--  Second card -->
-            <div class="card card-flush h-md-50 mb-xl-10">
-                 <div class="card-header pt-5">
-                     <div class="card-title d-flex flex-column">
-                         <div class="d-flex align-items-center">
-                            <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2">{{ this_week_orders }}</span>
-
-
+                <div class="card-header pt-5">
+                    <div class="card-title d-flex flex-column">
+                        <div class="d-flex align-items-center">
+                            <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2">{{ this_month_orders }}</span>
                             <span class="badge badge-light-danger fs-base">
                                 <i class="bi bi-arrow-down-short fs-5 text-danger ms-n1"></i>
-                                2.2%
+                                {% with progress=this_month_orders|multiply:100|divide:1000 %}
+                                    {{ progress|floatformat:1 }}%
+                                {% endwith %}
                             </span>
-                         </div>
-
-                        <span class="text-gray-500 pt-1 fw-semibold fs-6">Orders This week</span>
-                     </div>
-                 </div>
-
-                <div class="card-body d-flex align-items-end pt-0">
-                     <div class="d-flex align-items-center flex-column mt-3 w-100">
-                        <div class="d-flex justify-content-between w-100 mt-auto mb-2">
-                            <span class="fw-bolder fs-6 text-gray-900">1,048 to Goal</span>
-                            <span class="fw-bold fs-6 text-gray-500">62%</span>
                         </div>
-
+                        <span class="text-gray-500 pt-1 fw-semibold fs-6">Orders This Month</span>
+                    </div>
+                </div>
+                <div class="card-body d-flex align-items-end pt-0">
+                    <div class="d-flex align-items-center flex-column mt-3 w-100">
+                        <div class="d-flex justify-content-between w-100 mt-auto mb-2">
+                            <span class="fw-bolder fs-6 text-gray-900">
+                                {% with remaining=1000|subtract:this_month_orders %}
+                                    {{ remaining }} to Goal
+                                {% endwith %}
+                            </span>
+                            <span class="fw-bold fs-6 text-gray-500">
+                                {% with progress=this_month_orders|multiply:100|divide:1000 %}
+                                    {{ progress|floatformat:0 }}%
+                                {% endwith %}
+                            </span>
+                        </div>
                         <div class="h-8px mx-3 w-100 bg-light-success rounded">
-                            <div class="bg-success rounded h-8px" role="progressbar" style="width: 62%;" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+                            <div class="bg-success rounded h-8px" role="progressbar" style="width: {{ this_month_orders|multiply:100|divide:1000 }}%;" aria-valuenow="{{ this_month_orders }}" aria-valuemin="0" aria-valuemax="1000"></div>
                         </div>
                     </div>
-                 </div>
-             </div>
-        </div>
-<!-- Third Column -->
-<div class="col-lg-12 col-xl-12 col-xxl-6 mb-5 mb-xl-0">
-    <div class="card card-flush overflow-hidden h-md-100">
-        <div class="card-header py-5">
-            <h3 class="card-title align-items-start flex-column">
-                <span class="card-label fw-bold text-gray-900">Sales This Month</span>
-                <span class="text-gray-500 mt-1 fw-semibold fs-6">Daily sales for current month</span>
-            </h3>
-            <div class="card-toolbar">
-                <button class="btn btn-icon btn-color-gray-500 btn-active-color-primary justify-content-end" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end" data-kt-menu-overflow="true">
-                  
-                </button>
-            </div>
-        </div>
-        
-        <div class="card-body d-flex justify-content-between flex-column pb-1 px-0">
-            <div class="px-9 mb-5">
-                <div class="d-flex mb-2">
-                    <span class="fs-4 fw-semibold text-gray-500 me-1">$</span>
-                    <span class="fs-2hx fw-bold text-gray-800 me-2 lh-1 ls-n2">{{ sales_chart_data.total|floatformat:2 }}</span>
                 </div>
             </div>
-
-            <div id="diagram" class="min-h-auto ps-4 pe-6" style="height: 300px; min-height: 315px;"></div>
+        </div>
+        <!-- Second column -->
+        <div class="col-md-6 col-lg-6 col-xl-6 col-xxl-3 mb-10">
+            <!-- First card -->
+            <div class="card card-flush h-md-50 mb-xl-10">
+                <div class="card-header pt-5">
+                    <div class="card-title d-flex flex-column">
+                        <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2">{{ this_month_customers }}</span>
+                        <span class="text-gray-500 pt-1 fw-semibold fs-6">New Customers This Month</span>
+                    </div>
+                </div>
+                <div class="card-body d-flex flex-column justify-content-end pe-0">
+                    <span class="fs-6 fw-bolder text-gray-800 d-block mb-2">Today’s Heroes</span>
+                    <div class="symbol-group symbol-hover flex-nowrap">
+                        <div class="symbol symbol-35px symbol-circle" data-bs-toggle="tooltip" data-bs-original-title="Alan Warden" data-kt-initialized="1">
+                            <span class="symbol-label bg-warning text-inverse-warning fw-bold">A</span>
+                        </div>
+                        <a href="#" class="symbol symbol-35px symbol-circle" data-bs-toggle="modal" data-bs-target="#kt_modal_view_users">
+                            <span class="symbol-label bg-light text-gray-400 fs-8 fw-bold">+42</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <!-- Second card -->
+            <div class="card card-flush h-md-50 mb-xl-10">
+                <div class="card-header pt-5">
+                    <div class="card-title d-flex flex-column">
+                        <div class="d-flex align-items-center">
+                            <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2">{{ this_week_orders }}</span>
+                            <span class="badge badge-light-danger fs-base">
+                                <i class="bi bi-arrow-down-short fs-5 text-danger ms-n1"></i>
+                                {% with progress=this_week_orders|multiply:100|divide:1000 %}
+                                    {{ progress|floatformat:1 }}%
+                                {% endwith %}
+                            </span>
+                        </div>
+                        <span class="text-gray-500 pt-1 fw-semibold fs-6">Orders This Week</span>
+                    </div>
+                </div>
+                <div class="card-body d-flex align-items-end pt-0">
+                    <div class="d-flex align-items-center flex-column mt-3 w-100">
+                        <div class="d-flex justify-content-between w-100 mt-auto mb-2">
+                            <span class="fw-bolder fs-6 text-gray-900">
+                                {% with remaining=1000|subtract:this_week_orders %}
+                                    {{ remaining }} to Goal
+                                {% endwith %}
+                            </span>
+                            <span class="fw-bold fs-6 text-gray-500">
+                                {% with progress=this_week_orders|multiply:100|divide:1000 %}
+                                    {{ progress|floatformat:0 }}%
+                                {% endwith %}
+                            </span>
+                        </div>
+                        <div class="h-8px mx-3 w-100 bg-light-success rounded">
+                            <div class="bg-success rounded h-8px" role="progressbar" style="width: {{ this_week_orders|multiply:100|divide:1000 }}%;" aria-valuenow="{{ this_week_orders }}" aria-valuemin="0" aria-valuemax="1000"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Third Column -->
+        <div class="col-lg-12 col-xl-12 col-xxl-6 mb-5 mb-xl-0">
+            <div class="card card-flush overflow-hidden h-md-100">
+                <div class="card-header py-5">
+                    <h3 class="card-title align-items-start flex-column">
+                        <span class="card-label fw-bold text-gray-900">Sales This Month</span>
+                        <span class="text-gray-500 mt-1 fw-semibold fs-6">Daily sales for current month</span>
+                    </h3>
+                    <div class="card-toolbar">
+                        <button class="btn btn-icon btn-color-gray-500 btn-active-color-primary justify-content-end" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end" data-kt-menu-overflow="true"></button>
+                    </div>
+                </div>
+                <div class="card-body d-flex justify-content-between flex-column pb-1 px-0">
+                    <div class="px-9 mb-5">
+                        <div class="d-flex mb-2">
+                            <span class="fs-4 fw-semibold text-gray-500 me-1">$</span>
+                            <span class="fs-2hx fw-bold text-gray-800 me-2 lh-1 ls-n2">{{ sales_chart_data.total|floatformat:2 }}</span>
+                        </div>
+                    </div>
+                    <div id="diagram" class="min-h-auto ps-4 pe-6" style="height: 300px; min-height: 315px;"></div>
+                </div>
+            </div>
         </div>
     </div>
-</div>
-
-
-
-    <!--  Second Row  -->
+    <!-- Second Row -->
     <div class="row gy-5 g-xl-10">
-         <div class="col-xl-6 mb-xl-10">
-
-             <div class="card h-md-100">
-                 <div class="card-header align-items-center border-0">
-                     <h3 class="fw-bold text-gray-900 m-0">Recent Orders</h3></div>
-
-                 <div class="card-body pt-2">
-                <div class="tab-content">
-
-                            <!--begin::Tap pane-->
-                            <div class="tab-pane fade show active" id="kt_stats_widget_2_tab_1" role="tabpanel">
-                                <!--begin::Table container-->
-                                <div class="table-responsive">
-                                    <!--begin::Table-->
-                                  <!--begin::Table-->
-<table class="table table-row-dashed align-middle gs-0 gy-4 my-0">
-    <thead>
-        <tr class="fs-7 fw-bold text-gray-500 border-bottom-0">
-            <th class="ps-0 w-50px">Customer Name</th>
-            <th class="min-w-125px">Product Name</th>
-            <th class="text-end min-w-100px">QTY</th>
-            <th class="pe-0 text-end min-w-100px">PRICE</th>
-            <th class="pe-0 text-end min-w-100px">Payment Status</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for order in recent_orders %}
-            <tr>
-                <td class="ps-0">{{ order.order_by.username }}</td>
-                <td>{{ order.product.name }}</td>
-                <td class="text-end">{{ order.quantity }}</td>
-                <td class="pe-0 text-end">${{ order.price }}</td>
-                <td class="pe-0 text-end">{{ order.payment_status }}</td>
-            </tr>
-        {% empty %}
-            <tr><td colspan="5" class="text-center">No recent orders found.</td></tr>
-        {% endfor %}
-    </tbody>
-</table>
-<!--end::Table-->
-
-<!-- View All Orders Link -->
-<div class="text-end mt-4">
-    <a href="{% url 'adminv2:order_listing' %}" class="btn btn-sm btn-light-primary">View All Orders</a>
-</div>
-
-                                    <!--end::Table-->
+        <div class="col-xl-6 mb-xl-10">
+            <div class="card h-md-100">
+                <div class="card-header align-items-center border-0">
+                    <h3 class="fw-bold text-gray-900 m-0">Recent Orders</h3>
+                </div>
+                <div class="card-body pt-2">
+                    <div class="tab-content">
+                        <div class="tab-pane fade show active" id="kt_stats_widget_2_tab_1" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table table-row-dashed align-middle gs-0 gy-4 my-0">
+                                    <thead>
+                                        <tr class="fs-7 fw-bold text-gray-500 border-bottom-0">
+                                            <th class="ps-0 w-50px">Customer Name</th>
+                                            <th class="min-w-125px">Product Name</th>
+                                            <th class="text-end min-w-100px">QTY</th>
+                                            <th class="pe-0 text-end min-w-100px">PRICE</th>
+                                            <th class="pe-0 text-end min-w-100px">Payment Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in recent_orders %}
+                                        <tr>
+                                            <td class="ps-0">{{ item.order_by.get_full_name|default:item.order_by.username }}</td>
+                                            <td>{{ item.product.name }}</td>
+                                            <td class="text-end">{{ item.quantity }}</td>
+                                            <td class="pe-0 text-end">${{ item.price|floatformat:2 }}</td>
+                                            <td class="pe-0 text-end">
+                                                {% if item.order.payment.paid %}
+                                                    <span class="badge badge-light-success">Paid</span>
+                                                {% else %}
+                                                    <span class="badge badge-light-danger">Unpaid</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr><td colspan="5" class="text-center">No recent orders found.</td></tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                                <!-- View All Orders Link -->
+                                <div class="text-end mt-4">
+                                    <a href="{% url 'adminv2:order_listing' %}" class="btn btn-sm btn-light-primary">View All Orders</a>
                                 </div>
-                                <!--end::Table container-->
                             </div>
-                            <!--end::Tap pane-->
- </div>
-                    <!--end::Tab Content-->
+                        </div>
+                    </div>
                 </div>
-             </div>
-
-         </div>
-
-
-
-         <div class="col-xl-6 mb-5 mb-xl-10">
-    <!--begin::Chart widget 4-->
-    <div class="card card-flush overflow-hidden h-md-100">
-        <!--begin::Header-->
-        <div class="card-header py-5">
-            <!--begin::Title-->
-            <h3 class="card-title align-items-start flex-column">
-                <span class="card-label fw-bold text-gray-900">Discounted Product Sales</span>
-                <span class="text-gray-500 mt-1 fw-semibold fs-6">Users from all channels</span>
-            </h3>
-            <!--end::Title-->
-
-            <!--begin::Toolbar-->
-            <div class="card-toolbar">
-                <!--begin::Menu-->
-                
-                <!--end::Menu-->
             </div>
-            <!--end::Toolbar-->
         </div>
-        <!--end::Header-->
-
-        <!--begin::Card body-->
-        <div class="card-body d-flex justify-content-between flex-column pb-1 px-0">
-            <!--begin::Info-->
-            <div class="px-9 mb-5">
-                <!--begin::Statistics-->
-                <div class="d-flex align-items-center mb-2">
-                    <!--begin::Currency-->
-                    <span class="fs-4 fw-semibold text-gray-500 align-self-start me-1">$</span>
-                    <!--end::Currency-->
-
-                    <!--begin::Value-->
-                    <span class="fs-2hx fw-bold text-gray-800 me-2 lh-1 ls-n2">{{ discounted_sales_data.total|floatformat:0 }}</span>
-                    <!--end::Value-->
-
-                    <!--begin::Label-->
-                    <span class="badge badge-light-success fs-base">
-                        <i class="bi bi-arrow-up-short fs-5 text-success ms-n1"></i>
-                        {{ discounted_sales_data.growth_percentage|floatformat:1 }}%
-                    </span>
-                    <!--end::Label-->
+        <div class="col-xl-6 mb-5 mb-xl-10">
+            <div class="card card-flush overflow-hidden h-md-100">
+                <div class="card-header py-5">
+                    <h3 class="card-title align-items-start flex-column">
+                        <span class="card-label fw-bold text-gray-900">Discounted Product Sales</span>
+                        <span class="text-gray-500 mt-1 fw-semibold fs-6">Users from all channels</span>
+                    </h3>
+                    <div class="card-toolbar">
+                        <button class="btn btn-icon btn-color-gray-500 btn-active-color-primary justify-content-end" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end" data-kt-menu-overflow="true"></button>
+                    </div>
                 </div>
-                <!--end::Statistics-->
-
-                <!--begin::Description-->
-                <span class="fs-6 fw-semibold text-gray-500">Total Discounted Sales This Month</span>
-                <!--end::Description-->
+                <div class="card-body d-flex justify-content-between flex-column pb-1 px-0">
+                    <div class="px-9 mb-5">
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="fs-4 fw-semibold text-gray-500 align-self-start me-1">$</span>
+                            <span class="fs-2hx fw-bold text-gray-800 me-2 lh-1 ls-n2">{{ discounted_sales_data.total|floatformat:2 }}</span>
+                            <span class="badge badge-light-success fs-base">
+                                <i class="bi bi-arrow-up-short fs-5 text-success ms-n1"></i>
+                                {{ discounted_sales_data.growth_percentage|floatformat:1 }}%
+                            </span>
+                        </div>
+                        <span class="fs-6 fw-semibold text-gray-500">Total Discounted Sales This Month</span>
+                    </div>
+                    <div id="kt_charts_widget_discounted_sales" class="min-h-auto ps-4 pe-6" style="height: 300px; min-height: 315px;"></div>
+                </div>
             </div>
-            <!--end::Info-->
-
-            <!--begin::Chart-->
-            <div id="kt_charts_widget_discounted_sales" class="min-h-auto ps-4 pe-6" style="height: 300px; min-height: 315px;"></div>
-            <!--end::Chart-->
         </div>
-        <!--end::Card body-->
     </div>
-    <!--end::Chart widget 4-->
 </div>
 
-<!-- Add this script at the end of your template -->
-
-
-
-
-{% endblock content %}
 {% block page_only_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script>
     // Category Donut Chart - Chart.js
     const categoryData = {{ categories_data|safe }};
@@ -356,15 +283,14 @@
         }
     });
 
-    document.addEventListener("DOMContentLoaded", function () {
-        // Sales Chart (ApexCharts)
-        const salesChart = {{ sales_chart_data|safe }};
-        const salesLabels = salesChart.labels;
-        const salesData = salesChart.data;
+    // Sales Chart (ApexCharts)
+    const salesChart = {{ sales_chart_data|safe }};
+    const salesLabels = salesChart.labels;
+    const salesData = salesChart.data;
 
-        const element = document.getElementById("diagram");
-        const height = parseInt(KTUtil.css(element, 'height'));
-        const chart = new ApexCharts(element, {
+    const salesElement = document.getElementById("diagram");
+    if (salesElement) {
+        const salesChartInstance = new ApexCharts(salesElement, {
             series: [{
                 name: "Sales",
                 data: salesData
@@ -372,7 +298,7 @@
             chart: {
                 fontFamily: 'inherit',
                 type: 'area',
-                height: height,
+                height: 300,
                 toolbar: { show: false },
                 zoom: { enabled: false },
                 sparkline: { enabled: false }
@@ -413,7 +339,7 @@
             },
             yaxis: {
                 min: 0,
-                max: Math.max(...salesData) * 1.2,
+                max: Math.max(...salesData, 1) * 1.2,
                 labels: {
                     style: { colors: '#99A1B7', fontSize: '12px' },
                     formatter: function (val) {
@@ -438,9 +364,7 @@
             grid: {
                 borderColor: '#DBDFE9',
                 strokeDashArray: 4,
-                yaxis: {
-                    lines: { show: true }
-                },
+                yaxis: { lines: { show: true } },
                 padding: { top: 0, right: 0, bottom: 0, left: 0 }
             },
             markers: {
@@ -449,102 +373,97 @@
                 strokeWidth: 2
             }
         });
-        chart.render();
+        salesChartInstance.render();
+    }
 
-        // Discounted Sales Chart (ApexCharts)
-        const discountedChart = {{ discounted_sales_data|safe }};
-        const discountedLabels = discountedChart.labels;
-        const discountedData = discountedChart.data;
+    // Discounted Sales Chart (ApexCharts)
+    const discountedChart = {{ discounted_sales_data|safe }};
+    const discountedLabels = discountedChart.labels;
+    const discountedData = discountedChart.data;
 
-        const discountedSalesElement = document.getElementById("kt_charts_widget_discounted_sales");
-        if (discountedSalesElement) {
-            const discountedChartInstance = new ApexCharts(discountedSalesElement, {
-                series: [{
-                    name: 'Discounted Sales',
-                    data: discountedData
-                }],
-                chart: {
-                    fontFamily: 'inherit',
-                    type: 'area',
-                    height: 300,
-                    toolbar: { show: false },
-                    zoom: { enabled: false },
-                    sparkline: { enabled: false }
-                },
-                legend: { show: false },
-                dataLabels: { enabled: false },
-                fill: {
-                    type: 'gradient',
-                    gradient: {
-                        shadeIntensity: 1,
-                        opacityFrom: 0.4,
-                        opacityTo: 0.2,
-                        stops: [0, 90, 100]
-                    }
-                },
-                stroke: {
-                    curve: 'smooth',
-                    show: true,
-                    width: 3,
-                    colors: ['#1B84FF']
-                },
-                xaxis: {
-                    categories: discountedLabels,
-                    axisBorder: { show: false },
-                    axisTicks: { show: false },
-                    labels: {
-                        style: { colors: '#99A1B7', fontSize: '12px' }
-                    },
-                    crosshairs: {
-                        show: true,
-                        position: 'front',
-                        stroke: {
-                            color: '#1B84FF',
-                            width: 1,
-                            dashArray: 3
-                        }
-                    },
-                    tooltip: { enabled: false }
-                },
-                yaxis: {
-                    min: 0,
-                    max: Math.max(...discountedData) * 1.2,
-                    labels: {
-                        style: { colors: '#99A1B7', fontSize: '12px' },
-                        formatter: function (value) {
-                            return '$' + value.toFixed(0);
-                        }
-                    }
-                },
-                tooltip: {
-                    style: { fontSize: '12px' },
-                    y: {
-                        formatter: function (val) {
-                            return '$' + val.toFixed(2);
-                        }
-                    }
-                },
-                colors: ['#1B84FF'],
-                grid: {
-                    borderColor: '#DBDFE9',
-                    strokeDashArray: 4,
-                    yaxis: { lines: { show: true } },
-                    padding: { top: 0, right: 0, bottom: 0, left: 0 }
-                },
-                markers: {
-                    colors: ['#1B84FF'],
-                    strokeColors: '#1B84FF',
-                    strokeWidth: 3
+    const discountedSalesElement = document.getElementById("kt_charts_widget_discounted_sales");
+    if (discountedSalesElement) {
+        const discountedChartInstance = new ApexCharts(discountedSalesElement, {
+            series: [{
+                name: 'Discounted Sales',
+                data: discountedData
+            }],
+            chart: {
+                fontFamily: 'inherit',
+                type: 'area',
+                height: 300,
+                toolbar: { show: false },
+                zoom: { enabled: false },
+                sparkline: { enabled: false }
+            },
+            legend: { show: false },
+            dataLabels: { enabled: false },
+            fill: {
+                type: 'gradient',
+                gradient: {
+                    shadeIntensity: 1,
+                    opacityFrom: 0.4,
+                    opacityTo: 0.2,
+                    stops: [0, 90, 100]
                 }
-            });
-            discountedChartInstance.render();
-        }
-    });
+            },
+            stroke: {
+                curve: 'smooth',
+                show: true,
+                width: 3,
+                colors: ['#1B84FF']
+            },
+            xaxis: {
+                categories: discountedLabels,
+                axisBorder: { show: false },
+                axisTicks: { show: false },
+                labels: {
+                    style: { colors: '#99A1B7', fontSize: '12px' }
+                },
+                crosshairs: {
+                    show: true,
+                    position: 'front',
+                    stroke: {
+                        color: '#1B84FF',
+                        width: 1,
+                        dashArray: 3
+                    }
+                },
+                tooltip: { enabled: false }
+            },
+            yaxis: {
+                min: 0,
+                max: Math.max(...discountedData, 1) * 1.2,
+                labels: {
+                    style: { colors: '#99A1B7', fontSize: '12px' },
+                    formatter: function (value) {
+                        return '$' + value.toFixed(0);
+                    }
+                }
+            },
+            tooltip: {
+                style: { fontSize: '12px' },
+                y: {
+                    formatter: function (val) {
+                        return '$' + val.toFixed(2);
+                    }
+                }
+            },
+            colors: ['#1B84FF'],
+            grid: {
+                borderColor: '#DBDFE9',
+                strokeDashArray: 4,
+                yaxis: { lines: { show: true } },
+                padding: { top: 0, right: 0, bottom: 0, left: 0 }
+            },
+            markers: {
+                colors: ['#1B84FF'],
+                strokeColors: '#1B84FF',
+                strokeWidth: 3
+            }
+        });
+        discountedChartInstance.render();
+    }
 </script>
-
-
-
-
-
-
 {% endblock page_only_scripts %}
+{% endblock content %}
