@@ -9,7 +9,7 @@ from django.utils.dateparse import parse_date
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic import ListView
-
+from django.core.paginator import EmptyPage,PageNotAnInteger
 from adminv3.filters import QS_filter_user, QS_Products_filter, QS_orders_filters
 from adminv3.mixins import StaffAccountRequiredMixin, PermissionRequiredMixin
 from django.contrib.auth.models import User, Group, Permission
@@ -946,11 +946,12 @@ class OrderListingView(StaffAccountRequiredMixin, PermissionRequiredMixin, View)
             "payment_status": request.GET.get("payment_status", "all"),
             "search_by": request.GET.get("search_by"),
             "sort_by": request.GET.get("sort_by", "desc_created"),
-            "payment_type": request.GET.get("payment_type", "all")
+            "payment_type": request.GET.get("payment_type", "all"),
+            "created_date": request.GET.get("created_date", None),
+
         }
 
         base_queryset = QS_orders_filters(filter_dict)
-
 
         item_queryset = OrderItem.objects.all().annotate(
             item_total=F("price") * F("quantity")

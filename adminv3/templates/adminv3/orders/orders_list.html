@@ -55,6 +55,7 @@
                                             {% include "adminv3/pages/filters/filter_order_status.html" %}
                                             {% include "adminv3/pages/filters/filter_payment_status.html" %}
                                             {% include "adminv3/pages/filters/filter_payment_type.html" %}
+                                            {% include "adminv3/pages/filters/filter_created_date_range_picker.html" %}
                                           </div>
                                       </div>
                                   </div>
@@ -164,6 +165,8 @@
 {% endblock %}
 
 {% block page_only_scripts %}
+{% include "adminv3/pages/filters/filter_created_date_range_picker_js.html" %}
+
 <script>
     //searchbox
     document.addEventListener("DOMContentLoaded", function () {
@@ -232,5 +235,8 @@ $(document).ready(function () {
 });
 
 
+
 </script>
+
+
 {% endblock page_only_scripts %}

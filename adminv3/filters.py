@@ -1,6 +1,7 @@
 from django.db.models import Q
 from django.contrib.auth.models import User
 
+from adminv3.utils import util_get_date_range
 from dashboard.models import Product, Order
 
 
@@ -11,6 +12,7 @@ def QS_filter_user(filter_dict={}):
     user_type = filter_dict.get('account_type', 'all')  # retailer/wholesaler/supplier
     sort_by = filter_dict.get('sort_by', 'desc_created')
     permission_group = filter_dict.get('permission_group', 'all')
+    created_date = filter_dict.get('created_date', None)
 
     filters = Q()
 
@@ -48,6 +50,11 @@ def QS_filter_user(filter_dict={}):
         except ValueError:
             pass
 
+    if created_date:
+        start_date, end_date = util_get_date_range(created_date)
+        if start_date and end_date:
+            filters &= Q(date_joined__range=(start_date, end_date))
+
     ordering = '-date_joined' if sort_by == 'desc_created' else 'date_joined'
 
     return User.objects.filter(filters).order_by(ordering)
@@ -58,6 +65,8 @@ def QS_Products_filter(filter_dict={}):
     product_status = filter_dict.get("product_status")
     account_type = filter_dict.get("account_type")
     sort_by = filter_dict.get("sort_by", "desc_created")
+    created_date = filter_dict.get('created_date', None)
+
 
     qs = Product.objects.all()
 
@@ -85,6 +94,11 @@ def QS_Products_filter(filter_dict={}):
     else:
         qs = qs.order_by("-created_at")
 
+    if created_date:
+        start_date, end_date = util_get_date_range(created_date)
+        if start_date and end_date:
+            qs = qs.filter(created_at__range=(start_date, end_date))
+
     return qs
 
 
@@ -95,6 +109,8 @@ def QS_orders_filters(filter_dict={}):
     search_by = filter_dict.get("search_by")
     sort_by = filter_dict.get("sort_by")
     payment_type = filter_dict.get("payment_type")
+    filter_created_date = filter_dict.get('created_date', None)
+
 
 
     qs = Order.objects.all()
@@ -132,6 +148,12 @@ def QS_orders_filters(filter_dict={}):
         qs = qs.order_by("-created_at")
     else:
         qs = qs.order_by("-created_at")
+
+    if filter_created_date:
+        start_date, end_date = util_get_date_range(filter_created_date)
+
+        if start_date and end_date:
+            qs = qs.filter(created_at__range=(start_date, end_date))
 
     return qs
 

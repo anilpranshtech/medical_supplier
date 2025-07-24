@@ -25,3 +25,23 @@ def requestParamsToDict(request, url_params=False, get_params=False, post_params
         parsed_params = dict(request.POST.items())
 
     return parsed_params
+
+
+def util_get_date_range(filter_date):
+    try:
+        date_parts = filter_date.split('-')
+        start_date_str, end_date_str = map(str.strip, date_parts)
+
+        start_date = timezone.make_aware(timezone.datetime.strptime(start_date_str, '%m/%d/%Y'),
+                                         timezone.get_current_timezone())
+        end_date = timezone.make_aware(timezone.datetime.strptime(end_date_str, '%m/%d/%Y'),
+                                       timezone.get_current_timezone())
+        if start_date == end_date:
+            end_date = end_date + timedelta(days=1) - timedelta(seconds=1)
+        else:
+            end_date = end_date + timedelta(days=1) - timedelta(seconds=1)
+
+        return start_date, end_date
+    except Exception as e:
+        print(f"Error parsing date range: {e}")
+        return None, None

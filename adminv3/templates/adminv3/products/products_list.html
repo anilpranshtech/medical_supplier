@@ -17,6 +17,7 @@ Products
 
         <div id="kt_app_content" class="app-content  flex-column-fluid mx-5">
             <div id="kt_app_content_container" class="app-container  container-fluid ">
+
                 <form action="{% url 'adminv3:products_list' %}" method='GET'>
                     <div class="card mb-7">
                         <div class="card-body">
@@ -32,6 +33,7 @@ Products
                                           <div class="row g-8">
                                             {% include "adminv3/pages/filters/filter_product_category.html" %}
                                             {% include "adminv3/pages/filters/filter_product_status.html" %}
+                                            {% include "adminv3/pages/filters/filter_created_date_range_picker.html" %}
 
                                           </div>
                                       </div>
@@ -211,3 +213,6 @@ Products
 
 {% endblock content %}
 
+{% block page_only_scripts %}
+{% include "adminv3/pages/filters/filter_created_date_range_picker_js.html" %}
+{% endblock page_only_scripts %}
