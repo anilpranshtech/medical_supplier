@@ -1642,7 +1642,7 @@ class OrderPlacedView(LoginRequiredMixin, TemplateView):
 
         # Order summary calculations
         subtotal = sum(item.price * item.quantity for item in order.items.all()) or Decimal('0.00')
-        shipping = order.shipping_fees or Decimal('24.60')
+        shipping = order.shipping_fees or Decimal('00.00')
         vat = Decimal('0.00')
         total = subtotal + shipping + vat
 
