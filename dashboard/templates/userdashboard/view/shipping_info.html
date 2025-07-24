@@ -56,7 +56,8 @@
                                         {{ address.address_title|default:"Address" }}
                                     </h3>
                                     {% if address.is_default %}
-                                    <span class="kt-badge kt-badge-outline kt-badge-success">Ship here</span>
+                                    <span class="kt-badge kt-badge-outline kt-badge-success">
+                                        <i class="ki-filled ki-check-circle text-base"></i>Ship here</span>
                                     {% endif %}
                                 </div>
                                 <div class="kt-card-content px-5 space-y-4">
@@ -85,7 +86,8 @@
                                         </div>
                                         {% if not address.is_default %}
                                         <button class="kt-btn kt-btn-outline kt-btn-sm" data-kt-action="select"
-                                                data-address-id="{{ address.id }}">Select Address
+                                                data-address-id="{{ address.id }}">
+                                            <i class="ki-filled ki-check text-base"></i>Select Address
                                         </button>
                                         {% endif %}
                                     </div>
@@ -96,10 +98,11 @@
                             {% endfor %}
                         </div>
                         <div class="flex justify-end items-center flex-wrap gap-3">
-                            <button class="kt-btn kt-btn-outline" data-kt-modal-toggle="#modal_add_address">Add New
-                                Address
+                            <button class="kt-btn kt-btn-outline" data-kt-modal-toggle="#modal_add_address">
+                                <i class="ki-filled ki-plus text-base"></i>
+                                Add New Address
                             </button>
-                            <a class="kt-btn kt-btn-outline" href="{% url 'dashboard:shopping_cart' %}">
+                            <a class="kt-btn kt-btn-primary" href="{% url 'dashboard:shopping_cart' %}">
                                 <i class="ki-filled ki-black-left text-base"></i>
                                 Shopping Cart
                             </a>
@@ -249,9 +252,12 @@
                             </div>
                         </div>
                         <div class="kt-card-footer px-5 flex justify-end gap-3">
-                            <button class="kt-btn kt-btn-outline" data-kt-modal-dismiss="true" type="button">Cancel
+                            <button class="kt-btn kt-btn-outline" data-kt-modal-dismiss="true" type="button">
+                                <i class="ki-filled ki-cross text-base"></i>Cancel
                             </button>
-                            <button class="kt-btn kt-btn-primary" type="submit">Save Address</button>
+                            <button class="kt-btn kt-btn-primary" type="submit">
+                                <i class="ki-filled ki-check text-base"></i>Save Address
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -315,9 +321,12 @@
                             </div>
                         </div>
                         <div class="kt-card-footer px-5 flex justify-end gap-3">
-                            <button class="kt-btn kt-btn-outline" data-kt-modal-dismiss="true" type="button">Cancel
+                            <button class="kt-btn kt-btn-outline" data-kt-modal-dismiss="true" type="button">
+                                <i class="ki-filled ki-cross text-base"></i>Cancel
                             </button>
-                            <button class="kt-btn kt-btn-primary" type="submit">Update Address</button>
+                            <button class="kt-btn kt-btn-primary" type="submit">
+                                <i class="ki-filled ki-check text-base"></i>Update Address
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -341,9 +350,12 @@
                             Are you sure you want to remove this address?
                         </div>
                         <div class="kt-card-footer px-5 flex justify-end gap-3">
-                            <button class="kt-btn kt-btn-outline" data-kt-modal-dismiss="true" type="button">Cancel
+                            <button class="kt-btn kt-btn-outline" data-kt-modal-dismiss="true" type="button">
+                                <i class="ki-filled ki-cross text-base"></i>Cancel
                             </button>
-                            <button class="kt-btn kt-btn-danger" type="submit">Remove</button>
+                            <button class="kt-btn kt-btn-danger" type="submit">
+                                <i class="ki-filled ki-check text-base"></i>Remove
+                            </button>
                         </div>
                     </form>
                 </div>

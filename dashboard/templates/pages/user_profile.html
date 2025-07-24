@@ -118,7 +118,9 @@
                                         {% endif %}
                                     </td>
                                     <td class="py-2 text-center">
-                                        <a href="{% url 'dashboard:shipping_info' %}" class="kt-link kt-link-underlined kt-link-dashed">Add/Edit</a>
+                                        <a href="{% url 'dashboard:shipping_info' %}" class="kt-link kt-link-underlined kt-link-dashed">
+                                            <i class="ki-filled ki-notepad-edit"></i>
+                                        </a>
                                     </td>
                                 </tr>
                             </tbody>
@@ -140,7 +142,9 @@
                                 <label class="text-sm font-medium text-secondary-foreground">Email</label>
                                 <p class="text-sm text-foreground">{{ user.email }}</p>
                             </div>
-                            <a href="#" class="kt-link kt-link-underlined kt-link-dashed text-sm" data-kt-modal-toggle="#modal_edit_email">Edit</a>
+                            <a href="#" class="kt-link kt-link-underlined kt-link-dashed text-sm" data-kt-modal-toggle="#modal_edit_email">
+                                <i class="ki-filled ki-notepad-edit"></i>
+                            </a>
                         </div>
                         <div class="flex justify-between items-center">
                             <div>
@@ -153,7 +157,9 @@
                                     {% endif %}
                                 </p>
                             </div>
-                            <a href="#" class="kt-link kt-link-underlined kt-link-dashed text-sm" data-kt-modal-toggle="#modal_edit_phone">Edit</a>
+                            <a href="#" class="kt-link kt-link-underlined kt-link-dashed text-sm" data-kt-modal-toggle="#modal_edit_phone">
+                                <i class="ki-filled ki-notepad-edit"></i>
+                            </a>
                         </div>
                         <div>
                             <label class="text-sm font-medium text-secondary-foreground">Default Address</label>
@@ -201,7 +207,8 @@
                     </div>
                     <div class="kt-card-content space-y-2 text-sm">
                         <p class="text-secondary-foreground">You have {{ wishlist_count }} item{{ wishlist_count|pluralize }} in your wishlist.</p>
-                        <a href="{% url 'dashboard:wish_list' %}" class="kt-btn kt-btn-sm kt-btn-primary">View Wishlist</a>
+                        <a href="{% url 'dashboard:wish_list' %}" class="kt-btn kt-btn-sm kt-btn-primary">
+                            <i class="ki-filled ki-heart text-base"></i>View Wishlist</a>
                     </div>
                 </div>
 
@@ -242,8 +249,12 @@
                         <input type="email" name="email" class="kt-input w-full" value="{{ user.email }}" required>
                     </div>
                     <div class="kt-card-footer px-5 py-4 flex justify-end gap-3">
-                        <button type="button" class="kt-btn kt-btn-outline" onclick="closeModal('modal_edit_email')">Cancel</button>
-                        <button type="submit" class="kt-btn kt-btn-primary">Save Changes</button>
+                        <button type="button" class="kt-btn kt-btn-outline" onclick="closeModal('modal_edit_email')">
+                            <i class="ki-filled ki-cross text-base"></i>Cancel
+                        </button>
+                        <button type="submit" class="kt-btn kt-btn-primary">
+                            <i class="ki-filled ki-check text-base"></i>Save Changes
+                        </button>
                     </div>
                 </form>
             </div>
@@ -267,8 +278,12 @@
                         <input type="tel" name="phone" class="kt-input w-full" value="{% if default_address and default_address.phone %}{{ default_address.phone }}{% else %}{{ phone|default:'' }}{% endif %}" placeholder="+1234567890" required>
                     </div>
                     <div class="kt-card-footer px-5 py-4 flex justify-end gap-3">
-                        <button type="button" class="kt-btn kt-btn-outline" onclick="closeModal('modal_edit_phone')">Cancel</button>
-                        <button type="submit" class="kt-btn kt-btn-primary">Save Changes</button>
+                        <button type="button" class="kt-btn kt-btn-outline" onclick="closeModal('modal_edit_phone')">
+                            <i class="ki-filled ki-cross text-base"></i>Cancel
+                        </button>
+                        <button type="submit" class="kt-btn kt-btn-primary">
+                            <i class="ki-filled ki-check text-base"></i>Save Changes
+                        </button>
                     </div>
                 </form>
             </div>
@@ -309,8 +324,12 @@
                         </div>
                     </div>
                     <div class="kt-card-footer px-5 py-4 flex justify-end gap-3">
-                        <button type="button" class="kt-btn kt-btn-outline" onclick="closeModal('modal_edit_profile')">Cancel</button>
-                        <button type="submit" class="kt-btn kt-btn-primary">Save Changes</button>
+                        <button type="button" class="kt-btn kt-btn-outline" onclick="closeModal('modal_edit_profile')">
+                            <i class="ki-filled ki-cross text-base"></i>Cancel
+                        </button>
+                        <button type="submit" class="kt-btn kt-btn-primary">
+                            <i class="ki-filled ki-check text-base"></i>Save Changes
+                        </button>
                     </div>
                 </form>
             </div>

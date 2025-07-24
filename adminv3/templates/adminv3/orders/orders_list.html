@@ -43,7 +43,7 @@
                     <div class="card mb-7">
                         <div class="card-body">
                             {% include "adminv3/pages/filters/filter_sort_by.html" %}
-                            {% include "adminv3/pages/filters/filter_search_by.html"  with show_advance_search_link=True search_help_text='Choices: Order ID, Customer' search_placeholder_text='Search' %}
+                            {% include "adminv3/pages/filters/filter_search_by.html"  with show_advance_search_link=True search_help_text='Choices: Order ID, Customer, Phone Number' search_placeholder_text='Search' %}
                                 <div class="collapse" id="kt_advanced_search_form">
 
                                   <div class="separator separator-dashed mt-9 mb-6"></div>
@@ -72,11 +72,10 @@
                         <table class="table align-middle table-row-dashed fs-6 gy-5 px-0 text-center" id="kt_ecommerce_sales_table">
                             <thead>
                                 <tr class="text-gray-500 fw-bold fs-7 text-uppercase gs-0 text-center">
-                                    <th class="w-10px pe-2">
-                                        <div class="form-check form-check-sm form-check-custom form-check-solid me-3"></div>
-                                    </th>
+
                                     <th class="min-w-100px">Order ID</th>
                                     <th class="min-w-120px">Customer Name</th>
+                                    <th class="min-w-120px">Phone Number</th>
                                     <th class="min-w-70px">Status</th>
                                     <th class="min-w-100px">Price</th>
                                     <th class="min-w-100px">Payment Status</th>
@@ -89,16 +88,18 @@
                             <tbody class="fw-semibold text-gray-600 text-center">
                                 {% for order in orders %}
                                 <tr>
+
                                     <td>
-                                        <div class="form-check form-check-sm form-check-custom form-check-solid"></div>
-                                    </td>
-                                    <td>
-                                        <a href="{% url 'adminv2:order_detail' order.order_id %}" class="text-gray-800 text-hover-primary fw-bold">{{ order.order_id }}</a>
+                                        <a href="{% url 'adminv3:orders_detail' order.order_id %}" class="text-gray-800 text-hover-primary fw-bold">{{ order.order_id }}</a>
                                     </td>
                                     <td>
                                         <a href="#" class="text-gray-800 text-hover-primary fs-5 fw-bold">
-                                            {{ order.user.get_full_name|default:order.user.username }}
+                                            {{ order.user.email}}
                                         </a>
+                                    </td>
+
+                                    <td>
+                                        <span class="fw-bold">{{ order.phone_number|default:"---" }}</span>
                                     </td>
 
                                     <td data-order="{{ order.status }}">
@@ -111,7 +112,7 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        <span class="fw-bold">${{ order_totals|dict_get:order.order_id|floatformat:2|default:"0.00" }}</span>
+                                        <span class="fw-bold">${{ order.payment.amount }}</span>
                                     </td>
                                     <td>
                                         {% if order.payment.paid %}

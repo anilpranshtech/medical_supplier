@@ -53,24 +53,24 @@
                             <div class="kt-card">
                                 <div class="kt-card-header justify-start bg-muted/70 gap-9 h-auto py-5">
                                     <div class="flex flex-col gap-1.5">
-                                        <span class="text-xs font-normal text-secondary-foreground">Order ID</span>
-                                        <span class="text-sm font-medium text-mono">{{ order_id|default:"N/A" }}</span>
+                                        <span class="text-xs font-medium text-grey-650">Order ID</span>
+                                        <span class="text-sm font-bold text-grey-650">{{ order_id|default:"N/A" }}</span>
                                     </div>
                                     <div class="flex flex-col gap-1.5">
-                                        <span class="text-xs font-normal text-secondary-foreground">Order Placed</span>
-                                        <span class="text-sm font-medium text-mono">{{ order_date|date:"d F, Y"|default:"N/A" }}</span>
+                                        <span class="text-xs font-medium text-grey-650">Order Placed</span>
+                                        <span class="text-sm font-bold text-grey-650">{{ order_date|date:"d F, Y"|default:"N/A" }}</span>
                                     </div>
                                     <div class="flex flex-col gap-1.5">
-                                        <span class="text-xs font-normal text-secondary-foreground">Total</span>
-                                        <span class="text-sm font-medium text-mono">{{ currency_symbol }} {{ order_summary.total|floatformat:2|default:"0.00" }}</span>
+                                        <span class="text-xs font-medium text-grey-650">Total</span>
+                                        <span class="text-sm font-bold text-grey-650">{{ currency_symbol }} {{ order_summary.total|floatformat:2|default:"0.00" }}</span>
                                     </div>
                                     <div class="flex flex-col gap-1.5">
-                                        <span class="text-xs font-normal text-secondary-foreground">Ship to</span>
-                                        <span class="text-sm font-medium text-mono">{{ billing.customer_name|default:user.get_full_name|default:"N/A" }}</span>
+                                        <span class="text-xs font-medium text-grey-650">Ship to</span>
+                                        <span class="text-sm font-bold text-grey-650">{{ billing.customer_name|default:user.get_full_name|default:"N/A" }}</span>
                                     </div>
                                     <div class="flex flex-col gap-1.5">
-                                        <span class="text-xs font-normal text-secondary-foreground">Estimated Delivery</span>
-                                        <span class="text-sm font-medium text-mono">{{ estimated_delivery|date:"d F, Y"|default:"N/A" }}</span>
+                                        <span class="text-xs font-medium text-grey-650">Estimated Delivery</span>
+                                        <span class="text-sm font-bold text-grey-650">{{ estimated_delivery|date:"d F, Y"|default:"N/A" }}</span>
                                     </div>
                                 </div>
                                 <div class="kt-card-content p-5 lg:p-7.5 space-y-5">
@@ -121,8 +121,14 @@
                             </div>
                             <!-- Navigation -->
                             <div class="flex justify-end items-center flex-wrap gap-3">
-                                <a class="kt-btn kt-btn-outline" href="{% url 'dashboard:my_orders' %}">View All Orders</a>
-                                <a class="kt-btn kt-btn-primary" href="{% url 'dashboard:home' %}">Continue Shopping</a>
+                                <a class="kt-btn kt-btn-outline" href="{% url 'dashboard:my_orders' %}">
+                                    <i class="ki-filled ki-parcel text-base"></i>
+                                    View All Orders
+                                </a>
+                                <a class="kt-btn kt-btn-primary" href="{% url 'dashboard:home' %}">
+                                    <i class="ki-filled ki-handcart text-base"></i>
+                                    Continue Shopping
+                                </a>
                             </div>
                         </div>
 

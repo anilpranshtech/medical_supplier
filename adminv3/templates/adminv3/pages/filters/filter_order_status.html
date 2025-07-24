@@ -2,15 +2,16 @@
     <label class="fs-6 form-label fw-bold text-gray-900">Order Status</label>
 
     <select class="form-select form-select-solid" data-hide-search="true" name="order_status" data-control="select2">
-        <option value="all" {% if request.GET.product_status == 'all' %} selected {% endif %}>All</option>
-        <option value="pending" {% if request.GET.product_status == 'pending' %} selected {% endif %}>Pending</option>
-        <option value="processing" {% if request.GET.product_status == 'processing' %} selected {% endif %}>Processing</option>
-        <option value="shipped" {% if request.GET.product_status == 'shipped' %} selected {% endif %}>Shipped</option>
-        <option value="delivered" {% if request.GET.product_status == 'delivered' %} selected {% endif %}>Delivered</option>
-        <option value="delivering" {% if request.GET.product_status == 'delivering' %} selected {% endif %}>Delivering</option>
-        <option value="cancelled" {% if request.GET.product_status == 'cancelled' %} selected {% endif %}>Cancelled</option>
-        <option value="refunded" {% if request.GET.product_status == 'refunded' %} selected {% endif %}>Refunded</option>
-        <option value="failed" {% if request.GET.product_status == 'failed' %} selected {% endif %}>Failed</option>
+        <option value="all" {% if request.GET.order_status == 'all' %} selected {% endif %}>All</option>
+        <option value="completed" {% if request.GET.order_status == 'completed' %} selected {% endif %}>Completed</option>
+        <option value="pending" {% if request.GET.order_status == 'pending' %} selected {% endif %}>Pending</option>
+        <option value="processing" {% if request.GET.order_status == 'processing' %} selected {% endif %}>Processing</option>
+        <option value="shipped" {% if request.GET.order_status == 'shipped' %} selected {% endif %}>Shipped</option>
+        <option value="delivered" {% if request.GET.order_status == 'delivered' %} selected {% endif %}>Delivered</option>
+        <option value="delivering" {% if request.GET.order_status == 'delivering' %} selected {% endif %}>Delivering</option>
+        <option value="cancelled" {% if request.GET.order_status == 'cancelled' %} selected {% endif %}>Cancelled</option>
+        <option value="refunded" {% if request.GET.order_status == 'refunded' %} selected {% endif %}>Refunded</option>
+        <option value="failed" {% if request.GET.order_status == 'failed' %} selected {% endif %}>Failed</option>
     </select>
 
 </div>
