@@ -1,0 +1,22 @@
+<!-- Pagination Controls -->
+{% if page_obj.has_other_pages %}
+<div class="flex justify-center mt-6">
+    <ul class="inline-flex items-center space-x-2">
+        {% if page_obj.has_previous %}
+        <li><a href="?page={{ page_obj.previous_page_number }}" class="kt-btn kt-btn-outline">← Prev</a></li>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}
+        <li><span class="kt-btn kt-btn-primary">{{ num }}</span></li>
+        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+        <li><a href="?page={{ num }}" class="kt-btn kt-btn-outline">{{ num }}</a></li>
+        {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+        <li><a href="?page={{ page_obj.next_page_number }}" class="kt-btn kt-btn-outline">Next →</a></li>
+        {% endif %}
+    </ul>
+</div>
+{% endif %}

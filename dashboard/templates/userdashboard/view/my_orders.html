@@ -2,6 +2,12 @@
 {% load static %}
 {% load custom_filters %}
 
+<style>
+    .display-none {
+        display: none;
+    }
+</style>
+
 {% block content %}
 <div class="kt-container-fixed mt-1" style="max-width: var(--custom-container-width, 85%);">
     <div class="flex flex-col items-stretch gap-7 mt-5 py-5">
@@ -11,7 +17,6 @@
                 <h2 class="text-xl font-bold mb-5">My Orders</h2>
                 <!-- begin: grid -->
                 <div class="grid xl:grid-cols-1 gap-5 lg:gap-9">
-                    <!-- begin: Card -->
                     {% for order in orders %}
                     <div class="lg:col-span-1">
                         <div class="kt-card">
@@ -58,43 +63,60 @@
                                 </div>
                             </div>
                             <div class="kt-card-content p-5 lg:p-7.5 space-y-5">
-                                {% for item in order.items.all %}
-                                <div class="kt-card">
-                                    <div class="kt-card-content flex items-center flex-wrap justify-between gap-4.5 p-2 pe-5">
-                                        <div class="flex items-center gap-3.5">
-                                            <div class="kt-card flex items-center justify-center bg-accent/50 h-[70px] w-[90px] shadow-none">
-                                                {% if item.product.main_image %}
-                                                    <img alt="{{ item.product.name }}" class="cursor-pointer h-[70px]" src="{{ item.product.main_image.0.image.url }}">
-                                                {% else %}
-                                                    <span class="text-xs">No Image</span>
-                                                {% endif %}
-                                            </div>
-                                            <div class="flex flex-col gap-1">
-                                                <a class="hover:text-primary text-sm font-medium text-mono leading-5.5" href="#">{{ item.product.name }}</a>
-                                                <div class="flex items-center gap-1.5">
-                                                    <span class="text-xs font-normal text-secondary-foreground uppercase">
-                                                        Brand: <span class="text-xs font-medium text-foreground">{{ item.product.brand.name|default:"N/A" }}</span>
-                                                    </span>
+                                <div class="space-y-3 relative">
+                                    {% with item_count=order.items.all|length %}
+                                        <div class="space-y-3" id="items-container-{{ forloop.counter }}">
+                                            {% for item in order.items.all %}
+                                                <div class="kt-card order-item {% if forloop.counter0 >= 1 %}hidden{% endif %}">
+                                                    <div class="kt-card-content flex items-center flex-wrap justify-between gap-4.5 p-2 pe-5">
+                                                        <div class="flex items-center gap-3.5">
+                                                            <div class="kt-card flex items-center justify-center bg-accent/50 h-[70px] w-[90px] shadow-none">
+                                                                {% if item.product.main_image %}
+                                                                    <img alt="{{ item.product.name }}" class="cursor-pointer h-[70px]" src="{{ item.product.main_image.0.image.url }}">
+                                                                {% else %}
+                                                                    <span class="text-xs">No Image</span>
+                                                                {% endif %}
+                                                            </div>
+                                                            <div class="flex flex-col gap-1">
+                                                                <a class="hover:text-primary text-sm font-medium text-mono leading-5.5" href="#">{{ item.product.name }}</a>
+                                                                <div class="flex items-center gap-1.5">
+                                                                    <span class="text-xs font-normal text-secondary-foreground uppercase">
+                                                                        Brand: <span class="text-xs font-medium text-foreground">{{ item.product.brand.name|default:"N/A" }}</span>
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="flex flex-col gap-1.5">
+                                                            <span class="text-xs font-normal text-secondary-foreground text-end">{{ item.quantity }} x</span>
+                                                            <div class="flex items-center flex-wrap gap-1.5">
+                                                                <span class="text-sm font-semibold text-mono">
+                                                                    {{ item.payment_currency|default:"USD" }}
+                                                                    {{ item.quantity|floatformat:0 }} × {{ item.payment_currency|default:"USD" }} {{ item.price|floatformat:2 }} =
+                                                                    {{ item.payment_currency|default:"USD" }} {{ item.quantity|multiply:item.price|floatformat:2 }}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            {% empty %}
+                                                <div class="text-center text-sm text-secondary-foreground">
+                                                    No items in this order.
+                                                </div>
+                                            {% endfor %}
                                         </div>
-                                        <div class="flex flex-col gap-1.5">
-                                            <span class="text-xs font-normal text-secondary-foreground text-end">{{ item.quantity }} x</span>
-                                            <div class="flex items-center flex-wrap gap-1.5">
-                                                <span class="text-sm font-semibold text-mono">
-                                                    {{ item.payment_currency|default:"USD" }}
-                                                    {{ item.quantity|floatformat:0 }} × {{ item.payment_currency|default:"USD" }} {{ item.price|floatformat:2 }} =
-                                                    {{ item.payment_currency|default:"USD" }} {{ item.quantity|multiply:item.price|floatformat:2 }}
-                                                </span>
+                                        {% if item_count > 1 %}
+                                            <div class="text-center mt-2">
+                                                <button
+                                                    type="button"
+                                                    class="kt-btn kt-btn-outline text-sm toggle-btn"
+                                                    data-target="items-container-{{ forloop.counter }}"
+                                                >
+                                                   ▼ Read more
+                                                </button>
                                             </div>
-                                        </div>
-                                    </div>
+                                        {% endif %}
+                                    {% endwith %}
                                 </div>
-                                {% empty %}
-                                <div class="text-center text-sm text-secondary-foreground">
-                                    No items in this order.
-                                </div>
-                                {% endfor %}
                             </div>
                         </div>
                     </div>
@@ -106,9 +128,34 @@
                     <!-- end: Card -->
                 </div>
                 <!-- end: grid -->
+                {% include "pages/pagination.html" %}
             </div>
             <!-- End of Container -->
         </main>
     </div>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const toggleButtons = document.querySelectorAll(".toggle-btn");
+
+    toggleButtons.forEach((btn) => {
+        btn.addEventListener("click", function () {
+            const targetId = btn.getAttribute("data-target");
+            const container = document.getElementById(targetId);
+            const hiddenItems = container.querySelectorAll(".order-item.hidden");
+
+            if (hiddenItems.length > 0) {
+                hiddenItems.forEach((el) => el.classList.remove("hidden"));
+                btn.innerHTML = '▲ Show less';
+            } else {
+                container.querySelectorAll(".order-item").forEach((el, idx) => {
+                    if (idx >= 1) el.classList.add("hidden");
+                });
+                btn.innerHTML = '▼ Read more';
+            }
+        });
+    });
+});
+</script>
 {% endblock content %}

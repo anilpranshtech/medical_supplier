@@ -1717,10 +1717,18 @@ class MyOrdersView(LoginRequiredMixin, TemplateView):
             to_attr='main_image'
         )
 
-        # Fetch all orders for the user
-        orders = Order.objects.filter(user=user).select_related('payment').prefetch_related(main_image_prefetch).order_by('-created_at')
-        context['orders'] = orders
-        logger.info(f"Fetched {orders.count()} orders for user {user.id}")
+        # Fetch all orders
+        orders_qs = Order.objects.filter(user=user).select_related('payment').prefetch_related(main_image_prefetch).order_by('-created_at')
+
+        # Add pagination
+        paginator = Paginator(orders_qs, 2)
+        page_number = self.request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+
+        context['orders'] = page_obj.object_list
+        context['page_obj'] = page_obj
+
+        logger.info(f"Fetched {orders_qs.count()} orders for user {user.id}, page {page_number or 1}")
         return context
 
 
