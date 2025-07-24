@@ -1,22 +1,46 @@
-<!-- Pagination Controls -->
 {% if page_obj.has_other_pages %}
-<div class="flex justify-center mt-6">
-    <ul class="inline-flex items-center space-x-2">
-        {% if page_obj.has_previous %}
-        <li><a href="?page={{ page_obj.previous_page_number }}" class="kt-btn kt-btn-outline">← Prev</a></li>
-        {% endif %}
+<div class="kt-card mt-7">
+    <div class="flex justify-between items-center flex-wrap gap-4 px-4 py-4 mt-4 mb-4">
 
-        {% for num in page_obj.paginator.page_range %}
-        {% if page_obj.number == num %}
-        <li><span class="kt-btn kt-btn-primary">{{ num }}</span></li>
-        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-        <li><a href="?page={{ num }}" class="kt-btn kt-btn-outline">{{ num }}</a></li>
-        {% endif %}
-        {% endfor %}
+        <!-- Left: Record Range -->
+        <div class="text-sm text-muted">
+            Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} records
+        </div>
 
-        {% if page_obj.has_next %}
-        <li><a href="?page={{ page_obj.next_page_number }}" class="kt-btn kt-btn-outline">Next →</a></li>
-        {% endif %}
-    </ul>
+        <!-- Center: Pagination Buttons -->
+        <div class="flex justify-center flex-grow">
+            <ul class="inline-flex items-center space-x-2">
+                {% if page_obj.has_previous %}
+                    <li><a href="?page=1" class="kt-btn kt-btn-outline">« First</a></li>
+                    <li><a href="?page={{ page_obj.previous_page_number }}" class="kt-btn kt-btn-outline">← Prev</a></li>
+                {% else %}
+                    <li><span class="kt-btn kt-btn-disabled">« First</span></li>
+                    <li><span class="kt-btn kt-btn-disabled">← Prev</span></li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li><span class="kt-btn kt-btn-primary">{{ num }}</span></li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li><a href="?page={{ num }}" class="kt-btn kt-btn-outline">{{ num }}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <li><a href="?page={{ page_obj.next_page_number }}" class="kt-btn kt-btn-outline">Next →</a></li>
+                    <li><a href="?page={{ page_obj.paginator.num_pages }}" class="kt-btn kt-btn-outline">Last »</a></li>
+                {% else %}
+                    <li><span class="kt-btn kt-btn-disabled">Next →</span></li>
+                    <li><span class="kt-btn kt-btn-disabled">Last »</span></li>
+                {% endif %}
+            </ul>
+        </div>
+
+        <!-- Right: Total Pages -->
+        <div class="text-sm text-muted">
+            Total Pages: {{ page_obj.paginator.num_pages }}
+        </div>
+
+    </div>
 </div>
 {% endif %}
