@@ -1,7 +1,7 @@
 from django.db.models import Q
 from django.contrib.auth.models import User
 
-from dashboard.models import Product
+from dashboard.models import Product, Order
 
 
 def QS_filter_user(filter_dict={}):
@@ -86,3 +86,52 @@ def QS_Products_filter(filter_dict={}):
         qs = qs.order_by("-created_at")
 
     return qs
+
+
+def QS_orders_filters(filter_dict={}):
+
+    order_status = filter_dict.get("order_status")
+    payment_status = filter_dict.get("payment_status")
+    search_by = filter_dict.get("search_by")
+    sort_by = filter_dict.get("sort_by")
+    payment_type = filter_dict.get("payment_type")
+
+
+    qs = Order.objects.all()
+
+    if search_by:
+        qs = qs.filter(
+            Q(order_id__icontains=search_by) |
+            Q(user__email__icontains=search_by) |
+            Q(phone_number__icontains=search_by)
+        )
+
+    if order_status and order_status != "all":
+        qs = qs.filter(status=order_status)
+
+
+    if payment_status and payment_status != "all":
+        if payment_status == "paid":
+            qs = qs.filter(payment__paid=True)
+        elif payment_status == "unpaid":
+            qs = qs.filter(Q(payment__isnull=True) | Q(payment__paid=False))
+
+
+    if payment_type and payment_type != 'all':
+        if payment_type == "cod":
+            qs = qs.filter(payment__payment_method="cod")
+        elif payment_type == "stripe":
+            qs = qs.filter(payment__payment_method="stripe")
+        elif payment_type == "razorpay":
+            qs = qs.filter(payment__payment_method="razorpay")
+
+
+    if sort_by == "asc_created":
+        qs = qs.order_by("created_at")
+    elif sort_by == "desc_created":
+        qs = qs.order_by("-created_at")
+    else:
+        qs = qs.order_by("-created_at")
+
+    return qs
+

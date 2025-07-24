@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.paginator import Paginator
 from django.db import IntegrityError
 from django.db.models import Prefetch, F, Sum
 from django.http import JsonResponse, Http404, HttpResponse
@@ -9,7 +10,7 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic import ListView
 
-from adminv3.filters import QS_filter_user, QS_Products_filter
+from adminv3.filters import QS_filter_user, QS_Products_filter, QS_orders_filters
 from adminv3.mixins import StaffAccountRequiredMixin, PermissionRequiredMixin
 from django.contrib.auth.models import User, Group, Permission
 from django.contrib.contenttypes.models import ContentType
@@ -934,48 +935,43 @@ class DeleteProductImageView(StaffAccountRequiredMixin, View):
 
 class OrderListingView(StaffAccountRequiredMixin, PermissionRequiredMixin, View):
     template_name = 'adminv3/orders/orders_list.html'
+    paginate_by = 25
     required_permissions = ('dashboard.view_order',)
 
-    # def get(self, request):
-    #     status_filter = request.GET.get('status')
-    #
-    #     order = Order.objects.all()
-    #     if status_filter and status_filter != '':
-    #         order = order.filter(status=status_filter)
-    #
-    #     total_orders = Order.objects.count()
-    #     completed_orders = Order.objects.filter(status='completed').count()
-    #     pending_orders = Order.objects.filter(status='pending').count()
-    #     cancelled_orders = Order.objects.filter(status='cancelled').count()
-    #
-    #     context = {
-    #         'orders': order,
-    #         'total_orders': total_orders,
-    #         'completed_orders': completed_orders,
-    #         'pending_orders': pending_orders,
-    #         'cancelled_orders': cancelled_orders,
-    #         'selected_status': status_filter,
-    #     }
-    #     return render(request, self.template_name, context)
     def get(self, request):
-        status_filter = request.GET.get('status')
-        supplier = request.user
 
-        # Filter order items for the current supplier and annotate item totals
-        item_queryset = OrderItem.objects.filter(order_to=supplier).annotate(
-            item_total=F('price') * F('quantity')
+        # Collect all filters
+        filter_dict = {
+            "order_status": request.GET.get("order_status", "all"),
+            "payment_status": request.GET.get("payment_status", "all"),
+            "search_by": request.GET.get("search_by"),
+            "sort_by": request.GET.get("sort_by", "desc_created"),
+            "payment_type": request.GET.get("payment_type", "all")
+        }
+
+        base_queryset = QS_orders_filters(filter_dict)
+
+
+        item_queryset = OrderItem.objects.all().annotate(
+            item_total=F("price") * F("quantity")
         )
 
-        # Fetch orders where items belong to the current supplier
-        orders = Order.objects.filter(
-            items__order_to=supplier
-        ).distinct().select_related('user', 'payment').prefetch_related(
-            Prefetch('items', queryset=item_queryset, to_attr='filtered_items')
+        orders_queryset = base_queryset.all().distinct().select_related(
+            "user", "payment"
+        ).prefetch_related(
+            Prefetch("items", queryset=item_queryset, to_attr="filtered_items")
         )
 
-        # Apply status filter if selected
-        if status_filter:
-            orders = orders.filter(status=status_filter)
+        # Apply pagination
+        page = request.GET.get("page", 1)
+        paginator = Paginator(orders_queryset, self.paginate_by)
+
+        try:
+            orders = paginator.page(page)
+        except PageNotAnInteger:
+            orders = paginator.page(1)
+        except EmptyPage:
+            orders = paginator.page(paginator.num_pages)
 
         # Totals and phone mapping
         order_totals = {}
@@ -987,62 +983,41 @@ class OrderListingView(StaffAccountRequiredMixin, PermissionRequiredMixin, View)
             for item in order.filtered_items:
                 total += float(item.item_total or 0)
                 if item.phone_number and phone_number == "---":
-                    phone_number = item.phone_number  # Get first valid phone
+                    phone_number = item.phone_number
             order_totals[order.pk] = total
             order_phones[order.pk] = phone_number
 
-        # Status counters
-        total_orders = orders.count()
-        completed_orders = orders.filter(status='completed').count()
-        pending_orders = orders.filter(status='pending').count()
-        cancelled_orders = orders.filter(status='cancelled').count()
+        # Status counters (with supplier restriction)
+        supplier_orders = base_queryset.all().distinct()
+        total_orders = supplier_orders.count()
+        completed_orders = supplier_orders.filter(status='completed').count()
+        pending_orders = supplier_orders.filter(status='pending').count()
+        cancelled_orders = supplier_orders.filter(status='cancelled').count()
 
         context = {
-            'orders': orders,
-            'order_totals': order_totals,  # key = order.pk, value = total price
-            'order_phones': order_phones,  # key = order.pk, value = phone number
-            'total_orders': total_orders,
-            'completed_orders': completed_orders,
-            'pending_orders': pending_orders,
-            'cancelled_orders': cancelled_orders,
-            'selected_status': status_filter or '',
+            "orders": orders,
+            "page_obj":orders,
+            "order_totals": order_totals,
+            "order_phones": order_phones,
+            "total_orders": total_orders,
+            "completed_orders": completed_orders,
+            "pending_orders": pending_orders,
+            "cancelled_orders": cancelled_orders,
+            "selected_status": filter_dict["order_status"],
+            "selected_payment": filter_dict["payment_status"],
+            "selected_sort_by": filter_dict["sort_by"],
+            "search_by": filter_dict["search_by"],
         }
 
         return render(request, self.template_name, context)
 
-
 class OrderDetailesView(StaffAccountRequiredMixin, View):
     template_name = 'adminv3/orders/order_details.html'
 
-    # def get(self, request, pk):
-    #     order = get_object_or_404(Order, pk=pk)
-    #     product = order.product
-    #     brand = product.brand.name if product.brand else '-'
-    #     user = order.order_by
-    #
-    #     subtotal = float(order.price) * order.quantity
-    #     commission = (float(order.price) * float(product.commission_percentage) / 100) * order.quantity
-    #     shipping_fee = float(order.shipping_fees) if order.shipping_fees else 0
-    #
-    #     grand_total = subtotal - commission + shipping_fee
-    #
-    #     context = {
-    #         'order': order,
-    #         'product': product,
-    #         'brand': brand,
-    #         'user': user,
-    #         'subtotal': round(subtotal, 2),
-    #         'total_commission': round(commission, 2),
-    #         'shipping_fee': round(shipping_fee, 2),
-    #         'grand_total': round(grand_total, 2),
-    #
-    #     }
-    #     return render(request, self.template_name, context)
-
     def get(self, request, order_id):
-        supplier = request.user
+
         order = get_object_or_404(
-            Order.objects.filter(items__order_to=supplier).distinct().select_related('user', 'payment').prefetch_related(
+            Order.objects.all().distinct().select_related('user', 'payment').prefetch_related(
                 Prefetch('items', queryset=OrderItem.objects.select_related('product', 'order_by', 'order_to').prefetch_related(
                     Prefetch('product__productimage_set', queryset=ProductImage.objects.filter(is_main=True), to_attr='main_image')
                 ))
@@ -1051,7 +1026,7 @@ class OrderDetailesView(StaffAccountRequiredMixin, View):
         )
 
         # Calculate totals for supplier's order items
-        order_items = order.items.filter(order_to=supplier)
+        order_items = order.items.all()
         if not order_items.exists():
             logger.warning(f"Supplier {supplier.id} attempted to view order {order.id} with no relevant items")
             messages.error(request, "You do not have permission to view this order.")
