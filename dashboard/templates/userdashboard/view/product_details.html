@@ -130,6 +130,20 @@
     .loading .loader {
         display: inline-block;
     }
+    .kt-wishlist-icon {
+    cursor: pointer;
+    transition: color 0.2s ease-in-out;
+}
+.kt-wishlist-icon:hover i {
+    color: #ff0000; 
+}
+.kt-wishlist-icon i {
+   
+    color: #6b7280; 
+}
+.kt-wishlist-icon i.text-red-500 {
+    color: #ff0000; 
+}
 </style>
 
 <div class="kt-container-fixed mt-1" style="max-width: var(--custom-container-width, 85%);">
@@ -242,16 +256,18 @@
                         {% endif %}
                     {% endif %}
                     {% if request.user.is_authenticated %}
-                        <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-md"
-                                data-kt-wishlist-toggle="true" data-product-id="{{ product.id|default:'0' }}">
-                            <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
-                        </button>
-                    {% else %}
-                        <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-md show-login-modal">
-                            <i class="ki-filled ki-heart heart-icon text-xs"></i>
-                        </button>
-                    {% endif %}
-
+    <span class="kt-wishlist-icon cursor-pointer"
+          data-kt-wishlist-toggle="true"
+          data-product-id="{{ product.id|default:'0' }}"
+          title="{% if product.id in user_wishlist_ids %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}">
+        <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
+    </span>
+{% else %}
+    <span class="kt-wishlist-icon cursor-pointer show-login-modal"
+          title="Login to Add to Wishlist">
+        <i class="ki-filled ki-heart heart-icon"></i>
+    </span>
+{% endif %}
                     
                 </div>
 

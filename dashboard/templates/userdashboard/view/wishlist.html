@@ -29,6 +29,7 @@
         height: 120px;
         object-fit: contain;
         margin-right: 20px;
+        position: relative; /* Added for absolute positioning of ribbon */
     }
 
     .kt-list-card-content {
@@ -42,6 +43,35 @@
         min-width: 150px;
     }
 
+    /* Offer Ribbon Styles (copied from homepage) */
+    .offer-ribbon {
+        position: absolute;
+        top: 10px;
+        left: -25px;
+        transform: rotate(-45deg);
+        background-color: #dc2626;
+        color: white;
+        padding: 5px 30px;
+        font-size: 12px;
+        font-weight: bold;
+        text-transform: uppercase;
+        z-index: 1;
+        clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 10% 50%);
+    }
+
+    .offer-ribbon:after {
+        content: '';
+        position: absolute;
+        right: -20px;
+        bottom: 0;
+        width: 0;
+        height: 0;
+        border-left: 20px solid #dc2626;
+        border-top: 10px solid transparent;
+        border-bottom: 10px solid transparent;
+    }
+
+    /* Responsive adjustments */
     @media (max-width: 768px) {
         .kt-list-card {
             flex-direction: column;
@@ -60,6 +90,20 @@
             align-items: flex-start;
             margin-top: 15px;
         }
+
+        .offer-ribbon {
+            top: 5px;
+            left: -20px;
+            padding: 4px 25px;
+            font-size: 10px;
+        }
+
+        .offer-ribbon:after {
+            right: -15px;
+            border-left: 15px solid #dc2626;
+            border-top: 8px solid transparent;
+            border-bottom: 8px solid transparent;
+        }
     }
 
     .text-red-500 {
@@ -70,18 +114,19 @@
         transition: color 0.2s ease-in-out;
     }
 </style>
+
 <div class="kt-container-fixed mt-7">
     <!-- begin: grid -->
     <div class="grid xl:grid-cols-1 gap-5 lg:gap-9">
         <!-- begin: Card -->
-
         <div class="lg:col-span-1">
             <div class="kt-card">
                 <div class="kt-container-fixed mt-1" style="max-width: var(--custom-container-width, 90%);">
                     <div class="flex items-center justify-between mt-2 py-5 mb-2">
                         <h1 class="text-xl font-bold">Your Wishlist</h1>
                         <button class="kt-btn kt-btn-primary kt-btn" id="wishlist-clear">
-                            <i class="ki-filled ki-cross text-base"></i>Clear Wishlist</button>
+                            <i class="ki-filled ki-cross text-base"></i>Clear Wishlist
+                        </button>
                     </div>
 
                     <div class="kt-product-list mb-7" id="wishlist-items">
@@ -89,14 +134,22 @@
                         <div id="wish-{{ item.product.id }}" class="kt-list-card">
                             <!-- Product Image -->
                             <div class="kt-list-card-image">
-                                <img alt="{{ item.product.name }}" class="h-full w-full object-contain"
-                                     src="{{ item.product.main_image.url|default:'/static/default_product.png' }}">
+                                {% if item.product.offer_active and item.product.offer_percentage %}
+                                    <div class="offer-ribbon">save {{ item.product.offer_percentage|floatformat:0 }}%</div>
+                                {% endif %}
+                                <a href="{% url 'dashboard:product_detail' item.product.id %}">
+                                    <img alt="{{ item.product.name }}"
+                                         class="h-full w-full object-contain"
+                                         src="{{ item.product.main_image.url|default:'/static/default_product.png' }}">
+                                </a>
                             </div>
 
                             <!-- Product Details -->
                             <div class="kt-list-card-content">
                                 <h3 class="text-lg font-bold text-gray-650 mb-1">
-                                    {{ item.product.name }}
+                                    <a href="{% url 'dashboard:product_detail' item.product.id %}">
+                                        {{ item.product.name }}
+                                    </a>
                                 </h3>
                                 <p class="text-sm text-gray-100 mb-2">
                                     {{ item.product.description|default:"No description available"|truncatechars:200 }}
@@ -104,17 +157,17 @@
                                 <div class="flex items-center gap-4">
                                     {% if item.product.average_rating %}
                                     <span class="kt-badge
-                        {% if item.product.average_rating >= 4 %}kt-badge-success
-                        {% elif item.product.average_rating >= 2 %}kt-badge-warning
-                        {% else %}kt-badge-danger{% endif %}
-                        kt-badge-sm rounded-full gap-1">
-                        <i class="ki-solid ki-star text-white -mt-0.5"></i>
-                        {{ item.product.average_rating|floatformat:1 }}
-                    </span>
+                                        {% if item.product.average_rating >= 4 %}kt-badge-success
+                                        {% elif item.product.average_rating >= 2 %}kt-badge-warning
+                                        {% else %}kt-badge-danger{% endif %}
+                                        kt-badge-sm rounded-full gap-1">
+                                        <i class="ki-solid ki-star text-white -mt-0.5"></i>
+                                        {{ item.product.average_rating|floatformat:1 }}
+                                    </span>
                                     {% endif %}
                                     <span class="text-xs font-normal text-secondary-foreground">
-                        SKU: <span class="font-medium">{{ item.product.sku }}</span>
-                    </span>
+                                        SKU: <span class="font-medium">{{ item.product.sku }}</span>
+                                    </span>
                                 </div>
                             </div>
 
@@ -123,20 +176,20 @@
                                 <div class="text-right mb-3">
                                     {% if item.product.discounted_price %}
                                     <span class="text-xs font-normal text-secondary-foreground line-through">
-                        ${{ item.product.price }}
-                    </span>
+                                        ${{ item.product.price|floatformat:2 }}
+                                    </span>
                                     <div class="flex items-center gap-2">
-                        <span class="text-lg font-bold text-mono">
-                            ${{ item.product.discounted_price }}
-                        </span>
-                                        <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">
-                            save {{ item.product.discount_percentage }}%
-                        </span>
+                                        <span class="text-lg font-bold text-mono">
+                                            ${{ item.product.discounted_price|floatformat:2 }}
+                                        </span>
+                                        <!-- <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">
+                                            save {{ item.product.offer_percentage|floatformat:0 }}%
+                                        </span> -->
                                     </div>
                                     {% else %}
                                     <span class="text-lg font-bold text-mono">
-                        ${{ item.product.price }}
-                    </span>
+                                        ${{ item.product.price|floatformat:2 }}
+                                    </span>
                                     {% endif %}
                                 </div>
 
@@ -172,6 +225,7 @@
         </div>
     </div>
 </div>
+
 <script>
     function getCookie(name) {
         let cookieValue = null;
@@ -255,7 +309,7 @@
                 .then(res => res.json())
                 .then(data => {
                     if (data.status === "success") {
-                        button.classList.remove('kt-btn-primary');
+                        button.classList.remove('kt-btn-outline');
                         button.classList.add('kt-btn-success');
                         button.style.background = '#3b82f6';
                         button.style.color = 'white';

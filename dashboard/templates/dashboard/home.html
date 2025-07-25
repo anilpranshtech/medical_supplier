@@ -145,6 +145,48 @@
     .xl\:grid-cols-8 {
         grid-template-columns: repeat(8, minmax(0, 1fr));
     }
+    }
+
+    /* Discount Ribbon Styles */
+    .discount-ribbon {
+        position: absolute;
+        top: 10px;
+        left: -25px;
+        transform: rotate(-45deg);
+        background-color: #dc2626;
+        color: white;
+        padding: 5px 30px;
+        font-size: 12px;
+        font-weight: bold;
+        text-transform: uppercase;
+        z-index: 1;
+        clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 10% 50%);
+    }
+
+    .discount-ribbon:after {
+        content: '';
+        position: absolute;
+        right: -20px;
+        bottom: 0;
+        width: 0;
+        height: 0;
+        border-left: 20px solid #dc2626;
+        border-top: 10px solid transparent;
+        border-bottom: 10px solid transparent;
+    }
+   .kt-wishlist-icon {
+    cursor: pointer;
+    transition: color 0.2s ease-in-out;
+}
+.kt-wishlist-icon:hover i {
+    color: #ff0000; 
+}
+.kt-wishlist-icon i {
+   
+    color: #6b7280;
+}
+.kt-wishlist-icon i.text-red-500 {
+    color: #ff0000; 
 }
 </style>
 
@@ -180,16 +222,18 @@
                                          src="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"/>
                                 </a>
                                 {% if request.user.is_authenticated %}
-                                    <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
-                                            data-kt-wishlist-toggle="true"
-                                            data-product-id="{{ product.id }}">
-                                        <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
-                                    </button>
-                                {% else %}
-                                    <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2 show-login-modal">
-                                        <i class="ki-filled ki-heart heart-icon text-xs"></i>
-                                    </button>
-                                {% endif %}
+    <span class="kt-wishlist-icon absolute top-2 end-2 cursor-pointer"
+          data-kt-wishlist-toggle="true"
+          data-product-id="{{ product.id }}"
+          title="{% if product.id in user_wishlist_ids %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}">
+        <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
+    </span>
+{% else %}
+    <span class="kt-wishlist-icon absolute top-2 end-2 cursor-pointer show-login-modal"
+          title="Login to Add to Wishlist">
+        <i class="ki-filled ki-heart heart-icon"></i>
+    </span>
+{% endif %}
                             </div>
                             <h3 class="text-sm font-semibold text-gray-650 leading-snug truncate hover:text-primary transition">
                                 {{ product.name }}
@@ -269,12 +313,15 @@
                 {% for product in special_offers %}
                 {% if forloop.first %}
                 <div class="lg:col-span-1">
-                    <div class="kt-card h-full bg-violet-50 border-violet-200 dark:border-violet-950 dark:bg-violet-950/30">
+                    <div class="kt-card h-full bg-violet-50 border-violet-200 dark:border-violet-950 dark:bg-violet-950/30 relative">
+                        {% if product.offer_active and product.offer_percentage %}
+                        <div class="discount-ribbon">save {{ product.offer_percentage|floatformat:0 }}%</div>
+                        {% endif %}
                         <div class="kt-card-content flex items-center flex-wrap sm:flex-nowrap justify-between gap-5 lg:gap-9 lg:px-7.5 p-5">
                             <div class="flex flex-col">
                                 <div class="mb-3">
                                     {% if product.offer_active and product.offer_percentage %}
-                                    <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">save {{ product.offer_percentage|floatformat:0 }}%</span>
+                               
                                     {% endif %}
                                 </div>
                                 <h3 class="text-[26px] font-semibold text-mono mb-1">{{ product.name|default:'Unnamed Product' }}</h3>
@@ -310,16 +357,18 @@
                                         {% endif %}
                                     {% endif %}
                                     {% if request.user.is_authenticated %}
-                                        <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm"
-                                                data-kt-wishlist-toggle="true"
-                                                data-product-id="{{ product.id|default:'0' }}">
-                                            <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
-                                        </button>
-                                    {% else %}
-                                        <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm show-login-modal">
-                                            <i class="ki-filled ki-heart heart-icon text-xs"></i>
-                                        </button>
-                                    {% endif %}
+    <span class="kt-wishlist-icon absolute top-2 end-2 cursor-pointer"
+          data-kt-wishlist-toggle="true"
+          data-product-id="{{ product.id }}"
+          title="{% if product.id in user_wishlist_ids %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}">
+        <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
+    </span>
+{% else %}
+    <span class="kt-wishlist-icon absolute top-2 end-2 cursor-pointer show-login-modal"
+          title="Login to Add to Wishlist">
+        <i class="ki-filled ki-heart heart-icon"></i>
+    </span>
+{% endif %}
                                     {% if product.offer_active and product.offer_percentage %}
                                     <span class="text-base font-normal text-secondary-foreground line-through pt-[1px]">
                                         ${{ product.price|floatformat:2 }}
@@ -351,7 +400,10 @@
                 <div class="lg:col-span-1">
                     <div class="grid sm:grid-cols-2 gap-5 items-stretch">
                 {% else %}
-                        <div class="kt-card h-full bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-950">
+                        <div class="kt-card h-full bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-950 relative">
+                            {% if product.offer_active and product.offer_percentage %}
+                            <div class="discount-ribbon">save {{ product.offer_percentage|floatformat:0 }}%</div>
+                            {% endif %}
                             <div class="kt-card-content flex flex-col items-center justify-center px-5 pb-0">
                                 <a href="{% url 'dashboard:product_detail' product.id %}" class="block">
                                     <img alt="{{ product.name|default:'Unnamed Product' }}"
@@ -374,7 +426,7 @@
                                     ${{ product.price|floatformat:2 }}
                                 </span>
                                     <span class="text-sm font-medium text-mono">${{ product.discounted_price|floatformat:2 }}</span>
-                                    <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">save {{ product.offer_percentage|floatformat:0 }}%</span>
+                                 
                                     {% else %}
                                     <span class="text-sm font-medium text-mono">${{ product.price|floatformat:2 }}</span>
                                     {% endif %}
@@ -410,11 +462,12 @@
                                         </button>
                                         {% endif %}
                                     {% endif %}
-                                    <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm"
-                                            data-kt-wishlist-toggle="true"
-                                            data-product-id="{{ product.id|default:'0' }}">
-                                        <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
-                                    </button>
+                                    <span class="kt-wishlist-icon absolute top-2 end-2 cursor-pointer"
+          data-kt-wishlist-toggle="true"
+          data-product-id="{{ product.id }}"
+          title="{% if product.id in user_wishlist_ids %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}">
+        <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
+    </span>
                                 </div>
                                 {% if product.offer_active and product.offer_percentage %}
                             
@@ -464,16 +517,18 @@
                                          data-product-discount="{{ product.offer_percentage|default:'' }}"/>
                                 </a>
                                 {% if request.user.is_authenticated %}
-                                    <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
-                                            data-kt-wishlist-toggle="true"
-                                            data-product-id="{{ product.id|default:'0' }}">
-                                        <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
-                                    </button>
-                                {% else %}
-                                    <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2 show-login-modal">
-                                        <i class="ki-filled ki-heart heart-icon text-xs"></i>
-                                    </button>
-                                {% endif %}
+    <span class="kt-wishlist-icon absolute top-2 end-2 cursor-pointer"
+          data-kt-wishlist-toggle="true"
+          data-product-id="{{ product.id }}"
+          title="{% if product.id in user_wishlist_ids %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}">
+        <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
+    </span>
+{% else %}
+    <span class="kt-wishlist-icon absolute top-2 end-2 cursor-pointer show-login-modal"
+          title="Login to Add to Wishlist">
+        <i class="ki-filled ki-heart heart-icon"></i>
+    </span>
+{% endif %}
                             </div>
                             <h3 class="text-lg font-bold text-gray-650 leading-snug truncate hover:text-primary transition">
                                 {{ product.name }}
@@ -570,16 +625,18 @@
                                          data-product-discount="{{ product.offer_percentage|default:'' }}"/>
                                 </a>
                                 {% if request.user.is_authenticated %}
-                                    <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
-                                            data-kt-wishlist-toggle="true"
-                                            data-product-id="{{ product.id|default:'0' }}">
-                                        <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
-                                    </button>
-                                {% else %}
-                                    <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2 show-login-modal">
-                                        <i class="ki-filled ki-heart heart-icon text-xs"></i>
-                                    </button>
-                                {% endif %}
+    <span class="kt-wishlist-icon absolute top-2 end-2 cursor-pointer"
+          data-kt-wishlist-toggle="true"
+          data-product-id="{{ product.id }}"
+          title="{% if product.id in user_wishlist_ids %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}">
+        <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
+    </span>
+{% else %}
+    <span class="kt-wishlist-icon absolute top-2 end-2 cursor-pointer show-login-modal"
+          title="Login to Add to Wishlist">
+        <i class="ki-filled ki-heart heart-icon"></i>
+    </span>
+{% endif %}
                             </div>
                             <h3 class="text-lg font-bold text-gray-650 leading-snug truncate hover:text-primary transition">
                                 {{ product.name }}
@@ -676,16 +733,18 @@
                                          data-product-discount="{{ product.offer_percentage|default:'' }}"/>
                                 </a>
                                 {% if request.user.is_authenticated %}
-                                    <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2"
-                                            data-kt-wishlist-toggle="true"
-                                            data-product-id="{{ product.id|default:'0' }}">
-                                        <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
-                                    </button>
-                                {% else %}
-                                    <button class="kt-wishlist-icon kt-btn kt-btn-icon kt-btn-outline kt-btn-sm absolute top-2 end-2 show-login-modal">
-                                        <i class="ki-filled ki-heart heart-icon text-xs"></i>
-                                    </button>
-                                {% endif %}
+    <span class="kt-wishlist-icon absolute top-2 end-2 cursor-pointer"
+          data-kt-wishlist-toggle="true"
+          data-product-id="{{ product.id }}"
+          title="{% if product.id in user_wishlist_ids %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}">
+        <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
+    </span>
+{% else %}
+    <span class="kt-wishlist-icon absolute top-2 end-2 cursor-pointer show-login-modal"
+          title="Login to Add to Wishlist">
+        <i class="ki-filled ki-heart heart-icon"></i>
+    </span>
+{% endif %}
                             </div>
                             <h3 class="text-lg font-bold text-gray-650 leading-snug truncate hover:text-primary transition">
                                 {{ product.name }}
