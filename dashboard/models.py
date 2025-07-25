@@ -86,6 +86,21 @@ class Brand(models.Model):
     class Meta:
         verbose_name = verbose_name_plural ="Brand"
 
+class Event(models.Model):
+    conference_link = models.URLField(max_length=500, null=True, blank=True)
+    speaker_name = models.CharField(max_length=255, null=True, blank=True)
+    conference_at = models.DateTimeField(null=True, blank=True)
+    duration = models.DurationField(null=True, blank=True, help_text="Duration (e.g., 1:30:00 for 1 hour 30 minutes)")
+    venue = models.CharField(max_length=500, null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.speaker_name or 'Event'} at {self.venue or 'Unknown'}"
+
+    class Meta:
+        ordering = ['-conference_at']
+        verbose_name = verbose_name_plural = "Events"
 
 class Product(models.Model):
     # Category hierarchy
@@ -107,6 +122,7 @@ class Product(models.Model):
 
     # Uploads
     brochure = models.FileField(upload_to='product_brochures/', null=True, blank=True)
+    event = models.ForeignKey(Event, on_delete=models.SET_NULL, null=True, blank=True)
 
     # Images handled separately (see below)
 
