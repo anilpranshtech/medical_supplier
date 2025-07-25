@@ -7,9 +7,9 @@ from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import viewsets, status, response, permissions, mixins
 from django.utils.timezone import now
-from dashboard.models import PasswordUpdateTracker
+from dashboard.models import PasswordUpdateTracker, ProductCategory, ProductSubCategory, ProductLastCategory
 from medical_api.serializers import UserLoginSerializer, DoctorRegistrationSerializer, ChangePasswordSerializer, \
-    DoctorProfileSerializer
+    DoctorProfileSerializer, ProductCategorySerializer, ProductSubCategorySerializer, ProductLastCategorySerializer
 from django.contrib.auth import get_user_model, login, authenticate, logout
 from rest_framework.response import Response
 
@@ -149,4 +149,54 @@ class DoctorProfileAPIView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CategoryListAPIView(APIView):
+    def get(self, request):
+        categories = ProductCategory.objects.all()
+        serializer = ProductCategorySerializer(categories, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        serializer = ProductCategorySerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "Category created", "data": serializer.data}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class SubCategoryListByCategoryAPIView(APIView):
+    def get(self, request):
+        category_id = request.query_params.get('category_id')
+        if not category_id:
+            return Response({'error': 'category_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        subcategories = ProductSubCategory.objects.filter(category_id=category_id)
+        serializer = ProductSubCategorySerializer(subcategories, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        serializer = ProductSubCategorySerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "Subcategory created", "data": serializer.data}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class LastCategoryListBySubCategoryAPIView(APIView):
+    def get(self, request):
+        sub_category_id = request.query_params.get('sub_category_id')
+        if not sub_category_id:
+            return Response({'error': 'sub_category_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        last_categories = ProductLastCategory.objects.filter(sub_category_id=sub_category_id)
+        serializer = ProductLastCategorySerializer(last_categories, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        serializer = ProductLastCategorySerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "Last category created", "data": serializer.data}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -10,7 +10,7 @@ router = DefaultRouter()
 
 urlpatterns = [
 
-    path('r/', include(router.urls)),
+    path('', include(router.urls)),
 
     #--------------------- Authentication APIs ---------------------
     path("login/", UserLoginAdminView.as_view(), name="user_login"),
@@ -21,6 +21,12 @@ urlpatterns = [
     # --------------------- User Profile APIs ---------------------
     path('user-profile/', DoctorProfileAPIView.as_view(), name='user_profile'),
 
+    # --------------------- Categories ---------------------
+    path('categories/', CategoryListAPIView.as_view(), name='category-list'),
+    path('subcategories/', SubCategoryListByCategoryAPIView.as_view(), name='subcategory_by_category'),
+    path('last-categories/', LastCategoryListBySubCategoryAPIView.as_view(), name='lastcategory_by_subcategory'),
+
+    # --------------------- Products ---------------------
 
 
 ]
