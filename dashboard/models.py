@@ -86,6 +86,21 @@ class Brand(models.Model):
     class Meta:
         verbose_name = verbose_name_plural ="Brand"
 
+class Event(models.Model):
+    conference_link = models.URLField(max_length=500, null=True, blank=True)
+    speaker_name = models.CharField(max_length=255, null=True, blank=True)
+    conference_at = models.DateTimeField(null=True, blank=True)
+    duration = models.DurationField(null=True, blank=True, help_text="Duration (e.g., 1:30:00 for 1 hour 30 minutes)")
+    venue = models.CharField(max_length=500, null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.speaker_name or 'Event'} at {self.venue or 'Unknown'}"
+
+    class Meta:
+        ordering = ['-conference_at']
+        verbose_name = verbose_name_plural = "Events"
 
 class Product(models.Model):
     # Category hierarchy
@@ -107,15 +122,16 @@ class Product(models.Model):
 
     # Uploads
     brochure = models.FileField(upload_to='product_brochures/', null=True, blank=True)
+    event = models.ForeignKey(Event, on_delete=models.SET_NULL, null=True, blank=True)
 
     # Images handled separately (see below)
 
     # B2B / Pricing
     supplier_sku = models.CharField(max_length=100, blank=True)
-    price = models.DecimalField(max_digits=10, decimal_places=2)
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     commission_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0.0)
     weight = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    weight_unit = models.CharField(max_length=10, choices=[('gm', 'Gram'), ('kg', 'Kilogram'), ('cm', 'Centimeter'), ('ltr', 'Liter')], default='gm')
+    weight_unit = models.CharField(max_length=10, choices=[('gm', 'Gram'), ('kg', 'Kilogram'), ('cm', 'Centimeter'), ('ltr', 'Liter')], null=True,blank=True)
     stock_quantity = models.IntegerField(default=0)
     pcs_per_unit = models.IntegerField(default=1)
 
@@ -124,8 +140,8 @@ class Product(models.Model):
     show_rfq = models.BooleanField(default=False)
     Both = models.BooleanField(default=False)
 
-    min_order_qty = models.IntegerField(default=1)
-    low_stock_alert = models.IntegerField(default=5)
+    min_order_qty = models.IntegerField(default=0)
+    low_stock_alert = models.IntegerField(default=0)
 
     # Dates
     return_time_limit = models.PositiveIntegerField(help_text="Days", null=True, blank=True)
@@ -146,7 +162,7 @@ class Product(models.Model):
     ask_admin_to_publish = models.BooleanField(default=False)
 
     # Product status
-    condition = models.CharField(max_length=20, choices=[('new', 'New'), ('used', 'Used')], default='new')
+    condition = models.CharField(max_length=20, choices=[('new', 'New'), ('used', 'Used')], null=True, blank=True)
     tag = models.CharField(max_length=30, choices=[('recent', 'Recently Arrived'), ('popular', 'Most Wanted'),('limited', 'Limited Stock'), ('none', 'None')], default='none')
     warranty = models.CharField(max_length=20, choices=[('none', 'None'), ('1yr', '1 Year'), ('2yr', '2 Years')], default='none')
 

@@ -5,7 +5,7 @@ import re
 
 from rest_framework.permissions import IsAuthenticated
 
-from dashboard.models import DoctorProfile
+from dashboard.models import DoctorProfile, ProductCategory, ProductSubCategory, ProductLastCategory
 from django.db import IntegrityError
 
 
@@ -181,3 +181,19 @@ class DoctorProfileSerializer(serializers.ModelSerializer):
         instance.save()
 
         return instance
+
+
+class ProductCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductCategory
+        fields = ['id', 'name']
+
+class ProductSubCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductSubCategory
+        fields = ['id', 'name', 'category']
+
+class ProductLastCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductLastCategory
+        fields = ['id', 'name', 'sub_category']
