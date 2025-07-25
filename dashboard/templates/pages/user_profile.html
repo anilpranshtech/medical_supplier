@@ -2,337 +2,262 @@
 {% load static %}
 
 {% block content %}
-<div class="kt-container-fixed mt-7 py-6" style="max-width: var(--custom-container-width, 85%);">
-    <div class="flex flex-col gap-7">
-        <!-- Toolbar -->
-        <div class="flex justify-between items-center">
-            <h1 class="font-medium text-lg text-mono">User Profile</h1>
-        </div>
+<div class="container mx-auto px-4 py-8" style="max-width: 1500px;">
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-gray-650 dark:text-gray-100">Your Account</h1>
+        <p class="text-sm text-gray-400 dark:text-gray-400">Manage your personal information, addresses, and payment methods</p>
+    </div>
 
-        <!-- Grid Layout -->
-        <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            <!-- Left Column: Personal Info -->
-            <div class="grid gap-6">
-                <!-- Personal Info Card -->
-                <div class="kt-card w-full">
-                    <div class="kt-card-header">
-                        <h3 class="kt-card-title">Personal Info</h3>
-                    </div>
-                    <div class="kt-card-table overflow-x-auto pb-3">
-                        <table class="kt-table text-sm text-muted-foreground w-full">
-                            <tbody>
-                                <tr>
-                                    <td class="py-2 min-w-28 text-secondary-foreground font-normal">Photo</td>
-                                    <td class="py-2 text-secondary-foreground font-normal min-w-60 text-sm">
-                                        150x150px JPEG, PNG Image
-                                    </td>
-                                    <td class="py-2 text-center">
-                                        <div class="flex justify-center items-center">
-                                            <div class="kt-image-input size-20" data-kt-image-input="true"
-                                                 data-kt-image-input-initialized="true">
-                                                <form method="post" enctype="multipart/form-data" action="{% url 'dashboard:upload_avatar' %}">
-                                                    {% csrf_token %}
-                                                    <input accept=".png, .jpg, .jpeg" name="avatar" type="file">
-                                                    <input name="avatar_remove" type="hidden">
-                                                    <div class="relative">
-                                                    <!-- Image preview -->
-                                                    <div class="kt-image-input-placeholder ...">
-                                                        <div class="kt-image-input-preview ..."></div>
-                                                    </div>
-
-                                                    <!-- Remove button styled to float -->
-                                                    <button type="button"
-                                                        class="absolute top-0 right-0 bg-white/80 hover:bg-white p-1 rounded-full shadow"
-                                                        data-kt-image-input-remove="true"
-                                                        data-kt-tooltip="true"
-                                                        data-kt-tooltip-placement="right"
-                                                        data-kt-tooltip-trigger="hover"
-                                                        data-kt-tooltip-initialized="true">
-                                                        <i class="ki-filled ki-cross text-red-500 text-xs"></i>
-                                                    </button>
-                                                </div>
-
-                                                    <button type="submit" class="hidden">Upload</button>
-                                                </form>
-                                                <div class="kt-image-input-placeholder border-2 border-green-500 kt-image-input-empty:border-input"
-                                                     data-kt-image-input-placeholder="true"
-                                                     style="background-image:url({% static 'metronic/tailwind/dist/assets/media/avatars/blank.png' %})">
-                                                    <div class="kt-image-input-preview" data-kt-image-input-preview="true"
-                                                         style="background-image:url('{% if avatar %}{{ avatar.url }}{% else %}/media/avatars/blank.png{% endif %}')">
-                                                    </div>
-                                                    <div class="flex items-center justify-center cursor-pointer h-5 left-0 right-0 bottom-0 bg-black/25 absolute">
-                                                        <svg class="fill-border opacity-80" height="12"
-                                                             viewBox="0 0 14 12" width="14"
-                                                             xmlns="http://www.w3.org/2000/svg">
-                                                            <path d="M11.6665 2.64585H11.2232C11.0873 2.64749 10.9538 2.61053 10.8382 2.53928C10.7225 2.46803 10.6295 2.36541 10.5698 2.24335L10.0448 1.19918C9.91266 0.931853 9.70808 0.707007 9.45438 0.550249C9.20068 0.393491 8.90806 0.311121 8.60984 0.312517H5.38984C5.09162 0.311121 4.799 0.393491 4.5453 0.550249C4.2916 0.707007 4.08701 0.931853 3.95484 1.19918L3.42984 2.24335C3.37021 2.36541 3.27716 2.46803 3.1615 2.53928C3.04584 2.61053 2.91234 2.64749 2.7765 2.64585H2.33317C1.90772 2.64585 1.49969 2.81486 1.19885 3.1157C0.898014 3.41654 0.729004 3.82457 0.729004 4.25002V10.0834C0.729004 10.5088 0.898014 10.9168 1.19885 11.2177C1.49969 11.5185 1.90772 11.6875 2.33317 11.6875H11.6665C12.092 11.6875 12.5 11.5185 12.8008 11.2177C13.1017 10.9168 13.2707 10.5088 13.2707 10.0834V4.25002C13.2707 3.82457 13.1017 3.41654 12.8008 3.1157C12.5 2.81486 12.092 2.64585 11.6665 2.64585ZM6.99984 9.64585C6.39413 9.64585 5.80203 9.46624 5.2984 9.12973C4.79478 8.79321 4.40225 8.31492 4.17046 7.75532C3.93866 7.19572 3.87802 6.57995 3.99618 5.98589C4.11435 5.39182 4.40602 4.84613 4.83432 4.41784C5.26262 3.98954 5.80831 3.69786 6.40237 3.5797C6.99644 3.46153 7.61221 3.52218 8.1718 3.75397C8.7314 3.98576 9.2097 4.37829 9.54621 4.88192C9.88272 5.38554 10.0623 5.97765 10.0623 6.58335C10.0608 7.3951 9.73765 8.17317 9.16365 8.74716C8.58965 9.32116 7.81159 9.64431 7 9.64585Z">
-                                                            </path>
-                                                            <path d="M7 8.77087C8.20812 8.77087 9.1875 7.7915 9.1875 6.58337C9.1875 5.37525 8.20812 4.39587 7 4.39587C5.79188 4.39587 4.8125 5.37525 4.8125 6.58337C4.8125 7.7915 5.79188 8.77087 7 8.77087Z">
-                                                            </path>
-                                                        </svg>
-                                                    </div>
-                                                </div>
+    <!-- Grid Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Left Column: Personal Info -->
+        <div class="lg:col-span-2">
+            <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700">
+                <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                    <h2 class="text-lg font-semibold text-gray-650 dark:text-gray-100">Personal Information</h2>
+                </div>
+                <div class="p-6">
+                    <table class="w-full text-sm text-gray-650 dark:text-gray-100">
+                        <tbody>
+                            <tr class="border-b border-gray-200 dark:border-gray-700">
+                                <td class="py-4 font-medium text-gray-650 dark:text-gray-100">Photo</td>
+                                <td class="py-4">
+                                    <form method="post" enctype="multipart/form-data" action="{% url 'dashboard:upload_avatar' %}">
+                                        {% csrf_token %}
+                                        <div class="flex items-center space-x-4">
+                                            <div class="relative w-16 h-16 rounded-full overflow-hidden border border-gray-300 dark:border-gray-600">
+                                                <img src="{% if avatar %}{{ avatar.url }}{% else %}{% static 'metronic/tailwind/dist/assets/media/avatars/blank.png' %}{% endif %}" alt="Profile Photo" class="w-full h-full object-cover">
+                                                <input type="file" name="avatar" accept=".png, .jpg, .jpeg" class="absolute inset-0 opacity-0 cursor-pointer">
                                             </div>
+                                            <span class="text-sm text-gray-500 dark:text-gray-100">150x150px JPEG, PNG Image</span>
+                                            <button type="submit" class="text-blue-600 hover:underline dark:text-blue-400 dark:hover:text-blue-300 text-sm">Upload</button>
                                         </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="py-2 font-medium">Name</td>
-                                    <td class="py-2">{{ user.first_name }} {{ user.last_name }}</td>
-                                    <td class="py-2 text-center">
-                                        <a href="#" class="kt-btn kt-btn-icon kt-btn-sm kt-btn-ghost kt-btn-primary" data-kt-modal-toggle="#modal_edit_profile">
-                                            <i class="ki-filled ki-notepad-edit"></i>
-                                        </a>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="py-2 font-medium">Profile Type</td>
-                                    <td class="py-2">{{ profile_type|title|default:"Not set" }}</td>
-                                    <td class="py-2 text-center">
-                                        <a href="#" class="kt-btn kt-btn-icon kt-btn-sm kt-btn-ghost kt-btn-primary" data-kt-modal-toggle="#modal_edit_profile">
-                                        </a>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="py-2 font-medium">Specialization/Company</td>
-                                    <td class="py-2">
-                                        {% if profile_type == 'doctor' %}
-                                            {{ profile.speciality|default:"Not set" }}
-                                        {% elif profile_type in 'medical_supplier|corporate|wholesaler|supplier' %}
-                                            {{ profile.company_name|default:"Not set" }}
-                                        {% else %}
-                                            Not applicable
-                                        {% endif %}
-                                    </td>
-                                    <td class="py-2 text-center">
-                                        <a href="#" class="kt-btn kt-btn-icon kt-btn-sm kt-btn-ghost kt-btn-primary" data-kt-modal-toggle="#modal_edit_profile">
-                                        </a>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="py-2 font-medium">Address</td>
-                                    <td class="py-2">
-                                        {% if default_address %}
-                                            {{ default_address.customer_address1 }}{% if default_address.customer_address2 %}, {{ default_address.customer_address2 }}{% endif %}, {{ default_address.customer_city }}, {{ default_address.customer_state }} {{ default_address.customer_postal_code }}, {{ default_address.customer_country }}
-                                        {% else %}
-                                            No address added
-                                        {% endif %}
-                                    </td>
-                                    <td class="py-2 text-center">
-                                        <a href="{% url 'dashboard:shipping_info' %}" class="kt-link kt-link-underlined kt-link-dashed">
-                                            <i class="ki-filled ki-notepad-edit"></i>
-                                        </a>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                                    </form>
+                                </td>
+                            </tr>
+                            <tr class="border-b border-gray-200 dark:border-gray-700">
+                                <td class="py-4 font-medium text-gray-650 dark:text-gray-100">Name</td>
+                                <td class="py-4 text-gray-500 dark:text-gray-100">{{ user.first_name }} {{ user.last_name }}</td>
+                                <td class="py-4 text-right">
+                                    <button class="text-blue-600 hover:underline dark:text-blue-400 dark:hover:text-blue-300 text-sm" data-modal-toggle="modal_edit_profile">Edit</button>
+                                </td>
+                            </tr>
+                            <tr class="border-b border-gray-200 dark:border-gray-700">
+                                <td class="py-4 font-medium text-gray-650 dark:text-gray-100">Profile Type</td>
+                                <td class="py-4 text-gray-500 dark:text-gray-100">{{ profile_type|title|default:"Not set" }}</td>
+                            </tr>
+                            <tr class="border-b border-gray-200 dark:border-gray-700">
+                                <td class="py-4 font-medium text-gray-650 dark:text-gray-100">Specialization/Company</td>
+                                <td class="py-4 text-gray-500 dark:text-gray-100">
+                                    {% if profile_type == 'doctor' %}
+                                        {{ profile.speciality|default:"Not set" }}
+                                    {% elif profile_type in 'medical_supplier|corporate|wholesaler|supplier' %}
+                                        {{ profile.company_name|default:"Not set" }}
+                                    {% else %}
+                                        Not applicable
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="py-4 font-medium text-gray-650 dark:text-gray-100">Address</td>
+                                <td class="py-4 text-gray-500 dark:text-gray-100">
+                                    {% if default_address %}
+                                        {{ default_address.customer_address1 }}{% if default_address.customer_address2 %}, {{ default_address.customer_address2 }}{% endif %}, {{ default_address.customer_city }}, {{ default_address.customer_state }} {{ default_address.customer_postal_code }}, {{ default_address.customer_country }}
+                                    {% else %}
+                                        No address added
+                                    {% endif %}
+                                </td>
+                                <td class="py-4 text-right">
+                                    <a href="{% url 'dashboard:shipping_info' %}" class="text-blue-600 hover:underline dark:text-blue-400 dark:hover:text-blue-300 text-sm">Manage</a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
+            <!-- Payment Methods -->
+            <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700 mt-6">
+                <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                    <h2 class="text-lg font-semibold text-gray-650 dark:text-gray-100">Payment Methods</h2>
+                </div>
+                <div class="p-6">
+                    <p class="text-sm text-gray-500 dark:text-gray-100">
+                        {% if payment_method %}
+                            {{ payment_method.type }} - {{ payment_method.details }}
+                        {% else %}
+                            No payment method added
+                        {% endif %}
+                    </p>
+                    <a href="{% url 'dashboard:payment_method' %}" class="mt-2 inline-block text-blue-600 hover:underline dark:text-blue-400 dark:hover:text-blue-300 text-sm">Manage Payment Options</a>
+                </div>
+            </div>
+        </div>
 
-            <!-- Right Column: User Data Sections -->
-            <div class="grid gap-6">
-                <!-- Contact Info -->
-                <div class="kt-card">
-                    <div class="kt-card-header">
-                        <h3 class="kt-card-title">Contact & Address</h3>
-                    </div>
-                    <div class="kt-card-content space-y-4">
-                        <div class="flex justify-between items-center">
-                            <div>
-                                <label class="text-sm font-medium text-secondary-foreground">Email</label>
-                                <p class="text-sm text-foreground">{{ user.email }}</p>
-                            </div>
-                            <a href="#" class="kt-link kt-link-underlined kt-link-dashed text-sm" data-kt-modal-toggle="#modal_edit_email">
-                                <i class="ki-filled ki-notepad-edit"></i>
-                            </a>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <div>
-                                <label class="text-sm font-medium text-secondary-foreground">Phone</label>
-                                <p class="text-sm text-foreground">
-                                    {% if default_address and default_address.phone %}
-                                        {{ default_address.phone }}
-                                    {% else %}
-                                        {{ phone|default:"Not set" }}
-                                    {% endif %}
-                                </p>
-                            </div>
-                            <a href="#" class="kt-link kt-link-underlined kt-link-dashed text-sm" data-kt-modal-toggle="#modal_edit_phone">
-                                <i class="ki-filled ki-notepad-edit"></i>
-                            </a>
-                        </div>
+        <!-- Right Column: User Data Sections -->
+        <div class="space-y-6">
+            <!-- Contact Info -->
+            <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-300 dark:border-gray-100">
+                <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                    <h2 class="text-lg font-semibold text-gray-650 dark:text-gray-100">Contact Information</h2>
+                </div>
+                <div class="p-6 space-y-4">
+                    <div class="flex justify-between items-center">
                         <div>
-                            <label class="text-sm font-medium text-secondary-foreground">Default Address</label>
-                            <p class="text-sm text-foreground">
-                                {% if default_address %}
-                                    {{ default_address.customer_address1 }}{% if default_address.customer_address2 %}, {{ default_address.customer_address2 }}{% endif %}, {{ default_address.customer_city }}, {{ default_address.customer_state }} {{ default_address.customer_postal_code }}, {{ default_address.customer_country }}
+                            <p class="text-sm font-medium text-gray-650 dark:text-gray-300">Email</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-100">{{ user.email }}</p>
+                        </div>
+                        <button class="text-blue-600 hover:underline dark:text-blue-400 dark:hover:text-blue-300 text-sm" data-modal-toggle="modal_edit_email">Edit</button>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-sm font-medium text-gray-650 dark:text-gray-300">Phone</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-100">
+                                {% if default_address and default_address.phone %}
+                                    {{ default_address.phone }}
                                 {% else %}
-                                    No address added
+                                    {{ phone|default:"Not set" }}
                                 {% endif %}
                             </p>
-                            <a href="{% url 'dashboard:shipping_info' %}" class="kt-link kt-link-underlined text-sm">Manage Addresses</a>
                         </div>
+                        <button class="text-blue-600 hover:underline dark:text-blue-400 dark:hover:text-blue-300 text-sm" data-modal-toggle="modal_edit_phone">Edit</button>
                     </div>
                 </div>
+            </div>
 
-                <!-- Orders -->
-                <div class="kt-card">
-                    <div class="kt-card-header">
-                        <h3 class="kt-card-title">Order Summary</h3>
+            <!-- Order Summary -->
+            <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700 mt-5">
+                <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                    <h2 class="text-lg font-semibold text-gray-650 dark:text-gray-100">Order Summary</h2>
+                </div>
+                <div class="p-6 grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-sm text-gray-650 dark:text-gray-300">Total Orders</p>
+                        <p class="text-lg font-bold text-gray-400 dark:text-gray-100">{{ total_orders }}</p>
                     </div>
-                    <div class="kt-card-content grid grid-cols-2 gap-5 text-sm">
-                        <div>
-                            <div class="text-secondary-foreground">Total Orders</div>
-                            <div class="font-bold text-lg text-primary">{{ total_orders }}</div>
-                        </div>
-                        <div>
-                            <div class="text-secondary-foreground">Pending</div>
-                            <div class="font-bold text-lg text-yellow-600">{{ pending_orders }}</div>
-                        </div>
-                        <div>
-                            <div class="text-secondary-foreground">Delivered</div>
-                            <div class="font-bold text-lg text-green-600">{{ delivered_orders }}</div>
-                        </div>
-                        <div>
-                            <div class="text-secondary-foreground">Cancelled</div>
-                            <div class="font-bold text-lg text-red-500">{{ cancelled_orders }}</div>
-                        </div>
+                    <div>
+                        <p class="text-sm text-gray-650 dark:text-gray-300">Pending</p>
+                        <p class="text-lg font-bold text-yellow-600 dark:text-yellow-400">{{ pending_orders }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-650 dark:text-gray-300">Delivered</p>
+                        <p class="text-lg font-bold text-green-600 dark:text-green-400">{{ delivered_orders }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-650 dark:text-gray-300">Cancelled</p>
+                        <p class="text-lg font-bold text-red-600 dark:text-red-400">{{ cancelled_orders }}</p>
                     </div>
                 </div>
+            </div>
 
-                <!-- Wishlist -->
-                <div class="kt-card">
-                    <div class="kt-card-header">
-                        <h3 class="kt-card-title">Wishlist</h3>
-                    </div>
-                    <div class="kt-card-content space-y-2 text-sm">
-                        <p class="text-secondary-foreground">You have {{ wishlist_count }} item{{ wishlist_count|pluralize }} in your wishlist.</p>
-                        <a href="{% url 'dashboard:wish_list' %}" class="kt-btn kt-btn-sm kt-btn-primary">
-                            <i class="ki-filled ki-heart text-base"></i>View Wishlist</a>
-                    </div>
+            <!-- Wishlist -->
+            <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700 mt-5">
+                <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                    <h2 class="text-lg font-semibold text-gray-650 dark:text-gray-100">Wishlist</h2>
                 </div>
-
-                <!-- Payment Methods -->
-                <div class="kt-card">
-                    <div class="kt-card-header">
-                        <h3 class="kt-card-title">Payment Methods</h3>
-                    </div>
-                    <div class="kt-card-content space-y-2 text-sm">
-                        <p class="text-secondary-foreground">
-                            {% if payment_method %}
-                                {{ payment_method.type }} - {{ payment_method.details }}
-                            {% else %}
-                                No payment method added
-                            {% endif %}
-                        </p>
-                        <a href="{% url 'dashboard:payment_method' %}" class="kt-link kt-link-underlined text-sm">Manage Payment Options</a>
-                    </div>
+                <div class="p-6">
+                    <p class="text-sm text-gray-400 dark:text-gray-300">You have {{ wishlist_count }} item{{ wishlist_count|pluralize }} in your wishlist.</p>
+                    <a href="{% url 'dashboard:wish_list' %}" class="mt-2 inline-block bg-blue-600 text-white text-sm font-medium py-2 px-4 rounded hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600">View Wishlist</a>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- ==================== Edit Email Modal ==================== -->
-        <div id="modal_edit_email"
-             class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center"
-             style="backdrop-filter: blur(8px); background-color: rgba(0, 0, 0, 0.3);">
-            <div class="kt-card w-full max-w-[500px] max-h-[90vh] overflow-y-auto rounded-xl border border-border bg-background shadow-lg">
-                <form method="post" action="{% url 'dashboard:edit_email' %}">
-                    {% csrf_token %}
-                    <div class="kt-card-header px-5 flex items-center justify-between">
-                        <h3 class="kt-card-title">Edit Email</h3>
-                        <button type="button" class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost" onclick="closeModal('modal_edit_email')">
-                            <i class="ki-filled ki-cross text-base"></i>
-                        </button>
-                    </div>
-                    <div class="kt-card-content p-5">
-                        <label class="text-2sm font-semibold text-mono">Email Address</label>
-                        <input type="email" name="email" class="kt-input w-full" value="{{ user.email }}" required>
-                    </div>
-                    <div class="kt-card-footer px-5 py-4 flex justify-end gap-3">
-                        <button type="button" class="kt-btn kt-btn-outline" onclick="closeModal('modal_edit_email')">
-                            <i class="ki-filled ki-cross text-base"></i>Cancel
-                        </button>
-                        <button type="submit" class="kt-btn kt-btn-primary">
-                            <i class="ki-filled ki-check text-base"></i>Save Changes
-                        </button>
-                    </div>
-                </form>
-            </div>
+    <!-- Edit Email Modal -->
+    <div id="modal_edit_email" class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center" style="backdrop-filter: blur(8px); background-color: rgba(0, 0, 0, 0.3);">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-[500px] max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-700">
+            <form method="post" action="{% url 'dashboard:edit_email' %}">
+                {% csrf_token %}
+                <div class="p-5 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-lg font-semibold text-gray-650 dark:text-gray-100">Edit Email</h3>
+                    <button type="button" class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200" onclick="closeModal('modal_edit_email')">
+                        <i class="ki-filled ki-cross text-base"></i>
+                    </button>
+                </div>
+                <div class="p-5">
+                    <label class="block text-sm font-medium text-gray-600 dark:text-gray-300">Email Address</label>
+                    <input type="email" name="email" class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100" value="{{ user.email }}" required>
+                </div>
+                <div class="p-4 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700">
+                    <button type="button" class="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600" onclick="closeModal('modal_edit_email')">
+                        <i class="ki-filled ki-cross text-base"></i> Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 text-sm text-white bg-blue-600 rounded hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600">
+                        <i class="ki-filled ki-check text-base"></i> Save Changes
+                    </button>
+                </div>
+            </form>
         </div>
+    </div>
 
-        <!-- ==================== Edit Phone Modal ==================== -->
-        <div id="modal_edit_phone"
-             class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center"
-             style="backdrop-filter: blur(8px); background-color: rgba(0, 0, 0, 0.3);">
-            <div class="kt-card w-full max-w-[500px] max-h-[90vh] overflow-y-auto rounded-xl border border-border bg-background shadow-lg">
-                <form method="post" action="{% url 'dashboard:edit_phone' %}">
-                    {% csrf_token %}
-                    <div class="kt-card-header px-5 flex items-center justify-between">
-                        <h3 class="kt-card-title">Edit Phone Number</h3>
-                        <button type="button" class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost" onclick="closeModal('modal_edit_phone')">
-                            <i class="ki-filled ki-cross text-base"></i>
-                        </button>
-                    </div>
-                    <div class="kt-card-content p-5">
-                        <label class="text-2sm font-semibold text-mono">Phone Number</label>
-                        <input type="tel" name="phone" class="kt-input w-full" value="{% if default_address and default_address.phone %}{{ default_address.phone }}{% else %}{{ phone|default:'' }}{% endif %}" placeholder="+1234567890" required>
-                    </div>
-                    <div class="kt-card-footer px-5 py-4 flex justify-end gap-3">
-                        <button type="button" class="kt-btn kt-btn-outline" onclick="closeModal('modal_edit_phone')">
-                            <i class="ki-filled ki-cross text-base"></i>Cancel
-                        </button>
-                        <button type="submit" class="kt-btn kt-btn-primary">
-                            <i class="ki-filled ki-check text-base"></i>Save Changes
-                        </button>
-                    </div>
-                </form>
-            </div>
+    <!-- Edit Phone Modal -->
+    <div id="modal_edit_phone" class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center" style="backdrop-filter: blur(8px); background-color: rgba(0, 0, 0, 0.3);">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-[500px] max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-700">
+            <form method="post" action="{% url 'dashboard:edit_phone' %}">
+                {% csrf_token %}
+                <div class="p-5 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-lg font-semibold text-gray-650 dark:text-gray-100">Edit Phone Number</h3>
+                    <button type="button" class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200" onclick="closeModal('modal_edit_phone')">
+                        <i class="ki-filled ki-cross text-base"></i>
+                    </button>
+                </div>
+                <div class="p-5">
+                    <label class="block text-sm font-medium text-gray-600 dark:text-gray-300">Phone Number</label>
+                    <input type="tel" name="phone" class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100" value="{% if default_address and default_address.phone %}{{ default_address.phone }}{% else %}{{ phone|default:'' }}{% endif %}" placeholder="+1234567890" required>
+                </div>
+                <div class="p-4 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700">
+                    <button type="button" class="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600" onclick="closeModal('modal_edit_phone')">
+                        <i class="ki-filled ki-cross text-base"></i> Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 text-sm text-white bg-blue-600 rounded hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600">
+                        <i class="ki-filled ki-check text-base"></i> Save Changes
+                    </button>
+                </div>
+            </form>
         </div>
+    </div>
 
-        <!-- ==================== Edit Name & Profile Modal ==================== -->
-        <div id="modal_edit_profile"
-             class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center"
-             style="backdrop-filter: blur(8px); background-color: rgba(0, 0, 0, 0.3);">
-            <div class="kt-card w-full max-w-[500px] max-h-[90vh] overflow-y-auto rounded-xl border border-border bg-background shadow-lg">
-                <form method="post" id="edit-name-form" action="{% url 'dashboard:edit_profile' %}">
-                    {% csrf_token %}
-                    <div class="kt-card-header px-5 flex items-center justify-between">
-                        <h3 class="kt-card-title">Edit Name & Profile</h3>
-                        <button type="button" class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost" onclick="closeModal('modal_edit_profile')">
-                            <i class="ki-filled ki-cross text-base"></i>
-                        </button>
-                    </div>
-                    <div class="kt-card-content p-5 space-y-4">
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="text-2sm font-semibold text-mono">First Name</label>
-                                <input type="text" name="first_name" class="kt-input w-full" value="{{ user.first_name }}" required>
-                            </div>
-                            <div>
-                                <label class="text-2sm font-semibold text-mono">Last Name</label>
-                                <input type="text" name="last_name" class="kt-input w-full" value="{{ user.last_name }}" required>
-                            </div>
+    <!-- Edit Profile Modal -->
+    <div id="modal_edit_profile" class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center" style="backdrop-filter: blur(8px); background-color: rgba(0, 0, 0, 0.3);">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-[500px] max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-700">
+            <form method="post" id="edit-name-form" action="{% url 'dashboard:edit_profile' %}">
+                {% csrf_token %}
+                <div class="p-5 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-lg font-semibold text-gray-650 dark:text-gray-100">Edit Profile</h3>
+                    <button type="button" class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200" onclick="closeModal('modal_edit_profile')">
+                        <i class="ki-filled ki-cross text-base"></i>
+                    </button>
+                </div>
+                <div class="p-5 space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300">First Name</label>
+                            <input type="text" name="first_name" class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100" value="{{ user.first_name }}" required>
                         </div>
-                        <div id="dynamic-profile-field">
-                            {% if profile_type == 'doctor' %}
-                                <label class="text-2sm font-semibold text-mono">Specialization</label>
-                                <input type="text" name="speciality" class="kt-input w-full" value="{{ profile.speciality }}">
-                            {% elif profile_type in 'medical_supplier|corporate|wholesaler|supplier' %}
-                                <label class="text-2sm font-semibold text-mono">Company Name</label>
-                                <input type="text" name="company_name" class="kt-input w-full" value="{{ profile.company_name }}">
-                            {% endif %}
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300">Last Name</label>
+                            <input type="text" name="last_name" class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100" value="{{ user.last_name }}" required>
                         </div>
                     </div>
-                    <div class="kt-card-footer px-5 py-4 flex justify-end gap-3">
-                        <button type="button" class="kt-btn kt-btn-outline" onclick="closeModal('modal_edit_profile')">
-                            <i class="ki-filled ki-cross text-base"></i>Cancel
-                        </button>
-                        <button type="submit" class="kt-btn kt-btn-primary">
-                            <i class="ki-filled ki-check text-base"></i>Save Changes
-                        </button>
+                    <div id="dynamic-profile-field">
+                        {% if profile_type == 'doctor' %}
+                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300">Specialization</label>
+                            <input type="text" name="speciality" class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100" value="{{ profile.speciality }}">
+                        {% elif profile_type in 'medical_supplier|corporate|wholesaler|supplier' %}
+                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300">Company Name</label>
+                            <input type="text" name="company_name" class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100" value="{{ profile.company_name }}">
+                        {% endif %}
                     </div>
-                </form>
-            </div>
+                </div>
+                <div class="p-4 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700">
+                    <button type="button" class="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600" onclick="closeModal('modal_edit_profile')">
+                        <i class="ki-filled ki-cross text-base"></i> Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 text-sm text-white bg-blue-600 rounded hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600">
+                        <i class="ki-filled ki-check text-base"></i> Save Changes
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -348,41 +273,16 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Modal handling
-    const modals = document.querySelectorAll('[data-kt-modal="true"]');
-    const modalTriggers = document.querySelectorAll('[data-kt-modal-toggle]');
-    const modalDismiss = document.querySelectorAll('[data-kt-modal-dismiss="true"]');
-
+    const modalTriggers = document.querySelectorAll('[data-modal-toggle]');
     modalTriggers.forEach(trigger => {
         trigger.addEventListener('click', function (e) {
             e.preventDefault();
-            const modalId = this.getAttribute('data-kt-modal-toggle');
-            const modal = document.querySelector(modalId);
-            modal.classList.remove('hidden');
+            const modalId = this.getAttribute('data-modal-toggle');
+            document.getElementById(modalId).classList.remove('hidden');
         });
     });
 
-    modalDismiss.forEach(dismiss => {
-        dismiss.addEventListener('click', function () {
-            const modal = this.closest('[data-kt-modal="true"]');
-            modal.classList.add('hidden');
-            modal.querySelectorAll('input').forEach(input => {
-                input.value = input.type === 'checkbox' ? false : input.defaultValue || '';
-            });
-        });
-    });
-
-    modals.forEach(modal => {
-        modal.addEventListener('click', function (e) {
-            if (e.target === modal) {
-                modal.classList.add('hidden');
-                modal.querySelectorAll('input').forEach(input => {
-                    input.value = input.type === 'checkbox' ? false : input.defaultValue || '';
-                });
-            }
-        });
-    });
-
-    // AJAX form submissions for email/phone
+    // AJAX form submissions for email/phone/profile
     const forms = document.querySelectorAll('.kt-modal form');
     forms.forEach(form => {
         form.addEventListener('submit', function (e) {
@@ -392,7 +292,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 method: 'POST',
                 body: formData,
                 headers: {
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'X-Requested-With': 'XMLHttpRequest'
                 }
             })
             .then(response => response.json())
@@ -408,66 +309,13 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 });
-</script>
-<script>
-function openModal(id) {
-    document.getElementById(id)?.classList.remove('hidden');
-}
+
 function closeModal(id) {
-    document.getElementById(id)?.classList.add('hidden');
-}
-</script>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const profileSelect = document.getElementById('profile_type_select');
-    const profileField = document.getElementById('dynamic-profile-field');
-    const nameForm = document.getElementById('edit-name-form');
-
-    function updateDynamicField() {
-        const type = profileSelect.value;
-        let html = '';
-        if (type === 'doctor') {
-            html = `
-                <label class="text-2sm font-semibold text-mono">Specialization</label>
-                <input type="text" name="speciality" class="kt-input" required>
-            `;
-        } else if (['medical_supplier', 'corporate', 'wholesaler', 'supplier'].includes(type)) {
-            html = `
-                <label class="text-2sm font-semibold text-mono">Company Name</label>
-                <input type="text" name="company_name" class="kt-input" required>
-            `;
-        }
-        profileField.innerHTML = html;
-    }
-
-    if (profileSelect) {
-        profileSelect.addEventListener('change', updateDynamicField);
-        updateDynamicField();
-    }
-
-    nameForm.addEventListener('submit', function (e) {
-        e.preventDefault();
-        const formData = new FormData(nameForm);
-
-        fetch(nameForm.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
-                'X-Requested-With': 'XMLHttpRequest',
-            }
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.status === 'success') {
-                alert(data.message);
-                window.location.reload();
-            } else {
-                alert(data.message || 'Error occurred');
-            }
-        })
-        .catch(() => alert('An unexpected error occurred.'));
+    const modal = document.getElementById(id);
+    modal.classList.add('hidden');
+    modal.querySelectorAll('input').forEach(input => {
+        input.value = input.defaultValue || '';
     });
-});
+}
 </script>
 {% endblock content %}

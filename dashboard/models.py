@@ -3,7 +3,9 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-
+from django.utils.timezone import now
+from datetime import timedelta
+from django.conf import settings
 
 
 
@@ -84,6 +86,21 @@ class Brand(models.Model):
     class Meta:
         verbose_name = verbose_name_plural ="Brand"
 
+class Event(models.Model):
+    conference_link = models.URLField(max_length=500, null=True, blank=True)
+    speaker_name = models.CharField(max_length=255, null=True, blank=True)
+    conference_at = models.DateTimeField(null=True, blank=True)
+    duration = models.DurationField(null=True, blank=True, help_text="Duration (e.g., 1:30:00 for 1 hour 30 minutes)")
+    venue = models.CharField(max_length=500, null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.speaker_name or 'Event'} at {self.venue or 'Unknown'}"
+
+    class Meta:
+        ordering = ['-conference_at']
+        verbose_name = verbose_name_plural = "Events"
 
 class Product(models.Model):
     # Category hierarchy
@@ -97,6 +114,7 @@ class Product(models.Model):
     product_from = models.CharField(max_length=100, null=True, blank=True, help_text="Country of origin")
     description = models.TextField(blank=True)
     keywords = models.CharField(max_length=255, help_text="Comma-separated keywords", blank=True)
+    script = models.TextField(blank=True,null=True)
 
     # Countries sold in
     all_countries = models.BooleanField(default=False)
@@ -105,15 +123,16 @@ class Product(models.Model):
 
     # Uploads
     brochure = models.FileField(upload_to='product_brochures/', null=True, blank=True)
+    event = models.ForeignKey(Event, on_delete=models.SET_NULL, null=True, blank=True)
 
     # Images handled separately (see below)
 
     # B2B / Pricing
     supplier_sku = models.CharField(max_length=100, blank=True)
-    price = models.DecimalField(max_digits=10, decimal_places=2)
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     commission_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0.0)
     weight = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    weight_unit = models.CharField(max_length=10, choices=[('gm', 'Gram'), ('kg', 'Kilogram'), ('cm', 'Centimeter'), ('ltr', 'Liter')], default='gm')
+    weight_unit = models.CharField(max_length=10, choices=[('gm', 'Gram'), ('kg', 'Kilogram'), ('cm', 'Centimeter'), ('ltr', 'Liter')], null=True,blank=True)
     stock_quantity = models.IntegerField(default=0)
     pcs_per_unit = models.IntegerField(default=1)
 
@@ -122,8 +141,8 @@ class Product(models.Model):
     show_rfq = models.BooleanField(default=False)
     Both = models.BooleanField(default=False)
 
-    min_order_qty = models.IntegerField(default=1)
-    low_stock_alert = models.IntegerField(default=5)
+    min_order_qty = models.IntegerField(default=0)
+    low_stock_alert = models.IntegerField(default=0)
 
     # Dates
     return_time_limit = models.PositiveIntegerField(help_text="Days", null=True, blank=True)
@@ -144,7 +163,7 @@ class Product(models.Model):
     ask_admin_to_publish = models.BooleanField(default=False)
 
     # Product status
-    condition = models.CharField(max_length=20, choices=[('new', 'New'), ('used', 'Used')], default='new')
+    condition = models.CharField(max_length=20, choices=[('new', 'New'), ('used', 'Used')], null=True, blank=True)
     tag = models.CharField(max_length=30, choices=[('recent', 'Recently Arrived'), ('popular', 'Most Wanted'),('limited', 'Limited Stock'), ('none', 'None')], default='none')
     warranty = models.CharField(max_length=20, choices=[('none', 'None'), ('1yr', '1 Year'), ('2yr', '2 Years')], default='none')
 
@@ -520,3 +539,61 @@ class RFQRequest(models.Model):
     class Meta:
         ordering = ["-created_at"]
         verbose_name = verbose_name_plural = "RFQ Request"
+
+class PasswordUpdateTracker(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='password_tracker')
+    last_password_update = models.DateTimeField(default=now)
+
+    def is_password_expired(self):
+        return self.last_password_update < now() - timedelta(days=90)
+
+
+# models.py
+class Speciality(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+
+class Residency(models.Model):
+    country = models.CharField(max_length=100, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.country
+
+
+class Nationality(models.Model):
+    country = models.CharField(max_length=100, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.country
+
+
+class CountryCode(models.Model):
+    code = models.CharField(max_length=10, unique=True)
+    country = models.CharField(max_length=100)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.country} ({self.code})"
+
+class DoctorProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='doctor_profile')
+
+    current_position = models.CharField(max_length=255)
+    workplace = models.CharField(max_length=255)
+
+    nationality = models.ForeignKey(Nationality, on_delete=models.SET_NULL, null=True)
+    residency = models.ForeignKey(Residency, on_delete=models.SET_NULL, null=True)
+    country_code = models.ForeignKey(CountryCode, on_delete=models.SET_NULL, null=True)
+    specialty = models.ForeignKey(Speciality, on_delete=models.SET_NULL, null=True)
+
+    phone_number = models.CharField(max_length=20)
+
+    def __str__(self):
+        return f"{self.user.get_full_name()} - {self.specialty}"
+

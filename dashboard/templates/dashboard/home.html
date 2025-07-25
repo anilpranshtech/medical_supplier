@@ -78,6 +78,7 @@
         margin-left: auto;
         margin-right: auto;
         margin-bottom: 1.5rem;
+        padding: 0 15px;
     }
 
     /* Blur effect for background when modal is open */
@@ -89,24 +90,6 @@
     /* Ensure modal content is not blurred */
     .kt-modal {
         filter: none !important;
-    }
-
-    /* Responsive adjustments */
-    @media (max-width: 1599px) {
-        .kt-slider-container {
-            height: calc(100vw * 265 / 1600);
-        }
-    }
-
-    @media (prefers-color-scheme: dark) {
-        .kt-slider-container {
-            background: #1a202c;
-        }
-
-        .kt-nav-btn {
-            background: rgba(55, 65, 81, 0.8);
-            color: white;
-        }
     }
 
     /* Loader styles */
@@ -141,11 +124,158 @@
         z-index: 10;
     }
 
-    @media (min-width: 80rem) {
-    .xl\:grid-cols-8 {
-        grid-template-columns: repeat(8, minmax(0, 1fr));
+    /* Product card styles */
+    .product-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
+
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
     }
+
+    /* Responsive adjustments */
+    @media (min-width: 1536px) {
+        .xl\:grid-cols-8 {
+            grid-template-columns: repeat(8, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 1599px) {
+        .kt-slider-container {
+            height: calc(100vw * 265 / 1600);
+        }
+    }
+
+    @media (max-width: 1280px) {
+        .kt-slider-container {
+            height: 200px;
+        }
+
+        .grid-cols-6 {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 1024px) {
+        .kt-slider-container {
+            height: 180px;
+        }
+
+        .grid-cols-6 {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .xl\:grid-cols-2 {
+            grid-template-columns: 1fr;
+        }
+
+        .special-offer-card {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .special-offer-card img {
+            margin-top: 20px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .kt-slider-container {
+            height: 150px;
+        }
+
+        .grid-cols-6 {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .xl\:grid-cols-4,
+        .xl\:grid-cols-2 {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .benefits-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .product-thumbnail {
+            height: 120px !important;
+        }
+
+        .product-card-content {
+            padding: 1rem !important;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .kt-slider-container {
+            height: 120px;
+        }
+
+        .grid-cols-6 {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .xl\:grid-cols-4,
+        .xl\:grid-cols-2 {
+            grid-template-columns: 1fr;
+        }
+
+        .benefits-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .section-container {
+            padding: 0 10px;
+        }
+
+        .kt-card-header h3 {
+            font-size: 1.1rem;
+        }
+
+        .product-actions {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .product-actions button {
+            width: 100%;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .kt-slider-container {
+            height: 100px;
+        }
+
+        .grid-cols-6 {
+            grid-template-columns: 1fr;
+        }
+
+        .product-card {
+            max-width: 100%;
+        }
+
+        .kt-modal {
+            width: 95%;
+        }
+
+        .rfq-modal-content {
+            padding: 1rem;
+        }
+    }
+
+    @media (prefers-color-scheme: dark) {
+        .kt-slider-container {
+            background: #1a202c;
+        }
+
+        .kt-nav-btn {
+            background: rgba(55, 65, 81, 0.8);
+            color: white;
+        }
+    }
+    
 
     /* Discount Ribbon Styles */
     .discount-ribbon {
@@ -191,7 +321,7 @@
 </style>
 
 <!-- Begin Medical Banner Slider -->
-<div class="kt-slider-container mt-7" style="max-width: var(--custom-container-width, 97%);">
+<div class="kt-slider-container mt-7" style="max-width: var(--custom-container-width, 80%);">
     <div class="kt-slider" id="slider">
         {% for banner in banners %}
             <a href="{{ banner.link|default:'#' }}" class="kt-slide">
@@ -205,20 +335,20 @@
 <!-- End Medical Banner Slider -->
 
 <!-- Begin Sections -->
-<div class="kt-container-fixed" style="max-width: var(--custom-container-width, 105%);">
+<div class="kt-container-fixed" style="max-width: var(--custom-container-width, 85%);">
     <!-- Featured Products -->
     <div class="section-container">
     <div class="grid grid-cols-1 gap-6 mt-5 py-5">
         <!-- Product Grid -->
-        <div class="grid grid-cols-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-5 mb-2">
+        <div class="grid grid-cols-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-2">
             {% for product in featured_products|slice:":6" %}
-                <div class="kt-card">
-                    <div class="kt-card-content flex flex-col justify-between p-2 gap-3">
+                <div class="kt-card product-card">
+                    <div class="kt-card-content flex flex-col justify-between p-2 gap-3 h-full">
                         <div>
-                            <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[200px] mb-2 shadow-none">
+                            <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[150px] sm:h-[200px] mb-2 shadow-none">
                                 <a href="{% url 'dashboard:product_detail' product.id %}" class="block">
                                     <img alt="{{ product.name|default:'Unnamed Product' }}"
-                                         class="h-[150px] shrink-0 object-contain cursor-pointer"
+                                         class="h-[100px] sm:h-[150px] shrink-0 object-contain cursor-pointer"
                                          src="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"/>
                                 </a>
                                 {% if request.user.is_authenticated %}
@@ -260,7 +390,7 @@
                                 <span class="text-sm font-medium text-mono">${{ product.price|floatformat:2 }}</span>
                             </div>
                         </div>
-                        <div class="flex items-center flex-wrap gap-2 px-1">
+                        <div class="flex items-center flex-wrap gap-2 px-1 product-actions">
                             {% if user.is_authenticated %}
                                 {% if product.id in user_cart_ids %}
                                 <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1"
@@ -324,9 +454,9 @@
                                
                                     {% endif %}
                                 </div>
-                                <h3 class="text-[26px] font-semibold text-mono mb-1">{{ product.name|default:'Unnamed Product' }}</h3>
+                                <h3 class="text-xl sm:text-[26px] font-semibold text-mono mb-1">{{ product.name|default:'Unnamed Product' }}</h3>
                                 <span class="text-sm font-normal text-foreground mb-5 leading-5.5">{{ product.description|default:'No description available' }}</span>
-                                <div class="flex items-center gap-4">
+                                <div class="flex items-center gap-4 flex-wrap">
                                     {% if request.user.is_authenticated %}
                                         {% if product.id in user_cart_ids %}
                                         <button class="kt-btn kt-btn-outline kt-btn-sm ms-1"
@@ -381,7 +511,7 @@
                             </div>
                             <a href="{% url 'dashboard:product_detail' product.id %}" class="block">
                                 <img alt="{{ product.name|default:'Unnamed Product' }}"
-                                     class="size-48 shrink-0 cursor-pointer product-thumbnail"
+                                     class="size-32 sm:size-48 shrink-0 cursor-pointer product-thumbnail"
                                      src="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
                                      data-product-name="{{ product.name|default:'Unnamed Product' }}"
                                      data-product-description="{{ product.description|default:'No description available' }}"
@@ -407,7 +537,7 @@
                             <div class="kt-card-content flex flex-col items-center justify-center px-5 pb-0">
                                 <a href="{% url 'dashboard:product_detail' product.id %}" class="block">
                                     <img alt="{{ product.name|default:'Unnamed Product' }}"
-                                         class="size-48 shrink-0 cursor-pointer product-thumbnail"
+                                         class="size-32 sm:size-48 shrink-0 cursor-pointer product-thumbnail"
                                          src="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
                                          data-product-name="{{ product.name|default:'Unnamed Product' }}"
                                          data-product-description="{{ product.description|default:'No description available' }}"
@@ -432,7 +562,7 @@
                                     {% endif %}
                                 </div>
                                 <span class="text-base font-medium text-mono mb-3">{{ product.name|default:'Unnamed Product' }}</span>
-                                <div class="flex items-center gap-2.5 mb-2.5">
+                                <div class="flex items-center gap-2.5 mb-2.5 flex-wrap justify-center">
                                     {% if request.user.is_authenticated %}
                                         {% if product.id in user_cart_ids %}
                                         <button class="kt-btn kt-btn-outline kt-btn-sm ms-1"
@@ -470,7 +600,7 @@
     </span>
                                 </div>
                                 {% if product.offer_active and product.offer_percentage %}
-                            
+
                                 {% endif %}
                             </div>
                         </div>
@@ -495,15 +625,15 @@
                 <span class="text-lg font-medium text-gray-100">New Arrivals</span>
                 <a class="kt-link" href="{% url 'dashboard:search_results_grid' %}?{{ request.GET.urlencode }}">See All <i class="ki-filled ki-right text-xs"></i></a>
             </div>
-            <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-2">
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-2">
                 {% for product in recent_products %}
-                <div class="kt-card">
-                    <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
+                <div class="kt-card product-card">
+                    <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4 h-full">
                         <div class="mb-2.5">
-                            <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[250px] mb-4 shadow-none">
+                            <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[180px] sm:h-[250px] mb-4 shadow-none">
                                 <a href="{% url 'dashboard:product_detail' product.id %}" class="block">
                                     <img alt="{{ product.name|default:'Unnamed Product' }}"
-                                         class="h-[180px] shrink-0 cursor-pointer product-thumbnail"
+                                         class="h-[120px] sm:h-[180px] shrink-0 cursor-pointer product-thumbnail"
                                          src="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
                                          data-product-name="{{ product.name|default:'Unnamed Product' }}"
                                          data-product-description="{{ product.description|default:'No description available' }}"
@@ -530,10 +660,10 @@
     </span>
 {% endif %}
                             </div>
-                            <h3 class="text-lg font-bold text-gray-650 leading-snug truncate hover:text-primary transition">
+                            <h3 class="text-md sm:text-lg font-bold text-gray-650 leading-snug truncate hover:text-primary transition">
                                 {{ product.name }}
                             </h3>
-                            <p class="text-sm text-gray-650 mt-1 truncate">
+                            <p class="text-xs sm:text-sm text-gray-650 mt-1 truncate">
                                 {{ product.description|default:"No description available"|truncatechars:120 }}
                             </p>
                             {% if product.delivery_date %}
@@ -542,7 +672,7 @@
                             </p>
                             {% endif %}
                         </div>
-                        <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
+                        <div class="flex items-center flex-wrap justify-between gap-3 px-2.5 pb-1">
                             <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1">
                                 <i class="ki-solid ki-star text-white -mt-0.5"></i>
                                 {{ product.rating|default:"4.5" }}
@@ -603,15 +733,15 @@
                 <span class="text-lg font-medium text-gray-100">Popular Medical Supplies</span>
                 <a class="kt-link" href="{% url 'dashboard:search_results_grid' %}?{{ request.GET.urlencode }}">See All <i class="ki-filled ki-right text-xs"></i></a>
             </div>
-            <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-2">
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-2">
                 {% for product in popular_products %}
-                <div class="kt-card">
-                    <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
+                <div class="kt-card product-card">
+                    <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4 h-full">
                         <div class="mb-2.5">
-                            <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[250px] mb-4 shadow-none">
+                            <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[180px] sm:h-[250px] mb-4 shadow-none">
                                 <a href="{% url 'dashboard:product_detail' product.id %}" class="block">
                                     <img alt="{{ product.name|default:'Unnamed Product' }}"
-                                         class="h-[180px] shrink-0 cursor-pointer product-thumbnail"
+                                         class="h-[120px] sm:h-[180px] shrink-0 cursor-pointer product-thumbnail"
                                          src="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
                                          data-product-name="{{ product.name|default:'Unnamed Product' }}"
                                          data-product-description="{{ product.description|default:'No description available' }}"
@@ -638,10 +768,10 @@
     </span>
 {% endif %}
                             </div>
-                            <h3 class="text-lg font-bold text-gray-650 leading-snug truncate hover:text-primary transition">
+                            <h3 class="text-md sm:text-lg font-bold text-gray-650 leading-snug truncate hover:text-primary transition">
                                 {{ product.name }}
                             </h3>
-                            <p class="text-sm text-gray-650 mt-1 truncate">
+                            <p class="text-xs sm:text-sm text-gray-650 mt-1 truncate">
                                 {{ product.description|default:"No description available"|truncatechars:120 }}
                             </p>
                             {% if product.delivery_date %}
@@ -650,7 +780,7 @@
                             </p>
                             {% endif %}
                         </div>
-                        <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
+                        <div class="flex items-center flex-wrap justify-between gap-3 px-2.5 pb-1">
                             <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1">
                                 <i class="ki-solid ki-star text-white -mt-0.5"></i>
                                 {{ product.rating|default:"4.5" }}
@@ -711,15 +841,15 @@
                 <span class="text-lg font-medium text-gray-100">Limited-Time Deals</span>
                 <a class="kt-link" href="{% url 'dashboard:search_results_grid' %}?{{ request.GET.urlencode }}">See All <i class="ki-filled ki-right text-xs"></i></a>
             </div>
-            <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-2">
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-2">
                 {% for product in limited_products %}
-                <div class="kt-card">
-                    <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
+                <div class="kt-card product-card">
+                    <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4 h-full">
                         <div class="mb-2.5">
-                            <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[250px] mb-4 shadow-none">
+                            <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[180px] sm:h-[250px] mb-4 shadow-none">
                                 <a href="{% url 'dashboard:product_detail' product.id %}" class="block">
                                     <img alt="{{ product.name|default:'Unnamed Product' }}"
-                                         class="h-[180px] shrink-0 cursor-pointer product-thumbnail"
+                                         class="h-[120px] sm:h-[180px] shrink-0 cursor-pointer product-thumbnail"
                                          src="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
                                          data-product-name="{{ product.name|default:'Unnamed Product' }}"
                                          data-product-description="{{ product.description|default:'No description available' }}"
@@ -746,10 +876,10 @@
     </span>
 {% endif %}
                             </div>
-                            <h3 class="text-lg font-bold text-gray-650 leading-snug truncate hover:text-primary transition">
+                            <h3 class="text-md sm:text-lg font-bold text-gray-650 leading-snug truncate hover:text-primary transition">
                                 {{ product.name }}
                             </h3>
-                            <p class="text-sm text-gray-650 mt-1 truncate">
+                            <p class="text-xs sm:text-sm text-gray-650 mt-1 truncate">
                                 {{ product.description|default:"No description available"|truncatechars:120 }}
                             </p>
                             {% if product.delivery_date %}
@@ -758,7 +888,7 @@
                             </p>
                             {% endif %}
                         </div>
-                        <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
+                        <div class="flex items-center flex-wrap justify-between gap-3 px-2.5 pb-1">
                             <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1">
                                 <i class="ki-solid ki-star text-white -mt-0.5"></i>
                                 {{ product.rating|default:"4.5" }}
@@ -814,9 +944,9 @@
 
     <!-- Benefits -->
     <div class="section-container">
-        <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-2">
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-2 benefits-grid">
             <div class="kt-card">
-                <div class="kt-card-content flex items-center gap-3.5 px-5">
+                <div class="kt-card-content flex items-center gap-3.5 px-5 py-4">
                     <div class="relative size-[50px] shrink-0">
                         <svg class="w-full h-full stroke-primary/10 fill-primary-soft" fill="none" height="48"
                              viewBox="0 0 44 48" width="44" xmlns="http://www.w3.org/2000/svg">
@@ -836,7 +966,7 @@
                 </div>
             </div>
             <div class="kt-card">
-                <div class="kt-card-content flex items-center gap-3.5 px-5">
+                <div class="kt-card-content flex items-center gap-3.5 px-5 py-4">
                     <div class="relative size-[50px] shrink-0">
                         <svg class="w-full h-full stroke-success-transparent fill-success-soft" fill="none"
                              height="48" viewBox="0 0 44 48" width="44" xmlns="http://www.w3.org/2000/svg">
@@ -856,7 +986,7 @@
                 </div>
             </div>
             <div class="kt-card">
-                <div class="kt-card-content flex items-center gap-3.5 px-5">
+                <div class="kt-card-content flex items-center gap-3.5 px-5 py-4">
                     <div class="relative size-[50px] shrink-0">
                         <svg class="w-full h-full stroke-info-transparent fill-info-soft" fill="none" height="48"
                              viewBox="0 0 44 48" width="44" xmlns="http://www.w3.org/2000/svg">
@@ -876,7 +1006,7 @@
                 </div>
             </div>
             <div class="kt-card">
-                <div class="kt-card-content flex items-center gap-3.5 px-5">
+                <div class="kt-card-content flex items-center gap-3.5 px-5 py-4">
                     <div class="relative size-[50px] shrink-0">
                         <svg class="w-full h-full stroke-yellow-100 fill-warning-soft" fill="none" height="48"
                              viewBox="0 0 44 48" width="44" xmlns="http://www.w3.org/2000/svg">
