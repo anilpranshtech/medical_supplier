@@ -113,7 +113,7 @@
                     </span>
                                     {% endif %}
                                     <span class="text-xs font-normal text-secondary-foreground">
-                        SKU: <span class="font-medium">{{ item.product.sku }}</span>
+                        SKU: <span class="font-medium">{{ item.product.supplier_sku|default:item.product.id }}</span>
                     </span>
                                 </div>
                             </div>
@@ -123,27 +123,29 @@
                                 <div class="text-right mb-3">
                                     {% if item.product.discounted_price %}
                                     <span class="text-xs font-normal text-secondary-foreground line-through">
-                        ${{ item.product.price }}
-                    </span>
+                                        ${{ item.product.price }}
+                                    </span>
                                     <div class="flex items-center gap-2">
-                        <span class="text-lg font-bold text-mono">
-                            ${{ item.product.discounted_price }}
-                        </span>
+                                        <span class="text-lg font-bold text-mono">
+                                            ${{ item.product.discounted_price }}
+                                        </span>
+                                        {% if item.product.offer_percentage and item.product.offer_active %}
                                         <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">
-                            save {{ item.product.discount_percentage }}%
-                        </span>
+                                            save {{ item.product.offer_percentage }}%
+                                        </span>
+                                        {% endif %}
                                     </div>
                                     {% else %}
                                     <span class="text-lg font-bold text-mono">
-                        ${{ item.product.price }}
-                    </span>
+                                        ${{ item.product.price }}
+                                    </span>
                                     {% endif %}
                                 </div>
 
                                 <div class="flex items-center gap-2">
                                     <button class="kt-btn kt-btn-outline kt-btn-sm kt-wishlist-icon"
                                             data-product-id="{{ item.product.id }}">
-                                        <i class="ki-filled ki-heart heart-icon text-red-500 text-base"></i>
+                                        Remove <i class="ki-filled ki-basket text-red-500 text-base"></i>
                                     </button>
 
                                     {% if item.product.id in user_cart_ids %}

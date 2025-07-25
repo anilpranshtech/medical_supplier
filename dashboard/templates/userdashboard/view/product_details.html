@@ -193,7 +193,16 @@
                 <p class="text-gray-650 dark:text-gray-650 text-base leading-relaxed mb-6">
                     {{ product.description|default:'No description available' }}
                 </p>
+                {% if product.offer_percentage and product.offer_active %}
+                <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">
+                    save {{ product.offer_percentage|floatformat:0 }}%
+                </span>
+                {% endif %}
+
+                {% comment %}
                 <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">save {{ product.offer_percentage|floatformat:0 }}%</span>
+                {% endcomment %}
+                
                 <div class="flex items-center gap-4 mb-6">
                     {% if product.offer_active and product.offer_percentage and product.offer_percentage > 0 %}
                         <!-- Show original price as struck-through -->
