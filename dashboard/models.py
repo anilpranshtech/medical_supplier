@@ -3,7 +3,9 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-
+from django.utils.timezone import now
+from datetime import timedelta
+from django.conf import settings
 
 
 
@@ -520,3 +522,25 @@ class RFQRequest(models.Model):
     class Meta:
         ordering = ["-created_at"]
         verbose_name = verbose_name_plural = "RFQ Request"
+
+class PasswordUpdateTracker(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='password_tracker')
+    last_password_update = models.DateTimeField(default=now)
+
+    def is_password_expired(self):
+        return self.last_password_update < now() - timedelta(days=90)
+
+class DoctorProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='doctor_profile')
+
+    current_position = models.CharField(max_length=255)
+    workplace = models.CharField(max_length=255)
+    nationality = models.CharField(max_length=100)
+    residency = models.CharField(max_length=100)
+    country_code = models.CharField(max_length=10)
+    phone_number = models.CharField(max_length=20)
+    specialty = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"{self.user.get_full_name()} - {self.specialty}"
+

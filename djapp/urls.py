@@ -26,6 +26,7 @@ urlpatterns = [
     path('', include('adminv2.urls', namespace='adminv2')),
 
     path('admin_v3/', include('adminv3.urls', namespace='adminv3')),
+    path('api_v1/', include('medical_api.urls')),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=os.path.join(settings.BASE_DIR, 'static'))

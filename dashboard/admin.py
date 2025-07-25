@@ -109,3 +109,6 @@ class RFQRequestAdmin(admin.ModelAdmin):
         }),
     )
     readonly_fields = ('created_at', 'updated_at', 'quote_sent_at')
+
+
+admin.site.register(DoctorProfile)
