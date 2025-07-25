@@ -112,3 +112,8 @@ class RFQRequestAdmin(admin.ModelAdmin):
 
 
 admin.site.register(DoctorProfile)
+admin.site.register(Event)
+admin.site.register(Nationality)
+admin.site.register(Residency)
+admin.site.register(CountryCode)
+admin.site.register(Speciality)
