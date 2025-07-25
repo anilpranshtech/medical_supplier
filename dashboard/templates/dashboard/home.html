@@ -149,7 +149,7 @@
 </style>
 
 <!-- Begin Medical Banner Slider -->
-<div class="kt-slider-container mt-7">
+<div class="kt-slider-container mt-7" style="max-width: var(--custom-container-width, 97%);">
     <div class="kt-slider" id="slider">
         {% for banner in banners %}
             <a href="{{ banner.link|default:'#' }}" class="kt-slide">
@@ -163,12 +163,13 @@
 <!-- End Medical Banner Slider -->
 
 <!-- Begin Sections -->
-<div class="kt-container-fixed" style="max-width: var(--custom-container-width, 90%);">
+<div class="kt-container-fixed" style="max-width: var(--custom-container-width, 105%);">
     <!-- Featured Products -->
     <div class="section-container">
-        <div class="grid grid-cols-1 gap-6 mt-5 py-5">
-            <div class="grid sm:grid-cols-4 xl:grid-cols-8 gap-5 mb-2">
-                {% for product in featured_products|slice:":8" %}
+    <div class="grid grid-cols-1 gap-6 mt-5 py-5">
+        <!-- Product Grid -->
+        <div class="grid grid-cols-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-5 mb-2">
+            {% for product in featured_products|slice:":6" %}
                 <div class="kt-card">
                     <div class="kt-card-content flex flex-col justify-between p-2 gap-3">
                         <div>
