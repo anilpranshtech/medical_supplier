@@ -1,9 +1,10 @@
 from decimal import Decimal
 from io import BytesIO
-
+from django.contrib.auth.views import PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, \
+    PasswordResetCompleteView
 from django.db import transaction
+from django.views.generic import TemplateView, FormView, UpdateView, ListView
 from xhtml2pdf import pisa
-
 from django.conf import settings
 from django.core.mail import send_mail
 from django.http import HttpResponse, JsonResponse
@@ -20,15 +21,16 @@ from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from razorpay.errors import SignatureVerificationError
-from django.db.models import Count, Prefetch
+from django.db.models import Count, Prefetch, F
 from django.core.paginator import Paginator
 from django.db.models import Q
+from djapp.settings import TEXTDRIP_OTP_TOKEN
+from utils.handle_textdrip_otp import send_phone_otp, verify_mobile_otp, VERIFY_URL
 from utils.handle_user_profile import get_user_profile
 from .forms import *
 from .models import *
 import razorpay
 import stripe
-
 from datetime import date, timedelta
 import random
 import re
@@ -36,11 +38,8 @@ import requests
 from adminv2.models import *
 from django.http import JsonResponse
 from datetime import date, timedelta
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect, render
 from django.db.models import Avg
-from django.db.models import Count, Prefetch
-from django.core.paginator import Paginator
-from django.db.models import Q
 from django.db.models import  ExpressionWrapper, DecimalField, Case, When
 
 import logging

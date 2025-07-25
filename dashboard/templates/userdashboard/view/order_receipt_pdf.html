@@ -1,65 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    {% load static %}
     <meta charset="UTF-8">
     <title>Order Receipt #{{ order.id|stringformat:"05d" }}</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             background-color: #fff;
             color: #333;
-            padding: 40px;
-            font-size: 14px;
+            font-size: 13px;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 30px;
+            line-height: 1.4;
         }
 
         .header {
             text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .header h2 {
-            margin: 10px 0;
-        }
-
-        .section {
             margin-bottom: 25px;
         }
 
+        .header h2 {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        .section {
+            margin-bottom: 20px;
+        }
+
         .section-title {
-            font-weight: bold;
-            margin-bottom: 10px;
-            font-size: 16px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #222;
             border-bottom: 1px solid #ccc;
             padding-bottom: 4px;
+            margin-bottom: 10px;
         }
 
-        .product {
-            display: flex;
-            gap: 20px;
-            margin-bottom: 15px;
-        }
-
-        .product img {
-            width: 90px;
-            height: auto;
-            border: 1px solid #eee;
-        }
-
-        .product-details {
-            flex: 1;
-        }
-
-        .summary-table,
-        .summary-table td {
+        table {
+            width: 100%;
             border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
             padding: 6px 8px;
+            text-align: left;
+            vertical-align: middle;
         }
 
-        .summary-table td {
-            border: 1px solid #ddd;
+        th {
+            background-color: #f0f0f0;
+            font-weight: 600;
         }
 
-        .text-muted {
+        .text-right {
+            text-align: right;
+        }
+
+        .product-name {
+            font-weight: 500;
+        }
+
+        p {
+            margin: 2px 0;
+        }
+
+        .muted {
             color: #777;
         }
     </style>
@@ -73,44 +83,51 @@
 </div>
 
 {% if items %}
-    <div class="section">
-        <div class="section-title">Ordered Items</div>
+<div class="section">
+    <div class="section-title">Ordered Items</div>
+    <table>
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>SKU</th>
+                <th>Qty</th>
+                <th class="text-right">Price</th>
+            </tr>
+        </thead>
+        <tbody>
         {% for item in items %}
-            <div class="product">
-                {% if item.image_url %}
-                    <img src="{{ item.image_url }}" alt="{{ item.product.name }}">
-                {% else %}
-                    <div>No image</div>
-                {% endif %}
-                <div class="product-details">
-                    <p><strong>{{ item.product.name }}</strong></p>
-                    <p>SKU: {{ item.sku|default:"N/A" }}</p>
-                    <p>Quantity: {{ item.quantity }}</p>
-                    <p>Price: {% if order.payment_currency == "INR" %}₹{% else %}${% endif %}{{ item.total_price|floatformat:2 }}</p>
-                </div>
-            </div>
+            <tr>
+                <td class="product-name">{{ item.product.name }}</td>
+                <td>{{ item.sku|default:"N/A" }}</td>
+                <td>{{ item.quantity }}</td>
+                <td class="text-right">
+                    {% if order.payment_currency == "INR" %}₹{% else %}${% endif %}{{ item.total_price|floatformat:2 }}
+                </td>
+            </tr>
         {% endfor %}
-    </div>
+        </tbody>
+    </table>
+</div>
 {% endif %}
 
 <div class="section">
     <div class="section-title">Order Summary</div>
-    <table class="summary-table">
+    <table>
         <tr>
             <td>Subtotal</td>
-            <td>{% if order.payment_currency == "INR" %}₹{% else %}${% endif %}{{ order_summary.subtotal|floatformat:2 }}</td>
+            <td class="text-right">{% if order.payment_currency == "INR" %}₹{% else %}${% endif %}{{ order_summary.subtotal|floatformat:2 }}</td>
         </tr>
         <tr>
             <td>Shipping</td>
-            <td>{% if order.payment_currency == "INR" %}₹{% else %}${% endif %}{{ order_summary.shipping|floatformat:2 }}</td>
+            <td class="text-right">{% if order.payment_currency == "INR" %}₹{% else %}${% endif %}{{ order_summary.shipping|floatformat:2 }}</td>
         </tr>
         <tr>
             <td>VAT</td>
-            <td>{% if order.payment_currency == "INR" %}₹{% else %}${% endif %}{{ order_summary.vat|floatformat:2 }}</td>
+            <td class="text-right">{% if order.payment_currency == "INR" %}₹{% else %}${% endif %}{{ order_summary.vat|floatformat:2 }}</td>
         </tr>
         <tr>
-            <td><strong>Total</strong></td>
-            <td><strong>{% if order.payment_currency == "INR" %}₹{% else %}${% endif %}{{ order_summary.total|floatformat:2 }}</strong></td>
+            <th>Total</th>
+            <th class="text-right">{% if order.payment_currency == "INR" %}₹{% else %}${% endif %}{{ order_summary.total|floatformat:2 }}</th>
         </tr>
     </table>
 </div>
@@ -123,7 +140,7 @@
         <p>{{ billing.customer_country }}</p>
         <p>Phone: {{ billing.phone|default:"N/A" }}</p>
     {% else %}
-        <p class="text-muted">No billing information available.</p>
+        <p class="muted">No billing information available.</p>
     {% endif %}
 </div>
 
@@ -140,7 +157,7 @@
             <p>Unknown Payment Method</p>
         {% endif %}
     {% else %}
-        <p class="text-muted">No payment details available.</p>
+        <p class="muted">No payment details available.</p>
     {% endif %}
 </div>
 
