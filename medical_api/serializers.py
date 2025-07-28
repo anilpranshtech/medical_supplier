@@ -6,7 +6,7 @@ import re
 from rest_framework.permissions import IsAuthenticated
 
 from dashboard.models import DoctorProfile, ProductCategory, ProductSubCategory, ProductLastCategory, Event, Product, \
-    SupplierProfile, Residency, Speciality, Nationality, CountryCode
+    SupplierProfile, Residency, Speciality, Nationality, CountryCode,SubscriptionPlan, UserSubscription
 from django.db import IntegrityError
 
 
@@ -47,6 +47,31 @@ class DoctorRegistrationSerializer(serializers.ModelSerializer):
         if User.objects.filter(email=value).exists():
             raise serializers.ValidationError("A user with this email already exists.")
         return value
+    
+    def to_representation(self, instance):
+        data = {
+            "id": instance.id,
+            "email": instance.email,
+            "first_name": instance.first_name,
+            "last_name": instance.last_name,
+        }
+
+        try:
+            profile = instance.doctor_profile
+            data["doctor_profile"] = {
+                "current_position": profile.current_position,
+                "workplace": profile.workplace,
+                "phone_number": profile.phone_number,
+                "specialty": str(profile.specialty),
+                "residency": str(profile.residency),
+                "nationality": str(profile.nationality),
+                "country_code": str(profile.country_code),
+            }
+        except DoctorProfile.DoesNotExist:
+            data["doctor_profile"] = None
+
+        return data
+
 
     def validate(self, data):
         if data['password'] != data['confirm_password']:
@@ -365,3 +390,54 @@ class CountryCodeSerializer(serializers.ModelSerializer):
     class Meta:
         model = CountryCode
         fields = ['id', 'country', 'code']
+
+
+
+
+
+
+class SubscriptionPlanSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubscriptionPlan
+        fields = '__all__'
+    
+    def validate(self, data):
+        if data['client_type'] == 'buyer' and not data.get('buyer_type'):
+            raise serializers.ValidationError("Buyer type is required for buyer plans")
+        if data['client_type'] == 'supplier' and data.get('buyer_type'):
+            data['buyer_type'] = None
+        return data
+
+
+
+
+class UserSubscriptionSerializer(serializers.ModelSerializer):
+    user_email = serializers.EmailField(write_only=True)  # Add this field
+    
+    class Meta:
+        model = UserSubscription
+        fields = ['user_email', 'plan', 'platform', 'subscription_date', 'is_active', 'platform_plan_id']
+        read_only_fields = ('subscription_date', 'platform_plan_id', 'is_active')
+    
+    def validate(self, data):
+        user_email = data.get('user_email')
+        plan = data.get('plan')
+        platform = data.get('platform')
+        
+        # Validate user exists
+        try:
+            user = User.objects.get(email=user_email)
+        except User.DoesNotExist:
+            raise serializers.ValidationError({"user_email": "User with this email does not exist"})
+        
+        # Validate plan exists and has platform ID
+        if not plan:
+            raise serializers.ValidationError({"plan": "This field is required."})
+        
+        if platform == 'ios' and not plan.ios_plan_id:
+            raise serializers.ValidationError({"platform": "This plan doesn't have an iOS plan ID"})
+        if platform == 'android' and not plan.android_plan_id:
+            raise serializers.ValidationError({"platform": "This plan doesn't have an Android plan ID"})
+        
+        data['user'] = user  # Add user object to validated data
+        return data

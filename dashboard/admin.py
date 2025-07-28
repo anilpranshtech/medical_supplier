@@ -117,3 +117,40 @@ admin.site.register(Nationality)
 admin.site.register(Residency)
 admin.site.register(CountryCode)
 admin.site.register(Speciality)
+
+
+
+@admin.register(SubscriptionPlan)
+class SubscriptionPlanAdmin(admin.ModelAdmin):
+    list_display = ('name', 'client_type', 'buyer_type', 'period', 'cost', 'ios_plan_id', 'android_plan_id')
+    list_filter = ('client_type', 'buyer_type', 'period')
+    search_fields = ('name', 'description', 'ios_plan_id', 'android_plan_id')
+    fieldsets = (
+        ('Basic Information', {
+            'fields': ('name', 'description', 'period', 'cost')
+        }),
+        ('Client Type', {
+            'fields': ('client_type', 'buyer_type')
+        }),
+        ('Platform IDs', {
+            'fields': ('ios_plan_id', 'android_plan_id'),
+            'classes': ('collapse',)
+        }),
+    )
+
+@admin.register(UserSubscription)
+class UserSubscriptionAdmin(admin.ModelAdmin):
+    list_display = ('user', 'plan', 'platform', 'subscription_date', 'is_active')
+    list_filter = ('platform', 'is_active', 'plan__client_type', 'plan__buyer_type')
+    search_fields = ('user__email', 'user__username', 'plan__name')
+    readonly_fields = ('subscription_date', 'platform_plan_id')
+    date_hierarchy = 'subscription_date'
+    
+    fieldsets = (
+        ('Subscription Info', {
+            'fields': ('user', 'plan', 'is_active')
+        }),
+        ('Platform Details', {
+            'fields': ('platform', 'platform_plan_id', 'subscription_date')
+        }),
+    )

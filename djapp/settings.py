@@ -156,9 +156,10 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 
 STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / "static" / "static"
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # <- output folder, not same as input
+
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
+    os.path.join(BASE_DIR, 'static'),  # <- input folder (your manually created static/)
 ]
 
 # Secret Key & Debug
