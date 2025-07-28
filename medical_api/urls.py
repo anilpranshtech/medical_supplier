@@ -42,5 +42,9 @@ urlpatterns = [
     path('nationalities/', NationalityListView.as_view(), name='nationality-list'),
     path('country-codes/', CountryCodeListView.as_view(), name='countrycode-list'),
 
+    path('plans/', SubscriptionPlanListCreateAPIView.as_view(), name='plan-list-create'),
+    path('subscriptions/', UserSubscriptionListAPIView.as_view(), name='user-subscription-list'),
+    path('subscribe/', UserSubscriptionCreateAPIView.as_view(), name='user-subscription-create'),
+
 
 ]
