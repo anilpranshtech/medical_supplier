@@ -147,6 +147,22 @@
                                         </div>
                                     </div>
                                     <div class="card-body pt-0">
+
+                                       <div class="mb-10 fv-row">
+                                            <label class="required form-label">Supplier</label>
+
+                                            <select name="supplier" class="form-select form-select-solid" data-placeholder="Select a supplier" required>
+                                                <option value=""  selected disabled>Select a supplier</option>
+                                                {% for sup in suppliers %}
+                                                    <option value="{{ sup.id }}">{{ sup.user.email }}</option>
+                                                {% endfor %}
+                                            </select>
+
+                                            <div class="text-muted fs-7">
+                                                Add supplier name on behalf you add the product.
+                                            </div>
+                                        </div>
+
                                         <div class="mb-10 fv-row">
                                             <label class="required form-label">Product Name</label>
                                             <input type="text" name="product_name" class="form-control mb-2" placeholder="Product name" value="{{ product_name }}" required />

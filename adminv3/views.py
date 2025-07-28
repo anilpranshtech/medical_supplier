@@ -560,6 +560,7 @@ class AddproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
             'categories': ProductCategory.objects.all(),
             'subcategories': ProductSubCategory.objects.all(),
             'lastcategories': ProductLastCategory.objects.all(),
+            'suppliers': SupplierProfile.objects.all()
         }
         return render(request, self.template, context)
 
@@ -588,7 +589,10 @@ class AddproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
         show_add_to_cart = button_type in ['both', 'cart']
         show_rfq = button_type in ['both', 'rfq']
         both_selected = button_type == 'both'
+        supplier = data.get('supplier')
 
+        sup_user = SupplierProfile.objects.get(id=supplier)
+        print('---------- supplier user -----------',sup_user)
 
         if offer_start and offer_end and offer_end < offer_start:
             messages.warning(request, "Offer end date cannot be before start date.")
@@ -645,7 +649,7 @@ class AddproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
                 show_add_to_cart=show_add_to_cart,
                 show_rfq=show_rfq,
                 Both=both_selected,
-                created_by=request.user
+                created_by=sup_user.user
             )
 
 
@@ -726,6 +730,7 @@ class EditproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
         selling_countries = product.selling_countries if product.selling_countries else ''
         brochure_url = product.brochure.url if product.brochure else None
 
+
         context = {
 
             'pk': pk,
@@ -769,6 +774,9 @@ class EditproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
             'brochure_url': brochure_url,
             'subcategories': subcategories,
             'lastcategories': lastcategories,
+            'suppliers': SupplierProfile.objects.all(),
+            'sup_selected': product.created_by.email,
+            'sup_selected_id': product.created_by.id
         }
         return render(request, self.template, context)
 
