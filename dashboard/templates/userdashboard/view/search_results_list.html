@@ -3,6 +3,7 @@
 
 {% block content %}
 <style>
+    /* Existing styles unchanged */
     .kt-wishlist-icon.active i.ki-filled.ki-heart {
         color: #ff0000;
     }
@@ -30,6 +31,8 @@
         height: 120px;
         object-fit: contain;
         margin-right: 20px;
+        position: relative;
+        overflow: hidden;
     }
     .kt-list-card-content {
         flex: 1;
@@ -39,23 +42,6 @@
         flex-direction: column;
         align-items: flex-end;
         min-width: 150px;
-    }
-    @media (max-width: 768px) {
-        .kt-list-card {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-        .kt-list-card-image {
-            width: 100%;
-            height: auto;
-            margin-right: 0;
-            margin-bottom: 15px;
-        }
-        .kt-list-card-actions {
-            width: 100%;
-            align-items: flex-start;
-            margin-top: 15px;
-        }
     }
     .amazon-sidebar {
         border-right: 1px solid #e0e0e0;
@@ -123,7 +109,6 @@
     .subcategory-list a:hover {
         color: #3b82f6;
     }
-    /* Add RFQ Modal Styles */
     #rfqModal {
         z-index: 9999;
         backdrop-filter: blur(8px);
@@ -153,7 +138,6 @@
     .loading .loader {
         display: inline-block;
     }
-    /* Add this to your existing styles */
     .discount-ribbon {
         position: absolute;
         top: 10px;
@@ -169,7 +153,6 @@
         clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 10% 50%);
         width: 150px;
     }
-
     .discount-ribbon:after {
         content: '';
         position: absolute;
@@ -181,26 +164,208 @@
         border-top: 10px solid transparent;
         border-bottom: 10px solid transparent;
     }
-
-   
-    .kt-list-card-image {
-        position: relative;
-        overflow: hidden;
-    }
     .kt-wishlist-icon {
-    cursor: pointer;
-    transition: color 0.2s ease-in-out;
-}
-.kt-wishlist-icon:hover i {
-    color: #ff0000; 
-}
-.kt-wishlist-icon i {
-   
-    color: #6b7280; 
-}
-.kt-wishlist-icon i.text-red-500 {
-    color: #ff0000; 
-}
+        cursor: pointer;
+        transition: color 0.2s ease-in-out;
+    }
+    .kt-wishlist-icon:hover i {
+        color: #ff0000;
+    }
+    .kt-wishlist-icon i {
+        color: #6b7280;
+    }
+    .kt-wishlist-icon i.text-red-500 {
+        color: #ff0000;
+    }
+    .kt-btn-primary {
+        background-color: #3b82f6 !important;
+        opacity: 1 !important;
+        color: white !important;
+    }
+    .kt-btn-primary:disabled {
+        opacity: 1 !important;
+        background-color: #3b82f6 !important;
+        color: white !important;
+    }
+
+    /* Enhanced Responsiveness: Mobile (≤480px) */
+    @media (max-width: 480px) {
+        .kt-container-fixed {
+            padding: 0 10px; /* Reduce padding for small screens */
+        }
+        .kt-category-grid {
+            grid-template-columns: 1fr; /* Stack sidebar and product list */
+            gap: 10px;
+        }
+        .amazon-sidebar {
+            border-right: none; /* Remove border for stacked layout */
+            padding-right: 0;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e0e0e0; /* Add bottom border */
+        }
+        .amazon-sidebar h2 {
+            font-size: 1rem; /* Smaller heading */
+        }
+        .category-button {
+            font-size: 0.9rem; /* Smaller button text */
+            padding: 0.4rem 0;
+        }
+        .subcategory-list a {
+            font-size: 0.85rem; /* Smaller subcategory text */
+        }
+        .kt-list-card {
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 10px; /* Reduce padding */
+        }
+        .kt-list-card-image {
+            width: 100%;
+            height: auto;
+            aspect-ratio: 1/1; /* Maintain square aspect ratio */
+            margin-right: 0;
+            margin-bottom: 10px;
+        }
+        .kt-list-card-content h3 {
+            font-size: 1rem; /* Smaller product title */
+        }
+        .kt-list-card-content p {
+            font-size: 0.8rem; /* Smaller description */
+        }
+        .kt-list-card-actions {
+            width: 100%;
+            align-items: flex-start;
+            margin-top: 10px;
+            min-width: unset; /* Remove min-width constraint */
+        }
+        .kt-list-card-actions .text-lg {
+            font-size: 1rem; /* Smaller price text */
+        }
+        .kt-btn, .kt-btn-sm {
+            font-size: 0.8rem; /* Smaller button text */
+            padding: 6px 12px; /* Adjust button padding */
+        }
+        .discount-ribbon {
+            font-size: 10px; /* Smaller ribbon text */
+            padding: 4px 20px;
+            width: 120px; /* Smaller ribbon */
+            left: -20px;
+        }
+        .kt-select-wrapper {
+            width: 140px; /* Smaller dropdown */
+        }
+        #rfqModal .kt-card {
+            width: 90%; /* Full width with margin */
+            margin: 0 16px;
+            max-width: 400px; /* Limit max width */
+        }
+        #rfqModal .kt-card-content input,
+        #rfqModal .kt-card-content textarea {
+            font-size: 0.85rem; /* Smaller input text */
+        }
+        #rfqModal .text-xl {
+            font-size: 1.1rem; /* Smaller modal title */
+        }
+        .kt-toggle-group .kt-btn-icon {
+            padding: 6px; /* Smaller icon buttons */
+        }
+    }
+
+    /* New: Tablet Support (481px–768px) */
+    @media (min-width: 481px) and (max-width: 768px) {
+        .kt-container-fixed {
+            padding: 0 15px;
+        }
+        .kt-category-grid {
+            grid-template-columns: 1fr; /* Stack for tablets */
+            gap: 15px;
+        }
+        .amazon-sidebar {
+            border-right: none;
+            padding-right: 0;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .amazon-sidebar h2 {
+            font-size: 1.1rem;
+        }
+        .category-button {
+            font-size: 1rem;
+        }
+        .subcategory-list a {
+            font-size: 0.9rem;
+        }
+        .kt-list-card {
+            flex-direction: row; /* Keep row layout for tablets */
+            padding: 12px;
+        }
+        .kt-list-card-image {
+            width: 100px; /* Slightly smaller image */
+            height: 100px;
+            margin-right: 15px;
+        }
+        .kt-list-card-content h3 {
+            font-size: 1.1rem;
+        }
+        .kt-list-card-content p {
+            font-size: 0.85rem;
+        }
+        .kt-list-card-actions {
+            min-width: 120px; /* Adjust for tablet */
+        }
+        .kt-list-card-actions .text-lg {
+            font-size: 1.1rem;
+        }
+        .kt-btn, .kt-btn-sm {
+            font-size: 0.85rem;
+            padding: 8px 14px;
+        }
+        .discount-ribbon {
+            font-size: 11px;
+            width: 130px;
+            left: -22px;
+        }
+        .kt-select-wrapper {
+            width: 160px;
+        }
+        #rfqModal .kt-card {
+            width: 80%;
+            max-width: 500px;
+        }
+        #rfqModal .kt-card-content input,
+        #rfqModal .kt-card-content textarea {
+            font-size: 0.9rem;
+        }
+        #rfqModal .text-xl {
+            font-size: 1.2rem;
+        }
+    }
+
+    /* Existing Desktop Media Query (Adjusted) */
+    @media (min-width: 769px) {
+        .kt-container-fixed {
+            padding: 0 20px; /* Consistent padding */
+        }
+        .kt-category-grid {
+            grid-template-columns: 0.8fr 3.2fr; /* Maintain original grid */
+        }
+        .amazon-sidebar {
+            border-right: 1px solid #e0e0e0;
+            padding-right: 16px;
+        }
+        .kt-list-card-image {
+            width: 120px;
+            height: 120px;
+        }
+        .kt-list-card-content h3 {
+            font-size: 1.2rem;
+        }
+        .kt-list-card-content p {
+            font-size: 0.9rem;
+        }
+        .kt-btn, .kt-btn-sm {
+            font-size: 0.9rem;
+        }
+    }
 </style>
 
 <title>Category Results - Medical Supplies</title>
@@ -240,7 +405,7 @@
             <div class="flex items-center gap-2.5">
                 <div data-kt-select-wrapper="" class="kt-select-wrapper w-[175px] bg-background">
                     <div data-kt-select-display="" class="kt-select-display kt-select" tabindex="0" role="button"
-                         data-selected="{% if request.GET.sort_by == '1' %}1{% elif request.GET.sort_by == '2' %}2{% else %}2{% endif %}" aria-haspopup="listbox" aria-expanded="false" aria-label="Select an option">
+                         data-selected="{% if request.GET.sort_by == '1' %}1PulsePoint{% elif request.GET.sort_by == '2' %}2{% else %}2{% endif %}" aria-haspopup="listbox" aria-expanded="false" aria-label="Select an option">
                         {% if request.GET.sort_by == "1" %}
                             Price High to Low
                         {% elif request.GET.sort_by == "2" %}
@@ -337,8 +502,8 @@
                         <!-- Product Image -->
                         <div class="kt-list-card-image">
                             {% if product.offer_percentage and product.offer_active %}
-            <div class="discount-ribbon">save {{ product.offer_percentage|floatformat:0 }}%</div>
-        {% endif %}
+                                <div class="discount-ribbon">save {{ product.offer_percentage|floatformat:0 }}%</div>
+                            {% endif %}
                             {% with False as image_shown %}
                                 {% for img in product.productimage_set.all %}
                                     {% if img.is_main and not image_shown %}
@@ -362,7 +527,6 @@
                                     {% if product.offer_percentage and product.offer_active %}
                                         <div class="flex items-center gap-2">
                                             <span>{{ product.name }}</span>
-                                         
                                         </div>
                                     {% else %}
                                         {{ product.name }}
@@ -396,7 +560,6 @@
                                         <span class="text-lg font-bold text-mono">
                                             ${{ product.discounted_price|floatformat:2 }}
                                         </span>
-                                        <!-- <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">save {{ product.offer_percentage }}%</span> -->
                                     </div>
                                 {% else %}
                                     <span class="text-lg font-bold text-mono">
@@ -406,24 +569,25 @@
                             </div>
                             <div class="flex items-center gap-2">
                                 {% if request.user.is_authenticated %}
-    <span class="kt-wishlist-icon cursor-pointer"
-          data-kt-wishlist-toggle="true"
-          data-product-id="{{ product.id|default:'0' }}"
-          title="{% if product.id in user_wishlist_ids %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}">
-        <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
-    </span>
-{% else %}
-    <span class="kt-wishlist-icon cursor-pointer"
-          data-kt-wishlist-toggle="true"
-          data-product-id="{{ product.id|default:'0' }}"
-          title="Login to Add to Wishlist">
-        <i class="ki-filled ki-heart heart-icon"></i>
-    </span>
-{% endif %}
+                                    <span class="kt-wishlist-icon cursor-pointer"
+                                          data-kt-wishlist-toggle="true"
+                                          data-product-id="{{ product.id|default:'0' }}"
+                                          title="{% if product.id in user_wishlist_ids %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}">
+                                        <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
+                                    </span>
+                                {% else %}
+                                    <span class="kt-wishlist-icon cursor-pointer"
+                                          data-kt-wishlist-toggle="true"
+                                          data-product-id="{{ product.id|default:'0' }}"
+                                          title="Login to Add to Wishlist">
+                                        <i class="ki-filled ki-heart heart-icon"></i>
+                                    </span>
+                                {% endif %}
                                 {% if product.id in user_cart_ids %}
                                     <button class="kt-btn kt-btn-primary kt-btn-sm"
-                                            style="background:#3b82f6; color:white;"
-                                            data-product-id="{{ product.id }}">
+                                            style="background:#3b82f6 !important; color:white !important; opacity:1 !important;"
+                                            data-product-id="{{ product.id }}"
+                                            disabled>
                                         In cart <i class="ki-filled ki-handcart text-white"></i>
                                     </button>
                                 {% else %}
@@ -432,7 +596,6 @@
                                         Add to cart <i class="ki-filled ki-handcart"></i>
                                     </button>
                                 {% endif %}
-                                <!-- Add RFQ Button for Authenticated Users -->
                                 {% if request.user.is_authenticated %}
                                     {% if product.show_rfq or product.Both %}
                                         <button class="kt-btn kt-btn-outline kt-btn-sm open-rfq-modal"
@@ -592,6 +755,63 @@ function closeRFQModal() {
     document.getElementById('rfqModal').classList.add('hidden');
 }
 
+let isFetching = false; // Prevent race conditions
+
+function fetchProducts(params) {
+    if (isFetching) return; // Prevent multiple simultaneous requests
+    isFetching = true;
+
+    const urlParams = new URLSearchParams();
+    Object.keys(params).forEach(key => {
+        if (params[key]) {
+            urlParams.set(key, params[key]);
+        } else {
+            urlParams.delete(key);
+        }
+    });
+    const url = `{% url 'dashboard:search_results_list' %}?${urlParams.toString()}`;
+
+    fetch(url, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.text())
+    .then(html => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const newProductList = doc.querySelector('#product-list');
+        const newPagination = doc.querySelector('#pagination');
+        const newResultsHeader = doc.querySelector('#results-header');
+        const newSelectDisplay = doc.querySelector('[data-kt-select-display]');
+
+        if (newProductList) document.querySelector('#product-list').innerHTML = newProductList.innerHTML;
+        if (newPagination) document.querySelector('#pagination').innerHTML = newPagination.innerHTML;
+        if (newResultsHeader) document.querySelector('#results-header').innerHTML = newResultsHeader.innerHTML;
+        if (newSelectDisplay) {
+            const selectDisplay = document.querySelector('[data-kt-select-display]');
+            selectDisplay.textContent = newSelectDisplay.textContent;
+            selectDisplay.setAttribute('data-selected', newSelectDisplay.getAttribute('data-selected'));
+            const sortBy = urlParams.get('sort_by') || '2';
+            document.querySelectorAll('[data-kt-select-option]').forEach(opt => {
+                opt.classList.remove('selected');
+                opt.setAttribute('aria-selected', 'false');
+                if (opt.getAttribute('data-value') === sortBy) {
+                    opt.classList.add('selected');
+                    opt.setAttribute('aria-selected', 'true');
+                }
+            });
+        }
+
+        window.history.pushState({}, '', url);
+        isFetching = false;
+    })
+    .catch(error => {
+        console.error('Fetch products error:', error);
+        isFetching = false;
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const firstCategory = document.querySelector('[id^="cat-"]');
     if (firstCategory) {
@@ -651,12 +871,13 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(res => res.json())
             .then(data => {
                 if (data.status === "success") {
-                    addToCartBtn.classList.remove('kt-btn-primary');
-                    addToCartBtn.classList.add('kt-btn-success');
-                    addToCartBtn.style.background = '#3b82f6';
-                    addToCartBtn.style.color = 'white';
+                    addToCartBtn.classList.remove('kt-btn-outline');
+                    addToCartBtn.classList.add('kt-btn-primary');
+                    addToCartBtn.style.background = '#3b82f6 !important';
+                    addToCartBtn.style.color = 'white !important';
+                    addToCartBtn.style.opacity = '1 !important';
                     addToCartBtn.innerHTML = `In cart <i class="ki-filled ki-handcart text-white"></i>`;
-                    addToCartBtn.onclick = null;
+                    addToCartBtn.disabled = true; // Disable to prevent multiple clicks
                 } else {
                     alert("Something went wrong");
                 }
@@ -688,6 +909,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (data) {
                     const icon = wishlistBtn.querySelector('i');
                     icon.classList.toggle('text-red-500', data.status === 'added');
+                    wishlistBtn.title = data.status === 'added' ? 'Remove from Wishlist' : 'Add to Wishlist';
                 }
             })
             .catch(error => console.error('Wishlist toggle error:', error));
@@ -753,156 +975,6 @@ document.addEventListener('DOMContentLoaded', () => {
             selectDropdown.classList.toggle('hidden');
             selectDisplay.setAttribute('aria-expanded', selectDropdown.classList.contains('hidden') ? 'false' : 'true');
         });
-    }
-
-    function fetchProducts(params) {
-        const urlParams = new URLSearchParams();
-        Object.keys(params).forEach(key => {
-            if (params[key]) {
-                urlParams.set(key, params[key]);
-            } else {
-                urlParams.delete(key);
-            }
-        });
-        const url = `{% url 'dashboard:search_results_list' %}?${urlParams.toString()}`;
-
-        fetch(url, {
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => response.text())
-        .then(html => {
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            const newProductList = doc.querySelector('#product-list');
-            const newPagination = doc.querySelector('#pagination');
-            const newResultsHeader = doc.querySelector('#results-header');
-            const newSelectDisplay = doc.querySelector('[data-kt-select-display]');
-            
-            if (newProductList) document.querySelector('#product-list').innerHTML = newProductList.innerHTML;
-            if (newPagination) document.querySelector('#pagination').innerHTML = newPagination.innerHTML;
-            if (newResultsHeader) document.querySelector('#results-header').innerHTML = newResultsHeader.innerHTML;
-            if (newSelectDisplay) {
-                const selectDisplay = document.querySelector('[data-kt-select-display]');
-                selectDisplay.textContent = newSelectDisplay.textContent;
-                selectDisplay.setAttribute('data-selected', newSelectDisplay.getAttribute('data-selected'));
-                const sortBy = urlParams.get('sort_by') || '2';
-                document.querySelectorAll('[data-kt-select-option]').forEach(opt => {
-                    opt.classList.remove('selected');
-                    opt.setAttribute('aria-selected', 'false');
-                    if (opt.getAttribute('data-value') === sortBy) {
-                        opt.classList.add('selected');
-                        opt.setAttribute('aria-selected', 'true');
-                    }
-                });
-            }
-
-            // Reattach Event Listeners for Dynamically Loaded Content
-            document.querySelectorAll('.add-to-cart-btn').forEach(button => {
-                button.addEventListener('click', () => {
-                    const productId = button.dataset.productId;
-                    fetch("{% url 'dashboard:add_to_cart' %}", {
-                        method: "POST",
-                        headers: {
-                            "X-CSRFToken": csrftoken,
-                            "Content-Type": "application/x-www-form-urlencoded",
-                        },
-                        body: new URLSearchParams({
-                            product_id: productId,
-                            quantity: 1,
-                        }),
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.status === "success") {
-                            button.classList.remove('kt-btn-primary');
-                            button.classList.add('kt-btn-success');
-                            button.style.background = '#3b82f6';
-                            button.style.color = 'white';
-                            button.innerHTML = `In cart <i class="ki-filled ki-handcart text-white"></i>`;
-                            button.onclick = null;
-                        } else {
-                            alert("Something went wrong");
-                        }
-                    })
-                    .catch(err => console.error("Add to cart error:", err));
-                });
-            });
-
-           // Handle wishlist buttons
-    if (e.target.closest('.kt-wishlist-icon')) {
-        const button = e.target.closest('.kt-wishlist-icon');
-        const productId = button.dataset.productId || '0';
-        
-        fetch("{% url 'dashboard:toggle_wishlist' %}", {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': csrftoken,
-                'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            body: `product_id=${productId}`
-        })
-        .then(response => {
-            if (response.status === 403) {
-                alert('Please login to use wishlist.');
-                window.location.href = '/login/';
-                return;
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data) {
-                const icon = button.querySelector('i');
-                icon.classList.toggle('text-red-500', data.status === 'added');
-            }
-        })
-        .catch(error => console.error('Wishlist toggle error:', error));
-    }
-
-            document.querySelectorAll('.pagination-link').forEach(link => {
-                link.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const page = link.dataset.page;
-                    const params = new URLSearchParams(window.location.search);
-                    fetchProducts({ 
-                        page: page, 
-                        sort_by: params.get('sort_by'), 
-                        last_category: params.get('last_category'),
-                        category: params.get('category'),
-                        sub_category: params.get('sub_category')
-                    });
-                });
-            });
-
-            document.querySelectorAll('.category-link').forEach(link => {
-                link.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const lastCategoryId = link.dataset.lastCategory;
-                    fetchProducts({ last_category: lastCategoryId, page: 1 });
-                });
-            });
-
-            // Reattach RFQ Modal Open Handler for Dynamically Loaded Buttons
-            document.querySelectorAll('.open-rfq-modal').forEach(button => {
-                button.addEventListener('click', () => {
-                    const productId = button.getAttribute('data-product-id');
-                    const productName = button.getAttribute('data-product-name');
-                    const companyName = button.getAttribute('data-company-name');
-                    const quantity = button.getAttribute('data-quantity');
-
-                    document.getElementById('rfqProductId').value = productId;
-                    document.getElementById('rfqProductName').value = productName;
-                    document.getElementById('rfqCompanyName').value = companyName;
-                    document.getElementById('rfqQuantity').value = quantity;
-
-                    document.getElementById('rfqModal').classList.remove('hidden');
-                });
-            });
-
-            window.history.pushState({}, '', url);
-        })
-        .catch(error => console.error('Fetch products error:', error));
     }
 });
 </script>
