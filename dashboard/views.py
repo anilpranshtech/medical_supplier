@@ -62,9 +62,16 @@ class HomeView(TemplateView):
                 # Calculate delivery date
                 if product.delivery_time:
                     delivery_date = today + timedelta(days=product.delivery_time)
-                    product.delivery_date = delivery_date.strftime('%a, %d %b')  # e.g., Sun, 13 Jul
+                    product.delivery_date = delivery_date.strftime('%a, %d %b')  
                 else:
                     product.delivery_date = 'N/A'
+
+                # Calculate rating and review count
+                reviews = RatingReview.objects.filter(product=product)
+                total_reviews = reviews.count()
+                average_rating = reviews.aggregate(avg_rating=Avg('rating'))['avg_rating'] or 0.0
+                product.rating = round(average_rating, 1) if total_reviews > 0 else 0.0
+                product.total_reviews = total_reviews
             return product_queryset
 
         # Special Offers
