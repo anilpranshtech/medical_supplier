@@ -50,16 +50,37 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         const planId = packageModalPlanId.value;
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
         confirmBtn.querySelector('.indicator-label').classList.add('hidden');
         confirmBtn.querySelector('.indicator-progress').classList.remove('hidden');
 
-        // Simulated API call
-        setTimeout(() => {
-            packageModal.classList.add('hidden');
-            confirmCheckbox.checked = false;
+        fetch("{% url 'dashboard:subscription_plans' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+                "X-CSRFToken": csrfToken
+            },
+            body: new URLSearchParams({
+                plan_id: planId,
+                platform: "web"
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
             confirmBtn.querySelector('.indicator-label').classList.remove('hidden');
             confirmBtn.querySelector('.indicator-progress').classList.add('hidden');
-        }, 1000);
+
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert(data.message || "Failed to update subscription.");
+            }
+        })
+        .catch(error => {
+            alert("An error occurred. Please try again.");
+            console.error(error);
+        });
     });
 
     confirmCheckbox.addEventListener('change', function () {
@@ -68,3 +89,4 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 });
+

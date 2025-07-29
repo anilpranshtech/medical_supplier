@@ -27,9 +27,17 @@
                             <tr id="kt_pricing">
                                 <th class="p-4">
                                     <div class="flex justify-center mb-8">
-                                        <div class="inline-flex bg-gray-100 dark:bg-gray-700 rounded-full p-2 w-56" role="tablist">
-                                            <button class="flex-1 py-2 px-4 text-sm font-semibold text-gray-600 dark:text-gray-300 rounded-full focus:outline-none transition-colors duration-200 bg-white dark:bg-gray-600 shadow-sm active" id="monthlyPlan" role="tab" aria-selected="true">Monthly</button>
-                                            <button class="flex-1 py-2 px-4 text-sm font-semibold text-gray-600 dark:text-gray-300 rounded-full focus:outline-none transition-colors duration-200 hover:bg-white dark:hover:bg-gray-600" id="annuallyPlan" role="tab" aria-selected="false">Annually</button>
+                                        <div class="inline-flex rounded-md shadow-sm mb-6" role="tablist">
+                                            <button id="monthlyPlan" type="button"
+                                                class="inline-block px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-l-lg active"
+                                                role="tab">
+                                                Monthly
+                                            </button>
+                                            <button id="annuallyPlan" type="button"
+                                                class="inline-block px-4 py-2 text-sm font-medium text-gray-900 bg-gray-100 border border-gray-200 rounded-r-lg"
+                                                role="tab">
+                                                Annually
+                                            </button>
                                         </div>
                                     </div>
                                 </th>
@@ -61,6 +69,48 @@
                                             </div>
                                         </th>
                                     {% endif %}
+                                {% endfor %}
+                                {% for plan in platform_plans %}
+                                    <th scope="col" class="text-center align-top border-l border-gray-200 dark:border-gray-700 {{ plan.period }}-plan {% if plan.period == 'annually' %}hidden{% endif %}">
+                                        <div class="flex flex-col justify-start items-center p-4">
+                                            <h2 class="text-lg font-semibold mb-1 text-center">{{ plan.plan.name }}</h2>
+
+                                            {% if plan.period == 'monthly' %}
+                                                <div class="flex justify-center items-start mb-2">
+                                                    <span class="text-lg">$</span>
+                                                    <span class="text-4xl font-semibold">
+                                                        {{ plan.stripe_metadata.price|floatformat:2 }}
+                                                    </span>
+                                                    <span class="ml-1 text-base self-end">/mo</span>
+                                                </div>
+                                            {% elif plan.period == 'annually' %}
+                                                <div class="flex justify-center items-start mb-2">
+                                                    <span class="text-lg">$</span>
+                                                    <span class="text-4xl font-semibold">
+                                                        {{ plan.stripe_metadata.price|floatformat:2 }}
+                                                    </span>
+                                                    <span class="ml-1 text-base self-end">/yr</span>
+                                                </div>
+                                                <div class="text-sm font-medium mb-2 text-gray-600 dark:text-gray-300">
+                                                    (${{ plan.stripe_metadata.price|divide:12|floatformat:2 }}/mo equivalent)
+                                                </div>
+                                                <div class="text-sm font-medium mb-4">
+                                                    <span class="inline-block mt-2 bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 text-xs font-semibold px-2 py-1 rounded">
+                                                        Save 20% – ${{ plan.stripe_metadata.price|multiply:0.2|floatformat:2 }}
+                                                    </span>
+                                                </div>
+                                            {% endif %}
+
+                                            <!-- Select Plan Button -->
+                                            <button
+                                                type="button"
+                                                data-plan-id="{{ plan.id }}"
+                                                class="btnPackage w-full mt-4 px-4 py-2 bg-primary text-white font-medium text-sm rounded hover:bg-primary-dark focus:outline-none transition"
+                                            >
+                                                Select Plan
+                                            </button>
+                                        </div>
+                                    </th>
                                 {% endfor %}
                             </tr>
                         </thead>

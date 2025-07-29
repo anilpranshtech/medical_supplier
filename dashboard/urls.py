@@ -80,6 +80,7 @@ urlpatterns = [
 
     # Subscription Plan
     path('subscriptions-plans/', SubscriptionPlanView.as_view(), name='subscription_plans'),
+    path('subscriptions/check/', CheckStripeSubscriptionView.as_view(), name='check_stripe_subscription'),
     path('update-subscription/', UpdateSubscriptionView.as_view(), name='update_subscription'),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

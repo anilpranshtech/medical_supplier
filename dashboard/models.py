@@ -427,7 +427,6 @@ class StripePayment(models.Model):
     name = models.CharField(max_length=100)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     paid = models.BooleanField(default=True)
-    customer_id = models.CharField(max_length=100)
     stripe_charge_id = models.CharField(max_length=100)
     stripe_customer_id = models.CharField(max_length=100)
     stripe_signature = models.CharField(max_length=255, blank=True, null=True)

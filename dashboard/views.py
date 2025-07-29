@@ -1270,7 +1270,6 @@ class PaymentMethodView(LoginRequiredMixin, View):
                         name=crd_name,
                         amount=total,
                         paid=True,
-                        customer_id=customer.id,
                         stripe_charge_id=charge.id,
                         stripe_customer_id=customer.id,
                         stripe_signature=charge.payment_method,
@@ -2500,55 +2499,64 @@ class SubscriptionPlanView(LoginRequiredMixin, TemplateView):
     def post(self, request, *args, **kwargs):
         plan_id = request.POST.get('plan_id')
         platform = request.POST.get('platform', 'web')
+        user = request.user
 
         try:
-            # Validate plan
             plan = get_object_or_404(SubscriptionPlan, id=plan_id, is_active=True)
+            stripe_price_id = plan.stripe_metadata.price_id
 
-            # Check if plan matches the client_type and buyer_type
-            client_type = request.POST.get('client_type', 'buyer')
-            buyer_type = request.POST.get('buyer_type') if client_type == 'buyer' else None
+            profile = user.profile
+            customer_id = profile.stripe_customer_id
 
-            if plan.client_type != client_type or (plan.client_type == 'buyer' and plan.buyer_type != buyer_type):
-                return JsonResponse({
-                    'success': False,
-                    'message': 'Invalid plan for the selected client or buyer type.'
-                }, status=400)
+            # Check existing Stripe subscriptions
+            subscriptions = stripe.Subscription.list(customer=customer_id, status='active')
 
-            # Check for downgrade
-            current_subscription = UserSubscription.objects.filter(user=request.user, is_active=True).first()
-            if current_subscription and current_subscription.plan.cost > plan.cost:
-                return JsonResponse({
-                    'success': False,
-                    'message': 'Cannot downgrade to a lower-cost plan.'
-                }, status=400)
+            if subscriptions.data:
+                subscription_id = subscriptions.data[0].id
+                stripe.Subscription.modify(
+                    subscription_id,
+                    cancel_at_period_end=False,
+                    proration_behavior='create_prorations',
+                    items=[{
+                        'id': subscriptions.data[0]['items']['data'][0].id,
+                        'price': stripe_price_id,
+                    }],
+                    expand=["latest_invoice.payment_intent"],
+                )
+                stripe_subscription = stripe.Subscription.retrieve(subscription_id)
+            else:
+                stripe_subscription = stripe.Subscription.create(
+                    customer=customer_id,
+                    items=[{'price': stripe_price_id}],
+                    expand=["latest_invoice.payment_intent"],
+                )
 
-            # Create or update user subscription
-            user_subscription, created = UserSubscription.objects.update_or_create(
-                user=request.user,
+            # Save in profile
+            profile.stripe_subscription_id = stripe_subscription.id
+            profile.active_subscription_price_id = stripe_price_id
+            profile.subscription_status = stripe_subscription.status
+            profile.save()
+
+            # Deactivate current user subscription (local)
+            UserSubscription.objects.filter(user=user, is_active=True).update(is_active=False)
+
+            # Save new local user subscription
+            UserSubscription.objects.create(
+                user=user,
+                plan=plan,
                 platform=platform,
-                defaults={
-                    'plan': plan,
-                    'is_active': True,
-                }
+                is_active=True
             )
 
             return JsonResponse({
                 'success': True,
-                'message': f'Successfully subscribed to {plan.name}',
-                'plan_id': plan.id
+                'message': f'Subscribed to {plan.name}'
             })
 
-        except ValidationError as e:
-            return JsonResponse({
-                'success': False,
-                'message': str(e)
-            }, status=400)
+        except stripe.error.StripeError as e:
+            return JsonResponse({'success': False, 'message': f'Stripe error: {str(e)}'}, status=400)
         except Exception as e:
-            return JsonResponse({
-                'success': False,
-                'message': 'An error occurred while processing your subscription.'
-            }, status=500)
+            return JsonResponse({'success': False, 'message': f'Error: {str(e)}'}, status=500)
 
 
 class UpdateSubscriptionView(LoginRequiredMixin, View):
@@ -2601,4 +2609,52 @@ class UpdateSubscriptionView(LoginRequiredMixin, View):
             return JsonResponse({
                 'status': 'error',
                 'message': 'An error occurred while updating the subscription.'
+            }, status=500)
+
+
+# views.py
+class CheckStripeSubscriptionView(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        price_id = request.GET.get('price_id')
+        profile = user.profile
+        customer_id = profile.stripe_customer_id
+
+        try:
+            existing_subscriptions = stripe.Subscription.list(customer=customer_id, status='active')
+            disallowed_upgrade = False
+
+            for sub in existing_subscriptions.auto_paging_iter():
+                items = sub.get('items', {}).get('data', [])
+                if not items:
+                    continue  # Skip if no items
+
+                current_item = items[0]
+                current_price_obj = current_item.get('price')
+                if not current_price_obj:
+                    continue  # Skip if price info is missing
+
+                current_price_id = current_price_obj.get('id')
+                if not current_price_id:
+                    continue
+
+                # Get Stripe price amounts
+                current_price = stripe.Price.retrieve(current_price_id)
+                new_price = stripe.Price.retrieve(price_id)
+
+                if price_id == current_price_id or (new_price.unit_amount or 0) <= (current_price.unit_amount or 0):
+                    disallowed_upgrade = True
+
+            if disallowed_upgrade:
+                return JsonResponse({
+                    "status": "blocked",
+                    "message": "Cannot downgrade or select same plan."
+                })
+
+            return JsonResponse({"status": "ok"})
+
+        except Exception as e:
+            return JsonResponse({
+                "status": "error",
+                "message": str(e)
             }, status=500)

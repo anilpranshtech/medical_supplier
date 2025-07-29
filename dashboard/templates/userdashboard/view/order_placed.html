@@ -173,7 +173,7 @@
                                             <span>Payment Method: {{ payment_method|title|default:"N/A" }}</span>
                                             {% if payment_details %}
                                                 {% if payment_method == "stripe" %}
-                                                    <span>Card: {{ payment_details.card_last4|default:"N/A" }}</span>
+                                                    <span>Card: •••• {{ payment_details.card_last4|default:"N/A" }}</span>
                                                     <span>Charge ID: {{ payment_details.stripe_charge_id|default:"N/A" }}</span>
                                                 {% elif payment_method == "razorpay" %}
                                                     <span>Payment ID: {{ payment_details.razorpay_payment_id|default:"N/A" }}</span>
