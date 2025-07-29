@@ -78,4 +78,8 @@ urlpatterns = [
     path('rfq/<int:pk>/accept/', RFQAcceptView.as_view(), name='accept_rfq'),
     path('rfq/<int:pk>/reject/', RFQRejectView.as_view(), name='reject_rfq'),
 
+    # Subscription Plan
+    path('subscriptions-plans/', SubscriptionPlanView.as_view(), name='subscription_plans'),
+    path('update-subscription/', UpdateSubscriptionView.as_view(), name='update_subscription'),
+
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

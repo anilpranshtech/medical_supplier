@@ -1,4 +1,6 @@
 import json
+
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
@@ -598,51 +600,199 @@ class DoctorProfile(models.Model):
         return f"{self.user.get_full_name()} - {self.specialty}"
 
 
-
-
-
 class SubscriptionPlan(models.Model):
     CLIENT_TYPE_CHOICES = [
         ('supplier', 'Supplier'),
         ('buyer', 'Buyer'),
     ]
-    
+
     BUYER_TYPE_CHOICES = [
         ('retailer', 'Retailer'),
         ('wholesaler', 'Wholesaler'),
     ]
-    
-    name = models.CharField(max_length=100,null=True,blank=True)
-    description = models.TextField(null=True,blank=True)
-    ios_plan_id = models.CharField(max_length=100,null=True,blank=True)
+
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True, null=True)
+    period = models.CharField(max_length=50, blank=True, null=True)  # e.g. 'monthly', 'yearly'
+    cost = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    web_plan_id = models.CharField(max_length=255, blank=True, null=True)
+    ios_plan_id = models.CharField(max_length=100, null=True, blank=True)
     android_plan_id = models.CharField(max_length=100,null=True,blank=True)
-    period = models.CharField(max_length=50,null=True,blank=True) 
-    cost = models.DecimalField(max_digits=10, decimal_places=2,null=True,blank=True)
-    client_type = models.CharField(max_length=10, choices=CLIENT_TYPE_CHOICES,null=True,blank=True)
+    client_type = models.CharField(max_length=10, choices=CLIENT_TYPE_CHOICES)
     buyer_type = models.CharField(max_length=10, choices=BUYER_TYPE_CHOICES, blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+
+    def clean(self):
+        if self.client_type == 'buyer' and not self.buyer_type:
+            raise ValidationError("buyer_type is required when client_type is 'buyer'.")
 
     def __str__(self):
-        return self.name
+        return f"{self.name} ({self.client_type}{' - ' + self.buyer_type if self.buyer_type else ''})"
 
-class UserSubscription(models.Model):
+    class Meta:
+        unique_together = ('name', 'client_type', 'buyer_type')
+
+
+class PlatformPlan(models.Model):
     PLATFORM_CHOICES = [
         ('ios', 'iOS'),
         ('android', 'Android'),
+        ('web', 'Web'),
     ]
-    
+
+    platform = models.CharField(max_length=10, choices=PLATFORM_CHOICES)
+    subscription_plan = models.ForeignKey(SubscriptionPlan, related_name='platform_plans', on_delete=models.CASCADE)
+    platform_plan_id = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"{self.subscription_plan.name} - {self.platform.upper()} Plan ID"
+
+
+class UserSubscription(models.Model):
+    PLATFORM_CHOICES = [
+        ('web', 'Web'),
+        ('ios', 'iOS'),
+        ('android', 'Android'),
+    ]
+
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     plan = models.ForeignKey(SubscriptionPlan, on_delete=models.CASCADE)
     platform = models.CharField(max_length=10, choices=PLATFORM_CHOICES)
     subscription_date = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
-    platform_plan_id = models.CharField(max_length=100) 
-    
+    platform_plan_id = models.CharField(max_length=100)
+
+    def clean(self):
+        platform_plan = PlatformPlan.objects.filter(subscription_plan=self.plan, platform=self.platform).first()
+        if not platform_plan:
+            raise ValidationError(f"{self.platform} plan ID not found for this subscription plan.")
+        self.platform_plan_id = platform_plan.platform_plan_id
+
     def save(self, *args, **kwargs):
         if self.platform == 'ios':
             self.platform_plan_id = self.plan.ios_plan_id
-        else:
+        elif self.platform == 'android':
             self.platform_plan_id = self.plan.android_plan_id
+        else:
+            self.platform_plan_id = self.plan.web_plan_id
         super().save(*args, **kwargs)
-    
+
+     # def clean(self):
+    #     if self.platform == 'ios' and not self.plan.ios_plan_id:
+    #         raise ValidationError("ios_plan_id is required for iOS platform.")
+    #     if self.platform == 'android' and not self.plan.android_plan_id:
+    #         raise ValidationError("android_plan_id is required for Android platform.")
+
     def __str__(self):
-        return f"{self.user.email} - {self.plan.name}"
+        return f"{self.user.email} - {self.plan.name} ({self.platform})"
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'plan', 'platform'], name='unique_user_plan_platform')
+        ]
+
+
+class Feature(models.Model):
+    STATUS_CHOICES = [
+        ('available', 'Available'),
+        ('additional', 'Additional'),
+        ('unavailable', 'Unavailable'),
+    ]
+
+    name = models.CharField(max_length=100)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES)
+    cost = models.CharField(max_length=50, blank=True, null=True)
+    plans = models.ManyToManyField(SubscriptionPlan, related_name='features')
+
+    def __str__(self):
+        return self.name
+
+
+class StripeSubscriptionMetadata(models.Model):
+    PLAN_TYPE_CHOICES = [
+        ('Golden', 'Golden'),
+        ('Silver', 'Silver'),
+        ('Platinum', 'Platinum'),
+    ]
+
+    DURATION_CHOICES = [
+        ('Month', 'Month'),
+        ('Year', 'Year'),
+    ]
+
+    subscription_plan = models.OneToOneField(SubscriptionPlan, on_delete=models.CASCADE, related_name='stripe_metadata')
+    price = models.DecimalField(max_digits=20, decimal_places=2, default=0.00)
+    price_id = models.CharField(max_length=500)
+    plan_type = models.CharField(max_length=20, choices=PLAN_TYPE_CHOICES, default='Golden')
+    plan_duration = models.CharField(max_length=10, choices=DURATION_CHOICES, default='Year')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.subscription_plan.name} | {self.plan_type} | {self.plan_duration} - ${self.price}"
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = verbose_name_plural = "Stripe Subscriptions"
+
+
+# class SubscriptionPlan(models.Model):
+#     CLIENT_TYPE_CHOICES = [
+#         ('supplier', 'Supplier'),
+#         ('buyer', 'Buyer'),
+#     ]
+#
+#     BUYER_TYPE_CHOICES = [
+#         ('retailer', 'Retailer'),
+#         ('wholesaler', 'Wholesaler'),
+#     ]
+#
+#     name = models.CharField(max_length=100,null=True,blank=True)
+#     description = models.TextField(null=True,blank=True)
+#     ios_plan_id = models.CharField(max_length=100,null=True,blank=True)
+#     android_plan_id = models.CharField(max_length=100,null=True,blank=True)
+#     period = models.CharField(max_length=50,null=True,blank=True)
+#     cost = models.DecimalField(max_digits=10, decimal_places=2,null=True,blank=True)
+#     client_type = models.CharField(max_length=10, choices=CLIENT_TYPE_CHOICES,null=True,blank=True)
+#     buyer_type = models.CharField(max_length=10, choices=BUYER_TYPE_CHOICES, blank=True, null=True)
+#
+#     def __str__(self):
+#         return self.name
+#
+#     def clean(self):
+#         if self.client_type == 'buyer' and not self.buyer_type:
+#             raise ValidationError("buyer_type is required when client_type is 'buyer'.")
+#
+#     class Meta:
+#         unique_together = ('name', 'client_type', 'buyer_type')
+#
+#
+# class UserSubscription(models.Model):
+#     PLATFORM_CHOICES = [
+#         ('web', 'Web'),
+#         ('ios', 'iOS'),
+#         ('android', 'Android'),
+#     ]
+#
+#     user = models.ForeignKey(User, on_delete=models.CASCADE)
+#     plan = models.ForeignKey(SubscriptionPlan, on_delete=models.CASCADE)
+#     platform = models.CharField(max_length=10, choices=PLATFORM_CHOICES)
+#     subscription_date = models.DateTimeField(auto_now_add=True)
+#     is_active = models.BooleanField(default=True)
+#     platform_plan_id = models.CharField(max_length=100)
+#
+#     def save(self, *args, **kwargs):
+#         if self.platform == 'ios':
+#             self.platform_plan_id = self.plan.ios_plan_id
+#         else:
+#             self.platform_plan_id = self.plan.android_plan_id
+#         super().save(*args, **kwargs)
+#
+#     def clean(self):
+#         if self.platform == 'ios' and not self.plan.ios_plan_id:
+#             raise ValidationError("ios_plan_id is required for iOS platform.")
+#         if self.platform == 'android' and not self.plan.android_plan_id:
+#             raise ValidationError("android_plan_id is required for Android platform.")
+#
+#     def __str__(self):
+#         return f"{self.user.email} - {self.plan.name}"

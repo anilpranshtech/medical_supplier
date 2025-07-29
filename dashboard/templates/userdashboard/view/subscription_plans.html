@@ -1,0 +1,156 @@
+{% extends 'pages/base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block content %}
+<style>
+    .annually-plan {
+    display: none;
+}
+.monthly-plan {
+    display: table-cell;
+}
+</style>
+
+<div class="kt-container-fixed max-w-full mt-5 py-5">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md">
+        <div class="p-6 sm:p-10 lg:p-12">
+            <div class="flex items-center gap-3 w-full">
+                <h2 class="text-lg font-medium text-mono">Subscription Plans</h2>
+            </div>
+            {% if no_plans_message %}
+                <p class="text-center text-red-500">{{ no_plans_message }}</p>
+            {% else %}
+                <div class="overflow-x-auto">
+                    <table class="w-full text-center">
+                        <thead>
+                            <tr id="kt_pricing">
+                                <th class="p-4">
+                                    <div class="flex justify-center mb-8">
+                                        <div class="inline-flex bg-gray-100 dark:bg-gray-700 rounded-full p-2 w-56" role="tablist">
+                                            <button class="flex-1 py-2 px-4 text-sm font-semibold text-gray-600 dark:text-gray-300 rounded-full focus:outline-none transition-colors duration-200 bg-white dark:bg-gray-600 shadow-sm active" id="monthlyPlan" role="tab" aria-selected="true">Monthly</button>
+                                            <button class="flex-1 py-2 px-4 text-sm font-semibold text-gray-600 dark:text-gray-300 rounded-full focus:outline-none transition-colors duration-200 hover:bg-white dark:hover:bg-gray-600" id="annuallyPlan" role="tab" aria-selected="false">Annually</button>
+                                        </div>
+                                    </div>
+                                </th>
+                                {% for plan in plans %}
+                                    {% if plan.client_type == 'buyer' and plan.buyer_type == 'retailer' %}
+                                        <th class="text-center min-w-[200px] {{ plan.period }}-plan {% if plan.period == 'annually' %}hidden{% endif %}" data-plan-id="{{ plan.id }}">
+                                            <div class="min-w-[200px] rounded-lg p-6 {% if user_subscription.plan.id == plan.id %}bg-blue-500 text-white{% else %}bg-gray-50 dark:bg-gray-700{% endif %} text-gray-800 dark:text-gray-200" id="package{{ plan.id }}">
+                                                <h3 class="text-xl font-bold mb-4">{{ plan.name }}</h3>
+                                                <div class="flex justify-center items-start mb-2">
+                                                    <span class="text-lg">$</span>
+                                                    <span class="text-4xl font-semibold">{{ plan.stripe_metadata.price|floatformat:2 }}</span>
+                                                </div>
+                                                <div class="text-sm font-medium mb-2">{{ plan.period|title }}</div>
+                                                {% if plan.period == 'annually' %}
+                                                    <div class="text-sm font-medium mb-4">
+                                                        ($ {{ plan.stripe_metadata.price|divide:12|floatformat:2 }}/Monthly)<br>
+                                                        <span class="inline-block mt-2 bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 text-xs font-semibold px-2 py-1 rounded">Save 20% / $ {{ plan.stripe_metadata.price|floatformat:2|multiply:0.2 }}</span>
+                                                    </div>
+                                                {% endif %}
+                                                {% if user_subscription.plan.id == plan.id %}
+                                                    <button class="mt-4 px-4 py-2 bg-gray-800 text-white rounded-lg font-semibold cursor-not-allowed">Current</button>
+                                                {% else %}
+                                                    {% if user_subscription.plan.stripe_metadata.price > plan.stripe_metadata.price %}
+                                                        <span class="block mt-4 bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200 text-xs font-semibold px-2 py-1 rounded">You cannot downgrade<div class="mt-1">from higher package</div></span>
+                                                    {% else %}
+                                                        <button class="mt-4 px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg font-semibold hover:bg-blue-500 hover:text-red transition-colors btnPackage" data-plan-id="{{ plan.id }}">Change Plan</button>
+                                                    {% endif %}
+                                                {% endif %}
+                                            </div>
+                                        </th>
+                                    {% endif %}
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody class="mt-7">
+                            {% for feature in features %}
+                                <tr class="border-t border-gray-200 dark:border-gray-700">
+                                    <th class="text-left p-4 font-bold text-lg">{{ feature.name }}</th>
+                                    {% for plan in plans %}
+                                        {% if plan.client_type == 'buyer' and plan.buyer_type == 'retailer' %}
+                                            <td class="{{ plan.period }}-plan {% if plan.period == 'annually' %}hidden{% endif %} text-center p-4">
+                                                <div>
+                                                    {% if feature in plan.features.all %}
+                                                        <i class="bi bi-check-circle-fill text-green-500 text-2xl"></i>
+                                                        {% if feature.cost %}
+                                                            <div class="mt-2"><span class="inline-block bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200 text-xs font-semibold px-2 py-1 rounded">{{ feature.cost }}</span></div>
+                                                        {% endif %}
+                                                    {% elif feature.status == 'additional' %}
+                                                        <i class="bi bi-check-circle-fill text-yellow-500 text-2xl"></i>
+                                                        <div class="mt-2"><span class="inline-block bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200 text-xs font-semibold px-2 py-1 rounded">{{ feature.cost }}</span></div>
+                                                    {% else %}
+                                                        <i class="bi bi-x-circle-fill text-red-500 text-2xl"></i>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                        {% endif %}
+                                    {% endfor %}
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Subscription Confirmation Modal -->
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden" id="package_modal" data-bs-backdrop="static">
+        <div class="bg-white dark:bg-gray-800 rounded-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                <h3 class="text-xl font-bold">Confirm Your Subscription Change</h3>
+            </div>
+            <div class="p-6">
+                <div>
+                    <h2 class="text-lg font-semibold mb-4">Subscription Terms</h2>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">Welcome to Health_Equipment.com! Changing your subscription will update your access to our premium health equipment services. These terms govern your use of the services provided by Health Equipment LLC. Please review them carefully.</p>
+                    <div class="mb-4">
+                        <p class="font-semibold text-sm">1. Subscription Fees</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-300">By changing your subscription, you agree to pay the fees as outlined for the new plan. You authorize Health Equipment LLC (and its payment processors) to charge your selected payment method. <strong>All subscriptions are recurring and will renew automatically unless canceled.</strong> You are responsible for any applicable taxes.</p>
+                    </div>
+                    <div class="mb-4">
+                        <p class="font-semibold text-sm">2. Cancellation Policy</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-300">Subscriptions are charged automatically on a recurring basis until canceled. You may cancel by logging into your account and selecting the cancellation option. A confirmation email will be sent with the expiration date. <strong>You must contact support before or on the payment due date to cancel.</strong></p>
+                    </div>
+                    <div class="mb-4">
+                        <p class="font-semibold text-sm">3. Refunds</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-300">Subscriptions may include a free trial. Services are billed in advance and are non-refundable. No refunds will be issued for partial months, upgrades/downgrades, or unused months. <strong>All subscriptions are recurring and auto-renew.</strong></p>
+                    </div>
+                    <div class="border-t border-gray-200 dark:border-gray-700 my-6"></div>
+                    <h2 class="text-lg font-semibold mb-4">Terms & Conditions</h2>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Updated: 07/29/2025</p>
+                    <div class="mb-4">
+                        <p class="font-semibold text-sm">1. Overview</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-300">These Terms of Service apply to all access and use of Health Equipment LLC's services. By using our services, you agree to these terms. Please review carefully. If you do not agree, you must not use our services.</p>
+                    </div>
+                    <!-- Add more terms as needed, adapted from the original -->
+                </div>
+            </div>
+            <div class="p-6 border-t border-gray-200 dark:border-gray-700 flex justify-center gap-4">
+                <div class="mb-4">
+                    <label class="flex items-start gap-2 text-sm">
+                        <input type="checkbox" id="subscription_package_confirm" name="subscription_package_confirm" class="mt-1 h-4 w-4" required>
+                        <span>By checking this box, you agree to change your subscription. {% if user_subscription.is_trial %}If your current subscription is in a trial period, it will end, and you will be billed according to the selected plan.{% endif %}</span>
+                    </label>
+                    <div class="text-red-500 text-xs mt-1 hidden" id="subscription_package_confirm_required">You must agree to the terms and conditions.</div>
+                </div>
+                <button type="button" id="btn_subscription_package_cancelled" class="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors">Cancel</button>
+                <button type="button" id="btn_subscription_package_confirm" class="px-4 py-2 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 transition-colors">
+                    <span class="indicator-label">Confirm Change</span>
+                    <span class="indicator-progress hidden">Please wait...
+                        <svg class="animate-spin h-5 w-5 inline-block ml-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                        </svg>
+                    </span>
+                </button>
+                <input type="hidden" id="package_modal_plan_id" name="package_id">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{% static 'js/subscription.js' %}"></script>
+{% endblock content %}

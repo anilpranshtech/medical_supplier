@@ -2,6 +2,7 @@ from decimal import Decimal
 from io import BytesIO
 from django.contrib.auth.views import PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, \
     PasswordResetCompleteView
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.views.generic import TemplateView, FormView, UpdateView, ListView
 from xhtml2pdf import pisa
@@ -2440,3 +2441,164 @@ class RFQAcceptView(RFQActionBaseView):
 class RFQRejectView(RFQActionBaseView):
     action = 'rejected'
     success_message = "You have rejected the quotation."
+
+
+class SubscriptionPlanView(LoginRequiredMixin, TemplateView):
+    template_name = 'userdashboard/view/subscription_plans.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Get client_type and buyer_type from request or user profile
+        client_type = self.request.GET.get('client_type', 'buyer')  # Default to 'buyer'
+        buyer_type = self.request.GET.get('buyer_type', 'retailer') if client_type == 'buyer' else None
+
+        # Validate client_type
+        valid_client_types = [choice[0] for choice in SubscriptionPlan.CLIENT_TYPE_CHOICES]
+        if client_type not in valid_client_types:
+            client_type = 'buyer'
+
+        # Validate buyer_type if client_type is 'buyer'
+        valid_buyer_types = [choice[0] for choice in SubscriptionPlan.BUYER_TYPE_CHOICES]
+        if client_type == 'buyer' and buyer_type not in valid_buyer_types:
+            buyer_type = 'retailer'
+
+        # Build filter for plans
+        filters = {'client_type': client_type, 'is_active': True}
+        if client_type == 'buyer':
+            filters['buyer_type'] = buyer_type
+
+        # Fetch active subscription plans
+        plans = SubscriptionPlan.objects.filter(**filters).select_related('stripe_metadata').prefetch_related(
+            'features')
+
+        # Get user's current subscription
+        user_subscription = UserSubscription.objects.filter(
+            user=self.request.user,
+            is_active=True
+        ).select_related('plan').first()
+
+        # Fetch all features for the filtered plans
+        features = Feature.objects.filter(plans__in=plans).distinct()
+
+        if not plans:
+            context[
+                'no_plans_message'] = f"No subscription plans available for {client_type}{' - ' + buyer_type if buyer_type else ''} at this time."
+
+        context.update({
+            'plans': plans,
+            'features': features,
+            'user_subscription': user_subscription,
+            'client_type': client_type,
+            'buyer_type': buyer_type,
+            'client_type_choices': SubscriptionPlan.CLIENT_TYPE_CHOICES,
+            'buyer_type_choices': SubscriptionPlan.BUYER_TYPE_CHOICES,
+        })
+
+        return context
+
+    def post(self, request, *args, **kwargs):
+        plan_id = request.POST.get('plan_id')
+        platform = request.POST.get('platform', 'web')
+
+        try:
+            # Validate plan
+            plan = get_object_or_404(SubscriptionPlan, id=plan_id, is_active=True)
+
+            # Check if plan matches the client_type and buyer_type
+            client_type = request.POST.get('client_type', 'buyer')
+            buyer_type = request.POST.get('buyer_type') if client_type == 'buyer' else None
+
+            if plan.client_type != client_type or (plan.client_type == 'buyer' and plan.buyer_type != buyer_type):
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Invalid plan for the selected client or buyer type.'
+                }, status=400)
+
+            # Check for downgrade
+            current_subscription = UserSubscription.objects.filter(user=request.user, is_active=True).first()
+            if current_subscription and current_subscription.plan.cost > plan.cost:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Cannot downgrade to a lower-cost plan.'
+                }, status=400)
+
+            # Create or update user subscription
+            user_subscription, created = UserSubscription.objects.update_or_create(
+                user=request.user,
+                platform=platform,
+                defaults={
+                    'plan': plan,
+                    'is_active': True,
+                }
+            )
+
+            return JsonResponse({
+                'success': True,
+                'message': f'Successfully subscribed to {plan.name}',
+                'plan_id': plan.id
+            })
+
+        except ValidationError as e:
+            return JsonResponse({
+                'success': False,
+                'message': str(e)
+            }, status=400)
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'message': 'An error occurred while processing your subscription.'
+            }, status=500)
+
+
+class UpdateSubscriptionView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        plan_id = request.POST.get('plan_id')
+        platform = request.POST.get('platform', 'web')
+        client_type = request.POST.get('client_type', 'buyer')
+        buyer_type = request.POST.get('buyer_type') if client_type == 'buyer' else None
+
+        try:
+            # Validate plan
+            filters = {'id': plan_id, 'client_type': client_type, 'is_active': True}
+            if client_type == 'buyer':
+                filters['buyer_type'] = buyer_type
+            plan = SubscriptionPlan.objects.get(**filters)
+
+            # Deactivate current subscription
+            user_subscription = UserSubscription.objects.filter(
+                user=request.user,
+                is_active=True
+            ).first()
+            if user_subscription:
+                user_subscription.is_active = False
+                user_subscription.save()
+
+            # Create new subscription
+            new_subscription = UserSubscription(
+                user=request.user,
+                plan=plan,
+                platform=platform,
+            )
+            new_subscription.clean()
+            new_subscription.save()
+
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Subscription updated successfully.'
+            })
+        except SubscriptionPlan.DoesNotExist:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Invalid plan.'
+            }, status=400)
+        except ValidationError as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': str(e)
+            }, status=400)
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'An error occurred while updating the subscription.'
+            }, status=500)
