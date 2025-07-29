@@ -16,7 +16,7 @@ from django.contrib.auth.models import User, Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from adminv3.utils import requestParamsToDict
 from dashboard.models import RetailProfile, WholesaleBuyerProfile, SupplierProfile, Product, ProductImage, \
-    ProductCategory, ProductLastCategory, ProductSubCategory, Brand, Order, OrderItem
+    ProductCategory, ProductLastCategory, ProductSubCategory, Brand, Order, OrderItem, Event
 from django.conf import settings
 
 
@@ -552,6 +552,7 @@ class ProductsListView(LoginRequiredMixin,StaffAccountRequiredMixin, PermissionR
         return context
 
 
+
 class AddproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
     template = 'adminv3/products/add_product.html'
 
@@ -593,6 +594,11 @@ class AddproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
 
         sup_user = SupplierProfile.objects.get(id=supplier)
         print('---------- supplier user -----------',sup_user)
+        def _is_event_category(self, category):
+            event_keywords = ['conference', 'event', 'webinar']
+            if category and category.name:
+                return category.name.lower() in event_keywords
+            return False
 
         if offer_start and offer_end and offer_end < offer_start:
             messages.warning(request, "Offer end date cannot be before start date.")
@@ -651,6 +657,18 @@ class AddproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
                 Both=both_selected,
                 created_by=sup_user.user
             )
+
+            category_obj = self._get_object(ProductCategory, data.get('category'))
+            if _is_event_category(self, category_obj):
+                event = Event.objects.create(
+                    conference_link=data.get('conference_link') or None,
+                    speaker_name=data.get('speaker_name') or None,
+                    conference_at=data.get('conference_at') or None,
+                    duration=data.get('duration') or None,
+                    venue=data.get('venue') or None,
+                )
+                product.event = event
+                product.save()
 
 
             main_image = files.get('main_image')

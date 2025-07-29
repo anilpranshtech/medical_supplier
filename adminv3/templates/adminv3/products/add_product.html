@@ -174,7 +174,7 @@
                                             <textarea name="product_description" class="form-control" placeholder="Product description">{{ product_description|default:'' }} </textarea><br>
                                         </div>
 
-                                        <div class="mb-10 mt-4 fv-row">
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_product_quantity">
                                             <label class="form-label required">Quantity</label>
                                             <input type="number" name="product_quantity" class="form-control mb-2" placeholder="Enter available quantity" value="{{ product_quantity }}" min="0" required />
                                             <div class="text-muted fs-7">Specify how many items are available in stock.</div>
@@ -198,7 +198,7 @@
                                             <div class="text-muted fs-7">Comma-separated country names (e.g., India, USA, UK).</div>
                                         </div>
 
-                                        <div class="mb-10 mt-4 fv-row">
+                                        <div class="mb-10 mt-4 fv-row" id="hide_fields_warrenty">
                                             <label class="form-label">Warranty</label>
                                             <select class="form-select mb-2" name="warranty" data-control="select2" data-hide-search="true" data-placeholder="Select a warranty option" required >
                                                 <option value="none" {% if warranty == 'none' %}selected{% endif %}>None</option>
@@ -208,7 +208,7 @@
                                             <div class="text-muted fs-7">Select the product warranty.</div>
                                         </div>
 
-                                        <div class="mb-10 mt-4 fv-row">
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_condition">
                                             <label class="form-label">Condition</label>
                                             <select class="form-select mb-2" name="condition" data-control="select2" data-hide-search="true" data-placeholder="Select a condition">
                                                 <option value="new" {% if condition == 'new' %}selected{% endif %}>New</option>
@@ -217,25 +217,25 @@
                                             <div class="text-muted fs-7">Set the product condition.</div>
                                         </div>
 
-                                        <div class="mb-10 mt-4 fv-row">
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_return_time_limit">
                                             <label class="form-label required">Return Time Limit (Days)</label>
                                             <input type="number" name="return_time_limit" class="form-control mb-2" placeholder="Enter return time limit in days" value="{{ return_time_limit }}" min="0" required />
                                             <div class="text-muted fs-7">Number of days for product return.</div>
                                         </div>
 
 
-                                        <div class="mb-10 mt-4 fv-row">
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_manufacture_date">
                                             <label class="form-label required">Manufacture Date</label>
                                             <input type="date" name="manufacture_date" class="form-control mb-2" placeholder="Select manufacture date" value="{{ manufacture_date }}" required />
                                             <div class="text-muted fs-7">Date of manufacture.</div>
                                         </div>
 
-                                        <div class="mb-10 mt-4 fv-row">
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_expiry_date">
                                             <label class="form-label required">Expiry Date</label>
                                             <input type="date" name="expiry_date" class="form-control mb-2" placeholder="Select expiry date" value="{{ expiry_date }}" required />
                                             <div class="text-muted fs-7">Date of expiry.</div>
                                         </div>
-                                         <div class="mb-10 mt-4 fv-row">
+                                         <div class="mb-10 mt-4 fv-row" id="hide_field_barcode">
                                             <label class="form-label required">Barcode</label>
                                             <input type="text" name="barcode" class="form-control mb-2" placeholder="Enter barcode" value="{{ barcode }}" required />
                                             <div class="text-muted fs-7">Product barcode.</div>
@@ -246,7 +246,7 @@
 
 
                                 <!-- Pricing Card -->
-                                <div class="card card-flush py-4 mt-7">
+                                <div class="card card-flush py-4 mt-7" id="hide_field_price">
                                     <div class="card-header">
                                         <div class="card-title">
                                             <h2>Pricing</h2>
@@ -320,6 +320,9 @@
                                         </div>
                                     </div>
                                 </div>
+
+
+
                             </div>
 
                             <!-- Right Column in Right Container -->
@@ -333,7 +336,7 @@
                                     </div>
                                     <div class="card-body pt-0">
 
-                                        <div class="mb-10 mt-4 fv-row">
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_weight_unit">
                                             <label class="form-label">Weight Unit</label>
                                             <select class="form-select mb-2" name="weight_unit" data-control="select2" data-hide-search="true" data-placeholder="Select weight unit">
                                                 <option value="gm" {% if weight_unit == 'gm' %}selected{% endif %}>Gram</option>
@@ -343,7 +346,7 @@
                                             <div class="text-muted fs-7">Unit of product weight.</div>
                                         </div>
 
-                                        <div class="mb-10 mt-4 fv-row">
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_weight">
                                             <label class="form-label required">Weight</label>
                                             <input type="number" name="weight" class="form-control mb-2" placeholder="Enter product weight" value="{{ weight }}" min="0" step="0.01" required  />
                                             <div class="text-muted fs-7">Product weight.</div>
@@ -352,7 +355,7 @@
 
 
 
-                                         <div class="mb-10 mt-4 fv-row">
+                                         <div class="mb-10 mt-4 fv-row" id="hide_field_delivery_time">
                                             <label class="form-label required">Delivery Time (Days)</label>
                                             <input type="number" name="delivery_time" class="form-control mb-2" placeholder="Enter estimated delivery time in days" value="{{ delivery_time }}" min="0" required />
                                             <div class="text-muted fs-7">Estimated delivery time in days.</div>
@@ -367,7 +370,7 @@
                                         </div>
 
 
-                                        <div class="mb-10 mt-4 fv-row">
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_commission_percentage">
                                             <label class="form-label required">Commission Percentage</label>
                                             <input type="number" name="commission_percentage" class="form-control mb-2" placeholder="Enter commission percentage" value="{{ commission_percentage }}" min="0" max="100" step="0.01" required />
                                             <div class="text-muted fs-7">Commission percentage for the product.</div>
@@ -380,31 +383,31 @@
                                             <div class="text-muted fs-7">Upload product brochure (PDF, DOC).</div>
                                         </div>
 
-                                        <div class="mb-10 mt-4 fv-row">
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_supplier_sku">
                                             <label class="form-label required">Supplier SKU</label>
                                             <input type="text" name="supplier_sku" class="form-control mb-2" placeholder="Enter supplier SKU" value="{{ supplier_sku }}" required />
                                             <div class="text-muted fs-7">Supplier Stock Keeping Unit.</div>
                                         </div>
 
-                                        <div class="mb-10 mt-4 fv-row">
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_pcs_per_unit">
                                             <label class="form-label required">Pcs Per Unit</label>
                                             <input type="number" name="pcs_per_unit" class="form-control mb-2" placeholder="Enter pieces per unit" value="{{ pcs_per_unit }}" min="1" required />
                                             <div class="text-muted fs-7">Number of pieces in one unit of the product.</div>
                                         </div>
 
-                                        <div class="mb-10 mt-4 fv-row">
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_min_order_qty">
                                             <label class="form-label required">Min Order Qty</label>
                                             <input type="number" name="min_order_qty" class="form-control mb-2" placeholder="Enter minimum order quantity" value="{{ min_order_qty }}" min="1" required />
                                             <div class="text-muted fs-7">Minimum quantity required for an order.</div>
                                         </div>
 
-                                        <div class="mb-10 mt-4 fv-row">
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_low_stock_alert">
                                             <label class="form-label required">Low Stock Alert</label>
                                             <input type="number" name="low_stock_alert" class="form-control mb-2" placeholder="Enter low stock alert level" value="{{ low_stock_alert }}" min="0" required />
                                             <div class="text-muted fs-7">Alert when stock falls below this level.</div>
                                         </div>
 
-                                         <div class="mb-10 mt-4 fv-row">
+                                         <div class="mb-10 mt-4 fv-row" id="hide_field_button_type">
                                             <label class="form-label required">Enable Add to cart / RFQ Button</label>
                                             <div class="d-flex gap-5 mt-2">
                                                 <div class="form-check form-check-custom form-check-solid">
@@ -434,13 +437,13 @@
 
 
 
-                                        <div class="mb-10 mt-4 fv-row">
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_expiration_days">
                                             <label class="form-label required">Expiration Days</label>
                                             <input type="number" name="expiration_days" class="form-control mb-2" placeholder="Enter expiration days" value="{{ expiration_days }}" min="0" required />
                                             <div class="text-muted fs-7">Number of days until product expires.</div>
                                         </div>
 
-                                        <div class="mb-10 mt-4 fv-row">
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_tag">
                                             <label class="form-label">Tag</label>
                                             <select class="form-select mb-2" name="tag" data-control="select2" data-hide-search="true" data-placeholder="Select a tag">
                                                 <option value="none" {% if tag == 'none' %}selected{% endif %}>None</option>
@@ -451,50 +454,84 @@
                                             <div class="text-muted fs-7">Assign a tag to the product.</div>
                                         </div>
 
-<div class="mb-10 mt-4 fv-row">
-    <label class="form-label">Offer Percentage</label>
-    <input type="number" name="offer_percentage" class="form-control mb-2"
-           placeholder="Enter offer percentage" value="{{ offer_percentage }}"
-           min="0" max="100" step="0.01" />
-    <div class="text-muted fs-7">Percentage discount for the product.</div>
-</div>
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_offer_percentage">
+                                            <label class="form-label">Offer Percentage</label>
+                                            <input type="number" name="offer_percentage" class="form-control mb-2"
+                                                   placeholder="Enter offer percentage" value="{{ offer_percentage }}"
+                                                   min="0" max="100" step="0.01" />
+                                            <div class="text-muted fs-7">Percentage discount for the product.</div>
+                                        </div>
 
 
-<div class="mb-10 mt-4 fv-row">
-    <label class="form-label">Offer Start</label>
-    <input type="date" name="offer_start" class="form-control mb-2"
-           placeholder="Select offer start date" value="{{ offer_start }}" />
-</div>
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_offer_start">
+                                            <label class="form-label">Offer Start</label>
+                                            <input type="date" name="offer_start" class="form-control mb-2"
+                                                   placeholder="Select offer start date" value="{{ offer_start }}" />
+                                        </div>
 
 
-<div class="mb-10 mt-4 fv-row">
-    <label class="form-label">Offer End</label>
-    <input type="date" name="offer_end" class="form-control mb-2"
-           placeholder="Select offer end date" value="{{ offer_end }}" />
-</div>
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_offer_end">
+                                            <label class="form-label">Offer End</label>
+                                            <input type="date" name="offer_end" class="form-control mb-2"
+                                                   placeholder="Select offer end date" value="{{ offer_end }}" />
+                                        </div>
 
-<div class="mb-10 mt-4 fv-row">
-    <label class="form-label">Offer Status </label>
-    <div class="form-check form-switch">
-        <input type="checkbox" class="form-check-input" name="offer_active"
-               {% if offer_active %}checked{% endif %}
-               {% if not request.user.is_superuser %}disabled{% endif %}>
-        <label class="form-check-label text-muted">Activate offer</label>
-    </div>
-</div>
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_offer_status">
+                                            <label class="form-label">Offer Status </label>
+                                            <div class="form-check form-switch">
+                                                <input type="checkbox" class="form-check-input" name="offer_active"
+                                                       {% if offer_active %}checked{% endif %}
+                                                       {% if not request.user.is_superuser %}disabled{% endif %}>
+                                                <label class="form-check-label text-muted">Activate offer</label>
+                                            </div>
+                                        </div>
 
 
-<div class="mb-10 mt-4 fv-row">
-    <label class="form-label">Ask Admin to Approve Offer</label>
-    <div class="form-check">
-        <input type="checkbox" class="form-check-input" name="ask_admin_to_publish"
-               {% if ask_admin_to_publish %}checked{% endif %}>
-        <label class="form-check-label">Request admin to publish the offer</label>
-    </div>
-</div>
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_ask_admin_to_publish">
+                                            <label class="form-label">Ask Admin to Approve Offer</label>
+                                            <div class="form-check">
+                                                <input type="checkbox" class="form-check-input" name="ask_admin_to_publish"
+                                                       {% if ask_admin_to_publish %}checked{% endif %}>
+                                                <label class="form-check-label">Request admin to publish the offer</label>
+                                            </div>
+                                        </div>
 
                                     </div>
                                 </div>
+
+                                <!-- Webinar fields  -->
+                                <div id="webinar_fields" class="d-none">
+                                    <div class="card card-flush py-4 mt-7">
+                                        <div class="card-header">
+                                            <div class="card-title">
+                                                <h2>Event Details</h2>
+                                            </div>
+                                        </div>
+                                        <div class="card-body pt-0">
+                                        <div class="mb-10 fv-row">
+                                            <label class="form-label required">Registration Link</label>
+                                            <input type="url" name="registration_link" class="form-control" required/>
+                                        </div>
+                                        <div class="mb-10 fv-row">
+                                            <label class="form-label required">Event Name</label>
+                                            <input type="text" name="webinar_name" class="form-control" required/>
+                                        </div>
+                                        <div class="mb-10 fv-row">
+                                            <label class="form-label required">Date</label>
+                                            <input type="datetime-local" name="webinar_date" class="form-control"  required/>
+                                        </div>
+                                        <div class="mb-10 fv-row ">
+                                            <label class="form-label required">Duration</label>
+                                            <input type="text" name="webinar_duration" class="form-control" />
+                                        </div>
+                                        <div class="mb-10 fv-row">
+                                            <label class="form-label required">Venue</label>
+                                            <input type="text" name="webinar_venue" class="form-control" required/>
+                                        </div>
+                                    </div>
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
 
@@ -511,6 +548,7 @@
                             </button>
                         </div>
                     </div>
+
                 </form>
             </div>
         </div>
@@ -720,5 +758,52 @@ $(document).ready(function () {
         }
     }
 });
+
+// Hide fields
+document.addEventListener("DOMContentLoaded", function () {
+    const categorySelect = document.querySelector('select[name="category"]');
+    const webinarCategories = ["Webinar", "Conference", "Event"];
+
+    // IDs of fields to hide if it's a webinar-type category
+    const fieldsToHide = [
+
+        "hide_field_product_quantity", "hide_fields_warrenty", "hide_field_condition", "hide_field_return_time_limit",
+        "hide_field_manufacture_date", "hide_field_expiry_date", "hide_field_barcode", "hide_field_price",
+        "hide_field_weight_unit", "hide_field_weight", "hide_field_delivery_time", "hide_field_commission_percentage",
+        "hide_field_supplier_sku", "hide_field_pcs_per_unit", "hide_field_min_order_qty", "hide_field_low_stock_alert",
+        "hide_field_button_type", "hide_field_expiration_days", "hide_field_tag", "hide_field_offer_percentage",
+        "hide_field_offer_start", "hide_field_offer_end", "hide_field_offer_status", "hide_field_ask_admin_to_publish"
+    ];
+
+    const webinarFields = document.getElementById("webinar_fields");
+
+    function toggleFormFields() {
+        const selectedText = categorySelect.options[categorySelect.selectedIndex].text.trim();
+
+        const isWebinar = webinarCategories.includes(selectedText);
+
+        fieldsToHide.forEach(id => {
+            const field = document.getElementById(id);
+            if (field) {
+                field.style.display = isWebinar ? "none" : "";
+                // optionally remove required attribute
+                field.querySelectorAll("input, select, textarea").forEach(el => {
+                    el.required = !isWebinar;
+                });
+            }
+        });
+
+        if (webinarFields) {
+            webinarFields.classList.toggle("d-none", !isWebinar);
+            webinarFields.querySelectorAll("input").forEach(el => {
+                el.required = isWebinar;
+            });
+        }
+    }
+
+    categorySelect.addEventListener("change", toggleFormFields);
+    toggleFormFields(); // run on page load if already selected
+});
+
 </script>
 {% endblock page_only_scripts %}
