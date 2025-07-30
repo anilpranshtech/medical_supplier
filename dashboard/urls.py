@@ -42,6 +42,7 @@ urlpatterns = [
     path('payment-method/', views.PaymentMethodView.as_view(), name='payment_method'),
     path('order-placed/', views.OrderPlacedView.as_view(), name='order_placed'),
     path('my-orders/', views.MyOrdersView.as_view(), name='my_orders'),
+    path('submit-review/<int:product_id>/', SubmitReviewView.as_view(), name='submit_review'),
     path('orders/<int:order_id>/reorder/', ReorderView.as_view(), name='reorder'),
     path('order-receipt/<int:pk>/', OrderReceiptView.as_view(), name='order_receipt'),
     path('order-receipt/<int:pk>/download/', views.DownloadReceiptView.as_view(), name='download_receipt'),

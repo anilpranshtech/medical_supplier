@@ -1509,6 +1509,7 @@ class OrderPlacedView(LoginRequiredMixin, TemplateView):
         return context
 
 
+
 class MyOrdersView(LoginRequiredMixin, TemplateView):
     template_name = 'userdashboard/view/my_orders.html'
     login_url = 'dashboard:login'
@@ -1523,7 +1524,10 @@ class MyOrdersView(LoginRequiredMixin, TemplateView):
             to_attr='main_image'
         )
 
-        orders_qs = Order.objects.filter(user=user).select_related('payment').prefetch_related(main_image_prefetch).order_by('-created_at')
+        orders_qs = Order.objects.filter(user=user).select_related('payment').prefetch_related(
+            main_image_prefetch,
+            Prefetch('items__product__reviews', queryset=RatingReview.objects.filter(user=user), to_attr='user_reviews')
+        ).order_by('-created_at')
 
         paginator = Paginator(orders_qs, 2)
         page_number = self.request.GET.get('page')
@@ -1532,8 +1536,34 @@ class MyOrdersView(LoginRequiredMixin, TemplateView):
         context['orders'] = page_obj.object_list
         context['page_obj'] = page_obj
 
-        logger.info(f"Fetched {orders_qs.count()} orders for user {user.id}, page {page_number or 1}")
         return context
+
+
+class SubmitReviewView(LoginRequiredMixin, View):
+    def post(self, request, product_id):
+        product = get_object_or_404(Product, id=product_id)
+        rating = request.POST.get('rating')
+        review = request.POST.get('review')
+        photo = request.FILES.get('photo')
+
+        # Avoid duplicate
+        if RatingReview.objects.filter(user=request.user, product=product).exists():
+            messages.error(request, "You have already reviewed this product.")
+            return redirect('dashboard:my_orders')
+
+        if not rating:
+            messages.error(request, "Rating is required.")
+            return redirect('dashboard:my_orders')
+
+        RatingReview.objects.create(
+            product=product,
+            user=request.user,
+            rating=int(rating),
+            review=review,
+            photo=photo
+        )
+        messages.success(request, "Your review has been submitted!")
+        return redirect('dashboard:my_orders')
 
 
 class ReorderView(LoginRequiredMixin, View):

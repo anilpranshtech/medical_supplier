@@ -55,3 +55,33 @@ def get_item(dictionary, key):
 @register.filter
 def get_feature_value(dictionary, key):
     return dictionary.get(key)
+
+@register.filter
+def get_user_review(reviews, user):
+    return reviews.filter(user=user).first()
+
+@register.filter
+def get_rating_label(value):
+    labels = {
+        1: "Very Bad",
+        2: "Bad",
+        3: "Okay",
+        4: "Good",
+        5: "Excellent"
+    }
+    return labels.get(value, "Select rating")
+
+@register.filter
+def filter_by_user(product, user):
+    """
+    Filter reviews to return the review made by the specified user, if any.
+    Works with both querysets and lists.
+    """
+    reviews = product.user_reviews.all() if hasattr(product.user_reviews, 'all') else product.user_reviews
+    if hasattr(reviews, 'filter'):  # Check if reviews is a queryset
+        return reviews.filter(user=user).first()
+    else:  # Treat as a list
+        for review in reviews:
+            if review.user == user:
+                return review
+        return None
