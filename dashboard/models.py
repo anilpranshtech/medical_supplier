@@ -591,12 +591,12 @@ class DoctorProfile(models.Model):
     nationality = models.ForeignKey(Nationality, on_delete=models.SET_NULL, null=True)
     residency = models.ForeignKey(Residency, on_delete=models.SET_NULL, null=True)
     country_code = models.ForeignKey(CountryCode, on_delete=models.SET_NULL, null=True)
-    specialty = models.ForeignKey(Speciality, on_delete=models.SET_NULL, null=True)
+    speciality = models.ForeignKey(Speciality, on_delete=models.SET_NULL, null=True)
 
     phone_number = models.CharField(max_length=20)
 
     def __str__(self):
-        return f"{self.user.get_full_name()} - {self.specialty}"
+        return f"{self.user.get_full_name()} - {self.speciality}"
 
 
 class SubscriptionPlan(models.Model):

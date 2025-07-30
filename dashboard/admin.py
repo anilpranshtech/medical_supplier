@@ -22,22 +22,48 @@ class SupplierProfileAdmin(admin.ModelAdmin):
 class ProductProfileAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'description', 'price')
 
-admin.site.register(ProductImage)
-admin.site.register(ProductCategory)
-admin.site.register(ProductSubCategory)
-admin.site.register(ProductLastCategory)
-admin.site.register(Brand)
+@admin.register(ProductImage)
+class ProductImageAdmin(admin.ModelAdmin):
+    list_display = ('id', 'product', 'image', 'is_main')
 
-admin.site.register(Order)
+@admin.register(ProductCategory)
+class ProductCategoryAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'created_at')
 
+@admin.register(ProductSubCategory)
+class ProductSubCategoryAdmin(admin.ModelAdmin):
+    list_display = ('id', 'category', 'name', 'created_at')
 
-admin.site.register(OrderItem)
+@admin.register(ProductLastCategory)
+class ProductLastCategoryAdmin(admin.ModelAdmin):
+    list_display = ('id', 'sub_category', 'name', 'created_at')
 
-admin.site.register(CartProduct)
-admin.site.register(WishlistProduct)
-admin.site.register(RatingReview)
+@admin.register(Brand)
+class BrandAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name')
 
+@admin.register(Order)
+class OrderAdmin(admin.ModelAdmin):
+    list_display = ('id', 'order_id', 'status', 'user', 'payment', 'phone_number')
+    list_filter = ('status',)
 
+@admin.register(OrderItem)
+class OrderItemAdmin(admin.ModelAdmin):
+    list_display = ('id', 'order', 'order_by', 'order_to', 'status', 'payment_type', 'payment_status')
+    list_filter = ('status', 'payment_status')
+
+@admin.register(CartProduct)
+class CartProductAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'product', 'quantity')
+
+@admin.register(WishlistProduct)
+class WishlistProductAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'product', 'quantity')
+
+@admin.register(RatingReview)
+class RatingReviewAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'product', 'rating', 'review')
+    list_filter = ('rating',)
 
 @admin.register(DeliveryPartner)
 class DeliveryPartnerAdmin(admin.ModelAdmin):
@@ -69,7 +95,7 @@ class CustomerBillingAddressAdmin(admin.ModelAdmin):
 
 @admin.register(RoleRequest)
 class RoleRequestAdmin(admin.ModelAdmin):
-    list_display = ('user', 'requested_role', 'status', 'created_at')
+    list_display = ('id', 'user', 'requested_role', 'status', 'created_at')
     list_filter = ('status', 'created_at')
     actions = ['approve_requests']
 
@@ -110,18 +136,38 @@ class RFQRequestAdmin(admin.ModelAdmin):
     )
     readonly_fields = ('created_at', 'updated_at', 'quote_sent_at')
 
+@admin.register(DoctorProfile)
+class DoctorProfileAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'current_position', 'workplace', 'nationality', 'residency', 'country_code', 'speciality', 'phone_number')
 
-admin.site.register(DoctorProfile)
-admin.site.register(Event)
-admin.site.register(Nationality)
-admin.site.register(Residency)
-admin.site.register(CountryCode)
-admin.site.register(Speciality)
+@admin.register(Event)
+class EventAdmin(admin.ModelAdmin):
+    list_display = ('id', 'conference_link', 'speaker_name', 'conference_at', 'duration', 'venue')
+    list_filter = ('conference_at', 'duration', 'venue')
 
+@admin.register(Nationality)
+class NationalityAdmin(admin.ModelAdmin):
+    list_display = ('id', 'country', 'created_at')
+    list_filter = ('country', 'created_at')
+
+@admin.register(Residency)
+class ResidencyAdmin(admin.ModelAdmin):
+    list_display = ('id', 'country', 'created_at')
+    list_filter = ('country', 'created_at')
+
+@admin.register(CountryCode)
+class CountryCodeAdmin(admin.ModelAdmin):
+    list_display = ('id', 'code', 'country', 'created_at')
+    list_filter = ('country', 'created_at')
+
+@admin.register(Speciality)
+class SpecialityAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'created_at')
+    list_filter = ('name', 'created_at')
 
 @admin.register(SubscriptionPlan)
 class SubscriptionPlanAdmin(admin.ModelAdmin):
-    list_display = ('name', 'client_type', 'buyer_type', 'cost', 'period', 'is_active')
+    list_display = ('id', 'name', 'client_type', 'buyer_type', 'cost', 'period', 'is_active')
     list_filter = ('client_type', 'buyer_type', 'is_active')
     search_fields = ('name', 'description')
     ordering = ('client_type', 'buyer_type', 'name')
@@ -146,14 +192,14 @@ class FeatureInline(admin.TabularInline):
 
 @admin.register(PlatformPlan)
 class PlatformPlanAdmin(admin.ModelAdmin):
-    list_display = ('subscription_plan', 'platform', 'platform_plan_id')
+    list_display = ('id', 'subscription_plan', 'platform', 'platform_plan_id')
     list_filter = ('platform',)
     search_fields = ('subscription_plan__name', 'platform_plan_id')
 
 
 @admin.register(UserSubscription)
 class UserSubscriptionAdmin(admin.ModelAdmin):
-    list_display = ('user', 'plan', 'platform', 'is_active', 'subscription_date', 'platform_plan_id')
+    list_display = ('id', 'user', 'plan', 'platform', 'is_active', 'subscription_date', 'platform_plan_id')
     list_filter = ('platform', 'is_active')
     search_fields = ('user__email', 'plan__name')
     readonly_fields = ('subscription_date',)
@@ -162,14 +208,14 @@ class UserSubscriptionAdmin(admin.ModelAdmin):
 
 @admin.register(Feature)
 class FeatureAdmin(admin.ModelAdmin):
-    list_display = ('name', 'status', 'cost')
+    list_display = ('id', 'name', 'status', 'cost')
     list_filter = ('status',)
     search_fields = ('name', 'cost')
 
 
 @admin.register(StripeSubscriptionMetadata)
 class StripeSubscriptionMetadataAdmin(admin.ModelAdmin):
-    list_display = ('subscription_plan', 'price', 'price_id', 'plan_type', 'plan_duration', 'created_at')
+    list_display = ('id', 'subscription_plan', 'price', 'price_id', 'plan_type', 'plan_duration', 'created_at')
     list_filter = ('plan_type', 'plan_duration')
     search_fields = ('subscription_plan__name', 'price_id')
     readonly_fields = ('created_at', 'updated_at')
@@ -177,7 +223,7 @@ class StripeSubscriptionMetadataAdmin(admin.ModelAdmin):
 
 # @admin.register(SubscriptionPlan)
 # class SubscriptionPlanAdmin(admin.ModelAdmin):
-#     list_display = ('name', 'client_type', 'buyer_type', 'period', 'cost', 'ios_plan_id', 'android_plan_id')
+#     list_display = ('id', 'name', 'client_type', 'buyer_type', 'period', 'cost', 'ios_plan_id', 'android_plan_id')
 #     list_filter = ('client_type', 'buyer_type', 'period')
 #     search_fields = ('name', 'description', 'ios_plan_id', 'android_plan_id')
 #     fieldsets = (
@@ -195,7 +241,7 @@ class StripeSubscriptionMetadataAdmin(admin.ModelAdmin):
 #
 # @admin.register(UserSubscription)
 # class UserSubscriptionAdmin(admin.ModelAdmin):
-#     list_display = ('user', 'plan', 'platform', 'subscription_date', 'is_active')
+#     list_display = ('id', 'user', 'plan', 'platform', 'subscription_date', 'is_active')
 #     list_filter = ('platform', 'is_active', 'plan__client_type', 'plan__buyer_type')
 #     search_fields = ('user__email', 'user__username', 'plan__name')
 #     readonly_fields = ('subscription_date', 'platform_plan_id')
@@ -213,7 +259,7 @@ class StripeSubscriptionMetadataAdmin(admin.ModelAdmin):
 #
 # @admin.register(Feature)
 # class FeatureAdmin(admin.ModelAdmin):
-#     list_display = ('name', 'status', 'cost')
+#     list_display = ('id', 'name', 'status', 'cost')
 #     list_filter = ('name', 'status', 'cost')
 #
 #
