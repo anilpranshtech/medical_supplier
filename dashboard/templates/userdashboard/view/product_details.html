@@ -295,32 +295,31 @@
                             Add <i class="ki-filled ki-handcart text-xs"></i>
                         </button>
                     {% endif %}
-{% if request.user.is_authenticated %}
-                        {% if product.show_rfq or product.Both %}
-                            <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 open-rfq-modal"
-                                    data-product-id="{{ product.id }}"
-                                    data-product-name="{{ product.name }}"
-                                    data-product-price="{{ product.discounted_price|default:product.price|floatformat:2 }}"
-                                    data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
-                                    data-quantity="1">
-                                RFQ  <i class="ki-filled ki-directbox-default text-xs"></i>
-                            </button>
-                        {% endif %}
-                    {% endif %}
                     {% if request.user.is_authenticated %}
-    <span class="kt-wishlist-icon cursor-pointer"
-          data-kt-wishlist-toggle="true"
-          data-product-id="{{ product.id|default:'0' }}"
-          title="{% if product.id in user_wishlist_ids %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}">
-        <i class="ki-filled ki-heart heart-icon {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
-    </span>
-{% else %}
-    <span class="kt-wishlist-icon cursor-pointer show-login-modal"
-          title="Login to Add to Wishlist">
-        <i class="ki-filled ki-heart heart-icon"></i>
-    </span>
-{% endif %}
-                    
+                                            {% if product.show_rfq or product.Both %}
+                                                <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 open-rfq-modal"
+                                                        data-product-id="{{ product.id }}"
+                                                        data-product-name="{{ product.name }}"
+                                                        data-product-price="{{ product.discounted_price|default:product.price|floatformat:2 }}"
+                                                        data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
+                                                        data-quantity="1">
+                                                    RFQ  <i class="ki-filled ki-directbox-default text-xs"></i>
+                                                </button>
+                                            {% endif %}
+                                        {% endif %}
+                                        {% if request.user.is_authenticated %}
+                        <span class="kt-wishlist-icon cursor-pointer"
+                              data-kt-wishlist-toggle="true"
+                              data-product-id="{{ product.id|default:'0' }}"
+                              title="{% if product.id in user_wishlist_ids %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}">
+                            <i class="ki-solid ki-heart {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
+                        </span>
+                    {% else %}
+                        <span class="kt-wishlist-icon cursor-pointer show-login-modal"
+                              title="Login to Add to Wishlist">
+                            <i class="ki-solid ki-heart"></i>
+                        </span>
+                    {% endif %}
                 </div>
 
                 <!-- Additional Information -->
@@ -374,43 +373,42 @@
                         </div>
                     </div>
                 </div>
+                    <!-- Reviews Section -->
+                    <div class="mt-8">
+                        <h4 class="text-lg font-semibold text-gray-400 dark:text-white">Customer Reviews ({{ total_reviews }})</h4>
+                        {% if reviews %}
+                        <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+                           <!-- First Review -->
+                    <div class="flex gap-4">
+                        <div class="bg-teal-600 px-3 py-1 rounded text-sm font-bold w-12 text-center" style="color: #0b7663;">
+                            {{ reviews.0.rating }}★
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-gray-400 dark:text-gray-200">{{ reviews.0.review|default:"No comment provided." }}</p>
+                            {% if reviews.0.photo %}
+                            <img src="{{ reviews.0.photo.url }}" alt="Review Photo" class="w-24 h-auto rounded mt-2 shadow-sm cursor-pointer review-photo" data-full-image="{{ reviews.0.photo.url }}" data-review="{{ reviews.0.review|default:'No comment provided.' }}" data-rating="{{ reviews.0.rating }}" data-username="{{ reviews.0.user.username }}" data-date="{{ reviews.0.created_at|date:'d M Y' }}" loading="lazy" />
+                            {% endif %}
+                            <small class="text-gray-500 dark:text-gray-400">{{ reviews.0.user.username }} | {{ reviews.0.created_at|date:"d M Y" }}</small>
+                        </div>
+                    </div>
 
-               <!-- Reviews Section -->
-<div class="mt-8">
-    <h4 class="text-lg font-semibold text-gray-400 dark:text-white">Customer Reviews ({{ total_reviews }})</h4>
-    {% if reviews %}
-    <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
-       <!-- First Review -->
-<div class="flex gap-4">
-    <div class="bg-teal-600 px-3 py-1 rounded text-sm font-bold w-12 text-center" style="color: #0b7663;">
-        {{ reviews.0.rating }}★
-    </div>
-    <div class="flex-1">
-        <p class="text-gray-400 dark:text-gray-200">{{ reviews.0.review|default:"No comment provided." }}</p>
-        {% if reviews.0.photo %}
-        <img src="{{ reviews.0.photo.url }}" alt="Review Photo" class="w-24 h-auto rounded mt-2 shadow-sm cursor-pointer review-photo" data-full-image="{{ reviews.0.photo.url }}" data-review="{{ reviews.0.review|default:'No comment provided.' }}" data-rating="{{ reviews.0.rating }}" data-username="{{ reviews.0.user.username }}" data-date="{{ reviews.0.created_at|date:'d M Y' }}" loading="lazy" />
-        {% endif %}
-        <small class="text-gray-500 dark:text-gray-400">{{ reviews.0.user.username }} | {{ reviews.0.created_at|date:"d M Y" }}</small>
-    </div>
-</div>
-
-<!-- More Reviews -->
-<div id="more-reviews" class="hidden">
-    {% for review in reviews|slice:"1:" %}
-    <div class="border-t border-gray-200 dark:border-gray-700 pt-4 flex gap-4">
-        <div class="bg-teal-600 px-3 py-1 rounded text-sm font-bold w-12 text-center" style="color: #0b7663;">
-            {{ review.rating }}★
-        </div>
-        <div class="flex-1">
-            <p class="text-gray-400 dark:text-gray-200">{{ review.review|default:"No comment provided." }}</p>
-            {% if review.photo %}
-            <img src="{{ review.photo.url }}" alt="Review Photo" class="w-24 h-auto rounded mt-2 shadow-sm cursor-pointer review-photo" data-full-image="{{ review.photo.url }}" data-review="{{ review.review|default:'No comment provided.' }}" data-rating="{{ review.rating }}" data-username="{{ review.user.username }}" data-date="{{ review.created_at|date:'d M Y' }}" loading="lazy" />
-            {% endif %}
-            <small class="text-gray-500 dark:text-gray-400">{{ review.user.username }} | {{ review.created_at|date:"d M Y" }}</small>
-        </div>
-    </div>
-    {% endfor %}
-</div>
+                    <!-- More Reviews -->
+                    <div id="more-reviews" class="hidden">
+                        {% for review in reviews|slice:"1:" %}
+                        <div class="border-t border-gray-200 dark:border-gray-700 pt-4 flex gap-4">
+                            <div class="bg-teal-600 px-3 py-1 rounded text-sm font-bold w-12 text-center" style="color: #0b7663;">
+                                {{ review.rating }}★
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-gray-400 dark:text-gray-200">{{ review.review|default:"No comment provided." }}</p>
+                                {% if review.photo %}
+                                <img src="{{ review.photo.url }}" alt="Review Photo" class="w-24 h-auto rounded mt-2 shadow-sm cursor-pointer review-photo" data-full-image="{{ review.photo.url }}" data-review="{{ review.review|default:'No comment provided.' }}" data-rating="{{ review.rating }}" data-username="{{ review.user.username }}" data-date="{{ review.created_at|date:'d M Y' }}" loading="lazy" />
+                                {% endif %}
+                                <small class="text-gray-500 dark:text-gray-400">{{ review.user.username }} | {{ review.created_at|date:"d M Y" }}</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
 
                     <!-- Toggle Buttons -->
                     <a href="#" id="view-all-reviews-btn"
