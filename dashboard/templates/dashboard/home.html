@@ -379,8 +379,15 @@
             </div>
             <div class="flex items-center justify-between flex-wrap gap-2 px-1 pb-1">
                 <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1">
-                    <i class="ki-solid ki-star text-white -mt-0.5"></i> {{ product.rating|default:"0.0" }}
+                    <i class="ki-solid ki-star text-white -mt-0.5"></i>
+                        {{ product.rating|default:"0.0" }}
                 </span>
+                {% if product.total_reviews > 0 %}
+                <span>
+                    <span class="text-[11px] text-white/80 ml-1">
+                        (<i class="ki-solid ki-eye text-gray-600 -mt-0.5"></i> {{ product.total_reviews }})</span>
+                </span>
+                {% endif %}
                 <div class="flex items-center flex-nowrap gap-1 whitespace-nowrap">
                     {% if product.original_price and product.original_price > product.price %}
                     <span class="text-xs font-normal text-secondary-foreground line-through">
@@ -671,8 +678,15 @@
                         </div>
                         <div class="flex items-center flex-wrap justify-between gap-3 px-2.5 pb-1">
                             <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1">
-    <i class="ki-solid ki-star text-white -mt-0.5"></i> {{ product.rating|default:"0.0" }}
-</span>
+                                <i class="ki-solid ki-star text-white -mt-0.5"></i>
+                                {{ product.rating|default:"0.0" }}
+                            </span>
+                            {% if product.total_reviews > 0 %}
+                            <span>
+                                <span class="text-[11px] text-white/80 ml-1">
+                                    (<i class="ki-solid ki-eye text-gray-600 -mt-0.5"></i> {{ product.total_reviews }})</span>
+                            </span>
+                            {% endif %}
                             <div class="flex items-center flex-wrap gap-1.5">
                                 {% if product.original_price and product.original_price > product.price %}
                                 <span class="text-xs font-normal text-secondary-foreground line-through pt-[1px]">
@@ -778,8 +792,15 @@
                         </div>
                         <div class="flex items-center flex-wrap justify-between gap-3 px-2.5 pb-1">
                             <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1">
-    <i class="ki-solid ki-star text-white -mt-0.5"></i> {{ product.rating|default:"0.0" }}
-</span>
+                                <i class="ki-solid ki-star text-white -mt-0.5"></i>
+                                {{ product.rating|default:"0.0" }}
+                            </span>
+                            {% if product.total_reviews > 0 %}
+                            <span>
+                                <span class="text-[11px] text-white/80 ml-1">
+                                    (<i class="ki-solid ki-eye text-gray-600 -mt-0.5"></i> {{ product.total_reviews }})</span>
+                            </span>
+                            {% endif %}
                             <div class="flex items-center flex-wrap gap-1.5">
                                 {% if product.original_price and product.original_price > product.price %}
                                 <span class="text-xs font-normal text-secondary-foreground line-through pt-[1px]">
@@ -885,8 +906,15 @@
                         </div>
                         <div class="flex items-center flex-wrap justify-between gap-3 px-2.5 pb-1">
                             <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1">
-    <i class="ki-solid ki-star text-white -mt-0.5"></i> {{ product.rating|default:"0.0" }}
-</span>
+                                <i class="ki-solid ki-star text-white -mt-0.5"></i>
+                                {{ product.rating|default:"0.0" }}
+                            </span>
+                            {% if product.total_reviews > 0 %}
+                            <span>
+                                <span class="text-[11px] text-white/80 ml-1">
+                                    (<i class="ki-solid ki-eye text-gray-600 -mt-0.5"></i> {{ product.total_reviews }})</span>
+                            </span>
+                            {% endif %}
                             <div class="flex items-center flex-wrap gap-1.5">
                                 {% if product.original_price and product.original_price > product.price %}
                                 <span class="text-xs font-normal text-secondary-foreground line-through pt-[1px]">

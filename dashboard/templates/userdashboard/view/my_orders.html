@@ -142,8 +142,10 @@
                                                 </div>
 
                                                 <textarea name="review " placeholder="Write your review..." rows="1" class="w-full text-sm font-bold text-mono border border-gray-300 dark:border-gray-600 rounded-md p-2.5 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"></textarea>
-                                                <input type="file" name="photo" accept="image/*" class="form-input text-sm font-bold text-mono">
-                                                <button type="submit" class="kt-btn kt-btn-sm kt-btn-primary">Submit Review</button>
+                                                <input type="file" name="photo" accept="image/*" class="form-input text-sm font-bold text-mono border border-gray-300 dark:border-gray-600 rounded-md p-2.5 focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+                                                <button type="submit" class="kt-btn kt-btn-primary">
+                                                    <i class="ki-filled ki-check text-base"></i>Submit Review
+                                                </button>
                                             </form>
                                             {% else %}
                                             <p class="text-xs font-bold text-green-600 mt-2">You already reviewed this product.</p>

@@ -446,7 +446,7 @@
             </button>
         </div>
         <div class="kt-card-content p-5 text-center space-y-4">
-            <p class="text-gray-300 text-sm">You must be logged in to perform this action.</p>
+            <p class="text-gray-650 dark:text-gray-300 text-sm">You must be logged in to perform this action.</p>
         </div>
         <div class="kt-card-footer px-5 py-4 flex justify-end gap-3 border-t border-gray-200">
             <button type="button" class="kt-btn kt-btn-outline kt-btn-sm" onclick="closeLoginModal()">Cancel</button>
@@ -509,9 +509,10 @@
             <div class="kt-card-footer px-5 py-4 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700">
                 <button type="button"
                         class="kt-btn kt-btn-outline kt-btn-sm text-gray-650 hover:bg-gray-900 dark:hover:bg-gray-700"
-                        onclick="closeRFQModal()">Cancel
+                        onclick="closeRFQModal()"><i class="ki-filled ki-cross"></i>Cancel
                 </button>
                 <button type="submit" class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center" id="rfqSubmitBtn">
+                    <i class="ki-filled ki-directbox-default"></i>
                     Submit RFQ
                     <span class="loader"></span>
                 </button>
