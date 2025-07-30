@@ -178,6 +178,13 @@ class Product(models.Model):
             return self.price - discount_amount
         return self.price
 
+    # @property
+    # def is_verified_supplier(self):
+    #     try:
+    #         return self.created_by.supplierprofile.is_verified
+    #     except (AttributeError, SupplierProfile.DoesNotExist):
+    #         return False
+
     def __str__(self):
         return self.name
 
