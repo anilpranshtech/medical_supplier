@@ -287,7 +287,7 @@
             <div class="flex items-center gap-4 sm:gap-5 pl-4 sm:pl-5 mx-5 px-5">
                 <a href="#">
                     <img class="size-10"
-                         src="https://keenthemes.com/static/metronic/tailwind/dist/assets/media/app/mini-logo-circle-success.svg"
+                         src="{% static 'metronic/tailwind/dist/assets/media/brand-logos/health_logo_bg.png' %}"
                          alt="Logo"/>
                 </a>
                 <span class="text-sm sm:text-base font-semibold">Health Equipment</span>
@@ -544,7 +544,7 @@
                                         border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
                                     {% endif %}"
                                    href="{% url 'dashboard:shopping_cart' %}">
-                                    <i class="ki-filled ki-basket text-base"></i>
+                                    <i class="ki-filled ki-handcart text-base"></i>
                                     <span class="text-sm">Shopping Cart</span>
                                 </a>
                             </div>
