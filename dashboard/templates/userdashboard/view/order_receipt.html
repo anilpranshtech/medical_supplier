@@ -3,152 +3,136 @@
 
 {% block content %}
 <div class="kt-container-fixed mt-1" style="max-width: var(--custom-container-width, 85%);">
-    <div class="flex flex-col items-stretch gap-7 mt-1">
-        <main class="grow" role="content">
-            <!-- Container -->
-            <div class="kt-container-fixed">
-                <div class="py-10">
-                    <div class="kt-card px-0 w-full max-w-[800px] mx-auto overflow-hidden">
-                        <div class="h-[8px]"
-                             style="background:linear-gradient(90deg,#D618A3 0%,#1951E0 32.67%,#12C79C 67.17%,#DFBB19 100%)">
-                        </div>
-                        <div class="py-10 mb-5 ps-6 pe-3 me-3 text-center spaceọ-y-5" id="order_receipt_body">
-                            {% if error %}
-                                <div class="text-red-500">{{ error }}</div>
-                            {% else %}
-                                <div class="flex flex-col items-center gap-3 mb-5 lg:mb-9">
-                                    <a class="dark:hidden" href="#">
-                                        <img class="default-logo h-[25px]"
-                                             src="{% static 'metronic/tailwind/dist/assets/media/brand-logos/health_logo.jpg' %}">
-                                    </a>
-                                    <a class="hidden dark:block" href="#">
-                                        <img class="default-logo h-[25px]"
-                                             src="{% static 'metronic/tailwind/dist/assets/media/brand-logos/health_logo_bg.png' %}">
-                                    </a><h4 class="text-1xl text-dark font-semibold">Health Equipment</h4>
-                                    <h3 class="text-2xl text-dark font-semibold mt-6">Order Confirmation</h3>
-                                    <span class="text-sm text-secondary-foreground font-medium">
-                                        Thank you! Your order
-                                        <span class="text-sm text-dark font-semibold">
-                                            #{{ order.id|stringformat:"05d" }}
-                                        </span>
-                                        is confirmed and being processed.
-                                    </span>
-                                </div>
+  <div class="flex flex-col items-stretch gap-7 mt-1">
+    <main class="grow" role="content">
+      <div class="kt-container-fixed">
+        <div class="py-10">
+          <div class="kt-card px-0 w-full max-w-[800px] mx-auto overflow-hidden">
+            <div class="h-[8px]" style="background:linear-gradient(90deg,#D618A3 0%,#1951E0 32.67%,#12C79C 67.17%,#DFBB19 100%)"></div>
 
-                                <div class="space-y-5 lg:pb-5">
-                                    {% for item in items %}
-                                    <div class="kt-card">
-                                        <div class="kt-card-content flex items-center flex-wrap justify-between gap-4.5 p-2 pe-5">
-                                            <div class="flex items-center gap-3.5">
-                                                <div class="kt-card flex items-center justify-center bg-accent/50 h-[70px] w-[90px] shadow-none">
-                                                    {% if item.image_url %}
-                                                        <img alt="{{ item.product.name }}" class="cursor-pointer h-[70px]" src="{{ item.image_url }}">
-                                                    {% else %}
-                                                        <span class="text-xs text-muted">No Image</span>
-                                                    {% endif %}
-                                                </div>
-                                                <div class="flex flex-col gap-1">
-                                                    <a class="hover:text-primary text-sm font-medium text-mono leading-5.5报警
-                                                    .5" href="#">
-                                                        {{ item.product.name }}
-                                                    </a>
-                                                    <div class="flex items-center gap-1.5">
-                                                        <span class="text-xs font-normal text-secondary-foreground uppercase">
-                                                            SKU: <span class="text-xs font-medium text-foreground">{{ item.sku|default:"N/A" }}</span>
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="flex flex-col gap-1.5">
-                                                <span class="text-xs font-normal text-secondary-foreground text-end">{{ item.quantity }} x</span>
-                                                <div class="flex items-center flex-wrap gap-1.5">
-                                                    <span class="text-sm font-semibold text-mono">
-                                                        {% if order.payment_currency == "INR" %}₹{% else %}${% endif %}{{ item.total_price|floatformat:2 }}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {% empty %}
-                                        <div class="text-sm text-muted">No items found for this order.</div>
-                                    {% endfor %}
-                                </div>
-
-                                <div class="kt-card bg-muted/70 text-start px-5 lg:px-7 py-4 shadow-none">
-                                    <div class="flex justify-start gap-9">
-                                        <div class="flex flex-col gap-1.5">
-                                            <span class="text-sm font-normal text-secondary-foreground">Order placed</span>
-                                            <span class="text-sm font-medium text-dark">{{ order_date|date:"d M, Y" }}</span>
-                                        </div>
-                                        <div class="flex flex-col gap-1.5">
-                                            <span class="text-sm font-normal text-secondary-foreground">Total</span>
-                                            <span class="text-sm font-medium text-dark">
-                                                {% if order.payment_currency == "INR" %}₹{% else %}${% endif %}{{ order_total|floatformat:2 }}
-                                            </span>
-                                        </div>
-                                        <div class="flex flex-col gap-1.5">
-                                            <span class="text-sm font-normal text-secondary-foreground">Ship to</span>
-                                            <span class="text-sm font-medium text-dark">{{ billing.customer_name|default:"N/A" }}</span>
-                                        </div>
-                                        <div class="flex flex-col gap-1.5">
-                                            <span class="text-sm font-normal text-secondary-foreground">Estimated Delivery</span>
-                                            <span class="text-sm font-medium text-dark">{{ estimated_delivery|date:"d M, Y" }}</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="kt-card bg-muted/70 text-start px-5 lg:px-7 py-4 mt-5 shadow-none">
-                                    <div class="flex flex-col gap-1">
-                                        <span class="text-sm font-semibold">Billing Details</span>
-                                        {% if billing %}
-                                            <span class="text-sm">{{ billing.customer_name|default:"N/A" }}</span>
-                                            <span class="text-sm">{{ billing.customer_address1|default:"N/A" }}, {{ billing.customer_city|default:"N/A" }} - {{ billing.customer_postal_code|default:"N/A" }}</span>
-                                            <span class="text-sm">{{ billing.customer_country|default:"N/A" }}</span>
-                                            <span class="text-sm">Phone: {{ billing.phone|default:"N/A" }}</span>
-                                        {% else %}
-                                            <span class="text-sm text-muted">No billing address available</span>
-                                        {% endif %}
-                                    </div>
-                                </div>
-
-                                <div class="kt-card bg-muted/70 text-start px-5 lg:px-7 py-4 mt-5 shadow-none">
-                                    <div class="flex flex-col gap-1">
-                                        <span class="text-sm font-semibold">Payment Method</span>
-                                        {% if payment_details %}
-                                            {% if payment_method == "stripe" %}
-                                                <span class="text-sm">Stripe •••• {{ payment_details.card_last4|default:"N/A" }}</span>
-                                            {% elif payment_method == "razorpay" %}
-                                                <span class="text-sm">Razorpay ID: {{ payment_details.razorpay_payment_id|default:"N/A" }}</span>
-                                            {% elif payment_method == "cod" %}
-                                                <span class="text-sm">Cash on Delivery - Ref: {{ payment_details.cod_tracking_id|default:"N/A" }}</span>
-                                            {% else %}
-                                                <span class="text-sm">Unknown Payment Method</span>
-                                            {% endif %}
-                                        {% else %}
-                                            <span class="text-sm text-muted">No payment details available</span>
-                                        {% endif %}
-                                    </div>
-                                </div>
-
-                                <div class="flex gap-3 justify-center lg:mt-5">
-                                    <a class="kt-btn kt-btn-outline" href="{% url 'dashboard:my_orders' %}">
-                                        <i class="ki-filled ki-questionnaire-tablet"></i> My Orders
-                                    </a>
-                                    <a class="kt-btn kt-btn-primary" href="{% url 'dashboard:download_receipt' order.id %}">
-                                        <i class="ki-filled ki-file-down"></i> Download Receipt
-                                    </a>
-                                </div>
-                            {% endif %}
-                        </div>
-                    </div>
+            <div class="py-10 mb-5 px-6 text-center space-y-6" id="order_receipt_body">
+              {% if error %}
+                <div class="text-red-500">{{ error }}</div>
+              {% else %}
+                <div class="flex flex-col items-center gap-3 mb-6">
+                  <img class="default-logo h-9 dark:hidden" src="{% static 'metronic/tailwind/dist/assets/media/brand-logos/health_logo_bg.png' %}" alt="Health Logo">
+                  <img class="default-logo h-9 hidden dark:block" src="{% static 'metronic/tailwind/dist/assets/media/brand-logos/health_logo_bg.png' %}" alt="Health Logo Dark">
+                  <h4 class="text-2xl font-bold text-dark">Health Equipment</h4>
+                  <h3 class="text-3xl font-mono text-dark mt-4">Order Confirmation</h3>
+                  <span class="text-sm text-secondary-foreground font-medium">
+                    Thank you! Your order
+                    <span class="font-semibold text-dark">#{{ order.id|stringformat:"05d" }}</span>
+                    is confirmed and being processed.
+                  </span>
                 </div>
-                <style>
-                    body { background-color: #F9F9F9; }
-                    .dark body { background-color: #000000; }
-                </style>
+
+                <!-- Items List -->
+                <div class="space-y-5 lg:pb-5">
+                  {% for item in items %}
+                    <div class="kt-card mx-5">
+                      <div class="kt-card-content flex flex-wrap justify-between gap-4.5 items-center p-2 pe-5">
+                        <div class="flex items-center gap-3.5">
+                          <div class="kt-card bg-accent/50 h-[70px] w-[90px] flex items-center justify-center shadow-none">
+                            {% if item.image_url %}
+                              <img src="{{ item.image_url }}" alt="{{ item.product.name }}" class="h-[70px] object-contain">
+                            {% else %}
+                              <span class="text-xs text-muted">No Image</span>
+                            {% endif %}
+                          </div>
+                          <div class="flex flex-col gap-1">
+                            <a href="#" class="text-sm font-medium text-mono hover:text-primary">{{ item.product.name }}</a>
+                            <div class="text-xs text-secondary-foreground uppercase">
+                              SKU: <span class="font-medium text-foreground">{{ item.sku|default:"N/A" }}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="flex flex-col items-end gap-1.5">
+                          <span class="text-xs text-secondary-foreground">{{ item.quantity }} x</span>
+                          <span class="text-sm font-semibold text-mono">
+                            {% if order.payment_currency == "INR" %}₹{% else %}${% endif %}{{ item.total_price|floatformat:2 }}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  {% empty %}
+                    <div class="text-sm text-muted">No items found for this order.</div>
+                  {% endfor %}
+                </div>
+
+                <!-- Order Summary -->
+                <div class="kt-card bg-muted/70 px-5 lg:px-7 py-4 mt-6 shadow-none mx-5">
+                  <div class="flex flex-wrap gap-9">
+                    <div class="flex flex-col gap-1.5">
+                      <span class="text-sm text-secondary-foreground">Order placed</span>
+                      <span class="text-sm font-medium text-dark">{{ order_date|date:"d M, Y" }}</span>
+                    </div>
+                    <div class="flex flex-col gap-1.5">
+                      <span class="text-sm text-secondary-foreground">Total</span>
+                      <span class="text-sm font-medium text-dark">
+                        {% if order.payment_currency == "INR" %}₹{% else %}${% endif %}{{ order_total|floatformat:2 }}
+                      </span>
+                    </div>
+                    <div class="flex flex-col gap-1.5">
+                      <span class="text-sm text-secondary-foreground">Ship to</span>
+                      <span class="text-sm font-medium text-dark">{{ billing.customer_name|default:"N/A" }}</span>
+                    </div>
+                    <div class="flex flex-col gap-1.5">
+                      <span class="text-sm text-secondary-foreground">Estimated Delivery</span>
+                      <span class="text-sm font-medium text-dark">{{ estimated_delivery|date:"d M, Y" }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Billing Details -->
+                <div class="kt-card bg-muted/70 px-5 lg:px-7 py-4 mt-5 shadow-none mx-5">
+                  <span class="text-sm font-semibold">Billing Details</span>
+                  {% if billing %}
+                    <p class="text-sm">{{ billing.customer_name|default:"N/A" }}</p>
+                    <p class="text-sm">{{ billing.customer_address1|default:"N/A" }}, {{ billing.customer_city|default:"N/A" }} - {{ billing.customer_postal_code|default:"N/A" }}</p>
+                    <p class="text-sm">{{ billing.customer_country|default:"N/A" }}</p>
+                    <p class="text-sm">Phone: {{ billing.phone|default:"N/A" }}</p>
+                  {% else %}
+                    <p class="text-sm text-muted">No billing address available</p>
+                  {% endif %}
+                </div>
+
+                <!-- Payment Details -->
+                <div class="kt-card bg-muted/70 px-5 lg:px-7 py-4 mt-5 shadow-none mx-5">
+                  <span class="text-sm font-semibold">Payment Method</span>
+                  {% if payment_details %}
+                    {% if payment_method == "stripe" %}
+                      <p class="text-sm">Stripe •••• {{ payment_details.card_last4|default:"N/A" }}</p>
+                    {% elif payment_method == "razorpay" %}
+                      <p class="text-sm">Razorpay ID: {{ payment_details.razorpay_payment_id|default:"N/A" }}</p>
+                    {% elif payment_method == "cod" %}
+                      <p class="text-sm">Cash on Delivery - Ref: {{ payment_details.cod_tracking_id|default:"N/A" }}</p>
+                    {% else %}
+                      <p class="text-sm">Unknown Payment Method</p>
+                    {% endif %}
+                  {% else %}
+                    <p class="text-sm text-muted">No payment details available</p>
+                  {% endif %}
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-wrap gap-3 justify-center mt-6">
+                  <a class="kt-btn kt-btn-outline" href="{% url 'dashboard:my_orders' %}">
+                    <i class="ki-filled ki-questionnaire-tablet"></i> My Orders
+                  </a>
+                  <a class="kt-btn kt-btn-primary" href="{% url 'dashboard:download_receipt' order.id %}">
+                    <i class="ki-filled ki-file-down"></i> Download Receipt
+                  </a>
+                </div>
+              {% endif %}
             </div>
-            <!-- End of Container -->
-        </main>
-    </div>
+          </div>
+        </div>
+        <style>
+          body { background-color: #F9F9F9; }
+          .dark body { background-color: #000; }
+        </style>
+      </div>
+    </main>
+  </div>
 </div>
 {% endblock content %}

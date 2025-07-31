@@ -3,598 +3,88 @@
 
 {% block content %}
 <title>RFQ Quotations</title>
-<style>
-    /* Base styles from previous artifact */
-    .text-red-500 {
-        color: #ef4444 !important;
-    }
 
-    .kt-container-fixed {
-        max-width: var(--custom-container-width, 90%);
-        margin-left: auto;
-        margin-right: auto;
-    }
+<div class="max-w-[90%] mx-auto mt-6 text-gray-900 dark:text-gray-100">
+    <h2 class="text-3xl font-bold mb-6">📦 RFQ Quotations</h2>
 
-    /* Modal blur effect */
-    .modal-open {
-        filter: blur(8px);
-        transition: filter 0.3s ease-in-out;
-    }
+    <!-- Toggle Buttons -->
+    <div class="flex gap-3 mb-8">
+        <button class="px-5 py-2.5 rounded-lg text-sm font-semibold transition bg-blue-600 text-white active shadow-md hover:bg-blue-700" data-kt-tab-toggle="#sent_quotations">
+            Sent Quotations
+        </button>
+        <button class="px-5 py-2.5 rounded-lg text-sm font-semibold bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition shadow-sm" data-kt-tab-toggle="#received_quotations">
+            Received Quotations
+        </button>
+    </div>
 
-    .kt-modal {
-        filter: none !important;
-    }
+    <div class="tab-content space-y-8">
 
-    /* Toggle group styles */
-    .kt-toggle-group {
-        display: flex;
-        gap: 0.5rem;
-        margin-bottom: 1rem;
-    }
-
-    .kt-toggle-group .kt-btn {
-        padding: 0.5rem 1rem;
-        border-radius: 0.375rem;
-        font-size: 0.875rem;
-        font-weight: 500;
-        transition: all 0.2s ease-in-out;
-    }
-
-    .kt-toggle-group .kt-btn.active {
-        background-color: #3b82f6;
-        color: white;
-        border-color: #3b82f6;
-    }
-
-    .kt-toggle-group .kt-btn:not(.active) {
-        background-color: transparent;
-        border-color: #d1d5db;
-        color: #4b5563;
-    }
-
-    .kt-toggle-group .kt-btn:hover:not(.active) {
-        background-color: #f3f4f6;
-    }
-
-    /* Card styles */
-    .kt-card {
-        background: white;
-        border: 1px solid #e5e7eb;
-        border-radius: 0.5rem;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        transition: transform 0.3s ease-in-out;
-    }
-
-    .kt-card:hover {
-        transform: translateY(-2px);
-    }
-
-    .kt-card-content {
-        padding: 1.5rem;
-    }
-
-    /* Button styles */
-    .btn-sm {
-        padding: 0.5rem 1rem;
-        font-size: 0.875rem;
-        border-radius: 0.375rem;
-    }
-
-    .btn-success {
-        background-color: #10b981;
-        color: white;
-        border: none;
-    }
-
-    .btn-success:hover {
-        background-color: #059669;
-    }
-
-    .btn-danger {
-        background-color: #ef4444;
-        color: white;
-        border: none;
-    }
-
-    .btn-danger:hover {
-        background-color: #dc2626;
-    }
-
-    /* Alert styles for messages */
-    .alert {
-        padding: 0.75rem 1.25rem;
-        border-radius: 0.375rem;
-        font-size: 0.875rem;
-    }
-
-    .alert-success {
-        background-color: #d1fae5;
-        color: #065f46;
-    }
-
-    .alert-error {
-        background-color: #fee2e2;
-        color: #991b1b;
-    }
-
-    /* Modal styles */
-    .kt-modal {
-        z-index: 9999;
-        backdrop-filter: blur(8px);
-        background-color: rgba(0, 0, 0, 0.4);
-    }
-
-    /* Ensure confirmModal does not apply backdrop blur */
-    #confirmModal {
-        backdrop-filter: none;
-        background-color: rgba(0, 0, 0, 0.8);
-    }
-
-    /* Loader styles */
-    .loader {
-        display: none;
-        border: 2px solid #ffffff;
-        border-top: 2px solid transparent;
-        border-radius: 50%;
-        width: 16px;
-        height: 16px;
-        animation: spin 1s linear infinite;
-        margin-left: 8px;
-    }
-
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-
-    .loading .loader {
-        display: inline-block;
-    }
-
-    /* Responsive adjustments */
-    @media (prefers-color-scheme: dark) {
-        .kt-card {
-            background: #1a202c;
-            border-color: #374151;
-        }
-
-        .kt-toggle-group .kt-btn:not(.active) {
-            border-color: #4b5563;
-            color: #d1d5db;
-        }
-
-        .kt-toggle-group .kt-btn:hover:not(.active) {
-            background-color: #374151;
-        }
-
-        .text-secondary-foreground {
-            color: #d1d5db;
-        }
-
-        .text-foreground {
-            color: #f3f4f6;
-        }
-
-        .text-muted {
-            color: #6b7280;
-        }
-    }
-
-    @media (max-width: 640px) {
-        .kt-card-content {
-            padding: 1rem;
-        }
-
-        .kt-toggle-group {
-            flex-direction: column;
-            align-items: stretch;
-        }
-
-        .kt-toggle-group .kt-btn {
-            width: 100%;
-            text-align: center;
-        }
-    }
-</style>
-
-<div class="kt-container-fixed mt-1" style="max-width: var(--custom-container-width, 90%);">
-    <div class="flex flex-col items-stretch gap-7 mt-5 py-5">
-        <div class="flex items-center gap-3 w-full">
-            <h2 class="text-lg font-medium text-mono">RFQ Quotations Requests</h2>
-        </div>
-
-        <!-- Toggle Buttons -->
-        <div class="kt-toggle-group" data-kt-tabs="true" data-kt-tabs-initialized="true">
-            <label class="kt-btn kt-btn-outline active" data-kt-tab-toggle="#sent_quotations">
-                Sent Quotations
-                <input name="quotation-view" type="radio" value="sent" checked>
-            </label>
-            <label class="kt-btn kt-btn-outline" data-kt-tab-toggle="#received_quotations">
-                Received Quotations
-                <input name="quotation-view" type="radio" value="received">
-            </label>
-        </div>
-
-        {% if sent_quotations or received_quotations %}
-        <div class="tab-content">
-            <!-- Sent Quotations -->
-            <div class="tab-pane" id="sent_quotations">
-                {% if sent_quotations %}
-                <div class="grid grid-cols-1 gap-5">
-                    {% for rfq in sent_quotations %}
-                    <div class="kt-card">
-                        <div class="kt-card-content flex items-center flex-wrap justify-between p-2 pe-5 gap-4.5">
-                            <div class="flex flex-col gap-2">
-                                <div class="flex items-center gap-2.5 -mt-1">
-                                    <span class="text-sm font-medium text-mono">RFQ #{{ rfq.id }}</span>
-                                </div>
-                                <div class="flex items-center flex-wrap gap-3">
-                                    <span class="text-xs font-normal text-secondary-foreground">
-                                        Product: <span class="text-xs font-medium text-foreground">{{ rfq.product.name }}</span>
-                                    </span>
-                                    <span class="text-xs font-normal text-secondary-foreground">
-                                        Buyer: <span class="text-xs font-medium text-foreground">{{ rfq.requested_by.username }}</span>
-                                    </span>
-                                    <span class="text-xs font-normal text-secondary-foreground">
-                                        Price: <span class="text-xs font-medium text-foreground">
-                                            {% if rfq.quoted_price %} ₹{{ rfq.quoted_price|floatformat:2 }} {% else %} — {% endif %}
-                                        </span>
-                                    </span>
-                                    <span class="text-xs font-normal text-secondary-foreground">
-                                        Delivery Date: <span class="text-xs font-medium text-foreground">{{ rfq.quote_delivery_date|default:"—" }}</span>
-                                    </span>
-                                    <span class="text-xs font-normal text-secondary-foreground">
-                                        Notes: <span class="text-xs font-medium text-foreground">{{ rfq.supplier_notes|default:"—"|truncatewords:10 }}</span>
-                                    </span>
-                                    <span class="text-xs font-normal text-secondary-foreground">
-                                        File: <span class="text-xs font-medium text-foreground">
-                                            {% if rfq.quote_attached_file %}
-                                            <a href="{{ rfq.quote_attached_file.url }}" target="_blank">Download</a>
-                                            {% else %} — {% endif %}
-                                        </span>
-                                    </span>
-                                    <span class="text-xs font-normal text-secondary-foreground">
-                                        Sent At: <span class="text-xs font-medium text-foreground">{{ rfq.quote_sent_at|date:"Y-m-d H:i" }}</span>
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-                {% else %}
-                <p class="text-muted text-sm font-normal text-secondary-foreground">No sent quotations found.</p>
-                {% endif %}
-            </div>
-
-            <!-- Messages -->
-            {% if messages %}
-            <div class="space-y-2 my-4">
-                {% for message in messages %}
-                <div class="alert alert-{{ message.tags }}">
-                    {{ message }}
+        <!-- Sent Quotations -->
+        <div class="tab-pane" id="sent_quotations">
+            {% if sent_quotations %}
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for rfq in sent_quotations %}
+                <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg p-5 hover:shadow-xl transition">
+                    <div class="text-lg font-semibold text-blue-600 dark:text-blue-400">RFQ #{{ rfq.id }}</div>
+                    <ul class="mt-3 space-y-1 text-sm text-gray-700 dark:text-gray-300">
+                        <li><strong>Product:</strong> {{ rfq.product.name }}</li>
+                        <li><strong>Buyer:</strong> {{ rfq.requested_by.username }}</li>
+                        <li><strong>Price:</strong> {% if rfq.quoted_price %}₹{{ rfq.quoted_price|floatformat:2 }}{% else %}—{% endif %}</li>
+                        <li><strong>Delivery:</strong> {{ rfq.quote_delivery_date|default:"—" }}</li>
+                        <li><strong>Notes:</strong> {{ rfq.supplier_notes|default:"—"|truncatewords:10 }}</li>
+                        <li><strong>File:</strong> {% if rfq.quote_attached_file %}<a href="{{ rfq.quote_attached_file.url }}" class="underline text-blue-600 dark:text-blue-400" target="_blank">Download</a>{% else %}—{% endif %}</li>
+                        <li><strong>Sent At:</strong> {{ rfq.quote_sent_at|date:"Y-m-d H:i" }}</li>
+                    </ul>
                 </div>
                 {% endfor %}
             </div>
+            {% else %}
+            <p class="text-base text-gray-500 dark:text-gray-400">No sent quotations found.</p>
             {% endif %}
-
-            <!-- Received Quotations -->
-            <div class="tab-pane hidden" id="received_quotations">
-                {% if received_quotations %}
-                <div class="grid grid-cols-1 gap-5">
-                    {% for rfq in received_quotations %}
-                    <div class="kt-card">
-                        <div class="kt-card-content flex items-center flex-wrap justify-between p-2 pe-5 gap-4.5">
-                            <div class="flex flex-col gap-2">
-                                <div class="flex items-center gap-2.5 -mt-1">
-                                    <span class="text-sm font-medium text-mono">RFQ #{{ rfq.id }}</span>
-                                </div>
-                                <div class="flex items-center flex-wrap gap-3">
-                                    <span class="text-xs font-normal text-secondary-foreground">
-                                        Product: <span class="text-xs font-medium text-foreground">{{ rfq.product.name }}</span>
-                                    </span>
-                                    <span class="text-xs font-normal text-secondary-foreground">
-                                        Supplier: <span class="text-xs font-medium text-foreground">
-                                            {% if rfq.quoted_by %}
-                                            {{ rfq.quoted_by.username }}
-                                            {% else %}
-                                            —
-                                            {% endif %}
-                                        </span>
-                                    </span>
-                                    <span class="text-xs font-normal text-secondary-foreground">
-                                        Price: <span class="text-xs font-medium text-foreground">
-                                            {% if rfq.quoted_price %} ₹{{ rfq.quoted_price|floatformat:2 }} {% else %} — {% endif %}
-                                        </span>
-                                    </span>
-                                    <span class="text-xs font-normal text-secondary-foreground">
-                                        Delivery Date: <span class="text-xs font-medium text-foreground">{{ rfq.quote_delivery_date|default:"—" }}</span>
-                                    </span>
-                                    <span class="text-xs font-normal text-secondary-foreground">
-                                        Notes: <span class="text-xs font-medium text-foreground">{{ rfq.supplier_notes|default:"—"|truncatewords:10 }}</span>
-                                    </span>
-                                    <span class="text-xs font-normal text-secondary-foreground">
-                                        File: <span class="text-xs font-medium text-foreground">
-                                            {% if rfq.quote_attached_file %}
-                                            <a href="{{ rfq.quote_attached_file.url }}" target="_blank">Download</a>
-                                            {% else %} — {% endif %}
-                                        </span>
-                                    </span>
-                                    <span class="text-xs font-normal text-secondary-foreground">
-                                        Received At: <span class="text-xs font-medium text-foreground">{{ rfq.quote_sent_at|date:"Y-m-d H:i" }}</span>
-                                    </span>
-                                </div>
-                                {% if rfq.status == 'quoted' %}
-                                <div class="flex gap-2 mt-2">
-                                    <button class="btn btn-sm btn-success open-confirm-modal"
-                                            data-action="accept"
-                                            data-rfq-id="{{ rfq.pk }}"
-                                            data-action-url="{% url 'dashboard:accept_rfq' rfq.pk %}">Accept</button>
-                                    <button class="btn btn-sm btn-danger open-confirm-modal"
-                                            data-action="reject"
-                                            data-rfq-id="{{ rfq.pk }}"
-                                            data-action-url="{% url 'dashboard:reject_rfq' rfq.pk %}">Reject</button>
-                                </div>
-                                {% else %}
-                                <span class="text-muted text-xs font-normal text-secondary-foreground">—</span>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-                {% else %}
-                <p class="text-muted text-sm font-normal text-secondary-foreground">No received quotations found.</p>
-                {% endif %}
-            </div>
         </div>
-        {% else %}
-        <p class="text-muted text-sm font-bold text-center text-secondary-foreground mt-5 py-5">No quotations available.</p>
-        {% endif %}
-    </div>
 
-    <!-- Confirmation Modal for Accept/Reject -->
-    <div id="confirmModal"
-         class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black/30"
-         data-kt-modal="true" role="dialog" aria-labelledby="confirmModalTitle" aria-modal="true">
-        <div class="kt-card w-full max-w-[500px] rounded-xl border border-border bg-background shadow-2xl transition-transform duration-300 ease-in-out transform scale-95">
-            <div class="kt-card-header px-5 py-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
-                <h2 id="confirmModalTitle" class="text-xl font-bold text-gray-100">Confirm Action</h2>
-                <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" onclick="closeConfirmModal()" aria-label="Close modal">
-                    <i class="ki-filled ki-cross text-base text-gray-500 hover:text-red-500"></i>
-                </button>
-            </div>
-            <div class="kt-card-content p-5 text-center space-y-4">
-                <p class="text-gray-400 dark:text-gray-300 text-sm" id="confirmMessage">
-                    Are you sure you want to <span id="confirmAction"></span> this quotation?
-                </p>
-            </div>
-            <div class="kt-card-footer px-5 py-4 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700">
-                <button type="button" class="kt-btn kt-btn-outline kt-btn-sm text-gray-650 hover:bg-gray-900 dark:hover:bg-gray-700" onclick="closeConfirmModal()">Cancel</button>
-                <form id="confirmForm" method="post" action="">
-                    {% csrf_token %}
-                    <button type="submit" class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center" id="confirmSubmitBtn">
-                        Confirm
-                        <span class="loader"></span>
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- RFQ Modal -->
-    <div id="rfqModal"
-         class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
-         data-kt-modal="true" role="dialog" aria-labelledby="rfqModalTitle" aria-modal="true">
-        <div class="kt-card w-full max-w-[600px] rounded-xl border border-border bg-background shadow-2xl transition-transform duration-300 ease-in-out transform scale-95">
-            <div class="kt-card-header px-5 py-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
-                <h2 id="rfqModalTitle" class="text-xl font-bold text-mono">Request for Quotation</h2>
-                <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" onclick="closeRFQModal()"
-                        aria-label="Close modal">
-                    <i class="ki-filled ki-cross text-base text-gray-500 hover:text-red-500"></i>
-                </button>
-            </div>
-            <form method="POST" action="{% url 'dashboard:rfq_submit' %}" id="rfqForm">
-                {% csrf_token %}
-                <div class="kt-card-content flex flex-col space-y-4 p-5">
-                    <input type="hidden" name="product_id" id="rfqProductId">
-                    <div>
-                        <label for="rfqProductName"
-                               class="block text-sm font-medium text-gray-650 dark:text-gray-300 mb-1">Product</label>
-                        <input type="text" id="rfqProductName"
-                               class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 bg-gray-100 dark:bg-gray-800 text-gray-650 dark:text-gray-300 cursor-not-allowed"
-                               disabled>
-                    </div>
-                    <div>
-                        <label for="rfqCompanyName"
-                               class="block text-sm font-medium text-gray-650 dark:text-gray-300 mb-1">Company Name
-                            <span class="text-red-500">*</span></label>
-                        <input type="text" name="company_name" id="rfqCompanyName"
-                               class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
-                               required aria-required="true">
-                        <p class="text-xs text-red-500 mt-1 hidden" id="rfqCompanyNameError">Company name is required.</p>
-                    </div>
-                    <div>
-                        <label for="rfqQuantity"
-                               class="block text-sm font-medium text-gray-650 dark:text-gray-300 mb-1">Quantity
-                            <span class="text-red-500">*</span></label>
-                        <input type="number" name="quantity" id="rfqQuantity"
-                               class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
-                               min="1" required aria-required="true">
-                        <p class="text-xs text-red-500 mt-1 hidden" id="rfqQuantityError">Quantity must be at least 1.</p>
-                    </div>
-                    <div>
-                        <label for="rfqMessage"
-                               class="block text-sm font-medium text-gray-650 dark:text-gray-300 mb-1">Message</label>
-                        <textarea name="message" id="rfqMessage"
-                                  class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
-                                  rows="4" placeholder="Add any additional details..."></textarea>
-                    </div>
+        <!-- Received Quotations -->
+        <div class="tab-pane hidden" id="received_quotations">
+            {% if received_quotations %}
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for rfq in received_quotations %}
+                <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg p-5 hover:shadow-xl transition">
+                    <div class="text-lg font-semibold text-green-600 dark:text-green-400">RFQ #{{ rfq.id }}</div>
+                    <ul class="mt-3 space-y-1 text-sm text-gray-700 dark:text-gray-300">
+                        <li><strong>Product:</strong> {{ rfq.product.name }}</li>
+                        <li><strong>Supplier:</strong> {{ rfq.quoted_by.username|default:"—" }}</li>
+                        <li><strong>Price:</strong> {% if rfq.quoted_price %}₹{{ rfq.quoted_price|floatformat:2 }}{% else %}—{% endif %}</li>
+                        <li><strong>Delivery:</strong> {{ rfq.quote_delivery_date|default:"—" }}</li>
+                        <li><strong>Notes:</strong> {{ rfq.supplier_notes|default:"—"|truncatewords:10 }}</li>
+                        <li><strong>File:</strong> {% if rfq.quote_attached_file %}<a href="{{ rfq.quote_attached_file.url }}" class="underline text-blue-600 dark:text-blue-400" target="_blank">Download</a>{% else %}—{% endif %}</li>
+                        <li><strong>Received At:</strong> {{ rfq.quote_sent_at|date:"Y-m-d H:i" }}</li>
+                    </ul>
                 </div>
-                <div class="kt-card-footer px-5 py-4 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700">
-                    <button type="button"
-                            class="kt-btn kt-btn-outline kt-btn-sm text-gray-650 hover:bg-gray-900 dark:hover:bg-gray-700"
-                            onclick="closeRFQModal()">Cancel
-                    </button>
-                    <button type="submit" class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center" id="rfqSubmitBtn">
-                        Submit RFQ
-                        <span class="loader"></span>
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Login Required Modal -->
-    <div id="loginRequiredModal"
-         class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
-         data-kt-modal="true" role="dialog" aria-labelledby="loginRequiredTitle" aria-modal="true">
-        <div class="kt-card w-full max-w-[500px] rounded-xl border border-border bg-background shadow-2xl transition-transform duration-300 ease-in-out transform scale-95">
-            <div class="kt-card-header px-5 py-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
-                <h2 id="loginRequiredTitle" class="text-xl font-bold text-mono">Login Required</h2>
-                <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" onclick="closeLoginModal()" aria-label="Close modal">
-                    <i class="ki-filled ki-cross text-base text-gray-500 hover:text-red-500"></i>
-                </button>
+                {% endfor %}
             </div>
-            <div class="kt-card-content p-5 text-center space-y-4">
-                <p class="text-gray-700 dark:text-gray-300 text-sm">
-                    You must be logged in to perform this action.
-                </p>
-            </div>
-            <div class="kt-card-footer px-5 py-4 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700">
-                <button type="button" class="kt-btn kt-btn-outline kt-btn-sm text-gray-650 hover:bg-gray-900 dark:hover:bg-gray-700" onclick="closeLoginModal()">Cancel</button>
-                <a href="{% url 'dashboard:login' %}" class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center">
-                    Login
-                </a>
-            </div>
+            {% else %}
+            <p class="text-base text-gray-500 dark:text-gray-400">No received quotations found.</p>
+            {% endif %}
         </div>
     </div>
 </div>
 
 <script>
-    // CSRF Token Helper
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
+    document.addEventListener('DOMContentLoaded', () => {
+        const tabs = document.querySelectorAll('[data-kt-tab-toggle]');
+        const panes = document.querySelectorAll('.tab-pane');
 
-    const csrftoken = getCookie('csrftoken');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('bg-blue-600', 'text-white', 'active'));
+                tab.classList.add('bg-blue-600', 'text-white', 'active');
 
-    // Tabbed Interface
-    document.addEventListener('DOMContentLoaded', function () {
-        const toggleButtons = document.querySelectorAll('[data-kt-tab-toggle]');
-        const tabPanes = document.querySelectorAll('.tab-pane');
-
-        toggleButtons.forEach(button => {
-            button.addEventListener('click', function (e) {
-                e.preventDefault();
-
-                // Remove active class from all buttons
-                toggleButtons.forEach(btn => {
-                    btn.classList.remove('active');
-                    btn.querySelector('input').removeAttribute('checked');
-                });
-
-                // Add active class to clicked button
-                button.classList.add('active');
-                button.querySelector('input').setAttribute('checked', 'checked');
-
-                // Hide all tab panes
-                tabPanes.forEach(pane => pane.classList.add('hidden'));
-
-                // Show the selected tab pane
-                const targetPane = document.querySelector(button.getAttribute('data-kt-tab-toggle'));
-                if (targetPane) {
-                    targetPane.classList.remove('hidden');
-                }
-            });
-        });
-    });
-
-    // RFQ Modal
-    function closeRFQModal() {
-        document.getElementById('rfqModal').classList.add('hidden');
-        document.body.classList.remove('modal-open');
-    }
-
-    document.querySelectorAll('.open-rfq-modal').forEach(button => {
-        button.addEventListener('click', () => {
-            const productId = button.getAttribute('data-product-id');
-            const productName = button.getAttribute('data-product-name');
-            const companyName = button.getAttribute('data-company-name');
-            const quantity = button.getAttribute('data-quantity');
-
-            document.getElementById('rfqProductId').value = productId;
-            document.getElementById('rfqProductName').value = productName;
-            document.getElementById('rfqCompanyName').value = companyName;
-            document.getElementById('rfqQuantity').value = quantity;
-
-            document.getElementById('rfqModal').classList.remove('hidden');
-            document.body.classList.add('modal-open');
-        });
-    });
-
-    // Login Required Modal
-    function openLoginModal() {
-        const modal = document.getElementById('loginRequiredModal');
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-        document.body.classList.add('modal-open');
-    }
-
-    function closeLoginModal() {
-        const modal = document.getElementById('loginRequiredModal');
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-        document.body.classList.remove('modal-open');
-    }
-
-    document.addEventListener('DOMContentLoaded', function () {
-        document.querySelectorAll('.show-login-modal').forEach(button => {
-            button.addEventListener('click', openLoginModal);
-        });
-    });
-
-    // Confirmation Modal for Accept/Reject
-    function openConfirmModal(action, rfqId, actionUrl) {
-        const modal = document.getElementById('confirmModal');
-        const confirmAction = document.getElementById('confirmAction');
-        const confirmForm = document.getElementById('confirmForm');
-
-        confirmAction.textContent = action;
-        confirmForm.action = actionUrl;
-
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-        // No modal-open class added to avoid background blur
-    }
-
-    function closeConfirmModal() {
-        const modal = document.getElementById('confirmModal');
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-        // No modal-open class to remove
-    }
-
-    document.addEventListener('DOMContentLoaded', function () {
-        document.querySelectorAll('.open-confirm-modal').forEach(button => {
-            button.addEventListener('click', function () {
-                const action = button.getAttribute('data-action');
-                const rfqId = button.getAttribute('data-rfq-id');
-                const actionUrl = button.getAttribute('data-action-url');
-                openConfirmModal(action, rfqId, actionUrl);
+                panes.forEach(p => p.classList.add('hidden'));
+                const target = document.querySelector(tab.dataset.ktTabToggle);
+                if (target) target.classList.remove('hidden');
             });
         });
     });
 </script>
+
 {% endblock %}

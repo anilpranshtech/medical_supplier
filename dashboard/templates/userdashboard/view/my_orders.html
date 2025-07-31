@@ -30,163 +30,135 @@
 </style>
 
 {% block content %}
-<div class="kt-container-fixed" style="max-width: var(--custom-container-width, 80%);">
-    <div class="flex flex-col items-stretch gap-7 mt-5 py-5">
-        <main class="grow" role="content">
-            <div class="kt-card">
-                <div class="kt-container-fixed">
-                    <h2 class="text-xl font-bold mb-6 mt-7">My Orders</h2>
-                    <div class="grid xl:grid-cols-0 gap-0 lg:gap-0">
-                        {% for order in orders %}
-                        <div class="lg:col-span-1">
-                            <div class="kt-card mb-7">
-                                <div class="kt-card-header justify-start bg-muted/70 gap-9 h-auto py-5">
-                                    <!-- Order header info -->
-                                    <div class="flex flex-col gap-1.5">
-                                        <span class="text-xs font-medium text-grey-650">Order ID</span>
-                                        <span class="text-sm font-bold text-mono">{{ order.order_id }}</span>
-                                    </div>
-                                    <div class="flex flex-col gap-1.5">
-                                        <span class="text-xs font-medium text-grey-650">Order placed</span>
-                                        <span class="text-sm font-bold text-mono">{{ order.created_at|date:"d M, Y" }}</span>
-                                    </div>
-                                    <div class="flex flex-col gap-1.5">
-                                        <span class="text-xs font-medium text-grey-650">Total</span>
-                                        <span class="text-sm font-bold text-mono">
-                                            {{ order.payment.payment_currency|default:"USD" }}
-                                            {% with subtotal=order.items.all|length|floatformat:2 shipping=order.shipping_fees|floatformat:2 %}
-                                                {{ subtotal|add:shipping|floatformat:2 }}
-                                            {% endwith %}
-                                        </span>
-                                    </div>
-                                    <div class="flex flex-col gap-1.5">
-                                        <span class="text-xs font-medium text-grey-650">Ship to</span>
-                                        <span class="text-sm font-bold text-mono">{{ order.shipping_full_address }}</span>
-                                    </div>
-                                    <div class="flex flex-col gap-1.5">
-                                        <span class="text-xs font-medium text-grey-650">Status</span>
-                                        <span class="text-sm font-bold text-mono">{{ order.status|title }}</span>
-                                    </div>
-                                    <div class="flex flex-col gap-2">
-                                        <a href="{% url 'dashboard:order_receipt' order.id %}" class="kt-btn kt-btn-primary">
-                                            <i class="ki-filled ki-cheque text-base"></i> View Receipt
-                                        </a>
-                                    </div>
-                                    <div>
-                                        <form method="post" action="{% url 'dashboard:reorder' order.id %}">
-                                            {% csrf_token %}
-                                            <button type="submit" class="kt-btn kt-btn-destructive">
-                                                <i class="ki-filled ki-parcel text-base"></i> Reorder
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
-
-                                <!-- Order items -->
-                                <div class="kt-card-content p-5 lg:p-7.5 space-y-5">
-                                    <div class="space-y-3 relative">
-                                        {% with item_count=order.items.all|length %}
-                                        <div class="space-y-3" id="items-container-{{ forloop.counter }}">
-                                            {% for item in order.items.all %}
-                                            <div class="kt-card order-item {% if forloop.counter0 >= 1 %}hidden{% endif %} mb-7">
-                                                <div class="kt-card-content flex items-center flex-wrap justify-between gap-4.5 p-2 pe-5">
-                                                    <div class="flex items-center gap-3.5">
-                                                        <div class="kt-card flex items-center justify-center bg-accent/50 h-[70px] w-[90px] shadow-none">
-                                                            {% if item.product.main_image %}
-                                                            <img alt="{{ item.product.name }}" class="cursor-pointer h-[70px]" src="{{ item.product.main_image.0.image.url }}">
-                                                            {% else %}
-                                                            <span class="text-xs">No Image</span>
-                                                            {% endif %}
-                                                        </div>
-                                                        <div class="flex flex-col gap-1">
-                                                            <a class="hover:text-primary text-sm font-medium text-mono leading-5.5" href="#">{{ item.product.name }}</a>
-                                                            <div class="flex items-center gap-1.5">
-                                                                <span class="text-xs font-normal text-secondary-foreground uppercase">
-                                                                    Brand: <span class="text-xs font-medium text-foreground">{{ item.product.brand.name|default:"N/A" }}</span>
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex flex-col gap-1.5">
-                                                        <span class="text-xs font-normal text-secondary-foreground text-end">{{ item.quantity }} x</span>
-                                                        <div class="flex items-center flex-wrap gap-1.5">
-                                                            <span class="text-sm font-semibold text-mono">
-                                                                {{ item.payment_currency|default:"USD" }}
-                                                                {{ item.quantity|floatformat:0 }} × {{ item.payment_currency|default:"USD" }} {{ item.price|floatformat:2 }} =
-                                                                {{ item.payment_currency|default:"USD" }} {{ item.quantity|multiply:item.price|floatformat:2 }}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <!-- Review form -->
-                                            {% if order.status == 'delivered' %}
-                                            {% with already_reviewed=item.product.user_reviews|length %}
-                                            {% if not already_reviewed %}
-                                            <form method="post" action="{% url 'dashboard:submit_review' item.product.id %}" enctype="multipart/form-data" class="mt-3 space-y-3 review-form">
-                                                {% csrf_token %}
-                                                <div class="gPPg8e">
-                                                    <div class="text-sm font-bold text-mono"><span>Rate this product</span></div>
-                                                    <div class="_8dZzTZ">
-                                                        <div class="EuQYB1 star-rating" data-product-id="{{ item.product.id }}">
-                                                            {% for i in "01234" %}
-                                                            <span id="star-{{ forloop.counter0 }}-add-rating-{{ item.product.id }}"
-                                                                  class="KA1612 ux5iNN star text-gray-400 text-3xl"
-                                                                  data-value="{{ forloop.counter }}">{{ "★" }}</span>
-                                                            {% endfor %}
-                                                        </div>
-                                                        <input type="hidden" name="rating" class="rating-input" value="">
-                                                        <span class="text-sm font-bold text-mono rating-label">Select rating</span>
-                                                    </div>
-                                                </div>
-
-                                                <textarea name="review " placeholder="Write your review..." rows="1" class="w-full text-sm font-bold text-mono border border-gray-300 dark:border-gray-600 rounded-md p-2.5 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"></textarea>
-                                                <input type="file" name="photo" accept="image/*" class="form-input text-sm font-bold text-mono border border-gray-300 dark:border-gray-600 rounded-md p-2.5 focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
-                                                <button type="submit" class="kt-btn kt-btn-primary">
-                                                    <i class="ki-filled ki-check text-base"></i>Submit Review
-                                                </button>
-                                            </form>
-                                            {% else %}
-                                            <p class="text-xs font-bold text-green-600 mt-2">You already reviewed this product.</p>
-                                            {% endif %}
-                                            {% endwith %}
-                                            {% endif %}
-                                            {% empty %}
-                                            <div class="text-center text-sm text-secondary-foreground">
-                                                No items in this order.
-                                            </div>
-                                            {% endfor %}
-                                        </div>
-
-                                        {% if item_count > 1 %}
-                                        <div class="text-center mt-3">
-                                            <button type="button" class="kt-btn kt-btn-outline text-sm toggle-btn" data-target="items-container-{{ forloop.counter }}">
-                                                ▼ Read more
-                                            </button>
-                                        </div>
-                                        {% endif %}
-                                        {% endwith %}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        {% empty %}
-                        <div class="text-center text-sm text-secondary-foreground">No orders found.</div>
-                        {% endfor %}
+<div class="container mx-auto px-4 max-w-7xl">
+    <div class="flex flex-col gap-6 mt-6 mb-12">
+        <h2 class="text-xl md:text-2xl font-bold">My Orders</h2>
+        {% for order in orders %}
+        <div class="border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+            <div class="flex flex-col lg:flex-row flex-wrap gap-4 bg-gray-100 dark:bg-gray-800 p-4">
+                <!-- Order Header Info -->
+                <div class="flex-1 min-w-[150px]">
+                    <span class="text-xs text-gray-500">Order ID</span>
+                    <div class="text-sm font-bold">{{ order.order_id }}</div>
+                </div>
+                <div class="flex-1 min-w-[150px]">
+                    <span class="text-xs text-gray-500">Order Placed</span>
+                    <div class="text-sm font-bold">{{ order.created_at|date:"d M, Y" }}</div>
+                </div>
+                <div class="flex-1 min-w-[150px]">
+                    <span class="text-xs text-gray-500">Total</span>
+                    <div class="text-sm font-bold">
+                        {{ order.payment.payment_currency|default:"USD" }}
+                        {% with subtotal=order.items.all|length|floatformat:2 shipping=order.shipping_fees|floatformat:2 %}
+                            {{ subtotal|add:shipping|floatformat:2 }}
+                        {% endwith %}
                     </div>
+                </div>
+                <div class="flex-1 min-w-[150px]">
+                    <span class="text-xs text-gray-500">Ship to</span>
+                    <div class="text-sm font-bold">{{ order.shipping_full_address }}</div>
+                </div>
+                <div class="flex-1 min-w-[150px]">
+                    <span class="text-xs text-gray-500">Status</span>
+                    <div class="text-sm font-bold">{{ order.status|title }}</div>
+                </div>
+                <div class="flex items-center gap-2 mt-2">
+                    <a href="{% url 'dashboard:order_receipt' order.id %}" class="kt-btn kt-btn-primary text-sm">
+                        <i class="ki-filled ki-cheque"></i> View Receipt
+                    </a>
+                    <form method="post" action="{% url 'dashboard:reorder' order.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="kt-btn kt-btn-destructive text-sm">
+                            <i class="ki-filled ki-parcel"></i> Reorder
+                        </button>
+                    </form>
                 </div>
             </div>
 
-            {% include "pages/pagination.html" %}
-        </main>
+            <!-- Order Items -->
+            <div class="p-4 sm:p-6">
+                {% with item_count=order.items.all|length %}
+                <div class="space-y-4" id="items-container-{{ forloop.counter }}">
+                    {% for item in order.items.all %}
+                    <div class="order-item {% if forloop.counter0 >= 1 %}hidden{% endif %}">
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border p-4 rounded-lg">
+                            <div class="flex items-center gap-4 w-full sm:w-auto">
+                                <div class="w-[80px] h-[70px] bg-gray-200 flex items-center justify-center">
+                                    {% if item.product.main_image %}
+                                        <img src="{{ item.product.main_image.0.image.url }}" alt="{{ item.product.name }}" class="h-full object-contain">
+                                    {% else %}
+                                        <span class="text-xs">No Image</span>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <a href="#" class="block text-sm font-medium hover:text-primary">{{ item.product.name }}</a>
+                                    <div class="text-xs text-gray-500">
+                                        Brand: <span class="text-gray-700">{{ item.product.brand.name|default:"N/A" }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-sm font-semibold text-right sm:text-left w-full sm:w-auto">
+                                {{ item.payment_currency|default:"USD" }} {{ item.quantity }} × {{ item.price|floatformat:2 }} =
+                                {{ item.payment_currency|default:"USD" }} {{ item.quantity|multiply:item.price|floatformat:2 }}
+                            </div>
+                        </div>
+
+                        <!-- Review Section -->
+                        {% if order.status == 'delivered' %}
+                            {% with already_reviewed=item.product.user_reviews|length %}
+                            {% if not already_reviewed %}
+                            <form method="post" action="{% url 'dashboard:submit_review' item.product.id %}" enctype="multipart/form-data" class="mt-4 space-y-2 review-form">
+                                {% csrf_token %}
+                                <div class="text-sm font-bold">Rate this product</div>
+                                <div class="star-rating flex gap-1" data-product-id="{{ item.product.id }}">
+                                    {% for i in "01234" %}
+                                        <span id="star-{{ forloop.counter0 }}-add-rating-{{ item.product.id }}"
+                                              class="KA1612 star text-gray-400 text-2xl cursor-pointer"
+                                              data-value="{{ forloop.counter }}">{{ "★" }}</span>
+                                    {% endfor %}
+                                </div>
+                                <input type="hidden" name="rating" class="rating-input" value="">
+                                <span class="text-xs font-medium rating-label">Select rating</span>
+
+                                <textarea name="review" placeholder="Write your review..." rows="3"
+                                          class="w-full text-sm font-medium border border-gray-300 rounded-md p-2.5 focus:ring-2 focus:ring-primary focus:border-primary resize-none"></textarea>
+
+                                <input type="file" name="photo" accept="image/*" class="w-full text-sm">
+
+                                <button type="submit" class="kt-btn kt-btn-primary">
+                                    <i class="ki-filled ki-check"></i> Submit Review
+                                </button>
+                            </form>
+                            {% else %}
+                            <p class="text-xs font-bold text-green-600 mt-2">You already reviewed this product.</p>
+                            {% endif %}
+                            {% endwith %}
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+
+                {% if item_count > 1 %}
+                <div class="text-center mt-3">
+                    <button type="button" class="kt-btn kt-btn-outline text-sm toggle-btn" data-target="items-container-{{ forloop.counter }}">
+                        ▼ Read more
+                    </button>
+                </div>
+                {% endif %}
+                {% endwith %}
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-center text-sm text-gray-500">No orders found.</p>
+        {% endfor %}
+
+        {% include "pages/pagination.html" %}
     </div>
 </div>
 
-<!-- JS for read more & star rating -->
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        // Toggle read more
+        // Read more toggle
         document.querySelectorAll(".toggle-btn").forEach((btn) => {
             btn.addEventListener("click", function () {
                 const targetId = btn.getAttribute("data-target");
@@ -205,7 +177,7 @@
             });
         });
 
-        // Star rating
+        // Star Rating logic
         document.querySelectorAll(".star-rating").forEach(container => {
             const stars = container.querySelectorAll(".star");
             const form = container.closest(".review-form");
@@ -245,4 +217,4 @@
         }
     });
 </script>
-{% endblock content %}
+{% endblock %}
