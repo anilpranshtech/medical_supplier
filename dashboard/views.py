@@ -604,6 +604,8 @@ class SearchResultsGridView(TemplateView):
             context['user_wishlist_ids'] = []
 
         return context
+
+
 class SearchResultsListView(TemplateView):
     template_name = 'userdashboard/view/search_results_list.html'
 
@@ -616,20 +618,23 @@ class SearchResultsListView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        request = self.request
 
-        category_id = self.request.GET.get('category')
-        sub_category_id = self.request.GET.get('sub_category')
-        last_category_id = self.request.GET.get('last_category')
-        sort_by = self.request.GET.get('sort_by')
-        page = self.request.GET.get('page', 1)
+        category_id = request.GET.get('category')
+        sub_category_id = request.GET.get('sub_category')
+        last_category_id = request.GET.get('last_category')
+        sort_by = request.GET.get('sort_by')
+        page_number = request.GET.get('page', 1)
 
-        context['selected_category'] = None
-        context['selected_sub_category'] = None
-        context['selected_last_category'] = None
-        context['page_obj'] = None
-        context['total_products'] = 0
+        context.update({
+            'selected_category': None,
+            'selected_sub_category': None,
+            'selected_last_category': None,
+            'page_obj': None,
+            'total_products': 0,
+        })
 
-        # Categories & Subcategories
+        # Categories & Subcategories with active products
         last_categories_with_products = ProductLastCategory.objects.annotate(
             product_count=Count('product', filter=Q(product__is_active=True))
         ).filter(product_count__gt=0)
@@ -650,12 +655,12 @@ class SearchResultsListView(TemplateView):
 
         context['categories'] = categories_with_products
 
-        # Define effective price for sorting
+        # Base product queryset with effective price annotation
         effective_price = ExpressionWrapper(
             F('price') * (1 - F('offer_percentage') / 100.0),
             output_field=DecimalField(max_digits=10, decimal_places=2)
         )
-        products = Product.objects.annotate(
+        products_qs = Product.objects.annotate(
             effective_price=Case(
                 When(offer_active=True, offer_percentage__isnull=False, then=effective_price),
                 default=F('price'),
@@ -663,23 +668,21 @@ class SearchResultsListView(TemplateView):
             )
         )
 
+        # Filtering + sorting
         if last_category_id:
             try:
                 last_category = ProductLastCategory.objects.get(id=last_category_id)
-                products = products.filter(
-                    last_category=last_category,
-                    is_active=True
-                )
+                products_qs = products_qs.filter(last_category=last_category, is_active=True)
 
                 if sort_by == '1':
-                    products = products.order_by('-effective_price')
+                    products_qs = products_qs.order_by('-effective_price')
                 elif sort_by == '2':
-                    products = products.order_by('effective_price')
+                    products_qs = products_qs.order_by('effective_price')
                 else:
-                    products = products.order_by('-created_at')
+                    products_qs = products_qs.order_by('-created_at')
 
-                paginator = Paginator(products, 10)
-                page_obj = paginator.get_page(page)
+                paginator = Paginator(products_qs, 10)
+                page_obj = paginator.get_page(page_number)
 
                 context.update({
                     'products': page_obj,
@@ -690,10 +693,8 @@ class SearchResultsListView(TemplateView):
                     'selected_sub_category': last_category.sub_category,
                     'selected_category': last_category.sub_category.category,
                 })
-
             except ProductLastCategory.DoesNotExist:
                 context['products'] = []
-
         elif sub_category_id:
             try:
                 sub_category = ProductSubCategory.objects.get(id=sub_category_id)
@@ -702,7 +703,6 @@ class SearchResultsListView(TemplateView):
                 context['selected_category'] = sub_category.category
             except ProductSubCategory.DoesNotExist:
                 context['last_categories'] = []
-
         elif category_id:
             try:
                 category = ProductCategory.objects.get(id=category_id)
@@ -711,13 +711,13 @@ class SearchResultsListView(TemplateView):
                 context['selected_category'] = category
             except ProductCategory.DoesNotExist:
                 context['last_categories'] = []
-
         else:
             context['products'] = []
 
-        if self.request.user.is_authenticated:
-            cart_ids = CartProduct.objects.filter(user=self.request.user).values_list('product_id', flat=True)
-            wishlist_ids = WishlistProduct.objects.filter(user=self.request.user).values_list('product_id', flat=True)
+        # User-specific wishlist/cart IDs
+        if request.user.is_authenticated:
+            cart_ids = CartProduct.objects.filter(user=request.user).values_list('product_id', flat=True)
+            wishlist_ids = WishlistProduct.objects.filter(user=request.user).values_list('product_id', flat=True)
             context['user_cart_ids'] = list(cart_ids)
             context['user_wishlist_ids'] = list(wishlist_ids)
         else:

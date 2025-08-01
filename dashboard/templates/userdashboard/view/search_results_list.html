@@ -1,5 +1,6 @@
 {% extends "pages/base.html" %}
 {% load static %}
+{% load custom_filters %}
 
 {% block content %}
 <style>
@@ -7,17 +8,20 @@
     .kt-wishlist-icon.active i.ki-filled.ki-heart {
         color: #ff0000;
     }
+
     .kt-category-grid {
         display: grid;
         grid-template-columns: 0.8fr 3.2fr;
         gap: 20px;
         width: 100%;
     }
+
     .kt-product-list {
         display: grid;
         grid-template-columns: 1fr;
         gap: 15px;
     }
+
     .kt-list-card {
         display: flex;
         flex-direction: row;
@@ -26,6 +30,7 @@
         border: 1px solid #e0e0e0;
         border-radius: 8px;
     }
+
     .kt-list-card-image {
         width: 120px;
         height: 120px;
@@ -34,31 +39,39 @@
         position: relative;
         overflow: hidden;
     }
+
     .kt-list-card-content {
         flex: 1;
     }
+
     .kt-list-card-actions {
         display: flex;
         flex-direction: column;
         align-items: flex-end;
         min-width: 150px;
     }
+
     .amazon-sidebar {
         border-right: 1px solid #e0e0e0;
         padding-right: 16px;
     }
+
     .text-red-500 {
         color: #ef4444 !important;
     }
+
     .heart-icon {
         transition: color 0.2s ease-in-out;
     }
+
     .rotate-180 {
         transform: rotate(180deg);
     }
+
     .kt-select-wrapper {
         position: relative;
     }
+
     .kt-select-dropdown {
         position: absolute;
         top: 100%;
@@ -70,6 +83,7 @@
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         z-index: 105;
     }
+
     .amazon-sidebar h2 {
         font-size: 1.25rem;
         font-weight: 700;
@@ -77,6 +91,7 @@
         text-transform: uppercase;
         color: #111827;
     }
+
     .category-button {
         font-size: 1.1rem;
         font-weight: 600;
@@ -91,13 +106,16 @@
         transition: all 0.2s ease-in-out;
         cursor: pointer;
     }
+
     .category-button:hover {
         color: #3b82f6;
     }
+
     .subcategory-list {
         margin-left: 1.5rem;
         margin-top: 0.25rem;
     }
+
     .subcategory-list a {
         display: block;
         padding: 4px 0;
@@ -106,21 +124,26 @@
         text-decoration: none;
         transition: all 0.2s;
     }
+
     .subcategory-list a:hover {
         color: #3b82f6;
     }
+
     #rfqModal {
         z-index: 9999;
         backdrop-filter: blur(8px);
         background-color: rgba(0, 0, 0, 0.4);
     }
+
     .modal-open {
         filter: blur(8px);
         transition: filter 0.3s ease-in-out;
     }
+
     .kt-modal {
         filter: none !important;
     }
+
     .loader {
         display: none;
         border: 2px solid #ffffff;
@@ -131,13 +154,20 @@
         animation: spin 1s linear infinite;
         margin-left: 8px;
     }
+
     @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
+        }
     }
+
     .loading .loader {
         display: inline-block;
     }
+
     .discount-ribbon {
         position: absolute;
         top: 10px;
@@ -153,6 +183,7 @@
         clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 10% 50%);
         width: 150px;
     }
+
     .discount-ribbon:after {
         content: '';
         position: absolute;
@@ -164,24 +195,30 @@
         border-top: 10px solid transparent;
         border-bottom: 10px solid transparent;
     }
+
     .kt-wishlist-icon {
         cursor: pointer;
         transition: color 0.2s ease-in-out;
     }
+
     .kt-wishlist-icon:hover i {
         color: #ff0000;
     }
+
     .kt-wishlist-icon i {
         color: #6b7280;
     }
+
     .kt-wishlist-icon i.text-red-500 {
         color: #ff0000;
     }
+
     .kt-btn-primary {
         background-color: #3b82f6 !important;
         opacity: 1 !important;
         color: white !important;
     }
+
     .kt-btn-primary:disabled {
         opacity: 1 !important;
         background-color: #3b82f6 !important;
@@ -193,31 +230,38 @@
         .kt-container-fixed {
             padding: 0 10px; /* Reduce padding for small screens */
         }
+
         .kt-category-grid {
             grid-template-columns: 1fr; /* Stack sidebar and product list */
             gap: 10px;
         }
+
         .amazon-sidebar {
             border-right: none; /* Remove border for stacked layout */
             padding-right: 0;
             padding-bottom: 16px;
             border-bottom: 1px solid #e0e0e0; /* Add bottom border */
         }
+
         .amazon-sidebar h2 {
             font-size: 1rem; /* Smaller heading */
         }
+
         .category-button {
             font-size: 0.9rem; /* Smaller button text */
             padding: 0.4rem 0;
         }
+
         .subcategory-list a {
             font-size: 0.85rem; /* Smaller subcategory text */
         }
+
         .kt-list-card {
             flex-direction: column;
             align-items: flex-start;
             padding: 10px; /* Reduce padding */
         }
+
         .kt-list-card-image {
             width: 100%;
             height: auto;
@@ -225,46 +269,57 @@
             margin-right: 0;
             margin-bottom: 10px;
         }
+
         .kt-list-card-content h3 {
             font-size: 1rem; /* Smaller product title */
         }
+
         .kt-list-card-content p {
             font-size: 0.8rem; /* Smaller description */
         }
+
         .kt-list-card-actions {
             width: 100%;
             align-items: flex-start;
             margin-top: 10px;
             min-width: unset; /* Remove min-width constraint */
         }
+
         .kt-list-card-actions .text-lg {
             font-size: 1rem; /* Smaller price text */
         }
+
         .kt-btn, .kt-btn-sm {
             font-size: 0.8rem; /* Smaller button text */
             padding: 6px 12px; /* Adjust button padding */
         }
+
         .discount-ribbon {
             font-size: 10px; /* Smaller ribbon text */
             padding: 4px 20px;
             width: 120px; /* Smaller ribbon */
             left: -20px;
         }
+
         .kt-select-wrapper {
             width: 140px; /* Smaller dropdown */
         }
+
         #rfqModal .kt-card {
             width: 90%; /* Full width with margin */
             margin: 0 16px;
             max-width: 400px; /* Limit max width */
         }
+
         #rfqModal .kt-card-content input,
         #rfqModal .kt-card-content textarea {
             font-size: 0.85rem; /* Smaller input text */
         }
+
         #rfqModal .text-xl {
             font-size: 1.1rem; /* Smaller modal title */
         }
+
         .kt-toggle-group .kt-btn-icon {
             padding: 6px; /* Smaller icon buttons */
         }
@@ -275,66 +330,83 @@
         .kt-container-fixed {
             padding: 0 15px;
         }
+
         .kt-category-grid {
             grid-template-columns: 1fr; /* Stack for tablets */
             gap: 15px;
         }
+
         .amazon-sidebar {
             border-right: none;
             padding-right: 0;
             padding-bottom: 16px;
             border-bottom: 1px solid #e0e0e0;
         }
+
         .amazon-sidebar h2 {
             font-size: 1.1rem;
         }
+
         .category-button {
             font-size: 1rem;
         }
+
         .subcategory-list a {
             font-size: 0.9rem;
         }
+
         .kt-list-card {
             flex-direction: row; /* Keep row layout for tablets */
             padding: 12px;
         }
+
         .kt-list-card-image {
             width: 100px; /* Slightly smaller image */
             height: 100px;
             margin-right: 15px;
         }
+
         .kt-list-card-content h3 {
             font-size: 1.1rem;
         }
+
         .kt-list-card-content p {
             font-size: 0.85rem;
         }
+
         .kt-list-card-actions {
             min-width: 120px; /* Adjust for tablet */
         }
+
         .kt-list-card-actions .text-lg {
             font-size: 1.1rem;
         }
+
         .kt-btn, .kt-btn-sm {
             font-size: 0.85rem;
             padding: 8px 14px;
         }
+
         .discount-ribbon {
             font-size: 11px;
             width: 130px;
             left: -22px;
         }
+
         .kt-select-wrapper {
             width: 160px;
         }
+
         #rfqModal .kt-card {
             width: 80%;
             max-width: 500px;
         }
+
         #rfqModal .kt-card-content input,
         #rfqModal .kt-card-content textarea {
             font-size: 0.9rem;
         }
+
         #rfqModal .text-xl {
             font-size: 1.2rem;
         }
@@ -345,23 +417,29 @@
         .kt-container-fixed {
             padding: 0 20px; /* Consistent padding */
         }
+
         .kt-category-grid {
             grid-template-columns: 0.8fr 3.2fr; /* Maintain original grid */
         }
+
         .amazon-sidebar {
             border-right: 1px solid #e0e0e0;
             padding-right: 16px;
         }
+
         .kt-list-card-image {
             width: 120px;
             height: 120px;
         }
+
         .kt-list-card-content h3 {
             font-size: 1.2rem;
         }
+
         .kt-list-card-content p {
             font-size: 0.9rem;
         }
+
         .kt-btn, .kt-btn-sm {
             font-size: 0.9rem;
         }
@@ -375,278 +453,340 @@
         <div class="flex flex-wrap items-center gap-5 justify-between mt-3">
             <h3 id="results-header" class="text-sm text-mono font-medium">
                 {% if page_obj %}
-                    {{ page_obj.start_index }} - {{ page_obj.end_index }} over {{ total_products }} results for
-                    <span class="text-destructive">
-                        {% if selected_last_category %}
-                            {{ selected_last_category.name }}
-                        {% elif selected_sub_category %}
-                            {{ selected_sub_category.name }}
-                        {% elif selected_category %}
-                            {{ selected_category.name }}
-                        {% else %}
-                            Products
-                        {% endif %}
-                    </span>
+                {{ page_obj.start_index }} - {{ page_obj.end_index }} over {{ total_products }} results for
+                <span class="text-destructive">
+            {% if selected_last_category %}
+              {{ selected_last_category.name }}
+            {% elif selected_sub_category %}
+              {{ selected_sub_category.name }}
+            {% elif selected_category %}
+              {{ selected_category.name }}
+            {% else %}
+              Products
+            {% endif %}
+          </span>
                 {% else %}
-                    0 - 0 over 0 results for
-                    <span class="text-destructive">
-                        {% if selected_last_category %}
-                            {{ selected_last_category.name }}
-                        {% elif selected_sub_category %}
-                            {{ selected_sub_category.name }}
-                        {% elif selected_category %}
-                            {{ selected_category.name }}
-                        {% else %}
-                            Products
-                        {% endif %}
-                    </span>
+                0 - 0 over 0 results for
+                <span class="text-destructive">
+            {% if selected_last_category %}
+              {{ selected_last_category.name }}
+            {% elif selected_sub_category %}
+              {{ selected_sub_category.name }}
+            {% elif selected_category %}
+              {{ selected_category.name }}
+            {% else %}
+              Products
+            {% endif %}
+          </span>
                 {% endif %}
             </h3>
             <div class="flex items-center gap-2.5">
+                <!-- Sort Dropdown -->
                 <div data-kt-select-wrapper="" class="kt-select-wrapper w-[175px] bg-background">
                     <div data-kt-select-display="" class="kt-select-display kt-select" tabindex="0" role="button"
-                         data-selected="{% if request.GET.sort_by == '1' %}1PulsePoint{% elif request.GET.sort_by == '2' %}2{% else %}2{% endif %}" aria-haspopup="listbox" aria-expanded="false" aria-label="Select an option">
+                         aria-haspopup="listbox" aria-expanded="false" aria-label="Select sort option">
                         {% if request.GET.sort_by == "1" %}
-                            Price High to Low
+                        Price High to Low
                         {% elif request.GET.sort_by == "2" %}
-                            Price Low to High
+                        Price Low to High
                         {% else %}
-                            Price Low to High
+                        Price Low to High
                         {% endif %}
                     </div>
                     <div data-kt-select-dropdown="" class="kt-select-dropdown hidden" style="z-index: 105;">
-                        <ul role="listbox" aria-label="Select an option" class="kt-select-options"
+                        <ul role="listbox" aria-label="Sort options" class="kt-select-options"
                             data-kt-select-options="true">
                             <li data-kt-select-option="" data-value="1" data-text="Price High to Low"
-                                class="kt-select-option {% if request.GET.sort_by == '1' %}selected{% endif %}" role="option" aria-selected="{% if request.GET.sort_by == '1' %}true{% else %}false{% endif %}">
+                                class="kt-select-option {% if request.GET.sort_by == '1' %}selected{% endif %}"
+                                role="option"
+                                aria-selected="{% if request.GET.sort_by == '1' %}true{% else %}false{% endif %}">
                                 <div class="kt-select-option-text" data-kt-text-container="true">Price High to Low</div>
                             </li>
                             <li data-kt-select-option="" data-value="2" data-text="Price Low to High"
-                                class="kt-select-option {% if request.GET.sort_by == '2' %}selected{% endif %}" role="option" aria-selected="{% if request.GET.sort_by == '2' %}true{% else %}false{% endif %}">
+                                class="kt-select-option {% if request.GET.sort_by == '2' %}selected{% endif %}"
+                                role="option"
+                                aria-selected="{% if request.GET.sort_by == '2' %}true{% else %}false{% endif %}">
                                 <div class="kt-select-option-text" data-kt-text-container="true">Price Low to High</div>
                             </li>
                         </ul>
                     </div>
                 </div>
-                <div class="kt-toggle-group" data-kt-tabs="true" data-kt-tabs-initialized="true">
-                    <a class="kt-btn kt-btn-icon" href="{% url 'dashboard:search_results_grid' %}?{{ request.GET.urlencode }}"
-                       data-kt-tab-toggle="#shop1_grids">
+
+                <!-- View Toggle -->
+                <div class="kt-toggle-group" data-kt-tabs="true">
+                    <a class="kt-btn kt-btn-icon"
+                       href="{% url 'dashboard:search_results_grid' %}?{{ request.GET.urlencode }}"
+                       aria-label="Grid view">
                         <i class="ki-filled ki-category"></i>
                     </a>
-                    <a class="kt-btn kt-btn-icon active" href="{% url 'dashboard:search_results_list' %}?{{ request.GET.urlencode }}"
-                       data-kt-tab-toggle="#shop1_lists">
+                    <a class="kt-btn kt-btn-icon active"
+                       href="{% url 'dashboard:search_results_list' %}?{{ request.GET.urlencode }}"
+                       aria-label="List view">
                         <i class="ki-filled ki-row-horizontal"></i>
                     </a>
                 </div>
             </div>
         </div>
+
         <!-- Category and Product List -->
         <div class="kt-category-grid">
+            <!-- Sidebar -->
             <div class="amazon-sidebar w-full md:w-1/4 pr-6">
                 <h2 class="text-base font-bold mb-4 uppercase pb-1">Category</h2>
                 {% for category in categories %}
-                    <div class="mb-3">
-                        <button type="button" onclick="toggleCategory('cat-{{ category.id }}')" class="category-button">
-                            <span>{{ category.name }}</span>
-                            <svg id="arrow-{{ category.id }}" class="w-4 h-4 transform transition-transform duration-200"
-                                 xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                            </svg>
-                        </button>
-                        <div id="cat-{{ category.id }}" class="subcategory-list {% if forloop.first %}block{% else %}hidden{% endif %}">
-                            <ul>
-                                {% for subcategory in category.productsubcategory_set.all %}
-                                    {% for lastcategory in subcategory.productlastcategory_set.all %}
-                                        {% if lastcategory.product_count > 0 %}
-                                            <li>
-                                                <a href="#" data-last-category="{{ lastcategory.id }}" class="category-link">• {{ lastcategory.name }} </a>
-                                            </li>
-                                        {% endif %}
-                                    {% endfor %}
-                                {% endfor %}
-                            </ul>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-            <div class="kt-product-list" id="product-list">
-                {% if last_categories %}
-                    {% for lastcategory in last_categories %}
-                    <div class="kt-list-card">
-                        <div class="kt-list-card-image">
-                            <img alt="{{ lastcategory.name }}" class="h-full w-full object-contain"
-                                 src="{{ lastcategory.image.url|default:'/static/default_category_image.png' }}">
-                        </div>
-                        <div class="kt-list-card-content">
-                            <h3 class="text-lg font-bold text-mono mb-1">
-                                <a href="#" data-last-category="{{ lastcategory.id }}" class="category-link">
-                                    {{ lastcategory.name }}
-                                </a>
-                            </h3>
-                        </div>
-                    </div>
-                    {% endfor %}
-                {% else %}
-                    {% for product in products %}
-                    <div class="kt-list-card" data-product='{
-                        "name": "{{ product.name }}",
-                        "image": "{% for img in product.productimage_set.all %}{% if img.is_main %}{{ img.image.url }}{% endif %}{% empty %}{% static 'default_product.png' %}{% endfor %}",
-                        "description": "{{ product.description|truncatewords:20 }}",
-                        "category": "{{ product.last_category.sub_category.category.name }}",
-                        "price": "${{ product.price|floatformat:2 }}",
-                        {% if product.offer_percentage and product.offer_active %}
-                        "original_price": "${{ product.price|floatformat:2 }}",
-                        "discount": "save {{ product.offer_percentage }}%"
-                        {% endif %}
-                    }'>
-                        <!-- Product Image -->
-                        <div class="kt-list-card-image">
-                            {% if product.offer_percentage and product.offer_active %}
-                                <div class="discount-ribbon">save {{ product.offer_percentage|floatformat:0 }}%</div>
+                <div class="mb-3">
+                    <button type="button"
+                            onclick="toggleCategory('cat-{{ category.id }}')"
+                            class="category-button"
+                            aria-expanded="false"
+                            aria-controls="cat-{{ category.id }}">
+                        <span>{{ category.name }}</span>
+                        <svg id="arrow-{{ category.id }}" class="w-4 h-4 transform transition-transform duration-200"
+                             xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                             aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+                    <div id="cat-{{ category.id }}"
+                         class="subcategory-list {% if forloop.first %}block{% else %}hidden{% endif %}">
+                        <ul>
+                            {% for subcategory in category.productsubcategory_set.all %}
+                            {% for lastcategory in subcategory.productlastcategory_set.all %}
+                            {% if lastcategory.product_count > 0 %}
+                            <li>
+                                <a href="#" data-last-category="{{ lastcategory.id }}" class="category-link">• {{
+                                    lastcategory.name }}</a>
+                            </li>
                             {% endif %}
-                            {% with False as image_shown %}
-                                {% for img in product.productimage_set.all %}
-                                    {% if img.is_main and not image_shown %}
-                                        <a href="{% url 'dashboard:product_detail' product.id %}" class="block">
-                                            <img alt="{{ product.name }}" class="h-full w-full object-contain cursor-pointer"
-                                                 src="{{ img.image.url }}">
-                                        </a>
-                                        {% with True as image_shown %}{% endwith %}
-                                    {% endif %}
-                                {% empty %}
-                                    <a href="{% url 'dashboard:product_detail' product.id %}" class="block">
-                                        <img src="{% static 'default_product.png' %}" alt="Default Image" class="h-full w-full object-contain">
-                                    </a>
-                                {% endfor %}
-                            {% endwith %}
-                        </div>
-                        <!-- Product Details -->
-                        <div class="kt-list-card-content">
-                            <h3 class="text-lg font-bold text-gray-650 mb-1">
-                                <a href="{% url 'dashboard:product_detail' product.id %}" class="hover:text-primary">
-                                    {% if product.offer_percentage and product.offer_active %}
-                                        <div class="flex items-center gap-2">
-                                            <span>{{ product.name }}</span>
-                                        </div>
-                                    {% else %}
-                                        {{ product.name }}
-                                    {% endif %}
-                                </a>
-                            </h3>
-                            <p class="text-sm text-gray-200 mb-2">
-                                {{ product.description|default:"No description available"|truncatechars:200 }}
-                            </p>
-                            <div class="flex items-center gap-4">
-                                {% if product.average_rating %}
-                                <span class="kt-badge
-                                    {% if product.average_rating >= 4 %}kt-badge-success
-                                    {% elif product.average_rating >= 2 %}kt-badge-warning
-                                    {% else %}kt-badge-danger{% endif %}
-                                    kt-badge-sm rounded-full gap-1">
-                                    <i class="ki-solid ki-star text-white -mt-0.5"></i>
-                                    {{ product.average_rating|floatformat:1 }}
-                                </span>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <!-- Price and Actions -->
-                        <div class="kt-list-card-actions">
-                            <div class="text-right mb-3">
-                                {% if product.offer_percentage and product.offer_active %}
-                                    <span class="text-xs font-normal text-secondary-foreground line-through">
-                                        ${{ product.price|floatformat:2 }}
-                                    </span>
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-lg font-bold text-mono">
-                                            ${{ product.discounted_price|floatformat:2 }}
-                                        </span>
-                                    </div>
-                                {% else %}
-                                    <span class="text-lg font-bold text-mono">
-                                        ${{ product.price|floatformat:2 }}
-                                    </span>
-                                {% endif %}
-                            </div>
-                            <div class="flex items-center gap-2">
-                                {% if request.user.is_authenticated %}
-                                    <span class="kt-wishlist-icon cursor-pointer"
-                                          data-kt-wishlist-toggle="true"
-                                          data-product-id="{{ product.id|default:'0' }}"
-                                          title="{% if product.id in user_wishlist_ids %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}">
-                                        <i class="ki-solid ki-heart {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
-                                    </span>
-                                {% else %}
-                                    <span class="kt-wishlist-icon cursor-pointer"
-                                          data-kt-wishlist-toggle="true"
-                                          data-product-id="{{ product.id|default:'0' }}"
-                                          title="Login to Add to Wishlist">
-                                        <i class="ki-solid ki-heart"></i>
-                                    </span>
-                                {% endif %}
-                                {% if product.id in user_cart_ids %}
-                                    <button class="kt-btn kt-btn-primary kt-btn-sm"
-                                            style="background:#3b82f6 !important; color:white !important; opacity:1 !important;"
-                                            data-product-id="{{ product.id }}"
-                                            disabled>
-                                        In cart <i class="ki-filled ki-handcart text-white"></i>
-                                    </button>
-                                {% else %}
-                                    <button class="kt-btn kt-btn-outline kt-btn-sm add-to-cart-btn"
-                                            data-product-id="{{ product.id }}">
-                                        Add to cart <i class="ki-filled ki-handcart"></i>
-                                    </button>
-                                {% endif %}
-                                {% if request.user.is_authenticated %}
-                                    {% if product.show_rfq or product.Both %}
-                                        <button class="kt-btn kt-btn-outline kt-btn-sm open-rfq-modal"
-                                                data-product-id="{{ product.id }}"
-                                                data-product-name="{{ product.name }}"
-                                                data-product-price="{{ product.discounted_price|default:product.price|floatformat:2 }}"
-                                                data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
-                                                data-quantity="1">
-                                            RFQ  <i class="ki-filled ki-directbox-default text-xs"></i>
-                                        </button>
-                                    {% endif %}
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                    {% empty %}
-                    <div class="col-span-1 text-center py-10">
-                        <p>No products found.</p>
-                    </div>
-                    {% endfor %}
-                    {% if page_obj.has_other_pages %}
-                    <div class="col-span-1 mt-10 flex justify-center w-full">
-                        <ul class="inline-flex items-center -space-x-px text-sm" id="pagination">
-                            {% if page_obj.has_previous %}
-                                <li>
-                                    <a href="#" data-page="{{ page_obj.previous_page_number }}" class="kt-btn kt-btn-outline me-2 pagination-link">
-                                        Previous
-                                    </a>
-                                </li>
-                            {% endif %}
-                            {% for num in paginator.page_range %}
-                                {% if page_obj.number == num %}
-                                    <li><span class="kt-btn kt-btn-primary me-2">{{ num }}</span></li>
-                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                                    <li>
-                                        <a href="#" data-page="{{ num }}" class="kt-btn kt-btn-outline me-2 pagination-link">
-                                            {{ num }}
-                                        </a>
-                                    </li>
-                                {% endif %}
                             {% endfor %}
-                            {% if page_obj.has_next %}
-                                <li>
-                                    <a href="#" data-page="{{ page_obj.next_page_number }}" class="kt-btn kt-btn-outline pagination-link">
-                                        Next
-                                    </a>
-                                </li>
-                            {% endif %}
+                            {% endfor %}
                         </ul>
                     </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Product List -->
+            <div class="kt-product-list" id="product-list">
+                {% if last_categories %}
+                {% for lastcategory in last_categories %}
+                <div class="kt-list-card">
+                    <div class="kt-list-card-image">
+                        <img alt="{{ lastcategory.name }}" class="h-full w-full object-contain"
+                             src="{{ lastcategory.image.url|default:'/static/default_category_image.png' }}">
+                    </div>
+                    <div class="kt-list-card-content">
+                        <h3 class="text-lg font-bold text-mono mb-1">
+                            <a href="#" data-last-category="{{ lastcategory.id }}" class="category-link">
+                                {{ lastcategory.name }}
+                            </a>
+                        </h3>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                {% for product in products %}
+                <div class="kt-list-card"
+                     data-product-id="{{ product.id }}"
+                     data-name="{{ product.name|escape }}"
+                     data-description="{{ product.description|default:'No description available'|truncatechars:200|escape }}"
+                     data-category="{% if product.last_category and product.last_category.sub_category and product.last_category.sub_category.category %}{{ product.last_category.sub_category.category.name }}{% endif %}"
+                     data-price="{{ product.price|floatformat:2 }}"
+                     {% if product.offer_percentage and product.offer_active %}
+                     data-original-price="{{ product.price|floatformat:2 }}"
+                     data-discount="save {{ product.offer_percentage|floatformat:0 }}%"
+                     {% endif %}
+                >
+                    <!-- Product Image -->
+                    <div class="kt-list-card-image">
+                        {% if product.offer_percentage and product.offer_active %}
+                        <div class="discount-ribbon">save {{ product.offer_percentage|floatformat:0 }}%</div>
+                        {% endif %}
+                        {% with False as image_shown %}
+                        {% for img in product.productimage_set.all %}
+                        {% if img.is_main and not image_shown %}
+                        <a href="{% url 'dashboard:product_detail' product.id %}" class="block">
+                            <img alt="{{ product.name }}" class="h-full w-full object-contain cursor-pointer"
+                                 src="{{ img.image.url }}">
+                        </a>
+                        {% with True as image_shown %}{% endwith %}
+                        {% endif %}
+                        {% empty %}
+                        <a href="{% url 'dashboard:product_detail' product.id %}" class="block">
+                            <img src="{% static 'default_product.png' %}" alt="Default Image"
+                                 class="h-full w-full object-contain">
+                        </a>
+                        {% endfor %}
+                        {% endwith %}
+                    </div>
+
+                    <!-- Product Details -->
+                    <div class="kt-list-card-content">
+                        <h3 class="text-lg font-bold text-gray-650 mb-1">
+                            <a href="{% url 'dashboard:product_detail' product.id %}" class="hover:text-primary">
+                                {% if product.offer_percentage and product.offer_active %}
+                                <div class="flex items-center gap-2">
+                                    <span>{{ product.name }}</span>
+                                </div>
+                                {% else %}
+                                {{ product.name }}
+                                {% endif %}
+                            </a>
+                        </h3>
+                        <p class="text-sm text-gray-200 mb-2">
+                            {{ product.description|default:"No description available"|truncatechars:200 }}
+                        </p>
+                        <div class="flex items-center gap-4">
+                            {% if product.average_rating %}
+                            <span class="kt-badge
+                      {% if product.average_rating >= 4 %}kt-badge-success
+                      {% elif product.average_rating >= 2 %}kt-badge-warning
+                      {% else %}kt-badge-danger{% endif %}
+                      kt-badge-sm rounded-full gap-1">
+                      <i class="ki-solid ki-star text-white -mt-0.5"></i>
+                      {{ product.average_rating|floatformat:1 }}
+                    </span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Price and Actions -->
+                    <div class="kt-list-card-actions">
+                        <div class="text-right mb-3">
+                            {% if product.offer_percentage and product.offer_active %}
+                            <span class="text-xs font-normal text-secondary-foreground line-through">
+                      ${{ product.price|floatformat:2 }}
+                    </span>
+                            <div class="flex items-center gap-2">
+                      <span class="text-lg font-bold text-mono">
+                        ${{ product.discounted_price|floatformat:2 }}
+                      </span>
+                            </div>
+                            {% else %}
+                            <span class="text-lg font-bold text-mono">
+                      ${{ product.price|floatformat:2 }}
+                    </span>
+                            {% endif %}
+                        </div>
+                        <div class="flex items-center gap-2">
+                            {% if request.user.is_authenticated %}
+                            <span class="kt-wishlist-icon cursor-pointer"
+                                  data-kt-wishlist-toggle="true"
+                                  data-product-id="{{ product.id|default:'0' }}"
+                                  title="{% if product.id in user_wishlist_ids %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}">
+                      <i class="ki-solid ki-heart {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
+                    </span>
+                            {% else %}
+                            <span class="kt-wishlist-icon cursor-pointer"
+                                  data-kt-wishlist-toggle="true"
+                                  data-product-id="{{ product.id|default:'0' }}"
+                                  title="Login to Add to Wishlist">
+                      <i class="ki-solid ki-heart"></i>
+                    </span>
+                            {% endif %}
+
+                            {% if product.id in user_cart_ids %}
+                            <button class="kt-btn kt-btn-primary kt-btn-sm in-cart-button"
+                                    data-product-id="{{ product.id }}"
+                                    disabled>
+                                In cart <i class="ki-filled ki-handcart text-white"></i>
+                            </button>
+                            {% else %}
+                            <button class="kt-btn kt-btn-outline kt-btn-sm add-to-cart-btn"
+                                    data-product-id="{{ product.id }}">
+                                Add to cart <i class="ki-filled ki-handcart"></i>
+                            </button>
+                            {% endif %}
+
+                            {% if request.user.is_authenticated %}
+                            {% if product.show_rfq or product.Both %}
+                            <button class="kt-btn kt-btn-outline kt-btn-sm open-rfq-modal"
+                                    data-product-id="{{ product.id }}"
+                                    data-product-name="{{ product.name }}"
+                                    data-product-price="{{ product.discounted_price|default:product.price|floatformat:2 }}"
+                                    data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
+                                    data-quantity="1">
+                                RFQ <i class="ki-filled ki-directbox-default text-xs"></i>
+                            </button>
+                            {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-span-1 text-center py-10">
+                    <p>No products found.</p>
+                </div>
+                {% endfor %}
+
+                {# Pagination #}
+                <div id="pagination" class="mt-6">
+                    {% if page_obj.has_other_pages %}
+                    <div class="kt-card mt-7">
+                        <div class="flex justify-between items-center flex-wrap gap-4 px-4 py-4 mt-4 mb-4">
+                            <!-- Left: Record Range -->
+                            <div class="text-sm text-muted">
+                                Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{
+                                page_obj.paginator.count }} records
+                            </div>
+
+                            <!-- Center: Pagination Buttons -->
+                            <div class="flex justify-center flex-grow">
+                                <ul class="inline-flex items-center space-x-2">
+                                    {% if page_obj.has_previous %}
+                                    <li>
+                                        <a href="?{% query_replace page=1 %}"
+                                           class="kt-btn kt-btn-outline pagination-link" data-page="1">« First</a>
+                                    </li>
+                                    <li>
+                                        <a href="?{% query_replace page=page_obj.previous_page_number %}"
+                                           class="kt-btn kt-btn-outline pagination-link"
+                                           data-page="{{ page_obj.previous_page_number }}">← Prev</a>
+                                    </li>
+                                    {% else %}
+                                    <li><span class="kt-btn kt-btn-disabled">« First</span></li>
+                                    <li><span class="kt-btn kt-btn-disabled">← Prev</span></li>
+                                    {% endif %}
+
+                                    {% for num in page_obj.paginator.page_range %}
+                                    {% if page_obj.number == num %}
+                                    <li><span class="kt-btn kt-btn-primary">{{ num }}</span></li>
+                                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                    <li>
+                                        <a href="?{% query_replace page=num %}"
+                                           class="kt-btn kt-btn-outline pagination-link" data-page="{{ num }}">{{ num
+                                            }}</a>
+                                    </li>
+                                    {% endif %}
+                                    {% endfor %}
+
+                                    {% if page_obj.has_next %}
+                                    <li>
+                                        <a href="?{% query_replace page=page_obj.next_page_number %}"
+                                           class="kt-btn kt-btn-outline pagination-link"
+                                           data-page="{{ page_obj.next_page_number }}">Next →</a>
+                                    </li>
+                                    <li>
+                                        <a href="?{% query_replace page=page_obj.paginator.num_pages %}"
+                                           class="kt-btn kt-btn-outline pagination-link"
+                                           data-page="{{ page_obj.paginator.num_pages }}">Last »</a>
+                                    </li>
+                                    {% else %}
+                                    <li><span class="kt-btn kt-btn-disabled">Next →</span></li>
+                                    <li><span class="kt-btn kt-btn-disabled">Last »</span></li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+
+                            <!-- Right: Total Pages -->
+                            <div class="text-sm text-muted">
+                                Total Pages: {{ page_obj.paginator.num_pages }}
+                            </div>
+                        </div>
+                    </div>
                     {% endif %}
+                </div>
                 {% endif %}
             </div>
         </div>
@@ -682,7 +822,8 @@
                         <input type="text" name="company_name" id="rfqCompanyName"
                                class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                                required aria-required="true">
-                        <p class="text-xs text-red-500 mt-1 hidden" id="rfqCompanyNameError">Company name is required.</p>
+                        <p class="text-xs text-red-500 mt-1 hidden" id="rfqCompanyNameError">Company name is
+                            required.</p>
                     </div>
                     <div>
                         <label for="rfqQuantity"
@@ -691,7 +832,8 @@
                         <input type="number" name="quantity" id="rfqQuantity"
                                class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                                min="1" required aria-required="true">
-                        <p class="text-xs text-red-500 mt-1 hidden" id="rfqQuantityError">Quantity must be at least 1.</p>
+                        <p class="text-xs text-red-500 mt-1 hidden" id="rfqQuantityError">Quantity must be at least
+                            1.</p>
                     </div>
                     <div>
                         <label for="rfqMessage"
@@ -706,7 +848,9 @@
                             class="kt-btn kt-btn-outline kt-btn-sm text-gray-650 hover:bg-gray-900 dark:hover:bg-gray-700"
                             onclick="closeRFQModal()">Cancel
                     </button>
-                    <button type="submit" class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center" id="rfqSubmitBtn">
+                    <button type="submit"
+                            class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center"
+                            id="rfqSubmitBtn">
                         Submit RFQ
                         <span class="loader"></span>
                     </button>
@@ -717,265 +861,276 @@
 </div>
 
 <script>
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
             }
         }
+        return cookieValue;
     }
-    return cookieValue;
-}
-const csrftoken = getCookie('csrftoken');
 
-function toggleCategory(id) {
-    const content = document.getElementById(id);
-    const arrow = document.getElementById("arrow-" + id.replace("cat-", ""));
-    const alreadyOpen = !content.classList.contains("hidden");
+    const csrftoken = getCookie('csrftoken');
 
-    document.querySelectorAll('[id^="cat-"]').forEach(el => el.classList.add('hidden'));
-    document.querySelectorAll('[id^="arrow-"]').forEach(arrow => arrow.classList.remove('rotate-180'));
+    function toggleCategory(id) {
+        const content = document.getElementById(id);
+        const button = document.querySelector(`button[onclick="toggleCategory('${id}')"]`);
+        const arrow = document.getElementById("arrow-" + id.replace("cat-", ""));
+        const alreadyOpen = !content.classList.contains("hidden");
 
-    if (!alreadyOpen) {
-        content.classList.remove("hidden");
-        arrow.classList.add("rotate-180");
-        localStorage.setItem('openCategory', id);
-    } else {
-        localStorage.removeItem('openCategory');
-    }
-}
+        document.querySelectorAll('[id^="cat-"]').forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('[id^="arrow-"]').forEach(a => a.classList.remove('rotate-180'));
+        document.querySelectorAll('.category-button').forEach(btn => btn.setAttribute('aria-expanded', 'false'));
 
-// RFQ Modal Close Function
-function closeRFQModal() {
-    document.getElementById('rfqModal').classList.add('hidden');
-}
-
-let isFetching = false; // Prevent race conditions
-
-function fetchProducts(params) {
-    if (isFetching) return; // Prevent multiple simultaneous requests
-    isFetching = true;
-
-    const urlParams = new URLSearchParams();
-    Object.keys(params).forEach(key => {
-        if (params[key]) {
-            urlParams.set(key, params[key]);
+        if (!alreadyOpen) {
+            content.classList.remove("hidden");
+            arrow.classList.add("rotate-180");
+            if (button) button.setAttribute('aria-expanded', 'true');
+            localStorage.setItem('openCategory', id);
         } else {
-            urlParams.delete(key);
-        }
-    });
-    const url = `{% url 'dashboard:search_results_list' %}?${urlParams.toString()}`;
-
-    fetch(url, {
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-        }
-    })
-    .then(response => response.text())
-    .then(html => {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-        const newProductList = doc.querySelector('#product-list');
-        const newPagination = doc.querySelector('#pagination');
-        const newResultsHeader = doc.querySelector('#results-header');
-        const newSelectDisplay = doc.querySelector('[data-kt-select-display]');
-
-        if (newProductList) document.querySelector('#product-list').innerHTML = newProductList.innerHTML;
-        if (newPagination) document.querySelector('#pagination').innerHTML = newPagination.innerHTML;
-        if (newResultsHeader) document.querySelector('#results-header').innerHTML = newResultsHeader.innerHTML;
-        if (newSelectDisplay) {
-            const selectDisplay = document.querySelector('[data-kt-select-display]');
-            selectDisplay.textContent = newSelectDisplay.textContent;
-            selectDisplay.setAttribute('data-selected', newSelectDisplay.getAttribute('data-selected'));
-            const sortBy = urlParams.get('sort_by') || '2';
-            document.querySelectorAll('[data-kt-select-option]').forEach(opt => {
-                opt.classList.remove('selected');
-                opt.setAttribute('aria-selected', 'false');
-                if (opt.getAttribute('data-value') === sortBy) {
-                    opt.classList.add('selected');
-                    opt.setAttribute('aria-selected', 'true');
-                }
-            });
-        }
-
-        window.history.pushState({}, '', url);
-        isFetching = false;
-    })
-    .catch(error => {
-        console.error('Fetch products error:', error);
-        isFetching = false;
-    });
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    const firstCategory = document.querySelector('[id^="cat-"]');
-    if (firstCategory) {
-        const firstCategoryId = firstCategory.id;
-        const firstArrow = document.getElementById("arrow-" + firstCategoryId.replace("cat-", ""));
-        if (firstCategory && firstArrow) {
-            firstCategory.classList.remove("hidden");
-            firstArrow.classList.add("rotate-180");
-            const firstLastCategoryLink = firstCategory.querySelector('.category-link[data-last-category]');
-            if (firstLastCategoryLink && !window.location.search.includes('last_category')) {
-                const firstLastCategoryId = firstLastCategoryLink.dataset.lastCategory;
-                fetchProducts({ last_category: firstLastCategoryId, page: 1 });
-            }
+            if (button) button.setAttribute('aria-expanded', 'false');
+            localStorage.removeItem('openCategory');
         }
     }
 
-    // Consolidated Click Event Listener
-    document.addEventListener('click', (e) => {
-        // Category Link Handler
-        const categoryLink = e.target.closest('.category-link');
-        if (categoryLink) {
-            e.preventDefault();
-            const lastCategoryId = categoryLink.dataset.lastCategory;
-            fetchProducts({ last_category: lastCategoryId, page: 1 });
-        }
+    function closeRFQModal() {
+        document.getElementById('rfqModal').classList.add('hidden');
+    }
 
-        // Pagination Link Handler
-        const paginationLink = e.target.closest('.pagination-link');
-        if (paginationLink) {
-            e.preventDefault();
-            const page = paginationLink.dataset.page;
-            const params = new URLSearchParams(window.location.search);
-            fetchProducts({ 
-                page: page, 
-                sort_by: params.get('sort_by'), 
-                last_category: params.get('last_category'),
-                category: params.get('category'),
-                sub_category: params.get('sub_category')
-            });
-        }
+    let isFetching = false;
+    let fetchTimeout = null;
 
-        // Add to Cart Button Handler
-        const addToCartBtn = e.target.closest('.add-to-cart-btn');
-        if (addToCartBtn) {
-            const productId = addToCartBtn.dataset.productId;
-            fetch("{% url 'dashboard:add_to_cart' %}", {
-                method: "POST",
-                headers: {
-                    "X-CSRFToken": csrftoken,
-                    "Content-Type": "application/x-www-form-urlencoded",
-                },
-                body: new URLSearchParams({
-                    product_id: productId,
-                    quantity: 1,
-                }),
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === "success") {
-                    addToCartBtn.classList.remove('kt-btn-outline');
-                    addToCartBtn.classList.add('kt-btn-primary');
-                    addToCartBtn.style.background = '#3b82f6 !important';
-                    addToCartBtn.style.color = 'white !important';
-                    addToCartBtn.style.opacity = '1 !important';
-                    addToCartBtn.innerHTML = `In cart <i class="ki-filled ki-handcart text-white"></i>`;
-                    addToCartBtn.disabled = true; // Disable to prevent multiple clicks
+    function fetchProducts(params) {
+        if (fetchTimeout) clearTimeout(fetchTimeout);
+        fetchTimeout = setTimeout(() => {
+            if (isFetching) return;
+            isFetching = true;
+
+            const urlParams = new URLSearchParams();
+            Object.keys(params).forEach(key => {
+                if (params[key]) {
+                    urlParams.set(key, params[key]);
                 } else {
-                    alert("Something went wrong");
+                    urlParams.delete(key);
                 }
-            })
-            .catch(err => console.error("Add to cart error:", err));
-        }
+            });
+            const url = `{% url 'dashboard:search_results_list' %}?${urlParams.toString()}`;
 
-        // Wishlist Button Handler
-        const wishlistBtn = e.target.closest('.kt-wishlist-icon');
-        if (wishlistBtn) {
-            const productId = wishlistBtn.dataset.productId || '0';
-            fetch("{% url 'dashboard:toggle_wishlist' %}", {
-                method: 'POST',
+            fetch(url, {
                 headers: {
-                    'X-CSRFToken': csrftoken,
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: `product_id=${productId}`
-            })
-            .then(response => {
-                if (response.status === 403) {
-                    alert('Please login to use wishlist.');
-                    window.location.href = '/login/';
-                    return;
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data) {
-                    const icon = wishlistBtn.querySelector('i');
-                    icon.classList.toggle('text-red-500', data.status === 'added');
-                    wishlistBtn.title = data.status === 'added' ? 'Remove from Wishlist' : 'Add to Wishlist';
+                    'X-Requested-With': 'XMLHttpRequest'
                 }
             })
-            .catch(error => console.error('Wishlist toggle error:', error));
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const newProductList = doc.querySelector('#product-list');
+                    const newPagination = doc.querySelector('#pagination');
+                    const newResultsHeader = doc.querySelector('#results-header');
+                    const newSelectDisplay = doc.querySelector('[data-kt-select-display]');
+
+                    if (newProductList) document.querySelector('#product-list').innerHTML = newProductList.innerHTML;
+                    if (newPagination) document.querySelector('#pagination').innerHTML = newPagination.innerHTML;
+                    if (newResultsHeader) document.querySelector('#results-header').innerHTML = newResultsHeader.innerHTML;
+                    if (newSelectDisplay) {
+                        const selectDisplay = document.querySelector('[data-kt-select-display]');
+                        selectDisplay.textContent = newSelectDisplay.textContent;
+                        selectDisplay.setAttribute('data-selected', newSelectDisplay.getAttribute('data-selected'));
+                        const sortBy = urlParams.get('sort_by') || '2';
+                        document.querySelectorAll('[data-kt-select-option]').forEach(opt => {
+                            opt.classList.remove('selected');
+                            opt.setAttribute('aria-selected', 'false');
+                            if (opt.getAttribute('data-value') === sortBy) {
+                                opt.classList.add('selected');
+                                opt.setAttribute('aria-selected', 'true');
+                            }
+                        });
+                    }
+
+                    window.history.pushState({}, '', url);
+                    isFetching = false;
+                })
+                .catch(error => {
+                    console.error('Fetch products error:', error);
+                    isFetching = false;
+                });
+        }, 150);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const firstCategory = document.querySelector('[id^="cat-"]');
+        if (firstCategory) {
+            const firstCategoryId = firstCategory.id;
+            const firstArrow = document.getElementById("arrow-" + firstCategoryId.replace("cat-", ""));
+            if (firstCategory && firstArrow) {
+                firstCategory.classList.remove("hidden");
+                firstArrow.classList.add("rotate-180");
+                const firstLastCategoryLink = firstCategory.querySelector('.category-link[data-last-category]');
+                if (firstLastCategoryLink && !window.location.search.includes('last_category')) {
+                    const firstLastCategoryId = firstLastCategoryLink.dataset.lastCategory;
+                    fetchProducts({last_category: firstLastCategoryId, page: 1});
+                }
+            }
         }
 
-        // RFQ Modal Open Handler
-        const rfqBtn = e.target.closest('.open-rfq-modal');
-        if (rfqBtn) {
-            const productId = rfqBtn.getAttribute('data-product-id');
-            const productName = rfqBtn.getAttribute('data-product-name');
-            const companyName = rfqBtn.getAttribute('data-company-name');
-            const quantity = rfqBtn.getAttribute('data-quantity');
+        document.addEventListener('click', (e) => {
+            // Category Link
+            const categoryLink = e.target.closest('.category-link');
+            if (categoryLink) {
+                e.preventDefault();
+                const lastCategoryId = categoryLink.dataset.lastCategory;
+                fetchProducts({
+                    last_category: lastCategoryId,
+                    page: 1,
+                    sort_by: new URLSearchParams(window.location.search).get('sort_by') || '',
+                    category: new URLSearchParams(window.location.search).get('category') || '',
+                    sub_category: new URLSearchParams(window.location.search).get('sub_category') || ''
+                });
+            }
 
-            document.getElementById('rfqProductId').value = productId;
-            document.getElementById('rfqProductName').value = productName;
-            document.getElementById('rfqCompanyName').value = companyName;
-            document.getElementById('rfqQuantity').value = quantity;
+            // Pagination
+            const paginationLink = e.target.closest('.pagination-link');
+            if (paginationLink) {
+                e.preventDefault();
+                const page = paginationLink.dataset.page;
+                const params = new URLSearchParams(window.location.search);
+                fetchProducts({
+                    page: page,
+                    sort_by: params.get('sort_by'),
+                    last_category: params.get('last_category'),
+                    category: params.get('category'),
+                    sub_category: params.get('sub_category')
+                });
+            }
 
-            document.getElementById('rfqModal').classList.remove('hidden');
-        }
+            // Add to Cart
+            const addToCartBtn = e.target.closest('.add-to-cart-btn');
+            if (addToCartBtn) {
+                const productId = addToCartBtn.dataset.productId;
+                fetch("{% url 'dashboard:add_to_cart' %}", {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": csrftoken,
+                        "Content-Type": "application/x-www-form-urlencoded",
+                    },
+                    body: new URLSearchParams({
+                        product_id: productId,
+                        quantity: 1,
+                    }),
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.status === "success") {
+                            addToCartBtn.classList.remove('kt-btn-outline');
+                            addToCartBtn.classList.add('kt-btn-primary');
+                            addToCartBtn.innerHTML = `In cart <i class="ki-filled ki-handcart text-white"></i>`;
+                            addToCartBtn.disabled = true;
+                        } else {
+                            alert("Something went wrong");
+                        }
+                    })
+                    .catch(err => console.error("Add to cart error:", err));
+            }
 
-        // Sorting Dropdown Handler
-        const selectOption = e.target.closest('[data-kt-select-option]');
-        if (selectOption) {
+            // Wishlist
+            const wishlistBtn = e.target.closest('.kt-wishlist-icon');
+            if (wishlistBtn) {
+                const productId = wishlistBtn.dataset.productId || '0';
+                fetch("{% url 'dashboard:toggle_wishlist' %}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrftoken,
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `product_id=${productId}`
+                })
+                    .then(response => {
+                        if (response.status === 403) {
+                            alert('Please login to use wishlist.');
+                            const returnTo = encodeURIComponent(window.location.href);
+                            window.location.href = `/login/?next=${returnTo}`;
+                            return;
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data) {
+                            const icon = wishlistBtn.querySelector('i');
+                            icon.classList.toggle('text-red-500', data.status === 'added');
+                            wishlistBtn.title = data.status === 'added' ? 'Remove from Wishlist' : 'Add to Wishlist';
+                        }
+                    })
+                    .catch(error => console.error('Wishlist toggle error:', error));
+            }
+
+            // RFQ Modal Open
+            const rfqBtn = e.target.closest('.open-rfq-modal');
+            if (rfqBtn) {
+                const productId = rfqBtn.getAttribute('data-product-id');
+                const productName = rfqBtn.getAttribute('data-product-name');
+                const companyName = rfqBtn.getAttribute('data-company-name');
+                const quantity = rfqBtn.getAttribute('data-quantity');
+
+                document.getElementById('rfqProductId').value = productId;
+                document.getElementById('rfqProductName').value = productName;
+                document.getElementById('rfqCompanyName').value = companyName;
+                document.getElementById('rfqQuantity').value = quantity;
+
+                document.getElementById('rfqModal').classList.remove('hidden');
+            }
+
+            // Sorting Dropdown Option Click
+            const selectOption = e.target.closest('[data-kt-select-option]');
+            if (selectOption) {
+                const selectDisplay = document.querySelector('[data-kt-select-display]');
+                const selectDropdown = document.querySelector('[data-kt-select-dropdown]');
+                const value = selectOption.getAttribute('data-value');
+                const text = selectOption.getAttribute('data-text');
+                selectDisplay.textContent = text;
+                selectDisplay.setAttribute('data-selected', value);
+                document.querySelectorAll('[data-kt-select-option]').forEach(opt => {
+                    opt.classList.remove('selected');
+                    opt.setAttribute('aria-selected', 'false');
+                });
+                selectOption.classList.add('selected');
+                selectOption.setAttribute('aria-selected', 'true');
+                selectDropdown.classList.add('hidden');
+                selectDisplay.setAttribute('aria-expanded', 'false');
+                const params = new URLSearchParams(window.location.search);
+                fetchProducts({
+                    sort_by: value,
+                    page: 1,
+                    last_category: params.get('last_category'),
+                    category: params.get('category'),
+                    sub_category: params.get('sub_category')
+                });
+            }
+
+            // Close custom dropdown if clicking outside
             const selectDisplay = document.querySelector('[data-kt-select-display]');
             const selectDropdown = document.querySelector('[data-kt-select-dropdown]');
-            const value = selectOption.getAttribute('data-value');
-            const text = selectOption.getAttribute('data-text');
-            selectDisplay.textContent = text;
-            selectDisplay.setAttribute('data-selected', value);
-            document.querySelectorAll('[data-kt-select-option]').forEach(opt => {
-                opt.classList.remove('selected');
-                opt.setAttribute('aria-selected', 'false');
-            });
-            selectOption.classList.add('selected');
-            selectOption.setAttribute('aria-selected', 'true');
-            selectDropdown.classList.add('hidden');
-            selectDisplay.setAttribute('aria-expanded', 'false');
-            const params = new URLSearchParams(window.location.search);
-            fetchProducts({ 
-                sort_by: value, 
-                page: 1, 
-                last_category: params.get('last_category'),
-                category: params.get('category'),
-                sub_category: params.get('sub_category')
-            });
-        }
+            if (selectDisplay && selectDropdown && !selectDisplay.contains(e.target) && !selectDropdown.contains(e.target)) {
+                selectDropdown.classList.add('hidden');
+                selectDisplay.setAttribute('aria-expanded', 'false');
+            }
+        });
 
-        // Close Dropdown if Clicking Outside
-        const selectDisplay = document.querySelector('[data-kt-select-display]');
-        const selectDropdown = document.querySelector('[data-kt-select-dropdown]');
-        if (selectDisplay && selectDropdown && !selectDisplay.contains(e.target) && !selectDropdown.contains(e.target)) {
-            selectDropdown.classList.add('hidden');
-            selectDisplay.setAttribute('aria-expanded', 'false');
+        // Toggle dropdown on display click
+        const selectDisplayElem = document.querySelector('[data-kt-select-display]');
+        const selectDropdownElem = document.querySelector('[data-kt-select-dropdown]');
+        if (selectDisplayElem && selectDropdownElem) {
+            selectDisplayElem.addEventListener('click', () => {
+                selectDropdownElem.classList.toggle('hidden');
+                selectDisplayElem.setAttribute('aria-expanded', selectDropdownElem.classList.contains('hidden') ? 'false' : 'true');
+            });
         }
     });
-
-    // Sorting Dropdown Toggle
-    const selectDisplay = document.querySelector('[data-kt-select-display]');
-    const selectDropdown = document.querySelector('[data-kt-select-dropdown]');
-    if (selectDisplay && selectDropdown) {
-        selectDisplay.addEventListener('click', () => {
-            selectDropdown.classList.toggle('hidden');
-            selectDisplay.setAttribute('aria-expanded', selectDropdown.classList.contains('hidden') ? 'false' : 'true');
-        });
-    }
-});
 </script>
 {% endblock content %}

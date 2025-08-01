@@ -85,3 +85,18 @@ def filter_by_user(product, user):
             if review.user == user:
                 return review
         return None
+
+@register.simple_tag(takes_context=True)
+def query_replace(context, **kwargs):
+    """
+    Usage: {% query_replace page=2 sort_by='1' %}
+    Preserves existing GET params and overrides/adds the ones passed.
+    """
+    request = context['request']
+    params = request.GET.copy()
+    for k, v in kwargs.items():
+        if v is None or v == '':
+            params.pop(k, None)
+        else:
+            params[k] = v
+    return params.urlencode()
