@@ -173,14 +173,16 @@
                 </th>
                 {% for plan in plans %}
                   {% if plan.client_type == 'buyer' and plan.buyer_type == 'retailer' %}
-                    <th class="text-center min-w-[200px] {{ plan.period }}-plan {% if plan.period == 'annually' %}hidden{% endif %}" data-plan-id="{{ plan.id }}">
+                  <th class="... {% if plan.stripe_metadata.plan_duration == 'Year' %}annually-plan hidden{% elif plan.stripe_metadata.plan_duration == 'Month' %}monthly-plan{% endif %}">
+
                       <div class="min-w-[200px] rounded-lg p-6 {% if user_subscription.plan.id == plan.id %}bg-blue-500 text-white{% else %}bg-gray-50 dark:bg-gray-700{% endif %} text-gray-800 dark:text-gray-200" id="package{{ plan.id }}">
                         <h3 class="text-xl font-bold mb-4">{{ plan.name }}</h3>
                         <div class="flex justify-center items-start mb-2">
                           <span class="text-lg">$</span>
                           <span class="text-4xl font-semibold">{{ plan.stripe_metadata.price|floatformat:2 }}</span>
                         </div>
-                        <div class="text-sm font-medium mb-2">{{ plan.period|title }}</div>
+                      <div class="text-sm font-medium mb-2">{{ plan.stripe_metadata.plan_duration }}</div>
+
                         {% if plan.period == 'annually' %}
                           <div class="text-sm font-medium mb-4">
                             ($ {{ plan.stripe_metadata.price|divide:12|floatformat:2 }}/Monthly)<br>
