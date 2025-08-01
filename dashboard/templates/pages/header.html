@@ -736,6 +736,7 @@
                                 <span class="text-sm">Shipping Info</span>
                             </a>
                         </div>
+                        {% comment %}
                         <div class="kt-menu-item mt-3">
                             <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
                                     {% if request.resolver_match.url_name == 'payment_method' %}
@@ -748,6 +749,7 @@
                                 <span class="text-sm">Payment Method</span>
                             </a>
                         </div>
+                        {% endcomment %}
                         <div class="kt-menu-item mt-3">
                             <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
                                     {% if request.resolver_match.url_name == 'order_placed' %}
