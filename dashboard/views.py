@@ -1234,7 +1234,7 @@ class PaymentMethodView(LoginRequiredMixin, View):
                     )
 
                     order = create_orders_from_cart(user, payment_type="cod", payment_status="unpaid", payment=payment)
-                    messages.success(request, "COD Order placed.")
+                    messages.success(request, "Order Placed Successfully")
                     return redirect("dashboard:order_placed")
 
                 elif payment_method == "stripe":
@@ -1321,7 +1321,7 @@ class PaymentMethodView(LoginRequiredMixin, View):
                             is_default=True
                         )
 
-                    messages.success(request, "Stripe Payment successful.")
+                    messages.success(request, "Payment Done Successfully.")
                     return redirect("dashboard:order_placed")
 
                 elif payment_method == "razorpay":
@@ -1363,7 +1363,7 @@ class PaymentMethodView(LoginRequiredMixin, View):
                     )
 
                     order = create_orders_from_cart(user, payment_type="razorpay", payment_status="paid", payment=payment)
-                    messages.success(request, "Razorpay Payment successful.")
+                    messages.success(request, "Payment Done Successfully.")
                     return redirect("dashboard:order_placed")
 
                 else:
