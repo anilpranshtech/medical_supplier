@@ -1,107 +1,166 @@
-{% extends 'pages/base.html' %}
-{% load custom_filters %}
+{% extends "pages/base.html" %}
+{% load static custom_filters %}
 
 {% block content %}
-<div class="container mx-auto p-4 mt-5">
-    <div class="max-w-md mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-        <h2 class="text-2xl font-bold mb-6 text-gray-600 dark:text-white text-center">Request a Role</h2>
-
-        {% if messages %}
-            {% for message in messages %}
-                <div class="mb-4 p-3 rounded-md text-sm {% if message.tags == 'error' %}bg-red-100 text-red-700 dark:bg-red-900 dark:bg-opacity-50{% else %}bg-green-100 text-green-700 dark:bg-green-900 dark:bg-opacity-50{% endif %}">
-                    {{ message }}
+<div class="flex flex-col grow kt-scrollable-y-auto lg:[--kt-scrollbar-width:auto] pt-5" id="scrollable_content">
+    <main class="grow" role="main">
+        <!-- Toolbar -->
+        <div class="pb-5 mt-3">
+            <div class="kt-container-fixed flex items-center justify-between flex-wrap gap-3">
+                <div class="flex flex-col flex-wrap gap-1">
+                    <h1 class="font-medium text-lg text-mono">📋 Request a Role</h1>
+                    {% comment %}
+                    <div class="flex items-center gap-1 text-sm font-normal">
+                        <a class="text-secondary-foreground hover:text-primary" href="{% url 'dashboard:home' %}">Home</a>
+                        <span class="text-muted-foreground text-sm">/</span>
+                        <span class="text-mono" aria-current="page">Request a Role</span>
+                    </div>
+                    {% endcomment %}
                 </div>
-            {% endfor %}
-        {% endif %}
-
-        <form method="post" enctype="multipart/form-data" id="roleRequestForm" class="space-y-6">
-            {% csrf_token %}
-
-            <!-- Role Selection (from RoleRequest form) -->
-            <div>
-                <label for="id_requested_role" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Select Role</label>
-                {% if form and 'requested_role' in form.fields %}
-                    {{ form.requested_role|add_class:"w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white transition duration-200" }}
-                    {% for error in form.requested_role.errors %}
-                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ error }}</p>
-                    {% endfor %}
-                {% else %}
-                    <select name="requested_role" id="id_requested_role" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white transition duration-200" onchange="updateFormFields()">
-                        {% for value, label in role_choices %}
-                            <option value="{{ value }}">{{ label }}</option>
-                        {% endfor %}
-                    </select>
-                {% endif %}
             </div>
+        </div>
+        <!-- End Toolbar -->
 
-            <!-- Profile Form Fields -->
-            {% if profile_form %}
-                {% for field in profile_form %}
-                    <div>
-                        <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">{{ field.label }}</label>
-                        {% if field.field.widget.input_type == 'file' %}
-                            {{ field|add_class:"w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white custom-file-input" }}
-                        {% else %}
-                            {{ field|add_class:"w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white" }}
-                        {% endif %}
-                        {% if field.errors %}
-                            {% for error in field.errors %}
-                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ error }}</p>
+        <!-- Container -->
+        <div class="kt-container-fixed">
+            <div class="grid gap-5 lg:gap-7.5">
+                <div class="kt-card kt-card-grid min-w-full max-w-md mx-auto">
+                    <div class="kt-card-header">
+                        <h3 class="kt-card-title">Role Request Form</h3>
+                    </div>
+                    <div class="kt-card-body p-6">
+                        {% if messages %}
+                            {% for message in messages %}
+                                {% if message.tags == 'error' %}
+                                    {% with msg_classes="bg-red-100 text-red-700 dark:bg-red-900 dark:bg-opacity-50" %}
+                                        <div class="mb-4 p-3 rounded-md text-sm {{ msg_classes }}" role="alert">
+                                            {{ message }}
+                                        </div>
+                                    {% endwith %}
+                                {% else %}
+                                    {% with msg_classes="bg-green-100 text-green-700 dark:bg-green-900 dark:bg-opacity-50" %}
+                                        <div class="mb-4 p-3 rounded-md text-sm {{ msg_classes }}" role="alert">
+                                            {{ message }}
+                                        </div>
+                                    {% endwith %}
+                                {% endif %}
                             {% endfor %}
                         {% endif %}
-                    </div>
-                {% endfor %}
-                {% for error in profile_form.non_field_errors %}
-                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ error }}</p>
-                {% endfor %}
-                <button type="submit" class="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200">Submit Request</button>
-            {% endif %}
-        </form>
-    </div>
-</div>
 
-<script>
-    function updateFormFields() {
-        const form = document.getElementById('roleRequestForm');
-        form.submit();
-    }
-</script>
+
+                        <form method="post" enctype="multipart/form-data" id="roleRequestForm" class="space-y-6" novalidate>
+                            {% csrf_token %}
+
+                            <!-- Role Selection -->
+                            <div>
+                                <label for="id_requested_role" class="block text-sm font-medium text-foreground mb-2">Select Role</label>
+                                {% if form and 'requested_role' in form.fields %}
+                                    {{ form.requested_role|add_class:"kt-input kt-input-bordered w-full p-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary dark:bg-gray-800 dark:border-gray-600 dark:text-white transition duration-200" }}
+                                    {% for error in form.requested_role.errors %}
+                                        <p class="mt-1 text-sm text-red-600 dark:text-red-400" role="alert">{{ error }}</p>
+                                    {% endfor %}
+                                {% else %}
+                                    <select
+                                        name="requested_role"
+                                        id="id_requested_role"
+                                        class="kt-input kt-input-bordered w-full p-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary dark:bg-gray-800 dark:border-gray-600 dark:text-white transition duration-200"
+                                        aria-label="Requested Role"
+                                    >
+                                        {% for value, label in role_choices %}
+                                            <option value="{{ value }}" {% if value == selected_role %}selected{% endif %}>{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                {% endif %}
+                            </div>
+
+                            <!-- Profile Form Fields -->
+                            {% if profile_form %}
+                                {% for field in profile_form %}
+                                    <div>
+                                        <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-foreground mb-1">{{ field.label }}</label>
+
+                                        {% if field.field.widget.input_type == 'file' %}
+                                            <div class="relative">
+                                                {{ field|add_class:"hidden" }}
+                                                <label for="{{ field.id_for_label }}" class="flex items-center justify-between cursor-pointer border border-gray-300 rounded-md px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:border-gray-600 w-full">
+                                                    <span class="truncate">
+                                                        {% if field.value %}{{ field.value.name|default:"Selected file" }}{% else %}Choose file{% endif %}
+                                                    </span>
+                                                    <span class="ml-2 inline-flex items-center gap-1 text-xs font-medium bg-primary text-white px-2 py-1 rounded">Browse</span>
+                                                </label>
+                                            </div>
+                                        {% else %}
+                                            {{ field|add_class:"kt-input kt-input-bordered w-full p-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary dark:bg-gray-800 dark:border-gray-600 dark:text-white transition duration-200" }}
+                                        {% endif %}
+
+                                        {% if field.errors %}
+                                            {% for error in field.errors %}
+                                                <p class="mt-1 text-sm text-red-600 dark:text-red-400" role="alert">{{ error }}</p>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+
+                                {% for error in profile_form.non_field_errors %}
+                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400" role="alert">{{ error }}</p>
+                                {% endfor %}
+
+                                <button
+                                    type="submit"
+                                    class="kt-btn kt-btn-primary w-full py-2 px-4 text-sm font-semibold transition hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded"
+                                >
+                                    Submit Request
+                                </button>
+                            {% endif %}
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End Container -->
+    </main>
+</div>
 {% endblock %}
 
 {% block extra_css %}
     <style>
-        .custom-file-input::-webkit-file-upload-button {
-            visibility: hidden;
-        }
-        .custom-file-input::before {
-            content: 'Select File';
-            display: inline-block;
-            background: linear-gradient(to bottom, #f9f9f9, #e3e3e3);
-            border: 1px solid #999;
-            border-radius: 3px;
-            padding: 5px 8px;
-            outline: none;
-            white-space: nowrap;
-            -webkit-user-select: none;
-            cursor: pointer;
-            text-shadow: 1px 1px #fff;
-            font-weight: 700;
-            font-size: 10pt;
-        }
-        .custom-file-input:hover::before {
-            border-color: black;
-        }
-        .custom-file-input:active::before {
-            background: linear-gradient(to top, #e3e3e3, #f9f9f9);
-        }
+        /* Optional: you can further customize file input fallback styling */
+        /* hiding native file button for the hidden input is not necessary since we use a label */
     </style>
 {% endblock %}
 
 {% block extra_js %}
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const fileInputs = document.querySelectorAll('input[type="file"]');
-            fileInputs.forEach(input => input.classList.add('custom-file-input'));
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('roleRequestForm');
+            const roleSelect = document.getElementById('id_requested_role');
+            let debounceTimeout;
+
+            if (roleSelect) {
+                roleSelect.addEventListener('change', function () {
+                    // debounce to prevent rapid double submits
+                    clearTimeout(debounceTimeout);
+                    debounceTimeout = setTimeout(() => {
+                        form.submit();
+                    }, 150);
+                });
+            }
+
+            // Sync display for file inputs (in case JS enhancement is needed)
+            const fileFields = form.querySelectorAll('input[type="file"]');
+            fileFields.forEach(input => {
+                const label = form.querySelector(`label[for="${input.id}"]`);
+                input.addEventListener('change', () => {
+                    if (label) {
+                        const fileName = input.files.length ? input.files[0].name : 'Choose file';
+                        // if label has inner span showing name, update it
+                        const span = label.querySelector('span.truncate');
+                        if (span) {
+                            span.textContent = fileName;
+                        }
+                    }
+                });
+            });
         });
     </script>
 {% endblock %}
