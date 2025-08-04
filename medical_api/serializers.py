@@ -62,7 +62,7 @@ class DoctorRegistrationSerializer(serializers.ModelSerializer):
                 "current_position": profile.current_position,
                 "workplace": profile.workplace,
                 "phone_number": profile.phone_number,
-                "specialty": str(profile.specialty),
+                "specialty": str(profile.speciality),
                 "residency": str(profile.residency),
                 "nationality": str(profile.nationality),
                 "country_code": str(profile.country_code),
@@ -114,7 +114,7 @@ class DoctorRegistrationSerializer(serializers.ModelSerializer):
             profile_fields['nationality'] = Nationality.objects.get(id=validated_data.pop('nationality'))
             profile_fields['residency'] = Residency.objects.get(id=validated_data.pop('residency'))
             profile_fields['country_code'] = CountryCode.objects.get(id=validated_data.pop('country_code'))
-            profile_fields['specialty'] = Speciality.objects.get(id=validated_data.pop('specialty'))
+            profile_fields['speciality'] = Speciality.objects.get(id=validated_data.pop('specialty'))
         except (Nationality.DoesNotExist, Residency.DoesNotExist, CountryCode.DoesNotExist, Speciality.DoesNotExist) as e:
             raise serializers.ValidationError({"detail": str(e)})
 
