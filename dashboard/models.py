@@ -454,6 +454,7 @@ class Payment(models.Model):
         ("stripe", "Stripe"),
         ("razorpay", "Razorpay"),
         ("cod", "Cash on Delivery"),
+        ("bank_transfer", "Bank Transfer"),
     ])
     customer_id = models.CharField(max_length=100, blank=True, null=True)
     paid = models.BooleanField(default=False)
@@ -515,6 +516,20 @@ class CODPayment(models.Model):
     class Meta:
         ordering = ["-created_at"]
         verbose_name = verbose_name_plural = "COD Payment"
+
+
+class BankTransferPayment(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="bank_transfer_payments")
+    name = models.CharField(max_length=100)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    verified_by_admin = models.BooleanField(default=False)
+    admin_notes = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    proof_image = models.ImageField(upload_to='bank_transfer_proofs/', blank=True, null=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = verbose_name_plural = "Bank Transfer Payment"
 
 
 class RoleRequest(models.Model):

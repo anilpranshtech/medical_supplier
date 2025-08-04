@@ -1437,6 +1437,32 @@ class PaymentMethodView(LoginRequiredMixin, View):
                     messages.success(request, "Payment Done Successfully.")
                     return redirect("dashboard:order_placed")
 
+                elif payment_method == "bank_transfer":
+                    proof_image = request.FILES.get("proof_image")
+
+                    payment = Payment.objects.create(
+                        user=user,
+                        name=user.get_full_name() or user.email,
+                        amount=total,
+                        payment_method="bank_transfer",
+                        paid=False
+                    )
+                    logger.info(f"Created Bank Transfer Payment {payment.id} for user {user.id}")
+
+                    BankTransferPayment.objects.create(
+                        user=user,
+                        name=user.get_full_name() or user.email,
+                        amount=total,
+                        paid=False,
+                        proof_image=proof_image,
+                        verified_by_admin=False,
+                        admin_notes="Pending admin verification"
+                    )
+
+                    order = create_orders_from_cart(user, payment_type="bank_transfer", payment_status="unpaid", payment=payment)
+                    messages.success(request, "Order Placed Successfully. Awaiting admin verification.")
+                    return redirect("dashboard:order_placed")
+
                 else:
                     logger.error(f"Invalid payment method {payment_method} for user {user.id}")
                     messages.error(request, "Invalid payment method.")

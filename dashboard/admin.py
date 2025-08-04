@@ -89,6 +89,25 @@ class CODPaymentAdmin(admin.ModelAdmin):
     list_display = ('id','name', 'amount', 'paid', 'created_at')
     list_filter = ('paid', 'created_at')
 
+@admin.register(BankTransferPayment)
+class BankTransferPaymentAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'amount', 'verified_by_admin', 'created_at', 'proof_image')
+    list_filter = ('verified_by_admin', 'created_at')
+    search_fields = ('id', 'user__username', 'user__email')
+    list_editable = ('verified_by_admin',)
+    readonly_fields = ('created_at',)
+    fieldsets = (
+        (None, {
+            'fields': ('user', 'name', 'amount', 'verified_by_admin')
+        }),
+        ('Bank Transfer Details', {
+            'fields': ('admin_notes', 'proof_image')
+        }),
+        ('Metadata', {
+            'fields': ('created_at',)
+        }),
+    )
+
 @admin.register(CustomerBillingAddress)
 class CustomerBillingAddressAdmin(admin.ModelAdmin):
     list_display = ('id','user', 'customer_name', 'is_default', 'is_deleted', 'created_at', 'updated_at')
