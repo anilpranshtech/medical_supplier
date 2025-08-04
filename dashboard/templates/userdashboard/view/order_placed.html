@@ -181,6 +181,7 @@
                                                 {% elif payment_method == "cod" %}
                                                     <span>Tracking ID: {{ payment_details.cod_tracking_id|default:"Pending" }}</span>
                                                     <span>Delivery Partner: {{ payment_details.delivery_partner.name|default:"N/A" }}</span>
+                                                {% elif payment_method == "bank_transfer" %}
                                                 {% endif %}
                                             {% else %}
                                                 <span>No payment details available</span>

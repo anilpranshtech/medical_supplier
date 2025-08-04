@@ -106,6 +106,8 @@
                       <p class="text-sm">Razorpay ID: {{ payment_details.razorpay_payment_id|default:"N/A" }}</p>
                     {% elif payment_method == "cod" %}
                       <p class="text-sm">Cash on Delivery - Ref: {{ payment_details.cod_tracking_id|default:"N/A" }}</p>
+                    {% elif payment_method == "bank_transfer" %}
+                      <p class="text-sm">Bank Transfer</p>
                     {% else %}
                       <p class="text-sm">Unknown Payment Method</p>
                     {% endif %}

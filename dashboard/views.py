@@ -1574,6 +1574,11 @@ class OrderPlacedView(LoginRequiredMixin, TemplateView):
                 user=user,
                 created_at__range=(payment.created_at, time_window)
             ).order_by('-created_at').first()
+        elif payment_method == "bank_transfer":
+            payment_details = BankTransferPayment.objects.filter(
+                user=user,
+                created_at__range=(payment.created_at, time_window)
+            ).order_by('-created_at').first()
 
         # Billing address
         billing = CustomerBillingAddress.objects.filter(
@@ -1745,6 +1750,11 @@ class OrderReceiptView(LoginRequiredMixin, TemplateView):
             ).order_by('-created_at').first()
         elif payment_method == "cod":
             payment_details = CODPayment.objects.filter(
+                user=user,
+                created_at__range=(payment.created_at, payment.created_at + timedelta(minutes=5))
+            ).order_by('-created_at').first()
+        elif payment_method == "bank_transfer":
+            payment_details = BankTransferPayment.objects.filter(
                 user=user,
                 created_at__range=(payment.created_at, payment.created_at + timedelta(minutes=5))
             ).order_by('-created_at').first()
