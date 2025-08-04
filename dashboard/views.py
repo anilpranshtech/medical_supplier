@@ -202,7 +202,14 @@ class RegistrationView(View):
     def get(self, request):
         step = request.session.get("step", "register")
         template = self.otp_template if step == "verify_otp" else self.register_template
-        return render(request, template)
+        context = {
+            'form_data': request.session.get('signup_data', {}),
+            'nationalities': Nationality.objects.all(),
+            'residencies': Residency.objects.all(),
+            'country_codes': CountryCode.objects.all(),
+            'specialities': Speciality.objects.all(),
+        }
+        return render(request, template, context)
 
     def post(self, request):
         step = request.session.get("step", "register")
@@ -240,6 +247,10 @@ class RegistrationView(View):
         phone = request.POST.get('phone')
         user_type = request.POST.get('user_type')
         buyer_type = request.POST.get('buyer_type')
+        nationality_id = request.POST.get('nationality')
+        residency_id = request.POST.get('residency')
+        country_code_id = request.POST.get('country_code')
+        speciality_id = request.POST.get('speciality')
 
         # Validations
         if not first_name: errors['first_name'] = 'First name is required.'
@@ -269,12 +280,45 @@ class RegistrationView(View):
         if password and confirm_password and password != confirm_password:
             errors['confirm_password'] = 'Passwords do not match.'
 
+        # Validate retailer fields (optional, but check for valid IDs if provided)
+        if user_type == 'buyer' and buyer_type == 'retailer':
+            if nationality_id:
+                try:
+                    Nationality.objects.get(id=nationality_id)
+                except Nationality.DoesNotExist:
+                    errors['nationality'] = 'Invalid nationality selected.'
+            if residency_id:
+                try:
+                    Residency.objects.get(id=residency_id)
+                except Residency.DoesNotExist:
+                    errors['residency'] = 'Invalid residency selected.'
+            if country_code_id:
+                try:
+                    CountryCode.objects.get(id=country_code_id)
+                except CountryCode.DoesNotExist:
+                    errors['country_code'] = 'Invalid country code selected.'
+            if speciality_id:
+                try:
+                    Speciality.objects.get(id=speciality_id)
+                except Speciality.DoesNotExist:
+                    errors['speciality'] = 'Invalid speciality selected.'
+            if not request.POST.get('current_position'):
+                errors['current_position'] = 'Current position is required.'
+            if not request.POST.get('workplace'):
+                errors['workplace'] = 'Workplace is required.'
+
         if errors:
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({'success': False, 'errors': errors}, status=400)
             for field, message in errors.items():
                 messages.error(request, message, extra_tags=field)
-            return render(request, self.register_template, {'form_data': request.POST})
+            return render(request, self.register_template, {
+                'form_data': request.POST,
+                'nationalities': Nationality.objects.all(),
+                'residencies': Residency.objects.all(),
+                'country_codes': CountryCode.objects.all(),
+                'specialities': Speciality.objects.all(),
+            })
 
         # Send OTP
         otp_response = send_phone_otp(phone, TEXTDRIP_OTP_TOKEN)
@@ -282,7 +326,13 @@ class RegistrationView(View):
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({'success': False, 'errors': {'phone': otp_response["error"]}}, status=400)
             messages.error(request, otp_response["error"], extra_tags='phone')
-            return render(request, self.register_template, {'form_data': request.POST})
+            return render(request, self.register_template, {
+                'form_data': request.POST,
+                'nationalities': Nationality.objects.all(),
+                'residencies': Residency.objects.all(),
+                'country_codes': CountryCode.objects.all(),
+                'specialities': Speciality.objects.all(),
+            })
 
         # Save to session
         request.session['signup_data'] = {
@@ -293,14 +343,20 @@ class RegistrationView(View):
             'phone': phone,
             'user_type': user_type,
             'buyer_type': buyer_type,
-            'supplier_company_name': request.POST.get('supplier_company_name'),
-            'license_number': request.POST.get('license_number'),
-            'age': request.POST.get('age'),
-            'medical_needs': request.POST.get('medical_needs'),
-            'company_name': request.POST.get('company_name'),
-            'gst_number': request.POST.get('gst_number'),
-            'department': request.POST.get('department'),
-            'purchase_capacity': request.POST.get('purchase_capacity'),
+            'supplier_company_name': request.POST.get('supplier_company_name', ''),
+            'license_number': request.POST.get('license_number', ''),
+            'age': request.POST.get('age', ''),
+            'medical_needs': request.POST.get('medical_needs', ''),
+            'company_name': request.POST.get('company_name', ''),
+            'gst_number': request.POST.get('gst_number', ''),
+            'department': request.POST.get('department', ''),
+            'purchase_capacity': request.POST.get('purchase_capacity', ''),
+            'current_position': request.POST.get('current_position', ''),
+            'workplace': request.POST.get('workplace', ''),
+            'nationality': nationality_id,
+            'residency': residency_id,
+            'country_code': country_code_id,
+            'speciality': speciality_id,
         }
         request.session['step'] = "verify_otp"
 
@@ -353,11 +409,20 @@ class RegistrationView(View):
                         license_number=signup_data.get('license_number', '')
                     )
                 elif buyer_type == 'retailer':
+                    # Retrieve model instances for ForeignKey fields
+                    nationality = Nationality.objects.get(id=signup_data['nationality']) if signup_data.get('nationality') else None
+                    residency = Residency.objects.get(id=signup_data['residency']) if signup_data.get('residency') else None
+                    country_code = CountryCode.objects.get(id=signup_data['country_code']) if signup_data.get('country_code') else None
+                    speciality = Speciality.objects.get(id=signup_data['speciality']) if signup_data.get('speciality') else None
                     RetailProfile.objects.create(
                         user=user,
                         phone=phone,
-                        age=int(signup_data.get('age') or 0),
-                        medical_needs=signup_data.get('medical_needs', '')
+                        current_position=signup_data.get('current_position', ''),
+                        workplace=signup_data.get('workplace', ''),
+                        nationality=nationality,
+                        residency=residency,
+                        country_code=country_code,
+                        speciality=speciality,
                     )
                 elif user_type == 'wholesale' or buyer_type == 'wholesaler':
                     WholesaleBuyerProfile.objects.create(
@@ -382,6 +447,12 @@ class RegistrationView(View):
                 messages.success(request, "Account created successfully.")
                 return redirect('dashboard:login')
 
+            except (Nationality.DoesNotExist, Residency.DoesNotExist, CountryCode.DoesNotExist, Speciality.DoesNotExist) as e:
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                    return JsonResponse({'success': False, 'errors': {'general': 'Invalid selection for nationality, residency, country code, or speciality.'}}, status=400)
+                messages.error(request, "Invalid selection for nationality, residency, country code, or speciality.")
+                user.delete()
+                return redirect('dashboard:register')
             except Exception as e:
                 if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                     return JsonResponse({'success': False, 'errors': {'general': f'Error creating account: {str(e)}'}}, status=500)

@@ -10,13 +10,51 @@ from datetime import timedelta
 from django.conf import settings
 
 
+class Speciality(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+
+class Residency(models.Model):
+    country = models.CharField(max_length=100, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.country
+
+
+class Nationality(models.Model):
+    country = models.CharField(max_length=100, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.country
+
+
+class CountryCode(models.Model):
+    code = models.CharField(max_length=10, unique=True)
+    country = models.CharField(max_length=100)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.country} ({self.code})"
+
 
 class RetailProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     profile_picture = models.ImageField(upload_to='profile_pics/', null=True, blank=True)
     phone = models.CharField(max_length=20, blank=True, null=True)
-    age = models.IntegerField(null=True, blank=True)
-    medical_needs = models.TextField(blank=True)
+
+    current_position = models.CharField(max_length=255)
+    workplace = models.CharField(max_length=255)
+
+    nationality = models.ForeignKey(Nationality, on_delete=models.SET_NULL, null=True)
+    residency = models.ForeignKey(Residency, on_delete=models.SET_NULL, null=True)
+    country_code = models.ForeignKey(CountryCode, on_delete=models.SET_NULL, null=True)
+    speciality = models.ForeignKey(Speciality, on_delete=models.SET_NULL, null=True)
 
     class Meta:
         verbose_name = verbose_name_plural ="Retail Profile"
@@ -556,42 +594,8 @@ class PasswordUpdateTracker(models.Model):
         return self.last_password_update < now() - timedelta(days=90)
 
 
-# models.py
-class Speciality(models.Model):
-    name = models.CharField(max_length=100, unique=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.name
-
-
-class Residency(models.Model):
-    country = models.CharField(max_length=100, unique=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.country
-
-
-class Nationality(models.Model):
-    country = models.CharField(max_length=100, unique=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.country
-
-
-class CountryCode(models.Model):
-    code = models.CharField(max_length=10, unique=True)
-    country = models.CharField(max_length=100)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.country} ({self.code})"
-
 class DoctorProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='doctor_profile')
-
     current_position = models.CharField(max_length=255)
     workplace = models.CharField(max_length=255)
 

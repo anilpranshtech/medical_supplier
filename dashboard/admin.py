@@ -6,7 +6,7 @@ from dashboard.models import *
 
 @admin.register(RetailProfile)
 class RetailProfileAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'profile_picture', 'phone', 'age', 'medical_needs')
+    list_display = ('id', 'user', 'profile_picture', 'phone', 'current_position', 'workplace', 'nationality', 'residency', 'country_code', 'speciality')
 
 
 @admin.register(WholesaleBuyerProfile)
