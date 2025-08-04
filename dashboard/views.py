@@ -953,14 +953,19 @@ class WishlistView(LoginRequiredMixin, TemplateView):
             main_img = ProductImage.objects.filter(product=item.product, is_main=True).first()
             item.product.main_image = main_img.image if main_img else None
 
-        context['wishlist_items'] = wishlist_items
+        paginator = Paginator(wishlist_items, 5)
+        page_number = self.request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+
+        context['wishlist_items'] = page_obj
+        context['page_obj'] = page_obj
         return context
 
 class WishlistProductListView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         wishlist_items = WishlistProduct.objects.filter(user=request.user)
         data = [
-            {  
+            {
                 "id": item.product.id,
                 "name": item.product.name,
                 "price": f"${item.product.price}",
@@ -978,15 +983,17 @@ class ShoppingCartView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Fetch cart items for the authenticated user
         cart_items = CartProduct.objects.filter(user=self.request.user).select_related('product')
 
-        # Calculate the total price of all cart items
         total = sum(item.get_total_price() for item in cart_items)
 
-        # Add cart_items and total to the context
-        context['cart_items'] = cart_items
-        context['total'] = "{:.2f}".format(total)  # Format to two decimal places
+        paginator = Paginator(cart_items, 5)
+        page_number = self.request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+
+        context['cart_items'] = page_obj
+        context['page_obj'] = page_obj
+        context['total'] = "{:.2f}".format(total)
 
         return context
 
@@ -1003,7 +1010,6 @@ def add_to_cart(request):
             defaults={'quantity': 0}
         )
 
-        # Update quantity
         new_quantity = cart_item.quantity + quantity_change
         if new_quantity <= 0:
             cart_item.delete()
@@ -1041,17 +1047,17 @@ class ShippingInfoView(LoginRequiredMixin, TemplateView):
         profile_type = None
         try:
             profile = RetailProfile.objects.get(user=user)
-            phone = None  # Adjust if RetailProfile has a phone field
+            phone = phone
             profile_type = 'retailer'
         except RetailProfile.DoesNotExist:
             try:
                 profile = WholesaleBuyerProfile.objects.get(user=user)
-                phone = None  # Adjust if WholesaleBuyerProfile has a phone field
+                phone = phone
                 profile_type = 'wholesaler'
             except WholesaleBuyerProfile.DoesNotExist:
                 try:
                     profile = SupplierProfile.objects.get(user=user)
-                    phone = None  # Adjust if SupplierProfile has a phone field
+                    phone = phone
                     profile_type = 'supplier'
                 except SupplierProfile.DoesNotExist:
                     pass
@@ -1065,8 +1071,8 @@ class ShippingInfoView(LoginRequiredMixin, TemplateView):
         # Order summary based on CartProduct
         cart_items = CartProduct.objects.filter(user=user).select_related('product')
         subtotal = sum(item.get_total_price() for item in cart_items) or Decimal('0.00')
-        shipping = Decimal('0.00')  # Convert to Decimal; adjust based on your logic (e.g., Orders.shipping_fees)
-        vat = Decimal('0.00')       # Convert to Decimal; adjust based on your logic (e.g., tax calculation)
+        shipping = Decimal('0.00')
+        vat = Decimal('0.00')
         total = subtotal + shipping + vat
         context['cart_items'] = cart_items
         context['order_summary'] = {
@@ -1146,24 +1152,20 @@ def generate_order_id():
 def create_orders_from_cart(user, payment_type, payment_status, payment):
     try:
         print('create order from cart----------------------')
-        # Verify cart items
         cart_items = CartProduct.objects.filter(user=user).select_related('product')
         if not cart_items.exists():
             logger.error(f"No cart items found for user {user.id}")
             raise ValueError("Cart is empty")
 
-        # Verify billing address
         billing = CustomerBillingAddress.objects.filter(user=user, is_default=True, is_deleted=False).first()
         if not billing:
             logger.error(f"No default billing address found for user {user.id}")
             raise ValueError("No default billing address found")
 
-        # Calculate totals
         subtotal = sum(item.get_total_price() for item in cart_items)
-        shipping_fees = Decimal('00.00')  # Matches $512.60 - $488.00 from order_placed.html
+        shipping_fees = Decimal('00.00')
         total = subtotal + shipping_fees
 
-        # Create Order within transaction
         with transaction.atomic():
             order = Order.objects.create(
                 user=user,
@@ -1179,7 +1181,6 @@ def create_orders_from_cart(user, payment_type, payment_status, payment):
             )
             logger.info(f"Created Order {order.order_id} (ID: {order.id}) for user {user.id} with payment {payment.id}")
 
-            # Create OrderItem entries
             for item in cart_items:
                 OrderItem.objects.create(
                     order=order,
@@ -1577,7 +1578,7 @@ class OrderPlacedView(LoginRequiredMixin, TemplateView):
         elif payment_method == "bank_transfer":
             payment_details = BankTransferPayment.objects.filter(
                 user=user,
-                created_at__range=(payment.created_at, time_window)
+                created_at__range=(payment.created_at, payment.created_at + timedelta(minutes=5))
             ).order_by('-created_at').first()
 
         # Billing address
@@ -1850,6 +1851,11 @@ class DownloadReceiptView(LoginRequiredMixin, View):
             ).order_by('-created_at').first()
         elif payment_method == "cod":
             payment_details = CODPayment.objects.filter(
+                user=user,
+                created_at__range=(payment.created_at, payment.created_at + timedelta(minutes=5))
+            ).order_by('-created_at').first()
+        elif payment_method == "bank_transfer":
+            payment_details = BankTransferPayment.objects.filter(
                 user=user,
                 created_at__range=(payment.created_at, payment.created_at + timedelta(minutes=5))
             ).order_by('-created_at').first()
