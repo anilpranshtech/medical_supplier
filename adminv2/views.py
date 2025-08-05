@@ -247,6 +247,12 @@ class AddproductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
         show_rfq = button_type in ['both', 'rfq']
         both_selected = button_type == 'both'
 
+        def _is_event_category(self, category):
+            event_keywords = ['conference', 'event', 'webinar']
+            if category and category.name:
+                return category.name.lower() in event_keywords
+            return False
+
     
         if offer_start and offer_end and offer_end < offer_start:
             messages.warning(request, "Offer end date cannot be before start date.")
@@ -306,6 +312,17 @@ class AddproductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
                 created_by=request.user
             )
 
+            category_obj = self._get_object(ProductCategory, data.get('category'))
+            if _is_event_category(self, category_obj):
+                event = Event.objects.create(
+                    conference_link=data.get('conference_link') or None,
+                    speaker_name=data.get('speaker_name') or None,
+                    conference_at=data.get('conference_at') or None,
+                    duration=data.get('duration') or None,
+                    venue=data.get('venue') or None,
+                )
+                product.event = event
+                product.save()
          
             main_image = files.get('main_image')
             if main_image:

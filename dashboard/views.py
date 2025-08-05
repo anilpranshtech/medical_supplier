@@ -808,7 +808,7 @@ class ProductDetailsView(TemplateView):
         if pk:
             try:
                 product = Product.objects.select_related(
-                    'category', 'sub_category', 'last_category', 'brand'
+                    'category', 'sub_category', 'last_category', 'brand', 'event'  # Add 'event' to select_related
                 ).get(id=pk)
 
                 # Main and other images
@@ -831,6 +831,9 @@ class ProductDetailsView(TemplateView):
                     user_cart_ids = list(CartProduct.objects.filter(user=user).values_list('product_id', flat=True))
                     user_wishlist_ids = list(WishlistProduct.objects.filter(user=user).values_list('product_id', flat=True))
 
+                # Event data
+                event = product.event if hasattr(product, 'event') and product.event else None
+
                 context.update({
                     'product': product,
                     'other_images': other_images,
@@ -840,16 +843,71 @@ class ProductDetailsView(TemplateView):
                     'average_rating': round(avg_rating, 1),
                     'user_cart_ids': user_cart_ids,
                     'user_wishlist_ids': user_wishlist_ids,
+                    'event': event,  # Add event to context
                 })
 
             except Product.DoesNotExist:
                 context['product'] = None
                 context['other_images'] = []
-            
+                context['event'] = None  # Ensure event is None if product not found
 
         return context
 
 
+class EventRegistrationView(View):
+    def post(self, request):
+        product_id = request.POST.get('product_id')
+        full_name = request.POST.get('full_name')
+        email = request.POST.get('email')
+        message = request.POST.get('message')
+
+        if not full_name or not email:
+            messages.error(request, "Full name and email are required.")
+            return redirect('dashboard:product_detail', pk=product_id)
+
+        try:
+            product = Product.objects.get(id=product_id)
+            EventRegistration.objects.create(
+                product=product,
+                full_name=full_name,
+                email=email,
+                message=message,
+                user=request.user if request.user.is_authenticated else None
+            )
+            messages.success(request, "Successfully registered for the event!")
+        except Product.DoesNotExist:
+            messages.error(request, "Product not found.")
+        except Exception as e:
+            messages.error(request, f"Error: {str(e)}")
+
+        return redirect('dashboard:product_detail', pk=product_id)
+
+
+class EventRegisteredDataView(TemplateView):
+    template_name = 'userdashboard/view/event_registered_data.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        pk = self.kwargs.get('pk')
+
+        try:
+            product = Product.objects.select_related('event').get(id=pk)
+            event = product.event if hasattr(product, 'event') and product.event else None
+            registrations = EventRegistration.objects.filter(product=product).order_by('-registered_at')
+
+            context.update({
+                'product': product,
+                'event': event,
+                'registrations': registrations,
+            })
+        except Product.DoesNotExist:
+            context.update({
+                'product': None,
+                'event': None,
+                'registrations': [],
+            })
+
+        return context
 
 # class OrderSummaryView(LoginRequiredMixin, TemplateView):
 #     template_name = 'userdashboard/view/cart_summary.html'

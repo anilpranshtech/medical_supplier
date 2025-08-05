@@ -1,31 +1,42 @@
+from decimal import Decimal
+from io import BytesIO
+
+from django.http import HttpResponse
+from django.utils.html import strip_tags
+from xhtml2pdf import pisa
+from django.template.loader import render_to_string
 from django.contrib.auth import authenticate
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
+from django.core.paginator import Paginator
 from django.shortcuts import render, get_object_or_404
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from rest_framework.generics import CreateAPIView, ListAPIView
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from rest_framework.views import APIView
 from django.contrib.auth.models import User
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework import viewsets, status, response, permissions, mixins, generics
+from rest_framework import viewsets, status, response, permissions, mixins, generics, views
 from django.utils.timezone import now
-from dashboard.models import PasswordUpdateTracker, ProductCategory, ProductSubCategory, ProductLastCategory, Product, \
-    SupplierProfile,SubscriptionPlan, UserSubscription
-from medical_api.serializers import UserLoginSerializer, DoctorRegistrationSerializer, ChangePasswordSerializer, \
-    DoctorProfileSerializer, ProductCategorySerializer, ProductSubCategorySerializer, ProductLastCategorySerializer, \
-    ProductSerializer, ProductCreateSerializer, UserEmailSerializer, SupplierListSerializer, ResidencySerializer, \
-    SpecialitySerializer, NationalitySerializer, CountryCodeSerializer,SubscriptionPlanSerializer, UserSubscriptionSerializer
+from medical_api.serializers import *
 from django.contrib.auth import get_user_model, login, authenticate, logout
 from rest_framework.response import Response
-
+from django.utils import timezone
+from datetime import date, timedelta
+from django.db.models import Avg, Prefetch
+import random
 UserModel = get_user_model()
-from dashboard.models import Residency, Speciality, Nationality, CountryCode
+from dashboard.models import *
+from adminv2.models import *
+from adminv3.models import *
 from django.conf import settings
 import re
 from rest_framework.pagination import PageNumberPagination
+import logging
+logger = logging.getLogger(__name__)
 
 def get_tokens_for_user(user):
     refresh = RefreshToken.for_user(user)
@@ -802,3 +813,1130 @@ class UserSubscriptionCreateAPIView(generics.CreateAPIView):
                 "errors": serializer.errors
             }
         }, status=status.HTTP_400_BAD_REQUEST)
+
+
+class HomeAPIViewSet(viewsets.ViewSet):
+    def list(self, request):
+        today = date.today()
+
+        def set_product_fields(product_queryset):
+            for product in product_queryset:
+                main_img = ProductImage.objects.filter(product=product, is_main=True).first()
+                product.main_image = main_img.image.url if main_img else None
+                if product.delivery_time:
+                    delivery_date = today + timedelta(days=product.delivery_time)
+                    product.delivery_date = delivery_date.strftime('%a, %d %b')
+                else:
+                    product.delivery_date = 'N/A'
+                reviews = RatingReview.objects.filter(product=product)
+                total_reviews = reviews.count()
+                average_rating = reviews.aggregate(avg_rating=Avg('rating'))['avg_rating'] or 0.0
+                product.rating = round(average_rating, 1) if total_reviews > 0 else 0.0
+                product.total_reviews = total_reviews
+            return product_queryset
+
+        special_offers = Product.objects.filter(
+            offer_active=True,
+            offer_percentage__gt=0,
+            offer_start__lte=today,
+            offer_end__gte=today,
+            is_active=True
+        ).order_by('-offer_percentage')[:3]
+        special_offers = set_product_fields(special_offers)
+
+        recent_products = Product.objects.filter(
+            tag='recent',
+            is_active=True
+        ).order_by('-created_at')[:4]
+        recent_products = set_product_fields(recent_products)
+
+        popular_products = Product.objects.filter(
+            tag='popular',
+            is_active=True
+        ).order_by('-created_at')[:4]
+        popular_products = set_product_fields(popular_products)
+
+        limited_products = Product.objects.filter(
+            tag='limited',
+            is_active=True
+        ).order_by('-created_at')[:4]
+        limited_products = set_product_fields(limited_products)
+
+        all_ids = list(Product.objects.filter(is_active=True).values_list('id', flat=True))
+        random_ids = random.sample(all_ids, min(len(all_ids), 6))
+        featured_products = Product.objects.filter(id__in=random_ids)
+        featured_products = set_product_fields(featured_products)
+
+        user_wishlist_ids = []
+        user_cart_ids = []
+        if request.user.is_authenticated:
+            user_wishlist_ids = list(
+                WishlistProduct.objects.filter(user=request.user)
+                .values_list('product_id', flat=True)
+            )
+            user_cart_ids = list(
+                CartProduct.objects.filter(user=request.user).values_list('product_id', flat=True)
+            )
+
+        banners = Banner.objects.filter(is_active=True)
+
+        serializer_context = {'request': request}
+        data = {
+            # 'user_wishlist_ids': user_wishlist_ids,
+            # 'user_cart_ids': user_cart_ids,
+            'banners': BannerSerializer(banners, many=True, context=serializer_context).data,
+            'featured_products': ProductSerializer(featured_products, many=True, context=serializer_context).data,
+            'special_offers': ProductSerializer(special_offers, many=True, context=serializer_context).data,
+            'recent_products': ProductSerializer(recent_products, many=True, context=serializer_context).data,
+            'popular_products': ProductSerializer(popular_products, many=True, context=serializer_context).data,
+            'limited_products': ProductSerializer(limited_products, many=True, context=serializer_context).data,
+        }
+
+        return Response(data)
+
+class BannerViewSet(viewsets.ModelViewSet):
+    queryset = Banner.objects.filter(is_active=True)
+    serializer_class = BannerSerializer
+
+
+class OrderPlacedAPIViewSet(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
+
+    def list(self, request):
+        user = request.user
+        try:
+            payment = Payment.objects.filter(user=user).order_by('-created_at').first()
+            if not payment:
+                logger.error(f"No payment found for user {user.id}")
+                return Response({"error": "No recent payment found."}, status=400)
+        except ObjectDoesNotExist:
+            logger.error(f"No payment found for user {user.id}")
+            return Response({"error": "No recent payment found."}, status=400)
+
+        order_exists = Order.objects.filter(payment=payment, user=user).exists()
+        if not order_exists:
+            logger.error(
+                f"No order found for payment {payment.id} (method: {payment.payment_method}, created: {payment.created_at}) and user {user.id}"
+            )
+            recent_order = Order.objects.filter(user=user).order_by('-created_at').first()
+            if recent_order:
+                logger.warning(
+                    f"Fallback: Found recent order {recent_order.order_id} for user {user.id}, but not linked to payment {payment.id}"
+                )
+            all_orders = Order.objects.filter(user=user).values('id', 'order_id', 'payment_id', 'created_at')
+            all_payments = Payment.objects.filter(user=user).values('id', 'payment_method', 'created_at')
+            logger.debug(f"All orders for user {user.id}: {list(all_orders)}")
+            logger.debug(f"All payments for user {user.id}: {list(all_payments)}")
+            return Response({"error": "No recent order found."}, status=400)
+
+        logger.info(f"Found order for payment {payment.id} and user {user.id}")
+
+        main_image_prefetch = Prefetch(
+            'items__product__productimage_set',
+            queryset=ProductImage.objects.filter(is_main=True),
+            to_attr='main_image'
+        )
+
+        try:
+            order = Order.objects.filter(
+                user=user,
+                payment=payment
+            ).select_related(
+                'payment'
+            ).prefetch_related(main_image_prefetch).first()
+
+            if not order:
+                logger.error(f"No order found for payment {payment.id} and user {user.id}")
+                order = Order.objects.filter(user=user).order_by('-created_at').first()
+                if order:
+                    logger.warning(f"Fallback: Using recent order {order.order_id} for user {user.id}, not linked to payment {payment.id}")
+                else:
+                    return Response({"error": "No order found for this payment."}, status=400)
+        except ObjectDoesNotExist:
+            return Response({"error": "No order found for this payment."}, status=400)
+
+        subtotal = sum(item.price * item.quantity for item in order.items.all()) or Decimal('0.00')
+        shipping = order.shipping_fees or Decimal('0.00')
+        vat = Decimal('0.00')
+        total = subtotal + shipping + vat
+
+        max_delivery_days = max((item.product.delivery_time or 5) for item in order.items.all())
+        estimated_delivery = timezone.now().date() + timedelta(days=max_delivery_days)
+
+        time_window = payment.created_at + timedelta(minutes=10)
+        payment_method = payment.payment_method
+        payment_details = None
+
+        if payment_method == "stripe":
+            payment_details = StripePayment.objects.filter(
+                user=user,
+                created_at__range=(payment.created_at, time_window)
+            ).order_by('-created_at').first()
+        elif payment_method == "razorpay":
+            payment_details = RazorpayPayment.objects.filter(
+                user=user,
+                created_at__range=(payment.created_at, time_window)
+            ).order_by('-created_at').first()
+        elif payment_method == "cod":
+            payment_details = CODPayment.objects.filter(
+                user=user,
+                created_at__range=(payment.created_at, time_window)
+            ).order_by('-created_at').first()
+        elif payment_method == "bank_transfer":
+            payment_details = BankTransferPayment.objects.filter(
+                user=user,
+                created_at__range=(payment.created_at, payment.created_at + timedelta(minutes=5))
+            ).order_by('-created_at').first()
+
+        billing = CustomerBillingAddress.objects.filter(
+            user=user,
+            is_default=True,
+            is_deleted=False
+        ).first()
+
+        serializer_context = {'request': request}
+        data = {
+            'payment': PaymentSerializer(payment, context=serializer_context).data,
+            'order': OrderSerializer(order, context=serializer_context).data,
+            'order_items': OrderItemSerializer(order.items.all(), many=True, context=serializer_context).data,
+            'order_summary': {
+                'subtotal': str(subtotal),
+                'shipping': str(shipping),
+                'vat': str(vat),
+                'total': str(total)
+            },
+            'order_id': order.order_id,
+            'order_date': payment.created_at.isoformat(),
+            'estimated_delivery': estimated_delivery.isoformat(),
+            'payment_method': payment_method,
+            'payment_details': (
+                StripePaymentSerializer(payment_details, context=serializer_context).data if payment_method == "stripe" else
+                RazorpayPaymentSerializer(payment_details, context=serializer_context).data if payment_method == "razorpay" else
+                CODPaymentSerializer(payment_details, context=serializer_context).data if payment_method == "cod" else
+                BankTransferPaymentSerializer(payment_details, context=serializer_context).data if payment_method == "bank_transfer" else
+                None
+            ),
+            'billing': CustomerBillingAddressSerializer(billing, context=serializer_context).data if billing else None,
+            'currency_symbol': 'USD' if payment_method in ['stripe', 'cod'] else 'INR'
+        }
+
+        logger.info(f"Loaded order {order.order_id} for user {user.id} with payment {payment.id}, items: {order.items.count()}")
+        return Response(data)
+
+
+class MyOrdersAPIViewSet(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
+
+    def list(self, request):
+        user = request.user
+
+        main_image_prefetch = Prefetch(
+            'items__product__productimage_set',
+            queryset=ProductImage.objects.filter(is_main=True),
+            to_attr='main_image'
+        )
+        user_reviews_prefetch = Prefetch(
+            'items__product__reviews',
+            queryset=RatingReview.objects.filter(user=user),
+            to_attr='user_reviews'
+        )
+
+        orders_qs = Order.objects.filter(user=user).select_related('payment').prefetch_related(
+            main_image_prefetch,
+            user_reviews_prefetch
+        ).order_by('-created_at')
+
+        # Pagination
+        paginator = Paginator(orders_qs, 2)  # 2 orders per page
+        page_number = request.query_params.get('page', 1)
+        page_obj = paginator.get_page(page_number)
+
+        serializer_context = {'request': request}
+        orders_data = OrderSerializer(page_obj.object_list, many=True, context=serializer_context).data
+
+        data = {
+            'orders': orders_data,
+            'page': {
+                'current_page': page_obj.number,
+                'has_next': page_obj.has_next(),
+                'has_previous': page_obj.has_previous(),
+                'total_pages': paginator.num_pages,
+                'total_items': paginator.count
+            }
+        }
+
+        return Response(data)
+
+class SubmitReviewAPIView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, product_id):
+        try:
+            product = Product.objects.get(id=product_id)
+        except Product.DoesNotExist:
+            logger.error(f"Product {product_id} not found for user {request.user.id}")
+            return Response({"error": "Product not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Check for duplicate review
+        if RatingReview.objects.filter(user=request.user, product=product).exists():
+            logger.warning(f"User {request.user.id} already reviewed product {product_id}")
+            return Response({"error": "You have already reviewed this product."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Validate input
+        rating = request.data.get('rating')
+        if not rating:
+            logger.error(f"Rating is required for user {request.user.id} on product {product_id}")
+            return Response({"error": "Rating is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            rating = int(rating)
+            if rating < 1 or rating > 5:
+                raise ValueError("Rating must be between 1 and 5.")
+        except ValueError:
+            logger.error(f"Invalid rating value {rating} for user {request.user.id} on product {product_id}")
+            return Response({"error": "Rating must be an integer between 1 and 5."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Create review
+        review_data = {
+            'product': product.id,
+            'user': request.user.id,
+            'rating': rating,
+            'review': request.data.get('review'),
+            'photo': request.FILES.get('photo')
+        }
+        serializer = RatingReviewSerializer(data=review_data, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            logger.info(f"Review submitted by user {request.user.id} for product {product_id}")
+            return Response({"message": "Your review has been submitted!"}, status=status.HTTP_201_CREATED)
+        else:
+            logger.error(f"Review validation failed for user {request.user.id}: {serializer.errors}")
+            return Response({"error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+class ReorderAPIView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, order_id):
+        try:
+            order = Order.objects.get(id=order_id, user=request.user)
+        except Order.DoesNotExist:
+            logger.error(f"Order {order_id} not found for user {request.user.id}")
+            return Response({"error": "Order not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        order_items = OrderItem.objects.filter(order=order)
+        if not order_items.exists():
+            logger.error(f"No items found for order {order_id} and user {request.user.id}")
+            return Response({"error": "No items found in this order."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Add items to cart
+        cart_items = []
+        for item in order_items:
+            cart_item, created = CartProduct.objects.get_or_create(
+                user=request.user,
+                product=item.product,
+                defaults={'quantity': item.quantity}
+            )
+            if not created:
+                cart_item.quantity += item.quantity
+                cart_item.save()
+            cart_items.append(cart_item)
+            logger.info(f"Added {item.quantity} x {item.product.name} to cart for user {request.user.id}")
+
+        serializer_context = {'request': request}
+        cart_data = CartProductSerializer(cart_items, many=True, context=serializer_context).data
+        return Response({
+            "message": f"Added items from order {order.order_id} to your cart.",
+            "cart_items": cart_data
+        }, status=status.HTTP_200_OK)
+
+
+class OrderReceiptAPIView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, order_id):
+        user = request.user
+        main_image_prefetch = Prefetch(
+            'items__product__productimage_set',
+            queryset=ProductImage.objects.filter(is_main=True),
+            to_attr='main_image'
+        )
+
+        try:
+            order = Order.objects.filter(id=order_id, user=user).select_related('payment').prefetch_related(main_image_prefetch).get()
+        except Order.DoesNotExist:
+            logger.error(f"Order {order_id} not found for user {user.id}")
+            return Response({"error": "Order not found or you don't have permission to view it."}, status=status.HTTP_404_NOT_FOUND)
+
+        payment = order.payment
+        payment_method = payment.payment_method if payment else order.items.first().payment_type.lower()
+
+        payment_details = None
+        if payment_method == "stripe":
+            payment_details = StripePayment.objects.filter(
+                user=user,
+                created_at__range=(payment.created_at, payment.created_at + timedelta(minutes=5))
+            ).order_by('-created_at').first()
+            if payment_details and payment_details.stripe_customer_id:
+                billing_with_card = CustomerBillingAddress.objects.filter(user=user, is_old=True, is_deleted=False).first()
+                if billing_with_card and billing_with_card.old_card:
+                    try:
+                        card_info = json.loads(billing_with_card.old_card.replace("'", "\""))
+                        payment_details.card_last4 = card_info.get('last4', 'N/A')
+                    except (json.JSONDecodeError, AttributeError):
+                        payment_details.card_last4 = 'N/A'
+                else:
+                    payment_details.card_last4 = 'N/A'
+        elif payment_method == "razorpay":
+            payment_details = RazorpayPayment.objects.filter(
+                user=user,
+                created_at__range=(payment.created_at, payment.created_at + timedelta(minutes=5))
+            ).order_by('-created_at').first()
+        elif payment_method == "cod":
+            payment_details = CODPayment.objects.filter(
+                user=user,
+                created_at__range=(payment.created_at, payment.created_at + timedelta(minutes=5))
+            ).order_by('-created_at').first()
+        elif payment_method == "bank_transfer":
+            payment_details = BankTransferPayment.objects.filter(
+                user=user,
+                created_at__range=(payment.created_at, payment.created_at + timedelta(minutes=5))
+            ).order_by('-created_at').first()
+
+        subtotal = sum(item.price * item.quantity for item in order.items.all()) or Decimal('0.00')
+        shipping = order.shipping_fees or Decimal('0.00')
+        vat = Decimal('0.00')
+        total = subtotal + shipping + vat
+
+        max_delivery_days = max((item.product.delivery_time or 5) for item in order.items.all())
+        estimated_delivery = order.created_at.date() + timedelta(days=max_delivery_days)
+
+        billing = CustomerBillingAddress.objects.filter(user=user, is_default=True, is_deleted=False).first()
+
+        serializer_context = {'request': request}
+        data = {
+            'order': OrderSerializer(order, context=serializer_context).data,
+            'order_summary': {
+                'subtotal': str(subtotal),
+                'shipping': str(shipping),
+                'vat': str(vat),
+                'total': str(total)
+            },
+            'order_total': str(total),
+            'order_date': order.created_at.isoformat(),
+            'billing': CustomerBillingAddressSerializer(billing, context=serializer_context).data if billing else None,
+            'estimated_delivery': estimated_delivery.isoformat(),
+            'payment_method': payment_method,
+            'payment_details': (
+                StripePaymentSerializer(payment_details, context=serializer_context).data if payment_method == "stripe" else
+                RazorpayPaymentSerializer(payment_details, context=serializer_context).data if payment_method == "razorpay" else
+                CODPaymentSerializer(payment_details, context=serializer_context).data if payment_method == "cod" else
+                BankTransferPaymentSerializer(payment_details, context=serializer_context).data if payment_method == "bank_transfer" else
+                None
+            ),
+            'currency_symbol': 'USD' if payment_method in ['stripe', 'cod'] else 'INR'
+        }
+
+        logger.info(f"Order receipt loaded for order {order.order_id} and user {user.id}")
+        return Response(data)
+
+class DownloadReceiptAPIView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, order_id):
+        user = request.user
+        main_image_prefetch = Prefetch(
+            'items__product__productimage_set',
+            queryset=ProductImage.objects.filter(is_main=True),
+            to_attr='main_image'
+        )
+
+        try:
+            order = Order.objects.filter(id=order_id, user=user).select_related('payment').prefetch_related(main_image_prefetch).get()
+        except Order.DoesNotExist:
+            logger.error(f"Order {order_id} not found for user {user.id}")
+            return Response({"error": "Order not found or you don't have permission to view it."}, status=status.HTTP_404_NOT_FOUND)
+
+        payment = order.payment
+        payment_method = payment.payment_method if payment else order.items.first().payment_type.lower()
+
+        payment_details = None
+        if payment_method == "stripe":
+            payment_details = StripePayment.objects.filter(
+                user=user,
+                created_at__range=(payment.created_at, payment.created_at + timedelta(minutes=5))
+            ).order_by('-created_at').first()
+            if payment_details and payment_details.stripe_customer_id:
+                billing_with_card = CustomerBillingAddress.objects.filter(user=user, is_old=True, is_deleted=False).first()
+                if billing_with_card and billing_with_card.old_card:
+                    try:
+                        card_info = json.loads(billing_with_card.old_card.replace("'", "\""))
+                        payment_details.card_last4 = card_info.get('last4', 'N/A')
+                    except (json.JSONDecodeError, AttributeError):
+                        payment_details.card_last4 = 'N/A'
+                else:
+                    payment_details.card_last4 = 'N/A'
+        elif payment_method == "razorpay":
+            payment_details = RazorpayPayment.objects.filter(
+                user=user,
+                created_at__range=(payment.created_at, payment.created_at + timedelta(minutes=5))
+            ).order_by('-created_at').first()
+        elif payment_method == "cod":
+            payment_details = CODPayment.objects.filter(
+                user=user,
+                created_at__range=(payment.created_at, payment.created_at + timedelta(minutes=5))
+            ).order_by('-created_at').first()
+        elif payment_method == "bank_transfer":
+            payment_details = BankTransferPayment.objects.filter(
+                user=user,
+                created_at__range=(payment.created_at, payment.created_at + timedelta(minutes=5))
+            ).order_by('-created_at').first()
+
+        items = []
+        for order_item in order.items.all():
+            product_image = order_item.product.main_image[0] if order_item.product.main_image else None
+            items.append({
+                'product': order_item.product,
+                'quantity': order_item.quantity,
+                'sku': order_item.product.supplier_sku,
+                'total_price': order_item.price * order_item.quantity,
+                'image_url': request.build_absolute_uri(product_image.image.url) if product_image else None,
+            })
+
+        subtotal = sum(item.price * item.quantity for item in order.items.all()) or Decimal('0.00')
+        shipping = order.shipping_fees or Decimal('0.00')
+        vat = Decimal('0.00')
+        total = subtotal + shipping + vat
+
+        max_delivery_days = max((item.product.delivery_time or 5) for item in order.items.all())
+        estimated_delivery = order.created_at.date() + timedelta(days=max_delivery_days)
+
+        billing = CustomerBillingAddress.objects.filter(user=user, is_default=True, is_deleted=False).first()
+
+        context = {
+            'order': order,
+            'items': items,
+            'order_summary': {
+                'subtotal': subtotal,
+                'shipping': shipping,
+                'vat': vat,
+                'total': total,
+            },
+            'order_total': total,
+            'order_date': order.created_at,
+            'billing': billing,
+            'estimated_delivery': estimated_delivery,
+            'payment_method': payment_method,
+            'payment_details': payment_details,
+            'currency_symbol': 'USD' if payment_method in ['stripe', 'cod'] else 'INR'
+        }
+
+        html_string = render_to_string('userdashboard/view/order_receipt_pdf.html', context)
+        result = BytesIO()
+        pdf = pisa.CreatePDF(src=html_string, dest=result)
+        if pdf.err:
+            logger.error(f"Failed to generate PDF for order {order.order_id}: {pdf.err}")
+            return Response({"error": "Error generating PDF"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="order_receipt_{order.order_id}.pdf"'
+        response.write(result.getvalue())
+        logger.info(f"Generated PDF receipt for order {order.order_id} and user {user.id}")
+        return response
+
+
+class MyOrdersAPIViewSet(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
+
+    def list(self, request):
+        user = request.user
+        main_image_prefetch = Prefetch(
+            'items__product__productimage_set',
+            queryset=ProductImage.objects.filter(is_main=True),
+            to_attr='main_image'
+        )
+        user_reviews_prefetch = Prefetch(
+            'items__product__reviews',
+            queryset=RatingReview.objects.filter(user=user),
+            to_attr='user_reviews'
+        )
+        orders_qs = Order.objects.filter(user=user).select_related('payment').prefetch_related(
+            main_image_prefetch,
+            user_reviews_prefetch
+        ).order_by('-created_at')
+        paginator = Paginator(orders_qs, 2)
+        page_number = request.query_params.get('page', 1)
+        page_obj = paginator.get_page(page_number)
+        serializer_context = {'request': request}
+        orders_data = OrderSerializer(page_obj.object_list, many=True, context=serializer_context).data
+        data = {
+            'orders': orders_data,
+            'page': {
+                'current_page': page_obj.number,
+                'has_next': page_obj.has_next(),
+                'has_previous': page_obj.has_previous(),
+                'total_pages': paginator.num_pages,
+                'total_items': paginator.count
+            }
+        }
+        return Response(data)
+
+class SubmitReviewAPIView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, product_id):
+        try:
+            product = Product.objects.get(id=product_id)
+        except Product.DoesNotExist:
+            logger.error(f"Product {product_id} not found for user {request.user.id}")
+            return Response({"error": "Product not found."}, status=status.HTTP_404_NOT_FOUND)
+        if RatingReview.objects.filter(user=request.user, product=product).exists():
+            logger.warning(f"User {request.user.id} already reviewed product {product_id}")
+            return Response({"error": "You have already reviewed this product."}, status=status.HTTP_400_BAD_REQUEST)
+        rating = request.data.get('rating')
+        if not rating:
+            logger.error(f"Rating is required for user {request.user.id} on product {product_id}")
+            return Response({"error": "Rating is required."}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            rating = int(rating)
+            if rating < 1 or rating > 5:
+                raise ValueError("Rating must be between 1 and 5.")
+        except ValueError:
+            logger.error(f"Invalid rating value {rating} for user {request.user.id} on product {product_id}")
+            return Response({"error": "Rating must be an integer between 1 and 5."}, status=status.HTTP_400_BAD_REQUEST)
+        review_data = {
+            'product': product.id,
+            'user': request.user.id,
+            'rating': rating,
+            'review': request.data.get('review'),
+            'photo': request.FILES.get('photo')
+        }
+        serializer = RatingReviewSerializer(data=review_data, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            logger.info(f"Review submitted by user {request.user.id} for product {product_id}")
+            return Response({"message": "Your review has been submitted!"}, status=status.HTTP_201_CREATED)
+        else:
+            logger.error(f"Review validation failed for user {request.user.id}: {serializer.errors}")
+            return Response({"error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+class ReorderAPIView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, order_id):
+        try:
+            order = Order.objects.get(id=order_id, user=request.user)
+        except Order.DoesNotExist:
+            logger.error(f"Order {order_id} not found for user {request.user.id}")
+            return Response({"error": "Order not found."}, status=status.HTTP_404_NOT_FOUND)
+        order_items = OrderItem.objects.filter(order=order)
+        if not order_items.exists():
+            logger.error(f"No items found for order {order_id} and user {request.user.id}")
+            return Response({"error": "No items found in this order."}, status=status.HTTP_400_BAD_REQUEST)
+        cart_items = []
+        for item in order_items:
+            cart_item, created = CartProduct.objects.get_or_create(
+                user=request.user,
+                product=item.product,
+                defaults={'quantity': item.quantity}
+            )
+            if not created:
+                cart_item.quantity += item.quantity
+                cart_item.save()
+            cart_items.append(cart_item)
+            logger.info(f"Added {item.quantity} x {item.product.name} to cart for user {request.user.id}")
+        serializer_context = {'request': request}
+        cart_data = CartProductSerializer(cart_items, many=True, context=serializer_context).data
+        return Response({
+            "message": f"Added items from order {order.order_id} to your cart.",
+            "cart_items": cart_data
+        }, status=status.HTTP_200_OK)
+
+class OrderReceiptAPIView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, order_id):
+        user = request.user
+        main_image_prefetch = Prefetch(
+            'items__product__productimage_set',
+            queryset=ProductImage.objects.filter(is_main=True),
+            to_attr='main_image'
+        )
+
+        try:
+            order = Order.objects.filter(id=order_id, user=user).select_related('payment').prefetch_related(main_image_prefetch).get()
+        except Order.DoesNotExist:
+            logger.error(f"Order {order_id} not found for user {user.id}")
+            return Response({"error": "Order not found or you don't have permission to view it."}, status=status.HTTP_404_NOT_FOUND)
+
+        payment = order.payment
+        payment_method = payment.payment_method if payment else (order.items.first().payment_type.lower() if order.items.exists() else "unknown")
+
+        payment_details = None
+        if payment and payment_method == "stripe":
+            payment_details = StripePayment.objects.filter(
+                user=user,
+                created_at__range=(payment.created_at, payment.created_at + timedelta(minutes=5))
+            ).order_by('-created_at').first()
+            if payment_details and payment_details.stripe_customer_id:
+                billing_with_card = CustomerBillingAddress.objects.filter(user=user, is_old=True, is_deleted=False).first()
+                if billing_with_card and billing_with_card.old_card:
+                    try:
+                        card_info = json.loads(billing_with_card.old_card.replace("'", "\""))
+                        payment_details.card_last4 = card_info.get('last4', 'N/A')
+                    except (json.JSONDecodeError, AttributeError):
+                        payment_details.card_last4 = 'N/A'
+                else:
+                    payment_details.card_last4 = 'N/A'
+        elif payment and payment_method == "razorpay":
+            payment_details = RazorpayPayment.objects.filter(
+                user=user,
+                created_at__range=(payment.created_at, payment.created_at + timedelta(minutes=5))
+            ).order_by('-created_at').first()
+        elif payment and payment_method == "cod":
+            payment_details = CODPayment.objects.filter(
+                user=user,
+                created_at__range=(payment.created_at, payment.created_at + timedelta(minutes=5))
+            ).order_by('-created_at').first()
+        elif payment and payment_method == "bank_transfer":
+            payment_details = BankTransferPayment.objects.filter(
+                user=user,
+                created_at__range=(payment.created_at, payment.created_at + timedelta(minutes=5))
+            ).order_by('-created_at').first()
+
+        subtotal = sum(item.price * item.quantity for item in order.items.all()) or Decimal('0.00')
+        shipping = order.shipping_fees or Decimal('0.00')
+        vat = Decimal('0.00')
+        total = subtotal + shipping + vat
+
+        max_delivery_days = max((item.product.delivery_time or 5) for item in order.items.all()) if order.items.exists() else 5
+        estimated_delivery = order.created_at.date() + timedelta(days=max_delivery_days)
+
+        billing = CustomerBillingAddress.objects.filter(user=user, is_default=True, is_deleted=False).first()
+
+        serializer_context = {'request': request}
+        data = {
+            'order': OrderSerializer(order, context=serializer_context).data,
+            'order_summary': {
+                'subtotal': str(subtotal),
+                'shipping': str(shipping),
+                'vat': str(vat),
+                'total': str(total)
+            },
+            'order_total': str(total),
+            'order_date': order.created_at.isoformat(),
+            'billing': CustomerBillingAddressSerializer(billing, context=serializer_context).data if billing else None,
+            'estimated_delivery': estimated_delivery.isoformat(),
+            'payment_method': payment_method,
+            'payment_details': (
+                StripePaymentSerializer(payment_details, context=serializer_context).data if payment_method == "stripe" else
+                RazorpayPaymentSerializer(payment_details, context=serializer_context).data if payment_method == "razorpay" else
+                CODPaymentSerializer(payment_details, context=serializer_context).data if payment_method == "cod" else
+                BankTransferPaymentSerializer(payment_details, context=serializer_context).data if payment_method == "bank_transfer" else
+                None
+            ),
+            'currency_symbol': 'USD' if payment_method in ['stripe', 'cod'] else 'INR'
+        }
+
+        logger.info(f"Order receipt loaded for order {order.order_id} and user {user.id}")
+        return Response(data)
+
+class DownloadReceiptAPIView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, order_id):
+        user = request.user
+        main_image_prefetch = Prefetch(
+            'items__product__productimage_set',
+            queryset=ProductImage.objects.filter(is_main=True),
+            to_attr='main_image'
+        )
+
+        try:
+            order = Order.objects.filter(id=order_id, user=user).select_related('payment').prefetch_related(main_image_prefetch).get()
+        except Order.DoesNotExist:
+            logger.error(f"Order {order_id} not found for user {user.id}")
+            return Response({"error": "Order not found or you don't have permission to view it."}, status=status.HTTP_404_NOT_FOUND)
+
+        payment = order.payment
+        payment_method = payment.payment_method if payment else (order.items.first().payment_type.lower() if order.items.exists() else "unknown")
+
+        payment_details = None
+        if payment and payment_method == "stripe":
+            payment_details = StripePayment.objects.filter(
+                user=user,
+                created_at__range=(payment.created_at, payment.created_at + timedelta(minutes=5))
+            ).order_by('-created_at').first()
+            if payment_details and payment_details.stripe_customer_id:
+                billing_with_card = CustomerBillingAddress.objects.filter(user=user, is_old=True, is_deleted=False).first()
+                if billing_with_card and billing_with_card.old_card:
+                    try:
+                        card_info = json.loads(billing_with_card.old_card.replace("'", "\""))
+                        payment_details.card_last4 = card_info.get('last4', 'N/A')
+                    except (json.JSONDecodeError, AttributeError):
+                        payment_details.card_last4 = 'N/A'
+                else:
+                    payment_details.card_last4 = 'N/A'
+        elif payment and payment_method == "razorpay":
+            payment_details = RazorpayPayment.objects.filter(
+                user=user,
+                created_at__range=(payment.created_at, payment.created_at + timedelta(minutes=5))
+            ).order_by('-created_at').first()
+        elif payment and payment_method == "cod":
+            payment_details = CODPayment.objects.filter(
+                user=user,
+                created_at__range=(payment.created_at, payment.created_at + timedelta(minutes=5))
+            ).order_by('-created_at').first()
+        elif payment and payment_method == "bank_transfer":
+            payment_details = BankTransferPayment.objects.filter(
+                user=user,
+                created_at__range=(payment.created_at, payment.created_at + timedelta(minutes=5))
+            ).order_by('-created_at').first()
+
+        items = []
+        for order_item in order.items.all():
+            product_image = order_item.product.main_image[0] if order_item.product.main_image else None
+            items.append({
+                'product': order_item.product,
+                'quantity': order_item.quantity,
+                'sku': order_item.product.supplier_sku,
+                'total_price': order_item.price * order_item.quantity,
+                'image_url': request.build_absolute_uri(product_image.image.url) if product_image else None,
+            })
+
+        subtotal = sum(item.price * item.quantity for item in order.items.all()) or Decimal('0.00')
+        shipping = order.shipping_fees or Decimal('0.00')
+        vat = Decimal('0.00')
+        total = subtotal + shipping + vat
+
+        max_delivery_days = max((item.product.delivery_time or 5) for item in order.items.all()) if order.items.exists() else 5
+        estimated_delivery = order.created_at.date() + timedelta(days=max_delivery_days)
+
+        billing = CustomerBillingAddress.objects.filter(user=user, is_default=True, is_deleted=False).first()
+
+        context = {
+            'order': order,
+            'items': items,
+            'order_summary': {
+                'subtotal': subtotal,
+                'shipping': shipping,
+                'vat': vat,
+                'total': total,
+            },
+            'order_total': total,
+            'order_date': order.created_at,
+            'billing': billing,
+            'estimated_delivery': estimated_delivery,
+            'payment_method': payment_method,
+            'payment_details': payment_details,
+            'currency_symbol': 'USD' if payment_method in ['stripe', 'cod'] else 'INR'
+        }
+
+        html_string = render_to_string('userdashboard/view/order_receipt_pdf.html', context)
+        result = BytesIO()
+        pdf = pisa.CreatePDF(src=html_string, dest=result)
+        if pdf.err:
+            logger.error(f"Failed to generate PDF for order {order.order_id}: {pdf.err}")
+            return Response({"error": "Error generating PDF"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="order_receipt_{order.order_id}.pdf"'
+        response.write(result.getvalue())
+        logger.info(f"Generated PDF receipt for order {order.order_id} and user {user.id}")
+        return response
+
+
+class RFQSubmissionAPIView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        # Log the incoming request data for debugging
+        logger.debug(f"Request data: {request.data}, Content-Type: {request.content_type}")
+
+        # Handle both JSON and form-data
+        data = request.data if request.content_type == 'application/json' else request.POST
+
+        product_id = data.get('product_id')
+        if not product_id:
+            logger.error(f"Product ID missing in request for user {request.user.id}")
+            return Response({"error": {"product_id": ["This field is required."]}}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            product = Product.objects.get(id=product_id)
+        except Product.DoesNotExist:
+            logger.error(f"Product {product_id} not found for user {request.user.id}")
+            return Response({"error": "Product not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        rfq_data = {
+            'requested_by': request.user.id,
+            'product': product.id,
+            'quantity': data.get('quantity'),
+            'message': data.get('message', ''),
+            'company_name': data.get('company_name', ''),
+            'expected_delivery_date': data.get('expected_delivery_date') or None,
+            'status': 'received'
+        }
+
+        serializer = RFQRequestSerializer(data=rfq_data, context={'request': request})
+        if serializer.is_valid():
+            rfq = serializer.save()
+            try:
+                send_mail(
+                    subject='Quotation Request Received',
+                    message='Thank you for your quotation request. Our team will get back to you shortly.',
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[request.user.email],
+                    fail_silently=False,
+                )
+                rfq.email_sent = True
+                rfq.save()
+                logger.info(f"RFQ {rfq.id} submitted by user {request.user.id} for product {product_id}, email sent")
+            except Exception as e:
+                logger.error(f"Failed to send email for RFQ {rfq.id}: {str(e)}")
+                rfq.email_sent = False
+                rfq.save()
+            return Response({
+                "message": "Quotation request submitted successfully.",
+                "rfq": RFQRequestSerializer(rfq, context={'request': request}).data
+            }, status=status.HTTP_201_CREATED)
+        else:
+            logger.error(f"RFQ submission failed for user {request.user.id}: {serializer.errors}")
+            return Response({"error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+    def get(self, request):
+        logger.warning(f"GET request to RFQSubmissionAPIView by user {request.user.id}, redirecting to home")
+        return Response({"error": "Method not allowed. Use POST to submit an RFQ."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+
+class UserQuotationAPIView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        sent_quotations = RFQRequest.objects.filter(quoted_by=user)
+        received_quotations = RFQRequest.objects.filter(requested_by=user)
+
+        serializer_context = {'request': request}
+        data = {
+            'sent_quotations': RFQRequestSerializer(sent_quotations, many=True, context=serializer_context).data,
+            'received_quotations': RFQRequestSerializer(received_quotations, many=True, context=serializer_context).data
+        }
+
+        logger.info(f"Quotations loaded for user {user.id}: {sent_quotations.count()} sent, {received_quotations.count()} received")
+        return Response(data)
+
+
+class RFQActionAPIView(views.APIView):
+    permission_classes = [IsAuthenticated]
+    action = None
+    success_message = ""
+
+    def post(self, request, pk):
+        try:
+            rfq = RFQRequest.objects.get(pk=pk, requested_by=request.user)
+        except RFQRequest.DoesNotExist:
+            logger.error(f"RFQ {pk} not found for user {request.user.id}")
+            return Response({"error": "Quotation not found or you don't have permission to act on it."}, status=status.HTTP_404_NOT_FOUND)
+
+        if rfq.status != 'quoted':
+            logger.warning(f"RFQ {pk} status is {rfq.status}, not 'quoted', for user {request.user.id}")
+            return Response({"error": "This quotation is not available for action."}, status=status.HTTP_400_BAD_REQUEST)
+
+        rfq.status = self.action
+        rfq.updated_at = timezone.now()
+        rfq.save()
+
+        logger.info(f"RFQ {pk} {self.action} by user {request.user.id}")
+        return Response({"message": self.success_message}, status=status.HTTP_200_OK)
+
+
+class RFQAcceptAPIView(RFQActionAPIView):
+    action = 'accepted'
+    success_message = "You have accepted the quotation."
+
+
+class RFQRejectAPIView(RFQActionAPIView):
+    action = 'rejected'
+    success_message = "You have rejected the quotation."
+
+
+class RequestRoleAPIView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        logger.debug(f"Request data: {request.data}, Content-Type: {request.content_type}")
+
+        data = request.data if request.content_type == 'application/json' else request.POST
+        files = request.FILES if request.content_type != 'application/json' else request.data
+
+        requested_role = data.get('requested_role', 'retailer')
+        valid_roles = [choice[0] for choice in RoleRequest.ROLE_CHOICES]
+        if requested_role not in valid_roles:
+            logger.error(f"Invalid role {requested_role} requested by user {request.user.id}")
+            return Response({"error": f"Invalid role. Must be one of: {', '.join(valid_roles)}"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if RoleRequest.objects.filter(user=request.user, requested_role=requested_role).exists():
+            logger.warning(f"User {request.user.id} already has a pending or approved request for role {requested_role}")
+            return Response({"error": f"You already have a pending or approved request for {requested_role}."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if requested_role == 'retailer':
+            serializer_class = RetailProfileSerializer
+        elif requested_role == 'wholesaler':
+            serializer_class = WholesaleBuyerProfileSerializer
+        elif requested_role == 'supplier':
+            serializer_class = SupplierProfileSerializer
+        else:
+            serializer_class = RetailProfileSerializer
+
+        serializer = serializer_class(data=data, context={'request': request})
+        if serializer.is_valid():
+            role_request = RoleRequest.objects.create(
+                user=request.user,
+                requested_role=requested_role,
+                status='pending'
+            )
+
+            profile_data = serializer.validated_data
+            profile_data['user'] = request.user
+
+            if requested_role == 'retailer':
+                RetailProfile.objects.update_or_create(
+                    user=request.user,
+                    defaults=profile_data
+                )
+            elif requested_role == 'wholesaler':
+                WholesaleBuyerProfile.objects.update_or_create(
+                    user=request.user,
+                    defaults=profile_data
+                )
+            elif requested_role == 'supplier':
+                SupplierProfile.objects.update_or_create(
+                    user=request.user,
+                    defaults=profile_data
+                )
+
+            logger.info(f"Role request for {requested_role} submitted by user {request.user.id}")
+            return Response({
+                "message": f"Your role request for {requested_role} has been submitted.",
+                "role_request": RoleRequestSerializer(role_request, context={'request': request}).data
+            }, status=status.HTTP_201_CREATED)
+        else:
+            logger.error(f"Role request submission failed for user {request.user.id}: {serializer.errors}")
+            return Response({"error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+    def get(self, request):
+        role_choices = dict(RoleRequest.ROLE_CHOICES)
+        selected_role = request.query_params.get('requested_role', 'retailer')
+        if selected_role not in role_choices:
+            selected_role = 'retailer'
+        return Response({
+            "role_choices": role_choices,
+            "selected_role": selected_role
+        }, status=status.HTTP_200_OK)
+
+class ManageRequestsAPIView(views.APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def get(self, request):
+        role_requests = RoleRequest.objects.all().select_related('user')
+        serializer_context = {'request': request}
+        data = RoleRequestSerializer(role_requests, many=True, context=serializer_context).data
+        logger.info(f"Role requests loaded for admin user {request.user.id}")
+        return Response({"requests": data}, status=status.HTTP_200_OK)
+
+class ApproveRoleRequestAPIView(views.APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def post(self, request, pk):
+        try:
+            role_request = RoleRequest.objects.get(pk=pk)
+        except RoleRequest.DoesNotExist:
+            logger.error(f"Role request {pk} not found for admin user {request.user.id}")
+            return Response({"error": "Role request not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        user = role_request.user
+        current_status = role_request.status
+        action = request.data.get('action', 'approve')  # Default to approve
+
+        if action == 'approve' and current_status == 'pending':
+            role_request.status = 'approved'
+            role_request.save()
+
+            try:
+                if role_request.requested_role == 'supplier':
+                    supplier_profile, _ = SupplierProfile.objects.get_or_create(user=user)
+                    logger.info(f"Verified SupplierProfile for {user.username}")
+                elif role_request.requested_role == 'wholesaler':
+                    wholesale_profile, _ = WholesaleBuyerProfile.objects.get_or_create(user=user)
+                    logger.info(f"Verified WholesaleBuyerProfile for {user.username}")
+                elif role_request.requested_role == 'retailer':
+                    retail_profile, _ = RetailProfile.objects.get_or_create(user=user)
+                    logger.info(f"Verified RetailProfile for {user.username}")
+            except Exception as e:
+                logger.error(f"Failed to verify profile for {user.username}: {str(e)}")
+                return Response({"error": f"Failed to verify profile: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Send acceptance email
+            subject = 'Role Request Approved'
+            html_message = render_to_string('userdashboard/email/role_approved.html', {
+                'user': user.username,
+                'role': role_request.requested_role,
+                'date': '03:09 PM IST on Tuesday, August 05, 2025'
+            })
+            plain_message = strip_tags(html_message)
+            try:
+                send_mail(
+                    subject,
+                    plain_message,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [user.email],
+                    html_message=html_message,
+                    fail_silently=False,
+                )
+                logger.info(f"Email sent to {user.email} for role approval")
+            except Exception as e:
+                logger.error(f"Email sending failed for {user.email}: {str(e)}")
+                return Response({
+                    "message": f"Role '{role_request.requested_role}' approved for {user.username}, but email failed to send."
+                }, status=status.HTTP_200_OK)
+
+            logger.info(f"Role '{role_request.requested_role}' approved for {user.username} by admin {request.user.id}")
+            return Response({
+                "message": f"Role '{role_request.requested_role}' approved for {user.username}."
+            }, status=status.HTTP_200_OK)
+
+        elif action == 'reject' and current_status == 'approved':
+            role_request.status = 'rejected'
+            role_request.save()
+
+            # Send rejection email
+            subject = 'Role Request Rejected'
+            html_message = render_to_string('userdashboard/email/role_rejected.html', {
+                'user': user.username,
+                'role': role_request.requested_role,
+                'date': '03:09 PM IST on Tuesday, August 05, 2025'
+            })
+            plain_message = strip_tags(html_message)
+            try:
+                send_mail(
+                    subject,
+                    plain_message,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [user.email],
+                    html_message=html_message,
+                    fail_silently=False,
+                )
+                logger.info(f"Email sent to {user.email} for role rejection")
+            except Exception as e:
+                logger.error(f"Email sending failed for {user.email}: {str(e)}")
+                return Response({
+                    "message": f"Role request for {user.username} rejected, but email failed to send."
+                }, status=status.HTTP_200_OK)
+
+            logger.info(f"Role request for {user.username} rejected by admin {request.user.id}")
+            return Response({
+                "message": f"Role request for {user.username} rejected."
+            }, status=status.HTTP_200_OK)
+
+        else:
+            logger.warning(f"Invalid action {action} or status {current_status} for role request {pk} by admin {request.user.id}")
+            return Response({"error": "Invalid action or request status."}, status=status.HTTP_400_BAD_REQUEST)

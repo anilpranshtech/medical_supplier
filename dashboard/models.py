@@ -242,6 +242,18 @@ class ProductImage(models.Model):
         verbose_name = verbose_name_plural = "Product Image"
 
 
+class EventRegistration(models.Model):
+    product = models.ForeignKey('Product', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    full_name = models.CharField(max_length=255)
+    email = models.EmailField()
+    message = models.TextField(blank=True, null=True)
+    registered_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.full_name} - {self.product.name}"
+
+
 class Order(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders')
     payment = models.ForeignKey('Payment', on_delete=models.SET_NULL, null=True, blank=True, related_name='order')

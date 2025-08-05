@@ -6,8 +6,11 @@ from .views import *
 app_name = 'medical_api'
 
 router = DefaultRouter()
-router.register(r'user-list',UserEmailViewSet, basename='user_list')
+router.register(r'home', HomeAPIViewSet, basename='home')
+router.register(r'user-list', UserEmailViewSet, basename='user_list')
 router.register(r'supplier-list', SupplierList, basename='supplier_list')
+router.register(r'order-placed', OrderPlacedAPIViewSet, basename='order-placed')
+router.register(r'my-orders', MyOrdersAPIViewSet, basename='my-orders')
 
 urlpatterns = [
 
@@ -46,5 +49,18 @@ urlpatterns = [
     path('subscriptions/', UserSubscriptionListAPIView.as_view(), name='user-subscription-list'),
     path('subscribe/', UserSubscriptionCreateAPIView.as_view(), name='user-subscription-create'),
 
+    path('submit-review/<int:product_id>/', SubmitReviewAPIView.as_view(), name='submit-review'),
+    path('reorder/<int:order_id>/', ReorderAPIView.as_view(), name='reorder'),
+    path('order-receipt/<int:order_id>/', OrderReceiptAPIView.as_view(), name='order-receipt'),
+    path('download-receipt/<int:order_id>/', DownloadReceiptAPIView.as_view(), name='download-receipt'),
+
+    path('submit-rfq/', RFQSubmissionAPIView.as_view(), name='submit-rfq'),
+    path('quotations/', UserQuotationAPIView.as_view(), name='user-quotations'),
+    path('rfq-accept/<int:pk>/', RFQAcceptAPIView.as_view(), name='rfq-accept'),
+    path('rfq-reject/<int:pk>/', RFQRejectAPIView.as_view(), name='rfq-reject'),
+
+    path('request-role/', RequestRoleAPIView.as_view(), name='request-role'),
+    path('manage-requests/', ManageRequestsAPIView.as_view(), name='manage-requests'),
+    path('approve-role-request/<int:pk>/', ApproveRoleRequestAPIView.as_view(), name='approve-role-request'),
 
 ]
