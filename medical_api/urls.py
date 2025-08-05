@@ -48,6 +48,7 @@ urlpatterns = [
     path('plans/', SubscriptionPlanListCreateAPIView.as_view(), name='plan-list-create'),
     path('subscriptions/', UserSubscriptionListAPIView.as_view(), name='user-subscription-list'),
     path('subscribe/', UserSubscriptionCreateAPIView.as_view(), name='user-subscription-create'),
+ 
 
     path('submit-review/<int:product_id>/', SubmitReviewAPIView.as_view(), name='submit-review'),
     path('reorder/<int:order_id>/', ReorderAPIView.as_view(), name='reorder'),
@@ -62,5 +63,19 @@ urlpatterns = [
     path('request-role/', RequestRoleAPIView.as_view(), name='request-role'),
     path('manage-requests/', ManageRequestsAPIView.as_view(), name='manage-requests'),
     path('approve-role-request/<int:pk>/', ApproveRoleRequestAPIView.as_view(), name='approve-role-request'),
+  # ------------------- Cart --------------------
+    path('cart/', CartListAPIView.as_view(), name='cart-list'),
+    path('cart/add/', CartAddAPIView.as_view(), name='cart-add'),
+    path('cart/remove/', CartRemoveAPIView.as_view(), name='cart-remove'),
 
+ # ------------------- wishlist --------------------
+     path('wishlist/toggle/', WishlistToggleAPIView.as_view(), name='wishlist-toggle'),
+    path('wishlist/remove/', WishlistRemoveAPIView.as_view(), name='wishlist-remove'),
+    path('wishlist/list/', WishlistListAPIView.as_view(), name='wishlist-list'),
+
+ # ------------------- shipping info --------------------   
+    path('shipping-info/', ShippingInfoAPIView.as_view(), name='shipping-info'),
+    path('address/add/', AddAddressAPIView.as_view(), name='add-address'),
+    path('address/<int:pk>/edit/', EditAddressAPIView.as_view(), name='edit-address'),
+    path('address/<int:address_id>/delete/', RemoveAddressAPIView.as_view(), name='remove-address'),
 ]

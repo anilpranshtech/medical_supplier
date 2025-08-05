@@ -9,7 +9,7 @@ import re
 from rest_framework.permissions import IsAuthenticated
 
 from dashboard.models import DoctorProfile, ProductCategory, ProductSubCategory, ProductLastCategory, Event, Product, \
-    SupplierProfile, Residency, Speciality, Nationality, CountryCode,SubscriptionPlan, UserSubscription
+    SupplierProfile, Residency, Speciality, Nationality, CountryCode,SubscriptionPlan, UserSubscription , CartProduct, Product,WishlistProduct,CustomerBillingAddress
 from django.db import IntegrityError
 
 
@@ -534,14 +534,56 @@ class BankTransferPaymentSerializer(serializers.ModelSerializer):
         model = BankTransferPayment
         fields = ['id', 'name', 'amount', 'created_at', 'verified_by_admin', 'admin_notes', 'proof_image']
 
+
+class ProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = ['id', 'name', 'price'] 
+
+class CartProductSerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source='product.name', read_only=True)
+    product_price = serializers.DecimalField(source='product.price', read_only=True, max_digits=10, decimal_places=2)
+    product_image = serializers.SerializerMethodField()
+    product = ProductSerializer(read_only=True)
+
+    class Meta:
+        model = CartProduct
+        fields = ['id', 'product', 'product_name', 'product_price', 'quantity', 'product_image', 'created_at']
+
+    def get_product_image(self, obj):
+        if obj.product.productimage_set.exists():
+            return obj.product.productimage_set.first().image.url
+        return ''
+# class CartProductSerializer(serializers.ModelSerializer):
+#     product = ProductSerializer()
+
+#     class Meta:
+#         model = CartProduct
+#         fields = ['id', 'product', 'quantity', 'created_at']
+
+class WishlistProductSerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source='product.name')
+    price = serializers.SerializerMethodField()
+    sku = serializers.CharField(source='product.supplier_sku')
+    image = serializers.SerializerMethodField()
+
+    class Meta:
+        model = WishlistProduct
+        fields = ['id', 'product', 'product_name', 'price', 'sku', 'image']
+
+    def get_price(self, obj):
+        return f"${obj.product.price}"
+
+    def get_image(self, obj):
+        main_image = obj.product.productimage_set.first()
+        return main_image.image.url if main_image else None
+
+
 class CustomerBillingAddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomerBillingAddress
-        fields = [
-            'id', 'address_title', 'customer_name', 'customer_address1', 'customer_address2',
-            'phone', 'customer_city', 'customer_state', 'customer_postal_code',
-            'customer_country', 'customer_country_code', 'is_default'
-        ]
+        fields = ['id','address_title','customer_address1','customer_address2','phone','customer_city','customer_state','customer_country','customer_postal_code',]
+        read_only_fields = ['user', 'is_deleted']
 
 class OrderSerializer(serializers.ModelSerializer):
     payment = PaymentSerializer()
@@ -551,12 +593,7 @@ class OrderSerializer(serializers.ModelSerializer):
         fields = ['id', 'order_id', 'payment', 'shipping_fees', 'created_at', 'status']
 
 
-class CartProductSerializer(serializers.ModelSerializer):
-    product = ProductSerializer()
 
-    class Meta:
-        model = CartProduct
-        fields = ['id', 'product', 'quantity', 'created_at']
 
 
 class RFQRequestSerializer(serializers.ModelSerializer):
@@ -628,3 +665,12 @@ class RoleRequestSerializer(serializers.ModelSerializer):
         if value not in valid_roles:
             raise serializers.ValidationError(f"Invalid role. Must be one of: {', '.join(valid_roles)}")
         return value
+        fields = ['id','address_title','customer_address1','customer_address2','phone','customer_city','customer_state','customer_country','customer_postal_code',]
+        read_only_fields = ['user', 'is_deleted']
+
+class ShippingInfoSerializer(serializers.Serializer):
+  
+    addresses = CustomerBillingAddressSerializer(many=True)
+    default_address = CustomerBillingAddressSerializer()
+    cart_items = CartProductSerializer(many=True)
+    order_summary = serializers.DictField()

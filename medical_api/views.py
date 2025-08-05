@@ -28,6 +28,16 @@ from django.utils import timezone
 from datetime import date, timedelta
 from django.db.models import Avg, Prefetch
 import random
+from dashboard.models import PasswordUpdateTracker, ProductCategory, ProductSubCategory, ProductLastCategory, Product, \
+    SupplierProfile,SubscriptionPlan, UserSubscription ,CartProduct,WishlistProduct,CustomerBillingAddress,RetailProfile, WholesaleBuyerProfile, SupplierProfile
+from medical_api.serializers import UserLoginSerializer, DoctorRegistrationSerializer, ChangePasswordSerializer, \
+    DoctorProfileSerializer, ProductCategorySerializer, ProductSubCategorySerializer, ProductLastCategorySerializer, \
+    ProductSerializer, ProductCreateSerializer, UserEmailSerializer, SupplierListSerializer, ResidencySerializer, \
+    SpecialitySerializer, NationalitySerializer, CountryCodeSerializer,SubscriptionPlanSerializer, UserSubscriptionSerializer,CartProductSerializer,WishlistProductSerializer,CustomerBillingAddressSerializer,ShippingInfoSerializer
+from django.contrib.auth import get_user_model, login, authenticate, logout
+from rest_framework.response import Response
+from decimal import Decimal
+
 UserModel = get_user_model()
 from dashboard.models import *
 from adminv2.models import *
@@ -1659,52 +1669,98 @@ class RFQSubmissionAPIView(views.APIView):
         if not product_id:
             logger.error(f"Product ID missing in request for user {request.user.id}")
             return Response({"error": {"product_id": ["This field is required."]}}, status=status.HTTP_400_BAD_REQUEST)
+    
+
+
+
+class CartListAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        cart_items = CartProduct.objects.filter(user=request.user).select_related('product')
+        serializer = CartProductSerializer(cart_items, many=True)
+
+        subtotal = sum(float(item.product.price) * item.quantity for item in cart_items)
+        shipping = 0.0 
+        vat = 0.0
+        total = round(subtotal + shipping + vat, 2)
+
+        cart_summary = {
+            "title": "Price Details",
+            "Subtotal": subtotal,
+            "Shipping": shipping,
+            "VAT": vat,
+            "Total": total
+        }
+
+        response_data = {
+            "code": 200,
+            "cart_summary": cart_summary,
+            "message": "Success",
+            "items": {
+                "data": serializer.data
+            }
+        }
+
+        return Response(response_data, status=status.HTTP_200_OK)
+
+class CartAddAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        product_id = request.data.get('product_id')
+        quantity = int(request.data.get('quantity', 1))
+
+        if not product_id:
+            return format_response(data=None, message="Product ID is required", code=status.HTTP_400_BAD_REQUEST)
+
+        product = get_object_or_404(Product, id=product_id)
+        cart_item, created = CartProduct.objects.get_or_create(user=request.user, product=product)
+
+        if not created:
+            cart_item.quantity += quantity
+        else:
+            cart_item.quantity = quantity
+
+        cart_item.save()
+        return format_response(message="Product added to cart")
+
+class CartRemoveAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        item_id = request.data.get('item_id')
+
+        if not item_id:
+            return format_response(data=None, message="Item ID is required", code=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            item = CartProduct.objects.get(product_id=item_id, user=request.user)
+            item.delete()
+            return format_response(message="Item removed from cart")
+        except CartProduct.DoesNotExist:
+            return format_response(data=None, message="Item not found", code=status.HTTP_404_NOT_FOUND)
+        
+class WishlistToggleAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        product_id = request.data.get('product_id')
+        if not product_id:
+            return format_response(data=None, message="Product ID is required", code=status.HTTP_400_BAD_REQUEST)
 
         try:
             product = Product.objects.get(id=product_id)
         except Product.DoesNotExist:
-            logger.error(f"Product {product_id} not found for user {request.user.id}")
-            return Response({"error": "Product not found."}, status=status.HTTP_404_NOT_FOUND)
+            return format_response(data=None, message="Product not found", code=status.HTTP_404_NOT_FOUND)
 
-        rfq_data = {
-            'requested_by': request.user.id,
-            'product': product.id,
-            'quantity': data.get('quantity'),
-            'message': data.get('message', ''),
-            'company_name': data.get('company_name', ''),
-            'expected_delivery_date': data.get('expected_delivery_date') or None,
-            'status': 'received'
-        }
+        wishlist_item, created = WishlistProduct.objects.get_or_create(user=request.user, product=product)
+        if not created:
+            wishlist_item.delete()
+            return format_response(data={"status": "removed"}, message="Removed from wishlist")
+        return format_response(data={"status": "added"}, message="Added to wishlist")
 
-        serializer = RFQRequestSerializer(data=rfq_data, context={'request': request})
-        if serializer.is_valid():
-            rfq = serializer.save()
-            try:
-                send_mail(
-                    subject='Quotation Request Received',
-                    message='Thank you for your quotation request. Our team will get back to you shortly.',
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=[request.user.email],
-                    fail_silently=False,
-                )
-                rfq.email_sent = True
-                rfq.save()
-                logger.info(f"RFQ {rfq.id} submitted by user {request.user.id} for product {product_id}, email sent")
-            except Exception as e:
-                logger.error(f"Failed to send email for RFQ {rfq.id}: {str(e)}")
-                rfq.email_sent = False
-                rfq.save()
-            return Response({
-                "message": "Quotation request submitted successfully.",
-                "rfq": RFQRequestSerializer(rfq, context={'request': request}).data
-            }, status=status.HTTP_201_CREATED)
-        else:
-            logger.error(f"RFQ submission failed for user {request.user.id}: {serializer.errors}")
-            return Response({"error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
-    def get(self, request):
-        logger.warning(f"GET request to RFQSubmissionAPIView by user {request.user.id}, redirecting to home")
-        return Response({"error": "Method not allowed. Use POST to submit an RFQ."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 class UserQuotationAPIView(views.APIView):
@@ -1722,6 +1778,112 @@ class UserQuotationAPIView(views.APIView):
         }
 
         logger.info(f"Quotations loaded for user {user.id}: {sent_quotations.count()} sent, {received_quotations.count()} received")
+        return Response(data)
+
+ 
+
+
+class WishlistRemoveAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        product_id = request.data.get("product_id")
+
+        if not product_id:
+            return format_response(message="Product ID is required", code=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            wishlist_item = WishlistProduct.objects.get(user=request.user, product_id=product_id)
+            wishlist_item.delete()
+            return format_response(message="Product removed from wishlist")
+        except WishlistProduct.DoesNotExist:
+            return format_response(message="Product not found in wishlist", code=status.HTTP_404_NOT_FOUND)
+
+class WishlistListAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+    pagination_class = CustomPagination
+
+    @property
+    def paginator(self):
+        if not hasattr(self, '_paginator'):
+            self._paginator = self.pagination_class()
+        return self._paginator
+
+    def paginate_queryset(self, queryset):
+        if self.paginator is None:
+            return None
+        return self.paginator.paginate_queryset(queryset, self.request, view=self)
+
+    def get_paginated_response(self, data):
+        assert self.paginator is not None
+        return self.paginator.get_paginated_response(data)
+
+    def get(self, request):
+        wishlist_items = WishlistProduct.objects.filter(user=request.user).select_related('product')
+        no_page = request.query_params.get('no_page', '').lower() in ('true', '1')
+
+        if no_page:
+            serializer = WishlistProductSerializer(wishlist_items, many=True)
+            return format_response(data=serializer.data)
+
+        page = self.paginate_queryset(wishlist_items)
+        if page is not None:
+            serializer = WishlistProductSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = WishlistProductSerializer(wishlist_items, many=True)
+        return format_response(data=serializer.data)
+
+class ShippingInfoAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+
+        # Profile detection
+        phone = None
+        profile_type = None
+        try:
+            profile = RetailProfile.objects.get(user=user)
+            phone = profile.phone
+            profile_type = 'retailer'
+        except RetailProfile.DoesNotExist:
+            try:
+                profile = WholesaleBuyerProfile.objects.get(user=user)
+                phone = profile.phone
+                profile_type = 'wholesaler'
+            except WholesaleBuyerProfile.DoesNotExist:
+                try:
+                    profile = SupplierProfile.objects.get(user=user)
+                    phone = profile.phone
+                    profile_type = 'supplier'
+                except SupplierProfile.DoesNotExist:
+                    pass
+
+        # Address info
+        addresses = CustomerBillingAddress.objects.filter(user=user, is_deleted=False)
+        default_address = CustomerBillingAddress.objects.filter(user=user, is_default=True, is_deleted=False).first()
+
+        # Cart info
+        cart_items = CartProduct.objects.filter(user=user).select_related('product')
+        subtotal = sum(Decimal(item.product.price) * item.quantity for item in cart_items)
+        shipping = Decimal('0.00')
+        vat = Decimal('0.00')
+        total = subtotal + shipping + vat
+
+        data = {
+           
+            'addresses': CustomerBillingAddressSerializer(addresses, many=True).data,
+            'default_address': CustomerBillingAddressSerializer(default_address).data if default_address else None,
+            'cart_items': CartProductSerializer(cart_items, many=True).data,
+            'order_summary': {
+                'subtotal': str(subtotal),
+                'shipping': str(shipping),
+                'vat': str(vat),
+                'total': str(total)
+            }
+        }
+
         return Response(data)
 
 
@@ -1940,3 +2102,83 @@ class ApproveRoleRequestAPIView(views.APIView):
         else:
             logger.warning(f"Invalid action {action} or status {current_status} for role request {pk} by admin {request.user.id}")
             return Response({"error": "Invalid action or request status."}, status=status.HTTP_400_BAD_REQUEST)
+
+       
+        phone = None
+        profile_type = None
+        try:
+            profile = RetailProfile.objects.get(user=user)
+            phone = profile.phone
+            profile_type = 'retailer'
+        except RetailProfile.DoesNotExist:
+            try:
+                profile = WholesaleBuyerProfile.objects.get(user=user)
+                phone = profile.phone
+                profile_type = 'wholesaler'
+            except WholesaleBuyerProfile.DoesNotExist:
+                try:
+                    profile = SupplierProfile.objects.get(user=user)
+                    phone = profile.phone
+                    profile_type = 'supplier'
+                except SupplierProfile.DoesNotExist:
+                    pass
+
+        
+        addresses = CustomerBillingAddress.objects.filter(user=user, is_deleted=False)
+        default_address = CustomerBillingAddress.objects.filter(user=user, is_default=True, is_deleted=False).first()
+        cart_items = CartProduct.objects.filter(user=user).select_related('product')
+        subtotal = sum(Decimal(item.product.price) * item.quantity for item in cart_items)
+        shipping = Decimal('0.00')
+        vat = Decimal('0.00')
+        total = subtotal + shipping + vat
+
+        data = {
+           
+            'addresses': CustomerBillingAddressSerializer(addresses, many=True).data,
+            'default_address': CustomerBillingAddressSerializer(default_address).data if default_address else None,
+            'cart_items': CartProductSerializer(cart_items, many=True).data,
+            'order_summary': {
+                'subtotal': str(subtotal),
+                'shipping': str(shipping),
+                'vat': str(vat),
+                'total': str(total)
+            }
+        }
+
+        return Response(data)
+
+class AddAddressAPIView(generics.CreateAPIView):
+    serializer_class = CustomerBillingAddressSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        is_default = serializer.validated_data.get('is_default', False)
+        if is_default:
+            CustomerBillingAddress.objects.filter(user=user, is_default=True).update(is_default=False)
+        serializer.save(user=user)
+
+class RemoveAddressAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, address_id):
+        try:
+            address = CustomerBillingAddress.objects.get(id=address_id, user=request.user, is_deleted=False)
+            address.is_deleted = True
+            address.save()
+            return Response({'message': 'Address deleted successfully'}, status=status.HTTP_200_OK)
+        except CustomerBillingAddress.DoesNotExist:
+            return Response({'error': 'Address not found'}, status=status.HTTP_404_NOT_FOUND)
+
+class EditAddressAPIView(generics.UpdateAPIView):
+    serializer_class = CustomerBillingAddressSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return CustomerBillingAddress.objects.filter(user=self.request.user, is_deleted=False)
+
+    def perform_update(self, serializer):
+        address = serializer.save()
+        if address.is_default:
+            CustomerBillingAddress.objects.filter(user=self.request.user, is_default=True).exclude(id=address.id).update(is_default=False)
+
