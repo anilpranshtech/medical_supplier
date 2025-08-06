@@ -12,6 +12,7 @@ urlpatterns = [
     path('login/', CustomLoginView.as_view(), name='login'),
     path('', HomeView.as_view(), name='home'),
     path('register/', RegistrationView.as_view(), name='register'),
+    path('resend-otp/', ResendOTPView.as_view(), name='resend_otp'),
     path('profile/', UserProfileView.as_view(), name='profile'),
     path('upload-profile-picture/', views.UploadProfilePictureView.as_view(), name='upload_profile_picture'),
 

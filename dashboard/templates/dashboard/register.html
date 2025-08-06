@@ -7,6 +7,7 @@
     <title>User Registration</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap');
 
@@ -16,7 +17,6 @@
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-            background-opacity: 0.1;
         }
 
         .dark body {
@@ -25,11 +25,12 @@
 
         .register-container {
             background: #ffffff;
-            padding: 48px 40px;
-            border-radius: 24px;
+            padding: 2.5rem;
+            border-radius: 1.5rem;
             width: 100%;
             max-width: 500px;
             border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         .dark .register-container {
@@ -38,14 +39,15 @@
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 1.25rem;
         }
 
         .form-group label {
-            font-size: 14px;
+            font-size: 0.875rem;
             color: #1e293b;
-            margin-bottom: 6px;
+            margin-bottom: 0.375rem;
             display: block;
+            font-weight: 600;
         }
 
         .dark .form-group label {
@@ -54,14 +56,13 @@
 
         .input-field {
             width: 100%;
-            padding: 8px 16px;
-            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
             background: #ffffff;
             border: 1px solid #D0D5DD;
-            font-size: 16px;
+            font-size: 1rem;
             color: #101828;
             transition: border 0.2s ease, box-shadow 0.2s ease;
-            box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
         }
 
         .dark .input-field {
@@ -70,13 +71,9 @@
             color: #e5e7eb;
         }
 
-        .input-field:hover {
-            border-color: #84CAFF;
-        }
-
         .input-field:focus {
-            border-color: #84CAFF;
-            box-shadow: 0 0 0 4px rgba(164, 202, 254, 0.3);
+            border-color: #0ea5e9;
+            box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.15);
             outline: none;
         }
 
@@ -90,18 +87,13 @@
 
         .toggle-password {
             position: absolute;
-            right: 12px;
+            right: 0.75rem;
             top: 50%;
             transform: translateY(-50%);
             background: none;
             border: none;
             color: #98A2B3;
             cursor: pointer;
-            padding: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
         }
 
         .dark .toggle-password {
@@ -111,24 +103,16 @@
         .buyer-options {
             display: flex;
             justify-content: center;
-            gap: 20px;
-            margin-bottom: 16px;
-            font-weight: 500;
-            font-size: 17px;
-            color: #344054;
-        }
-
-        .dark .buyer-options {
-            color: #e5e7eb;
+            gap: 1rem;
+            margin-bottom: 1rem;
         }
 
         .buyer-options label {
             background: #f0f9ff;
-            padding: 8px 12px;
-            border-radius: 10px;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
             cursor: pointer;
             border: 1px solid #bae6fd;
-            transition: background 0.3s;
         }
 
         .dark .buyer-options label {
@@ -136,40 +120,33 @@
             border-color: #1d4ed8;
         }
 
-        .buyer-options input[type="radio"] {
-            margin-right: 6px;
-        }
-
-        .continue-btn, .create-btn {
+        .continue-btn, .create-btn, .verify-btn {
             width: 100%;
             background: #0ea5e9;
             color: white;
-            padding: 12px;
+            padding: 0.75rem;
             border: none;
-            border-radius: 8px;
-            font-size: 16px;
+            border-radius: 0.5rem;
+            font-size: 1rem;
             font-weight: 500;
             cursor: pointer;
-            transition: background 0.2s ease, transform 0.2s ease;
-            box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+            transition: background 0.2s ease;
         }
 
-        .continue-btn:hover, .create-btn:hover {
+        .continue-btn:hover, .create-btn:hover, .verify-btn:hover {
             background: #0284c7;
-            transform: translateY(-1px);
         }
 
         .back-btn {
             width: 100%;
             background: #f1f5f9;
             color: #64748b;
-            padding: 12px;
+            padding: 0.75rem;
             border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 16px;
+            border-radius: 0.5rem;
+            font-size: 1rem;
             font-weight: 500;
             cursor: pointer;
-            transition: background 0.2s ease, transform 0.2s ease;
         }
 
         .dark .back-btn {
@@ -180,7 +157,6 @@
 
         .back-btn:hover {
             background: #e2e8f0;
-            transform: translateY(-1px);
         }
 
         .dark .back-btn:hover {
@@ -189,8 +165,8 @@
 
         .signup-link {
             text-align: center;
-            font-size: 14px;
-            margin-top: 20px;
+            font-size: 0.875rem;
+            margin-top: 1.25rem;
             color: #64748b;
         }
 
@@ -208,91 +184,87 @@
             text-decoration: underline;
         }
 
-        .error-message {
+        .error-message, .success-message {
             color: #F04438;
-            font-size: 12px;
-            margin-top: 4px;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
             display: none;
+        }
+
+        .success-message {
+            color: #22c55e;
         }
 
         .server-error {
             color: #F04438;
-            font-size: 12px;
-            margin-bottom: 10px;
+            font-size: 0.75rem;
+            margin-bottom: 0.625rem;
             text-align: center;
         }
 
-        .google-login-btn {
-            width: 100%;
-            background-color: white;
-            color: #344054;
-            border: 1px solid #D0D5DD;
-            border-radius: 8px;
-            padding: 8px 16px;
-            font-size: 16px;
-            font-weight: 500;
-            cursor: pointer;
+        .otp-input-container {
             display: flex;
-            align-items: center;
+            gap: 0.5rem;
             justify-content: center;
-            margin-bottom: 24px;
-            transition: all 0.2s ease;
-            box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
         }
 
-        .dark .google-login-btn {
-            background-color: #374151;
+        .otp-input {
+            width: 2.5rem;
+            height: 2.5rem;
+            text-align: center;
+            font-size: 1.25rem;
+            border-radius: 0.5rem;
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            color: #0f172a;
+        }
+
+        .dark .otp-input {
+            background: #374151;
             border-color: #4b5563;
             color: #e5e7eb;
         }
 
-        .google-login-btn:hover {
-            background-color: #F9FAFB;
-            border-color: #98A2B3;
+        .otp-input:focus {
+            border-color: #0ea5e9;
+            box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.15);
+            outline: none;
         }
 
-        .dark .google-login-btn:hover {
-            background-color: #4b5563;
+        .otp-input.input-error {
+            border-color: #ef4444 !important;
         }
 
-        .or-divider {
-            display: flex;
-            align-items: center;
-            margin-bottom: 24px;
+        .resend-link {
+            color: #0ea5e9;
+            font-size: 0.875rem;
+            text-align: center;
+            margin-bottom: 1rem;
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
         }
 
-        .or-text {
-            padding: 0 12px;
-            color: #98A2B3;
-            font-size: 14px;
-            font-weight: 500;
+        .resend-link:hover {
+            text-decoration: underline;
         }
 
-        .dark .or-text {
-            color: #9ca3af;
-        }
-
-        .or-line {
-            flex: 1;
-            height: 1px;
-            background-color: #EAECF0;
-        }
-
-        .dark .or-line {
-            background-color: #4b5563;
+        .resend-link.disabled {
+            color: #64748b;
+            cursor: not-allowed;
+            text-decoration: none;
         }
 
         .role-toggle-btn {
             display: block;
             width: 100%;
             text-align: center;
-            font-size: 19px;
+            font-size: 1rem;
             font-weight: 600;
             color: #1570EF;
             text-decoration: none;
             cursor: pointer;
-            padding: 12px 0;
-            transition: all 0.2s ease;
+            padding: 0.75rem 0;
         }
 
         .dark .role-toggle-btn {
@@ -305,20 +277,11 @@
     </style>
 </head>
 <body class="antialiased flex h-full text-base bg-background">
-<div class="flex flex-col items-center justify-center grow bg-center bg-no-repeat bg-opacity-10 mt-5">
+<div class="flex flex-col items-center justify-center grow bg-center bg-no-repeat mt-5">
     <div class="register-container mb-5">
-        <h1 class="text-2xl font-semibold tracking-tight text-center text-gray-700">Create Your Account</h1>
+        <h1 class="text-2xl font-bold tracking-tight text-center text-gray-700">Create Your Account</h1>
 
-        <!-- Display non-field errors -->
-        {% if form.non_field_errors %}
-            <div class="server-error">
-                {% for error in form.non_field_errors %}
-                    {{ error }}
-                {% endfor %}
-            </div>
-        {% endif %}
-
-        <!-- Display server-side messages -->
+        <!-- Server-side errors -->
         {% if messages %}
             <div class="server-error">
                 {% for message in messages %}
@@ -327,294 +290,218 @@
             </div>
         {% endif %}
 
-        <form method="post" class="space-y-5" id="registrationForm" novalidate>
-            {% csrf_token %}
-            <input type="hidden" name="user_type" id="user_type_input" value="{{ form_data.user_type|default:'buyer' }}">
+        <!-- Registration Form -->
+        <div id="registerSection">
+            <form method="post" class="space-y-5" id="registerForm" novalidate>
+                {% csrf_token %}
+                <input type="hidden" name="user_type" id="user_type_input" value="{{ form_data.user_type|default:'buyer' }}">
 
-            <!-- Step 1 Fields -->
-            <div id="step1Fields" class="space-y-4">
-                <!-- Role Toggle -->
-                <div class="role-toggle mb-3">
-                    <a href="#" id="supplierBtn" class="role-toggle-btn text-center inline-block {% if form_data.user_type == 'supplier' %}active{% endif %}">
-                        {% if form_data.user_type == 'supplier' %}Become a buyer?{% else %}Become a supplier?{% endif %}
-                    </a>
-                </div>
-
-                <!-- Buyer Options -->
-                <div id="buyerOptions" class="buyer-options {% if form_data.user_type == 'supplier' %}hidden{% endif %}">
-                    <label><input type="radio" name="buyer_type" value="retailer" {% if form_data.buyer_type|default:'retailer' == 'retailer' %}checked{% endif %}> Retailer</label>
-                    <label><input type="radio" name="buyer_type" value="wholesaler" {% if form_data.buyer_type == 'wholesaler' %}checked{% endif %}> Wholesaler</label>
-                </div>
-
-                <div class="form-group">
-                    <label for="first_name">First Name</label>
-                    <input type="text" name="first_name" id="first_name" class="input-field {% if messages %}{% for message in messages %}{% if message.extra_tags == 'first_name' %}input-error{% endif %}{% endfor %}{% endif %}"
-                           placeholder="Your first name" value="{{ form_data.first_name|default_if_none:'' }}" required>
-                    {% for message in messages %}
-                        {% if message.extra_tags == 'first_name' %}
-                            <div class="error-message" style="display: block;">{{ message }}</div>
-                        {% endif %}
-                    {% endfor %}
-                    <div class="error-message" id="first_name_error">Please enter your first name</div>
-                </div>
-
-                <div class="form-group">
-                    <label for="last_name">Last Name</label>
-                    <input type="text" name="last_name" id="last_name" class="input-field {% if messages %}{% for message in messages %}{% if message.extra_tags == 'last_name' %}input-error{% endif %}{% endfor %}{% endif %}"
-                           placeholder="Your last name" value="{{ form_data.last_name|default_if_none:'' }}" required>
-                    {% for message in messages %}
-                        {% if message.extra_tags == 'last_name' %}
-                            <div class="error-message" style="display: block;">{{ message }}</div>
-                        {% endif %}
-                    {% endfor %}
-                    <div class="error-message" id="last_name_error">Please enter your last name</div>
-                </div>
-
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" name="email" id="email" class="input-field {% if messages %}{% for message in messages %}{% if message.extra_tags == 'email' %}input-error{% endif %}{% endfor %}{% endif %}"
-                           placeholder="Your email" value="{{ form_data.email|default_if_none:'' }}" required>
-                    {% for message in messages %}
-                        {% if message.extra_tags == 'email' %}
-                            <div class="error-message" style="display: block;">{{ message }}</div>
-                        {% endif %}
-                    {% endfor %}
-                    <div class="error-message" id="email_error">Please enter a valid email address</div>
-                </div>
-
-                <div class="form-group">
-                    <label for="phone">Phone Number</label>
-                    <input type="tel" name="phone" id="phone" class="input-field {% if messages %}{% for message in messages %}{% if message.extra_tags == 'phone' %}input-error{% endif %}{% endfor %}{% endif %}"
-                           placeholder="Your phone number" value="{{ form_data.phone|default_if_none:'' }}" required>
-                    {% for message in messages %}
-                        {% if message.extra_tags == 'phone' %}
-                            <div class="error-message" style="display: block;">{{ message }}</div>
-                        {% endif %}
-                    {% endfor %}
-                    <div class="error-message" id="phone_error">Please enter a valid phone number</div>
-                </div>
-
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <div class="password-input-container">
-                        <input type="password" name="password" id="password" placeholder="Your password" class="input-field {% if messages %}{% for message in messages %}{% if message.extra_tags == 'password' %}input-error{% endif %}{% endfor %}{% endif %}" required>
-                        {% for message in messages %}
-                            {% if message.extra_tags == 'password' %}
-                                <div class="error-message" style="display: block;">{{ message }}</div>
-                            {% endif %}
-                        {% endfor %}
-                        <div class="error-message" id="password_error">Please enter a password</div>
-                        <button type="button" class="toggle-password" aria-label="Toggle password visibility">
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M10 4.375C3.75 4.375 1.25 10 1.25 10C1.25 10 3.75 15.625 10 15.625C16.25 15.625 18.75 10 18.75 10C18.75 10 16.25 4.375 10 4.375Z"
-                                      stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M10 13.125C11.7259 13.125 13.125 11.7259 13.125 10C13.125 8.27411 11.7259 6.875 10 6.875C8.27411 6.875 6.875 8.27411 6.875 10C6.875 11.7259 8.27411 13.125 10 13.125Z"
-                                      stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </button>
+                <!-- Step 1 Fields -->
+                <div id="step1Fields" class="space-y-4">
+                    <div class="role-toggle mb-3">
+                        <a href="#" id="supplierBtn" class="role-toggle-btn">
+                            {% if form_data.user_type == 'supplier' %}Become a buyer?{% else %}Become a supplier?{% endif %}
+                        </a>
                     </div>
-                </div>
 
-                <div class="form-group">
-                    <label for="confirm_password">Confirm Password</label>
-                    <div class="password-input-container">
-                        <input type="password" name="confirm_password" id="confirm_password" placeholder="Confirm your password" class="input-field {% if messages %}{% for message in messages %}{% if message.extra_tags == 'confirm_password' %}input-error{% endif %}{% endfor %}{% endif %}" required>
-                        {% for message in messages %}
-                            {% if message.extra_tags == 'confirm_password' %}
-                                <div class="error-message" style="display: block;">{{ message }}</div>
-                            {% endif %}
-                        {% endfor %}
+                    <div id="buyerOptions" class="buyer-options {% if form_data.user_type == 'supplier' %}hidden{% endif %}">
+                        <label><input type="radio" name="buyer_type" value="retailer" {% if form_data.buyer_type|default:'retailer' == 'retailer' %}checked{% endif %}> Retailer</label>
+                        <label><input type="radio" name="buyer_type" value="wholesaler" {% if form_data.buyer_type == 'wholesaler' %}checked{% endif %}> Wholesaler</label>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="first_name">First Name</label>
+                        <input type="text" name="first_name" id="first_name" class="input-field" placeholder="Your first name" value="{{ form_data.first_name|default_if_none:'' }}" required>
+                        <div class="error-message" id="first_name_error">Please enter your first name</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="last_name">Last Name</label>
+                        <input type="text" name="last_name" id="last_name" class="input-field" placeholder="Your last name" value="{{ form_data.last_name|default_if_none:'' }}" required>
+                        <div class="error-message" id="last_name_error">Please enter your last name</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" name="email" id="email" class="input-field" placeholder="Your email" value="{{ form_data.email|default_if_none:'' }}" required>
+                        <div class="error-message" id="email_error">Please enter a valid email address</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">Phone Number</label>
+                        <input type="tel" name="phone" id="phone" class="input-field" placeholder="Your phone number" value="{{ form_data.phone|default_if_none:'' }}" required>
+                        <div class="error-message" id="phone_error">Please enter a valid phone number</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <div class="password-input-container">
+                            <input type="password" name="password" id="password" placeholder="Your password" class="input-field" required>
+                            <button type="button" class="toggle-password" aria-label="Toggle password visibility">
+                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M10 4.375C3.75 4.375 1.25 10 1.25 10C1.25 10 3.75 15.625 10 15.625C16.25 15.625 18.75 10 18.75 10C18.75 10 16.25 4.375 10 4.375Z"
+                                          stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M10 13.125C11.7259 13.125 13.125 11.7259 13.125 10C13.125 8.27411 11.7259 6.875 10 6.875C8.27411 6.875 6.875 8.27411 6.875 10C6.875 11.7259 8.27411 13.125 10 13.125Z"
+                                          stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="error-message" id="password_error">Please enter a valid password</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirm_password">Confirm Password</label>
+                        <div class="password-input-container">
+                            <input type="password" name="confirm_password" id="confirm_password" placeholder="Confirm your password" class="input-field" required>
+                            <button type="button" class="toggle-password" aria-label="Toggle password visibility">
+                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M10 4.375C3.75 4.375 1.25 10 1.25 10C1.25 10 3.75 15.625 10 15.625C16.25 15.625 18.75 10 18.75 10C18.75 10 16.25 4.375 10 4.375Z"
+                                          stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M10 13.125C11.7259 13.125 13.125 11.7259 13.125 10C13.125 8.27411 11.7259 6.875 10 6.875C8.27411 6.875 6.875 8.27411 6.875 10C6.875 11.7259 8.27411 13.125 10 13.125Z"
+                                          stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </button>
+                        </div>
                         <div class="error-message" id="confirm_password_error">Passwords do not match</div>
-                        <button type="button" class="toggle-password" aria-label="Toggle password visibility">
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M10 4.375C3.75 4.375 1.25 10 1.25 10C1.25 10 3.75 15.625 10 15.625C16.25 15.625 18.75 10 18.75 10C18.75 10 16.25 4.375 10 4.375Z"
-                                      stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M10 13.125C11.7259 13.125 13.125 11.7259 13.125 10C13.125 8.27411 11.7259 6.875 10 6.875C8.27411 6.875 6.875 8.27411 6.875 10C6.875 11.7259 8.27411 13.125 10 13.125Z"
-                                      stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </button>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="g-recaptcha" data-sitekey="6LdTHV8rAAAAAM_YfllvwXXOezA124fFTlQXO3Tb"></div>
+                        <div class="error-message" id="recaptcha_error">Please complete the captcha</div>
+                    </div>
+
+                    <button type="button" id="nextBtn" class="continue-btn">Continue</button>
+                </div>
+
+                <!-- Step 2 Fields -->
+                <div id="step2Fields" class="space-y-4 hidden">
+                    <div id="retailFields" class="user-fields hidden">
+                        <div class="form-group">
+                            <label for="current_position">Current Position</label>
+                            <input type="text" name="current_position" id="current_position" placeholder="Your current position" value="{{ form_data.current_position|default_if_none:'' }}" class="input-field">
+                            <div class="error-message" id="current_position_error">Please enter your current position</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="workplace">Workplace</label>
+                            <input type="text" name="workplace" id="workplace" placeholder="Your workplace" value="{{ form_data.workplace|default_if_none:'' }}" class="input-field">
+                            <div class="error-message" id="workplace_error">Please enter your workplace</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="nationality">Nationality</label>
+                            <select name="nationality" id="nationality" class="input-field">
+                                <option value="">Select your nationality</option>
+                                {% for nationality in nationalities %}
+                                    <option value="{{ nationality.id }}" {% if form_data.nationality|add:0 == nationality.id %}selected{% endif %}>{{ nationality.country }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="error-message" id="nationality_error">Please select a valid nationality</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="residency">Residency</label>
+                            <select name="residency" id="residency" class="input-field">
+                                <option value="">Select your residency</option>
+                                {% for residency in residencies %}
+                                    <option value="{{ residency.id }}" {% if form_data.residency|add:0 == residency.id %}selected{% endif %}>{{ residency.country }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="error-message" id="residency_error">Please select a valid residency</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="country_code">Country Code</label>
+                            <select name="country_code" id="country_code" class="input-field">
+                                <option value="">Select your country code</option>
+                                {% for code in country_codes %}
+                                    <option value="{{ code.id }}" {% if form_data.country_code|add:0 == code.id %}selected{% endif %}>{{ code.code }} ({{ code.country }})</option>
+                                {% endfor %}
+                            </select>
+                            <div class="error-message" id="country_code_error">Please select a valid country code</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="speciality">Speciality</label>
+                            <select name="speciality" id="speciality" class="input-field">
+                                <option value="">Select your speciality</option>
+                                {% for speciality in specialities %}
+                                    <option value="{{ speciality.id }}" {% if form_data.speciality|add:0 == speciality.id %}selected{% endif %}>{{ speciality.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="error-message" id="speciality_error">Please select a valid speciality</div>
+                        </div>
+                    </div>
+
+                    <div id="wholesalerFields" class="user-fields hidden">
+                        <div class="form-group">
+                            <label for="company_name">Company Name</label>
+                            <input type="text" name="company_name" id="company_name" placeholder="Your company name" value="{{ form_data.company_name|default_if_none:'' }}" class="input-field">
+                            <div class="error-message" id="company_name_error">Please enter your company name</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="gst_number">GST Number</label>
+                            <input type="text" name="gst_number" id="gst_number" placeholder="Your GST number" value="{{ form_data.gst_number|default_if_none:'' }}" class="input-field">
+                            <div class="error-message" id="gst_number_error">Please enter a valid GST number</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="department">Department</label>
+                            <input type="text" name="department" id="department" placeholder="Your department" value="{{ form_data.department|default_if_none:'' }}" class="input-field">
+                            <div class="error-message" id="department_error">Please enter your department</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="purchase_capacity">Purchase Capacity</label>
+                            <input type="text" name="purchase_capacity" id="purchase_capacity" placeholder="Your purchase capacity" value="{{ form_data.purchase_capacity|default_if_none:'' }}" class="input-field">
+                            <div class="error-message" id="purchase_capacity_error">Please enter a valid number</div>
+                        </div>
+                    </div>
+
+                    <div id="supplierFields" class="user-fields hidden">
+                        <div class="form-group">
+                            <label for="supplier_company_name">Company Name</label>
+                            <input type="text" name="supplier_company_name" id="supplier_company_name" placeholder="Your company name" value="{{ form_data.supplier_company_name|default_if_none:'' }}" class="input-field">
+                            <div class="error-message" id="supplier_company_name_error">Please enter your company name</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="license_number">License Number</label>
+                            <input type="text" name="license_number" id="license_number" placeholder="Your license number" value="{{ form_data.license_number|default_if_none:'' }}" class="input-field">
+                            <div class="error-message" id="license_number_error">Please enter a valid license number</div>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4">
+                        <button type="button" id="backBtn" class="back-btn">Back</button>
+                        <button type="submit" class="create-btn">Create Account</button>
                     </div>
                 </div>
 
-                <!-- Google reCAPTCHA -->
+                <div class="signup-link">
+                    Already have an account? <a href="{% url 'dashboard:login' %}">Sign in</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- OTP Section -->
+        <div id="otpSection" class="hidden">
+            <div class="otp-header">
+                <h3 class="text-2xl font-semibold tracking-tight text-center text-gray-700 dark:text-gray-200">Verify OTP</h3>
+                <p class="text-center text-gray-600 dark:text-gray-400">Enter the OTP sent to your mobile number.</p>
+            </div>
+            <div id="message" class="error-message"></div>
+            <form id="otpForm" class="flex flex-col gap-4">
+                {% csrf_token %}
                 <div class="form-group">
-                    <div class="g-recaptcha" data-sitekey="6LdTHV8rAAAAAM_YfllvwXXOezA124fFTlQXO3Tb"></div>
-                    {% for message in messages %}
-                        {% if message.extra_tags == 'recaptcha' %}
-                            <div class="error-message" style="display: block;">{{ message }}</div>
-                        {% endif %}
-                    {% endfor %}
-                    <div class="error-message" id="captcha_error">Please complete the captcha</div>
+                    <label for="otp">OTP</label>
+                    <div class="otp-input-container">
+                        <input class="otp-input" type="text" maxlength="1" pattern="[0-9]" required>
+                        <input class="otp-input" type="text" maxlength="1" pattern="[0-9]" required>
+                        <input class="otp-input" type="text" maxlength="1" pattern="[0-9]" required>
+                        <input class="otp-input" type="text" maxlength="1" pattern="[0-9]" required>
+                        <input class="otp-input" type="text" maxlength="1" pattern="[0-9]" required>
+                        <input class="otp-input" type="text" maxlength="1" pattern="[0-9]" required>
+                    </div>
+                    <div class="error-message" id="otp_error">Please enter a valid 6-digit OTP</div>
+                    <input type="hidden" name="otp" id="otp">
                 </div>
-
-                <button type="button" id="nextBtn" class="continue-btn">Continue</button>
-            </div>
-
-            <!-- Step 2 Fields -->
-            <div id="step2Fields" class="space-y-4 hidden">
-                <!-- Retailer Fields -->
-                <div id="retailFields" class="user-fields hidden">
-                    <div class="form-group">
-                        <label for="current_position">Current Position</label>
-                        <input type="text" name="current_position" id="current_position" placeholder="Your current position" value="{{ form_data.current_position|default_if_none:'' }}" class="input-field {% if messages %}{% for message in messages %}{% if message.extra_tags == 'current_position' %}input-error{% endif %}{% endfor %}{% endif %}" required>
-                        {% for message in messages %}
-                            {% if message.extra_tags == 'current_position' %}
-                                <div class="error-message" style="display: block;">{{ message }}</div>
-                            {% endif %}
-                        {% endfor %}
-                        <div class="error-message" id="current_position_error">Please enter your current position</div>
-                    </div>
-                    <div class="form-group">
-                        <label for="workplace">Workplace</label>
-                        <input type="text" name="workplace" id="workplace" placeholder="Your workplace" value="{{ form_data.workplace|default_if_none:'' }}" class="input-field {% if messages %}{% for message in messages %}{% if message.extra_tags == 'workplace' %}input-error{% endif %}{% endfor %}{% endif %}" required>
-                        {% for message in messages %}
-                            {% if message.extra_tags == 'workplace' %}
-                                <div class="error-message" style="display: block;">{{ message }}</div>
-                            {% endif %}
-                        {% endfor %}
-                        <div class="error-message" id="workplace_error">Please enter your workplace</div>
-                    </div>
-                    <div class="form-group">
-                        <label for="nationality">Nationality</label>
-                        <select name="nationality" id="nationality" class="input-field {% if messages %}{% for message in messages %}{% if message.extra_tags == 'nationality' %}input-error{% endif %}{% endfor %}{% endif %}">
-                            <option value="">Select your nationality</option>
-                            {% for nationality in nationalities %}
-                                <option value="{{ nationality.id }}" {% if form_data.nationality|add:0 == nationality.id %}selected{% endif %}>{{ nationality.country }}</option>
-                            {% endfor %}
-                        </select>
-                        {% for message in messages %}
-                            {% if message.extra_tags == 'nationality' %}
-                                <div class="error-message" style="display: block;">{{ message }}</div>
-                            {% endif %}
-                        {% endfor %}
-                        <div class="error-message" id="nationality_error">Please select a valid nationality</div>
-                    </div>
-                    <div class="form-group">
-                        <label for="residency">Residency</label>
-                        <select name="residency" id="residency" class="input-field {% if messages %}{% for message in messages %}{% if message.extra_tags == 'residency' %}input-error{% endif %}{% endfor %}{% endif %}">
-                            <option value="">Select your residency</option>
-                            {% for residency in residencies %}
-                                <option value="{{ residency.id }}" {% if form_data.residency|add:0 == residency.id %}selected{% endif %}>{{ residency.country }}</option>
-                            {% endfor %}
-                        </select>
-                        {% for message in messages %}
-                            {% if message.extra_tags == 'residency' %}
-                                <div class="error-message" style="display: block;">{{ message }}</div>
-                            {% endif %}
-                        {% endfor %}
-                        <div class="error-message" id="residency_error">Please select a valid residency</div>
-                    </div>
-                    <div class="form-group">
-                        <label for="country_code">Country Code</label>
-                        <select name="country_code" id="country_code" class="input-field {% if messages %}{% for message in messages %}{% if message.extra_tags == 'country_code' %}input-error{% endif %}{% endfor %}{% endif %}">
-                            <option value="">Select your country code</option>
-                            {% for code in country_codes %}
-                                <option value="{{ code.id }}" {% if form_data.country_code|add:0 == code.id %}selected{% endif %}>{{ code.code }} ({{ code.country }})</option>
-                            {% endfor %}
-                        </select>
-                        {% for message in messages %}
-                            {% if message.extra_tags == 'country_code' %}
-                                <div class="error-message" style="display: block;">{{ message }}</div>
-                            {% endif %}
-                        {% endfor %}
-                        <div class="error-message" id="country_code_error">Please select a valid country code</div>
-                    </div>
-                    <div class="form-group">
-                        <label for="speciality">Speciality</label>
-                        <select name="speciality" id="speciality" class="input-field {% if messages %}{% for message in messages %}{% if message.extra_tags == 'speciality' %}input-error{% endif %}{% endfor %}{% endif %}">
-                            <option value="">Select your speciality</option>
-                            {% for speciality in specialities %}
-                                <option value="{{ speciality.id }}" {% if form_data.speciality|add:0 == speciality.id %}selected{% endif %}>{{ speciality.name }}</option>
-                            {% endfor %}
-                        </select>
-                        {% for message in messages %}
-                            {% if message.extra_tags == 'speciality' %}
-                                <div class="error-message" style="display: block;">{{ message }}</div>
-                            {% endif %}
-                        {% endfor %}
-                        <div class="error-message" id="speciality_error">Please select a valid speciality</div>
-                    </div>
-                </div>
-
-                <!-- Wholesaler Fields -->
-                <div id="wholesalerFields" class="user-fields hidden">
-                    <div class="form-group">
-                        <label for="company_name">Company Name</label>
-                        <input type="text" name="company_name" id="company_name" placeholder="Your company name" value="{{ form_data.company_name|default_if_none:'' }}" class="input-field {% if messages %}{% for message in messages %}{% if message.extra_tags == 'company_name' %}input-error{% endif %}{% endfor %}{% endif %}">
-                        {% for message in messages %}
-                            {% if message.extra_tags == 'company_name' %}
-                                <div class="error-message" style="display: block;">{{ message }}</div>
-                            {% endif %}
-                        {% endfor %}
-                        <div class="error-message" id="company_name_error">Please enter your company name</div>
-                    </div>
-                    <div class="form-group">
-                        <label for="gst_number">GST Number</label>
-                        <input type="text" name="gst_number" id="gst_number" placeholder="Your GST number" value="{{ form_data.gst_number|default_if_none:'' }}" class="input-field {% if messages %}{% for message in messages %}{% if message.extra_tags == 'gst_number' %}input-error{% endif %}{% endfor %}{% endif %}">
-                        {% for message in messages %}
-                            {% if message.extra_tags == 'gst_number' %}
-                                <div class="error-message" style="display: block;">{{ message }}</div>
-                            {% endif %}
-                        {% endfor %}
-                        <div class="error-message" id="gst_number_error">Please enter a valid GST number</div>
-                    </div>
-                    <div class="form-group">
-                        <label for="department">Department</label>
-                        <input type="text" name="department" id="department" placeholder="Your department" value="{{ form_data.department|default_if_none:'' }}" class="input-field {% if messages %}{% for message in messages %}{% if message.extra_tags == 'department' %}input-error{% endif %}{% endfor %}{% endif %}">
-                        {% for message in messages %}
-                            {% if message.extra_tags == 'department' %}
-                                <div class="error-message" style="display: block;">{{ message }}</div>
-                            {% endif %}
-                        {% endfor %}
-                        <div class="error-message" id="department_error">Please enter your department</div>
-                    </div>
-                    <div class="form-group">
-                        <label for="purchase_capacity">Purchase Capacity</label>
-                        <input type="text" name="purchase_capacity" id="purchase_capacity" placeholder="Your purchase capacity" value="{{ form_data.purchase_capacity|default_if_none:'' }}" class="input-field {% if messages %}{% for message in messages %}{% if message.extra_tags == 'purchase_capacity' %}input-error{% endif %}{% endfor %}{% endif %}">
-                        {% for message in messages %}
-                            {% if message.extra_tags == 'purchase_capacity' %}
-                                <div class="error-message" style="display: block;">{{ message }}</div>
-                            {% endif %}
-                        {% endfor %}
-                        <div class="error-message" id="purchase_capacity_error">Please enter a valid purchase capacity</div>
-                    </div>
-                </div>
-
-                <!-- Supplier Fields -->
-                <div id="supplierFields" class="user-fields hidden">
-                    <div class="form-group">
-                        <label for="supplier_company_name">Company Name</label>
-                        <input type="text" name="supplier_company_name" id="supplier_company_name" placeholder="Your company name" value="{{ form_data.supplier_company_name|default_if_none:'' }}" class="input-field {% if messages %}{% for message in messages %}{% if message.extra_tags == 'supplier_company_name' %}input-error{% endif %}{% endfor %}{% endif %}">
-                        {% for message in messages %}
-                            {% if message.extra_tags == 'supplier_company_name' %}
-                                <div class="error-message" style="display: block;">{{ message }}</div>
-                            {% endif %}
-                        {% endfor %}
-                        <div class="error-message" id="supplier_company_name_error">Please enter your company name</div>
-                    </div>
-                    <div class="form-group">
-                        <label for="license_number">License Number</label>
-                        <input type="text" name="license_number" id="license_number" placeholder="Your license number" value="{{ form_data.license_number|default_if_none:'' }}" class="input-field {% if messages %}{% for message in messages %}{% if message.extra_tags == 'license_number' %}input-error{% endif %}{% endfor %}{% endif %}">
-                        {% for message in messages %}
-                            {% if message.extra_tags == 'license_number' %}
-                                <div class="error-message" style="display: block;">{{ message }}</div>
-                            {% endif %}
-                        {% endfor %}
-                        <div class="error-message" id="license_number_error">Please enter a valid license number</div>
-                    </div>
-                </div>
-
-                <!-- Back and Create -->
-                <div class="flex gap-4">
-                    <button type="button" id="backBtn" class="back-btn">Back</button>
-                    <button type="submit" class="create-btn">Create Account</button>
-                </div>
-            </div>
-
-            <div class="signup-link">
-                Already have an account? <a href="{% url 'dashboard:login' %}">Sign in</a>
-            </div>
-        </form>
+                <div class="resend-link" id="resend-otp">Resend OTP</div>
+                <button type="submit" class="verify-btn">Verify</button>
+            </form>
+        </div>
     </div>
 </div>
 
@@ -631,7 +518,7 @@
     const wholesalerFields = document.getElementById("wholesalerFields");
     const supplierFields = document.getElementById("supplierFields");
 
-    // Form fields (Step 1)
+    // Step 1 fields
     const firstNameInput = document.getElementById("first_name");
     const lastNameInput = document.getElementById("last_name");
     const emailInput = document.getElementById("email");
@@ -639,48 +526,40 @@
     const passwordInput = document.getElementById("password");
     const confirmPasswordInput = document.getElementById("confirm_password");
 
-    // Error messages (Step 1)
+    // Step 1 error messages
     const firstNameError = document.getElementById("first_name_error");
     const lastNameError = document.getElementById("last_name_error");
     const emailError = document.getElementById("email_error");
     const phoneError = document.getElementById("phone_error");
     const passwordError = document.getElementById("password_error");
     const confirmPasswordError = document.getElementById("confirm_password_error");
-    const captchaError = document.getElementById("captcha_error");
+    const recaptchaError = document.getElementById("recaptcha_error");
 
-    // Form fields (Step 2 - Retailer)
+    // Step 2 fields
     const currentPositionInput = document.getElementById("current_position");
     const workplaceInput = document.getElementById("workplace");
     const nationalityInput = document.getElementById("nationality");
     const residencyInput = document.getElementById("residency");
     const countryCodeInput = document.getElementById("country_code");
     const specialityInput = document.getElementById("speciality");
+    const companyNameInput = document.getElementById("company_name");
+    const gstNumberInput = document.getElementById("gst_number");
+    const departmentInput = document.getElementById("department");
+    const purchaseCapacityInput = document.getElementById("purchase_capacity");
+    const supplierCompanyNameInput = document.getElementById("supplier_company_name");
+    const licenseNumberInput = document.getElementById("license_number");
 
-    // Error messages (Step 2 - Retailer)
+    // Step 2 error messages
     const currentPositionError = document.getElementById("current_position_error");
     const workplaceError = document.getElementById("workplace_error");
     const nationalityError = document.getElementById("nationality_error");
     const residencyError = document.getElementById("residency_error");
     const countryCodeError = document.getElementById("country_code_error");
     const specialityError = document.getElementById("speciality_error");
-
-    // Form fields (Step 2 - Wholesaler)
-    const companyNameInput = document.getElementById("company_name");
-    const gstNumberInput = document.getElementById("gst_number");
-    const departmentInput = document.getElementById("department");
-    const purchaseCapacityInput = document.getElementById("purchase_capacity");
-
-    // Error messages (Step 2 - Wholesaler)
     const companyNameError = document.getElementById("company_name_error");
     const gstNumberError = document.getElementById("gst_number_error");
     const departmentError = document.getElementById("department_error");
     const purchaseCapacityError = document.getElementById("purchase_capacity_error");
-
-    // Form fields (Step 2 - Supplier)
-    const supplierCompanyNameInput = document.getElementById("supplier_company_name");
-    const licenseNumberInput = document.getElementById("license_number");
-
-    // Error messages (Step 2 - Supplier)
     const supplierCompanyNameError = document.getElementById("supplier_company_name_error");
     const licenseNumberError = document.getElementById("license_number_error");
 
@@ -691,45 +570,30 @@
         e.preventDefault();
         isSupplier = !isSupplier;
         supplierBtn.textContent = isSupplier ? "Become a buyer?" : "Become a supplier?";
-        supplierBtn.classList.toggle("active");
         buyerOptions.classList.toggle("hidden");
         userTypeInput.value = isSupplier ? "supplier" : "buyer";
     });
 
-    // Client-side validation for Step 1 and Step 2
+    // Client-side validation for Step 1
     nextBtn.addEventListener("click", () => {
         let isValid = true;
 
-        // Reset client-side error states for Step 1
-        firstNameInput.classList.remove("input-error");
-        lastNameInput.classList.remove("input-error");
-        emailInput.classList.remove("input-error");
-        phoneInput.classList.remove("input-error");
-        passwordInput.classList.remove("input-error");
-        confirmPasswordInput.classList.remove("input-error");
-        firstNameError.style.display = "none";
-        lastNameError.style.display = "none";
-        emailError.style.display = "none";
-        phoneError.style.display = "none";
-        passwordError.style.display = "none";
-        confirmPasswordError.style.display = "none";
-        captchaError.style.display = "none";
+        // Reset error states
+        [firstNameInput, lastNameInput, emailInput, phoneInput, passwordInput, confirmPasswordInput].forEach(input => input.classList.remove("input-error"));
+        [firstNameError, lastNameError, emailError, phoneError, passwordError, confirmPasswordError, recaptchaError].forEach(error => error.style.display = "none");
 
-        // Validate first name
         if (!firstNameInput.value.trim()) {
             firstNameInput.classList.add("input-error");
             firstNameError.style.display = "block";
             isValid = false;
         }
 
-        // Validate last name
         if (!lastNameInput.value.trim()) {
             lastNameInput.classList.add("input-error");
             lastNameError.style.display = "block";
             isValid = false;
         }
 
-        // Validate email
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailInput.value.trim() || !emailRegex.test(emailInput.value)) {
             emailInput.classList.add("input-error");
@@ -737,7 +601,6 @@
             isValid = false;
         }
 
-        // Validate phone
         const phoneRegex = /^\+?[1-9]\d{1,14}$/;
         if (!phoneInput.value.trim() || !phoneRegex.test(phoneInput.value)) {
             phoneInput.classList.add("input-error");
@@ -745,65 +608,38 @@
             isValid = false;
         }
 
-        // Validate password
         if (!passwordInput.value.trim()) {
             passwordInput.classList.add("input-error");
             passwordError.style.display = "block";
             isValid = false;
-        } else {
-            if (passwordInput.value.length < 8) {
-                passwordError.textContent = "Password must be at least 8 characters long";
-                passwordInput.classList.add("input-error");
-                passwordError.style.display = "block";
-                isValid = false;
-            } else if (!/[A-Z]/.test(passwordInput.value)) {
-                passwordError.textContent = "Password must contain at least one uppercase letter";
-                passwordInput.classList.add("input-error");
-                passwordError.style.display = "block";
-                isValid = false;
-            } else if (!/[a-z]/.test(passwordInput.value)) {
-                passwordError.textContent = "Password must contain at least one lowercase letter";
-                passwordInput.classList.add("input-error");
-                passwordError.style.display = "block";
-                isValid = false;
-            } else if (!/[0-9]/.test(passwordInput.value)) {
-                passwordError.textContent = "Password must contain at least one number";
-                passwordInput.classList.add("input-error");
-                passwordError.style.display = "block";
-                isValid = false;
-            } else if (!/[!@#$%^&*(),.?":{}|<>]/.test(passwordInput.value)) {
-                passwordError.textContent = "Password must contain at least one special character";
-                passwordInput.classList.add("input-error");
-                passwordError.style.display = "block";
-                isValid = false;
-            }
+        } else if (passwordInput.value.length < 8) {
+            passwordInput.classList.add("input-error");
+            passwordError.textContent = "Password must be at least 8 characters";
+            passwordError.style.display = "block";
+            isValid = false;
         }
 
-        // Validate confirm password
         if (!confirmPasswordInput.value.trim() || confirmPasswordInput.value !== passwordInput.value) {
             confirmPasswordInput.classList.add("input-error");
             confirmPasswordError.style.display = "block";
             isValid = false;
         }
 
-        // Validate reCAPTCHA
         const recaptchaResponse = grecaptcha.getResponse();
         if (!recaptchaResponse) {
-            captchaError.style.display = "block";
+            recaptchaError.style.display = "block";
             isValid = false;
         }
 
-        // Proceed to Step 2 if valid
         if (isValid) {
             step1.classList.add("hidden");
             step2.classList.remove("hidden");
-
             if (isSupplier) {
                 supplierFields.classList.remove("hidden");
                 retailFields.classList.add("hidden");
                 wholesalerFields.classList.add("hidden");
             } else {
-                const buyerType = document.querySelector('input[name="buyer_type"]:checked')?.value;
+                const buyerType = document.querySelector('input[name="buyer_type"]:checked')?.value || "retailer";
                 if (buyerType === "retailer") {
                     retailFields.classList.remove("hidden");
                     wholesalerFields.classList.add("hidden");
@@ -816,58 +652,90 @@
         }
     });
 
-    // Form submission validation for Step 2
-    document.getElementById("registrationForm").addEventListener("submit", function (e) {
-        let isValid = true;
+    // Back button
+    backBtn.addEventListener("click", () => {
+        step2.classList.add("hidden");
+        step1.classList.remove("hidden");
+    });
 
-        // Reset Step 2 error states
-        [currentPositionInput, workplaceInput, nationalityInput, residencyInput, countryCodeInput, specialityInput,
-         companyNameInput, gstNumberInput, departmentInput, purchaseCapacityInput,
-         supplierCompanyNameInput, licenseNumberInput].forEach(input => {
+    // Password visibility toggle
+    document.querySelectorAll('.toggle-password').forEach(button => {
+        button.addEventListener('click', () => {
+            const input = button.parentElement.querySelector('input');
+            const type = input.type === 'password' ? 'text' : 'password';
+            input.type = type;
+            const svg = button.querySelector('svg');
+            svg.innerHTML = type === 'text' ?
+                `<path d="M10 4.375C3.75 4.375 1.25 10 1.25 10C1.25 10 3.75 15.625 10 15.625C16.25 15.625 18.75 10 18.75 10C18.75 10 16.25 4.375 10 4.375Z" stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                 <path d="M2.5 2.5L17.5 17.5" stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                 <path d="M7.975 7.975C7.37083 8.57917 7.08333 9.375 7.08333 10C7.08333 11.7259 8.47411 13.125 10 13.125C10.625 13.125 11.4208 12.8375 12.025 12.2333" stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>` :
+                `<path d="M10 4.375C3.75 4.375 1.25 10 1.25 10C1.25 10 3.75 15.625 10 15.625C16.25 15.625 18.75 10 18.75 10C18.75 10 16.25 4.375 10 4.375Z" stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                 <path d="M10 13.125C11.7259 13.125 13.125 11.7259 13.125 10C13.125 8.27411 11.7259 6.875 10 6.875C8.27411 6.875 6.875 8.27411 6.875 10C6.875 11.7259 8.27411 13.125 10 13.125Z" stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+        });
+    });
+
+    // OTP input handling
+    const otpInputs = document.querySelectorAll('.otp-input');
+    const otpHidden = document.getElementById("otp");
+    const otpError = document.getElementById("otp_error");
+    const resendLink = document.getElementById("resend-otp");
+    const messageDiv = document.getElementById("message");
+
+    otpInputs.forEach((input, index) => {
+        input.addEventListener('input', (e) => {
+            if (!/^[0-9]$/.test(e.target.value)) {
+                e.target.value = '';
+                return;
+            }
+            if (e.target.value && index < otpInputs.length - 1) {
+                otpInputs[index + 1].focus();
+            }
+            updateHiddenOTP();
+        });
+
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                otpInputs[index - 1].focus();
+            }
+        });
+
+        input.addEventListener('paste', (e) => {
+            e.preventDefault();
+            const pasteData = e.clipboardData.getData('text').replace(/\D/g, '');
+            if (pasteData.length <= 6) {
+                for (let i = 0; i < pasteData.length && i < otpInputs.length; i++) {
+                    otpInputs[i].value = pasteData[i];
+                    if (i < otpInputs.length - 1) {
+                        otpInputs[i + 1].focus();
+                    }
+                }
+                updateHiddenOTP();
+            }
+        });
+    });
+
+    function updateHiddenOTP() {
+        otpHidden.value = Array.from(otpInputs).map(input => input.value).join('');
+    }
+
+    // jQuery AJAX for registration and OTP verification
+    let regToken = null;
+
+    $('#registerForm').submit(function (e) {
+        e.preventDefault();
+        $('.error-message').hide();
+        $('.input-field').removeClass('input-error');
+        messageDiv.style.display = 'none';
+
+        // Client-side validation for Step 2
+        let isValid = true;
+        [currentPositionInput, workplaceInput, companyNameInput, gstNumberInput, departmentInput, purchaseCapacityInput, supplierCompanyNameInput, licenseNumberInput].forEach(input => {
             if (input) input.classList.remove("input-error");
         });
-        [currentPositionError, workplaceError, nationalityError, residencyError, countryCodeError, specialityError,
-         companyNameError, gstNumberError, departmentError, purchaseCapacityError,
-         supplierCompanyNameError, licenseNumberError].forEach(error => {
+        [currentPositionError, workplaceError, companyNameError, gstNumberError, departmentError, purchaseCapacityError, supplierCompanyNameError, licenseNumberError].forEach(error => {
             if (error) error.style.display = "none";
         });
 
-        // Validate retailer fields if visible
-        if (!retailFields.classList.contains("hidden")) {
-            if (!currentPositionInput.value.trim()) {
-                currentPositionInput.classList.add("input-error");
-                currentPositionError.style.display = "block";
-                isValid = false;
-            }
-            if (!workplaceInput.value.trim()) {
-                workplaceInput.classList.add("input-error");
-                workplaceError.style.display = "block";
-                isValid = false;
-            }
-            // Nationality, residency, country code, and speciality are optional, but validate if provided
-            if (nationalityInput.value && !Number.isInteger(parseInt(nationalityInput.value))) {
-                nationalityInput.classList.add("input-error");
-                nationalityError.style.display = "block";
-                isValid = false;
-            }
-            if (residencyInput.value && !Number.isInteger(parseInt(residencyInput.value))) {
-                residencyInput.classList.add("input-error");
-                residencyError.style.display = "block";
-                isValid = false;
-            }
-            if (countryCodeInput.value && !Number.isInteger(parseInt(countryCodeInput.value))) {
-                countryCodeInput.classList.add("input-error");
-                countryCodeError.style.display = "block";
-                isValid = false;
-            }
-            if (specialityInput.value && !Number.isInteger(parseInt(specialityInput.value))) {
-                specialityInput.classList.add("input-error");
-                specialityError.style.display = "block";
-                isValid = false;
-            }
-        }
-
-        // Validate wholesaler fields if visible
         if (!wholesalerFields.classList.contains("hidden")) {
             if (!companyNameInput.value.trim()) {
                 companyNameInput.classList.add("input-error");
@@ -884,16 +752,13 @@
                 departmentError.style.display = "block";
                 isValid = false;
             }
-            const purchaseCapacityRegex = /^\d+$/;
-            if (!purchaseCapacityInput.value.trim() || !purchaseCapacityRegex.test(purchaseCapacityInput.value)) {
+            if (!purchaseCapacityInput.value.trim() || isNaN(parseInt(purchaseCapacityInput.value))) {
                 purchaseCapacityInput.classList.add("input-error");
-                purchaseCapacityError.textContent = "Please enter a valid number for purchase capacity";
                 purchaseCapacityError.style.display = "block";
                 isValid = false;
             }
         }
 
-        // Validate supplier fields if visible
         if (!supplierFields.classList.contains("hidden")) {
             if (!supplierCompanyNameInput.value.trim()) {
                 supplierCompanyNameInput.classList.add("input-error");
@@ -907,105 +772,129 @@
             }
         }
 
-        if (!isValid) {
-            e.preventDefault();
-        }
-    });
+        if (!isValid) return;
 
-    // Back button
-    backBtn.addEventListener("click", () => {
-        step2.classList.add("hidden");
-        step1.classList.remove("hidden");
-    });
-
-    // Password visibility toggle
-    document.addEventListener('DOMContentLoaded', function () {
-        const togglePasswordButtons = document.querySelectorAll('.toggle-password');
-        togglePasswordButtons.forEach(button => {
-            button.addEventListener('click', function () {
-                const input = this.parentElement.querySelector('input');
-                const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
-                input.setAttribute('type', type);
-
-                // Toggle the eye icon
-                const svg = this.querySelector('svg');
-                if (type === 'text') {
-                    svg.innerHTML = `
-                        <path d="M10 4.375C3.75 4.375 1.25 10 1.25 10C1.25 10 3.75 15.625 10 15.625C16.25 15.625 18.75 10 18.75 10C18.75 10 16.25 4.375 10 4.375Z" stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M2.5 2.5L17.5 17.5" stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M7.975 7.975C7.37083 8.57917 7.08333 9.375 7.08333 10C7.08333 11.7259 8.47411 13.125 10 13.125C10.625 13.125 11.4208 12.8375 12.025 12.2333" stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    `;
-                } else {
-                    svg.innerHTML = `
-                        <path d="M10 4.375C3.75 4.375 1.25 10 1.25 10C1.25 10 3.75 15.625 10 15.625C16.25 15.625 18.75 10 18.75 10C18.75 10 16.25 4.375 10 4.375Z" stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M10 13.125C11.7259 13.125 13.125 11.7259 13.125 10C13.125 8.27411 11.7259 6.875 10 6.875C8.27411 6.875 6.875 8.27411 6.875 10C6.875 11.7259 8.27411 13.125 10 13.125Z" stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    `;
+        $.ajax({
+            url: "{% url 'dashboard:register' %}",
+            type: "POST",
+            data: $(this).serialize() + "&step=register",
+            headers: { 'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val() },
+            success: function (res) {
+                if (res.success) {
+                    regToken = res.token;
+                    $('#registerSection').hide();
+                    $('#otpSection').show();
                 }
-            });
-        });
-
-        // Show server-side errors on page load
-        {% if messages %}
-            step1.classList.remove("hidden");
-            step2.classList.add("hidden");
-            {% for message in messages %}
-                {% if message.extra_tags %}
-                    const errorElement = document.getElementById("{{ message.extra_tags }}_error");
-                    if (errorElement) {
-                        errorElement.textContent = "{{ message|escapejs }}";
-                        errorElement.style.display = "block";
-                        document.getElementById("{{ message.extra_tags }}").classList.add("input-error");
-                    }
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-    });
-
-    // AJAX form submission
-    document.getElementById("registrationForm").addEventListener("submit", function (e) {
-        const form = this;
-        const formData = new FormData(form);
-
-        fetch(form.action || window.location.href, {
-            method: "POST",
-            headers: {
-                "X-Requested-With": "XMLHttpRequest"
             },
-            body: formData
-        })
-        .then(response => {
-            if (!response.ok) return response.json().then(err => Promise.reject(err));
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                if (data.redirect === "verify_otp") {
-                    window.location.href = window.location.href; // Reload to show OTP screen
-                } else if (data.redirect) {
-                    window.location.href = data.redirect;
+            error: function (xhr) {
+                const errors = xhr.responseJSON.errors;
+                for (const key in errors) {
+                    const errorEl = $(`#${key}_error`);
+                    const inputEl = $(`#${key}`);
+                    if (errorEl.length) {
+                        errorEl.text(errors[key]).show();
+                    }
+                    if (inputEl.length) {
+                        inputEl.addClass('input-error');
+                    }
+                }
+                if (errors.general) {
+                    messageDiv.textContent = errors.general;
+                    messageDiv.className = 'error-message';
+                    messageDiv.style.display = 'block';
+                    setTimeout(() => messageDiv.style.display = 'none', 5000);
                 }
             }
-        })
-        .catch(err => {
-            // Clear existing errors
-            document.querySelectorAll(".error-message").forEach(el => el.style.display = "none");
-            document.querySelectorAll(".input-error").forEach(el => el.classList.remove("input-error"));
+        });
+    });
 
-            // Display new errors
-            if (err.errors) {
-                for (const field in err.errors) {
-                    const errorEl = document.getElementById(`${field}_error`);
-                    const inputEl = document.getElementById(field);
-                    if (errorEl) {
-                        errorEl.textContent = err.errors[field];
-                        errorEl.style.display = "block";
-                    }
-                    if (inputEl) {
-                        inputEl.classList.add("input-error");
-                    }
+    $('#otpForm').submit(function (e) {
+        e.preventDefault();
+        const otpValue = $('#otp').val();
+        $('.otp-input').removeClass('input-error');
+        otpError.style.display = 'none';
+        messageDiv.style.display = 'none';
+
+        if (!otpValue || otpValue.length !== 6) {
+            $('.otp-input').addClass('input-error');
+            otpError.style.display = 'block';
+            return;
+        }
+
+        if (!regToken) {
+            messageDiv.textContent = 'Registration token is missing. Please try registering again.';
+            messageDiv.className = 'error-message';
+            messageDiv.style.display = 'block';
+            setTimeout(() => messageDiv.style.display = 'none', 5000);
+            return;
+        }
+
+        $.ajax({
+            url: "{% url 'dashboard:register' %}",
+            type: "POST",
+            data: { step: 'verify_otp', token: regToken, otp: otpValue },
+            headers: { 'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val() },
+            success: function (res) {
+                if (res.success) {
+                    messageDiv.textContent = 'Account created successfully!';
+                    messageDiv.className = 'success-message';
+                    messageDiv.style.display = 'block';
+                    setTimeout(() => window.location.href = res.redirect, 2000);
                 }
-            } else {
-                alert("Something went wrong. Please try again.");
+            },
+            error: function (xhr) {
+                $('.otp-input').addClass('input-error');
+                const errors = xhr.responseJSON.errors;
+                if (errors.otp) {
+                    otpError.textContent = errors.otp;
+                    otpError.style.display = 'block';
+                } else if (errors.general) {
+                    messageDiv.textContent = errors.general;
+                    messageDiv.className = 'error-message';
+                    messageDiv.style.display = 'block';
+                }
+                setTimeout(() => {
+                    otpError.style.display = 'none';
+                    messageDiv.style.display = 'none';
+                }, 5000);
+            }
+        });
+    });
+
+    // Resend OTP
+    let isResendDisabled = false;
+    resendLink.addEventListener('click', () => {
+        if (isResendDisabled || !regToken) return;
+        isResendDisabled = true;
+        resendLink.classList.add('disabled');
+        resendLink.textContent = 'Resending...';
+
+        $.ajax({
+            url: '{% url "dashboard:resend_otp" %}',
+            type: 'POST',
+            data: { token: regToken },
+            headers: { 'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val() },
+            success: function (res) {
+                messageDiv.textContent = res.message || 'OTP resent successfully';
+                messageDiv.className = res.message.includes('successfully') ? 'success-message' : 'error-message';
+                messageDiv.style.display = 'block';
+                setTimeout(() => messageDiv.style.display = 'none', 5000);
+                setTimeout(() => {
+                    isResendDisabled = false;
+                    resendLink.classList.remove('disabled');
+                    resendLink.textContent = 'Resend OTP';
+                }, 30000);
+            },
+            error: function () {
+                messageDiv.textContent = 'Failed to resend OTP. Please try again.';
+                messageDiv.className = 'error-message';
+                messageDiv.style.display = 'block';
+                setTimeout(() => messageDiv.style.display = 'none', 5000);
+                setTimeout(() => {
+                    isResendDisabled = false;
+                    resendLink.classList.remove('disabled');
+                    resendLink.textContent = 'Resend OTP';
+                }, 30000);
             }
         });
     });

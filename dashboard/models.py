@@ -833,3 +833,12 @@ class StripeSubscriptionMetadata(models.Model):
 #
 #     def __str__(self):
 #         return f"{self.user.email} - {self.plan.name}"
+
+
+class PendingSignup(models.Model):
+    token = models.CharField(max_length=64, unique=True)
+    data = models.JSONField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def is_expired(self):
+        return now() > self.created_at + timedelta(minutes=10)

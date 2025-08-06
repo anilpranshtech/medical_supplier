@@ -1,3 +1,4 @@
+import uuid
 from decimal import Decimal
 from io import BytesIO
 from django.contrib.auth.views import PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, \
@@ -194,51 +195,46 @@ class CustomLoginView(FormView):
 
 
 
+def generate_token():
+    return uuid.uuid4().hex
+
 class RegistrationView(View):
-    register_template = "dashboard/register.html"
-    otp_template = "userdashboard/auth/verify_otp.html"
     recaptcha_secret = '6LdTHV8rAAAAAIgLr2wdtdtWExTS6xJpUpD8qEzh'
+    template_name = 'dashboard/register.html'
 
     def get(self, request):
-        step = request.session.get("step", "register")
-        template = self.otp_template if step == "verify_otp" else self.register_template
+        # Render the registration form with necessary context
         context = {
-            'form_data': request.session.get('signup_data', {}),
+            'form_data': {},  # Empty dict for initial form rendering
             'nationalities': Nationality.objects.all(),
             'residencies': Residency.objects.all(),
             'country_codes': CountryCode.objects.all(),
             'specialities': Speciality.objects.all(),
         }
-        return render(request, template, context)
+        return render(request, self.template_name, context)
 
     def post(self, request):
-        step = request.session.get("step", "register")
+        step = request.POST.get("step")
 
         if step == "register":
             return self.handle_registration(request)
         elif step == "verify_otp":
-            return self.handle_otp_verification(request)
-        else:
-            messages.error(request, "Invalid registration step.")
-            return redirect('dashboard:register')
+            return self.handle_otp(request)
+        return JsonResponse({"success": False, "errors": {"general": "Invalid step"}}, status=400)
 
     def handle_registration(self, request):
         errors = {}
-
-        # reCAPTCHA
+        # reCAPTCHA verification
         recaptcha_response = request.POST.get('g-recaptcha-response')
         recaptcha_result = requests.post(
             'https://www.google.com/recaptcha/api/siteverify',
-            data={
-                'secret': self.recaptcha_secret,
-                'response': recaptcha_response
-            }
+            data={'secret': self.recaptcha_secret, 'response': recaptcha_response}
         ).json()
 
         if not recaptcha_result.get('success'):
-            errors['recaptcha'] = 'Invalid reCAPTCHA. Please try again.'
+            errors['recaptcha'] = 'Invalid reCAPTCHA.'
 
-        # Collect form data
+        # Collect data
         first_name = request.POST.get('first_name')
         last_name = request.POST.get('last_name')
         email = request.POST.get('email')
@@ -247,178 +243,88 @@ class RegistrationView(View):
         phone = request.POST.get('phone')
         user_type = request.POST.get('user_type')
         buyer_type = request.POST.get('buyer_type')
-        nationality_id = request.POST.get('nationality')
-        residency_id = request.POST.get('residency')
-        country_code_id = request.POST.get('country_code')
-        speciality_id = request.POST.get('speciality')
 
-        # Validations
+        # Basic validations
         if not first_name: errors['first_name'] = 'First name is required.'
         if not last_name: errors['last_name'] = 'Last name is required.'
         if not email: errors['email'] = 'Email is required.'
         if not phone: errors['phone'] = 'Phone number is required.'
         if not password: errors['password'] = 'Password is required.'
-        if not confirm_password: errors['confirm_password'] = 'Confirm password is required.'
-
-        if email and not re.match(r'^[\w\.-]+@[\w\.-]+\.\w+$', email):
-            errors['email'] = 'Invalid email format.'
-        elif email and User.objects.filter(username=email).exists():
-            errors['email'] = 'An account with this email already exists.'
-
-        if password:
-            if len(password) < 8:
-                errors['password'] = 'Password must be at least 8 characters.'
-            if not re.search(r'[A-Z]', password):
-                errors['password'] = 'Must include an uppercase letter.'
-            if not re.search(r'[a-z]', password):
-                errors['password'] = 'Must include a lowercase letter.'
-            if not re.search(r'[0-9]', password):
-                errors['password'] = 'Must include a number.'
-            if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
-                errors['password'] = 'Must include a special character.'
-
-        if password and confirm_password and password != confirm_password:
-            errors['confirm_password'] = 'Passwords do not match.'
-
-        # Validate retailer fields (optional, but check for valid IDs if provided)
-        if user_type == 'buyer' and buyer_type == 'retailer':
-            if nationality_id:
-                try:
-                    Nationality.objects.get(id=nationality_id)
-                except Nationality.DoesNotExist:
-                    errors['nationality'] = 'Invalid nationality selected.'
-            if residency_id:
-                try:
-                    Residency.objects.get(id=residency_id)
-                except Residency.DoesNotExist:
-                    errors['residency'] = 'Invalid residency selected.'
-            if country_code_id:
-                try:
-                    CountryCode.objects.get(id=country_code_id)
-                except CountryCode.DoesNotExist:
-                    errors['country_code'] = 'Invalid country code selected.'
-            if speciality_id:
-                try:
-                    Speciality.objects.get(id=speciality_id)
-                except Speciality.DoesNotExist:
-                    errors['speciality'] = 'Invalid speciality selected.'
-            if not request.POST.get('current_position'):
-                errors['current_position'] = 'Current position is required.'
-            if not request.POST.get('workplace'):
-                errors['workplace'] = 'Workplace is required.'
+        if password != confirm_password: errors['confirm_password'] = 'Passwords do not match.'
+        if email and User.objects.filter(username=email).exists():
+            errors['email'] = 'Email already exists.'
 
         if errors:
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                return JsonResponse({'success': False, 'errors': errors}, status=400)
-            for field, message in errors.items():
-                messages.error(request, message, extra_tags=field)
-            return render(request, self.register_template, {
-                'form_data': request.POST,
-                'nationalities': Nationality.objects.all(),
-                'residencies': Residency.objects.all(),
-                'country_codes': CountryCode.objects.all(),
-                'specialities': Speciality.objects.all(),
-            })
+            return JsonResponse({'success': False, 'errors': errors}, status=400)
 
         # Send OTP
         otp_response = send_phone_otp(phone, TEXTDRIP_OTP_TOKEN)
         if "error" in otp_response:
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                return JsonResponse({'success': False, 'errors': {'phone': otp_response["error"]}}, status=400)
-            messages.error(request, otp_response["error"], extra_tags='phone')
-            return render(request, self.register_template, {
-                'form_data': request.POST,
-                'nationalities': Nationality.objects.all(),
-                'residencies': Residency.objects.all(),
-                'country_codes': CountryCode.objects.all(),
-                'specialities': Speciality.objects.all(),
-            })
+            return JsonResponse({'success': False, 'errors': {'phone': otp_response["error"]}}, status=400)
 
-        # Save to session
-        request.session['signup_data'] = {
-            'first_name': first_name,
-            'last_name': last_name,
-            'email': email,
-            'password': password,
-            'phone': phone,
-            'user_type': user_type,
-            'buyer_type': buyer_type,
-            'supplier_company_name': request.POST.get('supplier_company_name', ''),
-            'license_number': request.POST.get('license_number', ''),
-            'age': request.POST.get('age', ''),
-            'medical_needs': request.POST.get('medical_needs', ''),
-            'company_name': request.POST.get('company_name', ''),
-            'gst_number': request.POST.get('gst_number', ''),
-            'department': request.POST.get('department', ''),
-            'purchase_capacity': request.POST.get('purchase_capacity', ''),
-            'current_position': request.POST.get('current_position', ''),
-            'workplace': request.POST.get('workplace', ''),
-            'nationality': nationality_id,
-            'residency': residency_id,
-            'country_code': country_code_id,
-            'speciality': speciality_id,
-        }
-        request.session['step'] = "verify_otp"
+        # Save pending data
+        token = uuid.uuid4().hex
+        PendingSignup.objects.create(token=token, data=request.POST.dict())
 
-        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            return JsonResponse({'success': True, 'redirect': 'verify_otp'})
-        return redirect('dashboard:register')
+        return JsonResponse({'success': True, 'token': token})
 
-    def handle_otp_verification(self, request):
+    def handle_otp(self, request):
+        token = request.POST.get('token')
         otp = request.POST.get('otp')
-        signup_data = request.session.get('signup_data')
 
-        if not signup_data:
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                return JsonResponse({'success': False, 'errors': {'general': 'Session expired. Please sign up again.'}}, status=400)
-            messages.error(request, "Session expired. Please sign up again.")
-            return redirect('dashboard:register')
+        try:
+            pending = PendingSignup.objects.get(token=token)
+        except PendingSignup.DoesNotExist:
+            return JsonResponse({'success': False, 'errors': {'general': 'Invalid or expired token.'}}, status=400)
 
-        phone = signup_data['phone']
+        if pending.is_expired():
+            pending.delete()
+            return JsonResponse({'success': False, 'errors': {'general': 'Token expired.'}}, status=400)
+
+        data = pending.data
+        phone = data.get('phone')
+
+        # Verify OTP
         result = verify_mobile_otp(VERIFY_URL, TEXTDRIP_OTP_TOKEN, phone, otp)
+        if not (result.get("success") or result.get("status") is True):
+            return JsonResponse({'success': False, 'errors': {'otp': result.get("message", "OTP verification failed.")}}, status=400)
 
-        if result.get("success") or result.get("status") is True:
-            if User.objects.filter(username=signup_data['email']).exists():
-                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                    return JsonResponse({'success': False, 'errors': {'email': 'An account with this email already exists.'}}, status=400)
-                messages.error(request, "An account with this email already exists.")
-                request.session.flush()
-                return redirect('dashboard:register')
-
-            try:
+        # Create user
+        try:
+            with transaction.atomic():
                 user = User.objects.create_user(
-                    username=signup_data['email'],
-                    email=signup_data['email'],
-                    password=signup_data['password'],
-                    first_name=signup_data['first_name'],
-                    last_name=signup_data['last_name']
+                    username=data['email'],
+                    email=data['email'],
+                    password=data['password'],
+                    first_name=data['first_name'],
+                    last_name=data['last_name']
                 )
 
                 if hasattr(user, 'phone'):
                     user.phone = phone
                     user.save()
 
-                user_type = signup_data.get('user_type')
-                buyer_type = signup_data.get('buyer_type')
+                user_type = data.get('user_type')
+                buyer_type = data.get('buyer_type')
 
                 if user_type == 'supplier':
                     SupplierProfile.objects.create(
                         user=user,
                         phone=phone,
-                        company_name=signup_data.get('supplier_company_name', ''),
-                        license_number=signup_data.get('license_number', '')
+                        company_name=data.get('supplier_company_name', ''),
+                        license_number=data.get('license_number', '')
                     )
                 elif buyer_type == 'retailer':
-                    # Retrieve model instances for ForeignKey fields
-                    nationality = Nationality.objects.get(id=signup_data['nationality']) if signup_data.get('nationality') else None
-                    residency = Residency.objects.get(id=signup_data['residency']) if signup_data.get('residency') else None
-                    country_code = CountryCode.objects.get(id=signup_data['country_code']) if signup_data.get('country_code') else None
-                    speciality = Speciality.objects.get(id=signup_data['speciality']) if signup_data.get('speciality') else None
+                    nationality = Nationality.objects.filter(id=data.get('nationality')).first()
+                    residency = Residency.objects.filter(id=data.get('residency')).first()
+                    country_code = CountryCode.objects.filter(id=data.get('country_code')).first()
+                    speciality = Speciality.objects.filter(id=data.get('speciality')).first()
+
                     RetailProfile.objects.create(
                         user=user,
                         phone=phone,
-                        current_position=signup_data.get('current_position', ''),
-                        workplace=signup_data.get('workplace', ''),
+                        current_position=data.get('current_position', ''),
+                        workplace=data.get('workplace', ''),
                         nationality=nationality,
                         residency=residency,
                         country_code=country_code,
@@ -428,42 +334,34 @@ class RegistrationView(View):
                     WholesaleBuyerProfile.objects.create(
                         user=user,
                         phone=phone,
-                        company_name=signup_data.get('company_name', ''),
-                        gst_number=signup_data.get('gst_number', ''),
-                        department=signup_data.get('department', ''),
-                        purchase_capacity=int(signup_data.get('purchase_capacity') or 0)
+                        company_name=data.get('company_name', ''),
+                        gst_number=data.get('gst_number', ''),
+                        department=data.get('department', ''),
+                        purchase_capacity=int(data.get('purchase_capacity') or 0)
                     )
                 else:
-                    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                        return JsonResponse({'success': False, 'errors': {'general': 'Invalid user type.'}}, status=400)
-                    messages.error(request, "Invalid user type.")
-                    user.delete()
-                    request.session.flush()
-                    return redirect('dashboard:register')
+                    return JsonResponse({'success': False, 'errors': {'general': 'Invalid user type.'}}, status=400)
 
-                request.session.flush()
-                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                    return JsonResponse({'success': True, 'redirect': 'dashboard:login'})
-                messages.success(request, "Account created successfully.")
-                return redirect('dashboard:login')
+                pending.delete()
+                return JsonResponse({'success': True, 'redirect': '/login/'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'errors': {'general': f'Error creating account: {str(e)}'}}, status=500)
 
-            except (Nationality.DoesNotExist, Residency.DoesNotExist, CountryCode.DoesNotExist, Speciality.DoesNotExist) as e:
-                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                    return JsonResponse({'success': False, 'errors': {'general': 'Invalid selection for nationality, residency, country code, or speciality.'}}, status=400)
-                messages.error(request, "Invalid selection for nationality, residency, country code, or speciality.")
-                user.delete()
-                return redirect('dashboard:register')
-            except Exception as e:
-                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                    return JsonResponse({'success': False, 'errors': {'general': f'Error creating account: {str(e)}'}}, status=500)
-                messages.error(request, f"Error creating account: {str(e)}")
-                return redirect('dashboard:register')
-        else:
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                return JsonResponse({'success': False, 'errors': {'otp': result.get("message", "OTP verification failed.")}}, status=400)
-            messages.error(request, result.get("message", "OTP verification failed."))
-            return render(request, self.otp_template)
 
+class ResendOTPView(View):
+    def post(self, request):
+        token = request.POST.get('token')
+        if not token:
+            return JsonResponse({'message': 'No token provided.'}, status=400)
+        try:
+            pending = PendingSignup.objects.get(token=token)
+            phone = pending.data.get('phone')
+            otp_response = send_phone_otp(phone, TEXTDRIP_OTP_TOKEN)
+            if "error" in otp_response:
+                return JsonResponse({'message': otp_response["error"]}, status=400)
+            return JsonResponse({'message': 'OTP resent successfully'})
+        except PendingSignup.DoesNotExist:
+            return JsonResponse({'message': 'Invalid or expired token'}, status=400)
 
 
 class UserProfileView(LoginRequiredMixin, TemplateView):
