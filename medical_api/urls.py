@@ -78,4 +78,7 @@ urlpatterns = [
     path('address/add/', AddAddressAPIView.as_view(), name='add-address'),
     path('address/<int:pk>/edit/', EditAddressAPIView.as_view(), name='edit-address'),
     path('address/<int:address_id>/delete/', RemoveAddressAPIView.as_view(), name='remove-address'),
+
+
+    path('api/search/', ProductSearchAPIView.as_view(), name='product-search-api'),
 ]

@@ -674,3 +674,14 @@ class ShippingInfoSerializer(serializers.Serializer):
     default_address = CustomerBillingAddressSerializer()
     cart_items = CartProductSerializer(many=True)
     order_summary = serializers.DictField()
+
+class ProductSerializer(serializers.ModelSerializer):
+    discounted_price = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Product
+        fields = ['id', 'name', 'price', 'discounted_price', 'category', 'sub_category', 'last_category', 'is_active', 'created_at']
+
+    def get_discounted_price(self, obj):
+        return obj.discounted_price()
+

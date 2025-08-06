@@ -1,6 +1,6 @@
 from decimal import Decimal
 from io import BytesIO
-
+from django.db.models import Q, F, DecimalField, ExpressionWrapper, Case, When
 from django.http import HttpResponse
 from django.utils.html import strip_tags
 from xhtml2pdf import pisa
@@ -29,11 +29,11 @@ from datetime import date, timedelta
 from django.db.models import Avg, Prefetch
 import random
 from dashboard.models import PasswordUpdateTracker, ProductCategory, ProductSubCategory, ProductLastCategory, Product, \
-    SupplierProfile,SubscriptionPlan, UserSubscription ,CartProduct,WishlistProduct,CustomerBillingAddress,RetailProfile, WholesaleBuyerProfile, SupplierProfile
+    SupplierProfile,SubscriptionPlan, UserSubscription ,CartProduct,WishlistProduct,CustomerBillingAddress,RetailProfile, WholesaleBuyerProfile, SupplierProfile,ProductCategory, ProductLastCategory
 from medical_api.serializers import UserLoginSerializer, DoctorRegistrationSerializer, ChangePasswordSerializer, \
     DoctorProfileSerializer, ProductCategorySerializer, ProductSubCategorySerializer, ProductLastCategorySerializer, \
     ProductSerializer, ProductCreateSerializer, UserEmailSerializer, SupplierListSerializer, ResidencySerializer, \
-    SpecialitySerializer, NationalitySerializer, CountryCodeSerializer,SubscriptionPlanSerializer, UserSubscriptionSerializer,CartProductSerializer,WishlistProductSerializer,CustomerBillingAddressSerializer,ShippingInfoSerializer
+    SpecialitySerializer, NationalitySerializer, CountryCodeSerializer,SubscriptionPlanSerializer, UserSubscriptionSerializer,CartProductSerializer,WishlistProductSerializer,CustomerBillingAddressSerializer,ShippingInfoSerializer, ProductSerializer
 from django.contrib.auth import get_user_model, login, authenticate, logout
 from rest_framework.response import Response
 from decimal import Decimal
@@ -2181,4 +2181,59 @@ class EditAddressAPIView(generics.UpdateAPIView):
         address = serializer.save()
         if address.is_default:
             CustomerBillingAddress.objects.filter(user=self.request.user, is_default=True).exclude(id=address.id).update(is_default=False)
+
+class ProductSearchAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        search_query = request.GET.get('search', '').strip()
+        sort_by = request.GET.get('sort_by')  # 1 = High to Low, 2 = Low to High
+
+        # Annotate effective price
+        effective_price = ExpressionWrapper(
+            F('price') * (1 - F('offer_percentage') / 100.0),
+            output_field=DecimalField(max_digits=10, decimal_places=2)
+        )
+
+        products = Product.objects.annotate(
+            effective_price=Case(
+                When(offer_active=True, offer_percentage__isnull=False, then=effective_price),
+                default=F('price'),
+                output_field=DecimalField(max_digits=10, decimal_places=2)
+            )
+        ).filter(is_active=True)
+
+        if search_query:
+            # Check if search matches a category name
+            category = ProductCategory.objects.filter(name__icontains=search_query).first()
+            if category:
+                last_category_ids = ProductLastCategory.objects.filter(
+                    sub_category__category=category
+                ).values_list('id', flat=True)
+
+                products = products.filter(last_category_id__in=last_category_ids)
+            else:
+                # Fallback to keyword or name search
+                search_terms = search_query.lower().split()
+                q_obj = Q()
+                for term in search_terms:
+                    q_obj |= Q(name__icontains=term) | Q(keywords__icontains=term)
+                products = products.filter(q_obj)
+
+        # Sorting
+        if sort_by == '1':
+            products = products.order_by('-effective_price')
+        elif sort_by == '2':
+            products = products.order_by('effective_price')
+        else:
+            products = products.order_by('-created_at')
+
+        # Pagination
+        paginator = PageNumberPagination()
+        paginator.page_size = 16
+        result_page = paginator.paginate_queryset(products, request)
+        serializer = ProductSerializer(result_page, many=True)
+
+        return paginator.get_paginated_response(serializer.data)
+    
 
