@@ -29,11 +29,11 @@ from datetime import date, timedelta
 from django.db.models import Avg, Prefetch
 import random
 from dashboard.models import PasswordUpdateTracker, ProductCategory, ProductSubCategory, ProductLastCategory, Product, \
-    SupplierProfile,SubscriptionPlan, UserSubscription ,CartProduct,WishlistProduct,CustomerBillingAddress,RetailProfile, WholesaleBuyerProfile, SupplierProfile,ProductCategory, ProductLastCategory
+    SupplierProfile,SubscriptionPlan, UserSubscription ,CartProduct,WishlistProduct,CustomerBillingAddress,RetailProfile, WholesaleBuyerProfile, SupplierProfile,ProductCategory, ProductLastCategory,SupplierProfile
 from medical_api.serializers import UserLoginSerializer, DoctorRegistrationSerializer, ChangePasswordSerializer, \
     DoctorProfileSerializer, ProductCategorySerializer, ProductSubCategorySerializer, ProductLastCategorySerializer, \
     ProductSerializer, ProductCreateSerializer, UserEmailSerializer, SupplierListSerializer, ResidencySerializer, \
-    SpecialitySerializer, NationalitySerializer, CountryCodeSerializer,SubscriptionPlanSerializer, UserSubscriptionSerializer,CartProductSerializer,WishlistProductSerializer,CustomerBillingAddressSerializer,ShippingInfoSerializer, ProductSerializer
+    SpecialitySerializer, NationalitySerializer, CountryCodeSerializer,SubscriptionPlanSerializer, UserSubscriptionSerializer,CartProductSerializer,WishlistProductSerializer,CustomerBillingAddressSerializer,ShippingInfoSerializer, ProductSerializer,SupplierProfileSerializer,WholesaleBuyerProfileSerializer,WholesaleRegistrationSerializer
 from django.contrib.auth import get_user_model, login, authenticate, logout
 from rest_framework.response import Response
 from decimal import Decimal
@@ -2187,9 +2187,9 @@ class ProductSearchAPIView(APIView):
 
     def get(self, request):
         search_query = request.GET.get('search', '').strip()
-        sort_by = request.GET.get('sort_by')  # 1 = High to Low, 2 = Low to High
+        sort_by = request.GET.get('sort_by') 
 
-        # Annotate effective price
+      
         effective_price = ExpressionWrapper(
             F('price') * (1 - F('offer_percentage') / 100.0),
             output_field=DecimalField(max_digits=10, decimal_places=2)
@@ -2204,7 +2204,7 @@ class ProductSearchAPIView(APIView):
         ).filter(is_active=True)
 
         if search_query:
-            # Check if search matches a category name
+            
             category = ProductCategory.objects.filter(name__icontains=search_query).first()
             if category:
                 last_category_ids = ProductLastCategory.objects.filter(
@@ -2213,7 +2213,7 @@ class ProductSearchAPIView(APIView):
 
                 products = products.filter(last_category_id__in=last_category_ids)
             else:
-                # Fallback to keyword or name search
+               
                 search_terms = search_query.lower().split()
                 q_obj = Q()
                 for term in search_terms:
@@ -2236,4 +2236,191 @@ class ProductSearchAPIView(APIView):
 
         return paginator.get_paginated_response(serializer.data)
     
+class WholesaleRegisterAPIView(APIView):
+    permission_classes = []
+    authentication_classes = []
 
+    def post(self, request, format=None):
+        serializer = WholesaleRegistrationSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                "success": True,
+                "message": "Wholesale user registered successfully",
+                "data": serializer.data
+            }, status=status.HTTP_201_CREATED)
+        
+        return Response({
+            "success": False,
+            "message": "Registration failed",
+            "errors": serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+
+class SupplierRegisterAPIView(APIView):
+    permission_classes = []
+    authentication_classes = []
+
+    def post(self, request):
+        serializer = SupplierRegistrationSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "Supplier registered successfully"}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class WholesaleBuyerProfileAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        try:
+            profile = user.wholesalebuyerprofile
+            profile_serializer = WholesaleBuyerProfileSerializer(profile)
+
+            combined_data = {
+                "username": user.username,
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                **profile_serializer.data  
+            }
+
+            return Response({
+                "code": 200,
+                "message": "Success",
+                "items": {
+                    "data": combined_data
+                }
+            }, status=status.HTTP_200_OK)
+        except AttributeError:
+            return Response({
+                "code": 404,
+                "message": "Wholesale Buyer profile not found",
+                "items": {
+                    "data": None
+                }
+            }, status=status.HTTP_404_NOT_FOUND)
+
+    def put(self, request):
+        user = request.user
+        try:
+            profile = user.wholesalebuyerprofile
+            serializer = WholesaleBuyerProfileSerializer(profile, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+
+                combined_data = {
+                    "username": user.username,
+                    "email": user.email,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                    **serializer.data
+                }
+
+                return Response({
+                    "code": 200,
+                    "message": "Success",
+                    "items": {
+                        "data": combined_data
+                    }
+                }, status=status.HTTP_200_OK)
+
+            return Response({
+                "code": 400,
+                "message": "Failed",
+                "items": {
+                    "data": serializer.errors
+                }
+            }, status=status.HTTP_400_BAD_REQUEST)
+        except AttributeError:
+            return Response({
+                "code": 404,
+                "message": "Wholesale Buyer profile not found",
+                "items": {
+                    "data": None
+                }
+            }, status=status.HTTP_404_NOT_FOUND)
+
+
+class SupplierProfileAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        try:
+            profile = user.supplierprofile
+        except SupplierProfile.DoesNotExist:
+            return Response({
+                "code": 404,
+                "message": "Supplier profile not found",
+                "items": None
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = SupplierProfileSerializer(profile)
+
+        combined_data = {
+            "username": user.username,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            **serializer.data
+        }
+
+        return Response({
+            "code": 200,
+            "message": "Success",
+            "items": {
+                "data": combined_data
+            }
+        }, status=status.HTTP_200_OK)
+
+    def put(self, request):
+        user = request.user
+        try:
+            profile = user.supplierprofile
+        except SupplierProfile.DoesNotExist:
+            return Response({
+                "code": 404,
+                "message": "Supplier profile not found",
+                "items": None
+            }, status=status.HTTP_404_NOT_FOUND)
+
+ 
+        serializer = SupplierProfileSerializer(profile, data=request.data, partial=True)
+
+        if serializer.is_valid():
+            serializer.save()
+
+            user_fields = ["username", "email", "first_name", "last_name"]
+            user_data_updated = False
+            for field in user_fields:
+                if field in request.data:
+                    setattr(user, field, request.data[field])
+                    user_data_updated = True
+
+            if user_data_updated:
+                user.save()
+
+            combined_data = {
+                "username": user.username,
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                **serializer.data
+            }
+
+            return Response({
+                "code": 200,
+                "message": "Profile Updated Successfully",
+                "items": {
+                    "data": combined_data
+                }
+            }, status=status.HTTP_200_OK)
+
+        return Response({
+            "code": 400,
+            "message": "Validation failed",
+            "items": {
+                "errors": serializer.errors
+            }
+        }, status=status.HTTP_400_BAD_REQUEST)

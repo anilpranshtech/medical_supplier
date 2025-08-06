@@ -9,7 +9,7 @@ import re
 from rest_framework.permissions import IsAuthenticated
 
 from dashboard.models import DoctorProfile, ProductCategory, ProductSubCategory, ProductLastCategory, Event, Product, \
-    SupplierProfile, Residency, Speciality, Nationality, CountryCode,SubscriptionPlan, UserSubscription , CartProduct, Product,WishlistProduct,CustomerBillingAddress
+    SupplierProfile, Residency, Speciality, Nationality, CountryCode,SubscriptionPlan, UserSubscription , CartProduct, Product,WishlistProduct,CustomerBillingAddress, SupplierProfile ,WholesaleBuyerProfile 
 from django.db import IntegrityError
 
 
@@ -684,4 +684,134 @@ class ProductSerializer(serializers.ModelSerializer):
 
     def get_discounted_price(self, obj):
         return obj.discounted_price()
+    
+
+class WholesaleRegistrationSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)
+    confirm_password = serializers.CharField(write_only=True)
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    phone = serializers.CharField()
+    company_name = serializers.CharField()
+    gst_number = serializers.CharField()
+    department = serializers.CharField()
+    purchase_capacity = serializers.IntegerField()
+
+    class Meta:
+        model = User
+        fields = (
+            'first_name', 'last_name', 'email', 'password', 'confirm_password',
+            'phone', 'company_name', 'gst_number', 'department', 'purchase_capacity'
+        )
+
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("A user with this email already exists.")
+        return value
+
+    def validate(self, data):
+        if data['password'] != data['confirm_password']:
+            raise serializers.ValidationError({"confirm_password": "Passwords do not match."})
+
+        password = data['password']
+        if len(password) < 8:
+            raise serializers.ValidationError({"password": "Password must be at least 8 characters."})
+        return data
+
+    def create(self, validated_data):
+        validated_data.pop('confirm_password')
+
+        profile_fields = {
+            'phone': validated_data.pop('phone'),
+            'company_name': validated_data.pop('company_name'),
+            'gst_number': validated_data.pop('gst_number'),
+            'department': validated_data.pop('department'),
+            'purchase_capacity': validated_data.pop('purchase_capacity'),
+        }
+
+        username = validated_data['email']
+
+        try:
+            user = User.objects.create_user(username=username, **validated_data)
+            WholesaleBuyerProfile.objects.create(user=user, **profile_fields)
+        except IntegrityError:
+            raise serializers.ValidationError("A user with this email already exists.")
+
+        return user
+
+    def to_representation(self, instance):
+        data = {
+            "id": instance.id,
+            "email": instance.email,
+            "first_name": instance.first_name,
+            "last_name": instance.last_name,
+        }
+        try:
+            profile = instance.wholesalebuyerprofile
+            data["wholesale_profile"] = {
+                "phone": profile.phone,
+                "company_name": profile.company_name,
+                "gst_number": profile.gst_number,
+                "department": profile.department,
+                "purchase_capacity": profile.purchase_capacity
+            }
+        except WholesaleBuyerProfile.DoesNotExist:
+            data["wholesale_profile"] = None
+        return data
+    
+class SupplierRegistrationSerializer(serializers.Serializer):
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    email = serializers.EmailField()
+    phone = serializers.CharField()
+    password = serializers.CharField(write_only=True)
+    confirm_password = serializers.CharField(write_only=True)
+    company_name = serializers.CharField()
+    license_number = serializers.CharField()
+
+    def validate_email(self, value):
+        if User.objects.filter(username=value).exists():
+            raise serializers.ValidationError("Email already exists.")
+        return value
+
+    def validate(self, data):
+        if data['password'] != data['confirm_password']:
+            raise serializers.ValidationError({'confirm_password': "Passwords do not match."})
+        return data
+
+    def create(self, validated_data):
+        user = User.objects.create_user(
+            username=validated_data['email'],
+            email=validated_data['email'],
+            password=validated_data['password'],
+            first_name=validated_data['first_name'],
+            last_name=validated_data['last_name']
+        )
+
+        supplier = SupplierProfile.objects.create(
+            user=user,
+            phone=validated_data['phone'],
+            company_name=validated_data['company_name'],
+            license_number=validated_data['license_number']
+        )
+        return supplier
+
+class WholesaleBuyerProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WholesaleBuyerProfile
+        fields = '__all__'
+        read_only_fields = ['user']
+
+class SupplierProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SupplierProfile
+        fields = [
+            'profile_picture',
+            'phone',
+            'company_name',
+            'license_number',
+            # 'is_verified'
+        ]
+        read_only_fields = ['is_verified']
 

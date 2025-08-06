@@ -79,6 +79,13 @@ urlpatterns = [
     path('address/<int:pk>/edit/', EditAddressAPIView.as_view(), name='edit-address'),
     path('address/<int:address_id>/delete/', RemoveAddressAPIView.as_view(), name='remove-address'),
 
-
+  # ------------------- search bar --------------------   
     path('api/search/', ProductSearchAPIView.as_view(), name='product-search-api'),
+ 
+  # ------------------- registration --------------------   
+    path('api/register/wholesaler/', WholesaleRegisterAPIView.as_view(), name='wholesaler_register'),
+    path('api/register/supplier/', SupplierRegisterAPIView.as_view(), name='supplier-register'),
+    path('profile/wholesaler/', WholesaleBuyerProfileAPIView.as_view(), name='wholesaler-profile'),
+    path('api/supplier/profile/', SupplierProfileAPIView.as_view(), name='supplier-profile'),
+    
 ]
