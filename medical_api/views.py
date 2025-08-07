@@ -2282,7 +2282,7 @@ class WholesaleBuyerProfileAPIView(APIView):
                 "email": user.email,
                 "first_name": user.first_name,
                 "last_name": user.last_name,
-                **profile_serializer.data  
+                **profile_serializer.data
             }
 
             return Response({
@@ -2306,6 +2306,17 @@ class WholesaleBuyerProfileAPIView(APIView):
         try:
             profile = user.wholesalebuyerprofile
             serializer = WholesaleBuyerProfileSerializer(profile, data=request.data, partial=True)
+
+            # Update User fields
+            user_fields = ['username', 'email', 'first_name', 'last_name']
+            user_updated = False
+            for field in user_fields:
+                if field in request.data:
+                    setattr(user, field, request.data[field])
+                    user_updated = True
+            if user_updated:
+                user.save()
+
             if serializer.is_valid():
                 serializer.save()
 
@@ -2332,6 +2343,7 @@ class WholesaleBuyerProfileAPIView(APIView):
                     "data": serializer.errors
                 }
             }, status=status.HTTP_400_BAD_REQUEST)
+
         except AttributeError:
             return Response({
                 "code": 404,
@@ -2340,6 +2352,7 @@ class WholesaleBuyerProfileAPIView(APIView):
                     "data": None
                 }
             }, status=status.HTTP_404_NOT_FOUND)
+
 
 
 class SupplierProfileAPIView(APIView):
