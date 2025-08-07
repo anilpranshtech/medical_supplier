@@ -976,6 +976,7 @@ def add_to_cart(request):
             return JsonResponse({'status': 'success', 'quantity': cart_item.quantity})
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    
 @require_POST
 def update_cart_item(request):
     if not request.user.is_authenticated:

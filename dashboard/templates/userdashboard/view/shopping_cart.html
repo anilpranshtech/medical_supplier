@@ -275,7 +275,6 @@
 </div>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Store original prices when page loads
     document.querySelectorAll('[id^="cart-item-"]').forEach(item => {
         const priceElement = item.querySelector('.text-sm.font-semibold.text-mono span');
         const originalPrice = parseFloat(priceElement.textContent.replace('$', '')) / parseInt(item.querySelector('.quantity').textContent);
