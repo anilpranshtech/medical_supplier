@@ -976,6 +976,27 @@ def add_to_cart(request):
             return JsonResponse({'status': 'success', 'quantity': cart_item.quantity})
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+@require_POST
+def update_cart_item(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'status': 'error', 'message': 'Authentication required'}, status=401)
+    
+    product_id = request.POST.get('product_id')
+    quantity = int(request.POST.get('quantity', 1))
+    
+    try:
+        cart_item = CartProduct.objects.get(user=request.user, product_id=product_id)
+        cart_item.quantity = quantity
+        cart_item.save()
+        
+        return JsonResponse({
+            'status': 'success',
+            'product_id': product_id,
+            'quantity': quantity
+        })
+        
+    except CartProduct.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Item not found'}, status=404)
 
 @require_POST
 def remove_from_cart(request):

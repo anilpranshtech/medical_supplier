@@ -29,7 +29,7 @@ urlpatterns = [
     # path('order-summary/', OrderSummaryView.as_view(), name='order_summary'),
     path('remove-from-cart/', RemoveFromCartView.as_view(), name='remove_from_cart'),
     path('clear_cart_items/', clearcart, name='clear_cart_items'),
-
+path('update-cart-item/', views.update_cart_item, name='update_cart_item'),
     path('wish-list/', views.WishlistView.as_view(), name='wish_list'),
     path('wishlist/toggle/', views.WishlistToggleView.as_view(), name='toggle_wishlist'),
     path('wishlist/clear/',views.WishlistClearView.as_view(), name='clear_wishlist'),

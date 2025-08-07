@@ -273,41 +273,90 @@
         </main>
     </div>
 </div>
-
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-
-    // Remove from Cart
-    document.querySelectorAll('.remove-from-cart').forEach(button => {
-        button.addEventListener('click', function () {
-            const itemId = this.dataset.itemId;
-
-            fetch("{% url 'dashboard:remove_from_cart' %}", {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token }}',
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `item_id=${itemId}`
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    document.getElementById(`cart-item-${itemId}`).remove();
-                    location.reload();
-                } else {
-                    alert('Failed to remove item from cart');
-                }
-            });
-        });
+document.addEventListener('DOMContentLoaded', function() {
+    // Store original prices when page loads
+    document.querySelectorAll('[id^="cart-item-"]').forEach(item => {
+        const priceElement = item.querySelector('.text-sm.font-semibold.text-mono span');
+        const originalPrice = parseFloat(priceElement.textContent.replace('$', '')) / parseInt(item.querySelector('.quantity').textContent);
+        priceElement.dataset.basePrice = originalPrice;
     });
 
-    // Increase/Decrease Quantity
+    // Function to update all prices and totals
+    function updateAllPrices() {
+        let subtotal = 0;
+        
+        // Update each product's total price
+        document.querySelectorAll('[id^="cart-item-"]').forEach(item => {
+            const quantity = parseInt(item.querySelector('.quantity').textContent);
+            const priceElement = item.querySelector('.text-sm.font-semibold.text-mono span');
+            const basePrice = parseFloat(priceElement.dataset.basePrice);
+            
+            // Calculate and update item total
+            const itemTotal = basePrice * quantity;
+            priceElement.textContent = `$${itemTotal.toFixed(2)}`;
+            
+            subtotal += itemTotal;
+        });
+
+        // Update summary section
+        document.querySelectorAll('.kt-card-content .flex.justify-between.items-center').forEach(el => {
+            if (el.textContent.includes('Subtotal')) {
+                el.querySelector('.text-sm.font-medium.text-mono').textContent = `$${subtotal.toFixed(2)}`;
+            }
+        });
+        
+        document.querySelector('.kt-card-footer .text-base.font-semibold.text-mono').textContent = `$${subtotal.toFixed(2)}`;
+    }
+
+    // Function to check and remove items with zero quantity
+    function checkAndRemoveZeroQuantityItems() {
+        document.querySelectorAll('[id^="cart-item-"]').forEach(item => {
+            const quantity = parseInt(item.querySelector('.quantity').textContent);
+            if (quantity <= 0) {
+                const productId = item.id.split('-')[2];
+                removeItemFromCart(productId, item);
+            }
+        });
+    }
+
+    // Function to remove item from cart
+    function removeItemFromCart(productId, itemElement) {
+        fetch("{% url 'dashboard:remove_from_cart' %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `item_id=${productId}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                itemElement.remove();
+                updateAllPrices();
+                checkEmptyCart();
+            }
+        })
+        .catch(error => {
+            console.error('Error removing item:', error);
+        });
+    }
+
+    // Quantity change handlers
     document.querySelectorAll('.increase-btn, .decrease-btn').forEach(button => {
-        button.addEventListener('click', function () {
+        button.addEventListener('click', function() {
             const productId = this.dataset.productId;
             const isIncrease = this.classList.contains('increase-btn');
-            const quantityChange = isIncrease ? 1 : -1;
+            const quantityElement = this.parentElement.querySelector('.quantity');
+            let newQuantity = parseInt(quantityElement.textContent) + (isIncrease ? 1 : -1);
+
+            // If quantity reaches zero, remove the item
+            if (newQuantity <= 0) {
+                const itemElement = document.getElementById(`cart-item-${productId}`);
+                removeItemFromCart(productId, itemElement);
+                return;
+            }
 
             fetch("{% url 'dashboard:add_to_cart' %}", {
                 method: 'POST',
@@ -315,16 +364,48 @@ document.addEventListener('DOMContentLoaded', function () {
                     'X-CSRFToken': '{{ csrf_token }}',
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: `product_id=${productId}&quantity=${quantityChange}`
+                body: `product_id=${productId}&quantity=${isIncrease ? 1 : -1}`
             })
-            .then(res => res.json())
+            .then(response => response.json())
             .then(data => {
-                if (data.status === 'success' || data.status === 'removed') {
-                    location.reload();
+                if (data.status === 'success') {
+                    quantityElement.textContent = newQuantity;
+                    updateAllPrices();
+                } else if (data.status === 'removed') {
+                    document.getElementById(`cart-item-${productId}`).remove();
+                    updateAllPrices();
+                    checkEmptyCart();
                 }
+            })
+            .catch(error => {
+                console.error('Error:', error);
             });
         });
     });
+
+    // Remove item handler
+    document.querySelectorAll('.remove-from-cart').forEach(button => {
+        button.addEventListener('click', function() {
+            const itemId = this.dataset.itemId;
+            const itemElement = document.getElementById(`cart-item-${itemId}`);
+            removeItemFromCart(itemId, itemElement);
+        });
+    });
+
+    // Check if cart is empty
+    function checkEmptyCart() {
+        const cartItems = document.querySelectorAll('[id^="cart-item-"]');
+        const emptyMessage = document.querySelector('.kt-card-content .text-muted.text-sm');
+        
+        if (cartItems.length === 0 && !emptyMessage) {
+            const newEmptyMessage = document.createElement('p');
+            newEmptyMessage.className = 'text-muted text-sm font-normal text-center text-secondary-foreground mx-5 mt-5';
+            newEmptyMessage.textContent = 'No products available in Cart';
+            document.querySelector('.kt-card-content').appendChild(newEmptyMessage);
+        } else if (cartItems.length > 0 && emptyMessage) {
+            emptyMessage.remove();
+        }
+    }
 });
 </script>
 {% endblock content %}
