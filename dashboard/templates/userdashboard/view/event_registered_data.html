@@ -1,0 +1,241 @@
+{% extends "pages/base.html" %}
+{% load static %}
+{% load tz %}
+
+{% block content %}
+<style>
+    /* Consistent styling with product_details.html */
+    .kt-container-fixed {
+        max-width: var(--custom-container-width, 85%);
+        margin: 0 auto;
+        padding: 20px 0;
+    }
+
+    .kt-card {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .kt-card-header {
+        padding: 16px 20px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .kt-card-content {
+        padding: 20px;
+    }
+
+    .kt-btn {
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-weight: 500;
+        transition: background-color 0.2s ease-in-out;
+    }
+
+    .kt-btn-primary {
+        background-color: #3b82f6;
+        color: #fff;
+    }
+
+    .kt-btn-primary:hover {
+        background-color: #2563eb;
+    }
+
+    .kt-badge {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .kt-badge-primary {
+        background-color: #dbeafe;
+        color: #3b82f6;
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+
+    .table th, .table td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .table th {
+        font-weight: 600;
+        color: #374151;
+        background-color: #f9fafb;
+    }
+
+    .table td {
+        color: #4b5563;
+    }
+
+    .text-gray-650 {
+        color: #374151;
+    }
+
+    .text-blue-600 {
+        color: #3b82f6;
+    }
+
+    .hover\:underline:hover {
+        text-decoration: underline;
+    }
+
+    #event-details-content {
+        transition: max-height 0.3s ease;
+        overflow: hidden;
+    }
+</style>
+
+<div class="kt-container-fixed mt-1">
+    <div class="flex flex-col items-stretch gap-7 mt-5 py-5">
+        <!-- Page Title -->
+        <h1 class="text-3xl font-semibold text-gray-650 dark:text-white">
+            Event Registrations for {{ product.name|default:'Product Not Found' }}
+        </h1>
+
+        {% if product %}
+        <div class="grid grid-cols-1 gap-8">
+            <!-- Event Details Section -->
+            {% if event %}
+            <div class="kt-card">
+                <div class="kt-card-header">
+                    <h2 class="text-xl font-semibold text-gray-650 dark:text-white flex items-center gap-2">
+                        Event Details
+                        <span class="kt-badge kt-badge-primary">Event</span>
+                    </h2>
+                </div>
+                <div class="kt-card-content">
+                    <div id="event-details-content" class="text-sm text-gray-650 dark:text-gray-300 space-y-2 max-h-36 overflow-hidden transition-all duration-300">
+                        {% if event.conference_link %}
+                        <p class="flex justify-between">
+                            <span class="font-semibold">Conference Link:</span>
+                            <a href="{{ event.conference_link }}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:underline">Join the Event</a>
+                        </p>
+                        {% endif %}
+                        {% if event.speaker_name %}
+                        <p class="flex justify-between">
+                            <span class="font-semibold">Speaker:</span>
+                            {{ event.speaker_name }}
+                        </p>
+                        {% endif %}
+                        {% if event.conference_at %}
+                        <p class="flex justify-between">
+                            <span class="font-semibold">Date & Time:</span>
+                            <span class="spec-value">
+                                {% localtime on %}
+                                    {{ event.conference_at|date:"d M, Y H:i" }}
+                                {% endlocaltime %}
+                            </span>
+                        </p>
+                        {% endif %}
+                        {% if event.duration %}
+                        <p class="flex justify-between">
+                            <span class="font-semibold">Duration:</span>
+                            {{ event.duration }}
+                        </p>
+                        {% endif %}
+                        {% if event.venue %}
+                        <p class="flex justify-between">
+                            <span class="font-semibold">Venue:</span>
+                            {{ event.venue }}
+                        </p>
+                        {% endif %}
+                    </div>
+                    <button id="toggle-event-details" class="text-blue-600 dark:text-blue-400 font-semibold mt-2 hover:underline focus:outline-none" aria-expanded="false">
+                        See More
+                    </button>
+                </div>
+            </div>
+            {% else %}
+            <div class="kt-card">
+                <div class="kt-card-content text-center text-gray-500 dark:text-gray-400 py-6">
+                    <p>No event associated with this product.</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Registered Users Section -->
+            <div class="kt-card">
+                <div class="kt-card-header">
+                    <h2 class="text-xl font-semibold text-gray-650 dark:text-white">Registered Users</h2>
+                </div>
+                <div class="kt-card-content">
+                    {% if registrations %}
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Full Name</th>
+                                <th>Email</th>
+                                <th>Registered At</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for registration in registrations %}
+                            <tr>
+                                <td>{{ registration.full_name }}</td>
+                                <td>{{ registration.email }}</td>
+                                <td>
+                                    {% localtime on %}
+                                        {{ registration.registered_at|date:"d M, Y H:i" }}
+                                    {% endlocaltime %}
+                                </td>
+                                <td>{{ registration.message|default:'N/A' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <p class="text-gray-500 dark:text-gray-400">No registrations for this event yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Back Button -->
+            <div class="flex justify-end">
+                <a href="{% url 'dashboard:product_detail' pk=product.id %}" class="kt-btn kt-btn-primary">
+                    Back to Product
+                </a>
+            </div>
+        </div>
+        {% else %}
+        <div class="text-center py-10 text-gray-500 dark:text-gray-400">
+            <p>Product not found. Please check the URL or try again.</p>
+            <a href="{% url 'dashboard:home' %}" class="mt-4 inline-block kt-btn kt-btn-primary">Back to Home</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    // Event Details Toggle
+    document.addEventListener('DOMContentLoaded', function() {
+        const eventContent = document.getElementById('event-details-content');
+        const eventBtn = document.getElementById('toggle-event-details');
+        if (eventContent && eventBtn) {
+            const collapsedHeight = '145px';
+            eventContent.style.maxHeight = collapsedHeight;
+
+            eventBtn.addEventListener('click', function () {
+                const isCollapsed = eventContent.style.maxHeight === collapsedHeight;
+                if (isCollapsed) {
+                    eventContent.style.maxHeight = eventContent.scrollHeight + 'px';
+                    eventBtn.textContent = 'See Less';
+                } else {
+                    eventContent.style.maxHeight = collapsedHeight;
+                    eventBtn.textContent = 'See More';
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

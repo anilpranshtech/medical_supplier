@@ -6,12 +6,11 @@
     <title>Verify OTP</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
         body {
-            margin: 0;
-            padding: 0;
             font-family: 'Nunito', sans-serif;
-            background-image: url('https://storely-nextjs.keenthemes.com//media/images/2600x1200/bg-10-dark.png');
+            background-image: url('https://storely-nextjs.keenthemes.com//media/images/2600x1200/bg-10.png');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -21,59 +20,85 @@
             min-height: 100vh;
         }
 
+        .dark body {
+            background-image: url('https://storely-nextjs.keenthemes.com//media/images/2600x1200/bg-10-dark.png');
+        }
+
         .otp-container {
             background: #ffffff;
-            padding: 48px 40px;
-            border-radius: 24px;
+            padding: 2.5rem;
+            border-radius: 1.5rem;
             width: 100%;
             max-width: 400px;
             border: 1px solid #e2e8f0;
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .dark .otp-container {
+            background: #1f2937;
+            border-color: #4b5563;
         }
 
         .otp-header h3 {
             text-align: center;
             color: #0f172a;
-            margin-bottom: 16px;
-            font-size: 24px;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
             font-weight: 700;
+        }
+
+        .dark .otp-header h3 {
+            color: #e5e7eb;
         }
 
         .otp-header p {
             text-align: center;
             color: #64748b;
-            font-size: 14px;
-            margin-bottom: 24px;
+            font-size: 0.875rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .dark .otp-header p {
+            color: #9ca3af;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 1.25rem;
         }
 
         .form-group label {
-            font-size: 14px;
+            font-size: 0.875rem;
             color: #1e293b;
-            margin-bottom: 6px;
+            margin-bottom: 0.375rem;
             display: block;
             font-weight: 600;
         }
 
+        .dark .form-group label {
+            color: #e5e7eb;
+        }
+
         .otp-input-container {
             display: flex;
-            gap: 8px;
+            gap: 0.5rem;
             justify-content: center;
         }
 
         .otp-input {
-            width: 40px;
-            height: 40px;
+            width: 2.5rem;
+            height: 2.5rem;
             text-align: center;
             font-size: 1.25rem;
-            border-radius: 8px;
+            border-radius: 0.5rem;
             background: #f8fafc;
             border: 1px solid #cbd5e1;
             color: #0f172a;
-            transition: border 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .dark .otp-input {
+            background: #374151;
+            border-color: #4b5563;
+            color: #e5e7eb;
         }
 
         .otp-input:focus {
@@ -90,26 +115,23 @@
             width: 100%;
             background: #0ea5e9;
             color: white;
-            padding: 12px;
+            padding: 0.75rem;
             border: none;
-            border-radius: 12px;
-            font-size: 16px;
+            border-radius: 0.5rem;
+            font-size: 1rem;
             font-weight: 700;
             cursor: pointer;
-            transition: background 0.3s ease, transform 0.2s ease;
-            box-shadow: 0 6px 12px rgba(14, 165, 233, 0.2);
         }
 
         .verify-btn:hover {
             background: #0284c7;
-            transform: translateY(-1px);
         }
 
         .resend-link {
             color: #0ea5e9;
-            font-size: 14px;
+            font-size: 0.875rem;
             text-align: center;
-            margin-bottom: 16px;
+            margin-bottom: 1rem;
             text-decoration: none;
             font-weight: 600;
             cursor: pointer;
@@ -127,9 +149,9 @@
 
         .error-message, .success-message {
             color: #ef4444;
-            font-size: 13px;
+            font-size: 0.75rem;
             text-align: center;
-            margin-bottom: 10px;
+            margin-bottom: 0.625rem;
             display: none;
         }
 
@@ -145,13 +167,12 @@
             <p>Enter the OTP sent to your mobile number.</p>
         </div>
 
-        <!-- Message display -->
-        <div id="message" class="error-message"></div>
+        <div id="message" class="error-message">{{ error|default_if_none:'' }}</div>
 
-        <form id="otp_form" class="flex flex-col gap-4">
+        <form id="otpForm" class="flex flex-col gap-4">
             {% csrf_token %}
             <div class="form-group">
-                <label for="otp-input">OTP</label>
+                <label for="otp">OTP</label>
                 <div class="otp-input-container">
                     <input class="otp-input" type="text" maxlength="1" pattern="[0-9]" required>
                     <input class="otp-input" type="text" maxlength="1" pattern="[0-9]" required>
@@ -160,50 +181,51 @@
                     <input class="otp-input" type="text" maxlength="1" pattern="[0-9]" required>
                     <input class="otp-input" type="text" maxlength="1" pattern="[0-9]" required>
                 </div>
-                <input type="hidden" name="otp" id="otp-hidden">
+                <div class="error-message" id="otp_error">Please enter a valid 6-digit OTP</div>
+                <input type="hidden" name="otp" id="otp">
             </div>
 
             <div class="resend-link" id="resend-otp">Resend OTP</div>
 
-            <button type="button" id="verify-btn" class="verify-btn">Verify</button>
+            <button type="submit" class="verify-btn">Verify</button>
         </form>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const otpInputs = document.querySelectorAll('.otp-input');
-            const otpHidden = document.getElementById('otp-hidden');
-            const resendLink = document.getElementById('resend-otp');
-            const verifyBtn = document.getElementById('verify-btn');
-            const messageDiv = document.getElementById('message');
+        $(document).ready(function () {
+            const otpInputs = $('.otp-input');
+            const otpHidden = $('#otp');
+            const otpError = $('#otp_error');
+            const resendLink = $('#resend-otp');
+            const messageDiv = $('#message');
+            const regToken = '{{ token|default_if_none:"" }}'; // Token passed via URL or view
 
-            // OTP input handling
-            otpInputs.forEach((input, index) => {
-                input.addEventListener('input', (e) => {
+            otpInputs.each(function (index) {
+                $(this).on('input', function (e) {
                     if (!/^[0-9]$/.test(e.target.value)) {
                         e.target.value = '';
                         return;
                     }
                     if (e.target.value && index < otpInputs.length - 1) {
-                        otpInputs[index + 1].focus();
+                        otpInputs.eq(index + 1).focus();
                     }
                     updateHiddenOTP();
                 });
 
-                input.addEventListener('keydown', (e) => {
+                $(this).on('keydown', function (e) {
                     if (e.key === 'Backspace' && !e.target.value && index > 0) {
-                        otpInputs[index - 1].focus();
+                        otpInputs.eq(index - 1).focus();
                     }
                 });
 
-                input.addEventListener('paste', (e) => {
+                $(this).on('paste', function (e) {
                     e.preventDefault();
-                    const pasteData = e.clipboardData.getData('text').replace(/\D/g, '');
+                    const pasteData = e.originalEvent.clipboardData.getData('text').replace(/\D/g, '');
                     if (pasteData.length <= 6) {
                         for (let i = 0; i < pasteData.length && i < otpInputs.length; i++) {
-                            otpInputs[i].value = pasteData[i];
+                            otpInputs.eq(i).val(pasteData[i]);
                             if (i < otpInputs.length - 1) {
-                                otpInputs[i + 1].focus();
+                                otpInputs.eq(i + 1).focus();
                             }
                         }
                         updateHiddenOTP();
@@ -212,112 +234,84 @@
             });
 
             function updateHiddenOTP() {
-                const otpValue = Array.from(otpInputs).map(input => input.value).join('');
-                otpHidden.value = otpValue;
+                otpHidden.val(otpInputs.map(function () { return this.value; }).get().join(''));
             }
 
-            // Display message
-            function displayMessage(message, isSuccess = false) {
-                messageDiv.textContent = message;
-                messageDiv.className = isSuccess ? 'success-message' : 'error-message';
-                messageDiv.style.display = 'block';
-                setTimeout(() => {
-                    messageDiv.style.display = 'none';
-                }, 5000);
-            }
+            $('#otpForm').on('submit', function (e) {
+                e.preventDefault();
+                const otpValue = $('#otp').val();
+                otpInputs.removeClass('input-error');
+                otpError.hide();
+                messageDiv.hide();
 
-            // Verify OTP
-            verifyBtn.addEventListener('click', () => {
-                const form = document.getElementById('otp_form');
-                const formData = new FormData(form);
-                otpInputs.forEach(input => input.classList.remove('input-error'));
-                messageDiv.style.display = 'none';
-
-                if (!otpHidden.value || otpHidden.value.length !== 6) {
-                    otpInputs.forEach(input => input.classList.add('input-error'));
-                    displayMessage('Please enter a valid 6-digit OTP');
+                if (!otpValue || otpValue.length !== 6) {
+                    otpInputs.addClass('input-error');
+                    otpError.show();
                     return;
                 }
 
-                formData.append('step', 'verify_otp');
+                if (!regToken) {
+                    messageDiv.text('Registration token is missing. Please try registering again.').addClass('error-message').show();
+                    setTimeout(() => messageDiv.hide(), 5000);
+                    return;
+                }
 
-                fetch('{% url "dashboard:register" %}', {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        displayMessage('Account created successfully!', true);
+                $.ajax({
+                    url: "{% url 'ajax_register' %}",
+                    type: "POST",
+                    data: { step: 'verify_otp', token: regToken, otp: otpValue },
+                    headers: { 'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val() },
+                    success: function (res) {
+                        if (res.success) {
+                            messageDiv.text('Account created successfully!').addClass('success-message').removeClass('error-message').show();
+                            setTimeout(() => window.location.href = res.redirect, 2000);
+                        }
+                    },
+                    error: function (xhr) {
+                        otpInputs.addClass('input-error');
+                        const errors = xhr.responseJSON.errors;
+                        if (errors.otp) {
+                            otpError.text(errors.otp).show();
+                        } else if (errors.general) {
+                            messageDiv.text(errors.general).addClass('error-message').show();
+                        }
                         setTimeout(() => {
-                            window.location.href = '{% url "dashboard:login" %}';
-                        }, 2000);
-                    } else {
-                        otpInputs.forEach(input => input.classList.add('input-error'));
-                        displayMessage(data.errors?.otp || data.errors?.general || 'OTP verification failed.');
+                            otpError.hide();
+                            messageDiv.hide();
+                        }, 5000);
                     }
-                })
-                .catch(error => {
-                    console.error('Error verifying OTP:', error);
-                    displayMessage('An unexpected error occurred. Please try again.');
                 });
             });
 
-            
-            // Resend OTP with rate-limiting
             let isResendDisabled = false;
-            resendLink.addEventListener('click', () => {
-                if (isResendDisabled) return;
-
+            resendLink.on('click', function () {
+                if (isResendDisabled || !regToken) return;
                 isResendDisabled = true;
-                resendLink.classList.add('disabled');
-                resendLink.textContent = 'Resending...';
+                resendLink.addClass('disabled').text('Resending...');
 
-                fetch('{% url "dashboard:resend_otp" %}', {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-                        'Content-Type': 'application/json'
+                $.ajax({
+                    url: '{% url "dashboard:resend_otp" %}',
+                    type: 'POST',
+                    data: { token: regToken },
+                    headers: { 'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val() },
+                    success: function (res) {
+                        messageDiv.text(res.message || 'OTP resent successfully').addClass(res.message.includes('successfully') ? 'success-message' : 'error-message').show();
+                        setTimeout(() => messageDiv.hide(), 5000);
+                        setTimeout(() => {
+                            isResendDisabled = false;
+                            resendLink.removeClass('disabled').text('Resend OTP');
+                        }, 30000);
+                    },
+                    error: function () {
+                        messageDiv.text('Failed to resend OTP. Please try again.').addClass('error-message').show();
+                        setTimeout(() => messageDiv.hide(), 5000);
+                        setTimeout(() => {
+                            isResendDisabled = false;
+                            resendLink.removeClass('disabled').text('Resend OTP');
+                        }, 30000);
                     }
-                })
-                    .then(response => {
-                        if (response.status === 429) {
-                            return { message: 'Please wait before resending OTP.' };
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        displayMessage(data.message, data.message.includes('successfully'));
-                        setTimeout(() => {
-                            isResendDisabled = false;
-                            resendLink.classList.remove('disabled');
-                            resendLink.textContent = 'Resend OTP';
-                        }, 30000);
-                    })
-                    .catch(error => {
-                        displayMessage('Failed to resend OTP. Please try again.');
-                        setTimeout(() => {
-                            isResendDisabled = false;
-                            resendLink.classList.remove('disabled');
-                            resendLink.textContent = 'Resend OTP';
-                        }, 30000);
-                    });
+                });
             });
-
-            // Handle server-side messages from initial load
-            {% if messages %}
-                {% for message in messages %}
-                    {% if 'success' in message.tags %}
-                        displayMessage("{{ message|escapejs }}", true);
-                    {% else %}
-                        displayMessage("{{ message|escapejs }}", false);
-                    {% endif %}
-                {% endfor %}
-            {% endif %}
         });
     </script>
 </body>

@@ -2,8 +2,8 @@
 {% load static %}
 
 <style>
-    .card-element{
-        background-color : #4ac1f7;
+    .card-element {
+        background-color: #4ac1f7;
     }
 </style>
 
@@ -55,6 +55,7 @@
                             <option value="Cash on Delivery" selected>Cash on Delivery</option>
                             <option value="Stripe">Stripe</option>
                             <option value="Razorpay">Razorpay</option>
+                            <option value="Bank Transfer">Bank Transfer</option>
                         </select>
                     </div>
                 </div>
@@ -164,6 +165,29 @@
                                     </div>
                                 </form>
                             </div>
+
+                            <!-- Bank Transfer -->
+                            <div class="kt-card" id="bank-transfer-card" hidden>
+                                <form method="post" action="." enctype="multipart/form-data">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="payment_method" value="bank_transfer">
+                                    <div class="text-blue-500 border border-blue-700 p-3 rounded mb-4 bg-blue-950 text-sm mt-5 mx-5">
+                                        <img src="{% static 'metronic/tailwind/dist/assets/media/brand-logos/bank.svg' %}"
+                                             alt="bank_transfer" class="w-5 h-5" style="background-color: #1e90ff;">
+                                        <strong>Note:</strong> Bank Transfer - Submit payment details and proof of payment for admin verification
+                                    </div>
+                                    <div class="grid sm:grid-cols-2 gap-4 mt-5 mx-5">
+                                        <div class="space-y-4">
+                                            <input type="file" name="proof_image" accept="image/*" class="kt-input w-full"/>
+                                        </div>
+                                    </div>
+                                    <div class="mx-5 mt-7 mb-7">
+                                        <button class="kt-btn kt-btn-primary w-full" type="submit">
+                                            Submit Bank Transfer Details (USD ${{ order_summary.total|floatformat:2 }})
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
 
                         <!-- Navigation -->
@@ -172,7 +196,7 @@
                                 <i class="ki-filled ki-black-left text-base"></i>
                                 Shipping Info
                             </a>
-                            <a class="kt-btn kt-btn-outline" fdprocessedid="1zln6" href="{% url 'dashboard:home' %}">
+                            <a class="kt-btn kt-btn-outline" href="{% url 'dashboard:home' %}">
                                 <i class="ki-filled ki-cross text-base"></i>
                                 Cancel
                             </a>
@@ -249,6 +273,7 @@
             cod: document.getElementById('cod-card'),
             stripe: document.getElementById('stripe-card'),
             razorpay: document.getElementById('razorpay-card'),
+            bank_transfer: document.getElementById('bank-transfer-card'),
         };
         const subtotalEl = document.getElementById("price-subtotal");
         const totalEl = document.getElementById("price-total");
@@ -256,7 +281,8 @@
         const currencyMap = {
             "Cash on Delivery": "$",
             "Stripe": "$",
-            "Razorpay": "₹"
+            "Razorpay": "₹",
+            "Bank Transfer": "$"
         };
 
         function hideAll() {
@@ -283,6 +309,8 @@
                 cards.stripe.hidden = false;
             } else if (value === "Razorpay") {
                 cards.razorpay.hidden = false;
+            } else if (value === "Bank Transfer") {
+                cards.bank_transfer.hidden = false;
             }
             updateCurrency(value);
         });

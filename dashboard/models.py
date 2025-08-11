@@ -10,13 +10,51 @@ from datetime import timedelta
 from django.conf import settings
 
 
+class Speciality(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+
+class Residency(models.Model):
+    country = models.CharField(max_length=100, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.country
+
+
+class Nationality(models.Model):
+    country = models.CharField(max_length=100, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.country
+
+
+class CountryCode(models.Model):
+    code = models.CharField(max_length=10, unique=True)
+    country = models.CharField(max_length=100)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.country} ({self.code})"
+
 
 class RetailProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     profile_picture = models.ImageField(upload_to='profile_pics/', null=True, blank=True)
     phone = models.CharField(max_length=20, blank=True, null=True)
-    age = models.IntegerField(null=True, blank=True)
-    medical_needs = models.TextField(blank=True)
+
+    current_position = models.CharField(max_length=255)
+    workplace = models.CharField(max_length=255)
+
+    nationality = models.ForeignKey(Nationality, on_delete=models.SET_NULL, null=True)
+    residency = models.ForeignKey(Residency, on_delete=models.SET_NULL, null=True)
+    country_code = models.ForeignKey(CountryCode, on_delete=models.SET_NULL, null=True)
+    speciality = models.ForeignKey(Speciality, on_delete=models.SET_NULL, null=True)
 
     class Meta:
         verbose_name = verbose_name_plural ="Retail Profile"
@@ -202,6 +240,18 @@ class ProductImage(models.Model):
     class Meta:
         ordering = ['-created_at']
         verbose_name = verbose_name_plural = "Product Image"
+
+
+class EventRegistration(models.Model):
+    product = models.ForeignKey('Product', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    full_name = models.CharField(max_length=255)
+    email = models.EmailField()
+    message = models.TextField(blank=True, null=True)
+    registered_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.full_name} - {self.product.name}"
 
 
 class Order(models.Model):
@@ -416,6 +466,7 @@ class Payment(models.Model):
         ("stripe", "Stripe"),
         ("razorpay", "Razorpay"),
         ("cod", "Cash on Delivery"),
+        ("bank_transfer", "Bank Transfer"),
     ])
     customer_id = models.CharField(max_length=100, blank=True, null=True)
     paid = models.BooleanField(default=False)
@@ -477,6 +528,21 @@ class CODPayment(models.Model):
     class Meta:
         ordering = ["-created_at"]
         verbose_name = verbose_name_plural = "COD Payment"
+
+
+class BankTransferPayment(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="bank_transfer_payments")
+    name = models.CharField(max_length=100)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    paid = models.BooleanField(default=False)   
+    verified_by_admin = models.BooleanField(default=False)
+    admin_notes = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    proof_image = models.ImageField(upload_to='bank_transfer_proofs/', blank=True, null=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = verbose_name_plural = "Bank Transfer Payment"
 
 
 class RoleRequest(models.Model):
@@ -556,42 +622,8 @@ class PasswordUpdateTracker(models.Model):
         return self.last_password_update < now() - timedelta(days=90)
 
 
-# models.py
-class Speciality(models.Model):
-    name = models.CharField(max_length=100, unique=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.name
-
-
-class Residency(models.Model):
-    country = models.CharField(max_length=100, unique=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.country
-
-
-class Nationality(models.Model):
-    country = models.CharField(max_length=100, unique=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.country
-
-
-class CountryCode(models.Model):
-    code = models.CharField(max_length=10, unique=True)
-    country = models.CharField(max_length=100)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.country} ({self.code})"
-
 class DoctorProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='doctor_profile')
-
     current_position = models.CharField(max_length=255)
     workplace = models.CharField(max_length=255)
 
@@ -802,3 +834,12 @@ class StripeSubscriptionMetadata(models.Model):
 #
 #     def __str__(self):
 #         return f"{self.user.email} - {self.plan.name}"
+
+
+class PendingSignup(models.Model):
+    token = models.CharField(max_length=64, unique=True)
+    data = models.JSONField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def is_expired(self):
+        return now() > self.created_at + timedelta(minutes=10)

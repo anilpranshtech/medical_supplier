@@ -1,12 +1,15 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers, mixins, viewsets
 from django.contrib.auth.models import User
+from adminv2.models import *
+from adminv3.models import *
+from dashboard.models import *
 import re
 
 from rest_framework.permissions import IsAuthenticated
 
 from dashboard.models import DoctorProfile, ProductCategory, ProductSubCategory, ProductLastCategory, Event, Product, \
-    SupplierProfile, Residency, Speciality, Nationality, CountryCode,SubscriptionPlan, UserSubscription
+    SupplierProfile, Residency, Speciality, Nationality, CountryCode,SubscriptionPlan, UserSubscription , CartProduct, Product,WishlistProduct,CustomerBillingAddress, SupplierProfile ,WholesaleBuyerProfile 
 from django.db import IntegrityError
 
 
@@ -409,8 +412,6 @@ class SubscriptionPlanSerializer(serializers.ModelSerializer):
         return data
 
 
-
-
 class UserSubscriptionSerializer(serializers.ModelSerializer):
     user_email = serializers.EmailField(write_only=True)  # Add this field
     
@@ -441,3 +442,376 @@ class UserSubscriptionSerializer(serializers.ModelSerializer):
         
         data['user'] = user  # Add user object to validated data
         return data
+
+
+class ProductSerializer(serializers.ModelSerializer):
+    main_image = serializers.SerializerMethodField()
+    delivery_date = serializers.SerializerMethodField()
+    rating = serializers.FloatField()
+    total_reviews = serializers.IntegerField()
+
+    class Meta:
+        model = Product
+        fields = [
+            'id', 'name', 'price', 'offer_percentage', 'main_image',
+            'delivery_date', 'rating', 'total_reviews'
+        ]
+
+    def get_main_image(self, obj):
+        if hasattr(obj, 'main_image') and obj.main_image:
+            return self.context['request'].build_absolute_uri(obj.main_image)
+        return None
+
+    def get_delivery_date(self, obj):
+        return obj.delivery_date if hasattr(obj, 'delivery_date') else 'N/A'
+
+
+class RatingReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RatingReview
+        fields = ['id', 'rating', 'review', 'photo', 'created_at']
+        read_only_fields = ['id', 'created_at']
+
+
+class BannerSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField()  # Explicitly define id as IntegerField
+    image = serializers.ImageField(use_url=True)
+
+    class Meta:
+        model = Banner
+        fields = ['id', 'title', 'image', 'link', 'is_active', 'order']
+
+
+
+class ProductSerializer(serializers.ModelSerializer):
+    main_image = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Product
+        fields = ['id', 'name', 'price', 'main_image']
+
+    def get_main_image(self, obj):
+        main_img = obj.productimage_set.filter(is_main=True).first()
+        if main_img and main_img.image:
+            return self.context['request'].build_absolute_uri(main_img.image.url)
+        return None
+
+class OrderItemSerializer(serializers.ModelSerializer):
+    product = ProductSerializer()
+
+    class Meta:
+        model = OrderItem
+        fields = ['id', 'product', 'price', 'quantity']
+
+class PaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Payment
+        fields = ['id', 'payment_method', 'created_at', 'amount', 'name']
+
+class StripePaymentSerializer(serializers.ModelSerializer):
+    card_last4 = serializers.CharField(read_only=True, allow_null=True)
+
+    class Meta:
+        model = StripePayment
+        fields = ['id', 'stripe_charge_id', 'amount', 'created_at', 'name', 'stripe_customer_id', 'stripe_signature', 'card_last4']
+
+class RazorpayPaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RazorpayPayment
+        fields = ['id', 'razorpay_payment_id', 'amount', 'created_at', 'name', 'razorpay_order_id', 'razorpay_signature']
+
+class CODPaymentSerializer(serializers.ModelSerializer):
+    delivery_partner = serializers.StringRelatedField()  # Returns the string representation of DeliveryPartner
+
+    class Meta:
+        model = CODPayment
+        fields = ['id', 'amount', 'created_at', 'name', 'cod_tracking_id', 'delivery_partner']
+
+class BankTransferPaymentSerializer(serializers.ModelSerializer):
+    proof_image = serializers.ImageField(use_url=True, allow_null=True)
+
+    class Meta:
+        model = BankTransferPayment
+        fields = ['id', 'name', 'amount', 'created_at', 'verified_by_admin', 'admin_notes', 'proof_image']
+
+
+class ProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = ['id', 'name', 'price'] 
+
+class CartProductSerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source='product.name', read_only=True)
+    product_price = serializers.DecimalField(source='product.price', read_only=True, max_digits=10, decimal_places=2)
+    product_image = serializers.SerializerMethodField()
+    product = ProductSerializer(read_only=True)
+
+    class Meta:
+        model = CartProduct
+        fields = ['id', 'product', 'product_name', 'product_price', 'quantity', 'product_image', 'created_at']
+
+    def get_product_image(self, obj):
+        if obj.product.productimage_set.exists():
+            return obj.product.productimage_set.first().image.url
+        return ''
+# class CartProductSerializer(serializers.ModelSerializer):
+#     product = ProductSerializer()
+
+#     class Meta:
+#         model = CartProduct
+#         fields = ['id', 'product', 'quantity', 'created_at']
+
+class WishlistProductSerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source='product.name')
+    price = serializers.SerializerMethodField()
+    sku = serializers.CharField(source='product.supplier_sku')
+    image = serializers.SerializerMethodField()
+
+    class Meta:
+        model = WishlistProduct
+        fields = ['id', 'product', 'product_name', 'price', 'sku', 'image']
+
+    def get_price(self, obj):
+        return f"${obj.product.price}"
+
+    def get_image(self, obj):
+        main_image = obj.product.productimage_set.first()
+        return main_image.image.url if main_image else None
+
+
+class CustomerBillingAddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomerBillingAddress
+        fields = ['id','address_title','customer_address1','customer_address2','phone','customer_city','customer_state','customer_country','customer_postal_code',]
+        read_only_fields = ['user', 'is_deleted']
+
+class OrderSerializer(serializers.ModelSerializer):
+    payment = PaymentSerializer()
+
+    class Meta:
+        model = Order
+        fields = ['id', 'order_id', 'payment', 'shipping_fees', 'created_at', 'status']
+
+
+
+
+
+class RFQRequestSerializer(serializers.ModelSerializer):
+    product = ProductSerializer(read_only=True)
+    product_id = serializers.PrimaryKeyRelatedField(
+        queryset=Product.objects.all(), source='product', write_only=True
+    )
+    requested_by = serializers.StringRelatedField(read_only=True)
+    quoted_by = serializers.StringRelatedField(read_only=True)
+
+    class Meta:
+        model = RFQRequest
+        fields = [
+            'id', 'product', 'product_id', 'quantity', 'message', 'company_name',
+            'expected_delivery_date', 'status', 'created_at', 'updated_at',
+            'quoted_by', 'requested_by', 'email_sent'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at', 'status', 'email_sent', 'quoted_by', 'requested_by']
+
+
+class RetailProfileSerializer(serializers.ModelSerializer):
+    profile_picture = serializers.ImageField(use_url=True, allow_null=True)
+
+    class Meta:
+        model = RetailProfile
+        fields = ['profile_picture', 'phone', 'current_position', 'workplace', 'nationality', 'residency', 'country_code', 'speciality']
+
+
+class WholesaleBuyerProfileSerializer(serializers.ModelSerializer):
+    profile_picture = serializers.ImageField(use_url=True, allow_null=True)
+
+    class Meta:
+        model = WholesaleBuyerProfile
+        fields = ['profile_picture', 'company_name', 'gst_number', 'department', 'purchase_capacity']
+
+
+class SupplierProfileSerializer(serializers.ModelSerializer):
+    profile_picture = serializers.ImageField(use_url=True, allow_null=True)
+
+    class Meta:
+        model = SupplierProfile
+        fields = ['profile_picture', 'company_name', 'license_number']
+
+    
+class RoleRequestSerializer(serializers.ModelSerializer):
+    user = serializers.StringRelatedField(read_only=True)
+    profile = serializers.SerializerMethodField()
+
+    class Meta:
+        model = RoleRequest
+        fields = ['id', 'user', 'requested_role', 'status', 'created_at', 'updated_at', 'profile']
+        read_only_fields = ['id', 'user', 'status', 'created_at', 'updated_at']
+
+    def get_profile(self, obj):
+        serializer_context = {'request': self.context.get('request')}
+        if obj.requested_role == 'retailer':
+            profile = RetailProfile.objects.filter(user=obj.user).first()
+            return RetailProfileSerializer(profile, context=serializer_context).data if profile else None
+        elif obj.requested_role == 'wholesaler':
+            profile = WholesaleBuyerProfile.objects.filter(user=obj.user).first()
+            return WholesaleBuyerProfileSerializer(profile, context=serializer_context).data if profile else None
+        elif obj.requested_role == 'supplier':
+            profile = SupplierProfile.objects.filter(user=obj.user).first()
+            return SupplierProfileSerializer(profile, context=serializer_context).data if profile else None
+        return None
+
+    def validate_requested_role(self, value):
+        valid_roles = [choice[0] for choice in RoleRequest.ROLE_CHOICES]
+        if value not in valid_roles:
+            raise serializers.ValidationError(f"Invalid role. Must be one of: {', '.join(valid_roles)}")
+        return value
+        fields = ['id','address_title','customer_address1','customer_address2','phone','customer_city','customer_state','customer_country','customer_postal_code',]
+        read_only_fields = ['user', 'is_deleted']
+
+class ShippingInfoSerializer(serializers.Serializer):
+  
+    addresses = CustomerBillingAddressSerializer(many=True)
+    default_address = CustomerBillingAddressSerializer()
+    cart_items = CartProductSerializer(many=True)
+    order_summary = serializers.DictField()
+
+class ProductSerializer(serializers.ModelSerializer):
+    discounted_price = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Product
+        fields = ['id', 'name', 'price', 'discounted_price', 'category', 'sub_category', 'last_category', 'is_active', 'created_at']
+
+    def get_discounted_price(self, obj):
+        return obj.discounted_price()
+    
+
+class WholesaleRegistrationSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)
+    confirm_password = serializers.CharField(write_only=True)
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    phone = serializers.CharField()
+    company_name = serializers.CharField()
+    gst_number = serializers.CharField()
+    department = serializers.CharField()
+    purchase_capacity = serializers.IntegerField()
+
+    class Meta:
+        model = User
+        fields = (
+            'first_name', 'last_name', 'email', 'password', 'confirm_password',
+            'phone', 'company_name', 'gst_number', 'department', 'purchase_capacity'
+        )
+
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("A user with this email already exists.")
+        return value
+
+    def validate(self, data):
+        if data['password'] != data['confirm_password']:
+            raise serializers.ValidationError({"confirm_password": "Passwords do not match."})
+
+        password = data['password']
+        if len(password) < 8:
+            raise serializers.ValidationError({"password": "Password must be at least 8 characters."})
+        return data
+
+    def create(self, validated_data):
+        validated_data.pop('confirm_password')
+
+        profile_fields = {
+            'phone': validated_data.pop('phone'),
+            'company_name': validated_data.pop('company_name'),
+            'gst_number': validated_data.pop('gst_number'),
+            'department': validated_data.pop('department'),
+            'purchase_capacity': validated_data.pop('purchase_capacity'),
+        }
+
+        username = validated_data['email']
+
+        try:
+            user = User.objects.create_user(username=username, **validated_data)
+            WholesaleBuyerProfile.objects.create(user=user, **profile_fields)
+        except IntegrityError:
+            raise serializers.ValidationError("A user with this email already exists.")
+
+        return user
+
+    def to_representation(self, instance):
+        data = {
+            "id": instance.id,
+            "email": instance.email,
+            "first_name": instance.first_name,
+            "last_name": instance.last_name,
+        }
+        try:
+            profile = instance.wholesalebuyerprofile
+            data["wholesale_profile"] = {
+                "phone": profile.phone,
+                "company_name": profile.company_name,
+                "gst_number": profile.gst_number,
+                "department": profile.department,
+                "purchase_capacity": profile.purchase_capacity
+            }
+        except WholesaleBuyerProfile.DoesNotExist:
+            data["wholesale_profile"] = None
+        return data
+    
+class SupplierRegistrationSerializer(serializers.Serializer):
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    email = serializers.EmailField()
+    phone = serializers.CharField()
+    password = serializers.CharField(write_only=True)
+    confirm_password = serializers.CharField(write_only=True)
+    company_name = serializers.CharField()
+    license_number = serializers.CharField()
+
+    def validate_email(self, value):
+        if User.objects.filter(username=value).exists():
+            raise serializers.ValidationError("Email already exists.")
+        return value
+
+    def validate(self, data):
+        if data['password'] != data['confirm_password']:
+            raise serializers.ValidationError({'confirm_password': "Passwords do not match."})
+        return data
+
+    def create(self, validated_data):
+        user = User.objects.create_user(
+            username=validated_data['email'],
+            email=validated_data['email'],
+            password=validated_data['password'],
+            first_name=validated_data['first_name'],
+            last_name=validated_data['last_name']
+        )
+
+        supplier = SupplierProfile.objects.create(
+            user=user,
+            phone=validated_data['phone'],
+            company_name=validated_data['company_name'],
+            license_number=validated_data['license_number']
+        )
+        return supplier
+
+class WholesaleBuyerProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WholesaleBuyerProfile
+        fields = '__all__'
+        read_only_fields = ['user']
+
+class SupplierProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SupplierProfile
+        fields = [
+            'profile_picture',
+            'phone',
+            'company_name',
+            'license_number',
+            # 'is_verified'
+        ]
+        read_only_fields = ['is_verified']
+

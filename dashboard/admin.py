@@ -6,7 +6,7 @@ from dashboard.models import *
 
 @admin.register(RetailProfile)
 class RetailProfileAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'profile_picture', 'phone', 'age', 'medical_needs')
+    list_display = ('id', 'user', 'profile_picture', 'phone', 'current_position', 'workplace', 'nationality', 'residency', 'country_code', 'speciality')
 
 
 @admin.register(WholesaleBuyerProfile)
@@ -88,6 +88,25 @@ class RazorpayPaymentAdmin(admin.ModelAdmin):
 class CODPaymentAdmin(admin.ModelAdmin):
     list_display = ('id','name', 'amount', 'paid', 'created_at')
     list_filter = ('paid', 'created_at')
+
+@admin.register(BankTransferPayment)
+class BankTransferPaymentAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'amount', 'verified_by_admin', 'created_at', 'proof_image')
+    list_filter = ('verified_by_admin', 'created_at')
+    search_fields = ('id', 'user__username', 'user__email')
+    list_editable = ('verified_by_admin',)
+    readonly_fields = ('created_at',)
+    fieldsets = (
+        (None, {
+            'fields': ('user', 'name', 'amount', 'verified_by_admin')
+        }),
+        ('Bank Transfer Details', {
+            'fields': ('admin_notes', 'proof_image')
+        }),
+        ('Metadata', {
+            'fields': ('created_at',)
+        }),
+    )
 
 @admin.register(CustomerBillingAddress)
 class CustomerBillingAddressAdmin(admin.ModelAdmin):

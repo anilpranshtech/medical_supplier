@@ -116,11 +116,11 @@ class PhoneForm(forms.ModelForm):
 class RetailProfileForm(forms.ModelForm):
     class Meta:
         model = RetailProfile
-        fields = ['profile_picture', 'age', 'medical_needs']
+        fields = ['profile_picture', 'current_position', 'workplace', 'nationality', 'residency', 'country_code', 'speciality',]
         widgets = {
             'profile_picture': forms.FileInput(),
-            'age': forms.NumberInput(attrs={'placeholder': 'Enter your age'}),
-            'medical_needs': forms.Textarea(attrs={'placeholder': 'Enter medical needs'}),
+            'current_position': forms.NumberInput(attrs={'placeholder': 'Enter your age'}),
+            'workplace': forms.Textarea(attrs={'placeholder': 'Enter medical needs'}),
         }
 
 

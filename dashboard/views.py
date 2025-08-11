@@ -1,3 +1,4 @@
+import uuid
 from decimal import Decimal
 from io import BytesIO
 from django.contrib.auth.views import PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, \
@@ -194,44 +195,46 @@ class CustomLoginView(FormView):
 
 
 
+def generate_token():
+    return uuid.uuid4().hex
+
 class RegistrationView(View):
-    register_template = "dashboard/register.html"
-    otp_template = "userdashboard/auth/verify_otp.html"
     recaptcha_secret = '6LdTHV8rAAAAAIgLr2wdtdtWExTS6xJpUpD8qEzh'
+    template_name = 'dashboard/register.html'
 
     def get(self, request):
-        step = request.session.get("step", "register")
-        template = self.otp_template if step == "verify_otp" else self.register_template
-        return render(request, template)
+        # Render the registration form with necessary context
+        context = {
+            'form_data': {},  # Empty dict for initial form rendering
+            'nationalities': Nationality.objects.all(),
+            'residencies': Residency.objects.all(),
+            'country_codes': CountryCode.objects.all(),
+            'specialities': Speciality.objects.all(),
+        }
+        return render(request, self.template_name, context)
 
     def post(self, request):
-        step = request.session.get("step", "register")
+        step = request.POST.get("step")
 
         if step == "register":
             return self.handle_registration(request)
         elif step == "verify_otp":
-            return self.handle_otp_verification(request)
-        else:
-            messages.error(request, "Invalid registration step.")
-            return redirect('dashboard:register')
+            return self.handle_otp(request)
+        return JsonResponse({"success": False, "errors": {"general": "Invalid step"}}, status=400)
 
     def handle_registration(self, request):
         errors = {}
-
-        # reCAPTCHA
+        # reCAPTCHA verification
         recaptcha_response = request.POST.get('g-recaptcha-response')
         recaptcha_result = requests.post(
             'https://www.google.com/recaptcha/api/siteverify',
-            data={
-                'secret': self.recaptcha_secret,
-                'response': recaptcha_response
-            }
+            data={'secret': self.recaptcha_secret, 'response': recaptcha_response}
         ).json()
 
         if not recaptcha_result.get('success'):
-            errors['recaptcha'] = 'Invalid reCAPTCHA. Please try again.'
+            errors['recaptcha'] = 'Invalid reCAPTCHA.'
 
-        # Collect form data
+        # Collect data
         first_name = request.POST.get('first_name')
         last_name = request.POST.get('last_name')
         email = request.POST.get('email')
@@ -241,158 +244,124 @@ class RegistrationView(View):
         user_type = request.POST.get('user_type')
         buyer_type = request.POST.get('buyer_type')
 
-        # Validations
+        # Basic validations
         if not first_name: errors['first_name'] = 'First name is required.'
         if not last_name: errors['last_name'] = 'Last name is required.'
         if not email: errors['email'] = 'Email is required.'
         if not phone: errors['phone'] = 'Phone number is required.'
         if not password: errors['password'] = 'Password is required.'
-        if not confirm_password: errors['confirm_password'] = 'Confirm password is required.'
-
-        if email and not re.match(r'^[\w\.-]+@[\w\.-]+\.\w+$', email):
-            errors['email'] = 'Invalid email format.'
-        elif email and User.objects.filter(username=email).exists():
-            errors['email'] = 'An account with this email already exists.'
-
-        if password:
-            if len(password) < 8:
-                errors['password'] = 'Password must be at least 8 characters.'
-            if not re.search(r'[A-Z]', password):
-                errors['password'] = 'Must include an uppercase letter.'
-            if not re.search(r'[a-z]', password):
-                errors['password'] = 'Must include a lowercase letter.'
-            if not re.search(r'[0-9]', password):
-                errors['password'] = 'Must include a number.'
-            if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
-                errors['password'] = 'Must include a special character.'
-
-        if password and confirm_password and password != confirm_password:
-            errors['confirm_password'] = 'Passwords do not match.'
+        if password != confirm_password: errors['confirm_password'] = 'Passwords do not match.'
+        if email and User.objects.filter(username=email).exists():
+            errors['email'] = 'Email already exists.'
 
         if errors:
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                return JsonResponse({'success': False, 'errors': errors}, status=400)
-            for field, message in errors.items():
-                messages.error(request, message, extra_tags=field)
-            return render(request, self.register_template, {'form_data': request.POST})
+            return JsonResponse({'success': False, 'errors': errors}, status=400)
 
         # Send OTP
         otp_response = send_phone_otp(phone, TEXTDRIP_OTP_TOKEN)
         if "error" in otp_response:
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                return JsonResponse({'success': False, 'errors': {'phone': otp_response["error"]}}, status=400)
-            messages.error(request, otp_response["error"], extra_tags='phone')
-            return render(request, self.register_template, {'form_data': request.POST})
+            return JsonResponse({'success': False, 'errors': {'phone': otp_response["error"]}}, status=400)
 
-        # Save to session
-        request.session['signup_data'] = {
-            'first_name': first_name,
-            'last_name': last_name,
-            'email': email,
-            'password': password,
-            'phone': phone,
-            'user_type': user_type,
-            'buyer_type': buyer_type,
-            'supplier_company_name': request.POST.get('supplier_company_name'),
-            'license_number': request.POST.get('license_number'),
-            'age': request.POST.get('age'),
-            'medical_needs': request.POST.get('medical_needs'),
-            'company_name': request.POST.get('company_name'),
-            'gst_number': request.POST.get('gst_number'),
-            'department': request.POST.get('department'),
-            'purchase_capacity': request.POST.get('purchase_capacity'),
-        }
-        request.session['step'] = "verify_otp"
+        # Save pending data
+        token = uuid.uuid4().hex
+        PendingSignup.objects.create(token=token, data=request.POST.dict())
 
-        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            return JsonResponse({'success': True, 'redirect': 'verify_otp'})
-        return redirect('dashboard:register')
+        return JsonResponse({'success': True, 'token': token})
 
-    def handle_otp_verification(self, request):
+    def handle_otp(self, request):
+        token = request.POST.get('token')
         otp = request.POST.get('otp')
-        signup_data = request.session.get('signup_data')
 
-        if not signup_data:
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                return JsonResponse({'success': False, 'errors': {'general': 'Session expired. Please sign up again.'}}, status=400)
-            messages.error(request, "Session expired. Please sign up again.")
-            return redirect('dashboard:register')
+        try:
+            pending = PendingSignup.objects.get(token=token)
+        except PendingSignup.DoesNotExist:
+            return JsonResponse({'success': False, 'errors': {'general': 'Invalid or expired token.'}}, status=400)
 
-        phone = signup_data['phone']
+        if pending.is_expired():
+            pending.delete()
+            return JsonResponse({'success': False, 'errors': {'general': 'Token expired.'}}, status=400)
+
+        data = pending.data
+        phone = data.get('phone')
+
+        # Verify OTP
         result = verify_mobile_otp(VERIFY_URL, TEXTDRIP_OTP_TOKEN, phone, otp)
+        if not (result.get("success") or result.get("status") is True):
+            return JsonResponse({'success': False, 'errors': {'otp': result.get("message", "OTP verification failed.")}}, status=400)
 
-        if result.get("success") or result.get("status") is True:
-            if User.objects.filter(username=signup_data['email']).exists():
-                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                    return JsonResponse({'success': False, 'errors': {'email': 'An account with this email already exists.'}}, status=400)
-                messages.error(request, "An account with this email already exists.")
-                request.session.flush()
-                return redirect('dashboard:register')
-
-            try:
+        # Create user
+        try:
+            with transaction.atomic():
                 user = User.objects.create_user(
-                    username=signup_data['email'],
-                    email=signup_data['email'],
-                    password=signup_data['password'],
-                    first_name=signup_data['first_name'],
-                    last_name=signup_data['last_name']
+                    username=data['email'],
+                    email=data['email'],
+                    password=data['password'],
+                    first_name=data['first_name'],
+                    last_name=data['last_name']
                 )
 
                 if hasattr(user, 'phone'):
                     user.phone = phone
                     user.save()
 
-                user_type = signup_data.get('user_type')
-                buyer_type = signup_data.get('buyer_type')
+                user_type = data.get('user_type')
+                buyer_type = data.get('buyer_type')
 
                 if user_type == 'supplier':
                     SupplierProfile.objects.create(
                         user=user,
                         phone=phone,
-                        company_name=signup_data.get('supplier_company_name', ''),
-                        license_number=signup_data.get('license_number', '')
+                        company_name=data.get('supplier_company_name', ''),
+                        license_number=data.get('license_number', '')
                     )
                 elif buyer_type == 'retailer':
+                    nationality = Nationality.objects.filter(id=data.get('nationality')).first()
+                    residency = Residency.objects.filter(id=data.get('residency')).first()
+                    country_code = CountryCode.objects.filter(id=data.get('country_code')).first()
+                    speciality = Speciality.objects.filter(id=data.get('speciality')).first()
+
                     RetailProfile.objects.create(
                         user=user,
                         phone=phone,
-                        age=int(signup_data.get('age') or 0),
-                        medical_needs=signup_data.get('medical_needs', '')
+                        current_position=data.get('current_position', ''),
+                        workplace=data.get('workplace', ''),
+                        nationality=nationality,
+                        residency=residency,
+                        country_code=country_code,
+                        speciality=speciality,
                     )
                 elif user_type == 'wholesale' or buyer_type == 'wholesaler':
                     WholesaleBuyerProfile.objects.create(
                         user=user,
                         phone=phone,
-                        company_name=signup_data.get('company_name', ''),
-                        gst_number=signup_data.get('gst_number', ''),
-                        department=signup_data.get('department', ''),
-                        purchase_capacity=int(signup_data.get('purchase_capacity') or 0)
+                        company_name=data.get('company_name', ''),
+                        gst_number=data.get('gst_number', ''),
+                        department=data.get('department', ''),
+                        purchase_capacity=int(data.get('purchase_capacity') or 0)
                     )
                 else:
-                    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                        return JsonResponse({'success': False, 'errors': {'general': 'Invalid user type.'}}, status=400)
-                    messages.error(request, "Invalid user type.")
-                    user.delete()
-                    request.session.flush()
-                    return redirect('dashboard:register')
+                    return JsonResponse({'success': False, 'errors': {'general': 'Invalid user type.'}}, status=400)
 
-                request.session.flush()
-                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                    return JsonResponse({'success': True, 'redirect': 'dashboard:login'})
-                messages.success(request, "Account created successfully.")
-                return redirect('dashboard:login')
+                pending.delete()
+                return JsonResponse({'success': True, 'redirect': '/login/'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'errors': {'general': f'Error creating account: {str(e)}'}}, status=500)
 
-            except Exception as e:
-                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                    return JsonResponse({'success': False, 'errors': {'general': f'Error creating account: {str(e)}'}}, status=500)
-                messages.error(request, f"Error creating account: {str(e)}")
-                return redirect('dashboard:register')
-        else:
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                return JsonResponse({'success': False, 'errors': {'otp': result.get("message", "OTP verification failed.")}}, status=400)
-            messages.error(request, result.get("message", "OTP verification failed."))
-            return render(request, self.otp_template)
 
+class ResendOTPView(View):
+    def post(self, request):
+        token = request.POST.get('token')
+        if not token:
+            return JsonResponse({'message': 'No token provided.'}, status=400)
+        try:
+            pending = PendingSignup.objects.get(token=token)
+            phone = pending.data.get('phone')
+            otp_response = send_phone_otp(phone, TEXTDRIP_OTP_TOKEN)
+            if "error" in otp_response:
+                return JsonResponse({'message': otp_response["error"]}, status=400)
+            return JsonResponse({'message': 'OTP resent successfully'})
+        except PendingSignup.DoesNotExist:
+            return JsonResponse({'message': 'Invalid or expired token'}, status=400)
 
 
 class UserProfileView(LoginRequiredMixin, TemplateView):
@@ -737,7 +706,7 @@ class ProductDetailsView(TemplateView):
         if pk:
             try:
                 product = Product.objects.select_related(
-                    'category', 'sub_category', 'last_category', 'brand'
+                    'category', 'sub_category', 'last_category', 'brand', 'event'  # Add 'event' to select_related
                 ).get(id=pk)
 
                 # Main and other images
@@ -760,6 +729,9 @@ class ProductDetailsView(TemplateView):
                     user_cart_ids = list(CartProduct.objects.filter(user=user).values_list('product_id', flat=True))
                     user_wishlist_ids = list(WishlistProduct.objects.filter(user=user).values_list('product_id', flat=True))
 
+                # Event data
+                event = product.event if hasattr(product, 'event') and product.event else None
+
                 context.update({
                     'product': product,
                     'other_images': other_images,
@@ -769,16 +741,71 @@ class ProductDetailsView(TemplateView):
                     'average_rating': round(avg_rating, 1),
                     'user_cart_ids': user_cart_ids,
                     'user_wishlist_ids': user_wishlist_ids,
+                    'event': event,  # Add event to context
                 })
 
             except Product.DoesNotExist:
                 context['product'] = None
                 context['other_images'] = []
-            
+                context['event'] = None  # Ensure event is None if product not found
 
         return context
 
 
+class EventRegistrationView(View):
+    def post(self, request):
+        product_id = request.POST.get('product_id')
+        full_name = request.POST.get('full_name')
+        email = request.POST.get('email')
+        message = request.POST.get('message')
+
+        if not full_name or not email:
+            messages.error(request, "Full name and email are required.")
+            return redirect('dashboard:product_detail', pk=product_id)
+
+        try:
+            product = Product.objects.get(id=product_id)
+            EventRegistration.objects.create(
+                product=product,
+                full_name=full_name,
+                email=email,
+                message=message,
+                user=request.user if request.user.is_authenticated else None
+            )
+            messages.success(request, "Successfully registered for the event!")
+        except Product.DoesNotExist:
+            messages.error(request, "Product not found.")
+        except Exception as e:
+            messages.error(request, f"Error: {str(e)}")
+
+        return redirect('dashboard:product_detail', pk=product_id)
+
+
+class EventRegisteredDataView(TemplateView):
+    template_name = 'userdashboard/view/event_registered_data.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        pk = self.kwargs.get('pk')
+
+        try:
+            product = Product.objects.select_related('event').get(id=pk)
+            event = product.event if hasattr(product, 'event') and product.event else None
+            registrations = EventRegistration.objects.filter(product=product).order_by('-registered_at')
+
+            context.update({
+                'product': product,
+                'event': event,
+                'registrations': registrations,
+            })
+        except Product.DoesNotExist:
+            context.update({
+                'product': None,
+                'event': None,
+                'registrations': [],
+            })
+
+        return context
 
 # class OrderSummaryView(LoginRequiredMixin, TemplateView):
 #     template_name = 'userdashboard/view/cart_summary.html'
@@ -882,14 +909,19 @@ class WishlistView(LoginRequiredMixin, TemplateView):
             main_img = ProductImage.objects.filter(product=item.product, is_main=True).first()
             item.product.main_image = main_img.image if main_img else None
 
-        context['wishlist_items'] = wishlist_items
+        paginator = Paginator(wishlist_items, 5)
+        page_number = self.request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+
+        context['wishlist_items'] = page_obj
+        context['page_obj'] = page_obj
         return context
 
 class WishlistProductListView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         wishlist_items = WishlistProduct.objects.filter(user=request.user)
         data = [
-            {  
+            {
                 "id": item.product.id,
                 "name": item.product.name,
                 "price": f"${item.product.price}",
@@ -907,15 +939,17 @@ class ShoppingCartView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Fetch cart items for the authenticated user
         cart_items = CartProduct.objects.filter(user=self.request.user).select_related('product')
 
-        # Calculate the total price of all cart items
         total = sum(item.get_total_price() for item in cart_items)
 
-        # Add cart_items and total to the context
-        context['cart_items'] = cart_items
-        context['total'] = "{:.2f}".format(total)  # Format to two decimal places
+        paginator = Paginator(cart_items, 5)
+        page_number = self.request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+
+        context['cart_items'] = page_obj
+        context['page_obj'] = page_obj
+        context['total'] = "{:.2f}".format(total)
 
         return context
 
@@ -932,7 +966,6 @@ def add_to_cart(request):
             defaults={'quantity': 0}
         )
 
-        # Update quantity
         new_quantity = cart_item.quantity + quantity_change
         if new_quantity <= 0:
             cart_item.delete()
@@ -943,6 +976,28 @@ def add_to_cart(request):
             return JsonResponse({'status': 'success', 'quantity': cart_item.quantity})
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    
+@require_POST
+def update_cart_item(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'status': 'error', 'message': 'Authentication required'}, status=401)
+    
+    product_id = request.POST.get('product_id')
+    quantity = int(request.POST.get('quantity', 1))
+    
+    try:
+        cart_item = CartProduct.objects.get(user=request.user, product_id=product_id)
+        cart_item.quantity = quantity
+        cart_item.save()
+        
+        return JsonResponse({
+            'status': 'success',
+            'product_id': product_id,
+            'quantity': quantity
+        })
+        
+    except CartProduct.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Item not found'}, status=404)
 
 @require_POST
 def remove_from_cart(request):
@@ -970,17 +1025,17 @@ class ShippingInfoView(LoginRequiredMixin, TemplateView):
         profile_type = None
         try:
             profile = RetailProfile.objects.get(user=user)
-            phone = None  # Adjust if RetailProfile has a phone field
+            phone = phone
             profile_type = 'retailer'
         except RetailProfile.DoesNotExist:
             try:
                 profile = WholesaleBuyerProfile.objects.get(user=user)
-                phone = None  # Adjust if WholesaleBuyerProfile has a phone field
+                phone = phone
                 profile_type = 'wholesaler'
             except WholesaleBuyerProfile.DoesNotExist:
                 try:
                     profile = SupplierProfile.objects.get(user=user)
-                    phone = None  # Adjust if SupplierProfile has a phone field
+                    phone = phone
                     profile_type = 'supplier'
                 except SupplierProfile.DoesNotExist:
                     pass
@@ -994,8 +1049,8 @@ class ShippingInfoView(LoginRequiredMixin, TemplateView):
         # Order summary based on CartProduct
         cart_items = CartProduct.objects.filter(user=user).select_related('product')
         subtotal = sum(item.get_total_price() for item in cart_items) or Decimal('0.00')
-        shipping = Decimal('0.00')  # Convert to Decimal; adjust based on your logic (e.g., Orders.shipping_fees)
-        vat = Decimal('0.00')       # Convert to Decimal; adjust based on your logic (e.g., tax calculation)
+        shipping = Decimal('0.00')
+        vat = Decimal('0.00')
         total = subtotal + shipping + vat
         context['cart_items'] = cart_items
         context['order_summary'] = {
@@ -1075,24 +1130,20 @@ def generate_order_id():
 def create_orders_from_cart(user, payment_type, payment_status, payment):
     try:
         print('create order from cart----------------------')
-        # Verify cart items
         cart_items = CartProduct.objects.filter(user=user).select_related('product')
         if not cart_items.exists():
             logger.error(f"No cart items found for user {user.id}")
             raise ValueError("Cart is empty")
 
-        # Verify billing address
         billing = CustomerBillingAddress.objects.filter(user=user, is_default=True, is_deleted=False).first()
         if not billing:
             logger.error(f"No default billing address found for user {user.id}")
             raise ValueError("No default billing address found")
 
-        # Calculate totals
         subtotal = sum(item.get_total_price() for item in cart_items)
-        shipping_fees = Decimal('00.00')  # Matches $512.60 - $488.00 from order_placed.html
+        shipping_fees = Decimal('00.00')
         total = subtotal + shipping_fees
 
-        # Create Order within transaction
         with transaction.atomic():
             order = Order.objects.create(
                 user=user,
@@ -1108,7 +1159,6 @@ def create_orders_from_cart(user, payment_type, payment_status, payment):
             )
             logger.info(f"Created Order {order.order_id} (ID: {order.id}) for user {user.id} with payment {payment.id}")
 
-            # Create OrderItem entries
             for item in cart_items:
                 OrderItem.objects.create(
                     order=order,
@@ -1366,6 +1416,32 @@ class PaymentMethodView(LoginRequiredMixin, View):
                     messages.success(request, "Payment Done Successfully.")
                     return redirect("dashboard:order_placed")
 
+                elif payment_method == "bank_transfer":
+                    proof_image = request.FILES.get("proof_image")
+
+                    payment = Payment.objects.create(
+                        user=user,
+                        name=user.get_full_name() or user.email,
+                        amount=total,
+                        payment_method="bank_transfer",
+                        paid=False
+                    )
+                    logger.info(f"Created Bank Transfer Payment {payment.id} for user {user.id}")
+
+                    BankTransferPayment.objects.create(
+                        user=user,
+                        name=user.get_full_name() or user.email,
+                        amount=total,
+                        paid=False,
+                        proof_image=proof_image,
+                        verified_by_admin=False,
+                        admin_notes="Pending admin verification"
+                    )
+
+                    order = create_orders_from_cart(user, payment_type="bank_transfer", payment_status="unpaid", payment=payment)
+                    messages.success(request, "Order Placed Successfully. Awaiting admin verification.")
+                    return redirect("dashboard:order_placed")
+
                 else:
                     logger.error(f"Invalid payment method {payment_method} for user {user.id}")
                     messages.error(request, "Invalid payment method.")
@@ -1476,6 +1552,11 @@ class OrderPlacedView(LoginRequiredMixin, TemplateView):
             payment_details = CODPayment.objects.filter(
                 user=user,
                 created_at__range=(payment.created_at, time_window)
+            ).order_by('-created_at').first()
+        elif payment_method == "bank_transfer":
+            payment_details = BankTransferPayment.objects.filter(
+                user=user,
+                created_at__range=(payment.created_at, payment.created_at + timedelta(minutes=5))
             ).order_by('-created_at').first()
 
         # Billing address
@@ -1651,6 +1732,11 @@ class OrderReceiptView(LoginRequiredMixin, TemplateView):
                 user=user,
                 created_at__range=(payment.created_at, payment.created_at + timedelta(minutes=5))
             ).order_by('-created_at').first()
+        elif payment_method == "bank_transfer":
+            payment_details = BankTransferPayment.objects.filter(
+                user=user,
+                created_at__range=(payment.created_at, payment.created_at + timedelta(minutes=5))
+            ).order_by('-created_at').first()
 
         # Prepare order item details
         items = []
@@ -1743,6 +1829,11 @@ class DownloadReceiptView(LoginRequiredMixin, View):
             ).order_by('-created_at').first()
         elif payment_method == "cod":
             payment_details = CODPayment.objects.filter(
+                user=user,
+                created_at__range=(payment.created_at, payment.created_at + timedelta(minutes=5))
+            ).order_by('-created_at').first()
+        elif payment_method == "bank_transfer":
+            payment_details = BankTransferPayment.objects.filter(
                 user=user,
                 created_at__range=(payment.created_at, payment.created_at + timedelta(minutes=5))
             ).order_by('-created_at').first()

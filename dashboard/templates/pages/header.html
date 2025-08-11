@@ -613,6 +613,18 @@
                                         </a>
                                     </li>
                                 </ul>
+                                <ul class="kt-dropdown-menu-sub">
+                                    {% if product and product.id and product.event %}
+                                    <li>
+                                        <a class="kt-dropdown-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary"
+                                           href="{% url 'dashboard:event_registered_data' pk=product.id %}">
+                                            <i class="bi bi-envelope-paper text-base"></i>
+
+                                            View Conference
+                                        </a>
+                                    </li>
+                                    {% endif %}
+                                </ul>
                             </div>
                         </li>
                         <li>
