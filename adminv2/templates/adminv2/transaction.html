@@ -1,0 +1,144 @@
+{% extends 'adminv2/base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 30px;
+        background: #fff;
+    }
+    .dashboard-container {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+    }
+    .card {
+        flex: 1;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+    .card-title {
+        font-weight: bold;
+        color: #000;
+        margin-bottom: 10px;
+    }
+    .card-count {
+        font-size: 32px;
+    }
+    @media (max-width: 768px) {
+        .dashboard-container {
+            flex-direction: column;
+        }
+    }
+</style>
+
+<div class="app-main flex-column flex-row-fluid" id="kt_app_main">
+    <div class="d-flex flex-column flex-column-fluid">
+        <div id="kt_app_content" class="app-content flex-column-fluid pt-0">
+            <div id="kt_app_content_container" class="app-container container-fluid">
+
+                <!-- Stats Cards -->
+                <div class="dashboard-container mb-6">
+                    <div class="card">
+                        <div class="fw-bolder text-primary">Paid Money</div>
+                        <div class="card-count text-primary fw-bolder">${{ total_orders|floatformat:2 }}</div>
+                    </div>
+                    <div class="card">
+                        <div class="fw-bolder text-warning">Unpaid Money</div>
+                        <div class="card-count text-warning fw-bolder">${{ pending_orders|floatformat:2 }}</div>
+                    </div>
+                    <div class="card">
+                        <div class="fw-bolder text-danger">Cash Money</div>
+                        <div class="card-count text-danger fw-bolder">${{ cash_money|floatformat:2 }}</div>
+                    </div>
+                    <div class="card">
+                        <div class="fw-bolder text-warning">Recevived Money</div>
+                        <div class="card-count text-warning fw-bolder">00</div>
+                    </div>
+                    <div class="card">
+                        <div class="fw-bolder text-warning">Unreceived Money</div>
+                        <div class="card-count text-warning fw-bolder">00</div>
+                    </div>
+                </div>
+
+                <!-- Transactions Table -->
+                <div class="card card-flush mb-3">
+                    <div class="card-header align-items-center py-5 gap-2 gap-md-5">
+                        <div class="card-title">
+                            <div class="d-flex align-items-center position-relative my-1">
+                                <i class="fas fa-search fs-3 position-absolute ms-4"></i>
+                                <input type="text" id="search-order" class="form-control form-control-solid w-250px ps-12" placeholder="Search Transaction">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-body table-responsive p-0">
+                 <table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_ecommerce_sales_table" style="margin:0;">
+    <thead>
+        <tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
+            <th class="text-center"> Transaction ID</th>
+            <th class="text-center">User</th>
+            <th class="text-center">Amount</th>
+            <th class="text-center">Payment Method</th>
+            <th class="text-center">Status</th>
+            <th class="text-center">Created At</th>
+        </tr>
+    </thead>
+    <tbody class="fw-semibold text-gray-600">
+        {% for payment in orders %}
+        <tr>
+            <td class="text-center">{{ payment.id }}</td>
+            <td class="text-center">
+                {% if payment.user %}
+                    {{ payment.user.get_full_name|default:payment.user.username }}
+                {% else %}
+                    {{ payment.name }}
+                {% endif %}
+            </td>
+            <td class="text-center">${{ payment.amount|floatformat:2 }}</td>
+            <td class="text-center">{{ payment.payment_method|title }}</td>
+            <td class="text-center">
+                {% if payment.paid %}
+                    <div class="badge badge-light-success">Paid</div>
+                {% else %}
+                    <div class="badge badge-light-danger">Unpaid</div>
+                {% endif %}
+            </td>
+            <td class="text-center">{{ payment.created_at|date:"d M Y" }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="6" class="text-center text-muted">No transactions available.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block page_only_scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const searchInput = document.getElementById("search-order");
+        searchInput.addEventListener("keyup", function () {
+            const query = this.value.toLowerCase();
+            const rows = document.querySelectorAll("#kt_ecommerce_sales_table tbody tr");
+
+            rows.forEach(row => {
+                const rowText = row.textContent.toLowerCase();
+                row.style.display = rowText.includes(query) ? "" : "none";
+            });
+        });
+    });
+</script>
+{% endblock page_only_scripts %}
+{% endblock %}

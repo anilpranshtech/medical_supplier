@@ -60,6 +60,8 @@ urlpatterns = [
     path('banner-list/', BannerListView.as_view(), name='banner_list'),
     path('banner-upload/', BannerCreateView.as_view(), name='banner_upload'),
     path('banner-edit/<int:pk>/', BannerUpdateView.as_view(), name='banner_edit'),
+
+     path('transaction/', TransactionView.as_view(), name='transaction_list'),
     
 
 ]

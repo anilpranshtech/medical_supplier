@@ -20,7 +20,7 @@ urlpatterns = [
     path('search-results-grid/', views.SearchResultsGridView.as_view(), name='search_results_grid'),
     path('search-results-list/', views.SearchResultsListView.as_view(), name='search_results_list'),
     path('search-suggestions/', views.SearchSuggestionsView.as_view(), name='search_suggestions'),
-    path('product-detail/<int:pk>/', views.ProductDetailsView.as_view(), name='product_detail'),
+    path('product-detail/<int:pk>/', views.ProductDetailsView.as_view(), name='c'),
     path('product/<int:pk>/registrations/', EventRegisteredDataView.as_view(), name='event_registered_data'),
     path('event/register/', EventRegistrationView.as_view(), name='event_registration'),
     path('product-detail/', views.ProductDetailsView.as_view(), name='product_detail'),
@@ -86,5 +86,7 @@ urlpatterns = [
     path('subscriptions-plans/', SubscriptionPlanView.as_view(), name='subscription_plans'),
     path('subscriptions/check/', CheckStripeSubscriptionView.as_view(), name='check_stripe_subscription'),
     path('update-subscription/', UpdateSubscriptionView.as_view(), name='update_subscription'),
+
+      path('post-question/', views.PostQuestionView.as_view(), name='post_question'),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

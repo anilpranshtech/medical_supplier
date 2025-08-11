@@ -843,3 +843,11 @@ class PendingSignup(models.Model):
 
     def is_expired(self):
         return now() > self.created_at + timedelta(minutes=10)
+    
+class Question(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.text[:50]

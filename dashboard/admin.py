@@ -34,6 +34,12 @@ class ProductCategoryAdmin(admin.ModelAdmin):
 class ProductSubCategoryAdmin(admin.ModelAdmin):
     list_display = ('id', 'category', 'name', 'created_at')
 
+@admin.register(Question)
+class Quetions(admin.ModelAdmin):
+    list_display = ['id', 'user', 'text']
+
+
+
 @admin.register(ProductLastCategory)
 class ProductLastCategoryAdmin(admin.ModelAdmin):
     list_display = ('id', 'sub_category', 'name', 'created_at')
