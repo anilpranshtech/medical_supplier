@@ -51,5 +51,11 @@ urlpatterns = [
     path('order/detail/<slug:order_id>/', OrderDetailesView.as_view(), name='orders_detail'),
     path('orders/delete/<int:pk>/', OrderDeleteView.as_view(), name='order_delete'),
 
+    path('banner-list/', BannerListView.as_view(), name='banner_list'),
+    path('banner-upload/', BannerCreateView.as_view(), name='banner_upload'),
+    path('banner-edit/<int:pk>/', BannerUpdateView.as_view(), name='banner_edit'),
 
+    path('rfq/', RFQListView.as_view(), name='rfq_list'),
+    path('rfq/<int:pk>/quote/', SupplierQuotationUpdateView.as_view(), name='rfq_quote'),
+   
 ]

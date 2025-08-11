@@ -15,10 +15,30 @@ from adminv3.mixins import StaffAccountRequiredMixin, PermissionRequiredMixin
 from django.contrib.auth.models import User, Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from adminv3.utils import requestParamsToDict
-from dashboard.models import RetailProfile, WholesaleBuyerProfile, SupplierProfile, Product, ProductImage, \
-    ProductCategory, ProductLastCategory, ProductSubCategory, Brand, Order, OrderItem, Event
+from dashboard.models import *
 from django.conf import settings
-
+from dashboard.mixins import SupplierPermissionMixin
+#from adminv3.forms import *
+from adminv3.models import *
+from django.views.generic import TemplateView
+from django.views.generic import ListView
+from .forms import BannerForm
+from django.views.generic.edit import UpdateView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib import messages
+from django.utils import timezone
+from django.template.loader import render_to_string
+from django.core.mail import EmailMessage
+from django.conf import settings
+from dashboard.models import RFQRequest
+from .forms import SupplierRFQQuotationForm
+from django.shortcuts import render, redirect, get_object_or_404
+from django.views.generic import TemplateView, View
+from django.contrib.auth.mixins import LoginRequiredMixin
+from adminv2.models import Banner 
+from adminv2.forms import BannerForm  
+from adminv2.models import Banner
+from adminv3.forms import BannerForm
 
 class HomeView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
     login_url = 'dashboard:login'
@@ -27,7 +47,45 @@ class HomeView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
     def get(self, request):
         if not request.user.is_authenticated:
             return redirect('dashboard:login')
-        return render(request, self.template_name)
+
+        total_order_price = OrderItem.objects.aggregate(
+            total=Sum(F('price') * F('quantity'))
+        )['total'] or 0
+        
+        total_products = Product.objects.count()
+        total_payments = Payment.objects.count()
+        successful_payments = Payment.objects.filter(paid=True).count()
+        unpaid_payments = total_payments - successful_payments
+        total_orders = Order.objects.count()
+        total_event = Event.objects.count()
+        
+        order_status_counts = {
+            'pending': Order.objects.filter(status='pending').count(),
+            'completed': Order.objects.filter(status='completed').count(),
+            'processing': Order.objects.filter(status='processing').count(),
+            'shipped': Order.objects.filter(status='shipped').count(),
+            'delivered': Order.objects.filter(status='delivered').count(),
+            'delivering': Order.objects.filter(status='delivering').count(),
+            'cancelled': Order.objects.filter(status='cancelled').count(),
+            'refunded': Order.objects.filter(status='refunded').count(),
+            'failed': Order.objects.filter(status='failed').count(),
+        }
+
+        payment_data = {
+            'paid': successful_payments,
+            'unpaid': unpaid_payments,
+        }
+
+        return render(request, self.template_name, {
+            'total_order_price': total_order_price,
+            'total_products': total_products,
+            'order_status_counts': order_status_counts,
+            'total_payments': total_payments,
+            'successful_payments': successful_payments,
+            'total_orders': total_orders, 
+            'total_event': total_event,
+            'payment_data': payment_data, 
+        })
 
 
 class UsersAccounts(LoginRequiredMixin, PermissionRequiredMixin, StaffAccountRequiredMixin, ListView):
@@ -57,9 +115,9 @@ class UsersAccounts(LoginRequiredMixin, PermissionRequiredMixin, StaffAccountReq
         context['sort_by'] = self.request.GET.get('sort_by', '')
         context['search_query'] = self.request.GET.get('search_by', '')
         context['permission_groups'] = Group.objects.all()
-
+        
         return context
-
+    
 
 class UserDetailView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
     template_name = 'adminv3/users/user_details.html'
@@ -1087,3 +1145,100 @@ class OrderDeleteView(StaffAccountRequiredMixin, View):
         order = get_object_or_404(Order, pk=pk)
         order.delete()
         return JsonResponse({'success': True})
+
+
+class BannerListView(LoginRequiredMixin, TemplateView):  # Add SupplierPermissionMixin if needed
+    template_name = 'adminv3/banner_list.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = BannerForm()
+        context['banners'] = Banner.objects.all().order_by('order')
+        return context
+
+class BannerCreateView(LoginRequiredMixin, View):
+    def get(self, request):
+        form = BannerForm()
+        return render(request, 'adminv3/banner_upload.html', {'form': form})
+
+    def post(self, request):
+        form = BannerForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            return redirect('adminv3:banner_list')
+        return render(request, 'adminv3/banner_upload.html', {'form': form})
+
+class BannerUpdateView(LoginRequiredMixin, View):
+    def get(self, request, pk):
+        banner = get_object_or_404(Banner, pk=pk)
+        form = BannerForm(instance=banner)
+        return render(request, 'adminv3/banner_edit.html', {'form': form, 'object': banner})
+
+    def post(self, request, pk):
+        banner = get_object_or_404(Banner, pk=pk)
+        form = BannerForm(request.POST, request.FILES, instance=banner)
+        if form.is_valid():
+            form.save()
+            return redirect('adminv3:banner_list')
+        return render(request, 'adminv3/banner_edit.html', {'form': form, 'object': banner})
+    
+
+
+
+class RFQListView(LoginRequiredMixin, SupplierPermissionMixin, ListView):
+    template_name = 'adminv3/rfq_list.html'
+    context_object_name = 'rfqs'
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_superuser:
+            return RFQRequest.objects.all()
+        elif hasattr(user, 'supplierprofile'):
+            return RFQRequest.objects.filter(product__created_by=user)
+        return RFQRequest.objects.none()
+
+class SupplierQuotationUpdateView(LoginRequiredMixin, SupplierPermissionMixin, UpdateView):
+    model = RFQRequest
+    form_class = SupplierRFQQuotationForm
+    template_name = 'adminv3/rfq_quotation_form.html'
+    success_url = '/admin_v3/rfq/'  
+
+    def form_valid(self, form):
+        rfq = form.save(commit=False)
+        rfq.quoted_by = self.request.user
+        rfq.quote_sent_at = timezone.now()
+        rfq.status = 'quoted'
+        rfq.save()
+
+        # Send quotation email to requester
+        self.send_quotation_email(rfq)
+
+        messages.success(self.request, "Quotation sent and email delivered to the user.")
+        return super().form_valid(form)
+
+    def send_quotation_email(self, rfq):
+        subject = f"Quotation for RFQ #{rfq.id} - {rfq.product.name}"
+        recipient_email = rfq.requested_by.email
+        context = {
+            'rfq': rfq,
+            'supplier': rfq.quoted_by,
+        }
+
+        message = render_to_string('adminv3/rfq_quotation_sent.html', context)
+
+        email = EmailMessage(
+            subject=subject,
+            body=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[recipient_email]
+        )
+        email.content_subtype = 'html'  # so template renders as HTML
+
+        # Attach file if exists
+        if rfq.quote_attached_file:
+            email.attach_file(rfq.quote_attached_file.path)
+
+        email.send(fail_silently=False)
+
+    def test_func(self):
+        return self.request.user.is_staff or self.request.user.is_superuser
