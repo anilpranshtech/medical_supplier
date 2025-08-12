@@ -217,6 +217,13 @@
                       </span>
                       <span class="menu-title">Upload Banner</span>
                     </a>
+                      <a class="menu-link {% if request.resolver_match.url_name == 'rfq_list' %} active {% endif %}"
+                       href="{% url 'adminv2:transaction_list' %}">
+                      <span class="menu-bullet">
+                        <span class="bullet bullet-dot"></span>
+                      </span>
+                      <span class="menu-title">Transaction</span>
+                    </a>
                   </div>
                 </div>
               </div>

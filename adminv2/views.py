@@ -321,6 +321,7 @@ class AddproductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
                     duration=data.get('duration') or None,
                     venue=data.get('venue') or None,
                 )
+                
                 product.event = event
                 product.save()
          
@@ -1381,3 +1382,36 @@ class BannerUpdateView(LoginRequiredMixin, SupplierPermissionMixin, View):
             form.save()
             return redirect('adminv2:banner_list')
         return render(request, 'adminv2/banner_edit.html', {'form': form, 'object': banner})
+    
+
+
+from django.views.generic import TemplateView
+from django.db.models import Sum
+from dashboard.models import Payment
+
+class TransactionView(TemplateView):
+    template_name = 'adminv2/transaction.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # All payments
+        payments = Payment.objects.all()
+
+        # Paid Money
+        paid_money = payments.filter(paid=True).aggregate(total=Sum('amount'))['total'] or 0
+
+        # Unpaid Money
+        unpaid_money = payments.filter(paid=False).aggregate(total=Sum('amount'))['total'] or 0
+
+        # Cash Money (COD only)
+        cash_money = payments.filter(payment_method="cod").aggregate(total=Sum('amount'))['total'] or 0
+
+        # Pass to template
+        context['total_orders'] = paid_money
+        context['pending_orders'] = unpaid_money
+        context['cash_money'] = cash_money
+        context['orders'] = payments
+
+        return context
+

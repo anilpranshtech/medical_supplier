@@ -144,10 +144,8 @@ class HomeView(TemplateView):
             context['user_cart_ids'] = []
 
         context['banners'] = Banner.objects.filter(is_active=True)
-
+ 
         return context
-
-
 class CustomLoginView(FormView):
     form_class = EmailOnlyLoginForm
     template_name = 'dashboard/login.html'
@@ -2779,3 +2777,11 @@ class CheckStripeSubscriptionView(LoginRequiredMixin, View):
                 "status": "error",
                 "message": str(e)
             }, status=500)
+
+
+class PostQuestionView(LoginRequiredMixin, View):
+    def post(self, request):
+        question_text = request.POST.get('question')
+        if question_text:
+            Question.objects.create(user=request.user, text=question_text)
+        return redirect('dashboard:product-detail')  

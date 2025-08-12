@@ -195,6 +195,15 @@
         color: #a0a0a0;
         font-size: 14px;
     }
+    /* Smooth fade-in animation for popup */
+#questionModal {
+    animation: fadeIn 0.3s ease-in-out;
+}
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
 </style>
 
 <div class="kt-container-fixed mt-1" style="max-width: var(--custom-container-width, 85%);">
@@ -282,62 +291,71 @@
                     {% endif %}
                 </div>
 
-                <!-- Buttons -->
-                <div class="flex items-center gap-3 mt-4">
-                    {% if request.user.is_authenticated %}
-                        {% if product.id in user_cart_ids %}
-                            <button class="kt-btn kt-btn-outline kt-btn-sm ms-1" style="background:#3b82f6; color:white;" data-product-id="{{ product.id }}">
-                                In cart <i class="ki-filled ki-handcart text-white"></i>
-                            </button>
-                        {% else %}
-                            <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 add-to-cart-btn" data-product-id="{{ product.id }}">
-                                Add <i class="ki-filled ki-handcart"></i>
-                            </button>
-                        {% endif %}
-                    {% else %}
-                        <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 show-login-modal">
-                            Add <i class="ki-filled ki-handcart text-xs"></i>
-                        </button>
-                    {% endif %}
-                    {% if request.user.is_authenticated %}
-                        {% if product.show_rfq or product.Both %}
-                            <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 open-rfq-modal"
-                                    data-product-id="{{ product.id }}"
-                                    data-product-name="{{ product.name }}"
-                                    data-product-price="{{ product.discounted_price|default:product.price|floatformat:2 }}"
-                                    data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
-                                    data-quantity="1">
-                                RFQ <i class="ki-filled ki-directbox-default text-xs"></i>
-                            </button>
-                        {% endif %}
-                    {% endif %}
-                    {% if request.user.is_authenticated %}
-                        <span class="kt-wishlist-icon cursor-pointer"
-                              data-kt-wishlist-toggle="true"
-                              data-product-id="{{ product.id|default:'0' }}"
-                              title="{% if product.id in user_wishlist_ids %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}">
-                            <i class="ki-solid ki-heart {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
-                        </span>
-                    {% else %}
-                        <span class="kt-wishlist-icon cursor-pointer show-login-modal"
-                              title="Login to Add to Wishlist">
-                            <i class="ki-solid ki-heart"></i>
-                        </span>
-                    {% endif %}
-                    {% if event %}
-                        {% if request.user.is_authenticated %}
-                            <button class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700 open-event-registration-modal"
-                                    data-product-id="{{ product.id }}"
-                                    data-event-name="{{ product.name }}">
-                                Register for Event
-                            </button>
-                        {% else %}
-                            <button class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700 show-login-modal">
-                                Register for Event
-                            </button>
-                        {% endif %}
-                    {% endif %}
-                </div>
+<!-- Buttons -->
+<div class="flex items-center gap-3 mt-4">
+    {% if request.user.is_authenticated %}
+        {% if product.category.name|lower != "conference" %}
+            {% if product.id in user_cart_ids %}
+                <button class="kt-btn kt-btn-outline kt-btn-sm ms-1" style="background:#3b82f6; color:white;" data-product-id="{{ product.id }}">
+                    In cart <i class="ki-filled ki-handcart text-white"></i>
+                </button>
+            {% else %}
+                <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 add-to-cart-btn" data-product-id="{{ product.id }}">
+                    Add <i class="ki-filled ki-handcart"></i>
+                </button>
+            {% endif %}
+        {% endif %}
+    {% else %}
+        {% if product.category.name|lower != "conference" %}
+            <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 show-login-modal">
+                Add <i class="ki-filled ki-handcart text-xs"></i>
+            </button>
+        {% endif %}
+    {% endif %}
+
+    {% if request.user.is_authenticated %}
+        {% if product.show_rfq or product.Both %}
+            <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 open-rfq-modal"
+                    data-product-id="{{ product.id }}"
+                    data-product-name="{{ product.name }}"
+                    data-product-price="{{ product.discounted_price|default:product.price|floatformat:2 }}"
+                    data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
+                    data-quantity="1">
+                RFQ <i class="ki-filled ki-directbox-default text-xs"></i>
+            </button>
+        {% endif %}
+    {% endif %}
+
+    {% if product.category.name|lower != "conference" %}
+        {% if request.user.is_authenticated %}
+            <span class="kt-wishlist-icon cursor-pointer"
+                  data-kt-wishlist-toggle="true"
+                  data-product-id="{{ product.id|default:'0' }}"
+                  title="{% if product.id in user_wishlist_ids %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}">
+                <i class="ki-solid ki-heart {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
+            </span>
+        {% else %}
+            <span class="kt-wishlist-icon cursor-pointer show-login-modal"
+                  title="Login to Add to Wishlist">
+                <i class="ki-solid ki-heart"></i>
+            </span>
+        {% endif %}
+    {% endif %}
+
+    {% if event %}
+        {% if request.user.is_authenticated %}
+            <button class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700 open-event-registration-modal"
+                    data-product-id="{{ product.id }}"
+                    data-event-name="{{ product.name }}">
+                Register for Event
+            </button>
+        {% else %}
+            <button class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700 show-login-modal">
+                Register for Event
+            </button>
+        {% endif %}
+    {% endif %}
+</div>
 
                 <!-- Additional Information -->
                 <div class="border-t border-gray-200 dark:border-gray-700 pt-4 mt-5">
@@ -624,6 +642,39 @@
                 <!-- Review info will be populated here -->
             </div>
         </div>
+    </div>
+</div>
+<!-- Post Question Button -->
+<button id="openQuestionModal" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+    Post Your Question
+</button>
+
+<!-- Fullscreen Popup -->
+<div id="questionModal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-50">
+    <div class="bg-white w-full h-full p-6 flex flex-col">
+        <!-- Header -->
+        <div class="flex justify-between items-center border-b pb-3">
+            <h2 class="text-xl font-semibold">Ask Your Question</h2>
+            <button id="closeQuestionModal" class="text-2xl font-bold text-gray-600 hover:text-red-500">&times;</button>
+        </div>
+
+        <!-- Form -->
+        <form action="{% url 'dashboard:post_question' %}" method="POST" class="flex flex-col flex-grow mt-4">
+            {% csrf_token %}
+            <textarea name="question" rows="10" placeholder="Type your question here..."
+                class="border p-3 rounded flex-grow resize-none focus:ring focus:ring-blue-300"
+                required></textarea>
+
+            <!-- Buttons -->
+            <div class="mt-4 flex justify-end gap-3">
+                <button type="button" id="cancelQuestionModal" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">
+                    Cancel
+                </button>
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                    Post
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -923,6 +974,29 @@
         });
 
         document.querySelector('#imageModal .kt-btn-ghost').addEventListener('click', closeImageModal);
+    });
+     const modal = document.getElementById('questionModal');
+    const openBtn = document.getElementById('openQuestionModal');
+    const closeBtn = document.getElementById('closeQuestionModal');
+    const cancelBtn = document.getElementById('cancelQuestionModal');
+
+    openBtn.addEventListener('click', () => {
+        modal.classList.remove('hidden');
+    });
+
+    closeBtn.addEventListener('click', () => {
+        modal.classList.add('hidden');
+    });
+
+    cancelBtn.addEventListener('click', () => {
+        modal.classList.add('hidden');
+    });
+
+    // Close modal on outside click
+    window.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.classList.add('hidden');
+        }
     });
 </script>
 {% endblock %}
