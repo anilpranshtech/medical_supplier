@@ -224,6 +224,13 @@
                       </span>
                       <span class="menu-title">Transaction</span>
                     </a>
+                        <a class="menu-link {% if request.resolver_match.url_name == 'rfq_list' %} active {% endif %}"
+                       href="{% url 'adminv2:question_list' %}">
+                      <span class="menu-bullet">
+                        <span class="bullet bullet-dot"></span>
+                      </span>
+                      <span class="menu-title">Questions</span>
+                    </a>
                   </div>
                 </div>
               </div>

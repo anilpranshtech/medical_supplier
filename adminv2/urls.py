@@ -62,6 +62,7 @@ urlpatterns = [
     path('banner-edit/<int:pk>/', BannerUpdateView.as_view(), name='banner_edit'),
 
      path('transaction/', TransactionView.as_view(), name='transaction_list'),
+    path('question /', QuestionView.as_view(), name='question_list'),
     
 
 ]

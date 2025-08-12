@@ -847,6 +847,8 @@ class PendingSignup(models.Model):
 class Question(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     text = models.TextField()
+    reply = models.TextField(null=True, blank=True) 
+    replied_at = models.DateTimeField(null=True, blank=True) 
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

@@ -195,14 +195,11 @@
         color: #a0a0a0;
         font-size: 14px;
     }
-    /* Smooth fade-in animation for popup */
-#questionModal {
-    animation: fadeIn 0.3s ease-in-out;
-}
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
+    #loginRequiredModal, #rfqModal, #imageModal, #eventRegistrationModal, #questionModal {
+        z-index: 9999;
+        backdrop-filter: blur(8px);
+        background-color: rgba(0, 0, 0, 0.4);
+    }
 
 </style>
 
@@ -429,34 +426,45 @@
                 </div>
                 {% endif %}
 
-                <!-- Ratings Section -->
-                <div class="ratings-section" style="margin-top: 30px;">
-                    <h3 style="font-size: 18px; font-weight: 600; color: #99a1af;">RATINGS <span style="color: #7f91a0;">☆</span></h3>
-                    <div style="display: flex; gap: 40px; margin-top: 20px; align-items: flex-start;">
-                        <div style="min-width: 100px; text-align: center;">
-                            <div style="font-size: 38px; font-weight: 500; color: #0b7663; line-height: 1;">
-                                {{ average_rating|default:"0.0" }}★
-                            </div>
-                            <div style="font-size: 15px; color: #99a1af; margin-top: 6px;">
-                                {{ total_reviews }} Verified Buyer{{ total_reviews|pluralize }}
-                            </div>
-                        </div>
-                        <div style="width: 1px; background: #e0e0e0; height: 65px; margin-top: 5px;"></div>
-                        <div style="flex-grow: 1; max-width: 300px; padding-left: 10px;">
-                            {% for i in "54321" %}
-                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                                <span style="width: 24px; font-size: 15px; color: #99a1af;">{{ i }}★</span>
-                                <div style="flex-grow: 1; background: #e0e0e0; height: 8px; border-radius: 4px; overflow: hidden;">
-                                    <div style="width: {{ rating_counts|get:i|percentage:total_reviews|floatformat:"0" }}%; height: 100%; background: {% if i == '1' %}#ff4d4f{% elif i == '2' %}#ffc107{% else %}#0b7663{% endif %};"></div>
-                                </div>
-                                <span style="width: 20px; font-size: 14px; color: #99a1af; text-align: right;">
-                                    {{ rating_counts|get:i|default:"0" }}
-                                </span>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </div>
+              <!-- Ratings Section -->
+<div class="ratings-section" style="margin-top: 30px;">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="font-size: 18px; font-weight: 600; color: #99a1af;">RATINGS <span style="color: #7f91a0;">☆</span></h3>
+        {% if request.user.is_authenticated %}
+        <button id="openQuestionModal" class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700">
+            Post Your Question
+        </button>
+        {% else %}
+        <button id="openQuestionModal" class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700 show-login-modal">
+            Post Your Question
+        </button>
+        {% endif %}
+    </div>
+    <div style="display: flex; gap: 40px; margin-top: 20px; align-items: flex-start;">
+        <div style="min-width: 100px; text-align: center;">
+            <div style="font-size: 38px; font-weight: 500; color: #0b7663; line-height: 1;">
+                {{ average_rating|default:"0.0" }}★
+            </div>
+            <div style="font-size: 15px; color: #99a1af; margin-top: 6px;">
+                {{ total_reviews }} Verified Buyer{{ total_reviews|pluralize }}
+            </div>
+        </div>
+        <div style="width: 1px; background: #e0e0e0; height: 65px; margin-top: 5px;"></div>
+        <div style="flex-grow: 1; max-width: 300px; padding-left: 10px;">
+            {% for i in "54321" %}
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                <span style="width: 24px; font-size: 15px; color: #99a1af;">{{ i }}★</span>
+                <div style="flex-grow: 1; background: #e0e0e0; height: 8px; border-radius: 4px; overflow: hidden;">
+                    <div style="width: {{ rating_counts|get:i|percentage:total_reviews|floatformat:"0" }}%; height: 100%; background: {% if i == '1' %}#ff4d4f{% elif i == '2' %}#ffc107{% else %}#0b7663{% endif %};"></div>
                 </div>
+                <span style="width: 20px; font-size: 14px; color: #99a1af; text-align: right;">
+                    {{ rating_counts|get:i|default:"0" }}
+                </span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
 
                 <!-- Reviews Section -->
                 <div class="mt-8">
@@ -645,33 +653,36 @@
     </div>
 </div>
 <!-- Post Question Button -->
-<button id="openQuestionModal" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+<!-- <button id="openQuestionModal" class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700">
     Post Your Question
-</button>
+</button> -->
 
-<!-- Fullscreen Popup -->
-<div id="questionModal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-50">
-    <div class="bg-white w-full h-full p-6 flex flex-col">
-        <!-- Header -->
-        <div class="flex justify-between items-center border-b pb-3">
-            <h2 class="text-xl font-semibold">Ask Your Question</h2>
-            <button id="closeQuestionModal" class="text-2xl font-bold text-gray-600 hover:text-red-500">&times;</button>
+<!-- Post Question Modal -->
+<div id="questionModal" class="kt-modal hidden fixed inset-0 z-[9999] flex items-center justify-center bg-black/30 backdrop-blur-sm" data-kt-modal="true" role="dialog" aria-labelledby="questionModalTitle" aria-modal="true">
+    <div class="kt-card w-full max-w-[600px] rounded-xl border border-border bg-background shadow-2xl transition-transform duration-300 ease-in-out transform scale-95">
+        <div class="kt-card-header px-5 py-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
+            <h2 id="questionModalTitle" class="text-xl font-bold text-mono">Ask Your Question</h2>
+            <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" onclick="closeQuestionModal()" aria-label="Close modal">
+                <i class="ki-filled ki-cross text-base text-gray-500 hover:text-red-500"></i>
+            </button>
         </div>
-
-        <!-- Form -->
-        <form action="{% url 'dashboard:post_question' %}" method="POST" class="flex flex-col flex-grow mt-4">
+        <form method="POST" action="{% url 'dashboard:post_question' %}" id="questionForm">
             {% csrf_token %}
-            <textarea name="question" rows="10" placeholder="Type your question here..."
-                class="border p-3 rounded flex-grow resize-none focus:ring focus:ring-blue-300"
-                required></textarea>
-
-            <!-- Buttons -->
-            <div class="mt-4 flex justify-end gap-3">
-                <button type="button" id="cancelQuestionModal" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">
-                    Cancel
+            <div class="kt-card-content flex flex-col space-y-4 p-5">
+                <input type="hidden" name="product_id" id="questionProductId" value="{{ product.id }}">
+                <div>
+                    <label for="questionText" class="block text-sm font-medium text-gray-650 dark:text-gray-300 mb-1">Your Question <span class="text-red-500">*</span></label>
+                    <textarea name="question" id="questionText" class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 focus:ring-2 focus:ring-primary focus:border-primary transition-colors" rows="4" placeholder="Type your question here..." required aria-required="true"></textarea>
+                    <p class="text-xs text-red-500 mt-1 hidden" id="questionTextError">Question is required.</p>
+                </div>
+            </div>
+            <div class="kt-card-footer px-5 py-4 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700">
+                <button type="button" class="kt-btn kt-btn-outline kt-btn-sm text-gray-650 hover:bg-gray-900 dark:hover:bg-gray-700" onclick="closeQuestionModal()">
+                    <i class="ki-filled ki-cross"></i>Cancel
                 </button>
-                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                    Post
+                <button type="submit" class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center" id="questionSubmitBtn">
+                    <i class="ki-filled ki-check-circle"></i>Post Question
+                    <span class="loader"></span>
                 </button>
             </div>
         </form>
@@ -975,28 +986,27 @@
 
         document.querySelector('#imageModal .kt-btn-ghost').addEventListener('click', closeImageModal);
     });
-     const modal = document.getElementById('questionModal');
-    const openBtn = document.getElementById('openQuestionModal');
-    const closeBtn = document.getElementById('closeQuestionModal');
-    const cancelBtn = document.getElementById('cancelQuestionModal');
 
-    openBtn.addEventListener('click', () => {
+    // Question Modal
+    function openQuestionModal() {
+        const modal = document.getElementById('questionModal');
         modal.classList.remove('hidden');
-    });
+        modal.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+    }
 
-    closeBtn.addEventListener('click', () => {
+    function closeQuestionModal() {
+        const modal = document.getElementById('questionModal');
         modal.classList.add('hidden');
-    });
+        modal.classList.remove('flex');
+        document.body.style.overflow = '';
+    }
 
-    cancelBtn.addEventListener('click', () => {
-        modal.classList.add('hidden');
-    });
-
-    // Close modal on outside click
-    window.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            modal.classList.add('hidden');
-        }
+    document.addEventListener('DOMContentLoaded', function () {
+        document.getElementById('openQuestionModal').addEventListener('click', function (e) {
+            e.preventDefault();
+            openQuestionModal();
+        });
     });
 </script>
 {% endblock %}

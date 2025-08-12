@@ -551,15 +551,12 @@
                     <div id="cat-{{ category.id }}"
                          class="subcategory-list {% if forloop.first %}block{% else %}hidden{% endif %}">
                         <ul>
-                            {% for subcategory in category.productsubcategory_set.all %}
-                            {% for lastcategory in subcategory.productlastcategory_set.all %}
+                            {% for lastcategory in category.last_categories %}
                             {% if lastcategory.product_count > 0 %}
                             <li>
-                                <a href="#" data-last-category="{{ lastcategory.id }}" class="category-link">• {{
-                                    lastcategory.name }}</a>
+                                <a href="#" data-last-category="{{ lastcategory.id }}" class="category-link">{{ lastcategory.name }}</a>
                             </li>
                             {% endif %}
-                            {% endfor %}
                             {% endfor %}
                         </ul>
                     </div>

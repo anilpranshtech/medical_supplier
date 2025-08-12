@@ -1414,4 +1414,43 @@ class TransactionView(TemplateView):
         context['orders'] = payments
 
         return context
+    
+
+
+# adminv2/views.py
+from django.views.generic import TemplateView
+from django.shortcuts import get_object_or_404, redirect
+from django.utils import timezone
+from django.contrib import messages
+from dashboard.models import Question
+
+class QuestionView(TemplateView):
+    template_name = 'adminv2/question.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['questions'] = Question.objects.select_related('user').order_by('-created_at')
+        return context
+
+    def post(self, request, *args, **kwargs):
+        # Reply to a question
+        question_id = request.POST.get('question_id')
+        reply_text = request.POST.get('reply_text')
+        action_type = request.POST.get('action_type')
+
+        if action_type == "reply":
+            question = get_object_or_404(Question, id=question_id)
+            question.reply = reply_text
+            question.replied_at = timezone.now()
+            question.save()
+            messages.success(request, "Reply sent successfully.")
+
+        elif action_type == "delete":
+            question = get_object_or_404(Question, id=question_id)
+            question.delete()
+            messages.success(request, "Question deleted successfully.")
+
+        return redirect('adminv2:question_list')
+
+
 
