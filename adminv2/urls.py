@@ -61,8 +61,9 @@ urlpatterns = [
     path('banner-upload/', BannerCreateView.as_view(), name='banner_upload'),
     path('banner-edit/<int:pk>/', BannerUpdateView.as_view(), name='banner_edit'),
 
-     path('transaction/', TransactionView.as_view(), name='transaction_list'),
+    path('transaction/', TransactionView.as_view(), name='transaction_list'),
     path('question /', QuestionView.as_view(), name='question_list'),
+    path('rating/', RatingView.as_view(), name='rating_list'),
     
 
 ]

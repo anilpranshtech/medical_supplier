@@ -1,0 +1,66 @@
+{% extends 'adminv2/base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    .rating-star {
+        color: gold;
+        font-size: 16px;
+    }
+</style>
+
+<div class="app-main flex-column flex-row-fluid" id="kt_app_main">
+    <div class="d-flex flex-column flex-column-fluid">
+        <div id="kt_app_content" class="app-content flex-column-fluid pt-0">
+            <div id="kt_app_content_container" class="app-container container-fluid">
+
+                <div class="card card-flush mb-3">
+                    <div class="card-header align-items-center py-5 gap-2 gap-md-5">
+                        <div class="card-title">
+                            <h3>Average Ratings</h3>
+                        </div>
+                    </div>
+
+                    <div class="card-body table-responsive p-0">
+                        <table class="table align-middle table-row-dashed fs-6 gy-5">
+                            <thead>
+                                <tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
+                                    <th class="text-center">Product ID</th>
+                                    <th class="text-center">Product Name</th>
+                                    <th class="text-center">Price</th>
+                                    <th class="text-center">Average Rating</th>
+                                    <th class="text-center">Total Reviews</th>
+                                </tr>
+                            </thead>
+                            <tbody class="fw-semibold text-gray-600">
+                                {% for p in products %}
+                                <tr>
+                                    <td class="text-center">{{ p.id }}</td>
+                                    <td class="text-center">{{ p.name }}</td>
+                                    <td class="text-center">{{ p.price }}</td>
+                                    <td class="text-center">
+                                        {% if p.avg_rating %}
+                                            <span class="rating-star">★</span> {{ p.avg_rating|floatformat:1 }} / 5
+                                        {% else %}
+                                            No Ratings
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {{ p.review_count }}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted">No products found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

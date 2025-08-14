@@ -39,6 +39,8 @@ from adminv2.models import Banner
 from adminv2.forms import BannerForm  
 from adminv2.models import Banner
 from adminv3.forms import BannerForm
+from django.db.models import Avg, Count, Q, Value
+from django.db.models.functions import Coalesce
 
 class HomeView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
     login_url = 'dashboard:login'
@@ -1242,3 +1244,28 @@ class SupplierQuotationUpdateView(LoginRequiredMixin, SupplierPermissionMixin, U
 
     def test_func(self):
         return self.request.user.is_staff or self.request.user.is_superuser
+    
+class RatingView(TemplateView):
+    template_name = "adminv3/rating.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        products = (
+            Product.objects
+            .annotate(
+                avg_rating=Avg('reviews__rating'),
+                review_count=Coalesce(
+                    Count(
+                        'reviews',
+                        filter=Q(reviews__rating__isnull=False) & ~Q(reviews__review="") 
+                    ),
+                    Value(0)
+                )
+            )
+            .filter(avg_rating__isnull=False)
+            .order_by('-avg_rating')
+        )
+
+        context['products'] = products
+        return context

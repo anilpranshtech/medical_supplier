@@ -58,4 +58,5 @@ urlpatterns = [
     path('rfq/', RFQListView.as_view(), name='rfq_list'),
     path('rfq/<int:pk>/quote/', SupplierQuotationUpdateView.as_view(), name='rfq_quote'),
    
+    path('rating/', RatingView.as_view(), name='rating_list'),
 ]

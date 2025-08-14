@@ -31,6 +31,8 @@ from django.db.models.functions import Coalesce,TruncDay
 from django.db.models import Sum, F, DecimalField, Prefetch
 from django.utils import timezone
 from datetime import timedelta
+from django.db.models import Avg, Count, Q, Value
+from django.db.models.functions import Coalesce
 from calendar import monthrange
 import logging
 logger = logging.getLogger(__name__)
@@ -1415,15 +1417,6 @@ class TransactionView(TemplateView):
 
         return context
     
-
-
-# adminv2/views.py
-from django.views.generic import TemplateView
-from django.shortcuts import get_object_or_404, redirect
-from django.utils import timezone
-from django.contrib import messages
-from dashboard.models import Question
-
 class QuestionView(TemplateView):
     template_name = 'adminv2/question.html'
 
@@ -1433,7 +1426,6 @@ class QuestionView(TemplateView):
         return context
 
     def post(self, request, *args, **kwargs):
-        # Reply to a question
         question_id = request.POST.get('question_id')
         reply_text = request.POST.get('reply_text')
         action_type = request.POST.get('action_type')
@@ -1453,4 +1445,27 @@ class QuestionView(TemplateView):
         return redirect('adminv2:question_list')
 
 
+class RatingView(TemplateView):
+    template_name = "adminv2/rating.html"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        products = (
+            Product.objects
+            .annotate(
+                avg_rating=Avg('reviews__rating'),
+                review_count=Coalesce(
+                    Count(
+                        'reviews',
+                        filter=Q(reviews__rating__isnull=False) & ~Q(reviews__review="") 
+                    ),
+                    Value(0)
+                )
+            )
+            .filter(avg_rating__isnull=False)
+            .order_by('-avg_rating')
+        )
+
+        context['products'] = products
+        return context
