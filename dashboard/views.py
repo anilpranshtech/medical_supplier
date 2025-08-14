@@ -2780,4 +2780,51 @@ class PostQuestionView(LoginRequiredMixin, View):
         question_text = request.POST.get('question')
         if question_text:
             Question.objects.create(user=request.user, text=question_text)
-        return redirect('dashboard:product-detail')  
+        return redirect('dashboard:product-detail')
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class RequestReturnView(View):
+    def post(self, request, order_item_id):
+        order_item = get_object_or_404(OrderItem, id=order_item_id)
+        order = order_item.order
+
+        if order.status != 'delivered':
+            return JsonResponse({'error': 'Return can only be requested for delivered orders.'}, status=400)
+
+        # Ensure all datetimes are timezone-aware
+        delivery_time = timezone.localtime(order.updated_at)  # Convert to local time
+        time_limit = delivery_time + timezone.timedelta(days=15)
+        current_time = timezone.localtime(timezone.now())  # Current time in local timezone
+
+        # Debug output with timezone info
+        print(f"Debug - Delivery Time: {delivery_time} (TZ: {delivery_time.tzinfo})")
+        print(f"Debug - Current Time: {current_time} (TZ: {current_time.tzinfo})")
+        print(f"Debug - Time Limit: {time_limit} (TZ: {time_limit.tzinfo})")
+
+        if current_time > time_limit:
+            return JsonResponse({
+                'error': f'Return period (15 days from {delivery_time.strftime("%d %b, %Y")}) has expired. '
+                         f'Current time: {current_time.strftime("%d %b, %Y %H:%M")}, '
+                         f'Time limit: {time_limit.strftime("%d %b, %Y %H:%M")}'
+            }, status=400)
+
+        # Prepare return data from request
+        return_option = request.POST.get('return_option')
+        price = float(request.POST.get('price', order_item.price))
+
+        if return_option not in dict(Return.RETURN_OPTION_CHOICES):
+            return JsonResponse({'error': 'Invalid return option.'}, status=400)
+
+        # Create return instance
+        return_instance = Return(
+            return_serial='',
+            order_item=order_item,
+            client=order.user,
+            return_option=return_option,
+            return_status='pending',
+            price=price
+        )
+        return_instance.save()
+
+        return JsonResponse({'message': 'Return request submitted successfully.', 'return_serial': return_instance.return_serial}, status=201)

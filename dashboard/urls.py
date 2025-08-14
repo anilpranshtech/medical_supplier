@@ -90,6 +90,6 @@ urlpatterns = [
     path('post-question/', views.PostQuestionView.as_view(), name='post_question'),
 
     # Return
-    # path('request-return/<int:order_item_id>/', views.RequestReturnView.as_view(), name='request_return'),
+    path('request-return/<int:order_item_id>/', views.RequestReturnView.as_view(), name='request_return'),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

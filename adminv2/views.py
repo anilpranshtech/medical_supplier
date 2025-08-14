@@ -317,10 +317,11 @@ class AddproductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
                     duration=self._parse_duration(data.get('webinar_duration')),
                     venue=data.get('webinar_venue'),
                 )
+
                 product.event = event
                 product.save()
 
-            # Handle images
+
             main_image = files.get('main_image')
             if main_image:
                 ProductImage.objects.create(product=product, image=main_image, is_main=True)
