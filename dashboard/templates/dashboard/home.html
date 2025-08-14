@@ -474,7 +474,7 @@
                         {% else %}
                             {% if request.user.is_authenticated %}
                                 {% if product.id in user_registered_event_ids %}
-                                <button class="kt-btn kt-btn-xs bg-gray-400 text-white cursor-not-allowed" disabled>
+                                <button class="kt-btn kt-btn-xs bg-blue-600 text-white hover:bg-blue-700 cursor-not-allowed" disabled>
                                     Registered
                                 </button>
                                 {% else %}
@@ -1108,7 +1108,7 @@
                         <div class="flex items-center flex-wrap gap-1.5">
                             {% if request.user.is_authenticated %}
                                 {% if product.id in user_registered_event_ids %}
-                                <button class="kt-btn kt-btn-sm bg-gray-400 text-white cursor-not-allowed" disabled>
+                                <button class="kt-btn kt-btn-xs bg-blue-600 text-white hover:bg-blue-700 cursor-not-allowed" disabled>
                                     Registered
                                 </button>
                                 {% else %}

@@ -275,7 +275,7 @@
                     {{ product.description|default:'No description available' }}
                 </p>
 
-                {% if product.category.name|lower != "conference" and product.category.name|lower != "webinar" %}
+                {% if product.category.name|lower != "conference" and product.category.name|lower != "webinar" and product.category.name|lower != "event" %}
                     <!-- Product Price and Offer -->
                     {% if product.offer_percentage and product.offer_active %}
                     <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">
@@ -368,7 +368,7 @@
                 {% endif %}
 
                 <!-- Event Details Section (Displayed only for events) -->
-                {% if product.category.name|lower == "conference" or product.category.name|lower == "webinar" %}
+                {% if product.category.name|lower == "conference" or product.category.name|lower == "webinar" or product.category.name|lower == "event" %}
                     <div class="border-t border-gray-200 dark:border-gray-700 pt-4 mt-5">
                         <div class="flex items-center justify-between mb-3">
                             <h2 class="text-xl font-semibold text-gray-650 dark:text-white flex items-center gap-3">
@@ -377,15 +377,21 @@
                             </h2>
 
                             {% if request.user.is_authenticated %}
+                                {% if product.id in user_registered_event_ids %}
+                                <button class="kt-btn kt-btn-xs bg-blue-600 text-white hover:bg-blue-700 cursor-not-allowed" disabled>
+                                    Registered
+                                </button>
+                                {% else %}
                                 <button class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700 open-event-registration-modal"
                                         data-product-id="{{ product.id }}"
                                         data-event-name="{{ product.name }}">
                                     Register for Event
                                 </button>
+                                {% endif %}
                             {% else %}
-                                <button class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700 show-login-modal">
-                                    Register for Event
-                                </button>
+                            <button class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700 show-login-modal">
+                                Register for Event
+                            </button>
                             {% endif %}
                         </div>
 
@@ -434,7 +440,7 @@
                 {% endif %}
 
                 <!-- Ratings Section for Products -->
-                {% if product.category.name|lower != "conference" and product.category.name|lower != "webinar" %}
+                {% if product.category.name|lower != "conference" and product.category.name|lower != "webinar" and product.category.name|lower != "event" %}
                     <div class="ratings-section" style="margin-top: 30px;">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <h3 style="font-size: 18px; font-weight: 600; color: #99a1af;">RATINGS <span style="color: #7f91a0;">☆</span></h3>
