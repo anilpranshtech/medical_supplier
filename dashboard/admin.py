@@ -26,6 +26,10 @@ class ProductProfileAdmin(admin.ModelAdmin):
 class ProductImageAdmin(admin.ModelAdmin):
     list_display = ('id', 'product', 'image', 'is_main')
 
+@admin.register(EventRegistration)
+class EventRegistrationAdmin(admin.ModelAdmin):
+    list_display = ('id', 'product', 'user', 'full_name', 'email', 'message', 'registered_at')
+
 @admin.register(ProductCategory)
 class ProductCategoryAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'created_at')
@@ -245,50 +249,3 @@ class StripeSubscriptionMetadataAdmin(admin.ModelAdmin):
     search_fields = ('subscription_plan__name', 'price_id')
     readonly_fields = ('created_at', 'updated_at')
 
-
-# @admin.register(SubscriptionPlan)
-# class SubscriptionPlanAdmin(admin.ModelAdmin):
-#     list_display = ('id', 'name', 'client_type', 'buyer_type', 'period', 'cost', 'ios_plan_id', 'android_plan_id')
-#     list_filter = ('client_type', 'buyer_type', 'period')
-#     search_fields = ('name', 'description', 'ios_plan_id', 'android_plan_id')
-#     fieldsets = (
-#         ('Basic Information', {
-#             'fields': ('name', 'description', 'period', 'cost')
-#         }),
-#         ('Client Type', {
-#             'fields': ('client_type', 'buyer_type')
-#         }),
-#         ('Platform IDs', {
-#             'fields': ('ios_plan_id', 'android_plan_id'),
-#             'classes': ('collapse',)
-#         }),
-#     )
-#
-# @admin.register(UserSubscription)
-# class UserSubscriptionAdmin(admin.ModelAdmin):
-#     list_display = ('id', 'user', 'plan', 'platform', 'subscription_date', 'is_active')
-#     list_filter = ('platform', 'is_active', 'plan__client_type', 'plan__buyer_type')
-#     search_fields = ('user__email', 'user__username', 'plan__name')
-#     readonly_fields = ('subscription_date', 'platform_plan_id')
-#     date_hierarchy = 'subscription_date'
-#
-#     fieldsets = (
-#         ('Subscription Info', {
-#             'fields': ('user', 'plan', 'is_active')
-#         }),
-#         ('Platform Details', {
-#             'fields': ('platform', 'platform_plan_id', 'subscription_date')
-#         }),
-#     )
-#
-#
-# @admin.register(Feature)
-# class FeatureAdmin(admin.ModelAdmin):
-#     list_display = ('id', 'name', 'status', 'cost')
-#     list_filter = ('name', 'status', 'cost')
-#
-#
-# @admin.register(StripeSubscriptionMetadata)
-# class StripeSubscriptionsAdmin(admin.ModelAdmin):
-#     list_display = ('id', 'name', 'price', 'price_id', 'plan_type')
-#     list_filter = ('name', 'plan_type')

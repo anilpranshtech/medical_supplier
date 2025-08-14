@@ -1,4 +1,5 @@
 from django import template
+from django.utils import timezone
 
 register = template.Library()
 
@@ -56,9 +57,11 @@ def get_item(dictionary, key):
 def get_feature_value(dictionary, key):
     return dictionary.get(key)
 
+
 @register.filter
 def get_user_review(reviews, user):
     return reviews.filter(user=user).first()
+
 
 @register.filter
 def get_rating_label(value):
@@ -71,27 +74,21 @@ def get_rating_label(value):
     }
     return labels.get(value, "Select rating")
 
+
 @register.filter
 def filter_by_user(product, user):
-    """
-    Filter reviews to return the review made by the specified user, if any.
-    Works with both querysets and lists.
-    """
     reviews = product.user_reviews.all() if hasattr(product.user_reviews, 'all') else product.user_reviews
-    if hasattr(reviews, 'filter'):  # Check if reviews is a queryset
+    if hasattr(reviews, 'filter'):
         return reviews.filter(user=user).first()
-    else:  # Treat as a list
+    else:
         for review in reviews:
             if review.user == user:
                 return review
         return None
 
+
 @register.simple_tag(takes_context=True)
 def query_replace(context, **kwargs):
-    """
-    Usage: {% query_replace page=2 sort_by='1' %}
-    Preserves existing GET params and overrides/adds the ones passed.
-    """
     request = context['request']
     params = request.GET.copy()
     for k, v in kwargs.items():
@@ -100,3 +97,14 @@ def query_replace(context, **kwargs):
         else:
             params[k] = v
     return params.urlencode()
+
+
+@register.filter
+def add_days(value, days):
+    return value + timezone.timedelta(days=days)
+
+
+@register.filter
+def is_event_category(category_name):
+    event_categories = ["Conference", "Webinar", "Event"]
+    return category_name in event_categories

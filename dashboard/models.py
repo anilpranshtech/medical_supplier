@@ -185,7 +185,8 @@ class Product(models.Model):
     low_stock_alert = models.IntegerField(default=0)
 
     # Dates
-    return_time_limit = models.PositiveIntegerField(help_text="Days", null=True, blank=True)
+    is_returnable = models.BooleanField(default=False)
+    return_time_limit = models.PositiveIntegerField(help_text="Days after delivery when returns are accepted", null=True, blank=True, default=7)
     delivery_time = models.PositiveIntegerField(help_text="Days", null=True, blank=True)
     expiry_date = models.DateField(null=True, blank=True)
     manufacture_date = models.DateField(null=True, blank=True)
@@ -216,13 +217,6 @@ class Product(models.Model):
             return self.price - discount_amount
         return self.price
 
-    # @property
-    # def is_verified_supplier(self):
-    #     try:
-    #         return self.created_by.supplierprofile.is_verified
-    #     except (AttributeError, SupplierProfile.DoesNotExist):
-    #         return False
-
     def __str__(self):
         return self.name
 
@@ -245,6 +239,7 @@ class ProductImage(models.Model):
 class EventRegistration(models.Model):
     product = models.ForeignKey('Product', on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, null=True, blank=True)
     full_name = models.CharField(max_length=255)
     email = models.EmailField()
     message = models.TextField(blank=True, null=True)
@@ -853,3 +848,52 @@ class Question(models.Model):
 
     def __str__(self):
         return self.text[:50]
+
+
+class Return(models.Model):
+    RETURN_OPTION_CHOICES = [
+        ('replace', 'Replace'),
+        ('refund', 'Refund'),
+    ]
+    RETURN_STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('replace_completed', 'Replace Completed'),
+        ('refund_completed', 'Refund Completed'),
+        ('cancelled', 'Cancelled'),
+    ]
+
+    return_serial = models.CharField(max_length=50, primary_key=True)
+    order_item = models.ForeignKey(OrderItem, on_delete=models.CASCADE, related_name='returns')
+    client = models.ForeignKey(User, on_delete=models.CASCADE, related_name='return_requests')
+    return_option = models.CharField(max_length=20, choices=RETURN_OPTION_CHOICES)
+    return_status = models.CharField(max_length=20, choices=RETURN_STATUS_CHOICES, default='pending')
+    request_date = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f"Return {self.return_serial} - {self.order_item.product.name}"
+
+    class Meta:
+        ordering = ['-request_date']
+        verbose_name = verbose_name_plural = "Return"
+
+    def is_within_return_period(self):
+        from django.utils import timezone
+        delivery_date = self.order_item.delivery_date  # Assuming you have this
+        return (timezone.now() - delivery_date).days <= self.order_item.product.return_time_limit
+
+    def save(self, *args, **kwargs):
+        if not self.return_serial:
+            from django.utils import timezone
+            import random
+            base_serial = 'R'
+            year = timezone.now().strftime('%y')
+            month = timezone.now().strftime('%m')
+            unique_code = ''.join(random.choices('0123456789', k=3))
+            suffix = 'R' + year
+            self.return_serial = f"{base_serial}{month}{unique_code}-{suffix}"
+            while Return.objects.filter(return_serial=self.return_serial).exists():
+                unique_code = ''.join(random.choices('0123456789', k=3))
+                self.return_serial = f"{base_serial}{month}{unique_code}-{suffix}"
+        super().save(*args, **kwargs)

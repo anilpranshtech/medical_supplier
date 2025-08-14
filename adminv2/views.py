@@ -208,8 +208,8 @@ class ProductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
             product.image_url = image.image.url if image else '/static/adminv2/media/stock/ecommerce/placeholder.png'
 
         return render(request, self.template, {'products': products})
-    
-    
+
+
 class AddproductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
     template = 'adminv2/add-product.html'
 
@@ -235,25 +235,19 @@ class AddproductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
         min_order_qty = self._parse_int(data.get('min_order_qty'), min_value=1)
         low_stock_alert = self._parse_int(data.get('low_stock_alert'), min_value=0)
         expiration_days = self._parse_int(data.get('expiration_days'), min_value=0)
-        return_time = self._parse_int(data.get('return_time_limit'), min_value=0)
+        is_returnable = data.get('is_returnable') == 'on'
+        return_time = self._parse_int(data.get('return_time_limit'), min_value=0) if is_returnable else 0
         delivery_time = self._parse_int(data.get('delivery_time'), min_value=0)
         weight = self._parse_float(data.get('weight'), min_value=0)
         manufacture_date = self._parse_date(data.get('manufacture_date'))
         expiry_date = self._parse_date(data.get('expiry_date'))
         offer_start = self._parse_date(data.get('offer_start'))
         offer_end = self._parse_date(data.get('offer_end'))
-        button_type = data.get('button_type') 
+        button_type = data.get('button_type')
         show_add_to_cart = button_type in ['both', 'cart']
         show_rfq = button_type in ['both', 'rfq']
         both_selected = button_type == 'both'
 
-        def _is_event_category(self, category):
-            event_keywords = ['conference', 'event', 'webinar']
-            if category and category.name:
-                return category.name.lower() in event_keywords
-            return False
-
-    
         if offer_start and offer_end and offer_end < offer_start:
             messages.warning(request, "Offer end date cannot be before start date.")
 
@@ -290,7 +284,8 @@ class AddproductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
                 weight_unit=data.get('weight_unit'),
                 barcode=data.get('barcode'),
                 commission_percentage=commission or 0,
-                return_time_limit=return_time or 0,
+                is_returnable=is_returnable,
+                return_time_limit=return_time,
                 delivery_time=delivery_time or 0,
                 keywords=data.get('keywords'),
                 brochure=files.get('brochure'),
@@ -312,19 +307,20 @@ class AddproductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
                 created_by=request.user
             )
 
+            # Check if this is an event product
             category_obj = self._get_object(ProductCategory, data.get('category'))
-            if _is_event_category(self, category_obj):
+            if self._is_event_category(category_obj):
                 event = Event.objects.create(
-                    conference_link=data.get('conference_link') or None,
-                    speaker_name=data.get('speaker_name') or None,
-                    conference_at=data.get('conference_at') or None,
-                    duration=data.get('duration') or None,
-                    venue=data.get('venue') or None,
+                    conference_link=data.get('registration_link'),
+                    speaker_name=data.get('webinar_name'),
+                    conference_at=self._parse_datetime(data.get('webinar_date')),
+                    duration=self._parse_duration(data.get('webinar_duration')),
+                    venue=data.get('webinar_venue'),
                 )
-                
                 product.event = event
                 product.save()
-         
+
+            # Handle images
             main_image = files.get('main_image')
             if main_image:
                 ProductImage.objects.create(product=product, image=main_image, is_main=True)
@@ -342,6 +338,29 @@ class AddproductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
             messages.error(request, f"Error: {e}")
 
         return self._render_form_with_context(request, data)
+
+    def _is_event_category(self, category):
+        event_keywords = ['conference', 'event', 'webinar']
+        if category and category.name:
+            return category.name.lower() in event_keywords
+        return False
+
+    def _parse_datetime(self, val):
+        if not val:
+            return None
+        try:
+            return datetime.strptime(val, "%Y-%m-%dT%H:%M")
+        except ValueError:
+            return None
+
+    def _parse_duration(self, val):
+        if not val:
+            return None
+        try:
+            hours, minutes = map(int, val.split(':'))
+            return timedelta(hours=hours, minutes=minutes)
+        except (ValueError, AttributeError):
+            return None
 
     def _parse_float(self, val, min_value=None, max_value=None):
         if not val:
@@ -387,9 +406,7 @@ class AddproductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
             **data.dict()
         })
 
-   
 
-    
 class EditproductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
     template = 'adminv2/edit-product.html'
 
@@ -399,14 +416,15 @@ class EditproductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
         main_image = product_images.filter(is_main=True).first()
         gallery_images = product_images.filter(is_main=False)
         categories = ProductCategory.objects.all()
-        subcategories = ProductSubCategory.objects.filter(category=product.category) if product.category else ProductSubCategory.objects.none()
-        lastcategories = ProductLastCategory.objects.filter(sub_category=product.sub_category) if product.sub_category else ProductLastCategory.objects.none()
+        subcategories = ProductSubCategory.objects.filter(
+            category=product.category) if product.category else ProductSubCategory.objects.none()
+        lastcategories = ProductLastCategory.objects.filter(
+            sub_category=product.sub_category) if product.sub_category else ProductLastCategory.objects.none()
         selling_countries = product.selling_countries if product.selling_countries else ''
         brochure_url = product.brochure.url if product.brochure else None
-        
+
         context = {
-           
-            'pk': pk, 
+            'pk': pk,
             'product': product,
             'product_name': product.name,
             'product_description': product.description,
@@ -416,6 +434,7 @@ class EditproductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
             'selling_countries': selling_countries,
             'warranty': product.warranty,
             'condition': product.condition,
+            'is_returnable': product.is_returnable,
             'return_time_limit': product.return_time_limit,
             'manufacture_date': product.manufacture_date.strftime('%Y-%m-%d') if product.manufacture_date else '',
             'expiry_date': product.expiry_date.strftime('%Y-%m-%d') if product.expiry_date else '',
@@ -447,99 +466,120 @@ class EditproductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
             'brochure_url': brochure_url,
             'subcategories': subcategories,
             'lastcategories': lastcategories,
+            'show_add_to_cart': product.show_add_to_cart,
+            'show_rfq': product.show_rfq,
+            'Both': product.Both,
         }
         return render(request, self.template, context)
 
     def post(self, request, pk):
         try:
             product = get_object_or_404(Product, pk=pk)
-            product.name = request.POST.get('product_name')
-            product.description = request.POST.get('product_description')
-            product.price = request.POST.get('price')
-            product.stock_quantity = request.POST.get('product_quantity')
-            product.product_from = request.POST.get('product_from')
-            product.selling_countries = request.POST.get('selling_countries', '')
-            product.warranty = request.POST.get('warranty', 'none')
-            product.condition = request.POST.get('condition', 'new')
-            product.return_time_limit = request.POST.get('return_time_limit')
-            product.manufacture_date = request.POST.get('manufacture_date')
-            product.expiry_date = request.POST.get('expiry_date')
-            product.weight = request.POST.get('weight')
-            product.weight_unit = request.POST.get('weight_unit', 'gm')
-            product.delivery_time = request.POST.get('delivery_time')
-            product.commission_percentage = request.POST.get('commission_percentage')
-            product.barcode = request.POST.get('barcode')
-            product.keywords = request.POST.get('keywords')
-            product.supplier_sku = request.POST.get('supplier_sku')
-            product.pcs_per_unit = request.POST.get('pcs_per_unit')
-            product.min_order_qty = request.POST.get('min_order_qty')
-            product.low_stock_alert = request.POST.get('low_stock_alert')
-            product.expiration_days = request.POST.get('expiration_days')
-            product.tag = request.POST.get('tag', 'none')
+            data = request.POST
+            files = request.FILES
 
-            offer_percentage = request.POST.get('offer_percentage')
+            # Update basic fields
+            product.name = data.get('product_name')
+            product.description = data.get('product_description')
+            product.price = data.get('price')
+            product.stock_quantity = data.get('product_quantity')
+            product.product_from = data.get('product_from')
+            product.selling_countries = data.get('selling_countries', '')
+            product.warranty = data.get('warranty', 'none')
+            product.condition = data.get('condition', 'new')
+            product.is_returnable = data.get('is_returnable') == 'on'
+            product.return_time_limit = data.get('return_time_limit') if product.is_returnable else 0
+            product.manufacture_date = data.get('manufacture_date')
+            product.expiry_date = data.get('expiry_date')
+            product.weight = data.get('weight')
+            product.weight_unit = data.get('weight_unit', 'gm')
+            product.delivery_time = data.get('delivery_time')
+            product.commission_percentage = data.get('commission_percentage')
+            product.barcode = data.get('barcode')
+            product.keywords = data.get('keywords')
+            product.supplier_sku = data.get('supplier_sku')
+            product.pcs_per_unit = data.get('pcs_per_unit')
+            product.min_order_qty = data.get('min_order_qty')
+            product.low_stock_alert = data.get('low_stock_alert')
+            product.expiration_days = data.get('expiration_days')
+            product.tag = data.get('tag', 'none')
+            product.is_active = data.get('is_active') == 'True'
+
+            # Handle button type
+            button_type = data.get('button_type')
+            product.show_add_to_cart = button_type in ['both', 'cart']
+            product.show_rfq = button_type in ['both', 'rfq']
+            product.Both = button_type == 'both'
+
+            # Handle offer fields
+            offer_percentage = data.get('offer_percentage')
             if offer_percentage:
                 product.offer_percentage = offer_percentage
 
-            start_offer = request.POST.get('offer_start')
-            end_offer = request.POST.get('offer_end')
-
+            start_offer = data.get('offer_start')
+            end_offer = data.get('offer_end')
             if start_offer:
                 product.offer_start = start_offer
-
             if end_offer:
                 product.offer_end = end_offer
 
-            product.is_active = request.POST.get('is_active') == 'True'
-            category_id = request.POST.get('category')
+            # Handle categories
+            category_id = data.get('category')
             if category_id:
                 try:
                     product.category = ProductCategory.objects.get(pk=category_id)
                 except ProductCategory.DoesNotExist:
                     product.category = None
-            sub_category_id = request.POST.get('sub_category')
+
+            sub_category_id = data.get('sub_category')
             if sub_category_id:
                 try:
                     product.sub_category = ProductSubCategory.objects.get(pk=sub_category_id)
                 except ProductSubCategory.DoesNotExist:
                     product.sub_category = None
-            last_category_id = request.POST.get('last_category')
+
+            last_category_id = data.get('last_category')
             if last_category_id:
                 try:
                     product.last_category = ProductLastCategory.objects.get(pk=last_category_id)
                 except ProductLastCategory.DoesNotExist:
                     product.last_category = None
 
-            if 'main_image' in request.FILES:
+            # Handle images
+            if 'main_image' in files:
                 ProductImage.objects.filter(product=product, is_main=True).delete()
                 ProductImage.objects.create(
                     product=product,
-                    image=request.FILES['main_image'],
+                    image=files['main_image'],
                     is_main=True
                 )
-            if 'gallery_images' in request.FILES:
-                for image in request.FILES.getlist('gallery_images'):
+
+            if 'gallery_images' in files:
+                for image in files.getlist('gallery_images'):
                     ProductImage.objects.create(
                         product=product,
                         image=image,
                         is_main=False
                     )
-            brand_name = request.POST.get('brand')
-            if brand_name:
-                    brand_obj, created = Brand.objects.get_or_create(name=brand_name)
-                    product.brand = brand_obj
 
-            if 'brochure' in request.FILES:
-                product.brochure = request.FILES['brochure']
+            # Handle brand
+            brand_name = data.get('brand')
+            if brand_name:
+                brand_obj, created = Brand.objects.get_or_create(name=brand_name)
+                product.brand = brand_obj
+
+            # Handle brochure
+            if 'brochure' in files:
+                product.brochure = files['brochure']
 
             product.save()
-
             messages.success(request, 'Product updated successfully!')
-        except Exception as e:
-            print('exception in edit product --- ',e)
-            messages.error(request, 'Issue in Product updated !')
 
-        return redirect('adminv2:products_list')  
+        except Exception as e:
+            print('Exception in edit product:', e)
+            messages.error(request, 'Error updating product!')
+
+        return redirect('adminv2:products_list')
         
    
     

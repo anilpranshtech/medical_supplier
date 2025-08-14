@@ -573,25 +573,6 @@ class SearchResultsGridView(TemplateView):
         return context
 
 
-from django.views.generic import TemplateView
-from django.http import HttpResponse
-from django.template.loader import render_to_string
-from django.core.paginator import Paginator
-from django.db.models import Q, Count, F, Case, When, DecimalField, ExpressionWrapper
-
-from .models import (  # Adjust imports based on your app's models
-    Product,
-    ProductCategory,
-    ProductSubCategory,
-    ProductLastCategory,
-    CartProduct,
-    WishlistProduct,
-    # Add other models if needed, e.g., ProductImage for images
-)
-
-# Assuming you have a custom query_replace tag for pagination, import it if necessary
-# from your_templatetags import query_replace
-
 class SearchResultsListView(TemplateView):
     template_name = 'userdashboard/view/search_results_list.html'
 
@@ -620,7 +601,7 @@ class SearchResultsListView(TemplateView):
             'total_products': 0,
         })
 
-        # Categories & Last Categories with active products
+        # Categories & Subcategories with active products
         last_categories_with_products = ProductLastCategory.objects.annotate(
             product_count=Count('product', filter=Q(product__is_active=True))
         ).filter(product_count__gt=0)
@@ -628,6 +609,8 @@ class SearchResultsListView(TemplateView):
         valid_subcategory_ids = last_categories_with_products.values_list('sub_category_id', flat=True).distinct()
         subcategories_with_products = ProductSubCategory.objects.filter(
             id__in=valid_subcategory_ids
+        ).prefetch_related(
+            Prefetch('productlastcategory_set', queryset=last_categories_with_products)
         )
 
         valid_category_ids = subcategories_with_products.values_list('category_id', flat=True).distinct()
@@ -636,12 +619,6 @@ class SearchResultsListView(TemplateView):
         ).prefetch_related(
             Prefetch('productsubcategory_set', queryset=subcategories_with_products)
         )
-
-        # Add last categories to each category in context
-        for category in categories_with_products:
-            category.last_categories = last_categories_with_products.filter(
-                sub_category__category=category
-            )
 
         context['categories'] = categories_with_products
 
@@ -715,6 +692,8 @@ class SearchResultsListView(TemplateView):
             context['user_wishlist_ids'] = []
 
         return context
+    
+
 class ProductDetailsView(TemplateView):
     template_name = 'userdashboard/view/product_details.html'
 
@@ -2805,6 +2784,4 @@ class PostQuestionView(LoginRequiredMixin, View):
         question_text = request.POST.get('question')
         if question_text:
             Question.objects.create(user=request.user, text=question_text)
-        return redirect('dashboard:home') 
-
- 
+        return redirect('dashboard:product-detail')  
