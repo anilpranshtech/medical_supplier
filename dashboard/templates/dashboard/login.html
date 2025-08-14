@@ -29,41 +29,6 @@
         font-size: 24px;
     }
 
-    .google-login-btn {
-        background-color: #1e40af;
-        color: white;
-        padding: 12px;
-        width: 100%;
-        border: none;
-        border-radius: 10px;
-        font-size: 15px;
-        font-weight: bold;
-        cursor: pointer;
-        margin-bottom: 20px;
-        transition: background 0.3s ease;
-    }
-
-    .google-login-btn:hover {
-        background-color: #1d4ed8;
-    }
-
-    .or-divider {
-        display: flex;
-        align-items: center;
-        margin: 24px 0;
-        color: #94a3b8;
-        font-size: 14px;
-    }
-
-    .or-divider::before,
-    .or-divider::after {
-        content: "";
-        flex: 1;
-        height: 1px;
-        background: #cbd5e1;
-        margin: 0 10px;
-    }
-
     .form-group {
         margin-bottom: 20px;
     }
@@ -106,32 +71,6 @@
         color: #64748b;
         cursor: pointer;
         font-size: 14px;
-    }
-
-    .role-toggle {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 20px;
-    }
-
-    .role-toggle-btn {
-        flex: 1;
-        background: #f0f9ff;
-        color: #0369a1;
-        border: 1px solid #bae6fd;
-        padding: 8px;
-        border-radius: 10px;
-        font-size: 14px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-
-    .role-toggle-btn.active {
-        background: #0ea5e9;
-        color: white;
-        border-color: #0ea5e9;
-        box-shadow: 0 0 8px rgba(14, 165, 233, 0.4);
     }
 
     .form-options {
@@ -197,89 +136,6 @@
         font-size: 13px;
         margin-bottom: 10px;
     }
-
-    .toggle-switch {
-        position: relative;
-        display: flex;
-        width: 100%;
-        background: #f1f5f9;
-        border: 2px solid #e2e8f0;
-        border-radius: 9999px;
-        overflow: hidden;
-        margin-bottom: 24px;
-        height: 50px;
-    }
-
-    .toggle-switch input[type="radio"] {
-        display: none;
-    }
-
-    .toggle-switch label {
-        flex: 1;
-        cursor: pointer;
-        text-align: center;
-        line-height: 50px;
-        font-weight: 600;
-        font-size: 14px;
-        position: relative;
-        z-index: 2;
-        color: #64748b;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-        transition: color 0.3s ease;
-    }
-
-    .toggle-switch .icon {
-        width: 18px;
-        height: 18px;
-    }
-
-    .toggle-switch input[type="radio"]:checked + label {
-        color: #ffffff;
-    }
-
-    .toggle-switch input[type="radio"]#buyer:checked ~ .toggle-indicator {
-        transform: translateX(0%);
-    }
-
-    .toggle-switch input[type="radio"]#supplier:checked ~ .toggle-indicator {
-        transform: translateX(100%);
-    }
-
-    .toggle-indicator {
-        position: absolute;
-        height: 100%;
-        width: 50%;
-        background-color: #0284c7;
-        border-radius: 9999px;
-        top: 0;
-        left: 0;
-        z-index: 1;
-        transition: transform 0.3s ease;
-    }
-
-    .buyer-options {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 20px;
-    }
-
-    .buyer-options label {
-        background: #f0f9ff;
-        padding: 8px 12px;
-        border-radius: 10px;
-        font-size: 14px;
-        cursor: pointer;
-        border: 1px solid #bae6fd;
-        transition: background 0.3s;
-    }
-
-    .buyer-options input[type="radio"] {
-        margin-right: 6px;
-    }
-
 </style>
 
 <div class="login-container">
@@ -287,7 +143,6 @@
         <h1>Sign in to Health Equipment</h1>
     </div>
 
-    <!-- Display non-field errors (e.g., "Invalid email or password") -->
     {% if form.non_field_errors %}
         <div class="error-message">
             {% for error in form.non_field_errors %}
@@ -298,42 +153,12 @@
 
     <form method="post" class="login-form">
         {% csrf_token %}
-        <input type="hidden" id="user_type" name="user_type" value="{{ form.user_type.value|default:'buyer' }}">
-
-        <!-- Role Toggle Switch (Buyer/Supplier) -->
-        <div class="toggle-switch">
-            <input type="radio" id="buyer" name="user_type" value="buyer" {% if form.user_type.value|default:'buyer' == 'buyer' %}checked{% endif %}>
-            <label for="buyer">
-                <svg class="icon" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10" /></svg>
-                Buyer
-            </label>
-
-            <input type="radio" id="supplier" name="user_type" value="supplier" {% if form.user_type.value == 'supplier' %}checked{% endif %}>
-            <label for="supplier">
-                <svg class="icon" viewBox="0 0 24 24" fill="currentColor"><rect width="20" height="20" x="2" y="2" rx="5" /></svg>
-                Supplier
-            </label>
-
-            <span class="toggle-indicator"></span>
-        </div>
-
-        <div class="flex justify-center my-4">
-            <div id="buyerOptions" class="flex gap-4 buyer-options {% if form.user_type.value == 'supplier' %}hidden{% endif %}">
-                <label class="bg-blue-50 px-4 py-2 rounded-lg border border-blue-200 cursor-pointer">
-                    <input type="radio" name="buyer_type" value="retailer"
-                        {% if form.buyer_type.value|default:'retailer' == 'retailer' %}checked{% endif %}> Retailer
-                </label>
-                <label class="bg-blue-50 px-4 py-2 rounded-lg border border-blue-200 cursor-pointer">
-                    <input type="radio" name="buyer_type" value="wholesaler"
-                        {% if form.buyer_type.value == 'wholesaler' %}checked{% endif %}> Wholesaler
-                </label>
-            </div>
-        </div>
-
 
         <div class="form-group">
             <label for="id_username">Email</label>
-            <input type="text" name="username" id="id_username" placeholder="Your email" class="input-field {% if form.username.errors %}input-error{% endif %}" value="{{ form.username.value|default_if_none:'' }}">
+            <input type="text" name="username" id="id_username" placeholder="Your email"
+                   class="input-field {% if form.username.errors %}input-error{% endif %}"
+                   value="{{ form.username.value|default_if_none:'' }}">
             {% for error in form.username.errors %}
                 <div class="error-message">{{ error }}</div>
             {% endfor %}
@@ -342,17 +167,13 @@
         <div class="form-group">
             <label for="id_password">Password</label>
             <div class="password-input-container">
-                <input type="password" name="password" id="id_password" placeholder="Your password" class="input-field {% if form.password.errors %}input-error{% endif %}">
+                <input type="password" name="password" id="id_password" placeholder="Your password"
+                       class="input-field {% if form.password.errors %}input-error{% endif %}">
                 {% for error in form.password.errors %}
                     <div class="error-message">{{ error }}</div>
                 {% endfor %}
                 <button type="button" class="toggle-password" aria-label="Toggle password visibility">
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M10 4.375C3.75 4.375 1.25 10 1.25 10C1.25 10 3.75 15.625 10 15.625C16.25 15.625 18.75 10 18.75 10C18.75 10 16.25 4.375 10 4.375Z"
-                              stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M10 13.125C11.7259 13.125 13.125 11.7259 13.125 10C13.125 8.27411 11.7259 6.875 10 6.875C8.27411 6.875 6.875 8.27411 6.875 10C6.875 11.7259 8.27411 13.125 10 13.125Z"
-                              stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
+                    👁
                 </button>
             </div>
         </div>
@@ -369,57 +190,22 @@
     </form>
 
     <div class="signup-link">
-        Don't have an account? <a href="{% url 'dashboard:register' %}" class="signup">Sign Up</a>
+        Don't have an account? Sign Up as
+        <a href="{% url 'dashboard:register' %}" style="text-decoration: underline;">Buyer</a> or
+        <a href="{% url 'dashboard:register' %}" style="text-decoration: underline;">Supplier</a>
     </div>
+
 </div>
-</div>
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const togglePassword = document.querySelector('.toggle-password');
         const passwordInput = document.getElementById('id_password');
-        const buyerRadio = document.getElementById('buyer');
-        const supplierRadio = document.getElementById('supplier');
-        const buyerOptions = document.getElementById('buyerOptions');
 
-        // Password visibility toggle
         togglePassword.addEventListener('click', function () {
             const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
             passwordInput.setAttribute('type', type);
-
-            const svg = this.querySelector('svg');
-            if (type === 'text') {
-                svg.innerHTML = `
-                    <path d="M10 4.375C3.75 4.375 1.25 10 1.25 10C1.25 10 3.75 15.625 10 15.625C16.25 15.625 18.75 10 18.75 10C18.75 10 16.25 4.375 10 4.375Z" stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M2.5 2.5L17.5 17.5" stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M7.975 7.975C7.37083 8.57917 7.08333 9.375 7.08333 10C7.08333 11.7259 8.47411 13.125 10 13.125C10.625 13.125 11.4208 12.8375 12.025 12.2333" stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                `;
-            } else {
-                svg.innerHTML = `
-                    <path d="M10 4.375C3.75 4.375 1.25 10 1.25 10C1.25 10 3.75 15.625 10 15.625C16.25 15.625 18.75 10 18.75 10C18.75 10 16.25 4.375 10 4.375Z" stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M10 13.125C11.7259 13.125 13.125 11.7259 13.125 10C13.125 8.27411 11.7259 6.875 10 6.875C8.27411 6.875 6.875 8.27411 6.875 10C6.875 11.7259 8.27411 13.125 10 13.125Z" stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                `;
-            }
-        });
-
-        // Role toggle: Show/hide buyer options
-        buyerRadio.addEventListener('change', () => {
-            if (buyerRadio.checked) {
-                buyerOptions.style.display = 'flex';
-            }
-        });
-
-        supplierRadio.addEventListener('change', () => {
-            if (supplierRadio.checked) {
-                buyerOptions.style.display = 'none';
-            }
         });
     });
-
-    document.querySelectorAll('.toggle-switch input[type="radio"]').forEach((radio) => {
-    radio.addEventListener('change', function () {
-        document.getElementById('user_type_hidden').value = this.value;
-    });
-});
-
 </script>
 {% endblock %}
