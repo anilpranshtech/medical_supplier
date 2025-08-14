@@ -1,5 +1,4 @@
 import json
-
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.contrib.auth.models import User
@@ -96,6 +95,7 @@ class ProductCategory(models.Model):
         ordering = ["-created_at"]
         verbose_name = verbose_name_plural ="Product Category"
 
+
 class ProductSubCategory(models.Model):
     category = models.ForeignKey(ProductCategory,on_delete=models.CASCADE)
     name = models.CharField(max_length=255, unique=True)
@@ -107,6 +107,7 @@ class ProductSubCategory(models.Model):
     class Meta:
         ordering = ["-created_at"]
         verbose_name = verbose_name_plural ="Product Sub Category"
+
 
 class ProductLastCategory(models.Model):
     sub_category = models.ForeignKey(ProductSubCategory,on_delete=models.CASCADE)
@@ -120,11 +121,13 @@ class ProductLastCategory(models.Model):
         ordering = ["-created_at"]
         verbose_name = verbose_name_plural ="Product Last Category"
 
+
 class Brand(models.Model):
     name = models.CharField(max_length=100)
 
     class Meta:
         verbose_name = verbose_name_plural ="Brand"
+
 
 class Event(models.Model):
     conference_link = models.URLField(max_length=500, null=True, blank=True)
@@ -141,6 +144,7 @@ class Event(models.Model):
     class Meta:
         ordering = ['-conference_at']
         verbose_name = verbose_name_plural = "Events"
+
 
 class Product(models.Model):
     # Category hierarchy
@@ -289,6 +293,7 @@ class Order(models.Model):
         ordering = ['-created_at']
         verbose_name = verbose_name_plural = "Order"
 
+
 # Renamed Orders to OrderItem
 class OrderItem(models.Model):
     ORDER_STATUS_CHOICES = [
@@ -395,7 +400,6 @@ class WishlistProduct(models.Model):
         unique_together = ('user', 'product')
         ordering = ["-created_at"]
         verbose_name = verbose_name_plural = "Wishlist Product"
-
 
 
 class CartProduct(models.Model):
@@ -505,7 +509,6 @@ class RazorpayPayment(models.Model):
         verbose_name = verbose_name_plural = "Razorpay Payment"
 
 
-
 class CODPayment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="cod_payments")
     name = models.CharField(max_length=100)
@@ -559,6 +562,7 @@ class RoleRequest(models.Model):
     def __str__(self):
         return f"{self.user.username} - {self.requested_role} ({self.status})"
 
+
 class RatingReview(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='reviews')
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -569,6 +573,7 @@ class RatingReview(models.Model):
 
     class Meta:
         unique_together = ('product', 'user')  
+
 
 class RFQRequest(models.Model):
     STATUS_CHOICES = [
@@ -608,6 +613,7 @@ class RFQRequest(models.Model):
     class Meta:
         ordering = ["-created_at"]
         verbose_name = verbose_name_plural = "RFQ Request"
+
 
 class PasswordUpdateTracker(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='password_tracker')
@@ -838,7 +844,8 @@ class PendingSignup(models.Model):
 
     def is_expired(self):
         return now() > self.created_at + timedelta(minutes=10)
-    
+
+
 class Question(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     text = models.TextField()

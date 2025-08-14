@@ -1,12 +1,13 @@
 from django import forms
 from adminv2.models import Banner  
+from dashboard.models import RFQRequest
+
 
 class BannerForm(forms.ModelForm):
     class Meta:
         model = Banner
         fields = ['title', 'image', 'link', 'is_active', 'order']
 
-from dashboard.models import RFQRequest
 
 class SupplierRFQQuotationForm(forms.ModelForm):
     class Meta:

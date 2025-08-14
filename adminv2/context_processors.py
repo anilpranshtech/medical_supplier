@@ -2,6 +2,7 @@
 from dashboard.models import Notification
 from django.contrib.auth.models import User
 
+
 def notification_context(request):
     if request.user.is_authenticated and request.user.is_staff:
         normal_users = User.objects.filter(is_staff=False, is_superuser=False)

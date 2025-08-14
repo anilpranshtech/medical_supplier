@@ -23,7 +23,6 @@ class SupplierRFQQuotationForm(forms.ModelForm):
         }
 
 
-
 class BannerForm(forms.ModelForm):
     class Meta:
         model = Banner

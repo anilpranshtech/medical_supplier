@@ -156,4 +156,3 @@ def QS_orders_filters(filter_dict={}):
             qs = qs.filter(created_at__range=(start_date, end_date))
 
     return qs
-

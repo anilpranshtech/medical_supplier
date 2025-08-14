@@ -178,10 +178,9 @@ class CustomLoginView(FormView):
         return reverse_lazy('dashboard:home')
 
 
-
-
 def generate_token():
     return uuid.uuid4().hex
+
 
 class RegistrationView(View):
     recaptcha_secret = '6LdTHV8rAAAAAIgLr2wdtdtWExTS6xJpUpD8qEzh'
@@ -801,6 +800,7 @@ class EventRegisteredDataView(TemplateView):
 
         return context
 
+
 # class OrderSummaryView(LoginRequiredMixin, TemplateView):
 #     template_name = 'userdashboard/view/cart_summary.html'
 #     login_url = 'dashboard:login'
@@ -812,7 +812,8 @@ class EventRegisteredDataView(TemplateView):
 #         context['cart_items'] = cart_items
 #         context['total'] = total
 #         return context
-    
+
+
 class CartAddView(LoginRequiredMixin, View):
     def get(self, request):
         cart_items = CartProduct.objects.filter(user=request.user).select_related('product')
@@ -850,6 +851,7 @@ class CartAddView(LoginRequiredMixin, View):
         cart_item.save()
         return JsonResponse({'status': 'success', 'message': 'Product added to cart'})
 
+
 class RemoveFromCartView(View):
     def post(self, request):
         item_id = request.POST.get('item_id')
@@ -861,6 +863,7 @@ class RemoveFromCartView(View):
         except CartProduct.DoesNotExist:
             return JsonResponse({'status': 'error', 'message': 'Item not found'})
 
+
 def clearcart(request):
     if request.method == 'POST':
         user = request.user
@@ -868,7 +871,6 @@ def clearcart(request):
         return JsonResponse({'status': 'success'})
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
-
 
 
 class WishlistToggleView(LoginRequiredMixin, View):
@@ -884,6 +886,7 @@ class WishlistToggleView(LoginRequiredMixin, View):
             wishlist_item.delete()
             return JsonResponse({'status': 'removed'})
         return JsonResponse({'status': 'added'})
+
 
 class WishlistClearView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
@@ -910,6 +913,7 @@ class WishlistView(LoginRequiredMixin, TemplateView):
         context['wishlist_items'] = page_obj
         context['page_obj'] = page_obj
         return context
+
 
 class WishlistProductListView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
@@ -947,6 +951,7 @@ class ShoppingCartView(LoginRequiredMixin, TemplateView):
 
         return context
 
+
 @require_POST
 def add_to_cart(request):
     product_id = request.POST.get('product_id')
@@ -970,7 +975,8 @@ def add_to_cart(request):
             return JsonResponse({'status': 'success', 'quantity': cart_item.quantity})
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
-    
+
+
 @require_POST
 def update_cart_item(request):
     if not request.user.is_authenticated:
@@ -992,6 +998,7 @@ def update_cart_item(request):
         
     except CartProduct.DoesNotExist:
         return JsonResponse({'status': 'error', 'message': 'Item not found'}, status=404)
+
 
 @require_POST
 def remove_from_cart(request):
@@ -1121,6 +1128,7 @@ def generate_order_id():
     import uuid
     return f"X{uuid.uuid4().hex[:6].upper()}-S{timezone.now().strftime('%y')}"
 
+
 def create_orders_from_cart(user, payment_type, payment_status, payment):
     try:
         print('create order from cart----------------------')
@@ -1179,6 +1187,7 @@ def create_orders_from_cart(user, payment_type, payment_status, payment):
     except Exception as e:
         logger.error(f"Failed to create order for user {user.id}: {str(e)}", exc_info=True)
         raise
+
 
 class PaymentMethodView(LoginRequiredMixin, View):
     template_name = 'userdashboard/view/payment_method.html'
@@ -1447,7 +1456,6 @@ class PaymentMethodView(LoginRequiredMixin, View):
             return redirect("dashboard:payment_method")
 
 
-
 class OrderPlacedView(LoginRequiredMixin, TemplateView):
     template_name = 'userdashboard/view/order_placed.html'
     login_url = 'dashboard:login'
@@ -1584,7 +1592,6 @@ class OrderPlacedView(LoginRequiredMixin, TemplateView):
         return context
 
 
-
 class MyOrdersView(LoginRequiredMixin, TemplateView):
     template_name = 'userdashboard/view/my_orders.html'
     login_url = 'dashboard:login'
@@ -1668,7 +1675,6 @@ class ReorderView(LoginRequiredMixin, View):
 
         messages.success(request, f"Added items from order {order.order_id} to your cart.")
         return redirect('dashboard:shopping_cart')  # Or redirect to cart page
-
 
 
 class OrderReceiptView(LoginRequiredMixin, TemplateView):

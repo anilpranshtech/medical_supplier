@@ -18,39 +18,46 @@ class WholesaleBuyerProfileAdmin(admin.ModelAdmin):
 class SupplierProfileAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'profile_picture', 'phone', 'company_name', 'license_number', 'is_verified')
 
+
 @admin.register(Product)
 class ProductProfileAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'description', 'price')
+
 
 @admin.register(ProductImage)
 class ProductImageAdmin(admin.ModelAdmin):
     list_display = ('id', 'product', 'image', 'is_main')
 
+
 @admin.register(EventRegistration)
 class EventRegistrationAdmin(admin.ModelAdmin):
     list_display = ('id', 'product', 'user', 'full_name', 'email', 'message', 'registered_at')
+
 
 @admin.register(ProductCategory)
 class ProductCategoryAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'created_at')
 
+
 @admin.register(ProductSubCategory)
 class ProductSubCategoryAdmin(admin.ModelAdmin):
     list_display = ('id', 'category', 'name', 'created_at')
+
 
 @admin.register(Question)
 class Quetions(admin.ModelAdmin):
     list_display = ['id', 'user', 'text','reply','replied_at']
 
 
-
 @admin.register(ProductLastCategory)
 class ProductLastCategoryAdmin(admin.ModelAdmin):
     list_display = ('id', 'sub_category', 'name', 'created_at')
 
+
 @admin.register(Brand)
 class BrandAdmin(admin.ModelAdmin):
     list_display = ('id', 'name')
+
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
@@ -62,42 +69,51 @@ class OrderItemAdmin(admin.ModelAdmin):
     list_display = ('id', 'order', 'order_by', 'order_to', 'status', 'payment_type', 'payment_status')
     list_filter = ('status', 'payment_status')
 
+
 @admin.register(CartProduct)
 class CartProductAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'product', 'quantity')
 
+
 @admin.register(WishlistProduct)
 class WishlistProductAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'product', 'quantity')
+
 
 @admin.register(RatingReview)
 class RatingReviewAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'product', 'rating', 'review')
     list_filter = ('rating',)
 
+
 @admin.register(DeliveryPartner)
 class DeliveryPartnerAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'tracking_url_template', 'support_email', 'phone_number', 'is_active', 'created_at')
+
 
 @admin.register(Payment)
 class PaymentAdmin(admin.ModelAdmin):
     list_display = ('id','name', 'amount', 'payment_method', 'paid', 'created_at')
     list_filter = ('paid', 'created_at')
 
+
 @admin.register(StripePayment)
 class StripePaymentAdmin(admin.ModelAdmin):
     list_display = ('id','name', 'amount', 'paid', 'created_at')
     list_filter = ('paid', 'created_at')
+
 
 @admin.register(RazorpayPayment)
 class RazorpayPaymentAdmin(admin.ModelAdmin):
     list_display = ('id','name', 'amount', 'paid', 'created_at')
     list_filter = ('paid', 'created_at')
 
+
 @admin.register(CODPayment)
 class CODPaymentAdmin(admin.ModelAdmin):
     list_display = ('id','name', 'amount', 'paid', 'created_at')
     list_filter = ('paid', 'created_at')
+
 
 @admin.register(BankTransferPayment)
 class BankTransferPaymentAdmin(admin.ModelAdmin):
@@ -118,9 +134,11 @@ class BankTransferPaymentAdmin(admin.ModelAdmin):
         }),
     )
 
+
 @admin.register(CustomerBillingAddress)
 class CustomerBillingAddressAdmin(admin.ModelAdmin):
     list_display = ('id','user', 'customer_name', 'is_default', 'is_deleted', 'created_at', 'updated_at')
+
 
 @admin.register(RoleRequest)
 class RoleRequestAdmin(admin.ModelAdmin):
@@ -165,34 +183,41 @@ class RFQRequestAdmin(admin.ModelAdmin):
     )
     readonly_fields = ('created_at', 'updated_at', 'quote_sent_at')
 
+
 @admin.register(DoctorProfile)
 class DoctorProfileAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'current_position', 'workplace', 'nationality', 'residency', 'country_code', 'speciality', 'phone_number')
+
 
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
     list_display = ('id', 'conference_link', 'speaker_name', 'conference_at', 'duration', 'venue')
     list_filter = ('conference_at', 'duration', 'venue')
 
+
 @admin.register(Nationality)
 class NationalityAdmin(admin.ModelAdmin):
     list_display = ('id', 'country', 'created_at')
     list_filter = ('country', 'created_at')
+
 
 @admin.register(Residency)
 class ResidencyAdmin(admin.ModelAdmin):
     list_display = ('id', 'country', 'created_at')
     list_filter = ('country', 'created_at')
 
+
 @admin.register(CountryCode)
 class CountryCodeAdmin(admin.ModelAdmin):
     list_display = ('id', 'code', 'country', 'created_at')
     list_filter = ('country', 'created_at')
 
+
 @admin.register(Speciality)
 class SpecialityAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'created_at')
     list_filter = ('name', 'created_at')
+
 
 @admin.register(SubscriptionPlan)
 class SubscriptionPlanAdmin(admin.ModelAdmin):
