@@ -1,0 +1,117 @@
+{% extends 'supplier/base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+
+    .question-text {
+        white-space: normal;     
+        word-break: break-word;   
+        max-width: 300px;         
+        text-align: left;         
+    }
+    .reply-text {
+        white-space: normal;
+        word-break: break-word;
+        max-width: 250px;
+        text-align: left;
+        
+    }
+</style>
+
+<div class="app-main flex-column flex-row-fluid" id="kt_app_main">
+    <div class="d-flex flex-column flex-column-fluid">
+        <div id="kt_app_content" class="app-content flex-column-fluid pt-0">
+            <div id="kt_app_content_container" class="app-container container-fluid">
+
+                <div class="card card-flush mb-3">
+                    <div class="card-header align-items-center py-5 gap-2 gap-md-5">
+                        <div class="card-title">
+                            <h3>User Questions</h3>
+                        </div>
+                    </div>
+
+                    <div class="card-body table-responsive p-0">
+                        <table class="table align-middle table-row-dashed fs-6 gy-5">
+                            <thead>
+                                <tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
+                                    <th class="text-center">User</th>
+                                    <th class="text-center">Question</th>
+                                    <th class="text-center">Reply</th>
+                                    <th class="text-center">Created At</th>
+                                    <th class="text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="fw-semibold text-gray-600">
+                                {% for q in questions %}
+                                <tr>
+                                    <td class="text-center">{{ q.user.username }}</td>
+                                    <td class="text-center question-text">{{ q.text }}</td>
+                                    <td class="text-center reply-text">
+                                        {% if q.reply %}
+                                            ✅ {{ q.reply }}
+                                        {% else %}
+                                            ❌ Not replied
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">{{ q.created_at|date:"d M Y" }}</td>
+                                    <td class="text-center">
+                                        <div class="dropdown">
+                                            <button class="btn btn-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                Actions
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li>
+                                                    <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#replyModal{{ q.id }}">Reply</a>
+                                                </li>
+                                                <li>
+                                                    <form method="post" action="">
+                                                        {% csrf_token %}
+                                                        <input type="hidden" name="question_id" value="{{ q.id }}">
+                                                        <input type="hidden" name="action_type" value="delete">
+                                                        <button type="submit" class="dropdown-item text-danger">Delete</button>
+                                                    </form>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- Reply Modal -->
+                                <div class="modal fade" id="replyModal{{ q.id }}" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <form method="post" action="">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="question_id" value="{{ q.id }}">
+                                            <input type="hidden" name="action_type" value="reply">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Reply to {{ q.user.username }}</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <textarea name="reply_text" class="form-control" rows="4" placeholder="Enter reply">{{ q.reply }}</textarea>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="submit" class="btn btn-primary">Send Reply</button>
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted">No questions found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
