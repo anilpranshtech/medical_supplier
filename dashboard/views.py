@@ -1943,18 +1943,28 @@ class UserProfile(LoginRequiredMixin, TemplateView):
                     profile = SupplierProfile.objects.get(user=user)
                     profile_type = 'supplier'
                 except SupplierProfile.DoesNotExist:
-                    pass
+                    try:
+                        profile = AdminUserProfile.objects.get(user=user)
+                        profile_type = 'admin'
+                    except AdminUserProfile.DoesNotExist:
+                        pass
 
         context['profile'] = profile
         context['profile_type'] = profile_type
 
-        # Phone
-        phone = profile.phone if profile else None
-        context['phone'] = phone or 'Not set'
 
-        # Avatar (profile picture)
-        avatar = profile.profile_picture if profile else None
+        if profile and hasattr(profile, "profile_picture") and profile.profile_picture:
+            avatar = profile.profile_picture
+        elif hasattr(user, "profile_picture") and user.profile_picture:  # superuser / base User
+            avatar = user.profile_picture
+        else:
+            avatar = None
+
         context['avatar'] = avatar
+
+        # Phone
+        phone = getattr(profile, "phone", None) if profile else None
+        context['phone'] = phone or 'Not set'
 
         # Default billing address
         try:
@@ -2010,7 +2020,7 @@ class UserProfile(LoginRequiredMixin, TemplateView):
 
 class UploadAvatarView(LoginRequiredMixin, View):
     def post(self, request):
-        profile, _ = get_user_profile(request.user)
+        profile, profile_type = get_user_profile(request.user)
         if profile:
             if 'avatar' in request.FILES:
                 profile.profile_picture = request.FILES['avatar']
@@ -2041,6 +2051,9 @@ class EditProfileView(LoginRequiredMixin, View):
         elif hasattr(user, 'supplierprofile'):
             profile = user.supplierprofile
             profile_type = 'supplier'
+        elif user.is_superuser:
+            profile = user
+            profile_type = 'admin'
         else:
             return JsonResponse({'status': 'error', 'message': 'Profile not found.'}, status=400)
 
@@ -2078,38 +2091,60 @@ class EditEmailView(LoginRequiredMixin, View):
 
 class EditPhoneView(LoginRequiredMixin, View):
     def post(self, request):
-        default_address = CustomerBillingAddress.objects.filter(
-            user=request.user, is_default=True, is_deleted=False
-        ).first()
+        phone_number = request.POST.get("phone")
 
-        if not default_address:
-            default_address = CustomerBillingAddress.objects.filter(
-                user=request.user, is_deleted=False
-            ).first()
-            if default_address:
-                default_address.is_default = True
-                default_address.save()
-            else:
-                default_address = CustomerBillingAddress.objects.create(
-                    user=request.user,
-                    address_title="Default Address",
-                    customer_address1="Not set",
-                    customer_city="Not set",
-                    customer_state="Not set",
-                    customer_postal_code="00000",
-                    customer_country="Not set",
-                    is_default=True
-                )
+        if not phone_number:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Phone number is required.'
+            }, status=400)
 
-        form = PhoneForm(request.POST, instance=default_address)
-        if form.is_valid():
-            form.save()
-            return JsonResponse({'status': 'success', 'message': 'Phone number updated successfully.'})
-        return JsonResponse({
-            'status': 'error',
-            'message': 'Failed to update phone number.',
-            'errors': form.errors
-        })
+        try:
+            with transaction.atomic():
+                if request.user.is_superuser:
+                    profile, created = AdminUserProfile.objects.get_or_create(user=request.user)
+                    profile.phone = phone_number
+                    profile.save()
+                    return JsonResponse({
+                        'status': 'success',
+                        'message': 'Phone number updated successfully'
+                    })
+
+                if hasattr(request.user, "retailprofile"):
+                    request.user.retailprofile.phone = phone_number
+                    request.user.retailprofile.save()
+                    return JsonResponse({
+                        'status': 'success',
+                        'message': 'Phone number updated successfully'
+                    })
+
+                elif hasattr(request.user, "wholesalebuyerprofile"):
+                    request.user.wholesalebuyerprofile.phone = phone_number
+                    request.user.wholesalebuyerprofile.save()
+                    return JsonResponse({
+                        'status': 'success',
+                        'message': 'Phone number updated successfully'
+                    })
+
+                elif hasattr(request.user, "supplierprofile"):
+                    request.user.supplierprofile.phone = phone_number
+                    request.user.supplierprofile.save()
+                    return JsonResponse({
+                        'status': 'success',
+                        'message': 'Phone number updated successfully'
+                    })
+
+                else:
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': 'No profile found for this user.'
+                    }, status=404)
+
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': f'Internal error: {str(e)}'
+            }, status=500)
 
 
 class SignUpView(View):
