@@ -225,11 +225,26 @@
                     <span class="menu-title">View Products</span>
                     </a>
                     <a class="menu-link {% if request.resolver_match.url_name == 'rfq_list' %} active {% endif %}"
-                       href="{% url 'superuser:rating_list' %}">
+                       href="{% url 'supplier:rating_list' %}">
                       <span class="menu-bullet">
                         <span class="bullet bullet-dot"></span>
                       </span>
                       <span class="menu-title">Rating</span>
+                    </a>
+
+                     <a class="menu-link {% if request.resolver_match.url_name == 'rfq_list' %} active {% endif %}"
+                       href="{% url 'supplier:question_list' %}">
+                      <span class="menu-bullet">
+                        <span class="bullet bullet-dot"></span>
+                      </span>
+                      <span class="menu-title">Quetions</span>
+                    </a>
+                     <a class="menu-link {% if request.resolver_match.url_name == 'rfq_list' %} active {% endif %}"
+                       href="{% url 'supplier:transaction_list' %}">
+                      <span class="menu-bullet">
+                        <span class="bullet bullet-dot"></span>
+                      </span>
+                      <span class="menu-title">Transaction</span>
                     </a>
                   </div>
                 </div>

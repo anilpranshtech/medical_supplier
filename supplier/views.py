@@ -1584,3 +1584,5 @@ class RatingView(TemplateView):
         return context
         context = {'products': products}
         return render(request, 'supplier/view_product.html', context)
+    
+
