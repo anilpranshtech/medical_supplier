@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" href="{% static 'metronic/tailwind/dist/assets/media/brand-logos/health_logo.jpg' %}"/>
     <title>User Registration</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
@@ -530,7 +531,7 @@
                 </div>
 
                 <div class="signup-link">
-                    Already have an account? <a href="{% url 'dashboard:login' %}">Sign in</a>
+                    Already have an account? <a href="{% url 'dashboard:login' %}" style="text-decoration: underline;">Sign in</a>
                 </div>
             </form>
         </div>

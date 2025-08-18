@@ -162,29 +162,26 @@
                   </div>
                   <div class="menu-item">
                     <a class="menu-link {% if request.resolver_match.url_name == 'banner_list' %} active {% endif %}"
-                       href="{% url 'superuser:banner_list' %}"> 
+                       href="{% url 'superuser:banner_list' %}">
                       <span class="menu-bullet">
                         <span class="bullet bullet-dot"></span>
-                      </span> 
+                      </span>
 
                       <span class="menu-title">Upload Banner</span>
                     </a>
-<<<<<<< Updated upstream:adminv3/templates/adminv3/pages/sidebar.html
                     <a class="menu-link {% if request.resolver_match.url_name == 'banner_list' %} active {% endif %}"
-                       href="{% url 'adminv3:rating_list' %}"> 
+                       href="{% url 'superuser:rating_list' %}">
                       <span class="menu-bullet">
                         <span class="bullet bullet-dot"></span>
                       </span> 
 
                       <span class="menu-title">Rating</span>
-=======
                     <a class="menu-link {% if request.resolver_match.url_name == 'view_product' %} active {% endif %}"
                     href="{% url 'superuser:view_product' %}">
                     <span class="menu-bullet">
                     <span class="bullet bullet-dot"></span>
                     </span>
                     <span class="menu-title">View Products</span>
->>>>>>> Stashed changes:superuser/templates/superuser/pages/sidebar.html
                     </a>
                   </div>
                 </div>

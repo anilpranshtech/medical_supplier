@@ -1,4 +1,6 @@
+{% load static %}
 {% block content %}
+<link rel="shortcut icon" href="{% static 'metronic/tailwind/dist/assets/media/brand-logos/health_logo.jpg' %}"/>
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap');
 
@@ -63,14 +65,17 @@
 
     .toggle-password {
         position: absolute;
-        right: 12px;
+        right: 0.75rem;
         top: 50%;
         transform: translateY(-50%);
         background: none;
         border: none;
-        color: #64748b;
+        color: #98A2B3;
         cursor: pointer;
-        font-size: 14px;
+    }
+
+    .dark .toggle-password {
+        color: #9ca3af;
     }
 
     .form-options {
@@ -173,7 +178,12 @@
                     <div class="error-message">{{ error }}</div>
                 {% endfor %}
                 <button type="button" class="toggle-password" aria-label="Toggle password visibility">
-                    👁
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 4.375C3.75 4.375 1.25 10 1.25 10C1.25 10 3.75 15.625 10 15.625C16.25 15.625 18.75 10 18.75 10C18.75 10 16.25 4.375 10 4.375Z"
+                              stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M10 13.125C11.7259 13.125 13.125 11.7259 13.125 10C13.125 8.27411 11.7259 6.875 10 6.875C8.27411 6.875 6.875 8.27411 6.875 10C6.875 11.7259 8.27411 13.125 10 13.125Z"
+                              stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
                 </button>
             </div>
         </div>
@@ -183,7 +193,7 @@
                 <input type="checkbox" id="remember-me" class="checkbox" {% if form.remember_me.value %}checked{% endif %}>
                 <label for="remember-me">Remember me</label>
             </div>
-            <a href="{% url 'dashboard:password_reset' %}" class="forgot-password">Forgot Password?</a>
+            <a href="{% url 'dashboard:password_reset' %}" class="forgot-password" style="text-decoration: underline;">Forgot Password?</a>
         </div>
 
         <button type="submit" class="login-btn">Continue</button>
@@ -198,13 +208,19 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const togglePassword = document.querySelector('.toggle-password');
-        const passwordInput = document.getElementById('id_password');
-
-        togglePassword.addEventListener('click', function () {
-            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-            passwordInput.setAttribute('type', type);
+    // Password visibility toggle
+    document.querySelectorAll('.toggle-password').forEach(button => {
+        button.addEventListener('click', () => {
+            const input = button.parentElement.querySelector('input');
+            const type = input.type === 'password' ? 'text' : 'password';
+            input.type = type;
+            const svg = button.querySelector('svg');
+            svg.innerHTML = type === 'text' ?
+                `<path d="M10 4.375C3.75 4.375 1.25 10 1.25 10C1.25 10 3.75 15.625 10 15.625C16.25 15.625 18.75 10 18.75 10C18.75 10 16.25 4.375 10 4.375Z" stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                 <path d="M2.5 2.5L17.5 17.5" stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                 <path d="M7.975 7.975C7.37083 8.57917 7.08333 9.375 7.08333 10C7.08333 11.7259 8.47411 13.125 10 13.125C10.625 13.125 11.4208 12.8375 12.025 12.2333" stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>` :
+                `<path d="M10 4.375C3.75 4.375 1.25 10 1.25 10C1.25 10 3.75 15.625 10 15.625C16.25 15.625 18.75 10 18.75 10C18.75 10 16.25 4.375 10 4.375Z" stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                 <path d="M10 13.125C11.7259 13.125 13.125 11.7259 13.125 10C13.125 8.27411 11.7259 6.875 10 6.875C8.27411 6.875 6.875 8.27411 6.875 10C6.875 11.7259 8.27411 13.125 10 13.125Z" stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>`;
         });
     });
 </script>

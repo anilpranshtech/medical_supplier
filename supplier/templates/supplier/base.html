@@ -29,10 +29,33 @@
     <meta property="og:url" content="https://keenthemes.com/metronic"/>
     <meta property="og:site_name" content="Metronic by Keenthemes"/>
     <link rel="canonical" href="products.html"/>
-    <link rel="shortcut icon" href="https://preview.keenthemes.com/metronic8/demo58/assets/media/logos/demo-58.svg"/>
+    <link rel="shortcut icon" href="{% static 'metronic/tailwind/dist/assets/media/brand-logos/health_logo.jpg' %}"/>
 
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700"/>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+      :root {
+        --bs-font-sans-serif: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        --bs-body-font-size: 0.925rem;
+        --bs-body-font-weight: 400;
+        --bs-body-line-height: 1.5;
+      }
+
+      body {
+        font-family: var(--bs-font-sans-serif);
+        font-size: var(--bs-body-font-size);
+        font-weight: var(--bs-body-font-weight);
+        line-height: var(--bs-body-line-height);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+      }
+    </style>
 
 
     <link href="{% static 'supplier/plugins/custom/datatables/datatables.bundle.css' %}" rel="stylesheet"
@@ -110,8 +133,9 @@
                 <div class="app-header-logo d-flex flex-center">
                     <a href="{% url 'supplier:supplier' %}">
                         <img alt="Logo"
-                             src="https://preview.keenthemes.com/metronic8/demo58/assets/media/logos/demo-58.svg"
-                             class="mh-25px"/>
+                             src="/static/metronic/tailwind/dist/assets/media/brand-logos/health_logo_bg.png"
+                             class="mh-40px"/>
+                        <h5 class="sm:block text-sm sm:text-base font-bold">Supplier</h5>
                     </a>
                     <button class="btn btn-icon btn-sm btn-active-color-primary d-flex d-lg-none"
                             id="kt_app_sidebar_mobile_toggle">

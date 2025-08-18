@@ -1542,6 +1542,7 @@ class QuestionView(TemplateView):
         reply_text = request.POST.get('reply_text')
         action_type = request.POST.get('action_type')
 
+
         if action_type == "reply":
             question = get_object_or_404(Question, id=question_id)
             question.reply = reply_text
