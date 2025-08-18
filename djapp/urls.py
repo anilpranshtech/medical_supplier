@@ -23,9 +23,9 @@ import os
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('dashboard.urls', namespace='dashboard')),
-    path('', include('adminv2.urls', namespace='adminv2')),
+    path('', include('supplier.urls', namespace='supplier')),
 
-    path('admin_v3/', include('adminv3.urls', namespace='adminv3')),
+    path('', include('superuser.urls', namespace='superuser')),
     path('api_v1/', include('medical_api.urls')),
 ]
 if settings.DEBUG:

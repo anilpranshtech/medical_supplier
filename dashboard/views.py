@@ -37,7 +37,7 @@ from datetime import date, timedelta
 import random
 import re
 import requests
-from adminv2.models import *
+from supplier.models import *
 from django.http import JsonResponse
 from datetime import date, timedelta
 from django.shortcuts import get_object_or_404, redirect, render
@@ -48,12 +48,12 @@ import logging
 from .forms import *
 logger = logging.getLogger(__name__)
 
-
 class HomeView(TemplateView):
     template_name = 'dashboard/home.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        today = timezone.now().date() 
         today = date.today()
 
         def set_product_fields(product_queryset):
@@ -62,9 +62,9 @@ class HomeView(TemplateView):
                 product.main_image = main_img.image.url if main_img else None
 
                 # Calculate delivery date
-                if getattr(product, 'delivery_time', None):
+                if product.delivery_time:
                     delivery_date = today + timedelta(days=product.delivery_time)
-                    product.delivery_date = delivery_date.strftime('%a, %d %b')
+                    product.delivery_date = delivery_date.strftime('%a, %d %b')  
                 else:
                     product.delivery_date = 'N/A'
 
@@ -76,13 +76,6 @@ class HomeView(TemplateView):
                 product.total_reviews = total_reviews
             return product_queryset
 
-        # ✅ Conference & Webinar Products
-        conference_products = Product.objects.filter(
-            category__name__in=['Conference', 'Webinar', 'Event'],
-            is_active=True
-        ).select_related('event')[:4]
-        context['conference_products'] = set_product_fields(conference_products)
-
         # Special Offers
         special_offers = Product.objects.filter(
             offer_active=True,
@@ -91,46 +84,68 @@ class HomeView(TemplateView):
             offer_end__gte=today,
             is_active=True
         ).order_by('-offer_percentage')[:3]
+        for product in special_offers:
+            main_img = ProductImage.objects.filter(product=product, is_main=True).first()
+            product.main_image = main_img.image.url if main_img else None
         context['special_offers'] = set_product_fields(special_offers)
 
         # New Arrivals
-        recent_products = Product.objects.filter(tag='recent', is_active=True).order_by('-created_at')[:4]
+        recent_products = Product.objects.filter(
+            tag='recent',
+            is_active=True
+        ).order_by('-created_at')[:4]
+        for product in recent_products:
+            main_img = ProductImage.objects.filter(product=product, is_main=True).first()
+            product.main_image = main_img.image.url if main_img else None
+
         context['recent_products'] = set_product_fields(recent_products)
 
         # Popular Medical Supplies
-        popular_products = Product.objects.filter(tag='popular', is_active=True).order_by('-created_at')[:4]
+        popular_products = Product.objects.filter(
+            tag='popular',
+            is_active=True
+        ).order_by('-created_at')[:4]
+        for product in popular_products:
+            main_img = ProductImage.objects.filter(product=product, is_main=True).first()
+            product.main_image = main_img.image.url if main_img else None
         context['popular_products'] = set_product_fields(popular_products)
 
         # Limited-Time Deals
-        limited_products = Product.objects.filter(tag='limited', is_active=True).order_by('-created_at')[:4]
+        limited_products = Product.objects.filter(
+            tag='limited',
+            is_active=True
+        ).order_by('-created_at')[:4]
+        for product in limited_products:
+            main_img = ProductImage.objects.filter(product=product, is_main=True).first()
+            product.main_image = main_img.image.url if main_img else None
         context['limited_products'] = set_product_fields(limited_products)
 
         # Featured Products
         all_ids = list(Product.objects.filter(is_active=True).values_list('id', flat=True))
         random_ids = random.sample(all_ids, min(len(all_ids), 6))
         featured_products = Product.objects.filter(id__in=random_ids)
+        for product in featured_products:
+            main_img = ProductImage.objects.filter(product=product, is_main=True).first()
+            product.main_image = main_img.image.url if main_img else None
         context['featured_products'] = set_product_fields(featured_products)
 
-        # Wishlist & Cart
+        # Wishlist
         if self.request.user.is_authenticated:
             context['user_wishlist_ids'] = list(
-                WishlistProduct.objects.filter(user=self.request.user).values_list('product_id', flat=True)
+                WishlistProduct.objects.filter(user=self.request.user)
+                .values_list('product_id', flat=True)
             )
+
             context['user_cart_ids'] = list(
                 CartProduct.objects.filter(user=self.request.user).values_list('product_id', flat=True)
-            )
-            context['user_registered_event_ids'] = list(
-                EventRegistration.objects.filter(user=self.request.user).values_list('product_id', flat=True)
             )
         else:
             context['user_wishlist_ids'] = []
             context['user_cart_ids'] = []
-            context['user_registered_event_ids'] = []
 
-        # Banners
         context['banners'] = Banner.objects.filter(is_active=True)
-
-        return context
+ 
+        return context  
 
 
 class CustomLoginView(FormView):
@@ -216,6 +231,8 @@ class RegistrationView(View):
         elif step == "verify_otp":
             return self.handle_otp(request)
         return JsonResponse({"success": False, "errors": {"general": "Invalid step"}}, status=400)
+    
+    
 
     def handle_registration(self, request):
         errors = {}
@@ -820,6 +837,8 @@ class EventRegisteredDataView(TemplateView):
 #         return context
 
 
+
+
 class CartAddView(LoginRequiredMixin, View):
     def get(self, request):
         cart_items = CartProduct.objects.filter(user=request.user).select_related('product')
@@ -898,6 +917,7 @@ class WishlistClearView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         WishlistProduct.objects.filter(user=request.user).delete()
         return JsonResponse({'status': 'cleared'})
+
 
 
 class WishlistView(LoginRequiredMixin, TemplateView):
@@ -2306,82 +2326,44 @@ class PaymentStatusView(View):
 # ------------------------------------------------------------------------------------------------------------------------
 
 
+
+
+
 class RequestRoleView(LoginRequiredMixin, View):
     template_name = 'userdashboard/seller/request_role.html'
     success_url = reverse_lazy('dashboard:home')
 
-    def get_form_class(self):
-        role = self.request.POST.get('requested_role') or self.request.GET.get('requested_role', 'retailer')
-        if role == 'retailer':
-            return RetailProfileForm
-        elif role == 'wholesaler':
-            return WholesaleBuyerProfileForm
-        elif role == 'supplier':
-            return SupplierProfileForm
-        return RetailProfileForm
-
     def get(self, request, *args, **kwargs):
-        form_class = self.get_form_class()
-        form = form_class()
-        return render(request, self.template_name, {
-            'form': form,
-            'profile_form': form,
-            'role_choices': RoleRequest.ROLE_CHOICES,
-            'selected_role': request.GET.get('requested_role', 'retailer')
-        })
+        form = SupplierProfileForm()
+        return render(request, self.template_name, {'form': form})
 
     def post(self, request, *args, **kwargs):
-        requested_role = request.POST.get('requested_role')
-        form_class = self.get_form_class()
-        form = form_class(request.POST, request.FILES)
+        form = SupplierProfileForm(request.POST, request.FILES)
 
-        if RoleRequest.objects.filter(user=request.user, requested_role=requested_role).exists():
-            messages.error(request, "You already have a pending or approved request for this role.")
-            return self.get(request)
+        # Check if already requested
+        if RoleRequest.objects.filter(user=request.user, requested_role='supplier').exists():
+            messages.error(request, "You already have a pending or approved supplier role request.")
+            return render(request, self.template_name, {'form': form})
 
         if form.is_valid():
-            # Save role request
-            role_request = RoleRequest.objects.create(
+            # Create role request
+            RoleRequest.objects.create(
                 user=request.user,
-                requested_role=requested_role,
+                requested_role='supplier',
                 status='pending'
             )
 
-            # Save profile data
-            profile = form.save(commit=False)
-            profile.user = request.user
+            # Save supplier profile
+            SupplierProfile.objects.update_or_create(
+                user=request.user,
+                defaults=form.cleaned_data
+            )
 
-            if requested_role == 'retailer':
-                RetailProfile.objects.update_or_create(user=request.user, defaults={
-                    'profile_picture': profile.profile_picture,
-                    'age': profile.age,
-                    'medical_needs': profile.medical_needs
-                })
-            elif requested_role == 'wholesaler':
-                WholesaleBuyerProfile.objects.update_or_create(user=request.user, defaults={
-                    'profile_picture': profile.profile_picture,
-                    'company_name': profile.company_name,
-                    'gst_number': profile.gst_number,
-                    'department': profile.department,
-                    'purchase_capacity': profile.purchase_capacity
-                })
-            elif requested_role == 'supplier':
-                SupplierProfile.objects.update_or_create(user=request.user, defaults={
-                    'profile_picture': profile.profile_picture,
-                    'company_name': profile.company_name,
-                    'license_number': profile.license_number
-                })
-
-            messages.success(request, f"Your role request for {requested_role} has been submitted.")
+            messages.success(request, "Your supplier role request has been submitted successfully.")
             return redirect(self.success_url)
 
         messages.error(request, "Please correct the errors below.")
-        return render(request, self.template_name, {
-            'form': form,
-            'profile_form': form,
-            'role_choices': RoleRequest.ROLE_CHOICES,
-            'selected_role': requested_role
-        })
+        return render(request, self.template_name, {'form': form})
 
 
 class ManageRequestsView(LoginRequiredMixin, UserPassesTestMixin, ListView):

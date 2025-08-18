@@ -1,0 +1,401 @@
+{% extends 'supplier/base.html' %}
+{% load static %}
+
+{% block content %}
+
+<!--begin::Main-->
+<div class="app-main flex-column flex-row-fluid " id="kt_app_main">
+    <!--begin::Content wrapper-->
+    <div class="d-flex flex-column flex-column-fluid">
+        <!--begin::Content-->
+        <div id="kt_app_content" class="app-content  flex-column-fluid ">
+            <!--begin::Content container-->
+            <div id="kt_app_content_container" class="app-container  container-fluid ">
+                <!--begin::Order details page-->
+                <div class="d-flex flex-column gap-7 gap-lg-10">
+                    <div class="d-flex flex-wrap flex-stack gap-5 gap-lg-10">
+                        <!--begin:::Tabs-->
+                        <ul class="nav nav-custom nav-tabs nav-line-tabs nav-line-tabs-2x border-0 fs-4 fw-semibold mb-lg-n2 me-auto">
+                            <!--begin:::Tab item-->
+                            <h1>Order Summary</h1>
+                            <!--end:::Tab item-->
+                            <!--begin:::Tab item-->
+                            <!--end:::Tab item-->
+                        </ul>
+                        <!--end:::Tabs-->
+                    </div>
+                    <!--begin::Order summary-->
+                    <div class="d-flex flex-column flex-xl-row gap-7 gap-lg-10">
+                        <!--begin::Order details-->
+                        <div class="card card-flush py-4 flex-row-fluid">
+                            <!--begin::Card header-->
+                            <div class="card-header">
+                                <div class="card-title">
+                                    <h2>Order Details ({{ order.order_id }})</h2>
+                                </div>
+                            </div>
+                            <!--end::Card header-->
+                            <!--begin::Card body-->
+                            <div class="card-body pt-0">
+                                <div class="table-responsive">
+                                    <!--begin::Table-->
+                                    <table class="table align-middle table-row-bordered mb-0 fs-6 gy-5 min-w-300px">
+                                        <tbody class="fw-semibold text-gray-600">
+                                        <tr>
+                                            <td class="text-muted">
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fa-solid fa-calendar  fa-lg me-3"></i> Order Date
+                                                </div>
+                                            </td>
+                                            <td class="fw-bold text-end">{{ order.created_at|date:"d/m/Y" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fa-regular fa-clock  fa-lg me-3"></i> Order Status
+                                                </div>
+                                            </td>
+                                            <td class="fw-bold text-end">{{ order.status }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fa-solid fa-user  fa-lg me-3"></i> Client Type
+                                                </div>
+                                            </td>
+                                            <td class="fw-bold text-end">
+                                                {% if order.order_by.retailprofile %}
+                                                Retailer
+                                                {% elif order.order_by.wholesalebuyerprofile %}
+                                                Wholesaler
+                                                {% else %}
+                                                Unknown
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                    <!--end::Table-->
+                                </div>
+                            </div>
+                            <!--end::Card body-->
+                        </div>
+                        <!--end::Order details-->
+                        <!--begin::Customer details-->
+                        <div class="card card-flush py-4  flex-row-fluid">
+                            <!--begin::Card header-->
+                            <div class="card-header">
+                                <div class="card-title">
+                                    <h2>Customer Details</h2>
+                                </div>
+                            </div>
+                            <!--end::Card header-->
+                            <!--begin::Card body-->
+                            <div class="card-body pt-0">
+                                <div class="table-responsive">
+                                    <!--begin::Table-->
+                                    <table class="table align-middle table-row-bordered mb-0 fs-6 gy-5 min-w-300px">
+                                        <tbody class="fw-semibold text-gray-600">
+
+                                        <!-- Customer Name -->
+                                        <tr>
+                                            <td class="text-muted">
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fa-solid fa-user fa-lg me-3"></i> Customer Name
+                                                </div>
+                                            </td>
+                                            <td class="fw-bold text-end">
+                                                <div class="d-flex align-items-center justify-content-end">
+                                                    <a href="#" class="text-gray-600 text-hover-primary">
+                                                        {{ user.get_full_name }}
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Email -->
+                                        <tr>
+                                            <td class="text-muted">
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fa-solid fa-envelope fa-lg me-3"></i> Email
+                                                </div>
+                                            </td>
+                                            <td class="fw-bold text-end">
+                                                <a href="mailto:{{ user.email }}"
+                                                   class="text-gray-600 text-hover-primary">
+                                                    {{ user.email }}
+                                                </a>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Phone -->
+                                        <tr>
+                                            <td class="text-muted">
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fa-solid fa-phone fa-lg me-3"></i> Phone Number
+                                                </div>
+                                            </td>
+                                            <td class="fw-bold text-end">
+                                                {{ order.phone_number }}
+                                            </td>
+                                        </tr>
+
+                                        </tbody>
+                                    </table>
+                                    <!--end::Table-->
+                                </div>
+                            </div>
+                            <!--end::Card body-->
+                        </div>
+                        <!--end::Customer details-->
+                        <!--begin::Documents-->
+                        <div class="card card-flush py-4  flex-row-fluid">
+                            <!--begin::Card header-->
+                            <div class="card-header">
+                                <div class="card-title">
+                                    <h2>Payment Information</h2>
+                                </div>
+                            </div>
+                            <!--end::Card header-->
+                            <!--begin::Card body-->
+                            <div class="card-body pt-0">
+                                <div class="table-responsive">
+                                    <!--begin::Table-->
+                                    <table class="table align-middle table-row-bordered mb-0 fs-6 gy-5 min-w-300px">
+                                        <tbody class="fw-semibold text-gray-600">
+                                        <tr>
+                                            <td class="text-muted">
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fas fa-credit-card fa-lg me-3"></i> Payment Type
+                                                    <span class="ms-1" data-bs-toggle="tooltip"
+                                                          title="View the invoice generated by this order.">
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td class="fw-bold text-end">{{ order.payment_type }}</td>
+                                        <tr>
+                                            <td class="text-muted">
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fa-regular fa-clock  fa-lg me-3"></i> Payment Status
+                                                    <span class="ms-1" data-bs-toggle="tooltip"
+                                                          title="View the shipping manifest generated by this order.">
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td class="fw-bold text-end">{{ order.payment_status }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fas fa-money-bill-wave fs-2 me-2"></i> Payment Currancy
+
+
+                                                    <span class="ms-1" data-bs-toggle="tooltip"
+                                                          title="Reward value earned by customer when purchasing this order">
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td class="fw-bold text-end">{{ order.payment_currency }}</td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                    <!--end::Table-->
+                                </div>
+                            </div>
+                            <!--end::Card body-->
+                        </div>
+                        <!--end::Documents-->    </div>
+                    <!--end::Order summary-->
+
+                    <!--begin::Tab content-->
+                    <div class="tab-content">
+                        <!--begin::Tab pane-->
+                        <div class="tab-pane fade show active" id="kt_ecommerce_sales_order_summary" role="tab-panel">
+                            <!--begin::Orders-->
+                            <div class="d-flex flex-column gap-7 gap-lg-10">
+                                <div class="d-flex flex-column flex-xl-row gap-7 gap-lg-10">
+                                    <!--begin::Payment address-->
+                                    <div class="card card-flush py-4 flex-row-fluid position-relative">
+
+                                        <!--end::Background-->
+
+                                        <!--begin::Card header-->
+                                        <div class="card-header">
+                                            <div class="card-title">
+                                                <h2>Shipping Information</h2>
+                                            </div>
+                                        </div>
+                                        <!--end::Card header-->
+
+                                        <!--begin::Card body-->
+                                        <div class="card-body pt-0">
+                                            <!-- Shipping Fees -->
+                                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                                <div>
+                                                    <i class="fas fa-money-bill-wave fa-lg me-2"></i> Shipping Fees
+                                                </div>
+                                                <div class="fw-bold">₹{{ order.shipping_fees }}</div>
+                                            </div>
+
+                                            <!-- Shipping Type -->
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <i class="fas fa-truck fa-lg me-2"></i> Shipping Type
+                                                </div>
+                                                <div class="fw-bold">{{ order.shipping_type }}</div>
+                                            </div>
+                                        </div>
+                                        <!--end::Card body-->
+                                    </div>
+                                    <!--end::Payment address-->
+
+                                    <!--begin::Shipping address-->
+                                    <div class="card card-flush py-4 flex-row-fluid position-relative">
+                                        <!--begin::Card header-->
+                                        <div class="card-header">
+                                            <div class="card-title">
+                                                <h2>Shipping Address</h2>
+                                            </div>
+                                        </div>
+                                        <!--end::Card header-->
+
+                                        <!--begin::Card body-->
+                                        <div class="card-body pt-0">
+                                            <!-- Full Address -->
+                                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                                <div>
+                                                    <i class="fas fa-map-marker-alt fa-lg me-2"></i> Full Address
+                                                </div>
+                                                <div class="fw-bold">{{ order.shipping_full_address }}</div>
+                                            </div>
+
+                                            <!-- City -->
+                                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                                <div>
+                                                    <i class="fas fa-city fa-lg me-2"></i> City
+                                                </div>
+                                                <div class="fw-bold">{{ order.shipping_city }}</div>
+                                            </div>
+
+
+                                            <!-- Country -->
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <i class="fas fa-globe fa-lg me-2"></i> Country
+                                                </div>
+                                                <div class="fw-bold">{{ order.shipping_country }}</div>
+                                            </div>
+                                        </div>
+                                        <!--end::Card body-->
+                                    </div>
+                                    <!--end::Shipping address-->
+
+                                </div>
+                                <!--end::Shipping address-->
+                            </div>
+
+                            <br><br>
+                            <!--begin::Product List-->
+                            <div class="card card-flush py-4 flex-row-fluid overflow-hidden">
+                                <!--begin::Card header-->
+                                <div class="card-header">
+                                    <div class="card-title">
+                                        <h2>Product List </h2>
+                                    </div>
+                                </div>
+                                <!--end::Card header-->
+
+                                <!--begin::Card body-->
+                                <div class="card-body pt-0">
+                                    <div class="table-responsive">
+                                        <!--begin::Table-->
+                                        <table class="table align-middle table-row-dashed fs-6 gy-5 mb-0">
+                                            <thead>
+                                            <tr class="text-gray-500 fw-bold fs-7 text-uppercase gs-0">
+                                                <th class="text-center min-w-175px ">Product</th>
+                                                <th class="text-center min-w-175px text-end">From Country</th>
+                                                <th class="text-center min-w-100px text-end">Brand</th>
+                                                <th class="text-center min-w-100px text-end">SKU</th>
+                                                <th class="text-center min-w-100px text-end">Selling Price</th>
+                                                <th class="text-center min-w-70px text-end">Quantity</th>
+                                                <th class="text-center min-w-100px text-end">Commission</th>
+                                                <th class="text-center min-w-100px text-end">Unit Price</th>
+                                                <th class="text-center min-w-100px text-end">Total</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody class="fw-semibold text-gray-600">
+                                            {% for item in order_items %}
+                                            <tr>
+                                                <td>
+                                                    <div class="d-flex align-items-center justify-content-center gap-4">
+                                                        <!-- Thumbnail -->
+                                                        <a href="#" class="symbol symbol-50px">
+                                                            {% if item.product.main_image %}
+                                                            <span class="symbol-label"
+                                                                  style="background-image:url('{{ item.product.main_image.0.image.url }}');"></span>
+                                                            {% else %}
+                                                            <span class="symbol-label bg-light">No Image</span>
+                                                            {% endif %}
+                                                        </a>
+                                                        <!-- Product Info -->
+                                                        <div>
+                                                            <a href="#"
+                                                               class="fw-bold text-gray-700 text-hover-primary">{{ item.product.name }}</a>
+                                                            <div class="fs-7 text-muted">Delivery Date: {{ item.created_at|date:"d/m/Y" }}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+
+                                                <td class="text-center">{{ item.product.product_from }}</td>
+                                                <td class="text-center">{{ item.product.brand.name }}</td>
+                                                <td class="text-center">{{ item.product.supplier_sku }}</td>
+                                                <td class="text-center">${{ item.price }}</td>
+                                                <td class="text-center">{{ item.quantity }}</td>
+                                                <td class="text-center">{{ item.product.commission_percentage }}%</td>
+                                                <td class="text-center">${{ item.price }}</td>
+                                                <td class="text-center">${{ item.price|floatformat:2 }}</td>
+                                            </tr>
+                                            {% endfor %}
+
+                                            <!-- Totals -->
+                                            <tr>
+                                                <td colspan="8" class="text-end">Subtotal</td>
+                                                <td class="text-end">${{ subtotal }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="8" class="text-end">Total Discount</td>
+                                                <td class="text-end">$0.00</td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="8" class="text-end">Total Commission</td>
+                                                <td class="text-end">${{ total_commission }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="8" class="text-end">Shipping Fee</td>
+                                                <td class="text-end">${{ shipping_fee }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="8" class="fs-3 text-gray-900 text-end">Grand Total</td>
+                                                <td class="text-gray-900 fs-3 fw-bolder text-end">${{ grand_total }}
+                                                </td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                        <!--end::Table-->
+                                    </div>
+                                </div>
+                                <!--end::Card body-->
+                            </div>
+                            <!--end::Product List-->
+                        </div>
+                        <!--end::Orders-->
+                    </div>
+                    <!--end::Tab pane-->
+                    <!--end:::Main-->
+
+                    {% endblock %}
+
+                    {% block page_only_scripts %}
+
+                    {% endblock page_only_scripts %}

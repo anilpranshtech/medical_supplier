@@ -1,0 +1,167 @@
+{% load superuser_tags %}
+
+<div id="kt_app_header" class="app-header d-flex ">
+    <div class="app-container container-fluid d-flex align-items-center justify-content-between"
+         id="kt_app_header_container">
+        <!-- App logo   -->
+        <div class="app-header-logo d-flex flex-center">
+            <a href="{% url 'superuser:superuser' %}">
+                <img alt="Logo"
+                     src="https://preview.keenthemes.com/metronic8/demo58/assets/media/logos/demo-58.svg"
+                     class="mh-25px"/>
+            </a>
+            <button class="btn btn-icon btn-sm btn-active-color-primary d-flex d-lg-none"
+                    id="kt_app_sidebar_mobile_toggle">
+                <i class="bi bi-list fs-1"></i>
+            </button>
+        </div>
+
+
+        <div class="d-flex flex-lg-grow-1 flex-stack" id="kt_app_header_wrapper">
+
+            <div id="kt_header_search" class="header-search d-flex align-items-start ms-4 w-lg-800px"
+                 data-kt-search-keypress="true" data-kt-search-min-length="2" data-kt-search-enter="enter"
+                 data-kt-search-layout="menu" data-kt-search-responsive="true" data-kt-menu-trigger="auto"
+                 data-kt-menu-permanent="true" data-kt-menu-placement="bottom-start">
+
+                <button class="btn btn-sm position-relative mx-3 fw-bolder" style="background:#ffcccc ;color: #ff0000; width:190px;">
+                    Total Users <br>{% tag_total_users %}
+                </button>
+                <button class="btn btn-sm position-relative mx-3 fw-bolder" style="background:#e6ccff ;color: #8c1aff; width:190px;">
+                    Active Users <br>{% tag_total_active_users %}
+                </button>
+                <button class="btn btn-sm position-relative mx-3 fw-bolder" style="background:#cce6ff ;color: #0066cc; width:190px;">
+                    Retailer <br> {% tag_total_retailer %}
+                </button>
+                <button class="btn btn-sm position-relative mx-3 fw-bolder" style="background:#fff0b3 ;color: #e69900 ; width:190px;">
+                    Wholesaler <br> {% tag_total_wholesaler %}
+                </button>
+
+                <button class="btn btn-sm position-relative mx-3 fw-bolder"
+                        onclick="window.location='';" style="background:#c2f0c2; color:#29a329; width:190px;">
+                    Supplier <br> {% tag_total_suppliers %}
+                </button>
+            </div>
+
+
+
+            <div class="app-header-wrapper d-flex align-items-center justify-content-around justify-content-lg-between flex-wrap gap-6 gap-lg-0 mb-6 mb-lg-0"
+                 data-kt-swapper="true" data-kt-swapper-mode="{default: 'prepend', lg: 'prepend'}"
+                 data-kt-swapper-parent="{default: '#kt_app_content_container', lg: '#kt_app_header_wrapper'}">
+                <div class="d-none d-md-block h-40px border-start border-gray-200 mx-10"></div>
+            </div>
+
+            <div class="app-navbar flex-shrink-0 gap-2 gap-lg-4">
+
+                <div class="menu-item my-3 mx-3">
+                    <!--begin::Menu link-->
+                    <a class="menu-item text-decoration-none" href="{% url 'dashboard:home' %}" target="_blank">
+                        <!--begin::Title-->
+                        <span class="menu-title">
+                            <span class="badge bg-primary text-white px-3 py-2"
+                                  style="transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;"
+                                  onmouseover="this.style.backgroundColor='#cc1e4f'; this.style.transform='scale(1.1)';"
+                                  onmouseout="this.style.backgroundColor=''; this.style.transform='scale(1)';">
+                                Visit Website
+                            </span>
+                        </span>
+                        <!--end::Title-->
+                    </a>
+                    <!--end::Menu link-->
+                </div>
+
+                <div class="app-navbar-item" id="kt_header_user_menu_toggle">
+
+
+
+                     <!--  User menu  -->
+                    <div class="cursor-pointer symbol symbol-40px py-2 px-2 bg-light shadow-sm"
+                         data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-attach="parent"
+                         data-kt-menu-placement="bottom-end">
+
+
+                        {% if request.user.supplierprofile.profile_picture %}
+                        <img src="{{ request.user.supplierprofile.profile_picture.url }}" alt="image"
+                             class="rounded-circle"/>
+                        {% else %}
+                        <div class="avatar-placeholder rounded d-flex align-items-center justify-content-center"
+                             style="width: 35px; height: 35px; background-color: #1B84FF; color: white; font-size: 20px;">
+                            {{ request.user.first_name|default:request.user.username|first|upper }}
+                        </div>
+                        {% endif %}
+
+                    </div>
+
+                    <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg menu-state-color fw-semibold py-4 fs-6 w-275px"
+                         data-kt-menu="true">
+                        <div class="menu-item px-3">
+                            <div class="menu-content d-flex align-items-center px-3">
+                                <div class="symbol symbol-50px me-5">
+
+                                    {% if request.user.supplierprofile.profile_picture %}
+                                    <img src="{{ request.user.supplierprofile.profile_picture.url }}"
+                                         alt="image" class="rounded-circle"/>
+                                    {% else %}
+                                    <div class="avatar-placeholder rounded d-flex align-items-center justify-content-center"
+                                         style="width: 35px; height: 35px; background-color: #1B84FF; color: white; font-size: 20px;">
+                                        {{ request.user.first_name|default:request.user.username|first|upper }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="d-flex flex-column">
+                                    <div class="fw-bold d-flex align-items-center fs-5">
+                                        {{request.user}} <span
+                                            class="badge badge-light-success fw-bold fs-7 px-2 py-1 ms-2"> {% if request.user.is_superuser %} SuperUser {% else %}Staff {% endif %}</span>
+                                    </div>
+
+                                    <a href="#" class="fw-semibold text-muted text-hover-primary fs-7">
+                                        {{request.user}} </a>
+                                </div>
+                            </div>
+                        </div>
+
+
+
+                    <!--my profile-->
+                    <div class="menu-item px-5">
+                    <a href="{% url 'superuser:user_detail' pk=request.user.pk %}"
+                      class="menu-link px-5">
+                    My Profile
+                    </a>
+                    </div>  
+                        
+
+
+
+                        <div class="separator my-2"></div>
+
+
+
+                        <div class="menu-item px-5">
+                            <a href="{% url 'supplier:products_list' %}"
+                               class="menu-link px-5">
+                                All Products
+                            </a>
+                        </div>
+
+                        <div class="separator my-2"></div>
+
+                        <div class="menu-item px-5">
+                            <a href="{% url 'supplier:admin_logout' %} "
+                               class="menu-link px-5">
+                                Sign Out
+                            </a>
+                        </div>
+
+                       
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+</div>

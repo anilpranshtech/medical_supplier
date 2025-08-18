@@ -40,8 +40,8 @@ from decimal import Decimal
 
 UserModel = get_user_model()
 from dashboard.models import *
-from adminv2.models import *
-from adminv3.models import *
+from supplier.models import *
+from superuser.models import *
 from django.conf import settings
 import re
 from rest_framework.pagination import PageNumberPagination

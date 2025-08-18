@@ -1,0 +1,245 @@
+<div id="kt_app_sidebar" class="app-sidebar " data-kt-drawer="true" data-kt-drawer-name="app-sidebar" data-kt-drawer-activate="{default: true, lg: false}"
+     data-kt-drawer-overlay="true" data-kt-drawer-width="auto" data-kt-drawer-direction="start" data-kt-drawer-toggle="#kt_app_sidebar_mobile_toggle">
+
+    <div id="kt_aside_menu_wrapper"
+          class="app-sidebar-menu flex-grow-1 hover-scroll-y scroll-lg-ps my-5 pt-8" data-kt-scroll="true" data-kt-scroll-height="auto"
+         data-kt-scroll-dependencies="#kt_app_sidebar_logo, #kt_app_sidebar_footer" data-kt-scroll-wrappers="#kt_app_sidebar_menu" data-kt-scroll-offset="5px">
+
+       <div id="kt_aside_menu" class="menu menu-rounded menu-column menu-title-gray-600 menu-state-primary menu-state-icon-primary
+            menu-state-bullet-primary  menu-arrow-gray-500 fw-semibold fs-6" data-kt-menu="true">
+
+          <!-- Home -->
+          <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="right-start"
+               class="menu-item py-2 {% if request.resolver_match.url_name == 'superuser_home' %} here show {% endif %}">
+              <span class="menu-link menu-center">
+                  <span class="menu-icon me-0">
+                      <i class="fas fa-home fs-1"></i>
+                  </span>
+              </span>
+
+             <div class="menu-sub menu-sub-dropdown px-2 py-4 w-250px mh-75 overflow-auto">
+                   <div class="menu-item  {% if request.resolver_match.url_name == 'superuser_home' %} active {% endif %}">
+                      <div class="menu-content">
+                          <span class="menu-section fs-5 fw-bolder ps-1 py-1">
+                              Home
+                          </span>
+                      </div>
+                  </div>
+
+                  <div class="menu-sub menu-sub-accordion">
+                       <div class="menu-item {% if request.resolver_match.url_name == 'superuser_home' %} here show {% endif %}">
+                           <a class="menu-link" href="{% url 'superuser:superuser' %}">
+                              <span class="menu-bullet">
+                                  <span class="bullet bullet-dot"></span>
+                              </span>
+                               <span class="menu-title">Home</span>
+                          </a>
+                      </div>
+                  </div>
+              </div>
+          </div>
+
+          <!-- Users -->
+          {% if "auth.view_user" in user_permissions_list %}
+          <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="right-start"
+               class="menu-item py-2 {% if request.resolver_match.url_name == 'user_accounts' or request.resolver_match.url_name == 'user_permissions' %} here show {% endif %}">
+              <span class="menu-link menu-center">
+                  <span class="menu-icon me-0">
+                      <i class="bi bi-people-fill fs-1"></i>
+                  </span>
+              </span>
+
+             <div class="menu-sub menu-sub-dropdown px-2 py-4 w-250px mh-75 overflow-auto">
+                   <div class="menu-item {% if request.resolver_match.url_name == 'user_accounts' or request.resolver_match.url_name == 'user_permissions' %} active {% endif %}">
+                      <div class="menu-content">
+                          <span class="menu-section fs-5 fw-bolder ps-1 py-1">
+                              Users
+                          </span>
+                      </div>
+                  </div>
+
+                  <div class="menu-sub menu-sub-accordion">
+                      {% if "auth.view_user" in user_permissions_list %}
+                      <div class="menu-item {% if request.resolver_match.url_name == 'user_accounts' %} here show {% endif %}">
+                           <a class="menu-link" href="{% url 'superuser:user_accounts' %}">
+                              <span class="menu-bullet">
+                                  <span class="bullet bullet-dot"></span>
+                              </span>
+                               <span class="menu-title">User List</span>
+                          </a>
+                      </div>
+                      {% endif %}
+
+                      {% if request.user.is_superuser %}
+                      <div class="menu-item {% if request.resolver_match.url_name == 'user_permissions' %} here show {% endif %}">
+                           <a class="menu-link" href="{% url 'superuser:user_permissions' %}">
+                              <span class="menu-bullet">
+                                  <span class="bullet bullet-dot"></span>
+                              </span>
+                               <span class="menu-title">Permissions</span>
+                          </a>
+                      </div>
+                      {% endif %}
+                  </div>
+              </div>
+          </div>
+          {% endif %}
+
+          <!-- Products -->
+          {% if "dashboard.view_product" in user_permissions_list or "dashboard.view_order" in user_permissions_list %}
+          <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="right-start"
+               class="menu-item py-2 {% if request.resolver_match.url_name == 'products_list' or request.resolver_match.url_name == 'orders_list' %} here show {% endif %}">
+              <span class="menu-link menu-center">
+                  <span class="menu-icon me-0">
+                      <i class="fas fa-cubes fs-1"></i>
+                  </span>
+              </span>
+
+             <div class="menu-sub menu-sub-dropdown px-2 py-4 w-250px mh-75 overflow-auto">
+                   <div class="menu-item">
+                      <div class="menu-content">
+                          <span class="menu-section fs-5 fw-bolder ps-1 py-1">
+                              Products
+                          </span>
+                      </div>
+                  </div>
+
+                 {% if "dashboard.view_product" in user_permissions_list %}
+                  <div class="menu-sub menu-sub-accordion">
+                       <div class="menu-item {% if request.resolver_match.url_name == 'products_list' %} here show {% endif %}">
+                           <a class="menu-link" href="{% url 'superuser:products_list' %}">
+                              <span class="menu-bullet">
+                                  <span class="bullet bullet-dot"></span>
+                              </span>
+                               <span class="menu-title">Products List</span>
+                          </a>
+                      </div>
+                  </div>
+                  {% endif %}
+
+                 {% if "dashboard.view_order" in user_permissions_list %}
+                 <div class="menu-sub menu-sub-accordion">
+                       <div class="menu-item {% if request.resolver_match.url_name == 'orders_list' %} here show {% endif %}">
+                           <a class="menu-link" href="{% url 'superuser:orders_list' %}">
+                              <span class="menu-bullet">
+                                  <span class="bullet bullet-dot"></span>
+                              </span>
+                               <span class="menu-title">Orders List</span>
+                          </a>
+                      </div>
+                  </div>
+                 {% endif %}
+            </div>
+          </div>
+          {% endif %}
+
+          <!-- RFQ Requests -->
+          <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}"
+               data-kt-menu-placement="right-start"
+               class="menu-item py-2 {% if request.resolver_match.url_name == 'rfq_list' or request.resolver_match.url_name == 'banner_list' %} here show {% endif %}">
+              <span class="menu-link menu-center">
+                <span class="menu-icon me-0">
+                  <i class="fas fa-envelope-open-text fs-1"></i>
+                </span>
+              </span>
+
+              <div class="menu-sub menu-sub-dropdown px-2 py-4 w-250px mh-75 overflow-auto">
+                <div class="menu-item">
+                  <div class="menu-content">
+                    <span class="menu-section fs-5 fw-bolder ps-1 py-1">RFQ</span>
+                  </div>
+                </div>
+
+                <div class="menu-sub menu-sub-accordion">
+                  <div class="menu-item">
+                    <a class="menu-link {% if request.resolver_match.url_name == 'rfq_list' %} active {% endif %}"
+                       href="{% url 'superuser:rfq_list' %}">
+                      <span class="menu-bullet">
+                        <span class="bullet bullet-dot"></span>
+                      </span>
+                      <span class="menu-title">RFQ Requests</span>
+                    </a>
+                  </div>
+                  <div class="menu-item">
+                    <a class="menu-link {% if request.resolver_match.url_name == 'banner_list' %} active {% endif %}"
+                       href="{% url 'superuser:banner_list' %}"> 
+                      <span class="menu-bullet">
+                        <span class="bullet bullet-dot"></span>
+                      </span> 
+
+                      <span class="menu-title">Upload Banner</span>
+                    </a>
+<<<<<<< Updated upstream:adminv3/templates/adminv3/pages/sidebar.html
+                    <a class="menu-link {% if request.resolver_match.url_name == 'banner_list' %} active {% endif %}"
+                       href="{% url 'adminv3:rating_list' %}"> 
+                      <span class="menu-bullet">
+                        <span class="bullet bullet-dot"></span>
+                      </span> 
+
+                      <span class="menu-title">Rating</span>
+=======
+                    <a class="menu-link {% if request.resolver_match.url_name == 'view_product' %} active {% endif %}"
+                    href="{% url 'superuser:view_product' %}">
+                    <span class="menu-bullet">
+                    <span class="bullet bullet-dot"></span>
+                    </span>
+                    <span class="menu-title">View Products</span>
+>>>>>>> Stashed changes:superuser/templates/superuser/pages/sidebar.html
+                    </a>
+                  </div>
+                </div>
+              </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="d-flex flex-column flex-center pb-4 pb-lg-8" id="kt_app_sidebar_footer">
+        <!--begin::Menu toggle-->
+        <a href="#" class="btn btn-icon btn-active-color-primary"
+            data-kt-menu-trigger="{default:'click', lg: 'hover'}" data-kt-menu-attach="parent"
+            data-kt-menu-placement="bottom-end">
+            <i class="fas fa-moon theme-light-show fs-2x"></i> <i
+                class="fas fa-sun theme-dark-show fs-2x"></i>
+        </a>
+        <!--begin::Menu toggle-->
+
+        <!--begin::Menu-->
+        <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-title-gray-700 menu-icon-gray-500 menu-active-bg menu-state-color fw-semibold py-4 fs-base w-150px"
+            data-kt-menu="true" data-kt-element="theme-mode-menu">
+            <!--begin::Menu item-->
+            <div class="menu-item px-3 my-0">
+                <a href="#" class="menu-link px-3 py-2" data-kt-element="mode" data-kt-value="light">
+                    <span class="menu-icon" data-kt-element="icon">
+                        <i class="fas fa-moon fs-2"></i>
+                    </span>
+                    <span class="menu-title">Light</span>
+                </a>
+            </div>
+            <!--end::Menu item-->
+
+            <!--begin::Menu item-->
+            <div class="menu-item px-3 my-0">
+                <a href="#" class="menu-link px-3 py-2" data-kt-element="mode" data-kt-value="dark">
+                    <span class="menu-icon" data-kt-element="icon">
+                        <i class="bi bi-moon fs-2"></i>
+                    </span>
+                    <span class="menu-title">Dark</span>
+                </a>
+            </div>
+            <!--end::Menu item-->
+
+            <!--begin::Menu item-->
+            <div class="menu-item px-3 my-0">
+                <a href="#" class="menu-link px-3 py-2" data-kt-element="mode" data-kt-value="system">
+                    <span class="menu-icon" data-kt-element="icon">
+                        <i class="fas fa-desktop fs-2"></i>
+                    </span>
+                    <span class="menu-title">System</span>
+                </a>
+            </div>
+            <!--end::Menu item-->
+        </div>
+        <!--end::Menu-->
+      </div>
+ </div>

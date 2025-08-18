@@ -80,7 +80,7 @@
                       <td class="text-foreground font-normal py-2 px-3">{{ rfq.product.name }}</td>
                       <td class="text-foreground font-normal py-2 px-3">{{ rfq.requested_by.username }}</td>
                       <td class="text-foreground font-normal whitespace-nowrap py-2 px-3">
-                        {% if rfq.quoted_price %}₹{{ rfq.quoted_price|floatformat:2 }}{% else %}—{% endif %}
+                        {% if rfq.quoted_price %}${{ rfq.quoted_price|floatformat:2 }}{% else %}—{% endif %}
                       </td>
                       <td class="text-foreground font-normal whitespace-nowrap py-2 px-3">
                         {{ rfq.quote_delivery_date|default:"—" }}
@@ -126,7 +126,7 @@
                     <div><strong>Product:</strong> {{ rfq.product.name }}</div>
                     <div><strong>Buyer:</strong> {{ rfq.requested_by.username }}</div>
                     <div><strong>Price:</strong>
-                      {% if rfq.quoted_price %}₹{{ rfq.quoted_price|floatformat:2 }}{% else %}—{% endif %}
+                      {% if rfq.quoted_price %}${{ rfq.quoted_price|floatformat:2 }}{% else %}—{% endif %}
                     </div>
                     <div><strong>Delivery:</strong> {{ rfq.quote_delivery_date|default:"—" }}</div>
                     <div><strong>Notes:</strong> {{ rfq.supplier_notes|default:"—"|truncatewords:10 }}</div>
@@ -183,7 +183,7 @@
                         {{ rfq.quoted_by.username|default:"—" }}
                       </td>
                       <td class="text-foreground font-normal whitespace-nowrap py-2 px-3">
-                        {% if rfq.quoted_price %}₹{{ rfq.quoted_price|floatformat:2 }}{% else %}—{% endif %}
+                        {% if rfq.quoted_price %}${{ rfq.quoted_price|floatformat:2 }}{% else %}—{% endif %}
                       </td>
                       <td class="text-foreground font-normal whitespace-nowrap py-2 px-3">
                         {{ rfq.quote_delivery_date|default:"—" }}
@@ -229,7 +229,7 @@
                     <div><strong>Product:</strong> {{ rfq.product.name }}</div>
                     <div><strong>Supplier:</strong> {{ rfq.quoted_by.username|default:"—" }}</div>
                     <div><strong>Price:</strong>
-                      {% if rfq.quoted_price %}₹{{ rfq.quoted_price|floatformat:2 }}{% else %}—{% endif %}
+                      {% if rfq.quoted_price %}${{ rfq.quoted_price|floatformat:2 }}{% else %}—{% endif %}
                     </div>
                     <div><strong>Delivery:</strong> {{ rfq.quote_delivery_date|default:"—" }}</div>
                     <div><strong>Notes:</strong> {{ rfq.supplier_notes|default:"—"|truncatewords:10 }}</div>
@@ -356,7 +356,14 @@
         const cells = Array.from(row.querySelectorAll('td'));
         return cells
           .slice(0, cells.length - 1) // drop last action cell
-          .map(cell => cell.textContent.trim());
+          .map(cell => {
+            // Convert rupee to dollar in PDF if needed
+            let text = cell.textContent.trim();
+            if (text.startsWith('₹')) {
+              text = '$' + text.substring(1);
+            }
+            return text;
+          });
       });
 
       doc.autoTable({

@@ -1,8 +1,8 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers, mixins, viewsets
 from django.contrib.auth.models import User
-from adminv2.models import *
-from adminv3.models import *
+from supplier.models import *
+from superuser.models import *
 from dashboard.models import *
 import re
 

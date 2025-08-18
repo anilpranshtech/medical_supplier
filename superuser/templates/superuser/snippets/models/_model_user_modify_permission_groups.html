@@ -1,0 +1,74 @@
+<!--begin::Modal - Update user details-->
+<div class="modal fade" id="_model_user_modify_permission_groups" tabindex="-1" aria-hidden="true">
+    <!--begin::Modal dialog-->
+    <div class="modal-dialog modal-dialog-centered mw-650px">
+        <!--begin::Modal content-->
+        <div class="modal-content">
+            <!--begin::Modal header-->
+            <div class="modal-header">
+                <!--begin::Modal title-->
+                <h2 class="fw-bold">Update Permission Groups</h2>
+                <!--end::Modal title-->
+                <!--begin::Close-->
+                <div class="btn btn-icon btn-sm btn-active-icon-primary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-lg fs-3"></i>
+                </div>
+                <!--end::Close-->
+            </div>
+            <!--end::Modal header-->
+            <!--begin::Modal body-->
+            <div class="modal-body py-10 px-lg-17" >
+                <!--begin::Alert-->
+                <div class="alert  bg-light-primary d-flex flex-column flex-sm-row p-3 mb-10">
+                    <!--begin::Icon-->
+                    <i class="bi bi-bell-fill fs-1 text-primary me-4 mb-5 mb-sm-0"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i>
+                    <!--end::Icon-->
+                    <!--begin::Wrapper-->
+                    <div class="d-flex flex-column pe-0 pe-sm-10">
+                        <!--begin::Title-->
+                        <h4 class="fw-semibold">Alert Note:</h4>
+                        <!--end::Title-->
+                        <!--begin::Content-->
+                        <span>After making this change, the old permissions will no longer work for the user.</span>
+                        <!--end::Content-->
+                    </div>
+                    <!--end::Wrapper-->
+                </div>
+                <!--end::Alert-->
+
+                <!--begin::Form-->
+                <form id="_model_user_modify_permission_groups_form" class="form" method="POST" novalidate="novalidate" data-url="{% url 'superuser:user_accounts_modify_permission_groups' user.id %}" data-kt-redirect-url="{% url 'superuser:user_detail' user.id %}">
+                    {% csrf_token %}
+                    <!--begin::Input group-->
+                    <div class="fv-row mb-7">
+                        <!--begin::Label-->
+                        <label class="fs-6 fw-semibold mb-2 required">Select Groups</label>
+                        <!--end::Label-->
+                        <!--begin::Input-->
+                        <select class="form-select form-select-md form-select-solid" name="user_modify_groups_list" data-control="select2" data-close-on-select="false" data-placeholder="Select multiple option(s)" data-allow-clear="true" multiple="multiple">
+                            <option></option>
+                            {% for group in permission_group_list %}
+                                <option value="{{group.id }}">{{group.name}}</option>
+                            {% endfor %}
+                        </select>
+                        <!--end::Input-->
+                    </div>
+                    <!--end::Input group-->
+
+                    <!--begin::Modal footer-->
+                    <div class="modal-footer flex-center">
+                        <!--begin::Button-->
+                        <button type="submit" id="_model_user_modify_permission_groups_submit" class="btn btn-primary" >
+                            <span class="indicator-label">Update Groups</span>
+                            <span class="indicator-progress">Please wait...
+                            <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+                        </button>
+                        <!--end::Button-->
+                    </div>
+                    <!--end::Modal footer-->
+                </form>
+                <!--end::Form-->
+        </div>
+    </div>
+</div>
+<!--end::Modal - Update user details-->

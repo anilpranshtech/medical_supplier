@@ -1,0 +1,122 @@
+
+<div class="modal fade" id="_model_user_profile_update" tabindex="-1" aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered mw-750px">
+
+        <div class="modal-content">
+
+            <div class="modal-header" id="kt_modal_update_user_profile_header">
+                <h2 class="fw-bold">Update User Details</h2>
+                <div class="btn btn-icon btn-sm btn-active-icon-primary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-lg fs-3"></i>
+                </div>
+
+            </div>
+
+            <div class="modal-body py-10 px-lg-17">
+
+                <form id="_model_user_profile_update_form" class="form" method="POST" novalidate="novalidate" data-url="{% url 'superuser:user_accounts_update_profile' user.id %}" data-kt-redirect-url="">
+                    <div class="d-flex flex-column scroll-y px-5 px-lg-10" id="_model_add_new_user_scroll" data-kt-scroll="true" data-kt-scroll-activate="true" data-kt-scroll-max-height="auto" data-kt-scroll-dependencies="#_model_add_new_user_header" data-kt-scroll-wrappers="#_model_add_new_user_scroll" data-kt-scroll-offset="300px">
+                        {% csrf_token %}
+
+                        <div class="row g-9 mb-7">
+
+                            <div class="col-md-6 fv-row">
+                                <label class="fs-6 fw-semibold mb-2">First Name</label>
+                                <input type="text" class="form-control form-control-solid" placeholder="Enter user's first name" name="user_first_name" value="{{ user.first_name|default:"" }}" />
+                            </div>
+
+                            <div class="col-md-6 fv-row">
+                                <label class="fs-6 fw-semibold mb-2">Last Name</label>
+                                <input type="text" class="form-control form-control-solid" placeholder="Enter user's last name" name="user_last_name" value="{{ user.last_name|default:""}}" />
+                            </div>
+
+                        </div>
+
+                        {% comment %}
+                        {% if retail_profile %}
+
+                            <div class="row g-9 mb-7">
+
+                                <div class="col-md-6 fv-row">
+                                    <label class="fs-6 fw-semibold mb-2">Age</label>
+                                    <input type="text" class="form-control form-control-solid" placeholder="Enter user's first name" name="user_first_name" value="{{ retail_profile.age|default:'' }}" />
+                                </div>
+
+                                <div class="col-md-6 fv-row">
+                                    <label class="fs-6 fw-semibold mb-2">Medical Needs</label>
+                                    <input type="text" class="form-control form-control-solid" placeholder="Enter user's last name" name="user_last_name" value="{{ retail_profile.medical_needs|default:'' }}" />
+                                </div>
+
+                            </div>
+
+                        {% elif wholesale_profile %}
+
+                            <div class="row g-9 mb-7">
+
+                                <div class="col-md-6 fv-row">
+                                    <label class="fs-6 fw-semibold mb-2">Company Name</label>
+                                    <input type="text" class="form-control form-control-solid" placeholder="Enter user's first name" name="user_first_name" value="{{ wholesale_profile.company_name|default:'' }}" />
+                                </div>
+
+                                <div class="col-md-6 fv-row">
+                                    <label class="fs-6 fw-semibold mb-2">GST Number</label>
+                                    <input type="text" class="form-control form-control-solid" placeholder="Enter user's last name" name="user_last_name" value="{{ wholesale_profile.gst_number|default:''}}" />
+                                </div>
+
+                            </div>
+
+                            <div class="row g-9 mb-7">
+
+                                <div class="col-md-6 fv-row">
+                                    <label class="fs-6 fw-semibold mb-2">Department</label>
+                                    <input type="text" class="form-control form-control-solid" placeholder="Enter user's first name" name="user_first_name" value="{{ wholesale_profile.department|default:'' }}" />
+                                </div>
+
+                                <div class="col-md-6 fv-row">
+                                    <label class="fs-6 fw-semibold mb-2">Purchase Capacity</label>
+                                    <input type="text" class="form-control form-control-solid" placeholder="Enter user's last name" name="user_last_name" value="{{ wholesale_profile.purchase_capacity|default:''}}" />
+                                </div>
+
+                            </div>
+
+                        {% elif supplier_profile %}
+
+                            <div class="row g-9 mb-7">
+
+                                <div class="col-md-6 fv-row">
+                                    <label class="fs-6 fw-semibold mb-2">Company Name</label>
+                                    <input type="text" class="form-control form-control-solid" placeholder="Enter user's first name" name="user_first_name" value="{{ supplier_profile.company_name|default:'' }}" />
+                                </div>
+
+                                <div class="col-md-6 fv-row">
+                                    <label class="fs-6 fw-semibold mb-2">License Number</label>
+                                    <input type="text" class="form-control form-control-solid" placeholder="Enter user's last name" name="user_last_name" value="{{ supplier_profile.license_number|default:''}}" />
+                                </div>
+
+                            </div>
+
+                        {% endif %}
+                        {% endcomment %}
+
+
+                    </div>
+
+
+
+                    <div class="modal-footer flex-center">
+
+                        <button type="submit" id="_model_user_profile_update_submit" class="btn btn-primary">
+                            <span class="indicator-label">Update Profile</span>
+                            <span class="indicator-progress">Please wait...
+                            <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>

@@ -53,8 +53,8 @@
                         <label for="payment-method-select" class="block mb-1 text-sm font-bold text-mono">Select Payment Method</label>
                         <select id="payment-method-select" class="kt-input w-full">
                             <option value="Cash on Delivery" selected>Cash on Delivery</option>
-                            <option value="Stripe">Stripe</option>
-                            <option value="Razorpay">Razorpay</option>
+                            <option value="Stripe">Card payment</option>
+                            <option value="Razorpay">UPI payment</option>
                             <option value="Bank Transfer">Bank Transfer</option>
                         </select>
                     </div>
@@ -138,7 +138,7 @@
                                     </div>
                                     <div class="mx-5">
                                         <button class="kt-btn kt-btn-danger w-full mt-4 mb-5" type="submit">
-                                            Pay with Stripe (USD ${{ order_summary.total|floatformat:2 }})
+                                            Pay with  Card (USD ${{ order_summary.total|floatformat:2 }})
                                         </button>
                                     </div>
                                 </form>
@@ -160,7 +160,7 @@
                                     <input type="hidden" id="razorpay_signature" name="razorpay_signature">
                                     <div class="mx-5 mb-5">
                                         <button type="button" id="rzp-button" class="kt-btn kt-btn-primary w-full">
-                                            Pay with Razorpay (INR ₹{{ order_summary.total|floatformat:2 }})
+                                            Pay with UPI (INR ₹{{ order_summary.total|floatformat:2 }})
                                         </button>
                                     </div>
                                 </form>

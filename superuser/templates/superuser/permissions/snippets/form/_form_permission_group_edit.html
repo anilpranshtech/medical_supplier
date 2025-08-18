@@ -1,0 +1,103 @@
+<!--begin::Alert-->
+<div class="alert  bg-light-primary d-flex flex-column flex-sm-row p-3 mb-10">
+    <!--begin::Icon-->
+    <i class="bi bi-bell-fill fs-1 text-primary me-4 mb-5 mb-sm-0">
+        <span class="path1"></span><span class="path2"></span><span class="path3"></span>
+    </i>
+    <!--end::Icon-->
+    <!--begin::Wrapper-->
+    <div class="d-flex flex-column pe-0 pe-sm-10">
+        <!--begin::Title-->
+        <h4 class="fw-semibold">Note:</h4>
+        <!--end::Title-->
+        <!--begin::Content-->
+        <span>To apply change, edit, or delete permissions, View Permissions are required.</span>
+        <!--end::Content-->
+    </div>
+    <!--end::Wrapper-->
+</div>
+<!--end::Alert-->
+
+<!--begin::Form-->
+<form id="_model_edit_permission_group_form" class="form" method="POST" novalidate="novalidate" data-url="{% url 'superuser:user_permissions_edit_group' group.id %}" data-kt-redirect-url="{% url 'superuser:user_permissions' %}">
+    {% csrf_token %}
+    <!--begin::Input group-->
+    <div class="fv-row mb-7">
+        <!--begin::Label-->
+        <label class="fs-6 fw-semibold mb-2 required">Group Name</label>
+        <!--end::Label-->
+        <!--begin::Input-->
+        <input type="text" class="form-control form-control-solid" placeholder="Enter group name" name="group_name" value="{{group.name}}" />
+    </div>
+    <!--end::Input group-->
+
+    <!--begin::Scroll-->
+    <div class="d-flex flex-column scroll-y me-n7 pe-7" data-kt-scroll="true" data-kt-scroll-activate="{default: false, lg: true}" data-kt-scroll-max-height="auto"
+    data-kt-scroll-offset="300px">
+        <!--begin::Permissions-->
+        <div class="fv-row">
+            <!--begin::Table wrapper-->
+            <div class="table-responsive">
+                <!--begin::Table-->
+                <table class="table align-middle table-row-dashed fs-6 gy-5">
+                    <!--begin::Table body-->
+                    <tbody class="text-gray-600 fw-semibold">
+
+                     {% for model_name, model_data in permissions_by_model.items %}
+                            <tr>
+                                <td class="text-gray-600 fs-4" style="width:20%;">
+                                    {{ model_name }}
+                                </td>
+                                <td>
+                                    <div class="row">
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-check form-check-sm form-check-custom form-check-solid">
+                                                <input class="form-check-input" type="checkbox" value="all" name="{{ model_name }}_select_all" id="{{ model_name }}_select_all"
+                                                       onclick="toggleSelectAll(this, '{{ model_name }}')"
+                                                       {% if model_data.all_selected %} checked {% endif %} />
+                                                <span class="form-check-label">Select All</span>
+                                            </label>
+                                        </div>
+                                        {% for permission in model_data.permissions %}
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-check form-check-sm form-check-custom form-check-solid">
+                                                <input class="form-check-input" type="checkbox"
+                                                   value="{{ permission.codename }}"
+                                                   name="{{ model_name }}_permissions[]"
+                                                   id="{{ model_name }}_{{ permission.codename }}"
+                                                   onclick="togglePermission(this, '{{ model_name }}')"
+                                                   {% if permission.codename in group_permissions %} checked {% endif %} />
+                                                <span class="form-check-label">{{ permission.name }}</span>
+                                            </label>
+                                        </div>
+                                        {% empty %}
+                                        <ul>
+                                            <li>No permissions available.</li>
+                                        </ul>
+                                        {% endfor %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        <!--</tbody>-->
+                    <!--end::Table body-->
+                </table>
+                <!--end::Table-->
+            </div>
+            <!--end::Table wrapper-->
+        </div>
+        <!--end::Permissions-->
+    </div>
+    <!--end::Scroll-->
+    <!--begin::Actions-->
+    <div class="text-center pt-15">
+        <button type="submit" class="btn btn-primary" id="_model_edit_permission_group_submit">
+            <span class="indicator-label">Update Group</span>
+            <span class="indicator-progress">Please wait...
+                <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+            </span>
+        </button>
+    </div>
+    <!--end::Actions-->
+</form>
+<!--end::Form-->

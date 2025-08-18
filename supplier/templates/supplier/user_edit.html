@@ -1,0 +1,356 @@
+{% extends 'supplier/base.html' %}
+{% load static %}
+
+{% block content %}
+<!--begin::Main-->
+<div class="app-main flex-column flex-row-fluid" id="kt_app_main">
+    <!--begin::Content wrapper-->
+    <div class="d-flex flex-column flex-column-fluid">
+        <!--begin::Content-->
+        <div id="kt_app_content" class="app-content flex-column-fluid">
+            <!--begin::Content container-->
+            <div id="kt_app_content_container" class="app-container container-fluid">
+                <!--begin::Basic info-->
+                <div class="card mb-5 mb-xl-10">
+                    <!--begin::Card header-->
+                    <div class="card-header border-0 cursor-pointer" role="button" data-bs-toggle="collapse" data-bs-target="#kt_account_profile_details" aria-expanded="true" aria-controls="kt_account_profile_details">
+                        <!--begin::Card title-->
+                        <div class="card-title m-0">
+                            <h3 class="fw-bold m-0">Edit User: {{ user.username }}</h3>
+                        </div>
+                        <!--end::Card title-->
+                        <!--begin::Card toolbar-->
+                        <div class="card-toolbar">
+                            <a href="{% url 'supplier:user_list' %}" class="btn btn-light btn-active-light-primary me-2">Back to Users</a>
+                        </div>
+                        <!--end::Card toolbar-->
+                    </div>
+                    <!--begin::Card header-->
+                    <!--begin::Content-->
+                    <div id="kt_account_settings_profile_details" class="collapse show">
+                        <!--begin::Form-->
+                        <form id="kt_account_profile_details_form" class="form" method="POST" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <!--begin::Card body-->
+                            <div class="card-body border-top p-9">
+                                <!--begin::Input group-->
+                                <div class="row mb-6">
+                                    <!--begin::Label-->
+                                    <label class="col-lg-4 col-form-label required fw-semibold fs-6">Username</label>
+                                    <!--end::Label-->
+                                    <!--begin::Col-->
+                                    <div class="col-lg-8 fv-row">
+                                        {{ form.username }}
+                                        {% if form.username.errors %}
+                                            <div class="text-danger">{{ form.username.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                    <!--end::Col-->
+                                </div>
+                                <!--end::Input group-->
+                                <!--begin::Input group-->
+                                <div class="row mb-6">
+                                    <!--begin::Label-->
+                                    <label class="col-lg-4 col-form-label required fw-semibold fs-6">Full Name</label>
+                                    <!--end::Label-->
+                                    <!--begin::Col-->
+                                    <div class="col-lg-8">
+                                        <!--begin::Row-->
+                                        <div class="row">
+                                            <!--begin::Col-->
+                                            <div class="col-lg-6 fv-row">
+                                                {{ form.first_name }}
+                                                {% if form.first_name.errors %}
+                                                    <div class="text-danger">{{ form.first_name.errors }}</div>
+                                                {% endif %}
+                                            </div>
+                                            <!--end::Col-->
+                                            <!--begin::Col-->
+                                            <div class="col-lg-6 fv-row">
+                                                {{ form.last_name }}
+                                                {% if form.last_name.errors %}
+                                                    <div class="text-danger">{{ form.last_name.errors }}</div>
+                                                {% endif %}
+                                            </div>
+                                            <!--end::Col-->
+                                        </div>
+                                        <!--end::Row-->
+                                    </div>
+                                    <!--end::Col-->
+                                </div>
+                                <!--end::Input group-->
+                                <!--begin::Input group-->
+                                <div class="row mb-6">
+                                    <!--begin::Label-->
+                                    <label class="col-lg-4 col-form-label required fw-semibold fs-6">Email</label>
+                                    <!--end::Label-->
+                                    <!--begin::Col-->
+                                    <div class="col-lg-8 fv-row">
+                                        {{ form.email }}
+                                        {% if form.email.errors %}
+                                            <div class="text-danger">{{ form.email.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                    <!--end::Col-->
+                                </div>
+                                <!--end::Input group-->
+                                <!--begin::Input group-->
+                                <div class="row mb-6">
+                                    <!--begin::Label-->
+                                    <label class="col-lg-4 col-form-label required fw-semibold fs-6">Role</label>
+                                    <!--end::Label-->
+                                    <!--begin::Col-->
+                                    <div class="col-lg-8 fv-row">
+                                        {{ form.role }}
+                                        {% if form.role.errors %}
+                                            <div class="text-danger">{{ form.role.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                    <!--end::Col-->
+                                </div>
+                                <!--end::Input group-->
+                                <!--begin::Retail Profile-->
+                                <div id="retail_fields" class="profile-section" style="display: {% if form.initial.role == 'retailer' %}block{% else %}none{% endif %};">
+                                    <h3 class="fw-bold">Retail Profile</h3>
+                                    <div class="row mb-6">
+                                        <label class="col-lg-4 col-form-label fw-semibold fs-6">Age</label>
+                                        <div class="col-lg-8 fv-row">
+                                            {{ form.age }}
+                                            {% if form.age.errors %}
+                                                <div class="text-danger">{{ form.age.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="row mb-6">
+                                        <label class="col-lg-4 col-form-label fw-semibold fs-6">Medical Needs</label>
+                                        <div class="col-lg-8 fv-row">
+                                            {{ form.medical_needs }}
+                                            {% if form.medical_needs.errors %}
+                                                <div class="text-danger">{{ form.medical_needs.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="row mb-6">
+                                        <label class="col-lg-4 col-form-label fw-semibold fs-6">Profile Picture</label>
+                                        <div class="col-lg-8 fv-row">
+                                            {{ form.profile_picture_retail }}
+                                            {% if form.profile_picture_retail.errors %}
+                                                <div class="text-danger">{{ form.profile_picture_retail.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--end::Retail Profile-->
+                                <!--begin::Wholesale Profile-->
+                                <div id="wholesale_fields" class="profile-section" style="display: {% if form.initial.role == 'wholesaler' %}block{% else %}none{% endif %};">
+                                    <h3 class="fw-bold">Wholesale Buyer Profile</h3>
+                                    <div class="row mb-6">
+                                        <label class="col-lg-4 col-form-label required fw-semibold fs-6">Company Name</label>
+                                        <div class="col-lg-8 fv-row">
+                                            {{ form.company_name_wholesale }}
+                                            {% if form.company_name_wholesale.errors %}
+                                                <div class="text-danger">{{ form.company_name_wholesale.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="row mb-6">
+                                        <label class="col-lg-4 col-form-label required fw-semibold fs-6">GST Number</label>
+                                        <div class="col-lg-8 fv-row">
+                                            {{ form.gst_number }}
+                                            {% if form.gst_number.errors %}
+                                                <div class="text-danger">{{ form.gst_number.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="row mb-6">
+                                        <label class="col-lg-4 col-form-label required fw-semibold fs-6">Department</label>
+                                        <div class="col-lg-8 fv-row">
+                                            {{ form.department }}
+                                            {% if form.department.errors %}
+                                                <div class="text-danger">{{ form.department.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="row mb-6">
+                                        <label class="col-lg-4 col-form-label required fw-semibold fs-6">Purchase Capacity</label>
+                                        <div class="col-lg-8 fv-row">
+                                            {{ form.purchase_capacity }}
+                                            <small class="form-text text-muted">{{ form.purchase_capacity.help_text }}</small>
+                                            {% if form.purchase_capacity.errors %}
+                                                <div class="text-danger">{{ form.purchase_capacity.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="row mb-6">
+                                        <label class="col-lg-4 col-form-label fw-semibold fs-6">Profile Picture</label>
+                                        <div class="col-lg-8 fv-row">
+                                            {{ form.profile_picture_wholesale }}
+                                            {% if form.profile_picture_wholesale.errors %}
+                                                <div class="text-danger">{{ form.profile_picture_wholesale.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--end::Wholesale Profile-->
+                                <!--begin::Supplier Profile-->
+                                <div id="supplier_fields" class="profile-section" style="display: {% if form.initial.role == 'supplier' %}block{% else %}none{% endif %};">
+                                    <h3 class="fw-bold">Supplier Profile</h3>
+                                    <div class="row mb-6">
+                                        <label class="col-lg-4 col-form-label required fw-semibold fs-6">Company Name</label>
+                                        <div class="col-lg-8 fv-row">
+                                            {{ form.company_name_supplier }}
+                                            {% if form.company_name_supplier.errors %}
+                                                <div class="text-danger">{{ form.company_name_supplier.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="row mb-6">
+                                        <label class="col-lg-4 col-form-label required fw-semibold fs-6">License Number</label>
+                                        <div class="col-lg-8 fv-row">
+                                            {{ form.license_number }}
+                                            {% if form.license_number.errors %}
+                                                <div class="text-danger">{{ form.license_number.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="row mb-6">
+                                        <label class="col-lg-4 col-form-label fw-semibold fs-6">Verified</label>
+                                        <div class="col-lg-8 fv-row">
+                                            {{ form.is_verified }}
+                                            {% if form.is_verified.errors %}
+                                                <div class="text-danger">{{ form.is_verified.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="row mb-6">
+                                        <label class="col-lg-4 col-form-label fw-semibold fs-6">Profile Picture</label>
+                                        <div class="col-lg-8 fv-row">
+                                            {{ form.profile_picture_supplier }}
+                                            {% if form.profile_picture_supplier.errors %}
+                                                <div class="text-danger">{{ form.profile_picture_supplier.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--end::Supplier Profile-->
+                            </div>
+                            <!--end::Card body-->
+                            <!--begin::Actions-->
+                            <div class="card-footer d-flex justify-content-end py-6 px-9">
+                                <a href="{% url 'supplier:user_list' %}" class="btn btn-light btn-active-light-primary me-2">Discard</a>
+                                <button type="submit" class="btn btn-primary">Update User</button>
+                            </div>
+                            <!--end::Actions-->
+                        </form>
+                        <!--end::Form-->
+                    </div>
+                    <!--end::Content-->
+                </div>
+                <!--end::Basic info-->
+                <!--begin::Password-->
+                <div class="card mb-5 mb-xl-10">
+                    <!--begin::Card header-->
+                    <div class="card-header border-0 cursor-pointer" role="button" data-bs-toggle="collapse" data-bs-target="#kt_account_signin_method">
+                        <div class="card-title m-0">
+                            <h3 class="fw-bold m-0">Reset Password</h3>
+                        </div>
+                    </div>
+                    <!--end::Card header-->
+                    <!--begin::Content-->
+                    <div id="kt_account_settings_signin_method" class="collapse show">
+                        <!--begin::Card body-->
+                        <div class="card-body border-top p-9">
+                            <!--begin::Password-->
+                            <div class="d-flex flex-wrap align-items-center mb-10">
+                                <!--begin::Label-->
+                                <div id="kt_signin_password">
+                                    <div class="fs-6 fw-bold mb-1">Password</div>
+                                    <div class="fw-semibold text-gray-600">************</div>
+                                </div>
+                                <!--end::Label-->
+                                <!--begin::Edit-->
+                                <div id="kt_signin_password_edit" class="flex-row-fluid d-none">
+                                    <!--begin::Form-->
+                                    <form id="kt_signin_change_password" class="form" method="POST">
+                                        {% csrf_token %}
+                                        <div class="row mb-1">
+                                            <div class="col-lg-4">
+                                                <div class="fv-row mb-0">
+                                                    <label for="{{ form.password.id_for_label }}" class="form-label fs-6 fw-bold mb-3">New Password</label>
+                                                    {{ form.password }}
+                                                    {% if form.password.errors %}
+                                                        <div class="text-danger">{{ form.password.errors }}</div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-text mb-5">Password must be at least 8 characters and contain symbols</div>
+                                        <div class="d-flex">
+                                            <button id="kt_password_submit" type="submit" class="btn btn-primary me-2 px-6">Update Password</button>
+                                            <button id="kt_password_cancel" type="button" class="btn btn-color-gray-500 btn-active-light-primary px-6">Cancel</button>
+                                        </div>
+                                    </form>
+                                    <!--end::Form-->
+                                </div>
+                                <!--end::Edit-->
+                                <!--begin::Action-->
+                                <div id="kt_signin_password_button" class="ms-auto">
+                                    <button class="btn btn-light btn-active-light-primary">Reset Password</button>
+                                </div>
+                                <!--end::Action-->
+                            </div>
+                            <!--end::Password-->
+                        </div>
+                        <!--end::Card body-->
+                    </div>
+                    <!--end::Content-->
+                </div>
+                <!--end::Password-->
+            </div>
+            <!--end::Content container-->
+        </div>
+        <!--end::Content-->
+    </div>
+    <!--end::Content wrapper-->
+</div>
+<!--end::Main-->
+
+{% block page_only_scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const roleSelect = document.querySelector('#{{ form.role.id_for_label }}');
+        const retailFields = document.querySelector('#retail_fields');
+        const wholesaleFields = document.querySelector('#wholesale_fields');
+        const supplierFields = document.querySelector('#supplier_fields');
+        const editButton = document.querySelector("#kt_signin_password_button button");
+        const passwordEditForm = document.getElementById("kt_signin_password_edit");
+        const passwordDisplay = document.getElementById("kt_signin_password");
+        const cancelButton = document.getElementById("kt_password_cancel");
+
+        // Toggle profile fields based on role
+        function toggleFields() {
+            retailFields.style.display = roleSelect.value === 'retailer' ? 'block' : 'none';
+            wholesaleFields.style.display = roleSelect.value === 'wholesaler' ? 'block' : 'none';
+            supplierFields.style.display = roleSelect.value === 'supplier' ? 'block' : 'none';
+        }
+
+        roleSelect.addEventListener('change', toggleFields);
+        toggleFields(); // Initial call to set visibility
+
+        // Show password form on "Reset Password" click
+        editButton.addEventListener("click", function () {
+            passwordEditForm.classList.remove("d-none");
+            passwordDisplay.classList.add("d-none");
+            editButton.classList.add("d-none");
+        });
+
+        // Cancel editing
+        cancelButton.addEventListener("click", function () {
+            passwordEditForm.classList.add("d-none");
+            passwordDisplay.classList.remove("d-none");
+            editButton.classList.remove("d-none");
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

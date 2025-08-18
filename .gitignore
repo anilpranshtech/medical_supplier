@@ -129,9 +129,9 @@ dmypy.json
 # Pyre type checker
 .pyre/
 *.log
-/adminv2/__pycache__
+/supplier/__pycache__
 *.pyc
-/adminv2/__pycache__
+/supplier/__pycache__
 *.xml
 *.iml
 *.ignore

@@ -1,0 +1,101 @@
+{% extends 'superuser/superuser_base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block content %}
+<!--begin::Main-->
+<div class="app-main flex-column flex-row-fluid" id="kt_app_main">
+    <!--begin::Content wrapper-->
+    <div class="d-flex flex-column flex-column-fluid">
+        <!--begin::Content-->
+        <div id="kt_app_content" class="app-content flex-column-fluid">
+            <!--begin::Content container-->
+            <div id="kt_app_content_container" class="app-container container-fluid">
+
+                <!--begin::Quotation Card-->
+                <div class="card mb-5 mb-xl-10">
+                    <!--begin::Card header-->
+                    <div class="card-header border-0 cursor-pointer" role="button" data-bs-toggle="collapse"
+                        data-bs-target="#kt_rfq_quotation_form" aria-expanded="true"
+                        aria-controls="kt_rfq_quotation_form">
+                        <div class="card-title m-0">
+                            <h3 class="fw-bold m-0">Submit Quotation for RFQ #{{ object.id }}</h3>
+                        </div>
+                    </div>
+                    <!--end::Card header-->
+
+                    <!--begin::Content-->
+                    <div id="kt_rfq_quotation_form" class="collapse show">
+                        <form method="post" enctype="multipart/form-data" class="form">
+                            {% csrf_token %}
+                            <div class="card-body border-top p-9">
+                                <!-- Price -->
+                                <div class="row mb-6">
+                                    <label class="col-lg-4 col-form-label required fw-semibold fs-6">
+                                        Quoted Price
+                                    </label>
+                                    <div class="col-lg-8 fv-row">
+                                        {{ form.quoted_price|add_class:"form-control form-control-lg form-control-solid" }}
+                                        {{ form.quoted_price.errors }}
+                                    </div>
+                                </div>
+
+                                <!-- Delivery Date -->
+                                <div class="row mb-6">
+                                    <label class="col-lg-4 col-form-label required fw-semibold fs-6">
+                                        Expected Delivery Date
+                                    </label>
+                                    <div class="col-lg-8 fv-row">
+                                        {{ form.quote_delivery_date|add_class:"form-control form-control-lg form-control-solid" }}
+                                        {{ form.quote_delivery_date.errors }}
+                                    </div>
+                                </div>
+
+                                <!-- Notes -->
+                                <div class="row mb-6">
+                                    <label class="col-lg-4 col-form-label fw-semibold fs-6">
+                                        Notes
+                                    </label>
+                                    <div class="col-lg-8 fv-row">
+                                        {{ form.supplier_notes|add_class:"form-control form-control-lg form-control-solid" }}
+                                        {{ form.supplier_notes.errors }}
+                                    </div>
+                                </div>
+
+                                <!-- Attached File -->
+                                <div class="row mb-6">
+                                    <label class="col-lg-4 col-form-label fw-semibold fs-6">
+                                        Attachment (Optional)
+                                    </label>
+                                    <div class="col-lg-8 fv-row">
+                                        {{ form.quote_attached_file|add_class:"form-control form-control-lg form-control-solid" }}
+                                        {{ form.quote_attached_file.errors }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="card-footer d-flex justify-content-end py-6 px-9">
+                                <a href="{% url 'superuser:rfq_list' %}" class="btn btn-light btn-active-light-primary me-2">
+                                    Cancel
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    Send Quotation
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    <!--end::Content-->
+                </div>
+                <!--end::Quotation Card-->
+
+            </div>
+            <!--end::Content container-->
+        </div>
+        <!--end::Content-->
+    </div>
+    <!--end::Content wrapper-->
+</div>
+<!--end::Main-->
+{% endblock %}
+

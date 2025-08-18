@@ -1,0 +1,188 @@
+  <div class="modal fade" id="_model_add_new_user" tabindex="-1" aria-hidden="true">
+    <!--begin::Modal dialog-->
+    <div class="modal-dialog modal-dialog-centered mw-750px">
+        <!--begin::Modal content-->
+        <div class="modal-content">
+            <!--begin::Modal header-->
+            <div class="modal-header" id="_model_add_new_user_header">
+                <!--begin::Modal title-->
+                <h2 class="fw-bold">Add New User's Account</h2>
+
+                <div class="btn btn-icon btn-sm btn-active-icon-primary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-lg fs-3"></i>
+                </div>
+                <!--end::Close-->
+            </div>
+            <!--end::Modal header-->
+            <!--begin::Modal body-->
+            <div class="modal-body px-5 mt-7">
+                <!--begin::Form-->
+                <form id="_model_add_new_user_form" class="form" method="POST" novalidate="novalidate" data-url="{% url 'superuser:user_accounts_add_new_user' %}" data-kt-redirect-url="{% url 'superuser:user_accounts' %}">
+                    <!--begin::Scroll-->
+                    <div class="d-flex flex-column scroll-y px-5 px-lg-10" id="_model_add_new_user_scroll" data-kt-scroll="true" data-kt-scroll-activate="true" data-kt-scroll-max-height="auto" data-kt-scroll-dependencies="#_model_add_new_user_header" data-kt-scroll-wrappers="#_model_add_new_user_scroll" data-kt-scroll-offset="300px">
+                        {% csrf_token %}
+                        <!--begin::Input group-->
+                        <div class="row g-9 mb-7">
+                            <!--begin::Col-->
+                            <div class="col-md-6 fv-row">
+                                <!--begin::Label-->
+                                <label class="required fs-6 fw-semibold mb-2">First Name</label>
+                                <!--end::Label-->
+                                <!--begin::Input-->
+                                <input type="text" class="form-control form-control-solid" placeholder="Enter user's first name" name="user_first_name" value="" />
+                                <!--end::Input-->
+                            </div>
+                            <!--end::Col-->
+                            <!--begin::Col-->
+                            <div class="col-md-6 fv-row">
+                                <!--begin::Label-->
+                                <label class="required fs-6 fw-semibold mb-2">Last Name</label>
+                                <!--end::Label-->
+                                <!--begin::Input-->
+                                <input type="text" class="form-control form-control-solid" placeholder="Enter user's last name" name="user_last_name" value="" />
+                                <!--end::Input-->
+                                </div>
+                            <!--end::Col-->
+                        </div>
+                        <!--end::Input group-->
+                        <!--begin::Input group-->
+                        <div class="row g-9 mb-7">
+                            <!--begin::Col-->
+                            <div class="col-md-6 fv-row">
+                                <!--begin::Label-->
+                                <label class="fs-6 fw-semibold mb-2">Phone Number</label>
+                                <!--end::Label-->
+                                <!--begin::Input-->
+                                <input type="text" class="form-control form-control-solid" placeholder="Enter user's phone" name="user_phone_number" value="{{user.profile.phone|default:''}}" />
+                                <!--end::Input-->
+                            </div>
+
+                            <div class="col-md-6 fv-row">
+                                <!--begin::Label-->
+                                <label class="required fs-6 fw-semibold mb-2">User Email</label>
+
+                                <input type="email" class="form-control form-control-solid" name="user_email_address" placeholder="Enter User's Email" value="" />
+                                <!--end::Input-->
+                                <small>Note: Email Address should be unique .</small>
+                            </div>
+
+                            <!--end::Col-->
+                        </div>
+
+                        <div class="row g-9 mb-7">
+                            <!--begin::Col-->
+                            <div class="col-md-6 fv-row">
+                               <!--begin::Label-->
+                                <label class="required fs-6 fw-semibold mb-2">Username</label>
+                                <!--end::Label-->
+                                <!--begin::Input-->
+                                <input type="text" class="form-control form-control-solid" name="user_username" placeholder="Enter User's Username" value="" />
+                                <!--end::Input-->
+                            </div>
+
+                            <div class="col-md-6 fv-row">
+                                <!--begin::Label-->
+                                <label class="required fs-6 fw-semibold mb-2">Account Role </label>
+
+                                <select name="account_role" aria-label="Select account role" data-control="select2" data-placeholder="Select account role..." class="form-select form-select-solid" data-dropdown-parent="#_model_add_new_user">
+                                    <option value="admin">Administrator</option>
+                                    <option value="staff">Staff</option>
+                                    <option value="user" selected >User</option>
+                                </select>
+                                <!--end::Input-->
+                            </div>
+                            <!--end::Col-->
+                        </div>
+
+                        <div class="row g-9 mb-7">
+                            <!--begin::Col-->
+
+
+                            <div class="col-md-6 fv-row">
+                                <!--begin::Label-->
+                                <label class="required fs-6 fw-semibold mb-2">Account Type </label>
+
+                                <select name="account_type" aria-label="Select account typee" data-control="select2" data-placeholder="Select account type..." class="form-select form-select-solid" data-dropdown-parent="#_model_add_new_user">
+                                    <option value="retailer" selected>Retailer</option>
+                                    <option value="wholesaler">WholeSaler</option>
+                                    <option value="supplier"  >Supplier</option>
+                                </select>
+                                <!--end::Input-->
+                            </div>
+                            <!--end::Col-->
+                        </div>
+
+
+                        <div class="row g-9 mb-7">
+                            <!--begin::Col-->
+                            <div class="col-md-6">
+                                 <!--begin::Input group-->
+                                <div class="mb-1 fv-row" data-kt-password-meter="true">
+                                    <!--begin::Wrapper-->
+                                    <div class="mb-1">
+                                        <!--begin::Label-->
+                                        <label class="form-label fw-semibold fs-6 mb-2 required">
+                                            New Password
+                                        </label>
+
+                                        <div class="position-relative mb-3">
+                                            <input class="form-control form-control-lg form-control-solid" type="password" placeholder="Enter User's New Password" name="new_password" autocomplete="off" />
+                                            <span class="btn btn-sm btn-icon position-absolute translate-middle top-50 end-0 me-n2" data-kt-password-meter-control="visibility">
+                                                <i class="bi bi-eye-slash-fill fs-1"><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span></i>
+                                                <i class="bi bi-eye-fill d-none fs-1"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i>
+                                            </span>
+                                        </div>
+
+                                        <div class="d-flex align-items-center mb-3" data-kt-password-meter-control="highlight">
+                                            <div class="flex-grow-1 bg-secondary bg-active-success rounded h-5px me-2"></div>
+                                            <div class="flex-grow-1 bg-secondary bg-active-success rounded h-5px me-2"></div>
+                                            <div class="flex-grow-1 bg-secondary bg-active-success rounded h-5px me-2"></div>
+                                            <div class="flex-grow-1 bg-secondary bg-active-success rounded h-5px"></div>
+                                        </div>
+                                        <!--end::Meter-->
+                                    </div>
+                                    <!--end::Wrapper-->
+
+                                    <!--begin::Hint-->
+                                    <div class="text-muted">
+                                        Use 8 or more characters with a mix of letters, numbers & symbols.
+                                    </div>
+                                    <!--end::Hint-->
+                                </div>
+
+                            </div>
+                            <!--end::Col-->
+                            <!--begin::Col-->
+                            <div class="col-md-6">
+                                <div class="fv-row mb-1">
+                                    <label class="form-label fw-semibold fs-6 mb-2 required">Confirm New Password</label>
+                                    <input class="form-control form-control-lg form-control-solid" type="password" placeholder="Enter User's Confirmation Password" name="confirm_password" autocomplete="off" />
+                                </div>
+                            </div>
+                            <!--end::Col-->
+                        </div>
+
+
+                    </div>
+                    <!--end::Scroll-->
+
+                    <!--begin::Modal footer-->
+                    <div class="modal-footer flex-center">
+                        <!--begin::Button-->
+                        <button type="submit" id="_model_add_new_user_submit" class="btn btn-primary" >
+                            <span class="indicator-label">Create Account</span>
+                            <span class="indicator-progress">Please wait... 
+                            <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+                        </button>
+                            <!--end::Button-->
+                    </div>
+
+                </form>
+                <!--end::Form-->
+            </div>
+            <!--end::Modal body-->
+        </div>
+        <!--end::Modal content-->
+    </div>
+    <!--end::Modal dialog-->
+</div>
