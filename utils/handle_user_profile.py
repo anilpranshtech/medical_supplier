@@ -1,7 +1,11 @@
-from dashboard.models import RetailProfile, WholesaleBuyerProfile, SupplierProfile
+from dashboard.models import *
 
 
 def get_user_profile(user):
+    if user.is_superuser:
+        profile, _ = AdminUserProfile.objects.get_or_create(user=user)
+        return profile, 'admin'
+
     for ProfileModel, profile_type in [
         (RetailProfile, 'retailer'),
         (WholesaleBuyerProfile, 'wholesaler'),

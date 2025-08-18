@@ -27,7 +27,7 @@
                                         {% csrf_token %}
                                         <div class="flex items-center space-x-4">
                                             <div class="relative w-16 h-16 rounded-full overflow-hidden border border-gray-300 dark:border-gray-600">
-                                                <img src="{% if avatar %}{{ avatar.url }}{% else %}{% static 'metronic/tailwind/dist/assets/media/avatars/blank.png' %}{% endif %}" alt="Profile Photo" class="w-full h-full object-cover">
+                                                <img src="{% if header_avatar_url %}{{ header_avatar_url }}?{{ user.last_login.timestamp }}{% else %}{% static 'metronic/tailwind/dist/assets/media/avatars/default-avatar.png' %}{% endif %}" alt="Profile Photo" class="w-full h-full object-cover">
                                                 <input type="file" name="avatar" accept=".png, .jpg, .jpeg" class="absolute inset-0 opacity-0 cursor-pointer">
                                             </div>
                                             <span class="text-sm text-gray-500 dark:text-gray-100">150x150px JPEG, PNG Image</span>
@@ -47,18 +47,21 @@
                                 <td class="py-4 font-medium text-gray-650 dark:text-gray-100">Profile Type</td>
                                 <td class="py-4 text-gray-500 dark:text-gray-100">{{ profile_type|title|default:"Not set" }}</td>
                             </tr>
+                            {% if profile_type == 'retailer' and profile.speciality %}
                             <tr class="border-b border-gray-200 dark:border-gray-700">
-                                <td class="py-4 font-medium text-gray-650 dark:text-gray-100">Specialization/Company</td>
+                                <td class="py-4 font-medium text-gray-650 dark:text-gray-100">Specialization</td>
                                 <td class="py-4 text-gray-500 dark:text-gray-100">
-                                    {% if profile_type == 'doctor' %}
-                                        {{ profile.speciality|default:"Not set" }}
-                                    {% elif profile_type in 'medical_supplier|corporate|wholesaler|supplier' %}
-                                        {{ profile.company_name|default:"Not set" }}
-                                    {% else %}
-                                        Not applicable
-                                    {% endif %}
+                                    {{ profile.speciality }}
                                 </td>
                             </tr>
+                            {% elif profile_type in "wholesaler supplier" and profile.company_name %}
+                            <tr class="border-b border-gray-200 dark:border-gray-700">
+                                <td class="py-4 font-medium text-gray-650 dark:text-gray-100">Company</td>
+                                <td class="py-4 text-gray-500 dark:text-gray-100">
+                                    {{ profile.company_name }}
+                                </td>
+                            </tr>
+                            {% endif %}
                             <tr>
                                 <td class="py-4 font-medium text-gray-650 dark:text-gray-100">Address</td>
                                 <td class="py-4 text-gray-500 dark:text-gray-100">
