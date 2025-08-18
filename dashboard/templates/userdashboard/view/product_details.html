@@ -5,16 +5,16 @@
 
 {% block content %}
 <style>
-    /* Ensure modal covers Swiper */
-    #loginRequiredModal, #rfqModal, #imageModal, #eventRegistrationModal {
+    /* Modal styles */
+    #loginRequiredModal, #rfqModal, #imageModal, #eventRegistrationModal, #questionModal {
         z-index: 9999;
         backdrop-filter: blur(8px);
-        background-color: rgba(0, 0, 0, 0.4); /* darker backdrop */
+        background-color: rgba(0, 0, 0, 0.4);
     }
 
     .swiper-button-next,
     .swiper-button-prev {
-        z-index: 10; /* must be below modal's z-index */
+        z-index: 10;
     }
 
     .thumbSwiper {
@@ -94,15 +94,6 @@
     .thumbnail-wrapper {
         border: 1px solid #d1d5db;
         background-color: #ffffff;
-    }
-
-    .ratings-section h3 {
-        font-size: 16px;
-        font-weight: bold;
-        color: #0b1727;
-        display: flex;
-        align-items: center;
-        gap: 4px;
     }
 
     .text-red-500 {
@@ -195,67 +186,86 @@
         color: #a0a0a0;
         font-size: 14px;
     }
-    #loginRequiredModal, #rfqModal, #imageModal, #eventRegistrationModal, #questionModal {
-        z-index: 9999;
-        backdrop-filter: blur(8px);
-        background-color: rgba(0, 0, 0, 0.4);
-    }
 
+    /* Center the Swiper containers */
+.mainSwiper, .thumbSwiper {
+    width: 100%;
+    max-width: 510px; /* Matches the main image width */
+    margin: 0 auto;
+}
+
+/* Ensure thumbnails are centered */
+.thumbSwiper .swiper-wrapper {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* Override Swiper's default transform for thumbnails */
+.thumbSwiper .swiper-wrapper {
+    transform: none !important;
+}
+
+/* Ensure the no-image placeholder is centered */
+.flex-col.items-center.justify-center {
+    text-align: center;
+}
 </style>
 
-<div class="kt-container-fixed mt-1" style="max-width: var(--custom-container-width, 85%);">
-    <div class="flex flex-col items-stretch gap-7 mt-5 py-5">
+<div class="kt-container-fixed mt-1" style="max-width: var(--custom-container-width, 85;);">
+    <div class="flex flex-col items-stretch gap-7 mt-5 py-5" style="align-items: center;">
         <!-- Product Title -->
         <h1 class="text-3xl font-semibold text-gray-650 dark:text-white">
             {{ product.name|default:'Product Not Found' }}
         </h1>
         {% if product %}
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Product Images Section -->
-            <div class="flex flex-col gap-4">
-                {% if product.main_image or other_images %}
-                    <!-- Main Image -->
-                    <div class="border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-lg overflow-hidden shadow-sm">
-                        <div class="swiper mainSwiper h-[510px] sm:h-[510px]">
-                            <div class="swiper-wrapper">
-                                {% if product.main_image %}
-                                <div class="swiper-slide">
-                                    <img src="{{ product.main_image }}" alt="{{ product.name }}" class="w-full h-full object-contain" loading="lazy" />
-                                </div>
-                                {% endif %}
-                                {% for img in other_images %}
-                                <div class="swiper-slide">
-                                    <img src="{{ img.image.url }}" alt="Product Image" class="w-full h-full object-contain" loading="lazy" />
-                                </div>
-                                {% endfor %}
-                            </div>
-                            <div class="swiper-button-prev bg-white dark:bg-gray-800 shadow-md"></div>
-                            <div class="swiper-button-next bg-white dark:bg-gray-800 shadow-md"></div>
-                        </div>
+        <div class="flex flex-col items-center justify-center gap-4">
+    {% if product.main_image or other_images %}
+        <!-- Main Image -->
+        <div class="border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-lg overflow-hidden shadow-sm max-w-[510px] mx-auto">
+            <div class="swiper mainSwiper h-[510px] sm:h-[510px]">
+                <div class="swiper-wrapper">
+                    {% if product.main_image %}
+                    <div class="swiper-slide">
+                        <img src="{{ product.main_image }}" alt="{{ product.name }}" class="w-full h-full object-contain" loading="lazy" />
                     </div>
-
-                    <!-- Thumbnails -->
-                    <div class="swiper thumbSwiper h-20">
-                        <div class="swiper-wrapper">
-                            {% if product.main_image %}
-                            <div class="swiper-slide w-16 h-16 cursor-pointer">
-                                <img src="{{ product.main_image }}" alt="Thumbnail" class="w-full h-full object-cover border border-gray-200 dark:border-gray-700 rounded" loading="lazy" />
-                            </div>
-                            {% endif %}
-                            {% for img in other_images %}
-                            <div class="swiper-slide w-16 h-16 cursor-pointer">
-                                <img src="{{ img.image.url }}" alt="Thumbnail" class="w-full h-full object-cover border border-gray-200 dark:border-gray-700 rounded" loading="lazy" />
-                            </div>
-                            {% endfor %}
-                        </div>
+                    {% endif %}
+                    {% for img in other_images %}
+                    <div class="swiper-slide">
+                        <img src="{{ img.image.url }}" alt="Product Image" class="w-full h-full object-contain" loading="lazy" />
                     </div>
-                {% else %}
-                    <div class="flex flex-col items-center justify-center border border-gray-200 dark:border-gray-700 rounded-lg p-6 bg-white dark:bg-gray-800 text-red-500">
-                        <img src="{% static 'default.png' %}" alt="Default Product Image" class="w-48 h-48 object-cover" loading="lazy" />
-                        <p class="mt-4">Image not available</p>
-                    </div>
-                {% endif %}
+                    {% endfor %}
+                </div>
+                <div class="swiper-button-prev bg-white dark:bg-gray-800 shadow-md"></div>
+                <div class="swiper-button-next bg-white dark:bg-gray-800 shadow-md"></div>
             </div>
+        </div>
+            </div>
+
+        <!-- Thumbnails -->
+        <div class="swiper thumbSwiper h-20 max-w-[510px] mx-auto">
+            <div class="swiper-wrapper flex justify-center">
+                {% if product.main_image %}
+                <div class="swiper-slide w-16 h-16 cursor-pointer">
+                    <img src="{{ product.main_image }}" alt="Thumbnail" class="w-full h-full object-cover border border-gray-200 dark:border-gray-700 rounded" loading="lazy" />
+                </div>
+                {% endif %}
+                {% for img in other_images %}
+                <div class="swiper-slide w-16 h-16 cursor-pointer">
+                    <img src="{{ img.image.url }}" alt="Thumbnail" class="w-full h-full object-cover border border-gray-200 dark:border-gray-700 rounded" loading="lazy" />
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% else %}
+        <div class="flex flex-col items-center justify-center border border-gray-200 dark:border-gray-700 rounded-lg p-6 bg-white dark:bg-gray-800 text-red-500">
+            <img src="{% static 'default.png' %}" alt="Default Product Image" class="w-48 h-48 object-cover" loading="lazy" />
+            <p class="mt-4">Image not available. Please check the URL or try again.</p>
+            <a href="{% url 'dashboard:home' %}" class="mt-4 inline-block kt-btn kt-btn-primary kt-btn-sm">Back to Home</a>
+        </div>
+    {% endif %}
+</div>
 
             <!-- Product Details -->
             <div>
@@ -264,256 +274,261 @@
                 <p class="text-gray-650 dark:text-gray-650 text-base leading-relaxed mb-6">
                     {{ product.description|default:'No description available' }}
                 </p>
-                {% if product.offer_percentage and product.offer_active %}
-                <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">
-                    save {{ product.offer_percentage|floatformat:0 }}%
-                </span>
-                {% endif %}
 
-                <div class="flex items-center gap-4 mb-6">
-                    {% if product.offer_active and product.offer_percentage and product.offer_percentage > 0 %}
-                        <!-- Show original price as struck-through -->
-                        <span class="text-base font-medium text-gray-500 line-through">
-                            ${{ product.price|floatformat:2 }}
-                        </span>
-                        <!-- Show discounted price -->
-                        <span class="text-2xl font-bold text-gray-650 dark:text-white">
-                            ${{ product.discounted_price|floatformat:2 }}
-                        </span>
-                    {% else %}
-                        <!-- No offer: show regular price only -->
-                        <span class="text-2xl font-bold text-gray-650 dark:text-white">
-                            ${{ product.price|floatformat:2 }}
-                        </span>
+                {% if product.category.name|lower != "conference" and product.category.name|lower != "webinar" and product.category.name|lower != "event" %}
+                    <!-- Product Price and Offer -->
+                    {% if product.offer_percentage and product.offer_active %}
+                    <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">
+                        save {{ product.offer_percentage|floatformat:0 }}%
+                    </span>
                     {% endif %}
-                </div>
-
-<!-- Buttons -->
-<div class="flex items-center gap-3 mt-4">
-    {% if request.user.is_authenticated %}
-        {% if product.category.name|lower != "conference" %}
-            {% if product.id in user_cart_ids %}
-                <button class="kt-btn kt-btn-outline kt-btn-sm ms-1" style="background:#3b82f6; color:white;" data-product-id="{{ product.id }}">
-                    In cart <i class="ki-filled ki-handcart text-white"></i>
-                </button>
-            {% else %}
-                <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 add-to-cart-btn" data-product-id="{{ product.id }}">
-                    Add <i class="ki-filled ki-handcart"></i>
-                </button>
-            {% endif %}
-        {% endif %}
-    {% else %}
-        {% if product.category.name|lower != "conference" %}
-            <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 show-login-modal">
-                Add <i class="ki-filled ki-handcart text-xs"></i>
-            </button>
-        {% endif %}
-    {% endif %}
-
-    {% if request.user.is_authenticated %}
-        {% if product.show_rfq or product.Both %}
-            <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 open-rfq-modal"
-                    data-product-id="{{ product.id }}"
-                    data-product-name="{{ product.name }}"
-                    data-product-price="{{ product.discounted_price|default:product.price|floatformat:2 }}"
-                    data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
-                    data-quantity="1">
-                RFQ <i class="ki-filled ki-directbox-default text-xs"></i>
-            </button>
-        {% endif %}
-    {% endif %}
-
-    {% if product.category.name|lower != "conference" %}
-        {% if request.user.is_authenticated %}
-            <span class="kt-wishlist-icon cursor-pointer"
-                  data-kt-wishlist-toggle="true"
-                  data-product-id="{{ product.id|default:'0' }}"
-                  title="{% if product.id in user_wishlist_ids %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}">
-                <i class="ki-solid ki-heart {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
-            </span>
-        {% else %}
-            <span class="kt-wishlist-icon cursor-pointer show-login-modal"
-                  title="Login to Add to Wishlist">
-                <i class="ki-solid ki-heart"></i>
-            </span>
-        {% endif %}
-    {% endif %}
-
-    {% if event %}
-        {% if request.user.is_authenticated %}
-            <button class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700 open-event-registration-modal"
-                    data-product-id="{{ product.id }}"
-                    data-event-name="{{ product.name }}">
-                Register for Event
-            </button>
-        {% else %}
-            <button class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700 show-login-modal">
-                Register for Event
-            </button>
-        {% endif %}
-    {% endif %}
-</div>
-
-                <!-- Additional Information -->
-                <div class="border-t border-gray-200 dark:border-gray-700 pt-4 mt-5">
-                    <h2 class="text-xl font-semibold text-gray-650 dark:text-white mb-3">Additional Information</h2>
-                    <div id="additional-info-content" class="text-sm text-gray-650 dark:text-gray-300 space-y-2 max-h-36 overflow-hidden transition-all duration-300">
-                        <p class="flex justify-between"><span class="font-semibold">SKU:</span> {{ product.supplier_sku|default:'N/A' }}</p>
-                        <p class="flex justify-between"><span class="font-semibold">Category:</span> {{ product.category.name|default:'Uncategorized' }}</p>
-                        <p class="flex justify-between"><span class="font-semibold">Brand:</span> {{ product.brand.name|default:'Unbranded' }}</p>
-                        <p class="flex justify-between"><span class="font-semibold">Product From:</span> {{ product.product_from|default:'N/A' }}</p>
-                        <p class="flex justify-between"><span class="font-semibold">Condition:</span> {{ product.get_condition_display }}</p>
-                        <p class="flex justify-between"><span class="font-semibold">Warranty:</span> {{ product.get_warranty_display }}</p>
-                        <p class="flex justify-between"><span class="font-semibold">Tag:</span> {{ product.get_tag_display }}</p>
-                        <p class="flex justify-between"><span class="font-semibold">Manufacture Date:</span> {{ product.manufacture_date|date:"d M, Y"|default:'N/A' }}</p>
-                        <p class="flex justify-between"><span class="font-semibold">Expiration Days:</span> {{ product.expiration_days|default:'N/A' }}</p>
-                        <p class="flex justify-between"><span class="font-semibold">Delivery Time:</span> {{ product.delivery_time }} Days</p>
-                        <p class="flex justify-between"><span class="font-semibold">Return Time Limit:</span> {{ product.return_time_limit }} Days</p>
-                        <p class="flex justify-between"><span class="font-semibold">Available Stock:</span> {{ product.stock_quantity }}</p>
-                        <p class="flex justify-between"><span class="font-semibold">Weight:</span> {{ product.weight }} {{ product.weight_unit }}</p>
-                    </div>
-                    <button id="toggle-additional-info" class="text-blue-600 dark:text-blue-400 font-semibold mt-2 hover:underline focus:outline-none" aria-expanded="false">
-                        See More
-                    </button>
-                </div>
-
-                <!-- Event Details Section (Displayed only if event exists) -->
-                {% if event %}
-                <div class="border-t border-gray-200 dark:border-gray-700 pt-4 mt-5">
-                    <h2 class="text-xl font-semibold text-gray-650 dark:text-white mb-3 flex items-center gap-2">
-                        Event Details
-                        <span class="kt-badge kt-badge-primary kt-badge-sm">Event</span>
-                    </h2>
-                    <div id="event-details-content" class="text-sm text-gray-650 dark:text-gray-300 space-y-2 max-h-36 overflow-hidden transition-all duration-300">
-                        {% if event.conference_link %}
-                        <p class="flex justify-between">
-                            <span class="font-semibold">Conference Link:</span>
-                            <a href="{{ event.conference_link }}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:underline">Join the Event</a>
-                        </p>
-                        {% endif %}
-                        {% if event.speaker_name %}
-                        <p class="flex justify-between">
-                            <span class="font-semibold">Speaker:</span>
-                            {{ event.speaker_name }}
-                        </p>
-                        {% endif %}
-                        {% if event.conference_at %}
-                        <p class="flex justify-between">
-                            <span class="font-semibold">Date & Time:</span>
-                            <span class="spec-value">
-                                {% localtime on %}
-                                    {{ event.conference_at|date:"d M, Y H:i" }}
-                                {% endlocaltime %}
+                    <div class="flex items-center gap-4 mb-6">
+                        {% if product.offer_active and product.offer_percentage and product.offer_percentage > 0 %}
+                            <span class="text-base font-medium text-gray-500 line-through">
+                                ${{ product.price|floatformat:2 }}
                             </span>
-                        </p>
-                        {% endif %}
-                        {% if event.duration %}
-                        <p class="flex justify-between">
-                            <span class="font-semibold">Duration:</span>
-                            {{ event.duration }}
-                        </p>
-                        {% endif %}
-                        {% if event.venue %}
-                        <p class="flex justify-between">
-                            <span class="font-semibold">Venue:</span>
-                            {{ event.venue }}
-                        </p>
+                            <span class="text-2xl font-bold text-gray-650 dark:text-white">
+                                ${{ product.discounted_price|floatformat:2 }}
+                            </span>
+                        {% else %}
+                            <span class="text-2xl font-bold text-gray-650 dark:text-white">
+                                ${{ product.price|floatformat:2 }}
+                            </span>
                         {% endif %}
                     </div>
-                    <button id="toggle-event-details" class="text-blue-600 dark:text-blue-400 font-semibold mt-2 hover:underline focus:outline-none" aria-expanded="false">
-                        See More
-                    </button>
-                </div>
+
+                    <!-- Buttons for Products -->
+                    <div class="flex items-center gap-3 mt-4">
+                        {% if request.user.is_authenticated %}
+                            {% if product.id in user_cart_ids %}
+                                <button class="kt-btn kt-btn-outline kt-btn-sm ms-1" style="background:#3b82f6; color:white;" data-product-id="{{ product.id }}">
+                                    In cart <i class="ki-filled ki-handcart text-white"></i>
+                                </button>
+                            {% else %}
+                                <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 add-to-cart-btn" data-product-id="{{ product.id }}">
+                                    Add <i class="ki-filled ki-handcart"></i>
+                                </button>
+                            {% endif %}
+                        {% else %}
+                            <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 show-login-modal">
+                                Add <i class="ki-filled ki-handcart text-xs"></i>
+                            </button>
+                        {% endif %}
+
+                        {% if request.user.is_authenticated %}
+                            {% if product.show_rfq or product.Both %}
+                                <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 open-rfq-modal"
+                                        data-product-id="{{ product.id }}"
+                                        data-product-name="{{ product.name }}"
+                                        data-product-price="{{ product.discounted_price|default:product.price|floatformat:2 }}"
+                                        data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
+                                        data-quantity="1">
+                                    RFQ <i class="ki-filled ki-directbox-default text-xs"></i>
+                                </button>
+                            {% endif %}
+                        {% endif %}
+
+                        {% if request.user.is_authenticated %}
+                            <span class="kt-wishlist-icon cursor-pointer"
+                                  data-kt-wishlist-toggle="true"
+                                  data-product-id="{{ product.id|default:'0' }}"
+                                  title="{% if product.id in user_wishlist_ids %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}">
+                                <i class="ki-solid ki-heart {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
+                            </span>
+                        {% else %}
+                            <span class="kt-wishlist-icon cursor-pointer show-login-modal"
+                                  title="Login to Add to Wishlist">
+                                <i class="ki-solid ki-heart"></i>
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Additional Information for Products -->
+                    <div class="border-t border-gray-200 dark:border-gray-700 pt-4 mt-5">
+                        <h2 class="text-xl font-semibold text-gray-650 dark:text-white mb-3">Additional Information</h2>
+                        <div id="additional-info-content" class="text-sm text-gray-650 dark:text-gray-300 space-y-2 max-h-36 overflow-hidden transition-all duration-300">
+                            <p class="flex justify-between"><span class="font-semibold">SKU:</span> {{ product.supplier_sku|default:'N/A' }}</p>
+                            <p class="flex justify-between"><span class="font-semibold">Category:</span> {{ product.category.name|default:'Uncategorized' }}</p>
+                            <p class="flex justify-between"><span class="font-semibold">Brand:</span> {{ product.brand.name|default:'Unbranded' }}</p>
+                            <p class="flex justify-between"><span class="font-semibold">Product From:</span> {{ product.product_from|default:'N/A' }}</p>
+                            <p class="flex justify-between"><span class="font-semibold">Condition:</span> {{ product.get_condition_display }}</p>
+                            <p class="flex justify-between"><span class="font-semibold">Warranty:</span> {{ product.get_warranty_display }}</p>
+                            <p class="flex justify-between"><span class="font-semibold">Tag:</span> {{ product.get_tag_display }}</p>
+                            <p class="flex justify-between"><span class="font-semibold">Manufacture Date:</span> {{ product.manufacture_date|date:"d M, Y"|default:'N/A' }}</p>
+                            <p class="flex justify-between"><span class="font-semibold">Expiration Days:</span> {{ product.expiration_days|default:'N/A' }}</p>
+                            <p class="flex justify-between"><span class="font-semibold">Delivery Time:</span> {{ product.delivery_time }} Days</p>
+                            <p class="flex justify-between"><span class="font-semibold">Return Time Limit:</span> {{ product.return_time_limit }} Days</p>
+                            <p class="flex justify-between"><span class="font-semibold">Available Stock:</span> {{ product.stock_quantity }}</p>
+                            <p class="flex justify-between"><span class="font-semibold">Weight:</span> {{ product.weight }} {{ product.weight_unit }}</p>
+                        </div>
+                        <button id="toggle-additional-info" class="text-blue-600 dark:text-blue-400 font-semibold mt-2 hover:underline focus:outline-none" aria-expanded="false">
+                            See More
+                        </button>
+                    </div>
                 {% endif %}
 
-              <!-- Ratings Section -->
-<div class="ratings-section" style="margin-top: 30px;">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h3 style="font-size: 18px; font-weight: 600; color: #99a1af;">RATINGS <span style="color: #7f91a0;">☆</span></h3>
-        {% if request.user.is_authenticated %}
-        <button id="openQuestionModal" class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700">
-            Post Your Question
-        </button>
-        {% else %}
-        <button id="openQuestionModal" class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700 show-login-modal">
-            Post Your Question
-        </button>
-        {% endif %}
-    </div>
-    <div style="display: flex; gap: 40px; margin-top: 20px; align-items: flex-start;">
-        <div style="min-width: 100px; text-align: center;">
-            <div style="font-size: 38px; font-weight: 500; color: #0b7663; line-height: 1;">
-                {{ average_rating|default:"0.0" }}★
-            </div>
-            <div style="font-size: 15px; color: #99a1af; margin-top: 6px;">
-                {{ total_reviews }} Verified Buyer{{ total_reviews|pluralize }}
-            </div>
-        </div>
-        <div style="width: 1px; background: #e0e0e0; height: 65px; margin-top: 5px;"></div>
-        <div style="flex-grow: 1; max-width: 300px; padding-left: 10px;">
-            {% for i in "54321" %}
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                <span style="width: 24px; font-size: 15px; color: #99a1af;">{{ i }}★</span>
-                <div style="flex-grow: 1; background: #e0e0e0; height: 8px; border-radius: 4px; overflow: hidden;">
-                    <div style="width: {{ rating_counts|get:i|percentage:total_reviews|floatformat:"0" }}%; height: 100%; background: {% if i == '1' %}#ff4d4f{% elif i == '2' %}#ffc107{% else %}#0b7663{% endif %};"></div>
-                </div>
-                <span style="width: 20px; font-size: 14px; color: #99a1af; text-align: right;">
-                    {{ rating_counts|get:i|default:"0" }}
-                </span>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-</div>
+                <!-- Event Details Section (Displayed only for events) -->
+                {% if product.category.name|lower == "conference" or product.category.name|lower == "webinar" or product.category.name|lower == "event" %}
+                    <div class="border-t border-gray-200 dark:border-gray-700 pt-4 mt-5">
+                        <div class="flex items-center justify-between mb-3">
+                            <h2 class="text-xl font-semibold text-gray-650 dark:text-white flex items-center gap-3">
+                                Event Details
+                                <span class="kt-badge kt-badge-primary kt-badge-sm">Event</span>
+                            </h2>
 
-                <!-- Reviews Section -->
-                <div class="mt-8">
-                    <h4 class="text-lg font-semibold text-gray-400 dark:text-white">Customer Reviews ({{ total_reviews }})</h4>
-                    {% if reviews %}
-                    <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
-                        <!-- First Review -->
-                        <div class="flex gap-4">
-                            <div class="bg-teal-600 px-3 py-1 rounded text-sm font-bold w-12 text-center" style="color: #0b7663;">
-                                {{ reviews.0.rating }}★
-                            </div>
-                            <div class="flex-1">
-                                <p class="text-gray-400 dark:text-gray-200">{{ reviews.0.review|default:"No comment provided." }}</p>
-                                {% if reviews.0.photo %}
-                                <img src="{{ reviews.0.photo.url }}" alt="Review Photo" class="w-24 h-auto rounded mt-2 shadow-sm cursor-pointer review-photo" data-full-image="{{ reviews.0.photo.url }}" data-review="{{ reviews.0.review|default:'No comment provided.' }}" data-rating="{{ reviews.0.rating }}" data-username="{{ reviews.0.user.username }}" data-date="{{ reviews.0.created_at|date:'d M Y' }}" loading="lazy" />
+                            {% if request.user.is_authenticated %}
+                                {% if product.id in user_registered_event_ids %}
+                                <button class="kt-btn kt-btn-xs bg-blue-600 text-white hover:bg-blue-700 cursor-not-allowed" disabled>
+                                    Registered
+                                </button>
+                                {% else %}
+                                <button class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700 open-event-registration-modal"
+                                        data-product-id="{{ product.id }}"
+                                        data-event-name="{{ product.name }}">
+                                    Register for Event
+                                </button>
                                 {% endif %}
-                                <small class="text-gray-500 dark:text-gray-400">{{ reviews.0.user.username }} | {{ reviews.0.created_at|date:"d M Y" }}</small>
-                            </div>
+                            {% else %}
+                            <button class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700 show-login-modal">
+                                Register for Event
+                            </button>
+                            {% endif %}
                         </div>
 
-                        <!-- More Reviews -->
-                        <div id="more-reviews" class="hidden">
-                            {% for review in reviews|slice:"1:" %}
-                            <div class="border-t border-gray-200 dark:border-gray-700 pt-4 flex gap-4">
+                        <div id="event-details-content" class="text-sm text-gray-650 dark:text-gray-300 space-y-2 max-h-36 overflow-hidden transition-all duration-300">
+                            {% if event.conference_link %}
+                            <p class="flex justify-between">
+                                <span class="font-semibold">Conference Link:</span>
+                                <a href="{{ event.conference_link }}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:underline">Join the Event</a>
+                            </p>
+                            {% endif %}
+                            {% if event.speaker_name %}
+                            <p class="flex justify-between">
+                                <span class="font-semibold">Speaker:</span>
+                                {{ event.speaker_name }}
+                            </p>
+                            {% endif %}
+                            {% if event.conference_at %}
+                            <p class="flex justify-between">
+                                <span class="font-semibold">Date & Time:</span>
+                                <span class="spec-value">
+                                    {% localtime on %}
+                                        {{ event.conference_at|date:"d M, Y H:i" }}
+                                    {% endlocaltime %}
+                                </span>
+                            </p>
+                            {% endif %}
+                            {% if event.duration %}
+                            <p class="flex justify-between">
+                                <span class="font-semibold">Duration:</span>
+                                {{ event.duration }}
+                            </p>
+                            {% endif %}
+                            {% if event.venue %}
+                            <p class="flex justify-between">
+                                <span class="font-semibold">Venue:</span>
+                                {{ event.venue }}
+                            </p>
+                            {% endif %}
+                        </div>
+                        {% comment %}
+                        <button id="toggle-event-details" class="text-blue-600 dark:text-blue-400 font-semibold mt-2 hover:underline focus:outline-none" aria-expanded="false">
+                            See More
+                        </button>
+                        {% endcomment %}
+                    </div>
+                {% endif %}
+
+                <!-- Ratings Section for Products -->
+                {% if product.category.name|lower != "conference" and product.category.name|lower != "webinar" and product.category.name|lower != "event" %}
+                    <div class="ratings-section" style="margin-top: 30px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <h3 style="font-size: 18px; font-weight: 600; color: #99a1af;">RATINGS <span style="color: #7f91a0;">☆</span></h3>
+                            {% if request.user.is_authenticated %}
+                            <button id="openQuestionModal" class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700">
+                                Post Your Question
+                            </button>
+                            {% else %}
+                            <button id="openQuestionModal" class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700 show-login-modal">
+                                Post Your Question
+                            </button>
+                            {% endif %}
+                        </div>
+                        <div style="display: flex; gap: 40px; margin-top: 20px; align-items: flex-start;">
+                            <div style="min-width: 100px; text-align: center;">
+                                <div style="font-size: 38px; font-weight: 500; color: #0b7663; line-height: 1;">
+                                    {{ average_rating|default:"0.0" }}★
+                                </div>
+                                <div style="font-size: 15px; color: #99a1af; margin-top: 6px;">
+                                    {{ total_reviews }} Verified Buyer{{ total_reviews|pluralize }}
+                                </div>
+                            </div>
+                            <div style="width: 1px; background: #e0e0e0; height: 65px; margin-top: 5px;"></div>
+                            <div style="flex-grow: 1; max-width: 300px; padding-left: 10px;">
+                                {% for i in "54321" %}
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                    <span style="width: 24px; font-size: 15px; color: #99a1af;">{{ i }}★</span>
+                                    <div style="flex-grow: 1; background: #e0e0e0; height: 8px; border-radius: 4px; overflow: hidden;">
+                                        <div style="width: {{ rating_counts|get:i|percentage:total_reviews|floatformat:"0" }}%; height: 100%; background: {% if i == '1' %}#ff4d4f{% elif i == '2' %}#ffc107{% else %}#0b7663{% endif %};"></div>
+                                    </div>
+                                    <span style="width: 20px; font-size: 14px; color: #99a1af; text-align: right;">
+                                        {{ rating_counts|get:i|default:"0" }}
+                                    </span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Reviews Section for Products -->
+                    <div class="mt-8">
+                        <h4 class="text-lg font-semibold text-gray-400 dark:text-white">Customer Reviews ({{ total_reviews }})</h4>
+                        {% if reviews %}
+                        <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+                            <!-- First Review -->
+                            <div class="flex gap-4">
                                 <div class="bg-teal-600 px-3 py-1 rounded text-sm font-bold w-12 text-center" style="color: #0b7663;">
-                                    {{ review.rating }}★
+                                    {{ reviews.0.rating }}★
                                 </div>
                                 <div class="flex-1">
-                                    <p class="text-gray-400 dark:text-gray-200">{{ review.review|default:"No comment provided." }}</p>
-                                    {% if review.photo %}
-                                    <img src="{{ review.photo.url }}" alt="Review Photo" class="w-24 h-auto rounded mt-2 shadow-sm cursor-pointer review-photo" data-full-image="{{ review.photo.url }}" data-review="{{ review.review|default:'No comment provided.' }}" data-rating="{{ review.rating }}" data-username="{{ review.user.username }}" data-date="{{ review.created_at|date:'d M Y' }}" loading="lazy" />
+                                    <p class="text-gray-400 dark:text-gray-200">{{ reviews.0.review|default:"No comment provided." }}</p>
+                                    {% if reviews.0.photo %}
+                                    <img src="{{ reviews.0.photo.url }}" alt="Review Photo" class="w-24 h-auto rounded mt-2 shadow-sm cursor-pointer review-photo" data-full-image="{{ reviews.0.photo.url }}" data-review="{{ reviews.0.review|default:'No comment provided.' }}" data-rating="{{ reviews.0.rating }}" data-username="{{ reviews.0.user.username }}" data-date="{{ reviews.0.created_at|date:'d M Y' }}" loading="lazy" />
                                     {% endif %}
-                                    <small class="text-gray-500 dark:text-gray-400">{{ review.user.username }} | {{ review.created_at|date:"d M Y" }}</small>
+                                    <small class="text-gray-500 dark:text-gray-400">{{ reviews.0.user.username }} | {{ reviews.0.created_at|date:"d M Y" }}</small>
                                 </div>
                             </div>
-                            {% endfor %}
-                        </div>
 
-                        <!-- Toggle Buttons -->
-                        <a href="#" id="view-all-reviews-btn" style="color: #e60023; font-weight: bold; display: block; margin-top: 20px;">
-                            View all {{ total_reviews }} reviews
-                        </a>
-                        <a href="#" id="see-less-reviews-btn" style="display: none; color: #0b7663; font-weight: bold; margin-top: 10px;">
-                            See less reviews
-                        </a>
-                    {% else %}
-                        <p class="text-gray-500 mt-4">No reviews yet for this product.</p>
-                    {% endif %}
-                </div>
+                            <!-- More Reviews -->
+                            <div id="more-reviews" class="hidden">
+                                {% for review in reviews|slice:"1:" %}
+                                <div class="border-t border-gray-200 dark:border-gray-700 pt-4 flex gap-4">
+                                    <div class="bg-teal-600 px-3 py-1 rounded text-sm font-bold w-12 text-center" style="color: #0b7663;">
+                                        {{ review.rating }}★
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-gray-400 dark:text-gray-200">{{ review.review|default:"No comment provided." }}</p>
+                                        {% if review.photo %}
+                                        <img src="{{ review.photo.url }}" alt="Review Photo" class="w-24 h-auto rounded mt-2 shadow-sm cursor-pointer review-photo" data-full-image="{{ review.photo.url }}" data-review="{{ review.review|default:'No comment provided.' }}" data-rating="{{ review.rating }}" data-username="{{ review.user.username }}" data-date="{{ review.created_at|date:'d M Y' }}" loading="lazy" />
+                                        {% endif %}
+                                        <small class="text-gray-500 dark:text-gray-400">{{ review.user.username }} | {{ review.created_at|date:"d M Y" }}</small>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+
+                            <!-- Toggle Buttons -->
+                            <a href="#" id="view-all-reviews-btn" style="color: #e60023; font-weight: bold; display: block; margin-top: 20px;">
+                                View all {{ total_reviews }} reviews
+                            </a>
+                            <a href="#" id="see-less-reviews-btn" style="display: none; color: #0b7663; font-weight: bold; margin-top: 10px;">
+                                See less reviews
+                            </a>
+                        {% else %}
+                            <p class="text-gray-500 mt-4">No reviews yet for this product.</p>
+                        {% endif %}
+                    </div>
+                {% endif %}
             </div>
         </div>
         {% else %}
@@ -522,7 +537,6 @@
             <a href="{% url 'dashboard:home' %}" class="mt-4 inline-block kt-btn kt-btn-primary kt-btn-sm">Back to Home</a>
         </div>
         {% endif %}
-    </div>
 </div>
 
 <!-- Login Required Modal -->
@@ -647,15 +661,10 @@
                 <img id="modalImage" src="" alt="Enlarged Review Photo" class="max-w-full max-h-[70vh] object-contain" />
             </div>
             <div class="info-section" id="modalInfo">
-                <!-- Review info will be populated here -->
             </div>
         </div>
     </div>
 </div>
-<!-- Post Question Button -->
-<!-- <button id="openQuestionModal" class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700">
-    Post Your Question
-</button> -->
 
 <!-- Post Question Modal -->
 <div id="questionModal" class="kt-modal hidden fixed inset-0 z-[9999] flex items-center justify-center bg-black/30 backdrop-blur-sm" data-kt-modal="true" role="dialog" aria-labelledby="questionModalTitle" aria-modal="true">
@@ -896,6 +905,21 @@
         document.body.style.overflow = '';
     }
 
+    // Question Modal
+    function openQuestionModal() {
+        const modal = document.getElementById('questionModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeQuestionModal() {
+        const modal = document.getElementById('questionModal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        document.body.style.overflow = '';
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         // Login Modal Handlers
         document.querySelectorAll('.show-login-modal').forEach(button => {
@@ -942,6 +966,12 @@
                 document.body.style.overflow = 'hidden';
             });
         });
+
+        // Question Modal Handlers
+        document.getElementById('openQuestionModal').addEventListener('click', function (e) {
+            e.preventDefault();
+            openQuestionModal();
+        });
     });
 
     // Image Modal Functionality
@@ -985,28 +1015,6 @@
         });
 
         document.querySelector('#imageModal .kt-btn-ghost').addEventListener('click', closeImageModal);
-    });
-
-    // Question Modal
-    function openQuestionModal() {
-        const modal = document.getElementById('questionModal');
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-        document.body.style.overflow = 'hidden';
-    }
-
-    function closeQuestionModal() {
-        const modal = document.getElementById('questionModal');
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-        document.body.style.overflow = '';
-    }
-
-    document.addEventListener('DOMContentLoaded', function () {
-        document.getElementById('openQuestionModal').addEventListener('click', function (e) {
-            e.preventDefault();
-            openQuestionModal();
-        });
     });
 </script>
 {% endblock %}

@@ -163,7 +163,6 @@ class EmailOnlyLoginForm(AuthenticationForm):
             raise ValidationError("No account found with this email")
         
 
-
 class CustomPasswordResetForm(PasswordResetForm):
     email = forms.EmailField(
         label='Email',

@@ -4,6 +4,12 @@
 {% block content %}
 <title>Medical Supplies</title>
 <style>
+     /* Modal styles */
+    #loginRequiredModal, #rfqModal, #imageModal, #eventRegistrationModal, #questionModal {
+        z-index: 9999;
+        backdrop-filter: blur(8px);
+        background-color: rgba(0, 0, 0, 0.4);
+    }
     .text-red-500 {
         color: #ef4444 !important;
     }
@@ -275,7 +281,7 @@
             color: white;
         }
     }
-    
+
 
     /* Discount Ribbon Styles */
     .discount-ribbon {
@@ -309,14 +315,14 @@
     transition: color 0.2s ease-in-out;
 }
 .kt-wishlist-icon:hover i {
-    color: #ff0000; 
+    color: #ff0000;
 }
 .kt-wishlist-icon i {
-   
+
     color: #6b7280;
 }
 .kt-wishlist-icon i.text-red-500 {
-    color: #ff0000; 
+    color: #ff0000;
 }
 </style>
 
@@ -351,6 +357,7 @@
                                      class="h-[100px] sm:h-[150px] shrink-0 object-contain cursor-pointer"
                                      src="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"/>
                             </a>
+                            {% if product.category.name not in 'Conference,Webinar,Event' %}
                             {% if request.user.is_authenticated %}
                             <span class="kt-wishlist-icon absolute top-2 end-2 cursor-pointer"
                                   data-kt-wishlist-toggle="true"
@@ -364,6 +371,7 @@
                                 <i class="ki-solid ki-heart"></i>
                             </span>
                             {% endif %}
+                            {% endif %}
                         </div>
                         <h3 class="text-sm font-semibold text-gray-650 leading-snug truncate hover:text-primary transition">
                             {{ product.name }}
@@ -371,24 +379,57 @@
                         <p class="text-xs sm:text-sm text-gray-650 mt-1 truncate">
                             {{ product.description|default:"No description available"|truncatechars:120 }}
                         </p>
-                        {% if product.category.name != 'Conference' and product.delivery_date %}
-                        <p class="text-xs text-green-600 mt-0.5">
-                            Delivery by: <strong>{{ product.delivery_date }}</strong>
-                        </p>
+                        {% if product.category.name in 'Conference,Webinar,Event' %}
+                            {% if product.event and product.event.conference_at %}
+                            <p class="text-xs text-green-600 mt-1">
+                                Event Date: <strong>{{ product.event.conference_at|date:"D, d M Y, H:i" }}</strong>
+                            </p>
+                            {% endif %}
+                            {% comment %}
+                            {% if product.event and product.event.speaker_name %}
+                            <p class="text-xs text-gray-600 mt-1">
+                                Speaker: <strong>{{ product.event.speaker_name }}</strong>
+                            </p>
+                            {% endif %}
+                            {% if product.event and product.event.venue %}
+                            <p class="text-xs text-gray-600 mt-1">
+                                Venue: <strong>{{ product.event.venue }}</strong>
+                            </p>
+                            {% endif %}
+                            {% if product.event and product.event.duration %}
+                            <p class="text-xs text-gray-600 mt-1">
+                                Duration: <strong>{{ product.event.duration }}</strong>
+                            </p>
+                            {% endif %}
+                            {% endcomment %}
+                            {% if product.event and product.event.conference_link %}
+                            <p class="text-xs text-gray-600 mt-1">
+                                Conference Link: <a href="{{ product.event.conference_link }}" class="text-blue-600 hover:underline" target="_blank">Join Here</a>
+                            </p>
+                            {% endif %}
+                        {% else %}
+                            {% if product.delivery_date %}
+                            <p class="text-xs text-green-600 mt-0.5">
+                                Delivery by: <strong>{{ product.delivery_date }}</strong>
+                            </p>
+                            {% endif %}
                         {% endif %}
                     </div>
                     <div class="flex items-center justify-between flex-wrap gap-2 px-1 pb-1">
+                        {% if product.category.name not in 'Conference,Webinar,Event' %}
                         <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1">
                             <i class="ki-solid ki-star text-white -mt-0.5"></i>
-                                {{ product.rating|default:"0.0" }}
+                            {{ product.rating|default:"0.0" }}
                         </span>
+                        {% endif %}
                         {% if product.total_reviews > 0 %}
                         <span>
                             <span class="text-[11px] text-white/80 ml-1">
-                                (<i class="ki-solid ki-eye text-gray-600 -mt-0.5"></i> {{ product.total_reviews }})</span>
+                                (<i class="ki-solid ki-eye text-gray-600 -mt-0.5"></i> {{ product.total_reviews }})
+                            </span>
                         </span>
                         {% endif %}
-                        {% if product.category.name != 'Conference' %}
+                        {% if product.category.name not in 'Conference,Webinar,Event' %}
                         <div class="flex items-center flex-nowrap gap-1 whitespace-nowrap">
                             {% if product.original_price and product.original_price > product.price %}
                             <span class="text-xs font-normal text-secondary-foreground line-through">
@@ -400,35 +441,53 @@
                         {% endif %}
                     </div>
                     <div class="flex items-center flex-wrap gap-2 px-1 product-actions">
-                        {% if product.category.name != 'Conference' %}
-                        {% if user.is_authenticated %}
-                            {% if product.id in user_cart_ids %}
-                            <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1"
-                                    style="background:#3b82f6; color:white;" data-product-id="{{ product.id }}">
-                                In cart <i class="ki-filled ki-handcart text-white text-xs"></i>
-                            </button>
+                        {% if product.category.name not in 'Conference,Webinar,Event' %}
+                            {% if user.is_authenticated %}
+                                {% if product.id in user_cart_ids %}
+                                <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1"
+                                        style="background:#3b82f6; color:white;" data-product-id="{{ product.id }}">
+                                    In cart <i class="ki-filled ki-handcart text-white text-xs"></i>
+                                </button>
+                                {% else %}
+                                <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 add-to-cart-btn"
+                                        data-product-id="{{ product.id }}">
+                                    Add <i class="ki-filled ki-handcart text-xs"></i>
+                                </button>
+                                {% endif %}
                             {% else %}
-                            <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 add-to-cart-btn"
-                                    data-product-id="{{ product.id }}">
-                                Add <i class="ki-filled ki-handcart text-xs"></i>
-                            </button>
+                                <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 show-login-modal">
+                                    Add <i class="ki-filled ki-handcart text-xs"></i>
+                                </button>
+                            {% endif %}
+                            {% if request.user.is_authenticated %}
+                                {% if product.show_rfq or product.Both %}
+                                <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 open-rfq-modal"
+                                        data-product-id="{{ product.id }}"
+                                        data-product-name="{{ product.name }}"
+                                        data-product-price="{{ product.price }}"
+                                        data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
+                                        data-quantity="1">
+                                    RFQ <i class="ki-filled ki-directbox-default text-xs"></i>
+                                </button>
+                                {% endif %}
                             {% endif %}
                         {% else %}
-                            <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 show-login-modal">
-                                Add <i class="ki-filled ki-handcart text-xs"></i>
-                            </button>
-                        {% endif %}
-                        {% endif %}
-                        {% if request.user.is_authenticated %}
-                            {% if product.show_rfq or product.Both %}
-                            <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 open-rfq-modal"
-                                    data-product-id="{{ product.id }}"
-                                    data-product-name="{{ product.name }}"
-                                    data-product-price="{{ product.price }}"
-                                    data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
-                                    data-quantity="1">
-                                RFQ <i class="ki-filled ki-directbox-default text-xs"></i>
-                            </button>
+                            {% if request.user.is_authenticated %}
+                                {% if product.id in user_registered_event_ids %}
+                                <button class="kt-btn kt-btn-xs bg-blue-600 text-white hover:bg-blue-700 cursor-not-allowed" disabled>
+                                    Registered
+                                </button>
+                                {% else %}
+                                <button class="kt-btn kt-btn-xs bg-blue-600 text-white hover:bg-blue-700 open-event-registration-modal"
+                                        data-product-id="{{ product.id }}"
+                                        data-event-name="{{ product.name }}">
+                                    Register for Event
+                                </button>
+                                {% endif %}
+                            {% else %}
+                                <button class="kt-btn kt-btn-xs bg-blue-600 text-white hover:bg-blue-700 show-login-modal">
+                                    Register for Event
+                                </button>
                             {% endif %}
                         {% endif %}
                     </div>
@@ -442,6 +501,7 @@
         </div>
     </div>
 </div>
+<!-- End Featured Products -->
 <!-- Special Offers -->
 <div class="section-container">
     <div class="space-y-5">
@@ -498,18 +558,18 @@
                                     {% endif %}
                                 {% endif %}
                                 {% if request.user.is_authenticated %}
-    <span class="kt-wishlist-icon absolute top-2 end-2 cursor-pointer"
-          data-kt-wishlist-toggle="true"
-          data-product-id="{{ product.id }}"
-          title="{% if product.id in user_wishlist_ids %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}">
-        <i class="ki-solid ki-heart {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
-    </span>
-{% else %}
-    <span class="kt-wishlist-icon absolute top-2 end-2 cursor-pointer show-login-modal"
-          title="Login to Add to Wishlist">
-        <i class="ki-solid ki-heart"></i>
-    </span>
-{% endif %}
+                                    <span class="kt-wishlist-icon absolute top-2 end-2 cursor-pointer"
+                                          data-kt-wishlist-toggle="true"
+                                          data-product-id="{{ product.id }}"
+                                          title="{% if product.id in user_wishlist_ids %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}">
+                                        <i class="ki-solid ki-heart {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
+                                    </span>
+                                {% else %}
+                                    <span class="kt-wishlist-icon absolute top-2 end-2 cursor-pointer show-login-modal"
+                                          title="Login to Add to Wishlist">
+                                        <i class="ki-solid ki-heart"></i>
+                                    </span>
+                                {% endif %}
                                 {% if product.offer_active and product.offer_percentage %}
                                 <span class="text-base font-normal text-secondary-foreground line-through pt-[1px]">
                                     ${{ product.price|floatformat:2 }}
@@ -654,18 +714,18 @@
                                          data-product-discount="{{ product.offer_percentage|default:'' }}"/>
                                 </a>
                                 {% if request.user.is_authenticated %}
-    <span class="kt-wishlist-icon absolute top-2 end-2 cursor-pointer"
-          data-kt-wishlist-toggle="true"
-          data-product-id="{{ product.id }}"
-          title="{% if product.id in user_wishlist_ids %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}">
-        <i class="ki-solid ki-heart {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
-    </span>
-{% else %}
-    <span class="kt-wishlist-icon absolute top-2 end-2 cursor-pointer show-login-modal"
-          title="Login to Add to Wishlist">
-        <i class="ki-solid ki-heart"></i>
-    </span>
-{% endif %}
+                                <span class="kt-wishlist-icon absolute top-2 end-2 cursor-pointer"
+                                      data-kt-wishlist-toggle="true"
+                                      data-product-id="{{ product.id }}"
+                                      title="{% if product.id in user_wishlist_ids %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}">
+                                    <i class="ki-solid ki-heart {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
+                                </span>
+                            {% else %}
+                                <span class="kt-wishlist-icon absolute top-2 end-2 cursor-pointer show-login-modal"
+                                      title="Login to Add to Wishlist">
+                                    <i class="ki-solid ki-heart"></i>
+                                </span>
+                            {% endif %}
                             </div>
                             <h3 class="text-md sm:text-lg font-bold text-gray-650 leading-snug truncate hover:text-primary transition">
                                 {{ product.name }}
@@ -768,18 +828,18 @@
                                          data-product-discount="{{ product.offer_percentage|default:'' }}"/>
                                 </a>
                                 {% if request.user.is_authenticated %}
-    <span class="kt-wishlist-icon absolute top-2 end-2 cursor-pointer"
-          data-kt-wishlist-toggle="true"
-          data-product-id="{{ product.id }}"
-          title="{% if product.id in user_wishlist_ids %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}">
-        <i class="ki-solid ki-heart {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
-    </span>
-{% else %}
-    <span class="kt-wishlist-icon absolute top-2 end-2 cursor-pointer show-login-modal"
-          title="Login to Add to Wishlist">
-        <i class="ki-solid ki-heart"></i>
-    </span>
-{% endif %}
+                                <span class="kt-wishlist-icon absolute top-2 end-2 cursor-pointer"
+                                      data-kt-wishlist-toggle="true"
+                                      data-product-id="{{ product.id }}"
+                                      title="{% if product.id in user_wishlist_ids %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}">
+                                    <i class="ki-solid ki-heart {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
+                                </span>
+                            {% else %}
+                                <span class="kt-wishlist-icon absolute top-2 end-2 cursor-pointer show-login-modal"
+                                      title="Login to Add to Wishlist">
+                                    <i class="ki-solid ki-heart"></i>
+                                </span>
+                            {% endif %}
                             </div>
                             <h3 class="text-md sm:text-lg font-bold text-gray-650 leading-snug truncate hover:text-primary transition">
                                 {{ product.name }}
@@ -882,18 +942,18 @@
                                          data-product-discount="{{ product.offer_percentage|default:'' }}"/>
                                 </a>
                                 {% if request.user.is_authenticated %}
-    <span class="kt-wishlist-icon absolute top-2 end-2 cursor-pointer"
-          data-kt-wishlist-toggle="true"
-          data-product-id="{{ product.id }}"
-          title="{% if product.id in user_wishlist_ids %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}">
-        <i class="ki-solid ki-heart {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
-    </span>
-{% else %}
-    <span class="kt-wishlist-icon absolute top-2 end-2 cursor-pointer show-login-modal"
-          title="Login to Add to Wishlist">
-        <i class="ki-solid ki-heart"></i>
-    </span>
-{% endif %}
+                                <span class="kt-wishlist-icon absolute top-2 end-2 cursor-pointer"
+                                      data-kt-wishlist-toggle="true"
+                                      data-product-id="{{ product.id }}"
+                                      title="{% if product.id in user_wishlist_ids %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}">
+                                    <i class="ki-solid ki-heart {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
+                                </span>
+                            {% else %}
+                                <span class="kt-wishlist-icon absolute top-2 end-2 cursor-pointer show-login-modal"
+                                      title="Login to Add to Wishlist">
+                                    <i class="ki-solid ki-heart"></i>
+                                </span>
+                            {% endif %}
                             </div>
                             <h3 class="text-md sm:text-lg font-bold text-gray-650 leading-snug truncate hover:text-primary transition">
                                 {{ product.name }}
@@ -966,6 +1026,115 @@
             </div>
         </div>
     </div>
+
+
+<!-- Conference & Webinar Events -->
+<div class="section-container">
+    <div class="space-y-4">
+        <div class="flex items-center justify-between gap-4">
+            <span class="text-lg font-medium text-gray-100">Conference & Webinar Events</span>
+            <a class="kt-link" href="{% url 'dashboard:search_results_grid' %}?category=Conference">See All <i class="ki-filled ki-right text-xs"></i></a>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-2">
+            {% for product in conference_products %}
+            <div class="kt-card product-card">
+                <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4 h-full">
+                    <div class="mb-2.5">
+                        <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[180px] sm:h-[250px] mb-4 shadow-none">
+                            <a href="{% url 'dashboard:product_detail' product.id %}" class="block">
+                                <img alt="{{ product.name|default:'Unnamed Event' }}"
+                                     class="h-[120px] sm:h-[180px] shrink-0 cursor-pointer product-thumbnail"
+                                     src="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
+                                     data-product-name="{{ product.name|default:'Unnamed Event' }}"
+                                     data-product-description="{{ product.description|default:'No description available' }}"
+                                     data-product-image="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
+                                     data-product-sku="{{ product.sku|default:'N/A' }}"
+                                     data-product-category="{{ product.category|default:'Conference' }}"
+                                     data-product-rating="{{ product.rating|default:'0.0' }}"
+                                     data-product-more-info="{{ product.more_info|default:'No additional info' }}"
+                                     data-product-price="{{ product.price|default:'0.00' }}"
+                                     data-product-original-price="{{ product.original_price|default:'' }}"
+                                     data-product-discount="{{ product.offer_percentage|default:'' }}"/>
+                            </a>
+                            {% if product.category.name not in 'Conference,Webinar,Event' %}
+                            {% if request.user.is_authenticated %}
+                            <span class="kt-wishlist-icon absolute top-2 end-2 cursor-pointer"
+                                  data-kt-wishlist-toggle="true"
+                                  data-product-id="{{ product.id }}"
+                                  title="{% if product.id in user_wishlist_ids %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}">
+                                <i class="ki-solid ki-heart {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
+                            </span>
+                            {% else %}
+                            <span class="kt-wishlist-icon absolute top-2 end-2 cursor-pointer show-login-modal"
+                                  title="Login to Add to Wishlist">
+                                <i class="ki-solid ki-heart"></i>
+                            </span>
+                            {% endif %}
+                            {% endif %}
+                        </div>
+                        <h3 class="text-md sm:text-lg font-bold text-gray-650 leading-snug truncate hover:text-primary transition">
+                            {{ product.name }}
+                        </h3>
+                        <p class="text-xs sm:text-sm text-gray-650 mt-1 truncate">
+                            {{ product.description|default:"No description available"|truncatechars:120 }}
+                        </p>
+                        {% if product.event and product.event.conference_at %}
+                        <p class="text-xs text-green-600 mt-1">
+                            Event Date: <strong>{{ product.event.conference_at|date:"D, d M Y, H:i" }}</strong>
+                        </p>
+                        {% endif %}
+                        {% if product.event and product.event.speaker_name %}
+                        <p class="text-xs text-gray-600 mt-1">
+                            Speaker: <strong>{{ product.event.speaker_name }}</strong>
+                        </p>
+                        {% endif %}
+                        {% if product.event and product.event.venue %}
+                        <p class="text-xs text-gray-600 mt-1">
+                            Venue: <strong>{{ product.event.venue }}</strong>
+                        </p>
+                        {% endif %}
+                        {% if product.event and product.event.duration %}
+                        <p class="text-xs text-gray-600 mt-1">
+                            Duration: <strong>{{ product.event.duration }}</strong>
+                        </p>
+                        {% endif %}
+                        {% if product.event and product.event.conference_link %}
+                        <p class="text-xs text-gray-600 mt-1">
+                            Conference Link: <a href="{{ product.event.conference_link }}" class="text-blue-600 hover:underline" target="_blank">Join Here</a>
+                        </p>
+                        {% endif %}
+                    </div>
+                    <div class="flex items-center flex-wrap justify-between gap-3 px-2.5 pb-1">
+                        <div class="flex items-center flex-wrap gap-1.5">
+                            {% if request.user.is_authenticated %}
+                                {% if product.id in user_registered_event_ids %}
+                                <button class="kt-btn kt-btn-xs bg-blue-600 text-white hover:bg-blue-700 cursor-not-allowed" disabled>
+                                    Registered
+                                </button>
+                                {% else %}
+                                <button class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700 open-event-registration-modal"
+                                        data-product-id="{{ product.id }}"
+                                        data-event-name="{{ product.name }}">
+                                    Register for Event
+                                </button>
+                                {% endif %}
+                            {% else %}
+                            <button class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700 show-login-modal">
+                                Register for Event
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-span-full text-center py-10 text-gray-400">
+                No conference or webinar events available at the moment.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
 
     <!-- Benefits -->
     <div class="section-container">
@@ -1053,54 +1222,6 @@
         </div>
     </div>
 
-    <!-- Product Details Modal -->
-    <div class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-         data-kt-modal="true" id="modal_shop_product_details">
-        <div class="kt-card w-full max-w-[500px] h-full rounded-xl border border-border bg-background">
-            <div class="kt-card-header px-5 flex items-center justify-between">
-                <h3 class="kt-card-title">Product Details</h3>
-                <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" data-kt-modal-dismiss="true">
-                    <i class="ki-filled ki-cross text-base"></i>
-                </button>
-            </div>
-            <div class="kt-card-content flex flex-col space-y-3 p-5 kt-scrollable-y-auto">
-                <div class="kt-card relative items-center justify-center bg-accent/50 mb-6.5 h-[280px] shadow-none">
-                    <span class="kt-badge kt-badge-destructive kt-badge-sm absolute top-4 end-4 uppercase product-discount hidden"></span>
-                    <img alt="" class="w-[250px] h-[250px] object-cover product-image"/>
-                </div>
-                <span class="text-base font-medium text-mono product-name"></span>
-                <span class="text-sm font-normal text-foreground block mb-7 product-description"></span>
-                <div class="flex flex-col gap-2.5">
-                    <div class="flex items-center gap-2.5">
-                        <span class="text-xs font-normal text-foreground min-w-14">SKU</span>
-                        <span class="text-xs font-medium text-foreground product-sku"></span>
-                    </div>
-                    <div class="flex items-center gap-2.5">
-                        <span class="text-xs font-normal text-foreground min-w-14">Category</span>
-                        <span class="text-xs font-medium text-foreground product-category"></span>
-                    </div>
-                    <div class="flex items-center gap-2.5">
-                        <span class="text-xs font-normal text-foreground min-w-14">Rating</span>
-                        <div class="kt-rating product-rating"></div>
-                    </div>
-                    <div class="flex items-center gap-2.5">
-                        <span class="text-xs font-normal text-foreground min-w-14">More Info</span>
-                        <span class="text-xs font-normal text-foreground product-more-info"></span>
-                    </div>
-                </div>
-                <div class="flex items-center justify-end gap-2">
-                    <span class="text-base font-normal text-secondary-foreground line-through product-original-price hidden"></span>
-                    <span class="text-lg font-medium text-mono product-price"></span>
-                </div>
-            </div>
-            <div class="kt-card-footer px-5">
-                <button class="kt-btn kt-btn-primary grow" data-kt-drawer-toggle="#drawers_shop_cart">
-                    <i class="ki-filled ki-handcart"></i> Add to Cart
-                </button>
-            </div>
-        </div>
-    </div>
-
     <!-- RFQ Modal -->
     <div id="rfqModal"
          class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
@@ -1164,6 +1285,50 @@
             </form>
         </div>
     </div>
+    <!-- Event Registration Modal -->
+<div id="eventRegistrationModal" class="kt-modal hidden fixed inset-0 z-[9999] flex items-center justify-center bg-black/30 backdrop-blur-sm" data-kt-modal="true" role="dialog" aria-labelledby="eventRegistrationModalTitle" aria-modal="true">
+    <div class="kt-card w-full max-w-[600px] rounded-xl border border-border bg-background shadow-2xl transition-transform duration-300 ease-in-out transform scale-95">
+        <div class="kt-card-header px-5 py-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
+            <h2 id="eventRegistrationModalTitle" class="text-xl font-bold text-mono">Event Registration</h2>
+            <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" onclick="closeEventRegistrationModal()" aria-label="Close modal">
+                <i class="ki-filled ki-cross text-base text-gray-500 hover:text-red-500"></i>
+            </button>
+        </div>
+        <form method="POST" action="{% url 'dashboard:event_registration' %}" id="eventRegistrationForm">
+            {% csrf_token %}
+            <div class="kt-card-content flex flex-col space-y-4 p-5">
+                <input type="hidden" name="product_id" id="eventProductId">
+                <div>
+                    <label for="eventName" class="block text-sm font-medium text-gray-650 dark:text-gray-300 mb-1">Event</label>
+                    <input type="text" id="eventName" class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 bg-gray-100 dark:bg-gray-800 text-gray-650 dark:text-gray-300 cursor-not-allowed" disabled>
+                </div>
+                <div>
+                    <label for="fullName" class="block text-sm font-medium text-gray-650 dark:text-gray-300 mb-1">Full Name <span class="text-red-500">*</span></label>
+                    <input type="text" name="full_name" id="fullName" class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 focus:ring-2 focus:ring-primary focus:border-primary transition-colors" required aria-required="true">
+                    <p class="text-xs text-red-500 mt-1 hidden" id="fullNameError">Full name is required.</p>
+                </div>
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-650 dark:text-gray-300 mb-1">Email <span class="text-red-500">*</span></label>
+                    <input type="email" name="email" id="email" class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 focus:ring-2 focus:ring-primary focus:border-primary transition-colors" required aria-required="true">
+                    <p class="text-xs text-red-500 mt-1 hidden" id="emailError">Valid email is required.</p>
+                </div>
+                <div>
+                    <label for="eventMessage" class="block text-sm font-medium text-gray-650 dark:text-gray-300 mb-1">Additional Notes</label>
+                    <textarea name="message" id="eventMessage" class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 focus:ring-2 focus:ring-primary focus:border-primary transition-colors" rows="4" placeholder="Add any additional details..."></textarea>
+                </div>
+            </div>
+            <div class="kt-card-footer px-5 py-4 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700">
+                <button type="button" class="kt-btn kt-btn-outline kt-btn-sm text-gray-650 hover:bg-gray-900 dark:hover:bg-gray-700" onclick="closeEventRegistrationModal()">
+                    <i class="ki-filled ki-cross"></i>Cancel
+                </button>
+                <button type="submit" class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center" id="eventRegistrationSubmitBtn">
+                    <i class="ki-filled ki-check-circle"></i>Register
+                    <span class="loader"></span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 
     <!-- Login Required Modal -->
     <div id="loginRequiredModal"
@@ -1253,7 +1418,10 @@
         const markAsInCart = (btn) => {
             btn.classList.remove('kt-btn-outline');
             btn.classList.add('kt-btn-success');
-            btn.innerHTML = `In cart <i class="ki-filled ki-handcart"></i>`;
+            btn.style.background = '#3b82f6';
+            btn.style.color = 'white';
+            btn.innerHTML = `In cart <i class="ki-filled ki-handcart text-white"></i>`;
+            btn.onclick = null;
         };
 
         document.querySelectorAll('.add-to-cart-btn').forEach(button => {
@@ -1308,9 +1476,44 @@
         setInterval(nextSlide, 5000);
     }
 
+    // Event Registration Modal Handlers
+    document.querySelectorAll('.open-event-registration-modal').forEach(button => {
+        button.addEventListener('click', function (e) {
+            e.preventDefault();
+            const productId = button.getAttribute('data-product-id');
+            const eventName = button.getAttribute('data-event-name');
+
+            document.getElementById('eventProductId').value = productId;
+            document.getElementById('eventName').value = eventName;
+
+            const modal = document.getElementById('eventRegistrationModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        });
+    });
+
+    // Login Required Modal
+    function openLoginModal() {
+        const modal = document.getElementById('loginRequiredModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeLoginModal() {
+        const modal = document.getElementById('loginRequiredModal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        document.body.style.overflow = '';
+    }
+
     // RFQ Modal
     function closeRFQModal() {
-        document.getElementById('rfqModal').classList.add('hidden');
+        const modal = document.getElementById('rfqModal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        document.body.style.overflow = '';
     }
 
     document.querySelectorAll('.open-rfq-modal').forEach(button => {
@@ -1325,22 +1528,36 @@
             document.getElementById('rfqCompanyName').value = companyName;
             document.getElementById('rfqQuantity').value = quantity;
 
-            document.getElementById('rfqModal').classList.remove('hidden');
+            const modal = document.getElementById('rfqModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
         });
     });
 
-    // Login Required Modal
-    function openLoginModal() {
-        const modal = document.getElementById('loginRequiredModal');
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-    }
-
-    function closeLoginModal() {
-        const modal = document.getElementById('loginRequiredModal');
+    // Event Registration Modal
+    function closeEventRegistrationModal() {
+        const modal = document.getElementById('eventRegistrationModal');
         modal.classList.add('hidden');
         modal.classList.remove('flex');
+        document.body.style.overflow = '';
     }
+
+    document.querySelectorAll('.open-event-registration-modal').forEach(button => {
+        button.addEventListener('click', function (e) {
+            e.preventDefault();
+            const productId = button.getAttribute('data-product-id');
+            const eventName = button.getAttribute('data-event-name');
+
+            document.getElementById('eventProductId').value = productId;
+            document.getElementById('eventName').value = eventName;
+
+            const modal = document.getElementById('eventRegistrationModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        });
+    });
 
     document.addEventListener('DOMContentLoaded', function () {
         document.querySelectorAll('.show-login-modal').forEach(button => {
