@@ -15,7 +15,7 @@
         <div class="lg:col-span-2">
             <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700">
                 <div class="p-6 border-b border-gray-200 dark:border-gray-700">
-                    <h2 class="text-lg font-semibold text-gray-650 dark:text-gray-100">Personal Information</h2>
+                    <h2 class="text-lg font-semibold text-gray-650 dark:text-gray-100">Personal Information tyhujkl</h2>
                 </div>
                 <div class="p-6">
                     <table class="w-full text-sm text-gray-650 dark:text-gray-100">
@@ -163,105 +163,110 @@
         </div>
     </div>
 
-    <!-- Edit Email Modal -->
-    <div id="modal_edit_email" class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center" style="backdrop-filter: blur(8px); background-color: rgba(0, 0, 0, 0.3);">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-[500px] max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-700">
-            <form method="post" action="{% url 'dashboard:edit_email' %}">
-                {% csrf_token %}
-                <div class="p-5 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
-                    <h3 class="text-lg font-semibold text-gray-650 dark:text-gray-100">Edit Email</h3>
-                    <button type="button" class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200" onclick="closeModal('modal_edit_email')">
-                        <i class="ki-filled ki-cross text-base"></i>
-                    </button>
-                </div>
-                <div class="p-5">
-                    <label class="block text-sm font-medium text-gray-600 dark:text-gray-300">Email Address</label>
-                    <input type="email" name="email" class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100" value="{{ user.email }}" required>
-                </div>
-                <div class="p-4 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700">
-                    <button type="button" class="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600" onclick="closeModal('modal_edit_email')">
-                        <i class="ki-filled ki-cross text-base"></i> Cancel
-                    </button>
-                    <button type="submit" class="px-4 py-2 text-sm text-white bg-blue-600 rounded hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600">
-                        <i class="ki-filled ki-check text-base"></i> Save Changes
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Edit Phone Modal -->
-    <div id="modal_edit_phone" class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center" style="backdrop-filter: blur(8px); background-color: rgba(0, 0, 0, 0.3);">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-[500px] max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-700">
-            <form method="post" action="{% url 'dashboard:edit_phone' %}">
-                {% csrf_token %}
-                <div class="p-5 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
-                    <h3 class="text-lg font-semibold text-gray-650 dark:text-gray-100">Edit Phone Number</h3>
-                    <button type="button" class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200" onclick="closeModal('modal_edit_phone')">
-                        <i class="ki-filled ki-cross text-base"></i>
-                    </button>
-                </div>
-                <div class="p-5">
-                    <label class="block text-sm font-medium text-gray-600 dark:text-gray-300">Phone Number</label>
-                    <input type="tel" name="phone" class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100" value="{% if default_address and default_address.phone %}{{ default_address.phone }}{% else %}{{ phone|default:'' }}{% endif %}" placeholder="+1234567890" required>
-                </div>
-                <div class="p-4 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700">
-                    <button type="button" class="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600" onclick="closeModal('modal_edit_phone')">
-                        <i class="ki-filled ki-cross text-base"></i> Cancel
-                    </button>
-                    <button type="submit" class="px-4 py-2 text-sm text-white bg-blue-600 rounded hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600">
-                        <i class="ki-filled ki-check text-base"></i> Save Changes
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Edit Profile Modal -->
-    <div id="modal_edit_profile" class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center" style="backdrop-filter: blur(8px); background-color: rgba(0, 0, 0, 0.3);">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-[500px] max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-700">
-            <form method="post" id="edit-name-form" action="{% url 'dashboard:edit_profile' %}">
-                {% csrf_token %}
-                <div class="p-5 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
-                    <h3 class="text-lg font-semibold text-gray-650 dark:text-gray-100">Edit Profile</h3>
-                    <button type="button" class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200" onclick="closeModal('modal_edit_profile')">
-                        <i class="ki-filled ki-cross text-base"></i>
-                    </button>
-                </div>
-                <div class="p-5 space-y-4">
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300">First Name</label>
-                            <input type="text" name="first_name" class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100" value="{{ user.first_name }}" required>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300">Last Name</label>
-                            <input type="text" name="last_name" class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100" value="{{ user.last_name }}" required>
-                        </div>
-                    </div>
-                    <div id="dynamic-profile-field">
-                        {% if profile_type == 'doctor' %}
-                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300">Specialization</label>
-                            <input type="text" name="speciality" class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100" value="{{ profile.speciality }}">
-                        {% elif profile_type in 'medical_supplier|corporate|wholesaler|supplier' %}
-                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300">Company Name</label>
-                            <input type="text" name="company_name" class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100" value="{{ profile.company_name }}">
-                        {% endif %}
-                    </div>
-                </div>
-                <div class="p-4 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700">
-                    <button type="button" class="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600" onclick="closeModal('modal_edit_profile')">
-                        <i class="ki-filled ki-cross text-base"></i> Cancel
-                    </button>
-                    <button type="submit" class="px-4 py-2 text-sm text-white bg-blue-600 rounded hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600">
-                        <i class="ki-filled ki-check text-base"></i> Save Changes
-                    </button>
-                </div>
-            </form>
-        </div>
+   <!-- Edit Email Modal -->
+<div id="modal_edit_email" class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-300 ease-in-out" style="backdrop-filter: blur(8px); background-color: rgba(0, 0, 0, 0.3);">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-[500px] max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-700">
+        <form method="post" action="{% url 'dashboard:edit_email' %}">
+            {% csrf_token %}
+            <div class="p-5 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-650 dark:text-gray-100">Edit Email</h3>
+                <button type="button" class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200" onclick="closeModal('modal_edit_email')">
+                    <i class="ki-filled ki-cross text-base"></i>
+                </button>
+            </div>
+            <div class="p-5">
+                <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1.5">Email Address</label>
+                <input type="email" name="email" class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 px-3 py-2.5 transition-colors duration-200" value="{{ user.email }}" required>
+            </div>
+            <div class="p-4 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700">
+                <button type="button" class="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200" onclick="closeModal('modal_edit_email')">
+                    <i class="ki-filled ki-cross text-base mr-1"></i> Cancel
+                </button>
+                <button type="submit" class="px-4 py-2 text-sm text-white bg-blue-600 rounded hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition-colors duration-200">
+                    <i class="ki-filled ki-check text-base mr-1"></i> Save Changes
+                </button>
+            </div>
+        </form>
     </div>
 </div>
+ <!-- Edit Phone Modal -->
+<div id="modal_edit_phone" class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-300 ease-in-out" style="backdrop-filter: blur(8px); background-color: rgba(0, 0, 0, 0.3);">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-[500px] max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-700">
+        <form method="post" action="{% url 'dashboard:edit_phone' %}">
+            {% csrf_token %}
+            <div class="p-5 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-650 dark:text-gray-100">Edit Phone Number</h3>
+                <button type="button" class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200" onclick="closeModal('modal_edit_phone')">
+                    <i class="ki-filled ki-cross text-base"></i>
+                </button>
+            </div>
+            <div class="p-5">
+                <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1.5">Phone Number</label>
+                <input type="tel" name="phone" class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 px-3 py-2.5 transition-colors duration-200" value="{% if default_address and default_address.phone %}{{ default_address.phone }}{% else %}{{ phone|default:'' }}{% endif %}" placeholder="+1234567890" required>
+            </div>
+            <div class="p-4 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700">
+                <button type="button" class="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200" onclick="closeModal('modal_edit_phone')">
+                    <i class="ki-filled ki-cross text-base mr-1"></i> Cancel
+                </button>
+                <button type="submit" class="px-4 py-2 text-sm text-white bg-blue-600 rounded hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition-colors duration-200">
+                    <i class="ki-filled ki-check text-base mr-1"></i> Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+    <!-- Table Row (unchanged, included for context) -->
+<tr class="border-b border-gray-200 dark:border-gray-700">
+    <td class="py-4 font-medium text-gray-650 dark:text-gray-100">Name</td>
+    <td class="py-4 text-gray-500 dark:text-gray-100">{{ user.first_name }} {{ user.last_name }}</td>
+    <td class="py-4 text-right">
+        <button class="text-blue-600 hover:underline dark:text-blue-400 dark:hover:text-blue-300 text-sm" data-modal-toggle="modal_edit_profile">Edit</button>
+    </td>
+</tr>
 
+<!-- Edit Profile Modal -->
+<div id="modal_edit_profile" class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-300 ease-in-out" style="backdrop-filter: blur(10px); background-color: rgba(0, 0, 0, 0.5);">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-[500px] max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-700 transform transition-all duration-300 ease-in-out scale-95">
+        <form method="post" id="edit-name-form" action="{% url 'dashboard:edit_profile' %}">
+            {% csrf_token %}
+            <div class="p-6 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
+                <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-100">Edit Profile</h3>
+                <button type="button" class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-colors duration-200" onclick="closeModal('modal_edit_profile')">
+                    <i class="ki-filled ki-cross text-lg"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-6">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">First Name</label>
+                        <input type="text" name="first_name" class="block w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 transition-colors duration-200" value="{{ user.first_name }}" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Last Name</label>
+                        <input type="text" name="last_name" class="block w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 transition-colors duration-200" value="{{ user.last_name }}" required>
+                    </div>
+                </div>
+                <div id="dynamic-profile-field">
+                    {% if profile_type == 'doctor' %}
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Specialization</label>
+                        <input type="text" name="speciality" class="block w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 transition-colors duration-200" value="{{ profile.speciality }}">
+                    {% elif profile_type in 'medical_supplier|corporate|wholesaler|supplier' %}
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Company Name</label>
+                        <input type="text" name="company_name" class="block w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 transition-colors duration-200" value="{{ profile.company_name }}">
+                    {% endif %}
+                </div>
+            </div>
+            <div class="p-5 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700">
+                <button type="button" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200" onclick="closeModal('modal_edit_profile')">
+                    <i class="ki-filled ki-cross text-base mr-1"></i> Cancel
+                </button>
+                <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition-colors duration-200">
+                    <i class="ki-filled ki-check text-base mr-1"></i> Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     // Avatar auto-submit on file select
