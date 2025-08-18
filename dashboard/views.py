@@ -194,7 +194,7 @@ class CustomLoginView(FormView):
 
         # Redirect based on profile existence
         if hasattr(user, 'supplierprofile'):
-            return reverse_lazy('adminv2:admin_v2')
+            return reverse_lazy('supplier:supplier')
         elif hasattr(user, 'retailprofile'):
             return reverse_lazy('dashboard:home')
         elif hasattr(user, 'wholesalebuyerprofile'):

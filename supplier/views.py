@@ -1453,7 +1453,7 @@ class BannerUpdateView(LoginRequiredMixin, SupplierPermissionMixin, View):
     
 
 class TransactionView(TemplateView):
-    template_name = 'adminv2/transaction.html'
+    template_name = 'supplier/transaction.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
