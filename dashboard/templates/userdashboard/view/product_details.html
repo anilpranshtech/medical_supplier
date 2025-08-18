@@ -665,38 +665,97 @@
         </div>
     </div>
 </div>
+<!-- q&a -->
+<button type="button"
+        class="kt-btn bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+        onclick="openQuestionModal()">
+    Ask a Question
+</button>
 
-<!-- Post Question Modal -->
+<!-- {# --- Post Question Modal --- #} -->
 <div id="questionModal" class="kt-modal hidden fixed inset-0 z-[9999] flex items-center justify-center bg-black/30 backdrop-blur-sm" data-kt-modal="true" role="dialog" aria-labelledby="questionModalTitle" aria-modal="true">
-    <div class="kt-card w-full max-w-[600px] rounded-xl border border-border bg-background shadow-2xl transition-transform duration-300 ease-in-out transform scale-95">
-        <div class="kt-card-header px-5 py-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
-            <h2 id="questionModalTitle" class="text-xl font-bold text-mono">Ask Your Question</h2>
-            <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" onclick="closeQuestionModal()" aria-label="Close modal">
-                <i class="ki-filled ki-cross text-base text-gray-500 hover:text-red-500"></i>
-            </button>
-        </div>
-        <form method="POST" action="{% url 'dashboard:post_question' %}" id="questionForm">
-            {% csrf_token %}
-            <div class="kt-card-content flex flex-col space-y-4 p-5">
-                <input type="hidden" name="product_id" id="questionProductId" value="{{ product.id }}">
-                <div>
-                    <label for="questionText" class="block text-sm font-medium text-gray-650 dark:text-gray-300 mb-1">Your Question <span class="text-red-500">*</span></label>
-                    <textarea name="question" id="questionText" class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 focus:ring-2 focus:ring-primary focus:border-primary transition-colors" rows="4" placeholder="Type your question here..." required aria-required="true"></textarea>
-                    <p class="text-xs text-red-500 mt-1 hidden" id="questionTextError">Question is required.</p>
-                </div>
-            </div>
-            <div class="kt-card-footer px-5 py-4 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700">
-                <button type="button" class="kt-btn kt-btn-outline kt-btn-sm text-gray-650 hover:bg-gray-900 dark:hover:bg-gray-700" onclick="closeQuestionModal()">
-                    <i class="ki-filled ki-cross"></i>Cancel
-                </button>
-                <button type="submit" class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center" id="questionSubmitBtn">
-                    <i class="ki-filled ki-check-circle"></i>Post Question
-                    <span class="loader"></span>
-                </button>
-            </div>
-        </form>
+  <div class="kt-card w-full max-w-[600px] rounded-2xl border border-border bg-white dark:bg-background shadow-2xl transition-transform duration-300 ease-in-out transform scale-95">
+    <div class="kt-card-header px-6 py-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
+      <h2 id="questionModalTitle" class="text-xl font-bold">Ask Your Question</h2>
+      <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" onclick="closeQuestionModal()" aria-label="Close modal">
+        <i class="ki-filled ki-cross text-base text-gray-500 hover:text-red-500"></i>
+      </button>
     </div>
+
+    <form method="POST" action="{% url 'dashboard:post_question' %}" id="questionForm">
+      {% csrf_token %}
+      <input type="hidden" name="product_id" id="questionProductId" value="{{ product.id }}">
+
+      <div class="kt-card-content flex flex-col gap-4 px-6 py-5">
+        <div>
+          <label for="questionText" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Your Question <span class="text-red-500">*</span>
+          </label>
+          <textarea name="question" id="questionText" rows="4"
+            class="w-full border border-gray-300 dark:border-gray-600 rounded-lg p-3 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition-colors"
+            placeholder="Type your question here..." required></textarea>
+          <p class="text-xs text-red-500 mt-1 hidden" id="questionTextError">Question is required.</p>
+        </div>
+
+        <div class="mt-2">
+          <h3 class="text-base font-semibold mb-2">Questions &amp; Answers</h3>
+
+          {% if questions %}
+            <ul class="space-y-3 max-h-56 overflow-y-auto pr-1">
+              {% for q in questions %}
+                <li class="text-sm leading-6">
+                  <p class="font-medium">
+                    Q: {{ q.text|linebreaksbr }}
+                    {% if q.user_id == request.user.id %}
+                      <span class="ml-2 text-xs rounded px-2 py-0.5 bg-gray-100">You</span>
+                    {% endif %}
+                  </p>
+                  <p class="mt-1">
+                    <span class="font-medium">Supplier:</span>
+                    {% if q.reply %}
+                      {{ q.reply|linebreaksbr }}
+                    {% else %}
+                      <span class="text-gray-500 italic">No answer yet.</span>
+                    {% endif %}
+                  </p>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="text-sm text-gray-500">No questions yet. Be the first to ask!</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="kt-card-footer px-6 py-4 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700">
+        <button type="button" class="kt-btn kt-btn-outline kt-btn-sm text-gray-700 hover:bg-gray-100" onclick="closeQuestionModal()">
+          Cancel
+        </button>
+        <button type="submit" class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center" id="questionSubmitBtn">
+          Post Question
+          <span class="loader"></span>
+        </button>
+      </div>
+    </form>
+  </div>
 </div>
+
+<script>
+  
+  function openQuestionModal() {
+    const modal = document.getElementById('questionModal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => document.getElementById('questionText')?.focus(), 50);
+  }
+  function closeQuestionModal() {
+    const modal = document.getElementById('questionModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    document.body.style.overflow = '';
+  }
+</script>
 
 <!-- SwiperJS CDN -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.css" />

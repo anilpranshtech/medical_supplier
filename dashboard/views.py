@@ -701,15 +701,13 @@ class ProductDetailsView(TemplateView):
         if pk:
             try:
                 product = Product.objects.select_related(
-                    'category', 'sub_category', 'last_category', 'brand', 'event'  # Add 'event' to select_related
+                    'category', 'sub_category', 'last_category', 'brand', 'event'
                 ).get(id=pk)
 
-                # Main and other images
                 main_img = ProductImage.objects.filter(product=product, is_main=True).first()
                 product.main_image = main_img.image.url if main_img else None
                 other_images = ProductImage.objects.filter(product=product).exclude(id=main_img.id if main_img else None)
 
-                # Rating & review data
                 reviews = RatingReview.objects.filter(product=product)
                 rating_counts = {i: reviews.filter(rating=i).count() for i in range(1, 6)}
                 total_reviews = reviews.count()
@@ -722,18 +720,17 @@ class ProductDetailsView(TemplateView):
                 else:
                     context['user_registered_event_ids'] = []
 
-                # Cart & Wishlist IDs
-                user_cart_ids = []
-                user_wishlist_ids = []
-
-
                 user = self.request.user
-                if user.is_authenticated:
-                    user_cart_ids = list(CartProduct.objects.filter(user=user).values_list('product_id', flat=True))
-                    user_wishlist_ids = list(WishlistProduct.objects.filter(user=user).values_list('product_id', flat=True))
+                user_cart_ids = list(CartProduct.objects.filter(user=user).values_list('product_id', flat=True)) if user.is_authenticated else []
+                user_wishlist_ids = list(WishlistProduct.objects.filter(user=user).values_list('product_id', flat=True)) if user.is_authenticated else []
 
-                # Event data
                 event = product.event if hasattr(product, 'event') and product.event else None
+
+              
+                questions = (Question.objects
+                             .select_related('user')
+                             .filter(product=product)
+                             .order_by('-created_at'))
 
                 context.update({
                     'product': product,
@@ -744,18 +741,16 @@ class ProductDetailsView(TemplateView):
                     'average_rating': round(avg_rating, 1),
                     'user_cart_ids': user_cart_ids,
                     'user_wishlist_ids': user_wishlist_ids,
-                    'event': event,  # Add event to context
+                    'event': event,
+                    'questions': questions,       
                 })
-
 
             except Product.DoesNotExist:
                 context['product'] = None
                 context['other_images'] = []
-                context['event'] = None  # Ensure event is None if product not found
+                context['event'] = None
 
         return context
-
-
 class EventRegistrationView(View):
     def post(self, request):
         product_id = request.POST.get('product_id')
@@ -2794,10 +2789,20 @@ class CheckStripeSubscriptionView(LoginRequiredMixin, View):
 
 class PostQuestionView(LoginRequiredMixin, View):
     def post(self, request):
-        question_text = request.POST.get('question')
-        if question_text:
-            Question.objects.create(user=request.user, text=question_text)
-        return redirect('dashboard:product-detail')
+        question_text = request.POST.get('question', '').strip()
+        product_id = request.POST.get('product_id')
+
+        if not question_text:
+            messages.error(request, "Please type your question.")
+    
+            if product_id:
+                return redirect('dashboard:product_detail', pk=product_id)
+            return redirect('dashboard:home')
+
+        product = get_object_or_404(Product, pk=product_id)
+        Question.objects.create(user=request.user, product=product, text=question_text)
+        messages.success(request, "Your question has been posted.")
+        return redirect('dashboard:product_detail', pk=product.id)
 
 
 @method_decorator(csrf_exempt, name='dispatch')
