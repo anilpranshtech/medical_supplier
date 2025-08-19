@@ -202,11 +202,23 @@
                                 <i class="ki-filled ki-plus text-base"></i>
                                 Add Items
                             </a>
-                            <a class="kt-btn kt-btn-primary"
-                               href="{% url 'dashboard:shipping_info' %}">
-                                Shipping Info
-                                <i class="ki-filled ki-black-right text-base"></i>
-                            </a>
+                            <a id="shipping-info-btn" class="kt-btn kt-btn-primary relative"
+   href="{% url 'dashboard:shipping_info' %}">
+    <span class="btn-text flex items-center gap-1">
+        Shipping Info
+        <i class="ki-filled ki-black-right text-base"></i>
+    </span>
+    <span class="btn-loader hidden flex items-center gap-1">
+        <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none"
+             viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor"
+                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+        </svg>
+        Shipping Info...
+    </span>
+</a>
+
                         </div>
                     </div>
                     <div class="col-span-1">
@@ -404,6 +416,17 @@ document.addEventListener('DOMContentLoaded', function() {
         } else if (cartItems.length > 0 && emptyMessage) {
             emptyMessage.remove();
         }
+    }
+});
+//loader
+document.addEventListener("DOMContentLoaded", function () {
+    const shippingBtn = document.getElementById("shipping-info-btn");
+    if (shippingBtn) {
+        shippingBtn.addEventListener("click", function () {
+            this.querySelector(".btn-text").classList.add("hidden");
+            this.querySelector(".btn-loader").classList.remove("hidden");
+            this.style.pointerEvents = "none";
+        });
     }
 });
 </script>

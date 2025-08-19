@@ -106,10 +106,20 @@
                                 <i class="ki-filled ki-black-left text-base"></i>
                                 Shopping Cart
                             </a>
-                            <a class="kt-btn kt-btn-primary" href="{% url 'dashboard:payment_method' %}">
-                                Select Payment Method
-                                <i class="ki-filled ki-black-right text-base"></i>
-                            </a>
+                          <a id="payment-method-btn" class="kt-btn kt-btn-primary relative" href="{% url 'dashboard:payment_method' %}">
+    <span class="btn-text flex items-center gap-1">
+        Select Payment Method
+        <i class="ki-filled ki-black-right text-base"></i>
+    </span>
+    <span class="btn-loader hidden flex items-center gap-1">
+        <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+        </svg>
+        Select Payment Method...
+    </span>
+</a>
+
                         </div>
                     </div>
                     <div class="lg:col-span-1">
@@ -255,9 +265,19 @@
                             <button class="kt-btn kt-btn-outline" data-kt-modal-dismiss="true" type="button">
                                 <i class="ki-filled ki-cross text-base"></i>Cancel
                             </button>
-                            <button class="kt-btn kt-btn-primary" type="submit">
-                                <i class="ki-filled ki-check text-base"></i>Save Address
-                            </button>
+                           <button id="save-address-btn" class="kt-btn kt-btn-primary relative" type="submit">
+    <span class="btn-text flex items-center gap-1">
+        <i class="ki-filled ki-check text-base"></i>Save Address
+    </span>
+    <span class="btn-loader hidden flex items-center gap-1">
+        <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+        </svg>
+        Saving...
+    </span>
+</button>
+
                         </div>
                     </form>
                 </div>
@@ -324,9 +344,19 @@
                             <button class="kt-btn kt-btn-outline" data-kt-modal-dismiss="true" type="button">
                                 <i class="ki-filled ki-cross text-base"></i>Cancel
                             </button>
-                            <button class="kt-btn kt-btn-primary" type="submit">
-                                <i class="ki-filled ki-check text-base"></i>Update Address
-                            </button>
+                           <button id="update-address-btn" class="kt-btn kt-btn-primary relative" type="submit">
+    <span class="btn-text flex items-center gap-1">
+        <i class="ki-filled ki-check text-base"></i>Update Address
+    </span>
+    <span class="btn-loader hidden flex items-center gap-1">
+        <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+        </svg>
+        Updating...
+    </span>
+</button>
+
                         </div>
                     </form>
                 </div>
@@ -542,5 +572,51 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 });
+// payment method loader
+document.addEventListener('DOMContentLoaded', function() {
+    const paymentBtn = document.getElementById('payment-method-btn');
+    const text = paymentBtn.querySelector('.btn-text');
+    const loader = paymentBtn.querySelector('.btn-loader');
+
+    paymentBtn.addEventListener('click', function(e) {
+        e.preventDefault();             
+        text.classList.add('hidden');   
+        loader.classList.remove('hidden'); 
+        paymentBtn.style.pointerEvents = 'none'; 
+
+        const url = paymentBtn.href;
+        setTimeout(() => {
+            window.location.href = url; 
+        }, 100); 
+    });
+});
+//update address loader
+document.addEventListener('DOMContentLoaded', function() {
+    const updateBtn = document.getElementById('update-address-btn');
+    const form = updateBtn.closest('form');
+    const text = updateBtn.querySelector('.btn-text');
+    const loader = updateBtn.querySelector('.btn-loader');
+
+    form.addEventListener('submit', function() {
+        text.classList.add('hidden');     
+        loader.classList.remove('hidden'); 
+        updateBtn.disabled = true;       
+    });
+});
+//save loader
+ document.addEventListener('DOMContentLoaded', function() {
+    const saveBtn = document.getElementById('save-address-btn');
+    const form = saveBtn.closest('form');
+    const text = saveBtn.querySelector('.btn-text');
+    const loader = saveBtn.querySelector('.btn-loader');
+
+    form.addEventListener('submit', function() {
+        text.classList.add('hidden');      
+        loader.classList.remove('hidden'); 
+        saveBtn.disabled = true;          
+    });
+});
+ 
+
 </script>
 {% endblock content %}

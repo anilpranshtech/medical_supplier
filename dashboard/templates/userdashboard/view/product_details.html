@@ -211,6 +211,7 @@
 .flex-col.items-center.justify-center {
     text-align: center;
 }
+
 </style>
 
 <div class="kt-container-fixed mt-1" style="max-width: var(--custom-container-width, 85;);">
@@ -666,11 +667,7 @@
     </div>
 </div>
 <!-- q&a -->
-<button type="button"
-        class="kt-btn bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-        onclick="openQuestionModal()">
-    Ask a Question
-</button>
+
 
 <!-- {# --- Post Question Modal --- #} -->
 <div id="questionModal" class="kt-modal hidden fixed inset-0 z-[9999] flex items-center justify-center bg-black/30 backdrop-blur-sm" data-kt-modal="true" role="dialog" aria-labelledby="questionModalTitle" aria-modal="true">
@@ -866,42 +863,65 @@
     });
 
     // Add to Cart
-    document.addEventListener('DOMContentLoaded', () => {
-        const markAsInCart = (btn) => {
-            btn.classList.remove('kt-btn-outline');
-            btn.classList.add('kt-btn-success');
-            btn.style.background = '#3b82f6';
-            btn.style.color = 'white';
-            btn.innerHTML = `In cart <i class="ki-filled ki-handcart text-white"></i>`;
-            btn.onclick = null;
-        };
+// Add to Cart with loader
+document.addEventListener('DOMContentLoaded', () => {
+    const markAsInCart = (btn) => {
+        btn.classList.remove('kt-btn-outline');
+        btn.classList.add('kt-btn-success');
+        btn.style.background = '#3b82f6';
+        btn.style.color = 'white';
+        btn.innerHTML = `In cart <i class="ki-filled ki-handcart text-white"></i>`;
+        btn.disabled = false;
+        btn.onclick = null;
+    };
 
-        document.querySelectorAll('.add-to-cart-btn').forEach(button => {
-            button.addEventListener('click', () => {
-                const productId = button.dataset.productId;
-                fetch("{% url 'dashboard:add_to_cart' %}", {
-                    method: "POST",
-                    headers: {
-                        "X-CSRFToken": csrftoken,
-                        "Content-Type": "application/x-www-form-urlencoded",
-                    },
-                    body: new URLSearchParams({
-                        product_id: productId,
-                        quantity: 1,
-                    }),
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.status === "success") {
-                        document.querySelectorAll(`.add-to-cart-btn[data-product-id="${productId}"]`).forEach(markAsInCart);
-                    } else {
-                        alert("Something went wrong");
-                    }
-                })
-                .catch(err => console.error("Add to cart error:", err));
+    document.querySelectorAll('.add-to-cart-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            const productId = button.dataset.productId;
+
+            // Save original content
+            const originalContent = button.innerHTML;
+
+            // Show loader
+            button.innerHTML = `
+                <svg class="animate-spin h-4 w-4 text-white inline-block mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                </svg>
+                Adding...
+            `;
+            button.disabled = true;
+
+            fetch("{% url 'dashboard:add_to_cart' %}", {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": csrftoken,
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+                body: new URLSearchParams({
+                    product_id: productId,
+                    quantity: 1,
+                }),
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "success") {
+                    document.querySelectorAll(`.add-to-cart-btn[data-product-id="${productId}"]`).forEach(markAsInCart);
+                } else {
+                    alert("Something went wrong");
+                    button.innerHTML = originalContent;
+                    button.disabled = false;
+                }
+            })
+            .catch(err => {
+                console.error("Add to cart error:", err);
+                button.innerHTML = originalContent;
+                button.disabled = false;
             });
         });
     });
+});
+
 
     // Wishlist Toggle
     document.querySelectorAll('.kt-wishlist-icon').forEach(button => {
@@ -1008,7 +1028,16 @@
                 document.body.style.overflow = 'hidden';
             });
         });
+    //loader
+    document.getElementById('rfqSubmitBtn').addEventListener('click', function(e) {
+    const btn = e.currentTarget;
+    const loader = btn.querySelector('.loader');
 
+    // Show loader
+    loader.style.display = 'inline-block';
+
+   
+});
         // Event Registration Modal Handlers
         document.querySelectorAll('.open-event-registration-modal').forEach(button => {
             button.addEventListener('click', function (e) {
@@ -1025,6 +1054,15 @@
                 document.body.style.overflow = 'hidden';
             });
         });
+            //loader
+    document.getElementById('eventRegistrationSubmitBtn').addEventListener('click', function(e) {
+    const btn = e.currentTarget;
+    const loader = btn.querySelector('.loader');
+
+    // Show loader
+    loader.style.display = 'inline-block';
+
+});
 
         // Question Modal Handlers
         document.getElementById('openQuestionModal').addEventListener('click', function (e) {
@@ -1032,6 +1070,17 @@
             openQuestionModal();
         });
     });
+    //loader
+    document.getElementById('questionSubmitBtn').addEventListener('click', function(e) {
+    const btn = e.currentTarget;
+    const loader = btn.querySelector('.loader');
+
+    // Show loader
+    loader.style.display = 'inline-block';
+
+
+});
+
 
     // Image Modal Functionality
     document.addEventListener('DOMContentLoaded', () => {

@@ -1,76 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    {% load static %}
     <meta charset="UTF-8">
     <title>Order Receipt #{{ order.id|stringformat:"05d" }}</title>
     <style>
         body {
-            font-family: 'Segoe UI', sans-serif;
-            background-color: #fff;
-            color: #333;
+            font-family: Arial, sans-serif;
             font-size: 13px;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 30px;
-            line-height: 1.4;
+            color: #333;
+            margin: 20px;
         }
-
         .header {
             text-align: center;
             margin-bottom: 25px;
         }
-
         .header h2 {
-            font-size: 20px;
-            margin-bottom: 5px;
+            margin: 5px 0;
+            font-size: 22px;
         }
-
         .section {
-            margin-bottom: 20px;
+            margin-bottom: 18px;
         }
-
         .section-title {
             font-size: 14px;
-            font-weight: 600;
-            color: #222;
-            border-bottom: 1px solid #ccc;
+            font-weight: bold;
+            border-bottom: 2px solid #444;
+            margin-bottom: 8px;
             padding-bottom: 4px;
-            margin-bottom: 10px;
         }
-
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 13px;
+            margin-top: 8px;
         }
-
         th, td {
             border: 1px solid #ccc;
-            padding: 6px 8px;
+            padding: 7px 10px;
             text-align: left;
-            vertical-align: middle;
         }
-
         th {
-            background-color: #f0f0f0;
-            font-weight: 600;
+            background: #f2f2f2;
         }
-
         .text-right {
             text-align: right;
         }
-
-        .product-name {
-            font-weight: 500;
-        }
-
-        p {
-            margin: 2px 0;
-        }
-
-        .muted {
-            color: #777;
+        .total-row th, .total-row td {
+            font-weight: bold;
         }
     </style>
 </head>
@@ -78,11 +53,11 @@
 
 <div class="header">
     <h2>Order Receipt</h2>
-    <p>Thank you for your order!</p>
     <p><strong>Order ID:</strong> #{{ order.id|stringformat:"05d" }}</p>
+    <p>Thank you for your purchase!</p>
 </div>
 
-{% if items %}
+<!-- Ordered Items -->
 <div class="section">
     <div class="section-title">Ordered Items</div>
     <table>
@@ -91,13 +66,13 @@
                 <th>Product</th>
                 <th>SKU</th>
                 <th>Qty</th>
-                <th class="text-right">Price</th>
+                <th class="text-right">Total</th>
             </tr>
         </thead>
         <tbody>
         {% for item in items %}
             <tr>
-                <td class="product-name">{{ item.product.name }}</td>
+                <td>{{ item.product.name }}</td>
                 <td>{{ item.sku|default:"N/A" }}</td>
                 <td>{{ item.quantity }}</td>
                 <td class="text-right">
@@ -108,30 +83,31 @@
         </tbody>
     </table>
 </div>
-{% endif %}
 
+<!-- Order Summary -->
 <div class="section">
     <div class="section-title">Order Summary</div>
     <table>
         <tr>
             <td>Subtotal</td>
-            <td class="text-right">{% if order.payment_currency == "INR" %}₹{% else %}${% endif %}{{ order_summary.subtotal|floatformat:2 }}</td>
+            <td class="text-right">{{ order_summary.subtotal|floatformat:2 }}</td>
         </tr>
         <tr>
             <td>Shipping</td>
-            <td class="text-right">{% if order.payment_currency == "INR" %}₹{% else %}${% endif %}{{ order_summary.shipping|floatformat:2 }}</td>
+            <td class="text-right">{{ order_summary.shipping|floatformat:2 }}</td>
         </tr>
         <tr>
             <td>VAT</td>
-            <td class="text-right">{% if order.payment_currency == "INR" %}₹{% else %}${% endif %}{{ order_summary.vat|floatformat:2 }}</td>
+            <td class="text-right">{{ order_summary.vat|floatformat:2 }}</td>
         </tr>
-        <tr>
-            <th>Total</th>
-            <th class="text-right">{% if order.payment_currency == "INR" %}₹{% else %}${% endif %}{{ order_summary.total|floatformat:2 }}</th>
+        <tr class="total-row">
+            <td>Total</td>
+            <td class="text-right">{{ order_summary.total|floatformat:2 }}</td>
         </tr>
     </table>
 </div>
 
+<!-- Billing -->
 <div class="section">
     <div class="section-title">Billing Information</div>
     {% if billing %}
@@ -140,10 +116,11 @@
         <p>{{ billing.customer_country }}</p>
         <p>Phone: {{ billing.phone|default:"N/A" }}</p>
     {% else %}
-        <p class="muted">No billing information available.</p>
+        <p>No billing information available.</p>
     {% endif %}
 </div>
 
+<!-- Payment -->
 <div class="section">
     <div class="section-title">Payment Method</div>
     {% if payment_details %}
@@ -155,14 +132,13 @@
             <p>Cash on Delivery - Ref: {{ payment_details.cod_tracking_id|default:"N/A" }}</p>
         {% elif payment_method == "bank_transfer" %}
             <p>Bank Transfer</p>
-        {% else %}
-            <p>Unknown Payment Method</p>
         {% endif %}
     {% else %}
-        <p class="muted">No payment details available.</p>
+        <p>No payment details available.</p>
     {% endif %}
 </div>
 
+<!-- Extra -->
 <div class="section">
     <div class="section-title">Other Details</div>
     <p><strong>Order Date:</strong> {{ order_date|date:"d M, Y" }}</p>
