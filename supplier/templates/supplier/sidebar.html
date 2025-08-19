@@ -11,7 +11,7 @@
 
             <!-- Home -->
           <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="right-start"
-               class="menu-item py-2 {% if request.resolver_match.url_name == 'order_listing' %} here show {% endif %}">
+               class="menu-item py-2 {% if request.resolver_match.url_name == 'user_list' or request.resolver_match.url_name == 'order_listing' %} here show {% endif %}">
               <span class="menu-link menu-center">
                   <span class="menu-icon me-0">
                       <i class="fas fa-home fs-1"></i>
@@ -107,7 +107,7 @@
 
           <!-- Products  -->
           <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="right-start"
-               class="menu-item py-2 {% if request.resolver_match.url_name == 'products_list' or request.resolver_match.url_name == 'add_product' or request.resolver_match.url_name == 'wishlist_products_list' %} here show {% endif %}">
+               class="menu-item py-2 {% if request.resolver_match.url_name == 'products_list' or request.resolver_match.url_name == 'add_product' or request.resolver_match.url_name == 'wishlist_products_list' or request.resolver_match.url_name == 'supplier_returns' %} here show {% endif %}">
                <span class="menu-link menu-center">
                   <span class="menu-icon me-0">
                       <i class="fas fa-cubes fs-1"></i>
@@ -125,7 +125,7 @@
 
                   <div class="menu-sub menu-sub-accordion">
 
-                      <div data-kt-menu-trigger="click" class="menu-item menu-accordion {% if request.resolver_match.url_name == 'products_list' or request.resolver_match.url_name == 'add_product' or request.resolver_match.url_name == 'wishlist_products_list' %} here show {% endif %}">
+                      <div data-kt-menu-trigger="click" class="menu-item menu-accordion {% if request.resolver_match.url_name == 'products_list' or request.resolver_match.url_name == 'add_product' or request.resolver_match.url_name == 'supplier_returns' %} here show {% endif %}">
                           <span class="menu-link">
                               <span class="menu-bullet">
                                   <span class="bullet bullet-dot"></span>
@@ -157,25 +157,14 @@
                               </div>
 
                               <div class="menu-item">
-                                  <a class="menu-link {% if request.resolver_match.url_name == 'wishlist_products_list' %}active{% endif %}"
-                                     href="{% url 'supplier:wishlist_products_list' %}">
+                                  <a class="menu-link {% if request.resolver_match.url_name == 'supplier_returns' %}active{% endif %}"
+                                     href="{% url 'supplier:supplier_returns' %}">
                                       <span class="menu-bullet">
                                           <span class="bullet bullet-dot"> </span>
                                       </span>
-                                      <span class="menu-title">Wishlist Product</span>
+                                      <span class="menu-title">Return Product</span>
                                   </a>
                               </div>
-
-                              <div class="menu-item">
-                                  <a class="menu-link {% if request.resolver_match.url_name == 'cart_product_list' %}active{% endif %}"
-                                     href="{% url 'supplier:cart_product_list' %}">
-                                      <span class="menu-bullet">
-                                          <span class="bullet bullet-dot"> </span>
-                                      </span>
-                                      <span class="menu-title">Cart</span>
-                                  </a>
-                              </div>
-
                           </div>
 
                       </div>
@@ -187,7 +176,7 @@
            <!-- RFQ Requests -->
             <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}"
                  data-kt-menu-placement="right-start"
-                 class="menu-item py-2 {% if request.resolver_match.url_name == 'rfq_list' %} here show {% endif %}">
+                 class="menu-item py-2 {% if request.resolver_match.url_name == 'rfq_list' or request.resolver_match.url_name == 'banner_list' or request.resolver_match.url_name == 'view_product' or request.resolver_match.url_name == 'rating_list' or request.resolver_match.url_name == 'question_list' or request.resolver_match.url_name == 'transaction_list' %} here show {% endif %}">
               <span class="menu-link menu-center">
                 <span class="menu-icon me-0">
                   <i class="fas fa-envelope-open-text fs-1"></i>
@@ -224,7 +213,7 @@
                     </span>
                     <span class="menu-title">View Products</span>
                     </a>
-                    <a class="menu-link {% if request.resolver_match.url_name == 'rfq_list' %} active {% endif %}"
+                    <a class="menu-link {% if request.resolver_match.url_name == 'rating_list' %} active {% endif %}"
                        href="{% url 'supplier:rating_list' %}">
                       <span class="menu-bullet">
                         <span class="bullet bullet-dot"></span>
@@ -232,14 +221,14 @@
                       <span class="menu-title">Rating</span>
                     </a>
 
-                     <a class="menu-link {% if request.resolver_match.url_name == 'rfq_list' %} active {% endif %}"
+                     <a class="menu-link {% if request.resolver_match.url_name == 'question_list' %} active {% endif %}"
                        href="{% url 'supplier:question_list' %}">
                       <span class="menu-bullet">
                         <span class="bullet bullet-dot"></span>
                       </span>
-                      <span class="menu-title">Quetions</span>
+                      <span class="menu-title">Questions</span>
                     </a>
-                     <a class="menu-link {% if request.resolver_match.url_name == 'rfq_list' %} active {% endif %}"
+                     <a class="menu-link {% if request.resolver_match.url_name == 'transaction_list' %} active {% endif %}"
                        href="{% url 'supplier:transaction_list' %}">
                       <span class="menu-bullet">
                         <span class="bullet bullet-dot"></span>

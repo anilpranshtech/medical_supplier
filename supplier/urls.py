@@ -67,6 +67,9 @@ urlpatterns = [
     
     path('most-viewed-products/', MostViewedProductsView.as_view(), name='view_product'),
 
+    path('supplier/returns/', SupplierReturnsView.as_view(), name='supplier_returns'),
+    path('supplier/returns/<str:return_serial>/', SupplierReturnsView.as_view(), name='supplier_returns'),
+
 ]
 
     

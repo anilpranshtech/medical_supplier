@@ -59,4 +59,8 @@ urlpatterns = [
     path('most-viewed-products/', MostViewedProductsView.as_view(), name='view_product'),
    
     path('rating/', RatingView.as_view(), name='rating_list'),
+
+    path('returns/', AdminReturnsView.as_view(), name='admin_returns'),
+    path('returns/<str:return_serial>/', AdminReturnsView.as_view(), name='admin_returns_update'),
+
 ]

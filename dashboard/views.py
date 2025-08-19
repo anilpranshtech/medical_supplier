@@ -48,28 +48,29 @@ import logging
 from .forms import *
 logger = logging.getLogger(__name__)
 
+
 class HomeView(TemplateView):
     template_name = 'dashboard/home.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        today = timezone.now().date() 
         today = date.today()
 
         def set_product_fields(product_queryset):
             for product in product_queryset:
-                main_img = ProductImage.objects.filter(product=product, is_main=True).first()
+                # Set main image
+                main_img = product.images.filter(is_main=True).first()
                 product.main_image = main_img.image.url if main_img else None
 
                 # Calculate delivery date
                 if product.delivery_time:
                     delivery_date = today + timedelta(days=product.delivery_time)
-                    product.delivery_date = delivery_date.strftime('%a, %d %b')  
+                    product.delivery_date = delivery_date.strftime('%a, %d %b')
                 else:
                     product.delivery_date = 'N/A'
 
                 # Calculate rating and review count
-                reviews = RatingReview.objects.filter(product=product)
+                reviews = product.reviews.all()  # Use related_name='reviews'
                 total_reviews = reviews.count()
                 average_rating = reviews.aggregate(avg_rating=Avg('rating'))['avg_rating'] or 0.0
                 product.rating = round(average_rating, 1) if total_reviews > 0 else 0.0
@@ -83,69 +84,62 @@ class HomeView(TemplateView):
             offer_start__lte=today,
             offer_end__gte=today,
             is_active=True
-        ).order_by('-offer_percentage')[:3]
-        for product in special_offers:
-            main_img = ProductImage.objects.filter(product=product, is_main=True).first()
-            product.main_image = main_img.image.url if main_img else None
+        ).select_related('category', 'event').prefetch_related('images', 'reviews').order_by('-offer_percentage')[:3]
         context['special_offers'] = set_product_fields(special_offers)
 
         # New Arrivals
         recent_products = Product.objects.filter(
             tag='recent',
             is_active=True
-        ).order_by('-created_at')[:4]
-        for product in recent_products:
-            main_img = ProductImage.objects.filter(product=product, is_main=True).first()
-            product.main_image = main_img.image.url if main_img else None
-
+        ).select_related('category', 'event').prefetch_related('images', 'reviews').order_by('-created_at')[:4]
         context['recent_products'] = set_product_fields(recent_products)
 
         # Popular Medical Supplies
         popular_products = Product.objects.filter(
             tag='popular',
             is_active=True
-        ).order_by('-created_at')[:4]
-        for product in popular_products:
-            main_img = ProductImage.objects.filter(product=product, is_main=True).first()
-            product.main_image = main_img.image.url if main_img else None
+        ).select_related('category', 'event').prefetch_related('images', 'reviews').order_by('-created_at')[:4]
         context['popular_products'] = set_product_fields(popular_products)
 
         # Limited-Time Deals
         limited_products = Product.objects.filter(
             tag='limited',
             is_active=True
-        ).order_by('-created_at')[:4]
-        for product in limited_products:
-            main_img = ProductImage.objects.filter(product=product, is_main=True).first()
-            product.main_image = main_img.image.url if main_img else None
+        ).select_related('category', 'event').prefetch_related('images', 'reviews').order_by('-created_at')[:4]
         context['limited_products'] = set_product_fields(limited_products)
 
         # Featured Products
         all_ids = list(Product.objects.filter(is_active=True).values_list('id', flat=True))
         random_ids = random.sample(all_ids, min(len(all_ids), 6))
-        featured_products = Product.objects.filter(id__in=random_ids)
-        for product in featured_products:
-            main_img = ProductImage.objects.filter(product=product, is_main=True).first()
-            product.main_image = main_img.image.url if main_img else None
+        featured_products = Product.objects.filter(id__in=random_ids).select_related('category', 'event').prefetch_related('images', 'reviews')
         context['featured_products'] = set_product_fields(featured_products)
 
-        # Wishlist
+        # Conference & Webinar Events
+        conference_products = Product.objects.filter(
+            category__name__in=['Conference', 'Webinar', 'Event'],
+            is_active=True
+        ).select_related('category', 'event').prefetch_related('images', 'reviews').order_by('-created_at')[:4]
+        context['conference_products'] = set_product_fields(conference_products)
+
+        # User-related data
         if self.request.user.is_authenticated:
             context['user_wishlist_ids'] = list(
-                WishlistProduct.objects.filter(user=self.request.user)
-                .values_list('product_id', flat=True)
+                WishlistProduct.objects.filter(user=self.request.user).values_list('product_id', flat=True)
             )
-
             context['user_cart_ids'] = list(
                 CartProduct.objects.filter(user=self.request.user).values_list('product_id', flat=True)
+            )
+            context['user_registered_event_ids'] = list(
+                EventRegistration.objects.filter(user=self.request.user).values_list('product_id', flat=True)
             )
         else:
             context['user_wishlist_ids'] = []
             context['user_cart_ids'] = []
+            context['user_registered_event_ids'] = []
 
         context['banners'] = Banner.objects.filter(is_active=True)
- 
-        return context  
+
+        return context
 
 
 class CustomLoginView(FormView):
@@ -495,7 +489,7 @@ class SearchResultsGridView(TemplateView):
                 default=F('price'),
                 output_field=DecimalField(max_digits=10, decimal_places=2)
             )
-        )
+        ).prefetch_related('images')  # Add prefetch_related for images
 
         # Handle search query
         if search_query:
@@ -503,7 +497,7 @@ class SearchResultsGridView(TemplateView):
             query = Q()
             for term in search_terms:
                 query |= Q(name__icontains=term) | Q(keywords__icontains=term)
-            
+
             products = products.filter(query, is_active=True).distinct()
 
             if sort_by == '1':
@@ -647,7 +641,7 @@ class SearchResultsListView(TemplateView):
                 default=F('price'),
                 output_field=DecimalField(max_digits=10, decimal_places=2)
             )
-        )
+        ).prefetch_related('images')  # Add prefetch_related for images
 
         # Filtering + sorting
         if last_category_id:
@@ -1528,7 +1522,7 @@ class OrderPlacedView(LoginRequiredMixin, TemplateView):
 
         # Prefetch main product images
         main_image_prefetch = Prefetch(
-            'items__product__productimage_set',
+            'items__product__images',
             queryset=ProductImage.objects.filter(is_main=True),
             to_attr='main_image'
         )
@@ -1627,7 +1621,7 @@ class MyOrdersView(LoginRequiredMixin, TemplateView):
         user = self.request.user
 
         main_image_prefetch = Prefetch(
-            'items__product__productimage_set',
+            'items__product__images',
             queryset=ProductImage.objects.filter(is_main=True),
             to_attr='main_image'
         )
@@ -1641,9 +1635,76 @@ class MyOrdersView(LoginRequiredMixin, TemplateView):
         page_number = self.request.GET.get('page')
         page_obj = paginator.get_page(page_number)
 
+        # Add return eligibility to each order item
+        for order in page_obj.object_list:
+            for item in order.items.all():
+                delivery_date = order.updated_at  # Or item.delivery_date if available
+                time_limit = delivery_date + timedelta(days=15)
+                item.can_return = timezone.now() <= time_limit
+                item.time_limit = time_limit
+
         context['orders'] = page_obj.object_list
         context['page_obj'] = page_obj
 
+        return context
+
+
+class RequestReturnView(LoginRequiredMixin, View):
+    login_url = 'dashboard:login'
+
+    def post(self, request, item_id):
+        try:
+            order_item = OrderItem.objects.get(id=item_id, order__user=request.user)
+            delivery_date = order_item.order.updated_at  # Adjust if using order_item.delivery_date
+            time_limit = delivery_date + timezone.timedelta(days=15)
+
+            if timezone.now() > time_limit:
+                messages.error(request, "Return period has expired.")
+                return redirect('dashboard:my_orders')
+
+            return_option = request.POST.get('return_option')
+            price = request.POST.get('price')
+
+            if not return_option or not price:
+                messages.error(request, "Invalid return request.")
+                return redirect('dashboard:my_orders')
+
+            # Generate unique return_serial
+            base_serial = 'R'
+            year = timezone.now().strftime('%y')
+            month = timezone.now().strftime('%m')
+            unique_code = ''.join(random.choices('0123456789', k=3))
+            suffix = 'R' + year
+            return_serial = f"{base_serial}{month}{unique_code}-{suffix}"
+            while Return.objects.filter(return_serial=return_serial).exists():
+                unique_code = ''.join(random.choices('0123456789', k=3))
+                return_serial = f"{base_serial}{month}{unique_code}-{suffix}"
+
+            # Create return request
+            Return.objects.create(
+                return_serial=return_serial,
+                order_item=order_item,
+                client=request.user,
+                return_option=return_option,
+                price=price,
+                return_status='pending'
+            )
+
+            messages.success(request, f"Return request submitted successfully. Return ID: {return_serial}")
+            return redirect('dashboard:my_orders')
+
+        except OrderItem.DoesNotExist:
+            messages.error(request, "Order item not found.")
+            return redirect('dashboard:my_orders')
+
+
+class MyReturnsView(LoginRequiredMixin, TemplateView):
+    template_name = 'userdashboard/view/my_returns.html'
+    login_url = 'dashboard:login'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['returns'] = Return.objects.filter(client=self.request.user).select_related('order_item__product').order_by('-request_date')
         return context
 
 
@@ -1714,7 +1775,7 @@ class OrderReceiptView(LoginRequiredMixin, TemplateView):
 
         # Prefetch main product images for OrderItems
         main_image_prefetch = Prefetch(
-            'items__product__productimage_set',
+            'items__product__images',
             queryset=ProductImage.objects.filter(is_main=True),
             to_attr='main_image'
         )
@@ -1815,7 +1876,7 @@ class DownloadReceiptView(LoginRequiredMixin, View):
 
         # Prefetch main product images for OrderItems
         main_image_prefetch = Prefetch(
-            'items__product__productimage_set',
+            'items__product__images',
             queryset=ProductImage.objects.filter(is_main=True),
             to_attr='main_image'
         )

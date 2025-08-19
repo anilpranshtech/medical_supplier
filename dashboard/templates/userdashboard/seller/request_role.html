@@ -2,11 +2,11 @@
 {% load static custom_filters %}
 
 {% block content %}
-<div class="flex flex-col grow kt-scrollable-y-auto pt-5" id="scrollable_content">
+<div class="flex flex-col grow kt-scrollable-y-auto pt-5" id="scrollable_content" style="max-width: var(--custom-container-width, 95%);">
     <main class="grow" role="main">
         <!-- Page Header -->
         <div class="pb-5 mt-3">
-            <div class="kt-container-fixed flex items-center justify-between">
+            <div class="kt-container-fixed flex items-center">
                 <h1 class="font-medium text-xl text-mono flex items-center gap-2">
                     📦 Supplier Role Request
                 </h1>
@@ -16,7 +16,7 @@
         
 
         <!-- Form Container -->
-        <div class="kt-container-fixed">
+        <div class="kt-container-fixed" style="max-width: var(--custom-container-width, 95%);">
             <div class="grid gap-5">
                 <div class="kt-card max-w-lg mx-auto w-full shadow-lg rounded-xl overflow-hidden border border-gray-200">
                     

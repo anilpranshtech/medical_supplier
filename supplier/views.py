@@ -1,6 +1,7 @@
 import json
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
 from django.core.mail import send_mail, EmailMessage
 from django.template.loader import render_to_string
 from django.urls import reverse_lazy
@@ -1586,3 +1587,48 @@ class RatingView(TemplateView):
         return render(request, 'supplier/view_product.html', context)
     
 
+class SupplierReturnsView(LoginRequiredMixin, TemplateView):
+    template_name = 'supplier/returns.html'
+    login_url = 'dashboard:login'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+
+        if not (user.is_superuser or (hasattr(user, 'userprofile') and user.userprofile.is_supplier)):
+            raise PermissionDenied("You are not authorized to access this page.")
+
+        if user.is_superuser:
+            returns_qs = Return.objects.all()
+        else:
+            returns_qs = Return.objects.filter(
+                order_item__product__brand__supplier=user
+            )
+        context['returns'] = returns_qs.select_related(
+            'order_item__product', 'client'
+        ).order_by('-request_date')
+
+        return context
+
+    def post(self, request, return_serial):
+        user = request.user
+        if user.is_superuser:
+            return_request = get_object_or_404(Return, return_serial=return_serial)
+        else:
+            return_request = get_object_or_404(
+                Return,
+                return_serial=return_serial,
+                order_item__product__brand__supplier=user
+            )
+        new_status = request.POST.get('return_status')
+
+        if new_status in [choice[0] for choice in Return.RETURN_STATUS_CHOICES]:
+            return_request.return_status = new_status
+            return_request.save()
+            messages.success(
+                request,
+                f"Return {return_request.return_serial} status updated to {return_request.get_return_status_display()}."
+            )
+        else:
+            messages.error(request, "Invalid status selected.")
+        return redirect('supplier:supplier_returns')

@@ -4,7 +4,7 @@
 {% block content %}
 <title>RFQ Quotations</title>
 
-<div class="flex flex-col grow kt-scrollable-y-auto lg:[--kt-scrollbar-width:auto] pt-5" id="scrollable_content">
+<div class="flex flex-col grow kt-scrollable-y-auto lg:[--kt-scrollbar-width:auto] pt-5" id="scrollable_content" style="max-width: var(--custom-container-width, 100%);">
   <main class="grow" role="content">
     <!-- Toolbar -->
     <div class="pb-5">
@@ -46,7 +46,7 @@
     <!-- End of Toolbar -->
 
     <!-- Container -->
-    <div class="kt-container-fixed px-4 sm:px-6 lg:px-8">
+    <div class="kt-container-fixed px-4 sm:px-6 lg:px-8" style="max-width: var(--custom-container-width, 95%);">
       <div class="grid gap-5 lg:gap-7.5">
         <div class="kt-card kt-card-grid min-w-full">
           <div class="kt-card-header flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
