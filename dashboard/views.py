@@ -489,7 +489,7 @@ class SearchResultsGridView(TemplateView):
                 default=F('price'),
                 output_field=DecimalField(max_digits=10, decimal_places=2)
             )
-        )
+        ).prefetch_related('images')  # Add prefetch_related for images
 
         # Handle search query
         if search_query:
@@ -497,7 +497,7 @@ class SearchResultsGridView(TemplateView):
             query = Q()
             for term in search_terms:
                 query |= Q(name__icontains=term) | Q(keywords__icontains=term)
-            
+
             products = products.filter(query, is_active=True).distinct()
 
             if sort_by == '1':
@@ -641,7 +641,7 @@ class SearchResultsListView(TemplateView):
                 default=F('price'),
                 output_field=DecimalField(max_digits=10, decimal_places=2)
             )
-        )
+        ).prefetch_related('images')  # Add prefetch_related for images
 
         # Filtering + sorting
         if last_category_id:
