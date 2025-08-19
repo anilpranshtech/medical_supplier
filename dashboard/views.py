@@ -48,28 +48,29 @@ import logging
 from .forms import *
 logger = logging.getLogger(__name__)
 
+
 class HomeView(TemplateView):
     template_name = 'dashboard/home.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        today = timezone.now().date() 
         today = date.today()
 
         def set_product_fields(product_queryset):
             for product in product_queryset:
-                main_img = ProductImage.objects.filter(product=product, is_main=True).first()
+                # Set main image
+                main_img = product.productimage_set.filter(is_main=True).first()  # Use productimage_set
                 product.main_image = main_img.image.url if main_img else None
 
                 # Calculate delivery date
                 if product.delivery_time:
                     delivery_date = today + timedelta(days=product.delivery_time)
-                    product.delivery_date = delivery_date.strftime('%a, %d %b')  
+                    product.delivery_date = delivery_date.strftime('%a, %d %b')
                 else:
                     product.delivery_date = 'N/A'
 
                 # Calculate rating and review count
-                reviews = RatingReview.objects.filter(product=product)
+                reviews = product.reviews.all()  # Use related_name='reviews'
                 total_reviews = reviews.count()
                 average_rating = reviews.aggregate(avg_rating=Avg('rating'))['avg_rating'] or 0.0
                 product.rating = round(average_rating, 1) if total_reviews > 0 else 0.0
@@ -83,69 +84,62 @@ class HomeView(TemplateView):
             offer_start__lte=today,
             offer_end__gte=today,
             is_active=True
-        ).order_by('-offer_percentage')[:3]
-        for product in special_offers:
-            main_img = ProductImage.objects.filter(product=product, is_main=True).first()
-            product.main_image = main_img.image.url if main_img else None
+        ).select_related('category', 'event').prefetch_related('productimage_set', 'reviews').order_by('-offer_percentage')[:3]
         context['special_offers'] = set_product_fields(special_offers)
 
         # New Arrivals
         recent_products = Product.objects.filter(
             tag='recent',
             is_active=True
-        ).order_by('-created_at')[:4]
-        for product in recent_products:
-            main_img = ProductImage.objects.filter(product=product, is_main=True).first()
-            product.main_image = main_img.image.url if main_img else None
-
+        ).select_related('category', 'event').prefetch_related('productimage_set', 'reviews').order_by('-created_at')[:4]
         context['recent_products'] = set_product_fields(recent_products)
 
         # Popular Medical Supplies
         popular_products = Product.objects.filter(
             tag='popular',
             is_active=True
-        ).order_by('-created_at')[:4]
-        for product in popular_products:
-            main_img = ProductImage.objects.filter(product=product, is_main=True).first()
-            product.main_image = main_img.image.url if main_img else None
+        ).select_related('category', 'event').prefetch_related('productimage_set', 'reviews').order_by('-created_at')[:4]
         context['popular_products'] = set_product_fields(popular_products)
 
         # Limited-Time Deals
         limited_products = Product.objects.filter(
             tag='limited',
             is_active=True
-        ).order_by('-created_at')[:4]
-        for product in limited_products:
-            main_img = ProductImage.objects.filter(product=product, is_main=True).first()
-            product.main_image = main_img.image.url if main_img else None
+        ).select_related('category', 'event').prefetch_related('productimage_set', 'reviews').order_by('-created_at')[:4]
         context['limited_products'] = set_product_fields(limited_products)
 
         # Featured Products
         all_ids = list(Product.objects.filter(is_active=True).values_list('id', flat=True))
         random_ids = random.sample(all_ids, min(len(all_ids), 6))
-        featured_products = Product.objects.filter(id__in=random_ids)
-        for product in featured_products:
-            main_img = ProductImage.objects.filter(product=product, is_main=True).first()
-            product.main_image = main_img.image.url if main_img else None
+        featured_products = Product.objects.filter(id__in=random_ids).select_related('category', 'event').prefetch_related('productimage_set', 'reviews')
         context['featured_products'] = set_product_fields(featured_products)
 
-        # Wishlist
+        # Conference & Webinar Events
+        conference_products = Product.objects.filter(
+            category__name__in=['Conference', 'Webinar', 'Event'],
+            is_active=True
+        ).select_related('category', 'event').prefetch_related('productimage_set', 'reviews').order_by('-created_at')[:4]
+        context['conference_products'] = set_product_fields(conference_products)
+
+        # User-related data
         if self.request.user.is_authenticated:
             context['user_wishlist_ids'] = list(
-                WishlistProduct.objects.filter(user=self.request.user)
-                .values_list('product_id', flat=True)
+                WishlistProduct.objects.filter(user=self.request.user).values_list('product_id', flat=True)
             )
-
             context['user_cart_ids'] = list(
                 CartProduct.objects.filter(user=self.request.user).values_list('product_id', flat=True)
+            )
+            context['user_registered_event_ids'] = list(
+                EventRegistration.objects.filter(user=self.request.user).values_list('product_id', flat=True)
             )
         else:
             context['user_wishlist_ids'] = []
             context['user_cart_ids'] = []
+            context['user_registered_event_ids'] = []
 
         context['banners'] = Banner.objects.filter(is_active=True)
- 
-        return context  
+
+        return context
 
 
 class CustomLoginView(FormView):
