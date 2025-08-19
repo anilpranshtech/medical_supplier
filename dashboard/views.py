@@ -1522,7 +1522,7 @@ class OrderPlacedView(LoginRequiredMixin, TemplateView):
 
         # Prefetch main product images
         main_image_prefetch = Prefetch(
-            'items__product__productimage_set',
+            'items__product__images',
             queryset=ProductImage.objects.filter(is_main=True),
             to_attr='main_image'
         )
@@ -1775,7 +1775,7 @@ class OrderReceiptView(LoginRequiredMixin, TemplateView):
 
         # Prefetch main product images for OrderItems
         main_image_prefetch = Prefetch(
-            'items__product__productimage_set',
+            'items__product__images',
             queryset=ProductImage.objects.filter(is_main=True),
             to_attr='main_image'
         )
@@ -1876,7 +1876,7 @@ class DownloadReceiptView(LoginRequiredMixin, View):
 
         # Prefetch main product images for OrderItems
         main_image_prefetch = Prefetch(
-            'items__product__productimage_set',
+            'items__product__images',
             queryset=ProductImage.objects.filter(is_main=True),
             to_attr='main_image'
         )

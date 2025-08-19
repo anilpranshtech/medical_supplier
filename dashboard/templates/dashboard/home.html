@@ -361,7 +361,7 @@
 </style>
 
 <!-- Begin Medical Banner Slider -->
-<div class="kt-slider-container mt-7" style="max-width: var(--custom-container-width, 99%);">
+<div class="kt-slider-container mt-7" style="max-width: var(--custom-container-width, 99%); height: fit-content">
     <div class="kt-slider" id="slider">
         {% for banner in banners %}
             <a href="{{ banner.link|default:'#' }}" class="kt-slide">
@@ -717,7 +717,7 @@
                         <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[180px] sm:h-[250px] mb-4 shadow-none">
                             <a href="{% url 'dashboard:product_detail' product.id %}" class="block">
                                 <img alt="{{ product.name|default:'Unnamed Product' }}"
-                                     class="h-[120px] sm:h-[180px] shrink-0 cursor-pointer product-thumbnail"
+                                     class="h-[150px] sm:h-[180px] shrink-0 cursor-pointer product-thumbnail"
                                      src="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
                                      data-product-name="{{ product.name|default:'Unnamed Product' }}"
                                      data-product-description="{{ product.description|default:'No description available' }}"
@@ -831,7 +831,7 @@
                             <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[180px] sm:h-[250px] mb-4 shadow-none">
                                 <a href="{% url 'dashboard:product_detail' product.id %}" class="block">
                                     <img alt="{{ product.name|default:'Unnamed Product' }}"
-                                         class="h-[120px] sm:h-[180px] shrink-0 cursor-pointer product-thumbnail"
+                                         class="h-[150px] sm:h-[180px] shrink-0 cursor-pointer product-thumbnail"
                                          src="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
                                          data-product-name="{{ product.name|default:'Unnamed Product' }}"
                                          data-product-description="{{ product.description|default:'No description available' }}"
@@ -945,7 +945,7 @@
                             <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[180px] sm:h-[250px] mb-4 shadow-none">
                                 <a href="{% url 'dashboard:product_detail' product.id %}" class="block">
                                     <img alt="{{ product.name|default:'Unnamed Product' }}"
-                                         class="h-[120px] sm:h-[180px] shrink-0 cursor-pointer product-thumbnail"
+                                         class="h-[150px] sm:h-[180px] shrink-0 cursor-pointer product-thumbnail"
                                          src="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
                                          data-product-name="{{ product.name|default:'Unnamed Product' }}"
                                          data-product-description="{{ product.description|default:'No description available' }}"
@@ -1062,7 +1062,7 @@
                         <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[180px] sm:h-[250px] mb-4 shadow-none">
                             <a href="{% url 'dashboard:product_detail' product.id %}" class="block">
                                 <img alt="{{ product.name|default:'Unnamed Event' }}"
-                                     class="h-[120px] sm:h-[180px] shrink-0 cursor-pointer product-thumbnail"
+                                     class="h-[150px] sm:h-[180px] shrink-0 cursor-pointer product-thumbnail"
                                      src="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
                                      data-product-name="{{ product.name|default:'Unnamed Event' }}"
                                      data-product-description="{{ product.description|default:'No description available' }}"

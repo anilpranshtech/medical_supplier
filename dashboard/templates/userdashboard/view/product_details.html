@@ -188,29 +188,33 @@
     }
 
     /* Center the Swiper containers */
-.mainSwiper, .thumbSwiper {
-    width: 100%;
-    max-width: 510px; /* Matches the main image width */
-    margin: 0 auto;
-}
+    .mainSwiper, .thumbSwiper {
+        width: 100%;
+        max-width: 510px; /* Matches the main image width */
+        margin: 0 auto;
+    }
 
-/* Ensure thumbnails are centered */
-.thumbSwiper .swiper-wrapper {
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 8px;
-}
+    /* Ensure thumbnails are centered */
+    .thumbSwiper .swiper-wrapper {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
 
-/* Override Swiper's default transform for thumbnails */
-.thumbSwiper .swiper-wrapper {
-    transform: none !important;
-}
+    /* Override Swiper's default transform for thumbnails */
+    .thumbSwiper .swiper-wrapper {
+        transform: none !important;
+    }
 
-/* Ensure the no-image placeholder is centered */
-.flex-col.items-center.justify-center {
-    text-align: center;
-}
+    /* Ensure the no-image placeholder is centered */
+    .flex-col.items-center.justify-center {
+        text-align: center;
+    }
+
+    .border.border-gray-200.dark\:border-gray-700.bg-gray-50.dark\:bg-gray-800.rounded-lg.overflow-hidden.shadow-sm.max-w-\[510px\].mx-auto {
+        height: 510px;
+    }
 </style>
 
 <div class="kt-container-fixed mt-1" style="max-width: var(--custom-container-width, 85;);">
@@ -221,52 +225,51 @@
         </h1>
         {% if product %}
         <div class="flex flex-col items-center justify-center gap-4">
-    {% if product.main_image or other_images %}
-        <!-- Main Image -->
-        <div class="border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-lg overflow-hidden shadow-sm max-w-[510px] mx-auto">
-            <div class="swiper mainSwiper h-[510px] sm:h-[510px]">
-                <div class="swiper-wrapper">
-                    {% if product.main_image %}
-                    <div class="swiper-slide">
-                        <img src="{{ product.main_image }}" alt="{{ product.name }}" class="w-full h-full object-contain" loading="lazy" />
+            {% if product.main_image or other_images %}
+                <!-- Main Image -->
+                <div class="border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-lg overflow-hidden shadow-sm max-w-[510px] mx-auto">
+                    <div class="swiper mainSwiper h-[510px] sm:h-[510px]">
+                        <div class="swiper-wrapper">
+                            {% if product.main_image %}
+                            <div class="swiper-slide">
+                                <img src="{{ product.main_image }}" alt="{{ product.name }}" class="w-full h-full object-contain" loading="lazy" />
+                            </div>
+                            {% endif %}
+                            {% for img in other_images %}
+                            <div class="swiper-slide">
+                                <img src="{{ img.image.url }}" alt="Product Image" class="w-full h-full object-contain" loading="lazy" />
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="swiper-button-prev bg-white dark:bg-gray-800 shadow-md"></div>
+                        <div class="swiper-button-next bg-white dark:bg-gray-800 shadow-md"></div>
                     </div>
-                    {% endif %}
-                    {% for img in other_images %}
-                    <div class="swiper-slide">
-                        <img src="{{ img.image.url }}" alt="Product Image" class="w-full h-full object-contain" loading="lazy" />
+                </div>
                     </div>
-                    {% endfor %}
-                </div>
-                <div class="swiper-button-prev bg-white dark:bg-gray-800 shadow-md"></div>
-                <div class="swiper-button-next bg-white dark:bg-gray-800 shadow-md"></div>
-            </div>
-        </div>
-            </div>
 
-        <!-- Thumbnails -->
-        <div class="swiper thumbSwiper h-20 max-w-[510px] mx-auto">
-            <div class="swiper-wrapper flex justify-center">
-                {% if product.main_image %}
-                <div class="swiper-slide w-16 h-16 cursor-pointer">
-                    <img src="{{ product.main_image }}" alt="Thumbnail" class="w-full h-full object-cover border border-gray-200 dark:border-gray-700 rounded" loading="lazy" />
+                <!-- Thumbnails -->
+                <div class="swiper thumbSwiper h-20 max-w-[510px] mx-auto">
+                    <div class="swiper-wrapper flex justify-center">
+                        {% if product.main_image %}
+                        <div class="swiper-slide w-16 h-16 cursor-pointer">
+                            <img src="{{ product.main_image }}" alt="Thumbnail" class="w-full h-full object-cover border border-gray-200 dark:border-gray-700 rounded" loading="lazy" />
+                        </div>
+                        {% endif %}
+                        {% for img in other_images %}
+                        <div class="swiper-slide w-16 h-16 cursor-pointer">
+                            <img src="{{ img.image.url }}" alt="Thumbnail" class="w-full h-full object-cover border border-gray-200 dark:border-gray-700 rounded" loading="lazy" />
+                        </div>
+                        {% endfor %}
+                    </div>
                 </div>
-                {% endif %}
-                {% for img in other_images %}
-                <div class="swiper-slide w-16 h-16 cursor-pointer">
-                    <img src="{{ img.image.url }}" alt="Thumbnail" class="w-full h-full object-cover border border-gray-200 dark:border-gray-700 rounded" loading="lazy" />
+            {% else %}
+                <div class="flex flex-col items-center justify-center border border-gray-200 dark:border-gray-700 rounded-lg p-6 bg-white dark:bg-gray-800 text-red-500">
+                    <img src="{% static 'default.png' %}" alt="Default Product Image" class="w-48 h-48 object-cover" loading="lazy" />
+                    <p class="mt-4">Image not available. Please check the URL or try again.</p>
+                    <a href="{% url 'dashboard:home' %}" class="mt-4 inline-block kt-btn kt-btn-primary kt-btn-sm">Back to Home</a>
                 </div>
-                {% endfor %}
-            </div>
+            {% endif %}
         </div>
-    {% else %}
-        <div class="flex flex-col items-center justify-center border border-gray-200 dark:border-gray-700 rounded-lg p-6 bg-white dark:bg-gray-800 text-red-500">
-            <img src="{% static 'default.png' %}" alt="Default Product Image" class="w-48 h-48 object-cover" loading="lazy" />
-            <p class="mt-4">Image not available. Please check the URL or try again.</p>
-            <a href="{% url 'dashboard:home' %}" class="mt-4 inline-block kt-btn kt-btn-primary kt-btn-sm">Back to Home</a>
-        </div>
-    {% endif %}
-</div>
-
             <!-- Product Details -->
             <div>
                 <!-- Description -->
@@ -674,20 +677,20 @@
 
 <!-- {# --- Post Question Modal --- #} -->
 <div id="questionModal" class="kt-modal hidden fixed inset-0 z-[9999] flex items-center justify-center bg-black/30 backdrop-blur-sm" data-kt-modal="true" role="dialog" aria-labelledby="questionModalTitle" aria-modal="true">
-  <div class="kt-card w-full max-w-[600px] rounded-2xl border border-border bg-white dark:bg-background shadow-2xl transition-transform duration-300 ease-in-out transform scale-95">
-    <div class="kt-card-header px-6 py-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
-      <h2 id="questionModalTitle" class="text-xl font-bold">Ask Your Question</h2>
-      <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" onclick="closeQuestionModal()" aria-label="Close modal">
-        <i class="ki-filled ki-cross text-base text-gray-500 hover:text-red-500"></i>
-      </button>
-    </div>
+    <div class="kt-card w-full max-w-[600px] rounded-2xl border border-border bg-white dark:bg-background shadow-2xl transition-transform duration-300 ease-in-out transform scale-95">
+        <div class="kt-card-header px-6 py-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
+            <h2 id="questionModalTitle" class="text-xl font-bold">Ask Your Question</h2>
+        <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" onclick="closeQuestionModal()" aria-label="Close modal">
+            <i class="ki-filled ki-cross text-base text-gray-500 hover:text-red-500"></i>
+        </button>
+        </div>
 
-    <form method="POST" action="{% url 'dashboard:post_question' %}" id="questionForm">
-      {% csrf_token %}
-      <input type="hidden" name="product_id" id="questionProductId" value="{{ product.id }}">
+            <form method="POST" action="{% url 'dashboard:post_question' %}" id="questionForm">
+            {% csrf_token %}
+            <input type="hidden" name="product_id" id="questionProductId" value="{{ product.id }}">
 
-      <div class="kt-card-content flex flex-col gap-4 px-6 py-5">
-        <div>
+            <div class="kt-card-content flex flex-col gap-4 px-6 py-5">
+                <div>
           <label for="questionText" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Your Question <span class="text-red-500">*</span>
           </label>
@@ -741,7 +744,7 @@
 </div>
 
 <script>
-  
+
   function openQuestionModal() {
     const modal = document.getElementById('questionModal');
     modal.classList.remove('hidden');
