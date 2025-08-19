@@ -1053,7 +1053,6 @@
             <a class="kt-link" href="{% url 'dashboard:search_results_grid' %}?category=Conference">See All <i class="ki-filled ki-right text-xs"></i></a>
         </div>
         <!-- Debug output -->
-        <p>Number of conference products: {{ conference_products|length }}</p>
         <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-2">
             {% for product in conference_products|slice:":4" %}
             <div class="kt-card product-card">

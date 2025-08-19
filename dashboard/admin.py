@@ -45,7 +45,7 @@ class ProductSubCategoryAdmin(admin.ModelAdmin):
 
 
 @admin.register(Question)
-class Quetions(admin.ModelAdmin):
+class Questions(admin.ModelAdmin):
     list_display = ['id', 'user', 'text','reply','replied_at']
 
 
