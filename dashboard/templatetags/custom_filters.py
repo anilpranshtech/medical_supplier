@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django import template
 from django.utils import timezone
 
@@ -101,10 +103,38 @@ def query_replace(context, **kwargs):
 
 @register.filter
 def add_days(value, days):
-    return value + timezone.timedelta(days=days)
+    if not value:
+        return value
+    try:
+        # Ensure value is a datetime object
+        if isinstance(value, str):
+            from django.utils.dateparse import parse_datetime
+            value = parse_datetime(value)
+        # Add days
+        result = value + timedelta(days=int(days))
+        return result
+    except (ValueError, TypeError):
+        return value
 
 
 @register.filter
 def is_event_category(category_name):
     event_categories = ["Conference", "Webinar", "Event"]
     return category_name in event_categories
+
+
+@property
+def get_main_image(self):
+    return self.main_image.first()
+
+
+@register.filter
+def status_count(returns, status):
+    return returns.filter(return_status=status).count()
+
+
+@register.filter
+def dictfilter(d, key):
+    if isinstance(d, dict):
+        return d.get(key, "")
+    return ""

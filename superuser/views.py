@@ -2,7 +2,8 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.paginator import Paginator
 from django.db import IntegrityError
-from django.db.models import Prefetch, F, Sum
+from django.db.models import Prefetch, F, Sum, Avg, Value
+from django.db.models.functions import Coalesce
 from django.http import JsonResponse, Http404, HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils.dateparse import parse_date
@@ -10,6 +11,8 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic import ListView
 from django.core.paginator import EmptyPage,PageNotAnInteger
+
+import supplier
 from superuser.filters import QS_filter_user, QS_Products_filter, QS_orders_filters
 from superuser.mixins import StaffAccountRequiredMixin, PermissionRequiredMixin
 from django.contrib.auth.models import User, Group, Permission
@@ -1245,7 +1248,8 @@ class SupplierQuotationUpdateView(LoginRequiredMixin, SupplierPermissionMixin, U
 
     def test_func(self):
         return self.request.user.is_staff or self.request.user.is_superuser
-    
+
+
 class RatingView(TemplateView):
     template_name = "superuser/rating.html"
 
@@ -1301,3 +1305,39 @@ class MostViewedProductsView(View):
         context = {'products': products}
         return render(request, 'superuser/view_product.html', context)
 
+
+class AdminReturnsView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
+    template_name = 'superuser/returns.html'
+    login_url = 'dashboard:login'
+    permission_required = 'is_staff'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        qs = Return.objects.select_related(
+            'order_item__product', 'client'
+        ).order_by('-request_date')
+
+        context['returns'] = qs
+        context['count_all'] = qs.count()
+        context['count_approved'] = qs.filter(return_status='approved').count()
+        context['count_pending'] = qs.filter(return_status='pending').count()
+        context['count_rejected'] = qs.filter(return_status='rejected').count()
+
+        return context
+
+    def post(self, request, return_serial):
+        return_request = get_object_or_404(Return, return_serial=return_serial)
+        new_status = request.POST.get('return_status')
+
+        if new_status in dict(Return.RETURN_STATUS_CHOICES):
+            return_request.return_status = new_status
+            return_request.save()
+            messages.success(
+                request,
+                f"Return {return_request.return_serial} updated to {return_request.get_return_status_display()}."
+            )
+        else:
+            messages.error(request, "Invalid status selected.")
+
+        return redirect('superuser:admin_returns')

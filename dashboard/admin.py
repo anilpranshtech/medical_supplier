@@ -274,3 +274,10 @@ class StripeSubscriptionMetadataAdmin(admin.ModelAdmin):
     search_fields = ('subscription_plan__name', 'price_id')
     readonly_fields = ('created_at', 'updated_at')
 
+
+@admin.register(Return)
+class ReturnAdmin(admin.ModelAdmin):
+    list_display = ('return_serial', 'order_item', 'price', 'client', 'return_option', 'return_status', 'request_date')
+    list_filter = ('return_option', 'return_status')
+    search_fields = ('return_serial', 'order_item', 'client', 'return_option', 'return_status')
+

@@ -29,12 +29,57 @@
         margin-top: 4px;
         display: inline-block;
     }
+
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+
+    .modal-content {
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        max-width: 400px;
+        text-align: center;
+    }
+
+    .modal-content p {
+        margin-bottom: 20px;
+    }
+
+    .modal-content button {
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .modal-content button:hover {
+        background-color: #0056b3;
+    }
 </style>
 
 {% block content %}
 <div class="container mx-auto px-4 max-w-7xl">
     <div class="flex flex-col gap-6 mt-6 mb-12">
         <h2 class="text-xl md:text-2xl font-bold">My Orders</h2>
+        <div class="mb-4">
+            <a href="{% url 'dashboard:my_returns' %}" class="kt-btn kt-btn-primary text-sm">
+                <i class="ki-filled ki-information-4 text-base"></i> View My Returns
+            </a>
+        </div>
         {% for order in orders %}
         <div class="border border-gray-200 rounded-lg shadow-sm overflow-hidden">
             <div class="flex flex-col lg:flex-row flex-wrap gap-4 bg-gray-100 dark:bg-gray-800 p-4">
@@ -66,12 +111,12 @@
                 </div>
                 <div class="flex items-center gap-2 mt-2">
                     <a href="{% url 'dashboard:order_receipt' order.id %}" class="kt-btn kt-btn-primary text-sm">
-                        <i class="ki-filled ki-cheque"></i> View Receipt
+                        <i class="ki-filled ki-cheque text-base"></i> View Receipt
                     </a>
                     <form method="post" action="{% url 'dashboard:reorder' order.id %}">
                         {% csrf_token %}
                         <button type="submit" class="kt-btn kt-btn-destructive text-sm">
-                            <i class="ki-filled ki-parcel"></i> Reorder
+                            <i class="ki-filled ki-parcel text-base"></i> Reorder
                         </button>
                     </form>
                 </div>
@@ -128,7 +173,7 @@
                                 <input type="file" name="photo" accept="image/*" class="w-full text-sm">
 
                                 <button type="submit" class="kt-btn kt-btn-primary">
-                                    <i class="ki-filled ki-check"></i> Submit Review
+                                    <i class="ki-filled ki-check text-base"></i> Submit Review
                                 </button>
                             </form>
                             {% else %}
@@ -139,28 +184,28 @@
 
                         <!-- Return Request Section -->
                         {% if order.status == 'delivered' %}
-    {% with delivery_time=order.updated_at time_limit=order.updated_at|add_days:15 %}
-        <!-- Debug output -->
-        <p class="text-xs text-gray-500">Debug: Delivery Time: {{ delivery_time|date:"d M, Y H:i" }}, Current Time: {% now "d M, Y H:i" %}, Time Limit: {{ time_limit|date:"d M, Y H:i" }}</p>
-        {% if current_time <= time_limit %}
-        <form method="post" action="{% url 'dashboard:request_return' item.id %}" class="mt-4 space-y-2">
-            {% csrf_token %}
-            <div class="text-sm font-bold">Request a Return</div>
-            <select name="return_option" class="w-full text-sm border border-gray-300 rounded-md p-2.5">
-                <option value="refund">Refund</option>
-                <option value="replace">Replace</option>
-            </select>
-            <input type="hidden" name="price" value="{{ item.price }}">
-            <button type="submit" class="kt-btn kt-btn-primary">
-                <i class="ki-filled ki-return"></i> Submit Return Request
-            </button>
-            <p class="text-xs text-gray-500">You can request a return until {{ time_limit|date:"d M, Y" }}.</p>
-        </form>
-        {% else %}
-        <p class="text-xs text-red-500 mt-2">Return period (15 days from {{ delivery_time|date:"d M, Y" }}) has expired.</p>
-        {% endif %}
-    {% endwith %}
-{% endif %}
+                            {% with delivery_time=order.updated_at time_limit=order.updated_at|add_days:15 %}
+                                <!-- Debug output -->
+                                <p class="text-xs text-gray-500 mt-2">Debug: Delivery Time: {{ delivery_time|date:"d M, Y H:i" }}, Current Time: {% now "d M, Y H:i" %}, Time Limit: {{ time_limit|date:"d M, Y H:i" }}</p>
+                                {% if time_limit >= now %}
+                                    <form method="post" action="{% url 'dashboard:request_return' item.id %}" class="mt-4 space-y-2">
+                                        {% csrf_token %}
+                                        <div class="text-sm font-bold">Request a Return</div>
+                                        <select name="return_option" class="w-full text-sm border border-gray-300 rounded-md p-2.5">
+                                            <option value="refund">Refund</option>
+                                            <option value="replace">Replace</option>
+                                        </select>
+                                        <input type="hidden" name="price" value="{{ item.price }}">
+                                        <button type="submit" class="kt-btn kt-btn-primary">
+                                            <i class="ki-filled ki-return text-base"></i> Submit Return Request
+                                        </button>
+                                        <p class="text-xs text-gray-500 mt-2">You can request a return until {{ time_limit|date:"d M, Y" }}.</p>
+                                    </form>
+                                {% else %}
+                                    <p class="text-xs text-red-500 mt-2">Return period (15 days from {{ delivery_time|date:"d M, Y" }}) has expired.</p>
+                                {% endif %}
+                            {% endwith %}
+                        {% endif %}
                     </div>
                     {% endfor %}
                 </div>
@@ -181,6 +226,16 @@
 
         {% include "pages/pagination.html" %}
     </div>
+
+    {% comment %}
+    <!-- Modal for Success Message -->
+    <div id="successModal" class="modal">
+        <div class="modal-content">
+            <p id="successMessage"></p>
+            <button onclick="closeModal()">OK</button>
+        </div>
+    </div>
+    {% endcomment %}
 </div>
 
 <script>
@@ -242,6 +297,18 @@
                 }
             });
         }
+
+        // Display success message in modal if present
+        {% if messages %}
+            {% for message in messages %}
+                document.getElementById('successMessage').textContent = "{{ message }}";
+                document.getElementById('successModal').style.display = 'flex';
+            {% endfor %}
+        {% endif %}
     });
+
+    function closeModal() {
+        document.getElementById('successModal').style.display = 'none';
+    }
 </script>
 {% endblock %}

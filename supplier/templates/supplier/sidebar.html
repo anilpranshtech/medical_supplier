@@ -125,7 +125,7 @@
 
                   <div class="menu-sub menu-sub-accordion">
 
-                      <div data-kt-menu-trigger="click" class="menu-item menu-accordion {% if request.resolver_match.url_name == 'products_list' or request.resolver_match.url_name == 'add_product' or request.resolver_match.url_name == 'wishlist_products_list' %} here show {% endif %}">
+                      <div data-kt-menu-trigger="click" class="menu-item menu-accordion {% if request.resolver_match.url_name == 'products_list' or request.resolver_match.url_name == 'add_product' or request.resolver_match.url_name == 'wishlist_products_list' or request.resolver_match.url_name == 'supplier_returns' %} here show {% endif %}">
                           <span class="menu-link">
                               <span class="menu-bullet">
                                   <span class="bullet bullet-dot"></span>
@@ -157,6 +157,17 @@
                               </div>
 
                               <div class="menu-item">
+                                  <a class="menu-link {% if request.resolver_match.url_name == 'supplier_returns' %}active{% endif %}"
+                                     href="{% url 'supplier:supplier_returns' %}">
+                                      <span class="menu-bullet">
+                                          <span class="bullet bullet-dot"> </span>
+                                      </span>
+                                      <span class="menu-title">Return Product</span>
+                                  </a>
+                              </div>
+
+                              {% comment %}
+                              <div class="menu-item">
                                   <a class="menu-link {% if request.resolver_match.url_name == 'wishlist_products_list' %}active{% endif %}"
                                      href="{% url 'supplier:wishlist_products_list' %}">
                                       <span class="menu-bullet">
@@ -175,6 +186,7 @@
                                       <span class="menu-title">Cart</span>
                                   </a>
                               </div>
+                              {% endcomment %}
 
                           </div>
 

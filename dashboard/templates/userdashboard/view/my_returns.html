@@ -1,0 +1,84 @@
+{% extends "pages/base.html" %}
+{% load static %}
+{% load tz %}
+
+<style>
+    .return-item {
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+</style>
+
+{% block content %}
+<div class="container mx-auto px-4 max-w-7xl">
+    <div class="flex flex-col gap-6 mt-6 mb-12">
+        <h2 class="text-xl md:text-2xl font-bold">My Returns</h2>
+
+        <div class="mb-4">
+            <a href="{% url 'dashboard:my_orders' %}" class="kt-btn kt-btn-primary text-sm">
+                <i class="ki-filled ki-package text-base"></i> Back to My Orders
+            </a>
+        </div>
+
+        {% for return in returns %}
+        <div class="border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+        <div class="return-item">
+            <!-- Header Info (flex row like My Orders) -->
+            <div class="flex flex-col lg:flex-row flex-wrap gap-4 bg-gray-100 dark:bg-gray-800 p-4">
+                <div class="flex-1 min-w-[150px]">
+                    <span class="text-xs text-gray-500">Return ID</span>
+                    <div class="text-sm font-bold">{{ return.return_serial }}</div>
+                </div>
+                <div class="flex-1 min-w-[150px]">
+                    <span class="text-xs text-gray-500">Product</span>
+                    <div class="text-sm font-bold">{{ return.order_item.product.name }}</div>
+                </div>
+                <div class="flex-1 min-w-[150px]">
+                    <span class="text-xs text-gray-500">Return Option</span>
+                    <div class="text-sm font-bold">{{ return.get_return_option_display }}</div>
+                </div>
+                <div class="flex-1 min-w-[150px]">
+                    <span class="text-xs text-gray-500">Status</span>
+                    <div class="text-sm font-bold">{{ return.get_return_status_display }}</div>
+                </div>
+                <div class="flex-1 min-w-[150px]">
+                    <span class="text-xs text-gray-500">Request Date</span>
+                    <div class="text-sm font-bold">{{ return.request_date|date:"d M, Y" }}</div>
+                </div>
+            </div>
+
+            <!-- Details Section (like items in My Orders) -->
+            <div class="p-4 sm:p-6">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border p-4 rounded-lg">
+                    <div class="flex items-center gap-4 w-full sm:w-auto">
+                        <div class="w-[80px] h-[70px] bg-gray-200 flex items-center justify-center">
+                            {% with return.order_item.product as product %}
+                                {% if product.get_main_image %}
+                                    <img src="{{ product.get_main_image }}" alt="{{ product.name }}">
+                                {% else %}
+                                    <img src="{% static 'img/no-image.png' %}" alt="No image available">
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+                        <div>
+                            <a href="#" class="block text-sm font-medium hover:text-primary">{{ return.order_item.product.name }}</a>
+                            <div class="text-xs text-gray-500">
+                                Order ID: <span class="text-gray-700">{{ return.order_item.order.order_id }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-sm font-semibold text-right sm:text-left w-full sm:w-auto">
+                        {{ return.order_item.payment_currency|default:"USD" }} {{ return.price|floatformat:2 }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+        {% empty %}
+        <p class="text-center text-sm text-gray-500">No return requests found.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

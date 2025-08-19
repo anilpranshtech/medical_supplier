@@ -230,6 +230,13 @@ class Product(models.Model):
             return self.price - discount_amount
         return self.price
 
+    def get_main_image(self):
+        main_image = self.images.filter(is_main=True).first()  # ✅ use related_name
+        if main_image:
+            return main_image.image.url
+        first_image = self.images.first()
+        return first_image.image.url if first_image else None
+
     def __str__(self):
         return self.name
 
@@ -239,7 +246,7 @@ class Product(models.Model):
     
     
 class ProductImage(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="images")
     image = models.ImageField(upload_to='product_images/')
     is_main = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
@@ -333,6 +340,7 @@ class OrderItem(models.Model):
     payment_type = models.CharField(max_length=50, default='BANK TRANSFER')
     payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='unpaid')
     payment_currency = models.CharField(max_length=10, default='USD')
+    delivery_date = models.DateTimeField(null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
@@ -870,12 +878,12 @@ class Question(models.Model):
 class Return(models.Model):
     RETURN_OPTION_CHOICES = [
         ('replace', 'Replace'),
-        ('refund', 'Refund'),
+        ('return', 'Return'),
     ]
     RETURN_STATUS_CHOICES = [
         ('pending', 'Pending'),
         ('replace_completed', 'Replace Completed'),
-        ('refund_completed', 'Refund Completed'),
+        ('return_completed', 'Return Completed'),
         ('cancelled', 'Cancelled'),
     ]
 
@@ -897,8 +905,8 @@ class Return(models.Model):
 
     def is_within_return_period(self):
         from django.utils import timezone
-        delivery_date = self.order_item.delivery_date  # Assuming you have this
-        return (timezone.now() - delivery_date).days <= self.order_item.product.return_time_limit
+        delivery_date = self.order_item.order.updated_at
+        return (timezone.now() - delivery_date).days <= 15
 
     def save(self, *args, **kwargs):
         if not self.return_serial:
