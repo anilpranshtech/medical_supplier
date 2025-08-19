@@ -120,7 +120,7 @@ Supplier Returns
                           </button>
                         </div>
                         <div class="modal-body">
-                          <select name="return_status" class="form-select">
+                          <select name="return_status" class="form-select form-select-solid" data-hide-search="true" data-control="select2">
                             {% for status_value, status_label in return.RETURN_STATUS_CHOICES %}
                               <option value="{{ status_value }}" {% if return.return_status == status_value %}selected{% endif %}>
                                 {{ status_label }}
