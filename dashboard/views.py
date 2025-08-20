@@ -839,11 +839,11 @@ class CartAddView(LoginRequiredMixin, View):
         cart_data = []
         for item in cart_items:
             image = ''
-            if item.product.productimage_set.exists():
-                image = item.product.productimage_set.first().image.url
+            if item.product.images.exists():
+                image = item.product.images.first().image.url
 
             cart_data.append({
-                'id': item.product.id, 
+                'id': item.product.id,
                 'name': item.product.name,
                 'price': str(item.product.price),
                 'quantity': item.quantity,
@@ -869,7 +869,6 @@ class CartAddView(LoginRequiredMixin, View):
 
         cart_item.save()
         return JsonResponse({'status': 'success', 'message': 'Product added to cart'})
-
 
 class RemoveFromCartView(View):
     def post(self, request):

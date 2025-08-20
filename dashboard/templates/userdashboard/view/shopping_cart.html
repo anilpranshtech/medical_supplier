@@ -113,85 +113,82 @@
 
                                 {% if cart_items %}
                                 <div class="grid grid-cols-1 gap-5">
-                                    {% for item in cart_items %}
-<div class="kt-card" id="cart-item-{{ item.product.id }}" data-product='{
-    "name": "{{ item.product.name|escapejs }}",
-    "image": "{{ item.product.productimage_set.first.image.url|escapejs }}",
-    "description": "{{ item.product.description|escapejs }}",
-    "sku": "{{ item.product.supplier_sku|default:item.product.id|escapejs }}",
-    {% comment %} "category": "{{ item.product.category.name|default:item.product.sub_category.name|default:item.product.last_category.name|escapejs }}", {% endcomment %}
-    "category": "{% if item.product.category %}{{ item.product.category.name|escapejs }}
-             {% elif item.product.sub_category %}{{ item.product.sub_category.name|escapejs }}
-             {% elif item.product.last_category %}{{ item.product.last_category.name|escapejs }}
-             {% else %}Unknown{% endif %}",
-
-    "price": "${{ item.get_total_price }}",
-    "original_price": {% if item.product.offer_percentage and item.product.offer_active %}"${{ item.product.price }}"{% else %}""{% endif %},
-    "discount": {% if item.product.offer_percentage and item.product.offer_active %}"save {{ item.product.offer_percentage }}%"{% else %}""{% endif %},
-    "more_info": "{{ item.product.pcs_per_unit|default:'1'|escapejs }} pcs per unit",
-    "id": "{{ item.product.id }}"
-}'>
-    <div class="kt-card-content flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4.5 p-2 pe-5 relative">
-        <!-- Discount Ribbon -->
-        {% if item.product.offer_percentage and item.product.offer_active %}
-        <div class="discount-ribbon">save {{ item.product.offer_percentage|floatformat:0 }}%</div>
-        {% endif %}
-        <!-- Remove Button -->
-        <button class="absolute top-2 right-2 text-red-500 hover:text-red-700 remove-from-cart"
-                data-item-id="{{ item.product.id }}">
-            <i class="ki-filled ki-cross text-lg"></i>
-        </button>
-        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3.5 w-full sm:w-auto">
-            <div class="kt-card flex items-center justify-center bg-accent/50 h-[70px] w-[90px] shadow-none">
-                <a href="{% url 'dashboard:product_detail' item.product.id %}">
-    <img alt="{{ item.product.name|escapejs }}" class="cursor-pointer h-[70px]"
-         src="{{ item.product.productimage_set.first.image.url }}">
-</a>
-            </div>
-            <div class="flex flex-col gap-1 w-full">
-                <a class="hover:text-primary text-sm font-medium text-mono leading-5.5"
-   href="{% url 'dashboard:product_detail' item.product.id %}">
-    {{ item.product.name }}
-</a>
-                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-1.5">
-                    <span class="text-xs font-normal text-secondary-foreground uppercase">
-                        sku:
-                        <span class="text-xs font-medium text-foreground">
-                            {{ item.product.supplier_sku|default:item.product.id }}
-                        </span>
-                    </span>
-                    <!-- {% if item.product.offer_percentage and item.product.offer_active %}
-                    <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">
-                        save {{ item.product.offer_percentage }}%
-                    </span>
-                    {% endif %} -->
-                </div>
-            </div>
-        </div>
-        <div class="flex flex-col gap-1.5 w-full sm:w-auto">
-            <div class="flex items-center gap-2 justify-end">
-                <button class="decrease-btn px-2 py-1 bg-gray-200 rounded" data-product-id="{{ item.product.id }}">-</button>
-                <span class="text-xs font-normal text-secondary-foreground text-end quantity">{{ item.quantity }}</span>
-                <button class="increase-btn px-2 py-1 bg-gray-200 rounded" data-product-id="{{ item.product.id }}">+</button>
-            </div>
-            <div class="flex items-center flex-wrap gap-1.5 justify-end">
-                {% if item.product.offer_percentage and item.product.offer_active %}
-                <span class="text-sm font-normal text-secondary-foreground line-through">
-                    ${{ item.product.price }}
-                </span>
-                {% endif %}
-                <span class="text-sm font-semibold text-mono">
-                    {% if item.product.offer_active and item.product.offer_percentage %}
-                        <span>${{ item.get_total_price|floatformat:2 }}</span>
-                    {% else %}
-                        <span>${{ item.get_total_price|floatformat:2 }}</span>
-                    {% endif %}
-                </span>
-            </div>
-        </div>
-    </div>
-</div>
-{% endfor %}
+                                {% for item in cart_items %}
+                                <div class="kt-card" id="cart-item-{{ item.product.id }}" data-product='{
+                                    "name": "{{ item.product.name|escapejs }}",
+                                    "image": "{% if item.product.images.exists %}{{ item.product.get_main_image|escapejs }}{% else %}{% static 'metronic/tailwind/dist/assets/media/misc/image.png' %}{% endif %}",
+                                    "description": "{{ item.product.description|escapejs }}",
+                                    "sku": "{{ item.product.supplier_sku|default:item.product.id|escapejs }}",
+                                    "category": "{% if item.product.category %}{{ item.product.category.name|escapejs }}
+                                             {% elif item.product.sub_category %}{{ item.product.sub_category.name|escapejs }}
+                                             {% elif item.product.last_category %}{{ item.product.last_category.name|escapejs }}
+                                             {% else %}Unknown{% endif %}",
+                                    "price": "${{ item.get_total_price|floatformat:2 }}",
+                                    "original_price": {% if item.product.offer_percentage and item.product.offer_active %}"${{ item.product.price|floatformat:2 }}"{% else %}""{% endif %},
+                                    "discount": {% if item.product.offer_percentage and item.product.offer_active %}"save {{ item.product.offer_percentage|floatformat:0 }}%"{% else %}""{% endif %},
+                                    "more_info": "{{ item.product.pcs_per_unit|default:'1'|escapejs }} pcs per unit",
+                                    "id": "{{ item.product.id }}" }'>
+                                    <div class="kt-card-content flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4.5 p-2 pe-5 relative">
+                                        <!-- Discount Ribbon -->
+                                        {% if item.product.offer_percentage and item.product.offer_active %}
+                                        <div class="discount-ribbon">save {{ item.product.offer_percentage|floatformat:0 }}%</div>
+                                        {% endif %}
+                                        <!-- Remove Button -->
+                                        <button class="absolute top-2 right-2 text-red-500 hover:text-red-700 remove-from-cart"
+                                                data-item-id="{{ item.product.id }}">
+                                            <i class="ki-filled ki-cross text-lg"></i>
+                                        </button>
+                                        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3.5 w-full sm:w-auto">
+                                            <div class="kt-card flex items-center justify-center bg-accent/50 h-[70px] w-[90px] shadow-none">
+                                                <a href="{% url 'dashboard:product_detail' item.product.id %}">
+                                                    <img alt="{{ item.product.name|escapejs }}" class="cursor-pointer h-[70px]"
+                                                         src="{% if item.product.images.exists %}{{ item.product.get_main_image }}{% else %}{% static 'metronic/tailwind/dist/assets/media/misc/image.png' %}{% endif %}">
+                                                </a>
+                                            </div>
+                                            <div class="flex flex-col gap-1 w-full">
+                                                <a class="hover:text-primary text-sm font-medium text-mono leading-5.5"
+                                                   href="{% url 'dashboard:product_detail' item.product.id %}">
+                                                    {{ item.product.name }}
+                                                </a>
+                                                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-1.5">
+                                                    <span class="text-xs font-normal text-secondary-foreground uppercase">
+                                                        sku:
+                                                        <span class="text-xs font-medium text-foreground">
+                                                            {{ item.product.supplier_sku|default:item.product.id }}
+                                                        </span>
+                                                    </span>
+                                                    <!-- {% if item.product.offer_percentage and item.product.offer_active %}
+                                                    <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">
+                                                        save {{ item.product.offer_percentage }}%
+                                                    </span>
+                                                    {% endif %} -->
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="flex flex-col gap-1.5 w-full sm:w-auto">
+                                            <div class="flex items-center gap-2 justify-end">
+                                                <button class="decrease-btn px-2 py-1 bg-gray-200 rounded" data-product-id="{{ item.product.id }}">-</button>
+                                                <span class="text-xs font-normal text-secondary-foreground text-end quantity">{{ item.quantity }}</span>
+                                                <button class="increase-btn px-2 py-1 bg-gray-200 rounded" data-product-id="{{ item.product.id }}">+</button>
+                                            </div>
+                                            <div class="flex items-center flex-wrap gap-1.5 justify-end">
+                                                {% if item.product.offer_percentage and item.product.offer_active %}
+                                                <span class="text-sm font-normal text-secondary-foreground line-through">
+                                                    ${{ item.product.price }}
+                                                </span>
+                                                {% endif %}
+                                                <span class="text-sm font-semibold text-mono">
+                                                    {% if item.product.offer_active and item.product.offer_percentage %}
+                                                        <span>${{ item.get_total_price|floatformat:2 }}</span>
+                                                    {% else %}
+                                                        <span>${{ item.get_total_price|floatformat:2 }}</span>
+                                                    {% endif %}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
                                 </div>
                                 {% else %}
                                 <p class="text-muted text-sm font-normal text-center text-secondary-foreground mx-5 mt-5">No products available in Cart</p>
@@ -208,22 +205,21 @@
                                 Add Items
                             </a>
                             <a id="shipping-info-btn" class="kt-btn kt-btn-primary relative"
-   href="{% url 'dashboard:shipping_info' %}">
-    <span class="btn-text flex items-center gap-1">
-        Shipping Info
-        <i class="ki-filled ki-black-right text-base"></i>
-    </span>
-    <span class="btn-loader hidden flex items-center gap-1">
-        <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none"
-             viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor"
-                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-        </svg>
-        Shipping Info...
-    </span>
-</a>
-
+                               href="{% url 'dashboard:shipping_info' %}">
+                                <span class="btn-text flex items-center gap-1">
+                                    Shipping Info
+                                    <i class="ki-filled ki-black-right text-base"></i>
+                                </span>
+                                <span class="btn-loader hidden flex items-center gap-1">
+                                    <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                         viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor"
+                                              d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                                    </svg>
+                                    Shipping Info...
+                                </span>
+                            </a>
                         </div>
                     </div>
                     <div class="col-span-1">
@@ -301,17 +297,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // Function to update all prices and totals
     function updateAllPrices() {
         let subtotal = 0;
-        
+
         // Update each product's total price
         document.querySelectorAll('[id^="cart-item-"]').forEach(item => {
             const quantity = parseInt(item.querySelector('.quantity').textContent);
             const priceElement = item.querySelector('.text-sm.font-semibold.text-mono span');
             const basePrice = parseFloat(priceElement.dataset.basePrice);
-            
+
             // Calculate and update item total
             const itemTotal = basePrice * quantity;
             priceElement.textContent = `$${itemTotal.toFixed(2)}`;
-            
+
             subtotal += itemTotal;
         });
 
@@ -321,7 +317,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 el.querySelector('.text-sm.font-medium.text-mono').textContent = `$${subtotal.toFixed(2)}`;
             }
         });
-        
+
         document.querySelector('.kt-card-footer .text-base.font-semibold.text-mono').textContent = `$${subtotal.toFixed(2)}`;
     }
 
@@ -412,7 +408,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function checkEmptyCart() {
         const cartItems = document.querySelectorAll('[id^="cart-item-"]');
         const emptyMessage = document.querySelector('.kt-card-content .text-muted.text-sm');
-        
+
         if (cartItems.length === 0 && !emptyMessage) {
             const newEmptyMessage = document.createElement('p');
             newEmptyMessage.className = 'text-muted text-sm font-normal text-center text-secondary-foreground mx-5 mt-5';
