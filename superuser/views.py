@@ -1,3 +1,4 @@
+import stripe
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.paginator import Paginator
@@ -1317,15 +1318,72 @@ class AdminReturnsView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
+        # Fetch returns with related models
         qs = Return.objects.select_related(
-            'order_item__product', 'client'
+            'order_item__product__brand',  # Removed 'supplier' until correct field is confirmed
+            'order_item__order__payment',
+            'client'
         ).order_by('-request_date')
 
-        context['returns'] = qs
+        # Apply filters
+        search_query = self.request.GET.get('search', '')
+        if search_query:
+            qs = qs.filter(
+                Q(return_serial__icontains=search_query) |
+                Q(client__username__icontains=search_query) |
+                Q(order_item__product__name__icontains=search_query) |
+                Q(order_item__order__order_id__icontains=search_query)
+            )
+
+        # Add transaction data for refunds
+        returns = []
+        for return_instance in qs:
+            payment = return_instance.order_item.order.payment
+            is_refunded = return_instance.return_status in ['return_completed', 'replace_completed']
+
+            refund_info = None
+            if is_refunded and payment and payment.payment_method == 'stripe':
+                stripe_payment = StripePayment.objects.filter(
+                    stripe_charge_id=payment.customer_id
+                ).first()
+                if stripe_payment:
+                    refund_info = {
+                        'id': f"re_{return_instance.return_serial}",
+                        'status': return_instance.return_status,
+                        'amount_dollars': float(return_instance.price),
+                        'charge': stripe_payment.stripe_charge_id,
+                        'currency': return_instance.order_item.payment_currency or 'USD',
+                        'metadata': {
+                            'refunded_by': return_instance.client.username,
+                            'description': 'User-initiated return',  # Update if notes are stored
+                            'admin_notes': 'Processed by admin'  # Update if notes are stored
+                        },
+                        'created_formatted': return_instance.request_date.strftime('%B %d %Y %I:%M %p')
+                    }
+
+            return_instance.transaction = {
+                'payment_type': 'refund' if is_refunded else (payment.payment_method if payment else 'other'),
+                'refund_info': refund_info,
+                'is_refunded': is_refunded
+            }
+            returns.append(return_instance)
+
+        # Pagination
+        paginator = Paginator(returns, 10)
+        page = self.request.GET.get('page')
+        try:
+            returns_page = paginator.page(page)
+        except PageNotAnInteger:
+            returns_page = paginator.page(1)
+        except EmptyPage:
+            returns_page = paginator.page(paginator.num_pages)
+
+        context['returns'] = returns_page
         context['count_all'] = qs.count()
         context['count_approved'] = qs.filter(return_status='approved').count()
         context['count_pending'] = qs.filter(return_status='pending').count()
         context['count_rejected'] = qs.filter(return_status='rejected').count()
+        context['user_permissions_list'] = self.request.user.get_all_permissions()
 
         return context
 
@@ -1335,6 +1393,7 @@ class AdminReturnsView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView
 
         if new_status in dict(Return.RETURN_STATUS_CHOICES):
             return_request.return_status = new_status
+            return_request.updated_at = timezone.now()
             return_request.save()
             messages.success(
                 request,
@@ -1343,4 +1402,97 @@ class AdminReturnsView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView
         else:
             messages.error(request, "Invalid status selected.")
 
+        return redirect('superuser:admin_returns')
+
+
+class StripeRefundView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    permission_required = 'is_staff'
+
+    def post(self, request, *args, **kwargs):
+        transaction_id = request.POST.get('hidden_transaction_id')
+        refund_amount = request.POST.get('final_refund_amount')
+        admin_note = request.POST.get('hidden_admin_note')
+        user_note = request.POST.get('hidden_user_note')
+
+        try:
+            return_instance = get_object_or_404(
+                Return,
+                order_item__order__payment__customer_id=transaction_id,
+                return_status='approved'
+            )
+
+            if not return_instance.is_within_return_period():
+                messages.error(request, "Return period has expired.")
+                return redirect('superuser:admin_returns')
+
+            if return_instance.return_status in ['return_completed', 'replace_completed']:
+                messages.error(request, "Return already processed.")
+                return redirect('superuser:admin_returns')
+
+            refund_amount = float(refund_amount) if refund_amount else float(return_instance.price)
+            if refund_amount > float(return_instance.price):
+                messages.error(request, "Refund amount exceeds original price.")
+                return redirect('superuser:admin_returns')
+
+            payment = return_instance.order_item.order.payment
+            if payment.payment_method == 'stripe':
+                stripe.api_key = settings.STRIPE_SECRET_KEY
+                try:
+                    refund = stripe.Refund.create(
+                        charge=payment.customer_id,
+                        amount=int(refund_amount * 100),  # Convert to cents
+                        metadata={
+                            'refunded_by': return_instance.client.username,
+                            'admin_notes': admin_note or 'Processed by admin',
+                            'description': user_note or 'User-initiated return'
+                        }
+                    )
+
+                    # Update return status
+                    return_instance.return_status = 'return_completed'
+                    return_instance.updated_at = timezone.now()
+                    return_instance.save()
+
+                    # Update payment status
+                    payment.paid = False
+                    payment.save()
+
+                    # Update StripePayment
+                    stripe_payment = StripePayment.objects.filter(
+                        stripe_charge_id=payment.customer_id
+                    ).first()
+                    if stripe_payment:
+                        stripe_payment.paid = False
+                        stripe_payment.save()
+
+                    messages.success(request, f"Refund processed for return {return_instance.return_serial}.")
+                except stripe.error.StripeError as e:
+                    messages.error(request, f"Stripe error: {str(e)}")
+                    return redirect('superuser:admin_returns')
+            else:
+                messages.error(request, "Unsupported payment method for refund.")
+                return redirect('superuser:admin_returns')
+
+        except Return.DoesNotExist:
+            messages.error(request, "Return request not found.")
+            return redirect('superuser:admin_returns')
+        except Exception as e:
+            messages.error(request, f"Error processing refund: {str(e)}")
+            return redirect('superuser:admin_returns')
+
+        return redirect('superuser:admin_returns')
+
+
+class ReturnDeleteView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    permission_required = 'is_staff'
+
+    def post(self, request, return_serial, *args, **kwargs):
+        try:
+            return_instance = get_object_or_404(Return, return_serial=return_serial)
+            return_instance.delete()
+            messages.success(request, f"Return {return_serial} deleted successfully.")
+        except Return.DoesNotExist:
+            messages.error(request, "Return request not found.")
+        except Exception as e:
+            messages.error(request, f"Error deleting return: {str(e)}")
         return redirect('superuser:admin_returns')

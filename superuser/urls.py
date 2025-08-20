@@ -61,6 +61,8 @@ urlpatterns = [
     path('rating/', RatingView.as_view(), name='rating_list'),
 
     path('returns/', AdminReturnsView.as_view(), name='admin_returns'),
-    path('returns/<str:return_serial>/', AdminReturnsView.as_view(), name='admin_returns_update'),
+    path('returns/update/<str:return_serial>/', AdminReturnsView.as_view(), name='admin_returns_update'),
+    path('returns/refund/', StripeRefundView.as_view(), name='stripe_refund'),
+    path('returns/delete/<str:return_serial>/', ReturnDeleteView.as_view(), name='admin_returns_delete'),
 
 ]

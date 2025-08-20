@@ -93,5 +93,6 @@ urlpatterns = [
 
     # Return
     path("orders/<int:item_id>/return/", RequestReturnView.as_view(), name="request_return"),
+    path('cancel-return/<int:return_id>/', CancelReturnView.as_view(), name='cancel_return'),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

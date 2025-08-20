@@ -20,7 +20,7 @@ from django.utils.decorators import method_decorator
 from django.utils.html import strip_tags
 from django.utils.timezone import now, timezone
 from django.views import View
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.views.decorators.http import require_POST
 from razorpay.errors import SignatureVerificationError
 from django.db.models import Count, Prefetch, F
@@ -929,8 +929,6 @@ class EventRegisteredDataView(TemplateView):
 #         return context
 
 
-
-
 class CartAddView(LoginRequiredMixin, View):
     def get(self, request):
         cart_items = CartProduct.objects.filter(user=request.user).select_related('product')
@@ -967,6 +965,7 @@ class CartAddView(LoginRequiredMixin, View):
 
         cart_item.save()
         return JsonResponse({'status': 'success', 'message': 'Product added to cart'})
+
 
 class RemoveFromCartView(View):
     def post(self, request):
@@ -1008,7 +1007,6 @@ class WishlistClearView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         WishlistProduct.objects.filter(user=request.user).delete()
         return JsonResponse({'status': 'cleared'})
-
 
 
 class WishlistView(LoginRequiredMixin, TemplateView):
@@ -1718,32 +1716,51 @@ class MyOrdersView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         user = self.request.user
 
+        # Prefetch main image for products
         main_image_prefetch = Prefetch(
             'items__product__images',
             queryset=ProductImage.objects.filter(is_main=True),
             to_attr='main_image'
         )
 
+        # Prefetch user reviews for products
         user_reviews_prefetch = Prefetch(
             'items__product__reviews',
             queryset=RatingReview.objects.filter(user=user),
             to_attr='user_reviews'
         )
 
+        # Prefetch returns for items
+        returns_prefetch = Prefetch(
+            'items__returns',
+            queryset=Return.objects.all(),  # Adjust queryset if needed (e.g., filter by status)
+            to_attr='all_returns'
+        )
+
+        # Fetch orders with related data
         orders_qs = (
             Order.objects.filter(user=user)
             .select_related('payment')
             .prefetch_related(
                 main_image_prefetch,
                 user_reviews_prefetch,
-                'items__product'
+                'items__product',
+                returns_prefetch  # Add returns prefetch
             )
             .order_by('-created_at')
         )
 
+        # Paginate the orders
         paginator = Paginator(orders_qs, 2)
         page_number = self.request.GET.get('page')
         page_obj = paginator.get_page(page_number)
+
+        # Add has_pending_returns flag to each item
+        for order in page_obj.object_list:
+            for item in order.items.all():
+                item.has_pending_returns = any(
+                    return_obj.return_status == 'pending' for return_obj in item.all_returns
+                )
 
         context['orders'] = page_obj.object_list
         context['page_obj'] = page_obj
@@ -1756,7 +1773,41 @@ class MyReturnsView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['returns'] = Return.objects.filter(client=self.request.user).select_related('order_item__product').order_by('-request_date')
+        user = self.request.user
+
+        returns_qs = (
+            Return.objects.filter(client=user)
+            .select_related('order_item__product', 'order_item__order')
+            .prefetch_related('order_item__product__images')
+            .order_by('-request_date')
+        )
+
+        # Filter by status if requested
+        status_filter = self.request.GET.get('status')
+        if status_filter and status_filter != 'all':
+            returns_qs = returns_qs.filter(return_status=status_filter)
+
+        from django.core.paginator import Paginator
+        paginator = Paginator(returns_qs, 10)
+        page_number = self.request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+
+        # Get status counts
+        status_counts = {
+            'all': Return.objects.filter(client=user).count(),
+            'pending': Return.objects.filter(client=user, return_status='pending').count(),
+            'return_completed': Return.objects.filter(client=user, return_status='return_completed').count(),
+            'replace_completed': Return.objects.filter(client=user, return_status='replace_completed').count(),
+            'cancelled': Return.objects.filter(client=user, return_status='cancelled').count(),
+        }
+
+        context.update({
+            'returns': page_obj.object_list,
+            'page_obj': page_obj,
+            'current_status': status_filter or 'all',
+            'status_counts': status_counts,
+        })
+
         return context
 
 
@@ -2701,6 +2752,7 @@ class RFQRejectView(RFQActionBaseView):
 
 class SubscriptionPlanView(LoginRequiredMixin, TemplateView):
     template_name = 'userdashboard/view/subscription_plans.html'
+    login_url = 'dashboard:login'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -2935,47 +2987,170 @@ class PostQuestionView(LoginRequiredMixin, View):
         return redirect('dashboard:product_detail', pk=product.id)
 
 
-class RequestReturnView(View):
+class CancelReturnView(LoginRequiredMixin, View):
+    @method_decorator(csrf_protect)
+    def post(self, request, return_id):
+        return_obj = get_object_or_404(
+            Return,
+            id=return_id,
+            client=request.user,
+            return_status='pending'  # Only pending returns can be cancelled
+        )
+
+        try:
+            # Update return status to cancelled
+            return_obj.return_status = 'cancelled'
+            return_obj.updated_at = timezone.now()
+            return_obj.save()
+
+            messages.success(
+                request,
+                f"Return request {return_obj.return_serial} has been cancelled successfully."
+            )
+
+            # Notify admin about cancellation
+            self._notify_admin_return_cancelled(return_obj)
+
+        except Exception as e:
+            messages.error(
+                request,
+                "An error occurred while cancelling your return request. Please try again."
+            )
+
+        return redirect('dashboard:my_orders')
+
+    def _notify_admin_return_cancelled(self, return_obj):
+        """Send notification to admin about cancelled return"""
+        try:
+            from django.contrib.auth.models import User
+            admin_users = User.objects.filter(is_staff=True)
+
+            for admin in admin_users:
+                Notification.objects.create(
+                    recipient=admin,
+                    title="Return Request Cancelled",
+                    message=f"Return request {return_obj.return_serial} has been cancelled by {return_obj.client.get_full_name() or return_obj.client.username}"
+                )
+        except Exception:
+            pass
+
+
+class RequestReturnView(LoginRequiredMixin, View):
     def post(self, request, item_id):
         order_item = get_object_or_404(OrderItem, id=item_id, order__user=request.user)
 
-        if not order_item.can_return:
-            messages.error(
-                request,
-                f"Return period has expired. Deadline was: {order_item.return_deadline.strftime('%d %b, %Y') if order_item.return_deadline else 'N/A'}"
-            )
+        # Comprehensive validation
+        validation_error = self._validate_return_eligibility(order_item)
+        if validation_error:
+            messages.error(request, validation_error)
             return redirect('dashboard:my_orders')
 
         return_option = request.POST.get('return_option')
         price = request.POST.get('price')
+        reason = request.POST.get('reason', '').strip()
 
-        if not return_option or not price:
-            messages.error(request, "Invalid return request.")
+        # Validate form data
+        if not return_option:
+            messages.error(request, "Please select a return option.")
+            return redirect('dashboard:my_orders')
+
+        if return_option not in ['return', 'replace']:
+            messages.error(request, "Invalid return option selected.")
+            return redirect('dashboard:my_orders')
+
+        if not price:
+            messages.error(request, "Price information is missing.")
+            return redirect('dashboard:my_orders')
+
+        # Check if user already has a pending return for this item
+        existing_return = Return.objects.filter(
+            order_item=order_item,
+            return_status='pending'
+        ).first()
+
+        if existing_return:
+            messages.warning(
+                request,
+                f"You already have a pending return request for this item (ID: {existing_return.return_serial})"
+            )
             return redirect('dashboard:my_orders')
 
         # Generate unique return_serial
+        return_serial = self._generate_return_serial()
+
+        try:
+            return_obj = Return.objects.create(
+                return_serial=return_serial,
+                order_item=order_item,
+                client=request.user,
+                return_option=return_option,
+                price=price,
+                return_status='pending',
+                reason=reason
+            )
+            option_text = "refund" if return_option == "return" else "replacement"
+            messages.success(
+                request,
+                f"Return request for {option_text} submitted successfully! "
+                f"Return ID: {return_serial}. You will be notified once processed."
+            )
+            self._notify_admin_new_return(return_obj)
+        except Exception as e:
+            messages.error(request, "An error occurred while processing your return request. Please try again.")
+
+        return redirect('dashboard:my_orders')
+
+    def _validate_return_eligibility(self, order_item):
+        """Validate if the item is eligible for return"""
+
+        # Check if order is delivered
+        if order_item.order.status != 'delivered':
+            return f"This order hasn't been delivered yet. Current status: {order_item.order.get_status_display()}"
+
+        # Check if product is returnable
+        if not order_item.product.is_returnable:
+            return "This product is not eligible for returns according to our policy."
+
+        # Check return period
+        if not order_item.can_return:
+            if order_item.return_deadline:
+                return f"Return period has expired. The deadline was: {order_item.return_deadline.strftime('%d %b, %Y')}"
+            else:
+                return "Return period information is not available for this item."
+
+        return None  # No error
+
+    def _generate_return_serial(self):
+        """Generate unique return serial number"""
         base_serial = 'R'
         year = timezone.now().strftime('%y')
         month = timezone.now().strftime('%m')
-        unique_code = ''.join(random.choices('0123456789', k=3))
         suffix = 'R' + year
-        return_serial = f"{base_serial}{month}{unique_code}-{suffix}"
-        while Return.objects.filter(return_serial=return_serial).exists():
+
+        # Try to generate unique serial (max 10 attempts)
+        for _ in range(10):
             unique_code = ''.join(random.choices('0123456789', k=3))
             return_serial = f"{base_serial}{month}{unique_code}-{suffix}"
 
-        # Create return record
-        Return.objects.create(
-            return_serial=return_serial,
-            order_item=order_item,
-            client=request.user,
-            return_option=return_option,
-            price=price,
-            return_status='pending'
-        )
+            if not Return.objects.filter(return_serial=return_serial).exists():
+                return return_serial
 
-        messages.success(
-            request,
-            f"Return request submitted successfully. Return ID: {return_serial}"
-        )
-        return redirect('dashboard:my_orders')
+        # Fallback with timestamp if all random attempts fail
+        timestamp = timezone.now().strftime('%H%M%S')
+        return f"{base_serial}{month}{timestamp}-{suffix}"
+
+    def _notify_admin_new_return(self, return_obj):
+        """Send notification to admin about new return request"""
+        try:
+            # Create admin notification
+            from django.contrib.auth.models import User
+            admin_users = User.objects.filter(is_staff=True)
+
+            for admin in admin_users:
+                Notification.objects.create(
+                    recipient=admin,
+                    title="New Return Request",
+                    message=f"Return request {return_obj.return_serial} for {return_obj.order_item.product.name} by {return_obj.client.get_full_name() or return_obj.client.username}"
+                )
+        except Exception:
+            pass  # Don't break the flow if notification fails

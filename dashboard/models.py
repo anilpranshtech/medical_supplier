@@ -136,6 +136,7 @@ class ProductLastCategory(models.Model):
 
 class Brand(models.Model):
     name = models.CharField(max_length=100)
+    supplier = models.ForeignKey(User, on_delete=models.CASCADE, related_name='brands')
 
     class Meta:
         verbose_name = verbose_name_plural ="Brand"
@@ -359,17 +360,90 @@ class OrderItem(models.Model):
 
     @property
     def return_deadline(self):
+        """Calculate return deadline based on delivery date"""
+        # First check if the product is returnable
+        if not self.product.is_returnable:
+            return None
+
+        # Get delivery date - prioritize order item's delivery_date, then order's delivered_at
         delivered_on = self.delivery_date or self.order.delivered_at
+
+        # If no delivery date is set, but order status is 'delivered', use updated_at
+        if not delivered_on and self.order.status == 'delivered':
+            delivered_on = self.order.updated_at
+
         if not delivered_on:
             return None
-        return delivered_on + timedelta(days=15)
+
+        # Use product's return_time_limit or default to 15 days
+        return_days = self.product.return_time_limit or 15
+        return delivered_on + timedelta(days=return_days)
 
     @property
     def can_return(self):
+        """Check if item can be returned"""
+        # Must be delivered to be returnable
+        if self.order.status != 'delivered':
+            return False
+
+        # Product must be returnable
+        if not self.product.is_returnable:
+            return False
+
+        # Check if within return deadline
         deadline = self.return_deadline
         if not deadline:
             return False
+
         return timezone.now() <= deadline
+
+    @property
+    def days_left_to_return(self):
+        """Get number of days left to return"""
+        deadline = self.return_deadline
+        if not deadline:
+            return 0
+
+        days_left = (deadline - timezone.now()).days
+        return max(0, days_left)  # Return 0 if negative
+
+    def get_return_status_message(self):
+        """Get a user-friendly return status message"""
+        if not self.product.is_returnable:
+            return "This product is not returnable"
+
+        if self.order.status != 'delivered':
+            return "Product must be delivered before return request"
+
+        days_left = self.days_left_to_return
+        if days_left > 0:
+            return f"Return available for {days_left} more days"
+        else:
+            return "Return period has expired"
+
+    @property
+    def has_pending_return(self):
+        """Check if item has a pending return request"""
+        return self.returns.filter(return_status='pending').exists()
+
+    @property
+    def latest_return(self):
+        """Get the latest return request for this item"""
+        return self.returns.order_by('-request_date').first()
+
+    @property
+    def return_history(self):
+        """Get all return requests for this item"""
+        return self.returns.all().order_by('-request_date')
+
+    @property
+    def can_request_return(self):
+        """Check if user can request a new return (no pending returns)"""
+        return (
+                self.can_return and
+                not self.has_pending_return and
+                self.order.status == 'delivered'
+        )
 
     class Meta:
         ordering = ['-created_at']
@@ -915,6 +989,7 @@ class Return(models.Model):
     client = models.ForeignKey(User, on_delete=models.CASCADE, related_name='return_requests')
     return_option = models.CharField(max_length=20, choices=RETURN_OPTION_CHOICES)
     return_status = models.CharField(max_length=20, choices=RETURN_STATUS_CHOICES, default='pending')
+    reason = models.TextField(blank=True, null=True)
     request_date = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -930,6 +1005,10 @@ class Return(models.Model):
         from django.utils import timezone
         delivery_date = self.order_item.order.updated_at
         return (timezone.now() - delivery_date).days <= 15
+
+    @property
+    def is_refunded(self):
+        return self.return_status in ['return_completed', 'replace_completed']
 
     def save(self, *args, **kwargs):
         if not self.return_serial:
