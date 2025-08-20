@@ -24,9 +24,14 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('dashboard.urls', namespace='dashboard')),
     path('', include('supplier.urls', namespace='supplier')),
+  
 
-    path('', include('superuser.urls', namespace='superuser')),
+    path('superuser/', include('superuser.urls', namespace='superuser')),
+    
     path('api_v1/', include('medical_api.urls')),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=os.path.join(settings.BASE_DIR, 'static'))
+
+
+

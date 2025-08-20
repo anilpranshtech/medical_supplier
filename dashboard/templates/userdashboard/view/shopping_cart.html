@@ -119,7 +119,12 @@
     "image": "{{ item.product.productimage_set.first.image.url|escapejs }}",
     "description": "{{ item.product.description|escapejs }}",
     "sku": "{{ item.product.supplier_sku|default:item.product.id|escapejs }}",
-    "category": "{{ item.product.category.name|default:item.product.sub_category.name|default:item.product.last_category.name|escapejs }}",
+    {% comment %} "category": "{{ item.product.category.name|default:item.product.sub_category.name|default:item.product.last_category.name|escapejs }}", {% endcomment %}
+    "category": "{% if item.product.category %}{{ item.product.category.name|escapejs }}
+             {% elif item.product.sub_category %}{{ item.product.sub_category.name|escapejs }}
+             {% elif item.product.last_category %}{{ item.product.last_category.name|escapejs }}
+             {% else %}Unknown{% endif %}",
+
     "price": "${{ item.get_total_price }}",
     "original_price": {% if item.product.offer_percentage and item.product.offer_active %}"${{ item.product.price }}"{% else %}""{% endif %},
     "discount": {% if item.product.offer_percentage and item.product.offer_active %}"save {{ item.product.offer_percentage }}%"{% else %}""{% endif %},

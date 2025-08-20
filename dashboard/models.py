@@ -95,7 +95,9 @@ class SupplierProfile(models.Model):
 
 class ProductCategory(models.Model):
     name = models.CharField(max_length=255, unique=True)
+    image = models.ImageField(upload_to="categories/", blank=True, null=True) 
     created_at = models.DateTimeField(auto_now_add=True)
+
 
     def __str__(self):
         return self.name
@@ -121,6 +123,7 @@ class ProductSubCategory(models.Model):
 class ProductLastCategory(models.Model):
     sub_category = models.ForeignKey(ProductSubCategory,on_delete=models.CASCADE)
     name = models.CharField(max_length=255, unique=True)
+    image = models.ImageField(upload_to="categories/", blank=True, null=True) 
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

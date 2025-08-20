@@ -36,7 +36,7 @@ class EventRegistrationAdmin(admin.ModelAdmin):
 
 @admin.register(ProductCategory)
 class ProductCategoryAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'created_at')
+    list_display = ("id", "name", "image", "created_at") 
 
 
 @admin.register(ProductSubCategory)
@@ -51,7 +51,7 @@ class Questions(admin.ModelAdmin):
 
 @admin.register(ProductLastCategory)
 class ProductLastCategoryAdmin(admin.ModelAdmin):
-    list_display = ('id', 'sub_category', 'name', 'created_at')
+    list_display = ('id', 'sub_category', 'name','image', 'created_at')
 
 
 @admin.register(Brand)
