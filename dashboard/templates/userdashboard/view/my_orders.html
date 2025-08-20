@@ -184,27 +184,20 @@
 
                         <!-- Return Request Section -->
                         {% if order.status == 'delivered' %}
-                            {% with delivery_time=order.updated_at time_limit=order.updated_at|add_days:15 %}
-                                <!-- Debug output -->
-                                <p class="text-xs text-gray-500 mt-2">Debug: Delivery Time: {{ delivery_time|date:"d M, Y H:i" }}, Current Time: {% now "d M, Y H:i" %}, Time Limit: {{ time_limit|date:"d M, Y H:i" }}</p>
-                                {% if time_limit >= now %}
-                                    <form method="post" action="{% url 'dashboard:request_return' item.id %}" class="mt-4 space-y-2">
-                                        {% csrf_token %}
-                                        <div class="text-sm font-bold">Request a Return</div>
-                                        <select name="return_option" class="w-full text-sm border border-gray-300 rounded-md p-2.5">
-                                            <option value="refund">Refund</option>
-                                            <option value="replace">Replace</option>
-                                        </select>
-                                        <input type="hidden" name="price" value="{{ item.price }}">
-                                        <button type="submit" class="kt-btn kt-btn-primary">
-                                            <i class="ki-filled ki-return text-base"></i> Submit Return Request
-                                        </button>
-                                        <p class="text-xs text-gray-500 mt-2">You can request a return until {{ time_limit|date:"d M, Y" }}.</p>
-                                    </form>
-                                {% else %}
-                                    <p class="text-xs text-red-500 mt-2">Return period (15 days from {{ delivery_time|date:"d M, Y" }}) has expired.</p>
-                                {% endif %}
-                            {% endwith %}
+                            {% if item.can_return %}
+                                <form method="post" action="{% url 'dashboard:request_return' item.id %}">
+                                    {% csrf_token %}
+                                    <select name="return_option">
+                                        <option value="refund">Refund</option>
+                                        <option value="replacement">Replacement</option>
+                                    </select>
+                                    <input type="hidden" name="price" value="{{ item.price }}">
+                                    <button type="submit">Submit Return</button>
+                                </form>
+                                <small>Return available until: {{ item.return_deadline|date:"d M, Y" }}</small>
+                            {% else %}
+                                <p class="text-danger">Return period expired.</p>
+                            {% endif %}
                         {% endif %}
                     </div>
                     {% endfor %}

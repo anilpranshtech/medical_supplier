@@ -5,7 +5,7 @@ app_name = 'superuser'
 urlpatterns = [
 
     # Home analytics
-    path('superuser/', HomeView.as_view(), name='superuser'),
+    path('', HomeView.as_view(), name='superuser'),
     # Users pages
     path('users/accounts/', UsersAccounts.as_view(), name='user_accounts'),
     path('users/<int:pk>/details/', UserDetailView.as_view(), name='user_detail'),

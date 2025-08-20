@@ -11,6 +11,7 @@ urlpatterns = [
   
     path('login/', CustomLoginView.as_view(), name='login'),
     path('', HomeView.as_view(), name='home'),
+    # path('category/<int:pk>/', CategoryProductsView.as_view(), name='category_products'),
     path('register/', RegistrationView.as_view(), name='register'),
     path('resend-otp/', ResendOTPView.as_view(), name='resend_otp'),
     path('profile/', UserProfileView.as_view(), name='profile'),
@@ -45,7 +46,6 @@ urlpatterns = [
     path('payment-method/', views.PaymentMethodView.as_view(), name='payment_method'),
     path('order-placed/', views.OrderPlacedView.as_view(), name='order_placed'),
     path('my-orders/', views.MyOrdersView.as_view(), name='my_orders'),
-    path('request-return/<int:item_id>/', RequestReturnView.as_view(), name='request_return'),
     path('my-returns/', MyReturnsView.as_view(), name='my_returns'),
     path('submit-review/<int:product_id>/', SubmitReviewView.as_view(), name='submit_review'),
     path('orders/<int:order_id>/reorder/', ReorderView.as_view(), name='reorder'),
@@ -92,6 +92,6 @@ urlpatterns = [
     path('post-question/', views.PostQuestionView.as_view(), name='post_question'),
 
     # Return
-    path('request-return/<int:order_item_id>/', views.RequestReturnView.as_view(), name='request_return'),
+    path("orders/<int:item_id>/return/", RequestReturnView.as_view(), name="request_return"),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

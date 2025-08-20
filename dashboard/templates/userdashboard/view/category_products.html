@@ -1,0 +1,425 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+    .kt-product-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 20px;
+        width: 100%;
+    }
+
+    .kt-card {
+        width: 100%;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        background-color: #fff;
+    }
+
+    .kt-card-content {
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .kt-card-content img {
+        max-width: 100%;
+        height: 180px;
+        object-fit: contain;
+        border-radius: 4px;
+    }
+
+    .discount-ribbon {
+        position: absolute;
+        top: 10px;
+        left: -25px;
+        transform: rotate(-45deg);
+        background-color: #dc2626;
+        color: white;
+        padding: 5px 30px;
+        font-size: 12px;
+        font-weight: bold;
+        text-transform: uppercase;
+        z-index: 1;
+        clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 10% 50%);
+        width: 150px;
+    }
+
+    .discount-ribbon:after {
+        content: '';
+        position: absolute;
+        right: -20px;
+        bottom: 0;
+        width: 0;
+        height: 0;
+        border-left: 20px solid #dc2626;
+        border-top: 10px solid transparent;
+        border-bottom: 10px solid transparent;
+    }
+
+    .kt-wishlist-icon {
+        cursor: pointer;
+        transition: color 0.2s ease-in-out;
+    }
+
+    .kt-wishlist-icon:hover i {
+        color: #ff0000;
+    }
+
+    .kt-wishlist-icon i {
+        color: #6b7280;
+    }
+
+    .kt-wishlist-icon i.text-red-500 {
+        color: #ff0000;
+    }
+
+    .kt-btn {
+        padding: 8px 12px;
+        font-size: 0.9rem;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .kt-btn-outline {
+        border: 1px solid #3b82f6;
+        color: #3b82f6;
+        background: transparent;
+    }
+
+    .kt-btn-outline:hover {
+        background: #3b82f6;
+        color: white;
+    }
+
+    #rfqModal {
+        z-index: 9999;
+        backdrop-filter: blur(8px);
+        background-color: rgba(0, 0, 0, 0.4);
+        overflow-y: auto;
+        padding: 1rem;
+    }
+
+    .kt-modal {
+        filter: none !important;
+    }
+
+    .kt-card-content a {
+        color: #1f2937;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .kt-card-content a:hover {
+        color: #3b82f6;
+    }
+
+    .loader {
+        display: none;
+        border: 2px solid #ffffff;
+        border-top: 2px solid transparent;
+        border-radius: 50%;
+        width: 16px;
+        height: 16px;
+        animation: spin 1s linear infinite;
+        margin-left: 8px;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .loading .loader {
+        display: inline-block;
+    }
+
+    @media (max-width: 767px) {
+        .kt-product-grid {
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        }
+
+        .kt-card-content img {
+            height: 120px;
+        }
+
+        .kt-btn {
+            padding: 6px 10px;
+            font-size: 0.85rem;
+        }
+
+        #rfqModal .kt-card {
+            max-width: 90%;
+        }
+    }
+
+    @media (min-width: 1024px) {
+        .kt-product-grid {
+            grid-template-columns: repeat(4, 1fr);
+        }
+    }
+</style>
+
+<title>{{ category.name }} - Medical Supplies</title>
+<div class="kt-container-fixed mt-1" style="max-width: var(--custom-container-width, 90%);">
+    <div class="flex flex-col items-stretch gap-7 mt-5 py-5">
+        <h2 class="text-xl font-bold mb-4">{{ category.name }}</h2>
+        <div class="kt-product-grid">
+            {% for product in products %}
+                <div class="kt-card" data-product='{
+                    "name": "{{ product.name }}",
+                    "image": "{{ product.main_image|default:'/static/default_product.png' }}",
+                    "description": "{{ product.description|truncatewords:20 }}",
+                    "sku": "{{ product.supplier_sku }}",
+                    "category": "{{ product.category.name }}",
+                    "price": "${{ product.price|floatformat:2 }}"
+                    {% if product.offer_percentage and product.offer_active %}
+                    ,"original_price": "${{ product.price|floatformat:2 }}",
+                    "discount": "save {{ product.offer_percentage }}%"
+                    {% endif %}
+                }'>
+                    <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4">
+                        <div class="mb-2.5">
+                            <div class="flex items-center justify-center relative bg-accent/50 w-full h-[180px] mb-4 shadow-none">
+                                <a href="{% url 'dashboard:product_detail' product.id %}" class="block">
+                                    <img alt="{{ product.name }}" class="h-[180px] shrink-0 cursor-pointer"
+                                         src="{{ product.main_image|default:'/static/default_product.png' }}">
+                                </a>
+                                {% if request.user.is_authenticated %}
+                                    <span class="kt-wishlist-icon absolute top-2 end-2 cursor-pointer"
+                                          data-kt-wishlist-toggle="true"
+                                          data-product-id="{{ product.id|default:'0' }}"
+                                          title="{% if product.id in user_wishlist_ids %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}">
+                                        <i class="ki-solid ki-heart {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
+                                    </span>
+                                {% else %}
+                                    <span class="kt-wishlist-icon absolute top-2 end-2 cursor-pointer"
+                                          data-kt-wishlist-toggle="true"
+                                          data-product-id="{{ product.id|default:'0' }}"
+                                          title="Login to Add to Wishlist">
+                                        <i class="ki-solid ki-heart"></i>
+                                    </span>
+                                {% endif %}
+                                {% if product.offer_percentage and product.offer_active %}
+                                    <div class="discount-ribbon">save {{ product.offer_percentage|floatformat:0 }}%</div>
+                                {% endif %}
+                            </div>
+                            <a class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block"
+                               href="{% url 'dashboard:product_detail' product.id %}">
+                                {{ product.name }}
+                            </a>
+                        </div>
+                        <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
+                            <div class="flex items-center flex-wrap gap-1.5">
+                                {% if product.offer_percentage and product.offer_active %}
+                                    <span class="text-xs font-normal text-secondary-foreground line-through pt-[1px]">${{ product.price|floatformat:2 }}</span>
+                                    <span class="text-sm font-medium text-mono">${{ product.discounted_price|floatformat:2 }}</span>
+                                {% else %}
+                                    <span class="text-sm font-medium text-mono">${{ product.price|floatformat:2 }}</span>
+                                {% endif %}
+                                {% if product.id in user_cart_ids %}
+                                    <button class="kt-btn kt-btn-outline kt-btn-sm ms-1" style="background:#3b82f6; color:white;" data-product-id="{{ product.id }}">
+                                        In cart <i class="ki-filled ki-handcart text-white"></i>
+                                    </button>
+                                {% else %}
+                                    <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 add-to-cart-btn" data-product-id="{{ product.id }}">
+                                        Add <i class="ki-filled ki-handcart"></i>
+                                    </button>
+                                {% endif %}
+                                {% if request.user.is_authenticated %}
+                                    {% if product.show_rfq or product.Both %}
+                                        <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 open-rfq-modal"
+                                                data-product-id="{{ product.id }}"
+                                                data-product-name="{{ product.name }}"
+                                                data-product-price="{{ product.discounted_price|default:product.price|floatformat:2 }}"
+                                                data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
+                                                data-quantity="1">
+                                            RFQ <i class="ki-filled ki-directbox-default text-xs"></i>
+                                        </button>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-span-4 text-center font-medium py-10">
+                    <p>No products found in this category.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- RFQ Modal -->
+    <div id="rfqModal"
+         class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+         data-kt-modal="true" role="dialog" aria-labelledby="rfqModalTitle" aria-modal="true">
+        <div class="kt-card w-full max-w-[600px] rounded-xl border border-border bg-background shadow-2xl transition-transform duration-300 ease-in-out transform scale-95">
+            <div class="kt-card-header px-5 py-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
+                <h2 id="rfqModalTitle" class="text-xl font-bold text-mono">Request for Quotation</h2>
+                <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" onclick="closeRFQModal()"
+                        aria-label="Close modal">
+                    <i class="ki-filled ki-cross text-base text-gray-500 hover:text-red-500"></i>
+                </button>
+            </div>
+            <form method="POST" action="{% url 'dashboard:rfq_submit' %}" id="rfqForm">
+                {% csrf_token %}
+                <div class="kt-card-content flex flex-col space-y-4 p-5">
+                    <input type="hidden" name="product_id" id="rfqProductId">
+                    <div>
+                        <label for="rfqProductName"
+                               class="block text-sm font-medium text-gray-650 dark:text-gray-300 mb-1">Product</label>
+                        <input type="text" id="rfqProductName"
+                               class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 bg-gray-100 dark:bg-gray-800 text-gray-650 dark:text-gray-300 cursor-not-allowed"
+                               disabled>
+                    </div>
+                    <div>
+                        <label for="rfqCompanyName"
+                               class="block text-sm font-medium text-gray-650 dark:text-gray-300 mb-1">Company Name
+                            <span class="text-red-500">*</span></label>
+                        <input type="text" name="company_name" id="rfqCompanyName"
+                               class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                               required aria-required="true">
+                        <p class="text-xs text-red-500 mt-1 hidden" id="rfqCompanyNameError">Company name is required.</p>
+                    </div>
+                    <div>
+                        <label for="rfqQuantity"
+                               class="block text-sm font-medium text-gray-650 dark:text-gray-300 mb-1">Quantity
+                            <span class="text-red-500">*</span></label>
+                        <input type="number" name="quantity" id="rfqQuantity"
+                               class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                               min="1" required aria-required="true">
+                        <p class="text-xs text-red-500 mt-1 hidden" id="rfqQuantityError">Quantity must be at least 1.</p>
+                    </div>
+                    <div>
+                        <label for="rfqMessage"
+                               class="block text-sm font-medium text-gray-650 dark:text-gray-300 mb-1">Message</label>
+                        <textarea name="message" id="rfqMessage"
+                                  class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                                  rows="4" placeholder="Add any additional details..."></textarea>
+                    </div>
+                </div>
+                <div class="kt-card-footer px-5 py-4 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700">
+                    <button type="button"
+                            class="kt-btn kt-btn-outline kt-btn-sm text-gray-650 hover:bg-gray-900 dark:hover:bg-gray-700"
+                            onclick="closeRFQModal()">Cancel
+                    </button>
+                    <button type="submit" class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center" id="rfqSubmitBtn">
+                        Submit RFQ
+                        <span class="loader"></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// CSRF Token Helper
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+const csrftoken = getCookie('csrftoken');
+
+// Event Listeners
+document.addEventListener('click', function(e) {
+    // Handle add to cart buttons
+    if (e.target.closest('.add-to-cart-btn')) {
+        const button = e.target.closest('.add-to-cart-btn');
+        const productId = button.dataset.productId;
+        
+        fetch("{% url 'dashboard:add_to_cart' %}", {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": csrftoken,
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: new URLSearchParams({
+                product_id: productId,
+                quantity: 1,
+            }),
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === "success") {
+                button.classList.remove('kt-btn-outline');
+                button.style.background = '#3b82f6';
+                button.style.color = 'white';
+                button.innerHTML = `In cart <i class="ki-filled ki-handcart text-white"></i>`;
+                button.onclick = null;
+            } else {
+                alert("Something went wrong");
+            }
+        })
+        .catch(err => console.error("Add to cart error:", err));
+    }
+
+    // Handle wishlist buttons
+    if (e.target.closest('.kt-wishlist-icon')) {
+        const button = e.target.closest('.kt-wishlist-icon');
+        const productId = button.dataset.productId || '0';
+        
+        fetch("{% url 'dashboard:toggle_wishlist' %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: `product_id=${productId}`
+        })
+        .then(response => {
+            if (response.status === 403) {
+                alert('Please login to use wishlist.');
+                window.location.href = '/login/';
+                return;
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data) {
+                const icon = button.querySelector('i');
+                icon.classList.toggle('text-red-500', data.status === 'added');
+            }
+        })
+        .catch(error => console.error('Wishlist toggle error:', error));
+    }
+
+    // Handle RFQ Modal Open
+    if (e.target.closest('.open-rfq-modal')) {
+        const button = e.target.closest('.open-rfq-modal');
+        const productId = button.getAttribute('data-product-id');
+        const productName = button.getAttribute('data-product-name');
+        const companyName = button.getAttribute('data-company-name');
+        const quantity = button.getAttribute('data-quantity');
+
+        document.getElementById('rfqProductId').value = productId;
+        document.getElementById('rfqProductName').value = productName;
+        document.getElementById('rfqCompanyName').value = companyName;
+        document.getElementById('rfqQuantity').value = quantity;
+
+        document.getElementById('rfqModal').classList.remove('hidden');
+    }
+});
+
+// RFQ Modal Close Function
+function closeRFQModal() {
+    document.getElementById('rfqModal').classList.add('hidden');
+}
+</script>
+{% endblock %}

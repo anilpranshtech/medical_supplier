@@ -210,10 +210,20 @@
                                             </select>
                                             <div class="text-muted fs-7">Set the product condition.</div>
                                         </div>
-                                        
+
                                         <div class="mb-10 mt-4 fv-row">
+                                            <label class="form-label">Is Returnable?</label>
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="is_returnable" name="is_returnable" {% if product.is_returnable %}checked{% endif %}>
+                                                <label class="form-check-label" for="is_returnable">Enable product return</label>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_return_time_limit">
                                             <label class="form-label required">Return Time Limit (Days)</label>
-                                            <input type="number" name="return_time_limit" class="form-control mb-2" placeholder="Enter return time limit in days" value="{{ return_time_limit }}" min="0" required/>
+                                            <input type="number" name="return_time_limit" class="form-control mb-2"
+                                                   placeholder="Enter return time limit in days"
+                                                   value="{{ product.return_time_limit|default:7 }}" min="0"/>
                                             <div class="text-muted fs-7">Number of days for product return.</div>
                                         </div>
                                         
@@ -567,22 +577,25 @@
 <script src="https://cdn.jsdelivr.net/npm/nouislider@15.7.0/dist/nouislider.min.js"></script>
 <script>
 $(document).ready(function () {
-   
+
+    // ---------------------------
+    // Form submit loader
+    // ---------------------------
     $('form').on('submit', function(e) {
         $('.indicator-label').hide();
         $('.indicator-progress').show();
         return true;
     });
 
-    // Subcategory 
+    // ---------------------------
+    // Subcategory AJAX
+    // ---------------------------
     $('select[name="category"]').on('change', function () {
         let categoryId = $(this).val();
         if (categoryId) {
             $.ajax({
                 url: "{% url 'supplier:get_subcategories' %}",
-                data: {
-                    'category_id': categoryId
-                },
+                data: {'category_id': categoryId},
                 success: function (data) {
                     let options = '<option value="">Select a Sub-Category</option>';
                     data.forEach(function (item) {
@@ -596,17 +609,21 @@ $(document).ready(function () {
             $('#subcategory_select').html('<option value="">Select a Sub-Category</option>').trigger('change');
             $('#lastcategory_select').html('<option value="">Select a Last Category</option>').trigger('change');
         }
+
+        // Run toggle for webinar fields & return time limit on category change
+        toggleWebinarFields();
+        toggleReturnTimeLimit();
     });
 
-    // Lastcategory 
+    // ---------------------------
+    // Lastcategory AJAX
+    // ---------------------------
     $('#subcategory_select').on('change', function () {
         let subCatId = $(this).val();
         if (subCatId) {
             $.ajax({
                 url: "{% url 'supplier:get_lastcategories' %}",
-                data: {
-                    'sub_id': subCatId
-                },
+                data: {'sub_id': subCatId},
                 success: function (data) {
                     let options = '<option value="">Select a Last Category</option>';
                     data.forEach(function (item) {
@@ -620,24 +637,23 @@ $(document).ready(function () {
         }
     });
 
-    // percentage
+    // ---------------------------
+    // Discount option toggle
+    // ---------------------------
     const radios = document.querySelectorAll('input[name="discount_option"]');
     const percentageSection = document.getElementById('kt_ecommerce_add_product_discount_percentage');
     const fixedSection = document.getElementById('kt_ecommerce_add_product_discount_fixed');
-    
+
     if (percentageSection && fixedSection) {
         const discountLabel = document.getElementById('kt_ecommerce_add_product_discount_label');
         const sliderElement = document.getElementById('kt_ecommerce_add_product_discount_slider');
-        
+
         if (sliderElement) {
             noUiSlider.create(sliderElement, {
                 start: 0,
                 step: 1,
                 connect: [true, false],
-                range: {
-                    'min': 0,
-                    'max': 100
-                }
+                range: { 'min': 0, 'max': 100 }
             });
 
             sliderElement.noUiSlider.on('update', function (values, handle) {
@@ -659,11 +675,82 @@ $(document).ready(function () {
                 }
             });
         });
+
         const checkedRadio = document.querySelector('input[name="discount_option"]:checked');
-        if (checkedRadio) {
-            checkedRadio.dispatchEvent(new Event('change'));
+        if (checkedRadio) checkedRadio.dispatchEvent(new Event('change'));
+    }
+
+    // ---------------------------
+    // Webinar fields toggle
+    // ---------------------------
+    const webinarCategories = ["Webinar", "Conference", "Event"];
+    const fieldsToHide = [
+        "hide_field_product_quantity", "hide_fields_warrenty", "hide_field_condition",
+        "hide_field_return_time_limit", "hide_field_manufacture_date", "hide_field_expiry_date",
+        "hide_field_barcode", "hide_field_price", "hide_field_weight_unit", "hide_field_weight",
+        "hide_field_delivery_time", "hide_field_commission_percentage", "hide_field_supplier_sku",
+        "hide_field_pcs_per_unit", "hide_field_min_order_qty", "hide_field_low_stock_alert",
+        "hide_field_button_type", "hide_field_expiration_days", "hide_field_tag",
+        "hide_field_offer_percentage", "hide_field_offer_start", "hide_field_offer_end",
+        "hide_field_offer_status", "hide_field_ask_admin_to_publish"
+    ];
+
+    const webinarFields = document.getElementById("webinar_fields");
+    const categorySelect = $('select[name="category"]');
+
+    function toggleWebinarFields() {
+        const selectedText = categorySelect.find('option:selected').text().trim();
+        const isWebinar = webinarCategories.includes(selectedText);
+
+        fieldsToHide.forEach(id => {
+            const field = document.getElementById(id);
+            if (field) {
+                field.style.display = isWebinar ? "none" : "";
+                field.querySelectorAll("input, select, textarea").forEach(el => {
+                    el.required = !isWebinar;
+                });
+            }
+        });
+
+        if (webinarFields) {
+            webinarFields.classList.toggle("d-none", !isWebinar);
+            webinarFields.querySelectorAll("input").forEach(el => {
+                el.required = isWebinar;
+            });
+        }
+
+        // Disable returnable toggle if webinar
+        if ($('#is_returnable').length) {
+            if (isWebinar) {
+                $('#is_returnable').prop('checked', false).prop('disabled', true);
+            } else {
+                $('#is_returnable').prop('disabled', false);
+            }
+            toggleReturnTimeLimit();
         }
     }
+
+    // ---------------------------
+    // Returnable toggle
+    // ---------------------------
+    function toggleReturnTimeLimit() {
+        if ($('#is_returnable').is(':checked')) {
+            $('#hide_field_return_time_limit').show();
+            $('#hide_field_return_time_limit input').attr('required', true);
+        } else {
+            $('#hide_field_return_time_limit').hide();
+            $('#hide_field_return_time_limit input').removeAttr('required');
+        }
+    }
+
+    // Run toggles on page load
+    toggleWebinarFields();
+    toggleReturnTimeLimit();
+
+    $('#is_returnable').on('change', toggleReturnTimeLimit);
+    $(document).ready(function() {
+        toggleReturnTimeLimit(); // Run on page load
+    });
 });
 </script>
 {% endblock page_only_scripts %}

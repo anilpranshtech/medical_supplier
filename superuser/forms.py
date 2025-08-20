@@ -8,7 +8,7 @@ class BannerForm(forms.ModelForm):
 
 from django import forms
 from django.utils import timezone
-from dashboard.models import RFQRequest
+from dashboard.models import RFQRequest,Product
 
 class SupplierRFQQuotationForm(forms.ModelForm):
     class Meta:
@@ -35,3 +35,4 @@ class SupplierRFQQuotationForm(forms.ModelForm):
         if delivery_date and delivery_date < timezone.localdate():
             raise forms.ValidationError("Delivery date cannot be in the past.")
         return delivery_date
+

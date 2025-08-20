@@ -937,11 +937,11 @@ class CartAddView(LoginRequiredMixin, View):
         cart_data = []
         for item in cart_items:
             image = ''
-            if item.product.productimage_set.exists():
-                image = item.product.productimage_set.first().image.url
+            if item.product.images.exists():
+                image = item.product.images.first().image.url
 
             cart_data.append({
-                'id': item.product.id, 
+                'id': item.product.id,
                 'name': item.product.name,
                 'price': str(item.product.price),
                 'quantity': item.quantity,
@@ -967,7 +967,6 @@ class CartAddView(LoginRequiredMixin, View):
 
         cart_item.save()
         return JsonResponse({'status': 'success', 'message': 'Product added to cart'})
-
 
 class RemoveFromCartView(View):
     def post(self, request):
@@ -1042,7 +1041,8 @@ class WishlistProductListView(LoginRequiredMixin, View):
                 "name": item.product.name,
                 "price": f"${item.product.price}",
                 "sku": item.product.supplier_sku,
-                "image": item.product.productimage_set.first().image.url if item.product.productimage_set.exists() else None,
+                "image": item.product.get_main_image(),
+                # "image": item.product.images.first().image.url if item.product.images.exists() else None,
             }
             for item in wishlist_items
         ]
@@ -1724,76 +1724,30 @@ class MyOrdersView(LoginRequiredMixin, TemplateView):
             to_attr='main_image'
         )
 
-        orders_qs = Order.objects.filter(user=user).select_related('payment').prefetch_related(
-            main_image_prefetch,
-            Prefetch('items__product__reviews', queryset=RatingReview.objects.filter(user=user), to_attr='user_reviews')
-        ).order_by('-created_at')
+        user_reviews_prefetch = Prefetch(
+            'items__product__reviews',
+            queryset=RatingReview.objects.filter(user=user),
+            to_attr='user_reviews'
+        )
+
+        orders_qs = (
+            Order.objects.filter(user=user)
+            .select_related('payment')
+            .prefetch_related(
+                main_image_prefetch,
+                user_reviews_prefetch,
+                'items__product'
+            )
+            .order_by('-created_at')
+        )
 
         paginator = Paginator(orders_qs, 2)
         page_number = self.request.GET.get('page')
         page_obj = paginator.get_page(page_number)
 
-        # Add return eligibility to each order item
-        for order in page_obj.object_list:
-            for item in order.items.all():
-                delivery_date = order.updated_at  # Or item.delivery_date if available
-                time_limit = delivery_date + timedelta(days=15)
-                item.can_return = timezone.now() <= time_limit
-                item.time_limit = time_limit
-
         context['orders'] = page_obj.object_list
         context['page_obj'] = page_obj
-
         return context
-
-
-class RequestReturnView(LoginRequiredMixin, View):
-    login_url = 'dashboard:login'
-
-    def post(self, request, item_id):
-        try:
-            order_item = OrderItem.objects.get(id=item_id, order__user=request.user)
-            delivery_date = order_item.order.updated_at  # Adjust if using order_item.delivery_date
-            time_limit = delivery_date + timezone.timedelta(days=15)
-
-            if timezone.now() > time_limit:
-                messages.error(request, "Return period has expired.")
-                return redirect('dashboard:my_orders')
-
-            return_option = request.POST.get('return_option')
-            price = request.POST.get('price')
-
-            if not return_option or not price:
-                messages.error(request, "Invalid return request.")
-                return redirect('dashboard:my_orders')
-
-            # Generate unique return_serial
-            base_serial = 'R'
-            year = timezone.now().strftime('%y')
-            month = timezone.now().strftime('%m')
-            unique_code = ''.join(random.choices('0123456789', k=3))
-            suffix = 'R' + year
-            return_serial = f"{base_serial}{month}{unique_code}-{suffix}"
-            while Return.objects.filter(return_serial=return_serial).exists():
-                unique_code = ''.join(random.choices('0123456789', k=3))
-                return_serial = f"{base_serial}{month}{unique_code}-{suffix}"
-
-            # Create return request
-            Return.objects.create(
-                return_serial=return_serial,
-                order_item=order_item,
-                client=request.user,
-                return_option=return_option,
-                price=price,
-                return_status='pending'
-            )
-
-            messages.success(request, f"Return request submitted successfully. Return ID: {return_serial}")
-            return redirect('dashboard:my_orders')
-
-        except OrderItem.DoesNotExist:
-            messages.error(request, "Order item not found.")
-            return redirect('dashboard:my_orders')
 
 
 class MyReturnsView(LoginRequiredMixin, TemplateView):
@@ -2981,48 +2935,47 @@ class PostQuestionView(LoginRequiredMixin, View):
         return redirect('dashboard:product_detail', pk=product.id)
 
 
-@method_decorator(csrf_exempt, name='dispatch')
 class RequestReturnView(View):
-    def post(self, request, order_item_id):
-        order_item = get_object_or_404(OrderItem, id=order_item_id)
-        order = order_item.order
+    def post(self, request, item_id):
+        order_item = get_object_or_404(OrderItem, id=item_id, order__user=request.user)
 
-        if order.status != 'delivered':
-            return JsonResponse({'error': 'Return can only be requested for delivered orders.'}, status=400)
+        if not order_item.can_return:
+            messages.error(
+                request,
+                f"Return period has expired. Deadline was: {order_item.return_deadline.strftime('%d %b, %Y') if order_item.return_deadline else 'N/A'}"
+            )
+            return redirect('dashboard:my_orders')
 
-        # Ensure all datetimes are timezone-aware
-        delivery_time = timezone.localtime(order.updated_at)  # Convert to local time
-        time_limit = delivery_time + timezone.timedelta(days=15)
-        current_time = timezone.localtime(timezone.now())  # Current time in local timezone
-
-        # Debug output with timezone info
-        print(f"Debug - Delivery Time: {delivery_time} (TZ: {delivery_time.tzinfo})")
-        print(f"Debug - Current Time: {current_time} (TZ: {current_time.tzinfo})")
-        print(f"Debug - Time Limit: {time_limit} (TZ: {time_limit.tzinfo})")
-
-        if current_time > time_limit:
-            return JsonResponse({
-                'error': f'Return period (15 days from {delivery_time.strftime("%d %b, %Y")}) has expired. '
-                         f'Current time: {current_time.strftime("%d %b, %Y %H:%M")}, '
-                         f'Time limit: {time_limit.strftime("%d %b, %Y %H:%M")}'
-            }, status=400)
-
-        # Prepare return data from request
         return_option = request.POST.get('return_option')
-        price = float(request.POST.get('price', order_item.price))
+        price = request.POST.get('price')
 
-        if return_option not in dict(Return.RETURN_OPTION_CHOICES):
-            return JsonResponse({'error': 'Invalid return option.'}, status=400)
+        if not return_option or not price:
+            messages.error(request, "Invalid return request.")
+            return redirect('dashboard:my_orders')
 
-        # Create return instance
-        return_instance = Return(
-            return_serial='',
+        # Generate unique return_serial
+        base_serial = 'R'
+        year = timezone.now().strftime('%y')
+        month = timezone.now().strftime('%m')
+        unique_code = ''.join(random.choices('0123456789', k=3))
+        suffix = 'R' + year
+        return_serial = f"{base_serial}{month}{unique_code}-{suffix}"
+        while Return.objects.filter(return_serial=return_serial).exists():
+            unique_code = ''.join(random.choices('0123456789', k=3))
+            return_serial = f"{base_serial}{month}{unique_code}-{suffix}"
+
+        # Create return record
+        Return.objects.create(
+            return_serial=return_serial,
             order_item=order_item,
-            client=order.user,
+            client=request.user,
             return_option=return_option,
-            return_status='pending',
-            price=price
+            price=price,
+            return_status='pending'
         )
-        return_instance.save()
 
-        return JsonResponse({'message': 'Return request submitted successfully.', 'return_serial': return_instance.return_serial}, status=201)
+        messages.success(
+            request,
+            f"Return request submitted successfully. Return ID: {return_serial}"
+        )
+        return redirect('dashboard:my_orders')
