@@ -1102,6 +1102,7 @@ class OrderListingView(StaffAccountRequiredMixin, PermissionRequiredMixin, View)
 
         return render(request, self.template_name, context)
 
+
 class OrderDetailesView(StaffAccountRequiredMixin, View):
     template_name = 'superuser/orders/order_details.html'
 
@@ -1146,6 +1147,7 @@ class OrderDetailesView(StaffAccountRequiredMixin, View):
 
         return render(request, self.template_name , context)
 
+
 class OrderDeleteView(StaffAccountRequiredMixin, View):
     def post(self, request, pk):
         order = get_object_or_404(Order, pk=pk)
@@ -1162,6 +1164,7 @@ class BannerListView(LoginRequiredMixin, TemplateView):  # Add SupplierPermissio
         context['banners'] = Banner.objects.all().order_by('order')
         return context
 
+
 class BannerCreateView(LoginRequiredMixin, View):
     def get(self, request):
         form = BannerForm()
@@ -1173,6 +1176,7 @@ class BannerCreateView(LoginRequiredMixin, View):
             form.save()
             return redirect('superuser:banner_list')
         return render(request, 'superuser/banner_upload.html', {'form': form})
+
 
 class BannerUpdateView(LoginRequiredMixin, View):
     def get(self, request, pk):
@@ -1187,8 +1191,6 @@ class BannerUpdateView(LoginRequiredMixin, View):
             form.save()
             return redirect('superuser:banner_list')
         return render(request, 'superuser/banner_edit.html', {'form': form, 'object': banner})
-    
-
 
 
 class RFQListView(LoginRequiredMixin, SupplierPermissionMixin, ListView):
@@ -1202,6 +1204,7 @@ class RFQListView(LoginRequiredMixin, SupplierPermissionMixin, ListView):
         elif hasattr(user, 'supplierprofile'):
             return RFQRequest.objects.filter(product__created_by=user)
         return RFQRequest.objects.none()
+
 
 class SupplierQuotationUpdateView(LoginRequiredMixin, SupplierPermissionMixin, UpdateView):
     model = RFQRequest

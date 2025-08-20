@@ -237,6 +237,11 @@ class Product(models.Model):
         first_image = self.images.first()
         return first_image.image.url if first_image else None
 
+    def get_return_deadline(self, delivered_at):
+        if not delivered_at or not self.is_returnable:
+            return None
+        return delivered_at + timedelta(days=self.return_time_limit)
+
     def __str__(self):
         return self.name
 
@@ -281,6 +286,7 @@ class Order(models.Model):
     shipping_full_address = models.TextField(null=True, blank=True)
     shipping_city = models.CharField(max_length=100, null=True, blank=True)
     shipping_country = models.CharField(max_length=100, null=True, blank=True)
+    delivered_at = models.DateTimeField(null=True, blank=True)
     status = models.CharField(
         max_length=20,
         choices=[
@@ -347,6 +353,20 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"OrderItem #{self.pk} - {self.product.name} x {self.quantity} in Order {self.order.order_id}"
+
+    @property
+    def return_deadline(self):
+        delivered_on = self.delivery_date or self.order.delivered_at
+        if not delivered_on:
+            return None
+        return delivered_on + timedelta(days=15)
+
+    @property
+    def can_return(self):
+        deadline = self.return_deadline
+        if not deadline:
+            return False
+        return timezone.now() <= deadline
 
     class Meta:
         ordering = ['-created_at']

@@ -201,9 +201,19 @@
                                             <div class="text-muted fs-7">Set the product condition.</div>
                                         </div>
 
+                                        <div class="mb-10 mt-4 fv-row">
+                                            <label class="form-label">Is Returnable?</label>
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="is_returnable" name="is_returnable" {% if is_returnable %}checked{% endif %}>
+                                                <label class="form-check-label" for="is_returnable">Enable product return</label>
+                                            </div>
+                                        </div>
+
                                         <div class="mb-10 mt-4 fv-row" id="hide_field_return_time_limit">
                                             <label class="form-label required">Return Time Limit (Days)</label>
-                                            <input type="number" name="return_time_limit" class="form-control mb-2" placeholder="Enter return time limit in days" value="{{ return_time_limit }}" min="0" required />
+                                            <input type="number" name="return_time_limit" class="form-control mb-2"
+                                                   placeholder="Enter return time limit in days"
+                                                   value="{{ return_time_limit }}" min="0" />
                                             <div class="text-muted fs-7">Number of days for product return.</div>
                                         </div>
 
@@ -741,14 +751,14 @@ $(document).ready(function () {
     }
 });
 
-// Hide fields
 document.addEventListener("DOMContentLoaded", function () {
     const categorySelect = document.querySelector('select[name="category"]');
+    const isReturnableToggle = document.getElementById("is_returnable");
+    const returnTimeLimitField = document.getElementById("hide_field_return_time_limit");
+
     const webinarCategories = ["Webinar", "Conference", "Event"];
 
-    // IDs of fields to hide if it's a webinar-type category
     const fieldsToHide = [
-
         "hide_field_product_quantity", "hide_fields_warrenty", "hide_field_condition", "hide_field_return_time_limit",
         "hide_field_manufacture_date", "hide_field_expiry_date", "hide_field_barcode", "hide_field_price",
         "hide_field_weight_unit", "hide_field_weight", "hide_field_delivery_time", "hide_field_commission_percentage",
@@ -761,14 +771,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function toggleFormFields() {
         const selectedText = categorySelect.options[categorySelect.selectedIndex].text.trim();
-
         const isWebinar = webinarCategories.includes(selectedText);
 
         fieldsToHide.forEach(id => {
             const field = document.getElementById(id);
             if (field) {
                 field.style.display = isWebinar ? "none" : "";
-                // optionally remove required attribute
                 field.querySelectorAll("input, select, textarea").forEach(el => {
                     el.required = !isWebinar;
                 });
@@ -781,10 +789,25 @@ document.addEventListener("DOMContentLoaded", function () {
                 el.required = isWebinar;
             });
         }
+
+        // ✅ extra logic: handle return toggle
+        if (isReturnableToggle) {
+            returnTimeLimitField.style.display = isReturnableToggle.checked ? "" : "none";
+            returnTimeLimitField.querySelectorAll("input").forEach(el => {
+                el.required = isReturnableToggle.checked;
+            });
+        }
     }
 
-    categorySelect.addEventListener("change", toggleFormFields);
-    toggleFormFields(); // run on page load if already selected
+    // Attach listeners
+    if (categorySelect) {
+        categorySelect.addEventListener("change", toggleFormFields);
+    }
+    if (isReturnableToggle) {
+        isReturnableToggle.addEventListener("change", toggleFormFields);
+    }
+
+    toggleFormFields(); // run on page load
 });
 
 </script>
