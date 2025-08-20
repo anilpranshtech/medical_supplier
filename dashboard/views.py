@@ -35,6 +35,7 @@ import razorpay
 import stripe
 from datetime import date, timedelta
 import random
+from django.db.models.functions import Coalesce
 import re
 import requests
 from supplier.models import *
@@ -203,7 +204,7 @@ def generate_token():
 
 
 class RegistrationView(View):
-    recaptcha_secret = '6LdTHV8rAAAAAIgLr2wdtdtWExTS6xJpUpD8qEzh'
+    recaptcha_secret = '6LcldqwrAAAAAFeYWDuPvhw8cKrgGJ3dqKHuuYGq'
     template_name = 'dashboard/register.html'
 
     def get(self, request):
@@ -461,7 +462,10 @@ class SearchResultsGridView(TemplateView):
         context['search_query'] = search_query
         context['is_search_active'] = bool(search_query)
 
-        # Categories & Subcategories
+        # Define special categories
+        special_category_names = ['Conference', 'Webinar', 'Event']
+        
+        # Get regular categories (excluding special categories)
         last_categories_with_products = ProductLastCategory.objects.annotate(
             product_count=Count('product', filter=Q(product__is_active=True))
         ).filter(product_count__gt=0)
@@ -472,15 +476,23 @@ class SearchResultsGridView(TemplateView):
         ).prefetch_related('productlastcategory_set')
 
         valid_category_ids = subcategories_with_products.values_list('category_id', flat=True).distinct()
-        categories_with_products = ProductCategory.objects.filter(
+        regular_categories = ProductCategory.objects.filter(
             id__in=valid_category_ids
-        ).prefetch_related('productsubcategory_set')
+        ).exclude(name__in=special_category_names).prefetch_related('productsubcategory_set')
 
-        context['categories'] = categories_with_products
+        # Get special categories with product counts
+        special_categories = ProductCategory.objects.filter(
+            name__in=special_category_names
+        ).annotate(
+            product_count=Count('product', filter=Q(product__is_active=True))
+        ).filter(product_count__gt=0)
+
+        context['regular_categories'] = regular_categories
+        context['special_categories'] = special_categories
 
         # Define effective price for sorting
         effective_price = ExpressionWrapper(
-            F('price') * (1 - F('offer_percentage') / 100.0),
+            F('price') * (1 - Coalesce(F('offer_percentage'), 0) / 100.0),
             output_field=DecimalField(max_digits=10, decimal_places=2)
         )
         products = Product.objects.annotate(
@@ -489,7 +501,7 @@ class SearchResultsGridView(TemplateView):
                 default=F('price'),
                 output_field=DecimalField(max_digits=10, decimal_places=2)
             )
-        ).prefetch_related('images')  # Add prefetch_related for images
+        ).prefetch_related('images')
 
         # Handle search query
         if search_query:
@@ -560,9 +572,29 @@ class SearchResultsGridView(TemplateView):
         elif category_id:
             try:
                 category = ProductCategory.objects.get(id=category_id)
-                subcategories = ProductSubCategory.objects.filter(category=category)
-                context['last_categories'] = last_categories_with_products.filter(sub_category__in=subcategories)
-                context['selected_category'] = category
+                if category.name in special_category_names:
+                    products = products.filter(category=category, is_active=True)
+                    if sort_by == '1':
+                        products = products.order_by('-effective_price')
+                    elif sort_by == '2':
+                        products = products.order_by('effective_price')
+                    else:
+                        products = products.order_by('-created_at')
+
+                    paginator = Paginator(products, 16)
+                    page_obj = paginator.get_page(page)
+
+                    context.update({
+                        'products': page_obj,
+                        'page_obj': page_obj,
+                        'paginator': paginator,
+                        'total_products': paginator.count,
+                        'selected_category': category
+                    })
+                else:
+                    subcategories = ProductSubCategory.objects.filter(category=category)
+                    context['last_categories'] = last_categories_with_products.filter(sub_category__in=subcategories)
+                    context['selected_category'] = category
             except ProductCategory.DoesNotExist:
                 context['last_categories'] = []
 
@@ -579,7 +611,6 @@ class SearchResultsGridView(TemplateView):
             context['user_wishlist_ids'] = []
 
         return context
-
 
 class SearchResultsListView(TemplateView):
     template_name = 'userdashboard/view/search_results_list.html'
@@ -600,6 +631,7 @@ class SearchResultsListView(TemplateView):
         last_category_id = request.GET.get('last_category')
         sort_by = request.GET.get('sort_by')
         page_number = request.GET.get('page', 1)
+        search_query = request.GET.get('q', '').strip()
 
         context.update({
             'selected_category': None,
@@ -607,9 +639,14 @@ class SearchResultsListView(TemplateView):
             'selected_last_category': None,
             'page_obj': None,
             'total_products': 0,
+            'search_query': search_query,
+            'is_search_active': bool(search_query),
         })
 
-        # Categories & Subcategories with active products
+        # Define special categories
+        special_category_names = ['Conference', 'Webinar', 'Event']
+
+        # Fetch regular categories (excluding special categories)
         last_categories_with_products = ProductLastCategory.objects.annotate(
             product_count=Count('product', filter=Q(product__is_active=True))
         ).filter(product_count__gt=0)
@@ -622,17 +659,32 @@ class SearchResultsListView(TemplateView):
         )
 
         valid_category_ids = subcategories_with_products.values_list('category_id', flat=True).distinct()
-        categories_with_products = ProductCategory.objects.filter(
+        regular_categories = ProductCategory.objects.filter(
             id__in=valid_category_ids
-        ).prefetch_related(
+        ).exclude(name__in=special_category_names).prefetch_related(
             Prefetch('productsubcategory_set', queryset=subcategories_with_products)
         )
 
-        context['categories'] = categories_with_products
+        # Fetch special categories with product counts
+        special_categories = ProductCategory.objects.filter(
+            name__in=special_category_names
+        ).annotate(
+            product_count=Count('product', filter=Q(product__is_active=True))
+        ).filter(product_count__gt=0)
+
+        # Attach last_categories to each regular category
+        for category in regular_categories:
+            category.last_categories = ProductLastCategory.objects.filter(
+                sub_category__in=category.productsubcategory_set.all(),
+                id__in=last_categories_with_products
+            ).distinct()
+
+        context['regular_categories'] = regular_categories
+        context['special_categories'] = special_categories
 
         # Base product queryset with effective price annotation
         effective_price = ExpressionWrapper(
-            F('price') * (1 - F('offer_percentage') / 100.0),
+            F('price') * (1 - Coalesce(F('offer_percentage'), 0) / 100.0),
             output_field=DecimalField(max_digits=10, decimal_places=2)
         )
         products_qs = Product.objects.annotate(
@@ -641,10 +693,34 @@ class SearchResultsListView(TemplateView):
                 default=F('price'),
                 output_field=DecimalField(max_digits=10, decimal_places=2)
             )
-        ).prefetch_related('images')  # Add prefetch_related for images
+        ).prefetch_related('images')
 
         # Filtering + sorting
-        if last_category_id:
+        if search_query:
+            search_terms = search_query.lower().split()
+            query = Q()
+            for term in search_terms:
+                query |= Q(name__icontains=term) | Q(keywords__icontains=term)
+            products_qs = products_qs.filter(query, is_active=True).distinct()
+
+            if sort_by == '1':
+                products_qs = products_qs.order_by('-effective_price')
+            elif sort_by == '2':
+                products_qs = products_qs.order_by('effective_price')
+            else:
+                products_qs = products_qs.order_by('-created_at')
+
+            paginator = Paginator(products_qs, 10)
+            page_obj = paginator.get_page(page_number)
+
+            context.update({
+                'products': page_obj,
+                'page_obj': page_obj,
+                'paginator': paginator,
+                'total_products': paginator.count,
+            })
+
+        elif last_category_id:
             try:
                 last_category = ProductLastCategory.objects.get(id=last_category_id)
                 products_qs = products_qs.filter(last_category=last_category, is_active=True)
@@ -670,6 +746,7 @@ class SearchResultsListView(TemplateView):
                 })
             except ProductLastCategory.DoesNotExist:
                 context['products'] = []
+
         elif sub_category_id:
             try:
                 sub_category = ProductSubCategory.objects.get(id=sub_category_id)
@@ -678,14 +755,36 @@ class SearchResultsListView(TemplateView):
                 context['selected_category'] = sub_category.category
             except ProductSubCategory.DoesNotExist:
                 context['last_categories'] = []
+
         elif category_id:
             try:
                 category = ProductCategory.objects.get(id=category_id)
-                subcategories = ProductSubCategory.objects.filter(category=category)
-                context['last_categories'] = last_categories_with_products.filter(sub_category__in=subcategories)
-                context['selected_category'] = category
+                if category.name in special_category_names:
+                    products_qs = products_qs.filter(category=category, is_active=True)
+                    if sort_by == '1':
+                        products_qs = products_qs.order_by('-effective_price')
+                    elif sort_by == '2':
+                        products_qs = products_qs.order_by('effective_price')
+                    else:
+                        products_qs = products_qs.order_by('-created_at')
+
+                    paginator = Paginator(products_qs, 10)
+                    page_obj = paginator.get_page(page_number)
+
+                    context.update({
+                        'products': page_obj,
+                        'page_obj': page_obj,
+                        'paginator': paginator,
+                        'total_products': paginator.count,
+                        'selected_category': category
+                    })
+                else:
+                    subcategories = ProductSubCategory.objects.filter(category=category)
+                    context['last_categories'] = last_categories_with_products.filter(sub_category__in=subcategories)
+                    context['selected_category'] = category
             except ProductCategory.DoesNotExist:
                 context['last_categories'] = []
+
         else:
             context['products'] = []
 
@@ -700,7 +799,6 @@ class SearchResultsListView(TemplateView):
             context['user_wishlist_ids'] = []
 
         return context
-    
 
 class ProductDetailsView(TemplateView):
     template_name = 'userdashboard/view/product_details.html'

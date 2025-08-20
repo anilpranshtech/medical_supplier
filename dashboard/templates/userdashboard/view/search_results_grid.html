@@ -1,9 +1,9 @@
+
 {% extends "pages/base.html" %}
 {% load static %}
 {% block content %}
 <style>
-  
-    .kt-wishlist-icon.active i.ki-filled.ki-heart {
+  .kt-wishlist-icon.active i.ki-filled.ki-heart {
         color: #ff0000;
     }
 
@@ -334,6 +334,26 @@
 .kt-wishlist-icon i.text-red-500 {
     color: #ff0000;
 }
+
+    /* Add styling for special categories */
+    .special-category-link {
+        display: block;
+        padding: 0.5rem 0;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #1f2937;
+        text-decoration: none;
+        transition: all 0.2s ease-in-out;
+    }
+    .special-category-link:hover {
+        color: #3b82f6;
+    }
+    .special-category-count {
+        font-size: 0.9rem;
+        color: #4b5563;
+        margin-left: 0.5rem;
+    }
+    
 </style>
 
 <title>Search Results - Medical Supplies</title>
@@ -417,7 +437,8 @@
         <div class="kt-category-grid">
             <div class="amazon-sidebar w-full md:w-1/4 pr-6">
                 <h2 class="text-base font-bold mb-4 uppercase pb-1">Category</h2>
-                {% for category in categories %}
+                <!-- Regular Categories with Dropdowns -->
+                {% for category in regular_categories %}
                     <div class="mb-3">
                         <button type="button" onclick="toggleCategory('cat-{{ category.id }}')" class="category-button">
                             <span>{{ category.name }}</span>
@@ -441,6 +462,17 @@
                         </div>
                     </div>
                 {% endfor %}
+                <!-- Special Categories without Dropdowns -->
+                {% if special_categories %}
+                    <div class="mt-4">
+                        {% for category in special_categories %}
+                            <a href="#" data-category="{{ category.id }}" class="special-category-link">
+                                {{ category.name }}
+                                <span class="special-category-count">({{ category.product_count }})</span>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% endif %}
             </div>
             <div class="kt-product-grid" id="product-grid">
                 {% if last_categories %}
@@ -744,6 +776,23 @@ document.addEventListener('click', function(e) {
         }
         fetchProducts({ last_category: lastCategoryId, page: 1 });
     }
+
+    // Handle special category links
+    if (e.target.closest('.special-category-link')) {
+        e.preventDefault();
+        const link = e.target.closest('.special-category-link');
+        const categoryId = link.dataset.category;
+        const sidebar = document.querySelector('.amazon-sidebar');
+        const toggleButton = document.querySelector('.sidebar-toggle');
+        if (sidebar) {
+            sidebar.style.display = '';
+            sidebar.classList.remove('hidden');
+        }
+        if (toggleButton && window.innerWidth < 768) {
+            sidebar.classList.add('hidden');
+        }
+        fetchProducts({ category: categoryId, page: 1 });
+    }
     
     // Handle pagination 
     if (e.target.closest('.pagination-link')) {
@@ -755,6 +804,7 @@ document.addEventListener('click', function(e) {
             page: page, 
             sort_by: params.get('sort_by'), 
             last_category: params.get('last_category'), 
+            category: params.get('category'), 
             q: params.get('q') 
         });
     }
@@ -980,6 +1030,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     sort_by: value, 
                     page: 1, 
                     last_category: params.get('last_category'), 
+                    category: params.get('category'),
                     q: params.get('q') 
                 });
             });
