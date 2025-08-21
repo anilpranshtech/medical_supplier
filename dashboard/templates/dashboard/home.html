@@ -1,5 +1,6 @@
 {% extends "pages/base.html" %}
 {% load static %}
+{% load custom_filters %}
 
 {% block content %}
 <title>Medical Supplies</title>
@@ -421,11 +422,13 @@
                                 Event Date: <strong>{{ product.event.conference_at|date:"D, d M Y, H:i" }}</strong>
                             </p>
                             {% endif %}
+                        {% if request.user.is_authenticated %}
                             {% if product.event and product.event.conference_link %}
                             <p class="text-xs text-gray-600 mt-1">
                                 Conference Link: <a href="{{ product.event.conference_link }}" class="text-blue-600 hover:underline" target="_blank" style="text-decoration: underline;">Join Here</a>
                             </p>
                             {% endif %}
+                        {% endif %}
                         {% else %}
                             {% if product.delivery_date %}
                             <p class="text-xs text-green-600 mt-0.5">
@@ -1061,7 +1064,9 @@
         <div class="space-y-4">
             <div class="flex items-center justify-between gap-4">
                 <span class="text-lg font-medium text-gray-100">Conference & Webinar Events</span>
-                <a class="kt-link" href="{% url 'dashboard:search_results_grid' %}?category=Conference">See All <i class="ki-filled ki-right text-xs"></i></a>
+                {% with conference_category=special_categories|filter_by_name:'Conference' %}
+                    <a class="kt-link" href="{% url 'dashboard:search_results_grid' %}?category={{ conference_category.id }}">See All <i class="ki-filled ki-right text-xs"></i></a>
+                {% endwith %}
             </div>
             <!-- Debug output -->
             <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-2">
@@ -1113,10 +1118,12 @@
                                     Duration: <strong>{{ product.event.formatted_duration }}</strong>
                                 </p>
                                 {% endif %}
+                                {% if request.user.is_authenticated %}
                                 {% if product.event.conference_link %}
                                 <p class="text-xs text-gray-600 mt-1">
                                     Conference Link: <a href="{{ product.event.conference_link }}" class="text-blue-600 hover:underline" target="_blank" style="text-decoration: underline;">Join Here</a>
                                 </p>
+                                {% endif %}
                                 {% endif %}
                             {% else %}
                                 <p class="text-xs text-gray-600 mt-1">No event details available.</p>

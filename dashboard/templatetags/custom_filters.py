@@ -3,6 +3,9 @@ from datetime import timedelta
 from django import template
 from django.utils import timezone
 
+import logging
+logger = logging.getLogger(__name__)
+
 register = template.Library()
 
 
@@ -179,3 +182,27 @@ def return_status_class(order_item):
             return 'text-red-600'
     else:
         return 'text-red-600'
+
+
+@register.filter
+def filter_by_name(value, name):
+    if hasattr(value, 'filter'):
+        result = value.filter(name=name).first()
+        logger.debug(f"filter_by_name: Queryset filtered, result: {result}")
+        return result
+    logger.error(f"filter_by_name received non-queryset: type={type(value)}, value={value}")
+    return None
+
+
+@register.filter
+def is_number(value):
+    try:
+        int(value)
+        return True
+    except (ValueError, TypeError):
+        return False
+
+
+@register.filter
+def get_type(value):
+    return str(type(value).__name__)

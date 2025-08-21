@@ -439,6 +439,7 @@ class SearchResultsGridView(TemplateView):
 
     def get(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
+        logger.debug(f"Context prepared: {context.keys()}")
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             html = render_to_string(self.template_name, context, request=request)
             return HttpResponse(html)
@@ -446,6 +447,7 @@ class SearchResultsGridView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        logger.debug(f"Initial context: {context}")
 
         category_id = self.request.GET.get('category')
         sub_category_id = self.request.GET.get('sub_category')
@@ -464,21 +466,25 @@ class SearchResultsGridView(TemplateView):
 
         # Define special categories
         special_category_names = ['Conference', 'Webinar', 'Event']
-        
+        logger.debug(f"special_category_names: {special_category_names}")
+
         # Get regular categories (excluding special categories)
         last_categories_with_products = ProductLastCategory.objects.annotate(
             product_count=Count('product', filter=Q(product__is_active=True))
         ).filter(product_count__gt=0)
+        logger.debug(f"last_categories_with_products: {list(last_categories_with_products)}")
 
         valid_subcategory_ids = last_categories_with_products.values_list('sub_category_id', flat=True).distinct()
         subcategories_with_products = ProductSubCategory.objects.filter(
             id__in=valid_subcategory_ids
         ).prefetch_related('productlastcategory_set')
+        logger.debug(f"subcategories_with_products: {list(subcategories_with_products)}")
 
         valid_category_ids = subcategories_with_products.values_list('category_id', flat=True).distinct()
         regular_categories = ProductCategory.objects.filter(
             id__in=valid_category_ids
         ).exclude(name__in=special_category_names).prefetch_related('productsubcategory_set')
+        logger.debug(f"regular_categories: {list(regular_categories)}")
 
         # Get special categories with product counts
         special_categories = ProductCategory.objects.filter(
@@ -486,9 +492,30 @@ class SearchResultsGridView(TemplateView):
         ).annotate(
             product_count=Count('product', filter=Q(product__is_active=True))
         ).filter(product_count__gt=0)
+        logger.debug(
+            f"special_categories type: {type(special_categories)}, value: {[f'ID: {c.id}, Name: {c.name}' for c in special_categories]}")
+
+        # Fetch conference products
+        conference_products = Product.objects.filter(
+            category__name__in=special_category_names,
+            is_active=True
+        ).annotate(
+            effective_price=Case(
+                When(offer_active=True, offer_percentage__isnull=False, then=ExpressionWrapper(
+                    F('price') * (1 - Coalesce(F('offer_percentage'), 0) / 100.0),
+                    output_field=DecimalField(max_digits=10, decimal_places=2)
+                )),
+                default=F('price'),
+                output_field=DecimalField(max_digits=10, decimal_places=2)
+            )
+        ).prefetch_related('images')[:4]
+        logger.debug(
+            f"conference_products: {[f'ID: {p.id}, Type: {type(p.id)}, Name: {p.name}, SKU: {p.supplier_sku}' for p in conference_products]}")
 
         context['regular_categories'] = regular_categories
         context['special_categories'] = special_categories
+        context['conference_products'] = conference_products
+        logger.debug(f"Context after setting categories: {context.keys()}")
 
         # Define effective price for sorting
         effective_price = ExpressionWrapper(
@@ -571,7 +598,12 @@ class SearchResultsGridView(TemplateView):
 
         elif category_id:
             try:
-                category = ProductCategory.objects.get(id=category_id)
+                try:
+                    category_id_int = int(category_id)
+                    category = ProductCategory.objects.get(id=category_id_int)
+                except ValueError:
+                    category = ProductCategory.objects.get(name=category_id)
+
                 if category.name in special_category_names:
                     products = products.filter(category=category, is_active=True)
                     if sort_by == '1':
@@ -606,17 +638,23 @@ class SearchResultsGridView(TemplateView):
             wishlist_ids = WishlistProduct.objects.filter(user=self.request.user).values_list('product_id', flat=True)
             context['user_cart_ids'] = list(cart_ids)
             context['user_wishlist_ids'] = list(wishlist_ids)
+            context['user_registered_event_ids'] = list(
+                EventRegistration.objects.filter(user=self.request.user).values_list('product_id', flat=True))
         else:
             context['user_cart_ids'] = []
             context['user_wishlist_ids'] = []
+            context['user_registered_event_ids'] = []
 
+        logger.debug(f"Final context: {context.keys()}")
         return context
+
 
 class SearchResultsListView(TemplateView):
     template_name = 'userdashboard/view/search_results_list.html'
 
     def get(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
+        logger.debug(f"SearchResultsListView Context prepared: {context.keys()}")
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             html = render_to_string(self.template_name, context, request=request)
             return HttpResponse(html)
@@ -624,14 +662,14 @@ class SearchResultsListView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        request = self.request
+        logger.debug(f"Initial context: {context}")
 
-        category_id = request.GET.get('category')
-        sub_category_id = request.GET.get('sub_category')
-        last_category_id = request.GET.get('last_category')
-        sort_by = request.GET.get('sort_by')
-        page_number = request.GET.get('page', 1)
-        search_query = request.GET.get('q', '').strip()
+        category_id = self.request.GET.get('category')
+        sub_category_id = self.request.GET.get('sub_category')
+        last_category_id = self.request.GET.get('last_category')
+        sort_by = self.request.GET.get('sort_by')
+        page_number = self.request.GET.get('page', 1)
+        search_query = self.request.GET.get('q', '').strip()
 
         context.update({
             'selected_category': None,
@@ -645,25 +683,25 @@ class SearchResultsListView(TemplateView):
 
         # Define special categories
         special_category_names = ['Conference', 'Webinar', 'Event']
+        logger.debug(f"special_category_names: {special_category_names}")
 
         # Fetch regular categories (excluding special categories)
         last_categories_with_products = ProductLastCategory.objects.annotate(
             product_count=Count('product', filter=Q(product__is_active=True))
         ).filter(product_count__gt=0)
+        logger.debug(f"last_categories_with_products: {list(last_categories_with_products)}")
 
         valid_subcategory_ids = last_categories_with_products.values_list('sub_category_id', flat=True).distinct()
         subcategories_with_products = ProductSubCategory.objects.filter(
             id__in=valid_subcategory_ids
-        ).prefetch_related(
-            Prefetch('productlastcategory_set', queryset=last_categories_with_products)
-        )
+        ).prefetch_related('productlastcategory_set')
+        logger.debug(f"subcategories_with_products: {list(subcategories_with_products)}")
 
         valid_category_ids = subcategories_with_products.values_list('category_id', flat=True).distinct()
         regular_categories = ProductCategory.objects.filter(
             id__in=valid_category_ids
-        ).exclude(name__in=special_category_names).prefetch_related(
-            Prefetch('productsubcategory_set', queryset=subcategories_with_products)
-        )
+        ).exclude(name__in=special_category_names).prefetch_related('productsubcategory_set')
+        logger.debug(f"regular_categories: {list(regular_categories)}")
 
         # Fetch special categories with product counts
         special_categories = ProductCategory.objects.filter(
@@ -671,16 +709,29 @@ class SearchResultsListView(TemplateView):
         ).annotate(
             product_count=Count('product', filter=Q(product__is_active=True))
         ).filter(product_count__gt=0)
+        logger.debug(
+            f"special_categories type: {type(special_categories)}, value: {[f'ID: {c.id}, Name: {c.name}' for c in special_categories]}")
 
-        # Attach last_categories to each regular category
-        for category in regular_categories:
-            category.last_categories = ProductLastCategory.objects.filter(
-                sub_category__in=category.productsubcategory_set.all(),
-                id__in=last_categories_with_products
-            ).distinct()
+        # Fetch conference products
+        conference_products = Product.objects.filter(
+            category__name__in=special_category_names,
+            is_active=True
+        ).annotate(
+            effective_price=Case(
+                When(offer_active=True, offer_percentage__isnull=False, then=ExpressionWrapper(
+                    F('price') * (1 - Coalesce(F('offer_percentage'), 0) / 100.0),
+                    output_field=DecimalField(max_digits=10, decimal_places=2)
+                )),
+                default=F('price'),
+                output_field=DecimalField(max_digits=10, decimal_places=2)
+            )
+        ).prefetch_related('images')[:4]
+        logger.debug(
+            f"conference_products: {[f'ID: {p.id}, Type: {type(p.id)}, Name: {p.name}, SKU: {p.supplier_sku}' for p in conference_products]}")
 
         context['regular_categories'] = regular_categories
         context['special_categories'] = special_categories
+        context['conference_products'] = conference_products
 
         # Base product queryset with effective price annotation
         effective_price = ExpressionWrapper(
@@ -758,7 +809,12 @@ class SearchResultsListView(TemplateView):
 
         elif category_id:
             try:
-                category = ProductCategory.objects.get(id=category_id)
+                try:
+                    category_id_int = int(category_id)
+                    category = ProductCategory.objects.get(id=category_id_int)
+                except ValueError:
+                    category = ProductCategory.objects.get(name=category_id)
+
                 if category.name in special_category_names:
                     products_qs = products_qs.filter(category=category, is_active=True)
                     if sort_by == '1':
@@ -789,16 +845,21 @@ class SearchResultsListView(TemplateView):
             context['products'] = []
 
         # User-specific wishlist/cart IDs
-        if request.user.is_authenticated:
-            cart_ids = CartProduct.objects.filter(user=request.user).values_list('product_id', flat=True)
-            wishlist_ids = WishlistProduct.objects.filter(user=request.user).values_list('product_id', flat=True)
+        if self.request.user.is_authenticated:
+            cart_ids = CartProduct.objects.filter(user=self.request.user).values_list('product_id', flat=True)
+            wishlist_ids = WishlistProduct.objects.filter(user=self.request.user).values_list('product_id', flat=True)
             context['user_cart_ids'] = list(cart_ids)
             context['user_wishlist_ids'] = list(wishlist_ids)
+            context['user_registered_event_ids'] = list(
+                EventRegistration.objects.filter(user=self.request.user).values_list('product_id', flat=True))
         else:
             context['user_cart_ids'] = []
             context['user_wishlist_ids'] = []
+            context['user_registered_event_ids'] = []
 
+        logger.debug(f"Final context: {context.keys()}")
         return context
+
 
 class ProductDetailsView(TemplateView):
     template_name = 'userdashboard/view/product_details.html'

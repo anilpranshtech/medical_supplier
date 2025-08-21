@@ -477,10 +477,10 @@
 </style>
 
 <title>Category Results - Medical Supplies</title>
-<div class="kt-container-fixed mt-1" style="max-width: var(--custom-container-width, 90%);">
+<div class="kt-container-fixed mt-1" style="max-width: var(--custom-container-width, 95%);">
     <div class="flex flex-col items-stretch gap-7 mt-5 py-5">
         <!-- Results Header and Sorting -->
-        <div class="flex flex-wrap items-center gap-5 justify-between mt-3">
+        <div class="flex flex-wrap items-center gap-5 justify-between mt-5 py-4">
             <h3 id="results-header" class="text-sm text-mono font-medium">
                 {% if page_obj %}
                 {{ page_obj.start_index }} - {{ page_obj.end_index }} over {{ total_products }} results for
@@ -684,6 +684,31 @@
                     <!-- Price and Actions -->
                     <div class="kt-list-card-actions">
                         <div class="text-right mb-3">
+                            {% if product.category.name in 'Conference,Webinar,Event' %}
+                            {% if product.event and product.event.conference_at %}
+                            <p class="text-xs text-green-600 mt-1">
+                                Event Date: <strong>{{ product.event.conference_at|date:"D, d M Y, H:i" }}</strong>
+                            </p>
+                            {% endif %}
+                            {% if request.user.is_authenticated %}
+                            {% if product.event and product.event.conference_link %}
+                            <p class="text-xs text-gray-600 mt-1">
+                                Conference Link: <a href="{{ product.event.conference_link }}" class="text-blue-600 hover:underline" target="_blank" style="text-decoration: underline;">Join Here</a>
+                            </p>
+                            {% endif %}
+                            {% endif %}
+                            {% if product.event.speaker_name %}
+                            <p class="text-xs text-gray-600 mt-1">
+                                Speaker: <strong>{{ product.event.speaker_name }}</strong>
+                            </p>
+                            {% endif %}
+                            {% if product.event.venue %}
+                            <p class="text-xs text-gray-600 mt-1">
+                                Venue: <strong>{{ product.event.venue }}</strong>
+                            </p>
+                            {% endif %}
+                            {% endif %}
+                            {% if product.category.name not in 'Conference,Webinar,Event' %}
                             {% if product.offer_percentage and product.offer_active %}
                             <span class="text-xs font-normal text-secondary-foreground line-through">
                                 ${{ product.price|floatformat:2 }}
@@ -698,8 +723,10 @@
                                 ${{ product.price|floatformat:2 }}
                             </span>
                             {% endif %}
+                            {% endif %}
                         </div>
                         <div class="flex items-center gap-2">
+                            {% if product.category.name not in 'Conference,Webinar,Event' %}
                             {% if request.user.is_authenticated %}
                             <span class="kt-wishlist-icon cursor-pointer"
                                   data-kt-wishlist-toggle="true"
@@ -727,6 +754,7 @@
                                     data-product-id="{{ product.id }}">
                                 Add to cart <i class="ki-filled ki-handcart"></i>
                             </button>
+                            {% endif %}
                             {% endif %}
 
                             {% if request.user.is_authenticated %}
