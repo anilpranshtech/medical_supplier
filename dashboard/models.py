@@ -537,8 +537,29 @@ class CartProduct(models.Model):
         verbose_name = verbose_name_plural = "Cart Product"
 
 
+# class Notification(models.Model):
+#     recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+#     title = models.CharField(max_length=255)
+#     message = models.TextField()
+#     is_read = models.BooleanField(default=False)
+#     is_deleted = models.BooleanField(default=False)
+#     created_at = models.DateTimeField(default=timezone.now)
+
+#     class Meta:
+#         ordering = ['-created_at']
+#         verbose_name = verbose_name_plural = "Notification"
+
 class Notification(models.Model):
-    recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    SEND_TO_CHOICES = [
+        ('buyer', 'All Buyers'),
+        ('supplier', 'All Suppliers'),
+        ('all', 'All Users'),
+        ('single', 'Specific User'),
+    ]
+
+    recipient = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='notifications')
+    send_to = models.CharField(max_length=20, choices=SEND_TO_CHOICES, default='single', null=True, blank=True)
+
     title = models.CharField(max_length=255)
     message = models.TextField()
     is_read = models.BooleanField(default=False)
@@ -547,7 +568,12 @@ class Notification(models.Model):
 
     class Meta:
         ordering = ['-created_at']
-        verbose_name = verbose_name_plural = "Notification"
+
+    def __str__(self):
+        if self.send_to == "single" and self.recipient:
+            return f"To {self.recipient.username} - {self.title}"
+        else:
+            return f"{self.get_send_to_display()} - {self.title}"
 
 
 class DeliveryPartner(models.Model):
@@ -560,7 +586,7 @@ class DeliveryPartner(models.Model):
     support_email = models.EmailField(blank=True, null=True)
     phone_number = models.CharField(max_length=20, blank=True, null=True)
     is_active = models.BooleanField(default=True)
-
+    
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

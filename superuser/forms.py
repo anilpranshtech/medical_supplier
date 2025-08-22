@@ -1,6 +1,7 @@
 from django import forms
 from supplier.models import Banner  
-
+from dashboard.models import Notification
+from django.contrib.auth.models import User
 class BannerForm(forms.ModelForm):
     class Meta:
         model = Banner
@@ -36,3 +37,13 @@ class SupplierRFQQuotationForm(forms.ModelForm):
             raise forms.ValidationError("Delivery date cannot be in the past.")
         return delivery_date
 
+
+class NotificationForm(forms.ModelForm):
+    class Meta:
+        model = Notification
+        fields = ["send_to", "recipient", "title", "message"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['recipient'].queryset = User.objects.all()
+        self.fields['recipient'].required = False

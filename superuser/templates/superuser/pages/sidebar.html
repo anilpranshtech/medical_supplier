@@ -187,6 +187,18 @@
                       </span> 
 
                       <span class="menu-title">Rating</span>
+
+                      </a>
+                 <a class="menu-link {% if request.resolver_match.url_name == 'banner_list' %} active {% endif %}"
+                       href="{% url 'superuser:notifications_list' %}">
+                      <span class="menu-bullet">
+                        <span class="bullet bullet-dot"></span>
+                      </span> 
+
+                      <span class="menu-title">Notification</span>
+
+                      </a>
+
                     <a class="menu-link {% if request.resolver_match.url_name == 'view_product' %} active {% endif %}"
                     href="{% url 'superuser:view_product' %}">
                     <span class="menu-bullet">

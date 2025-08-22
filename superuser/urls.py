@@ -59,6 +59,10 @@ urlpatterns = [
     path('most-viewed-products/', MostViewedProductsView.as_view(), name='view_product'),
    
     path('rating/', RatingView.as_view(), name='rating_list'),
+    path("notifications/", NotificationListView.as_view(), name="notifications_list"),
+    path("notifications/add/", NotificationCreateView.as_view(), name="add_notification"),
+    path('notifications/edit/<int:pk>/', EditNotificationView.as_view(), name='edit_notification'),
+    path('notifications/delete/<int:pk>/', DeleteNotificationView.as_view(), name='delete_notification'),
 
     path('returns/', AdminReturnsView.as_view(), name='admin_returns'),
     path('returns/update/<str:return_serial>/', AdminReturnsView.as_view(), name='admin_returns_update'),

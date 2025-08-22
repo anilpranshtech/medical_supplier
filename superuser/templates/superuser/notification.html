@@ -1,0 +1,430 @@
+{% extends 'superuser/superuser_base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="app-main flex-column flex-row-fluid" id="kt_app_main">
+    <div class="d-flex flex-column flex-column-fluid">
+        <div id="kt_app_content" class="app-content flex-column-fluid pt-0">
+            <div id="kt_app_content_container" class="app-container container-fluid">
+
+                <!-- Search Bar Section -->
+                <div class="card card-flush mb-3">
+                    <div class="card-header align-items-center py-5 gap-2 gap-md-5">
+                        <div class="card-title">
+                            <h3>Notification List</h3>
+                        </div>
+                    </div>
+                    <div class="card-body p-5">
+                        <div class="d-flex align-items-start flex-column search-card">
+                            <div class="d-flex flex-column flex-sm-row w-100 gap-5">
+                                <div class="position-relative w-md-400px me-md-2">
+                                    <i class="bi bi-search fs-3 text-gray-500 position-absolute top-50 translate-middle ms-6"></i>
+                                    <input type="text" class="form-control form-control-solid ps-10" name="search_by" id="searchBy" value="{{ request.GET.search_by }}" placeholder="Search by User, Title, or Message" />
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <button type="submit" class="btn btn-primary me-3" id="applyFilter">Search</button>
+                                    {% if request.GET and request.GET.urlencode %}
+                                        <a href="{{ request.path }}" class="btn btn-primary me-3 mx-1" id="clearFilter">Clear Filters</a>
+                                    {% endif %}
+                                    <a href="#" id="kt_horizontal_search_advanced_link" class="btn btn-link me-3" data-bs-toggle="collapse" data-bs-target="#kt_advanced_search_form">
+                                        Advanced Search
+                                    </a>
+                                </div>
+                            </div>
+                            <small class="form-text text-muted">Search notifications by user email, title, or message content.</small>
+                        </div>
+
+                        <!-- Advanced Search Form -->
+                        <div class="collapse" id="kt_advanced_search_form">
+                            <div class="separator separator-dashed my-5"></div>
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label class="fs-6 form-label fw-bold text-gray-900">Created Date Range</label>
+                                    <div class="fv-row w-100 flex-md-root fv-plugins-icon-container">
+                                        <input class="form-control form-control-solid date_picker_selector" placeholder="Select a Date" name="created_date" id="created_date_picker" {% if request.GET.created_date %} value="{{ request.GET.created_date }}" {% endif %} autocomplete="off"/>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Sort By</label>
+                                    <select class="form-select" id="filterSort">
+                                        <option value="" {% if not request.GET.filterSort %}selected{% endif %}>Default</option>
+                                        <option value="asc" {% if request.GET.filterSort == 'asc' %}selected{% endif %}>Ascending (Created)</option>
+                                        <option value="desc" {% if request.GET.filterSort == 'desc' %}selected{% endif %}>Descending (Created)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Checked</label>
+                                    <select class="form-select" id="filterChecked">
+                                        <option value="" {% if not request.GET.filterChecked %}selected{% endif %}>All</option>
+                                        <option value="true" {% if request.GET.filterChecked == 'true' %}selected{% endif %}>Checked</option>
+                                        <option value="false" {% if request.GET.filterChecked == 'false' %}selected{% endif %}>Unchecked</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notification List -->
+                <div class="card card-flush mb-3">
+                    <div class="card-header align-items-center py-5 gap-2 gap-md-5">
+                        <div class="card-title">
+                        </div>
+                        <div class="card-toolbar">
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addNotificationModal">
+                                + Add Notification
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body table-responsive p-0">
+                        <table class="table align-middle table-row-dashed fs-6 gy-5" id="notificationTable">
+                            <thead>
+                                <tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
+                                    <th class="text-center">User</th>
+                                    <th class="text-center">Title</th>
+                                    <th class="text-center">Message</th>
+                                    <th class="text-center">Is Checked</th>
+                                    <th class="text-center">Is Deleted</th>
+                                    <th class="text-center">Created At</th>
+                                    <th class="text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="fw-semibold text-gray-600" id="tableBody">
+                                {% for n in page_obj %}
+                                <tr data-is-read="{{ n.is_read|lower }}" data-notification-id="{{ n.id }}">
+                                    <td class="text-center">
+                                        {% if n.recipient %} {{ n.recipient.email }} {% else %} {{ n.get_send_to_display }} {% endif %}
+                                    </td>
+                                    <td class="text-center" data-title="{{ n.title }}">{{ n.title }}</td>
+                                    <td class="text-center" data-message="{{ n.message }}">{{ n.message|truncatechars:40 }}</td>
+                                    <td class="text-center">
+                                        {% if n.is_read %}
+                                            <span class="text-primary">Checked</span>
+                                        {% else %}
+                                            <span class="text-danger">Unchecked</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if n.is_deleted %}
+                                            <span class="text-primary">Yes</span>
+                                        {% else %}
+                                            <span class="text-danger">No</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center" data-date="{{ n.created_at|date:'Y-m-d H:i:s' }}">
+                                        {{ n.created_at|date:"M d, Y, h:i a" }}
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-light btn-active-light-primary" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                Actions <i class="bi bi-chevron-down"></i>
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li><a class="dropdown-item edit-notification" href="#" data-bs-toggle="modal" data-bs-target="#editNotificationModal" data-id="{{ n.id }}">Edit</a></li>
+                                                <li>
+                                                    <a class="dropdown-item delete-notification" href="#" data-bs-toggle="modal" data-bs-target="#deleteConfirmationModal" data-id="{{ n.id }}">Delete</a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted">No Notifications found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Pagination Section -->
+                <div class="card card-flush my-5 w-100">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-sm-12 col-md-2 d-flex align-items-center justify-content-center justify-content-md-start">
+                                <div class="dataTables_length">
+                                    <span class="text-muted">
+                                        Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} records
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-sm-12 col-md-8 d-flex align-items-center justify-content-center justify-content-md-center">
+                                <div class="dataTables_paginate paging_simple_numbers" id="kt_ecommerce_products_table_paginate">
+                                    <ul class="pagination">
+                                        {% if page_obj.has_previous %}
+                                            <li class="page-item">
+                                                <a href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="page-link">
+                                                    <span class="page-link page-text">First</span>
+                                                </a>
+                                            </li>
+                                            <li class="page-item">
+                                                <a href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="page-link">
+                                                    <span class="page-link page-text">Previous</span>
+                                                </a>
+                                            </li>
+                                        {% else %}
+                                            <li class="page-item disabled">
+                                                <span class="page-link page-text">First</span>
+                                            </li>
+                                            <li class="page-item disabled">
+                                                <span class="page-link page-text">Previous</span>
+                                            </li>
+                                        {% endif %}
+
+                                        {% for num in page_obj.paginator.page_range %}
+                                            {% if page_obj.number == num %}
+                                                <li class="page-item active">
+                                                    <a href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="page-link">{{ num }}</a>
+                                                </li>
+                                            {% elif num > page_obj.number|add:'-5' and num < page_obj.number|add:'5' %}
+                                                <li class="page-item">
+                                                    <a href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="page-link">{{ num }}</a>
+                                                </li>
+                                            {% endif %}
+                                        {% endfor %}
+
+                                        {% if page_obj.has_next %}
+                                            <li class="page-item">
+                                                <a href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="page-link">
+                                                    <span class="page-link page-text">Next</span>
+                                                </a>
+                                            </li>
+                                            <li class="page-item">
+                                                <a href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="page-link">
+                                                    <span class="page-link page-text">Last</span>
+                                                </a>
+                                            </li>
+                                        {% else %}
+                                            <li class="page-item disabled">
+                                                <span class="page-link page-text">Next</span>
+                                            </li>
+                                            <li class="page-item disabled">
+                                                <span class="page-link page-text">Last</span>
+                                            </li>
+                                        {% endif %}
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col-sm-12 col-md-2 d-flex align-items-center justify-content-center justify-content-md-end">
+                                <div class="dataTables_length">
+                                    <span class="text-muted" style="float: right;">
+                                        Total Pages: {{ page_obj.paginator.num_pages }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Notification Modal -->
+<div class="modal fade" id="addNotificationModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content rounded-2xl p-3">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Notification</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'superuser:add_notification' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Title</label>
+                        <input type="text" name="title" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Message</label>
+                        <textarea name="message" class="form-control" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Send To</label>
+                        <select name="send_to" class="form-select" id="sendToSelect" required>
+                            <option value="buyer">All Buyers</option>
+                            <option value="supplier">All Suppliers</option>
+                            <option value="all">All Users</option>
+                            <option value="single">Specific User(s)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3 d-none" id="specificUserSelect">
+                        <label class="form-label">Select Users</label>
+                        <select name="recipients" class="form-select" multiple>
+                            {% for user in users %}
+                                <option value="{{ user.id }}">{{ user.username }} ({{ user.email }})</option>
+                            {% endfor %}
+                        </select>
+                        <small class="text-muted">Hold Ctrl/Shift to select multiple users.</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Send</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Notification Modal -->
+<div class="modal fade" id="editNotificationModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content rounded-2xl p-3">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Notification</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="" id="editNotificationForm">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Title</label>
+                        <input type="text" name="title" class="form-control" id="editTitle" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Message</label>
+                        <textarea name="message" class="form-control" id="editMessage" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Update</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-2xl p-3">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this notification?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteNotificationForm" method="post" action="">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Include Moment.js and DateRangePicker -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-daterangepicker/3.0.5/daterangepicker.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-daterangepicker/3.0.5/daterangepicker.css" />
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const sendToSelect = document.getElementById("sendToSelect");
+    const specificUserDiv = document.getElementById("specificUserSelect");
+    const searchBy = document.getElementById("searchBy");
+    const createdDatePicker = document.getElementById("created_date_picker");
+    const filterSort = document.getElementById("filterSort");
+    const filterChecked = document.getElementById("filterChecked");
+    const applyFilterBtn = document.getElementById("applyFilter");
+    const clearFilterBtn = document.getElementById("clearFilter");
+
+    sendToSelect.addEventListener("change", function() {
+        if (this.value === "single") {
+            specificUserDiv.classList.remove("d-none");
+        } else {
+            specificUserDiv.classList.add("d-none");
+        }
+    });
+
+    // Edit notification modal setup
+    document.querySelectorAll('.edit-notification').forEach(button => {
+        button.addEventListener('click', function() {
+            const row = this.closest('tr');
+            const notificationId = row.getAttribute('data-notification-id');
+            const title = row.querySelector('[data-title]').getAttribute('data-title');
+            const message = row.querySelector('[data-message]').getAttribute('data-message');
+            
+            const editForm = document.getElementById('editNotificationForm');
+            editForm.action = `{% url 'superuser:edit_notification' 0 %}`.replace('0', notificationId);
+            document.getElementById('editTitle').value = title;
+            document.getElementById('editMessage').value = message;
+        });
+    });
+
+    // Delete notification modal setup
+    document.querySelectorAll('.delete-notification').forEach(button => {
+        button.addEventListener('click', function() {
+            const notificationId = this.getAttribute('data-id');
+            const deleteForm = document.getElementById('deleteNotificationForm');
+            deleteForm.action = `{% url 'superuser:delete_notification' 0 %}`.replace('0', notificationId);
+        });
+    });
+
+    // Date Range Picker
+    var start = moment();
+    var end = moment();
+    function cb(start, end) {
+        const start_date = start.format("MM/DD/YYYY");
+        const end_date = end.format("MM/DD/YYYY");
+        let dateRange;
+
+        if (start_date && start_date !== 'Invalid date') {
+            dateRange = start_date + " - " + end_date;
+        } else {
+            dateRange = end_date;
+        }
+        $("#created_date_picker").val(dateRange);
+    }
+
+    $("#created_date_picker").daterangepicker({
+        autoUpdateInput: false,
+        startDate: start,
+        endDate: end,
+        locale: {
+            format: 'MM/DD/YYYY'
+        },
+        ranges: {
+            "Today": [moment().utcOffset(600).startOf('day'), moment().utcOffset(600).endOf('day')],
+            "Yesterday": [moment().subtract(1, "days"), moment().subtract(1, "days")],
+            "Last 7 Days": [moment().subtract(6, "days"), moment()],
+            "Last 15 Days": [moment().subtract(14, "days"), moment()],
+            "Last 30 Days": [moment().subtract(29, "days"), moment()],
+            "Last 45 Days": [moment().subtract(44, "days"), moment()],
+            "Last 60 Days": [moment().subtract(59, "days"), moment()],
+            "Last 90 Days": [moment().subtract(89, "days"), moment()],
+            "This Month": [moment().startOf("month"), moment().endOf("month")],
+            "Last Month": [moment().subtract(1, "month").startOf("month"), moment().subtract(1, "month").endOf("month")]
+        }
+    }, cb);
+
+    applyFilterBtn.addEventListener("click", function() {
+        const searchValue = searchBy.value.trim();
+        const dateRangeValue = createdDatePicker.value.trim();
+        const sortValue = filterSort.value;
+        const checkedValue = filterChecked.value;
+
+        // Build query string
+        let query = [];
+        if (searchValue) query.push(`search_by=${encodeURIComponent(searchValue)}`);
+        if (dateRangeValue) query.push(`created_date=${encodeURIComponent(dateRangeValue)}`);
+        if (sortValue) query.push(`filterSort=${sortValue}`);
+        if (checkedValue) query.push(`filterChecked=${checkedValue}`);
+
+        // Redirect to apply filters
+        window.location.href = `?${query.join('&')}`;
+    });
+
+    clearFilterBtn.addEventListener("click", function() {
+        // Clear filters and reload the page
+        window.location.href = window.location.pathname;
+    });
+});
+</script>
+
+{% endblock %}

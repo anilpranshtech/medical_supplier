@@ -12,6 +12,10 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic import ListView
 from django.core.paginator import EmptyPage,PageNotAnInteger
+from django.views.generic import ListView, CreateView, UpdateView, View
+from django.urls import reverse_lazy
+from datetime import datetime
+import re
 
 import supplier
 from superuser.filters import QS_filter_user, QS_Products_filter, QS_orders_filters
@@ -1496,3 +1500,100 @@ class ReturnDeleteView(LoginRequiredMixin, PermissionRequiredMixin, View):
         except Exception as e:
             messages.error(request, f"Error deleting return: {str(e)}")
         return redirect('superuser:admin_returns')
+    
+
+class NotificationListView(ListView):
+    model = Notification
+    template_name = "superuser/notification.html"
+    context_object_name = "notifications"
+    paginate_by = 5 
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # filters
+        search_by = self.request.GET.get('search_by', '')
+        created_date = self.request.GET.get('created_date', '')
+        sort_filter = self.request.GET.get('filterSort', '')
+        checked_filter = self.request.GET.get('filterChecked', '')
+
+        if search_by:
+            queryset = queryset.filter(
+                Q(recipient__email__icontains=search_by) |
+                Q(title__icontains=search_by) |
+                Q(message__icontains=search_by)
+            )
+
+        if created_date:
+            # Parse date range in format 
+            match = re.match(r'(\d{2}/\d{2}/\d{4}) - (\d{2}/\d{2}/\d{4})', created_date)
+            if match:
+                start_date_str, end_date_str = match.groups()
+                try:
+                    start_date = datetime.strptime(start_date_str, '%m/%d/%Y')
+                    end_date = datetime.strptime(end_date_str, '%m/%d/%Y').replace(hour=23, minute=59, second=59)
+                    queryset = queryset.filter(created_at__range=[start_date, end_date])
+                except ValueError:
+                    pass 
+
+        if checked_filter:
+            queryset = queryset.filter(is_read=(checked_filter == 'true'))
+        if sort_filter:
+            queryset = queryset.order_by('created_at' if sort_filter == 'asc' else '-created_at')
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["users"] = User.objects.all()
+        context["search_placeholder_text"] = "Search by User, Title, or Message"
+        context["search_help_text"] = "Search notifications by user email, title, or message content."
+        context["show_advance_search_link"] = True
+        return context
+
+class NotificationCreateView(CreateView):
+    model = Notification
+    template_name = "superuser/notification_form.html"
+    fields = ["title", "message", "send_to", "recipient"]
+    success_url = reverse_lazy("superuser:notifications_list")
+
+    def post(self, request, *args, **kwargs):
+        send_to = request.POST.get("send_to")
+        title = request.POST.get("title")
+        message = request.POST.get("message")
+
+        if send_to == "single":
+            user_ids = request.POST.getlist("recipients")
+            for uid in user_ids:
+                user = User.objects.get(id=uid)
+                Notification.objects.create(
+                    recipient=user,
+                    send_to="single",
+                    title=title,
+                    message=message,
+                )
+        else:
+            Notification.objects.create(
+                send_to=send_to,
+                title=title,
+                message=message,
+            )
+
+        messages.success(request, "Notification sent successfully!")
+        return redirect("superuser:notifications_list")
+
+class EditNotificationView(UpdateView):
+    model = Notification
+    fields = ['title', 'message']
+    template_name = 'superuser/notification.html'
+    success_url = reverse_lazy('superuser:notifications_list')
+
+    def form_valid(self, form):
+        messages.success(self.request, "Notification updated successfully.")
+        return super().form_valid(form)
+
+class DeleteNotificationView(View):
+    def post(self, request, pk):
+        notification = get_object_or_404(Notification, pk=pk)
+        notification.delete()
+        messages.success(request, "Notification deleted successfully.")
+        return redirect('superuser:notifications_list')
