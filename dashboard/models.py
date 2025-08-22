@@ -160,6 +160,7 @@ class Event(models.Model):
 
 
 class Product(models.Model):
+    id = models.AutoField(primary_key=True)
     # Category hierarchy
     category = models.ForeignKey(ProductCategory, on_delete=models.SET_NULL, null=True)
     sub_category = models.ForeignKey(ProductSubCategory, on_delete=models.SET_NULL, null=True)
