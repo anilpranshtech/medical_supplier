@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Refund Processed</title>
+</head>
+<body>
+  <p>Hi {{ user.first_name }},</p>
+  <p>Your refund has been successfully processed for Return ID <strong>{{ return_serial }}</strong>.</p>
+  <p>
+    <strong>Refund Amount:</strong> {{ currency }} {{ amount|floatformat:2 }}<br>
+    <strong>Refund ID:</strong> {{ refund_id }}<br>
+  </p>
+  {% if admin_note %}
+  <p><strong>Admin Note:</strong> {{ admin_note }}</p>
+  {% endif %}
+  {% if user_note %}
+  <p><strong>User Note:</strong> {{ user_note }}</p>
+  {% endif %}
+  <p>Thank you for shopping with us!</p>
+</body>
+</html>

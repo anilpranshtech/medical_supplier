@@ -208,6 +208,7 @@ class HomeView(LoginRequiredMixin, SupplierPermissionMixin, View):
 
 class ProductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
     template = 'supplier/products.html'
+
     def get(self, request):
         user = request.user
         products = Product.objects.filter(created_by=user)
@@ -252,7 +253,7 @@ class AddproductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
         expiry_date = self._parse_date(data.get('expiry_date'))
         offer_start = self._parse_date(data.get('offer_start'))
         offer_end = self._parse_date(data.get('offer_end'))
-        button_type = data.get('button_type') 
+        button_type = data.get('button_type')
         show_add_to_cart = button_type in ['both', 'cart']
         show_rfq = button_type in ['both', 'rfq']
         both_selected = button_type == 'both'
@@ -263,11 +264,9 @@ class AddproductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
                 return category.name.lower() in event_keywords
             return False
 
-    
         if offer_start and offer_end and offer_end < offer_start:
             messages.warning(request, "Offer end date cannot be before start date.")
 
-        # Set offer active based on user role
         if request.user.is_superuser:
             offer_active = data.get('offer_active') == 'on'
         else:
@@ -275,10 +274,14 @@ class AddproductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
 
         ask_admin_to_publish = data.get('ask_admin_to_publish') == 'on'
 
+        # Handle brand creation
         brand_name = data.get('brand')
         brand = None
         if brand_name:
-            brand, _ = Brand.objects.get_or_create(name=brand_name)
+            brand, _ = Brand.objects.get_or_create(
+                name=brand_name,
+                defaults={'supplier': request.user}
+            )
 
         try:
             product = Product.objects.create(
@@ -326,15 +329,15 @@ class AddproductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
             category_obj = self._get_object(ProductCategory, data.get('category'))
             if _is_event_category(self, category_obj):
                 event = Event.objects.create(
-                    conference_link=data.get('conference_link') or None,
-                    speaker_name=data.get('speaker_name') or None,
-                    conference_at=data.get('conference_at') or None,
-                    duration=data.get('duration') or None,
-                    venue=data.get('venue') or None,
+                    conference_link=data.get('registration_link') or None,  # Updated to match form field
+                    speaker_name=data.get('webinar_name') or None,  # Updated to match form field
+                    conference_at=data.get('webinar_date') or None,  # Updated to match form field
+                    duration=data.get('webinar_duration') or None,  # Updated to match form field
+                    venue=data.get('webinar_venue') or None,  # Updated to match form field
                 )
                 product.event = event
                 product.save()
-         
+
             main_image = files.get('main_image')
             if main_image:
                 ProductImage.objects.create(product=product, image=main_image, is_main=True)
@@ -1475,50 +1478,50 @@ class MostViewedProductsView(View):
         # Prefetch main images (or first image if no main exists)
         products = Product.objects.annotate(
             delivered_count=Count(
-                'orderitem',  
+                'orderitem',
                 filter=Q(orderitem__status='delivered'),
                 distinct=True
             ),
             review_count=Count(
-                'reviews', 
+                'reviews',
                 distinct=True
             )
         ).prefetch_related(
             Prefetch(
-                'productimage_set',
+                'images',
                 queryset=ProductImage.objects.order_by('-is_main', '-created_at'),
-                to_attr='images'
+                to_attr='prefetched_images'
             )
         ).order_by('-delivered_count')
 
         # Attach a display image to each product
         for product in products:
-            if product.images:
-                # Find main image or use first available
-                main_images = [img for img in product.images if img.is_main]
-                product.display_image = main_images[0] if main_images else product.images[0]
+            if hasattr(product, 'prefetched_images') and product.prefetched_images:
+                main_images = [img for img in product.prefetched_images if img.is_main]
+                product.display_image = main_images[0] if main_images else product.prefetched_images[0]
             else:
                 product.display_image = None
 
         # All payments
         payments = Payment.objects.all()
 
+        # Prepare context dictionary
+        context = {}
+
         # Paid Money
-        paid_money = payments.filter(paid=True).aggregate(total=Sum('amount'))['total'] or 0
+        context['total_orders'] = payments.filter(paid=True).aggregate(total=Sum('amount'))['total'] or 0
 
         # Unpaid Money
-        unpaid_money = payments.filter(paid=False).aggregate(total=Sum('amount'))['total'] or 0
+        context['pending_orders'] = payments.filter(paid=False).aggregate(total=Sum('amount'))['total'] or 0
 
         # Cash Money (COD only)
-        cash_money = payments.filter(payment_method="cod").aggregate(total=Sum('amount'))['total'] or 0
+        context['cash_money'] = payments.filter(payment_method="cod").aggregate(total=Sum('amount'))['total'] or 0
 
-        # Pass to template
-        context['total_orders'] = paid_money
-        context['pending_orders'] = unpaid_money
-        context['cash_money'] = cash_money
+        # Pass products and orders to template
+        context['products'] = products
         context['orders'] = payments
 
-        return context
+        return render(request, 'supplier/view_product.html', context)
 
 
 class QuestionView(TemplateView):
@@ -1533,7 +1536,6 @@ class QuestionView(TemplateView):
         question_id = request.POST.get('question_id')
         reply_text = request.POST.get('reply_text')
         action_type = request.POST.get('action_type')
-
 
         if action_type == "reply":
             question = get_object_or_404(Question, id=question_id)
@@ -1590,14 +1592,22 @@ class SupplierReturnsView(LoginRequiredMixin, TemplateView):
             raise PermissionDenied("You are not authorized to access this page.")
 
         if user.is_superuser:
-            returns_qs = Return.objects.all()
+            qs = Return.objects.all()
         else:
-            returns_qs = Return.objects.filter(
+            qs = Return.objects.filter(
                 order_item__product__brand__supplier=user
             )
-        context['returns'] = returns_qs.select_related(
-            'order_item__product', 'client'
+
+        qs = qs.select_related(
+            'order_item__product',
+            'client'
         ).order_by('-request_date')
+
+        context['returns'] = qs
+        context['count_all'] = qs.count()
+        context['count_approved'] = qs.filter(return_status='approved').count()
+        context['count_pending'] = qs.filter(return_status='pending').count()
+        context['count_rejected'] = qs.filter(return_status='rejected').count()
 
         return context
 
@@ -1611,9 +1621,10 @@ class SupplierReturnsView(LoginRequiredMixin, TemplateView):
                 return_serial=return_serial,
                 order_item__product__brand__supplier=user
             )
+
         new_status = request.POST.get('return_status')
 
-        if new_status in [choice[0] for choice in Return.RETURN_STATUS_CHOICES]:
+        if new_status in dict(Return.RETURN_STATUS_CHOICES):
             return_request.return_status = new_status
             return_request.save()
             messages.success(
@@ -1622,4 +1633,5 @@ class SupplierReturnsView(LoginRequiredMixin, TemplateView):
             )
         else:
             messages.error(request, "Invalid status selected.")
+
         return redirect('supplier:supplier_returns')

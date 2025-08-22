@@ -22,7 +22,9 @@ from superuser.filters import QS_filter_user, QS_Products_filter, QS_orders_filt
 from superuser.mixins import StaffAccountRequiredMixin, PermissionRequiredMixin
 from django.contrib.auth.models import User, Group, Permission
 from django.contrib.contenttypes.models import ContentType
-from superuser.utils import requestParamsToDict
+
+from .refunds import process_refund
+from .utils import *
 from dashboard.models import *
 from django.conf import settings
 from dashboard.mixins import SupplierPermissionMixin
@@ -50,6 +52,9 @@ from superuser.forms import BannerForm
 from django.views import View
 from django.shortcuts import render
 from django.db.models import Count, Q
+import logging
+logger = logging.getLogger(__name__)
+
 
 class HomeView(LoginRequiredMixin, View):
     login_url = 'dashboard:login'
@@ -621,7 +626,6 @@ class ProductsListView(LoginRequiredMixin,StaffAccountRequiredMixin, PermissionR
         return context
 
 
-
 class AddproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
     template = 'superuser/products/add_product.html'
 
@@ -661,8 +665,12 @@ class AddproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
         both_selected = button_type == 'both'
         supplier = data.get('supplier')
 
-        sup_user = SupplierProfile.objects.get(id=supplier)
-        print('---------- supplier user -----------',sup_user)
+        try:
+            sup_user = SupplierProfile.objects.get(id=supplier)
+        except SupplierProfile.DoesNotExist:
+            messages.error(request, "Selected supplier does not exist.")
+            return self._render_form_with_context(request, data)
+
         def _is_event_category(self, category):
             event_keywords = ['conference', 'event', 'webinar']
             if category and category.name:
@@ -680,10 +688,14 @@ class AddproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
 
         ask_admin_to_publish = data.get('ask_admin_to_publish') == 'on'
 
+        # Handle brand creation
         brand_name = data.get('brand')
         brand = None
         if brand_name:
-            brand, _ = Brand.objects.get_or_create(name=brand_name)
+            brand, _ = Brand.objects.get_or_create(
+                name=brand_name,
+                defaults={'supplier': sup_user.user}
+            )
 
         try:
             product = Product.objects.create(
@@ -730,15 +742,14 @@ class AddproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
             category_obj = self._get_object(ProductCategory, data.get('category'))
             if _is_event_category(self, category_obj):
                 event = Event.objects.create(
-                    conference_link=data.get('conference_link') or None,
-                    speaker_name=data.get('speaker_name') or None,
-                    conference_at=data.get('conference_at') or None,
-                    duration=data.get('duration') or None,
-                    venue=data.get('venue') or None,
+                    conference_link=data.get('registration_link') or None,
+                    speaker_name=data.get('webinar_name') or None,
+                    conference_at=self._parse_date(data.get('webinar_date')) or None,
+                    duration=self._parse_duration(data.get('webinar_duration')) or None,
+                    venue=data.get('webinar_venue') or None,
                 )
                 product.event = event
                 product.save()
-
 
             main_image = files.get('main_image')
             if main_image:
@@ -786,6 +797,15 @@ class AddproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
         except:
             return None
 
+    def _parse_duration(self, val):
+        if not val:
+            return None
+        try:
+            h, m, s = map(int, val.split(':'))
+            return timedelta(hours=h, minutes=m, seconds=s)
+        except:
+            return None
+
     def _get_object(self, model, pk):
         if not pk:
             return None
@@ -799,6 +819,7 @@ class AddproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
             'categories': ProductCategory.objects.all(),
             'subcategories': ProductSubCategory.objects.all(),
             'lastcategories': ProductLastCategory.objects.all(),
+            'suppliers': SupplierProfile.objects.all(),
             **data.dict()
         })
 
@@ -958,6 +979,7 @@ class EditproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
 
         return redirect('superuser:products_list')
 
+
 class DeleteProductView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
     def post(self, request, pk):
         try:
@@ -967,6 +989,7 @@ class DeleteProductView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
         except Exception as e:
             messages.error(request, "Failed to delete product.")
         return redirect('superuser:products_list')  # or wherever the list is
+
 
 class CreateProductCategoryView(StaffAccountRequiredMixin, View):
     def post(self, request):
@@ -982,6 +1005,7 @@ class CreateProductCategoryView(StaffAccountRequiredMixin, View):
         ProductCategory.objects.create(name=name)
         messages.success(request, f"Category '{name}' created successfully.")
         return redirect('superuser:add_product')
+
 
 class CreateProductSubCategoryView(StaffAccountRequiredMixin, View):
     def post(self, request):
@@ -999,6 +1023,7 @@ class CreateProductSubCategoryView(StaffAccountRequiredMixin, View):
 
             messages.success(request, f"Sub-category '{name}' created successfully.")
         return redirect('superuser:add_product')
+
 
 class CreateProductLastCategoryView(StaffAccountRequiredMixin, View):
     def post(self, request):
@@ -1298,15 +1323,16 @@ class MostViewedProductsView(View):
             )
         ).prefetch_related(
             Prefetch(
-                'productimage_set',
+                'images',
                 queryset=ProductImage.objects.order_by('-is_main', '-created_at'),
-                to_attr='images'
+                to_attr='images_list'
             )
         ).order_by('-delivered_count')
+
         for product in products:
-            if product.images:
-                main_images = [img for img in product.images if img.is_main]
-                product.display_image = main_images[0] if main_images else product.images[0]
+            if hasattr(product, 'images_list') and product.images_list:
+                main_images = [img for img in product.images_list if img.is_main]
+                product.display_image = main_images[0] if main_images else product.images_list[0]
             else:
                 product.display_image = None
 
@@ -1322,14 +1348,12 @@ class AdminReturnsView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        # Fetch returns with related models
         qs = Return.objects.select_related(
-            'order_item__product__brand',  # Removed 'supplier' until correct field is confirmed
+            'order_item__product__brand',
             'order_item__order__payment',
             'client'
         ).order_by('-request_date')
 
-        # Apply filters
         search_query = self.request.GET.get('search', '')
         if search_query:
             qs = qs.filter(
@@ -1339,40 +1363,75 @@ class AdminReturnsView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView
                 Q(order_item__order__order_id__icontains=search_query)
             )
 
-        # Add transaction data for refunds
         returns = []
         for return_instance in qs:
             payment = return_instance.order_item.order.payment
             is_refunded = return_instance.return_status in ['return_completed', 'replace_completed']
 
             refund_info = None
-            if is_refunded and payment and payment.payment_method == 'stripe':
-                stripe_payment = StripePayment.objects.filter(
-                    stripe_charge_id=payment.customer_id
-                ).first()
-                if stripe_payment:
-                    refund_info = {
-                        'id': f"re_{return_instance.return_serial}",
-                        'status': return_instance.return_status,
-                        'amount_dollars': float(return_instance.price),
-                        'charge': stripe_payment.stripe_charge_id,
-                        'currency': return_instance.order_item.payment_currency or 'USD',
-                        'metadata': {
-                            'refunded_by': return_instance.client.username,
-                            'description': 'User-initiated return',  # Update if notes are stored
-                            'admin_notes': 'Processed by admin'  # Update if notes are stored
-                        },
-                        'created_formatted': return_instance.request_date.strftime('%B %d %Y %I:%M %p')
-                    }
+            payment_type = payment.payment_method if payment else "other"
+
+            # ✅ Stripe refunds
+            if is_refunded and payment and payment.payment_method == 'stripe' and hasattr(payment, "stripe_payment"):
+                stripe_payment = payment.stripe_payment
+                refund_info = {
+                    'id': f"re_{return_instance.return_serial}",
+                    'status': return_instance.return_status,
+                    'amount_dollars': float(return_instance.price),
+                    'charge': stripe_payment.stripe_charge_id,
+                    'currency': return_instance.order_item.payment_currency or 'USD',
+                    'metadata': {
+                        'refunded_by': return_instance.client.username,
+                        'description': 'User-initiated return',
+                        'admin_notes': 'Processed by admin'
+                    },
+                    'created_formatted': return_instance.request_date.strftime('%B %d %Y %I:%M %p')
+                }
+
+            # ✅ Razorpay refunds
+            elif is_refunded and payment and payment.payment_method == 'razorpay':
+                razorpay_payment = getattr(payment, "razorpay_payment", None)
+                refund_info = {
+                    'id': f"rzr_{return_instance.return_serial}",
+                    'status': return_instance.return_status,
+                    'amount_rupees': float(return_instance.price),
+                    'reference': razorpay_payment.razorpay_payment_id if razorpay_payment else 'manual',
+                    'currency': return_instance.order_item.payment_currency or 'INR',
+                    'created_formatted': return_instance.request_date.strftime('%B %d %Y %I:%M %p'),
+                    'admin_notes': 'Refund handled manually in Razorpay dashboard'
+                }
+
+            # ✅ Bank transfer
+            elif is_refunded and payment and payment.payment_method == 'bank_transfer':
+                bank_txn = getattr(payment, "bank_transfer_payment", None)
+                refund_info = {
+                    'id': f"bank_{return_instance.return_serial}",
+                    'status': return_instance.return_status,
+                    'amount': float(return_instance.price),
+                    'reference': bank_txn.reference_id if bank_txn else 'manual',
+                    'currency': return_instance.order_item.payment_currency or 'INR',
+                    'created_formatted': return_instance.request_date.strftime('%B %d %Y %I:%M %p'),
+                    'admin_notes': 'Refund handled via manual bank transfer'
+                }
+
+            # ✅ COD refunds
+            elif is_refunded and payment and payment.payment_method == 'cod':
+                refund_info = {
+                    'id': f"cod_{return_instance.return_serial}",
+                    'status': return_instance.return_status,
+                    'amount': float(return_instance.price),
+                    'currency': return_instance.order_item.payment_currency or 'INR',
+                    'created_formatted': return_instance.request_date.strftime('%B %d %Y %I:%M %p'),
+                    'admin_notes': 'Refund in cash upon return pickup'
+                }
 
             return_instance.transaction = {
-                'payment_type': 'refund' if is_refunded else (payment.payment_method if payment else 'other'),
+                'payment_type': payment_type,
                 'refund_info': refund_info,
                 'is_refunded': is_refunded
             }
             returns.append(return_instance)
 
-        # Pagination
         paginator = Paginator(returns, 10)
         page = self.request.GET.get('page')
         try:
@@ -1391,116 +1450,158 @@ class AdminReturnsView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView
 
         return context
 
-    def post(self, request, return_serial):
-        return_request = get_object_or_404(Return, return_serial=return_serial)
+
+class AdminReturnUpdateStatusView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    permission_required = 'is_staff'
+
+    def post(self, request, return_serial, *args, **kwargs):
+        return_instance = get_object_or_404(Return, return_serial=return_serial)
         new_status = request.POST.get('return_status')
 
-        if new_status in dict(Return.RETURN_STATUS_CHOICES):
-            return_request.return_status = new_status
-            return_request.updated_at = timezone.now()
-            return_request.save()
-            messages.success(
-                request,
-                f"Return {return_request.return_serial} updated to {return_request.get_return_status_display()}."
-            )
+        if new_status in dict(return_instance.RETURN_STATUS_CHOICES):
+            return_instance.return_status = new_status
+            return_instance.save()
+            messages.success(request, f"Return {return_serial} status updated to {new_status}.")
         else:
             messages.error(request, "Invalid status selected.")
 
         return redirect('superuser:admin_returns')
-
-
-class StripeRefundView(LoginRequiredMixin, PermissionRequiredMixin, View):
-    permission_required = 'is_staff'
-
-    def post(self, request, *args, **kwargs):
-        transaction_id = request.POST.get('hidden_transaction_id')
-        refund_amount = request.POST.get('final_refund_amount')
-        admin_note = request.POST.get('hidden_admin_note')
-        user_note = request.POST.get('hidden_user_note')
-
-        try:
-            return_instance = get_object_or_404(
-                Return,
-                order_item__order__payment__customer_id=transaction_id,
-                return_status='approved'
-            )
-
-            if not return_instance.is_within_return_period():
-                messages.error(request, "Return period has expired.")
-                return redirect('superuser:admin_returns')
-
-            if return_instance.return_status in ['return_completed', 'replace_completed']:
-                messages.error(request, "Return already processed.")
-                return redirect('superuser:admin_returns')
-
-            refund_amount = float(refund_amount) if refund_amount else float(return_instance.price)
-            if refund_amount > float(return_instance.price):
-                messages.error(request, "Refund amount exceeds original price.")
-                return redirect('superuser:admin_returns')
-
-            payment = return_instance.order_item.order.payment
-            if payment.payment_method == 'stripe':
-                stripe.api_key = settings.STRIPE_SECRET_KEY
-                try:
-                    refund = stripe.Refund.create(
-                        charge=payment.customer_id,
-                        amount=int(refund_amount * 100),  # Convert to cents
-                        metadata={
-                            'refunded_by': return_instance.client.username,
-                            'admin_notes': admin_note or 'Processed by admin',
-                            'description': user_note or 'User-initiated return'
-                        }
-                    )
-
-                    # Update return status
-                    return_instance.return_status = 'return_completed'
-                    return_instance.updated_at = timezone.now()
-                    return_instance.save()
-
-                    # Update payment status
-                    payment.paid = False
-                    payment.save()
-
-                    # Update StripePayment
-                    stripe_payment = StripePayment.objects.filter(
-                        stripe_charge_id=payment.customer_id
-                    ).first()
-                    if stripe_payment:
-                        stripe_payment.paid = False
-                        stripe_payment.save()
-
-                    messages.success(request, f"Refund processed for return {return_instance.return_serial}.")
-                except stripe.error.StripeError as e:
-                    messages.error(request, f"Stripe error: {str(e)}")
-                    return redirect('superuser:admin_returns')
-            else:
-                messages.error(request, "Unsupported payment method for refund.")
-                return redirect('superuser:admin_returns')
-
-        except Return.DoesNotExist:
-            messages.error(request, "Return request not found.")
-            return redirect('superuser:admin_returns')
-        except Exception as e:
-            messages.error(request, f"Error processing refund: {str(e)}")
-            return redirect('superuser:admin_returns')
-
-        return redirect('superuser:admin_returns')
-
-
+#
+#
+# class StripeRefundView(LoginRequiredMixin, PermissionRequiredMixin, View):
+#     permission_required = 'is_staff'
+#
+#     def post(self, request, *args, **kwargs):
+#         return_serial = request.POST.get("return_serial")
+#         refund_amount = request.POST.get("final_refund_amount")
+#         admin_note = request.POST.get("hidden_admin_note")
+#         user_note = request.POST.get("hidden_user_note")
+#
+#         try:
+#             return_instance = get_object_or_404(Return, return_serial=return_serial, return_status='approved')
+#             payment = return_instance.order_item.order.payment
+#
+#             if not (payment and payment.payment_method == 'stripe' and hasattr(payment, "stripe_payment")):
+#                 messages.error(request, "No linked Stripe payment found.")
+#                 return redirect("superuser:admin_returns")
+#
+#             stripe.api_key = settings.STRIPE_SECRET_KEY
+#             stripe_payment = payment.stripe_payment
+#
+#             # ✅ Refund using PaymentIntent or Charge
+#             if stripe_payment.stripe_payment_intent_id:
+#                 refund = stripe.Refund.create(
+#                     payment_intent=stripe_payment.stripe_payment_intent_id,
+#                     amount=int(float(refund_amount) * 100),
+#                     metadata={
+#                         "return_id": return_instance.return_serial,
+#                         "admin_notes": admin_note or "Processed by admin",
+#                         "description": user_note or "User-initiated return"
+#                     }
+#                 )
+#             elif stripe_payment.stripe_charge_id:
+#                 refund = stripe.Refund.create(
+#                     charge=stripe_payment.stripe_charge_id,
+#                     amount=int(float(refund_amount) * 100),
+#                     metadata={
+#                         "return_id": return_instance.return_serial,
+#                         "admin_notes": admin_note or "Processed by admin",
+#                         "description": user_note or "User-initiated return"
+#                     }
+#                 )
+#             else:
+#                 messages.error(request, "No PaymentIntent or Charge ID found.")
+#                 return redirect("superuser:admin_returns")
+#
+#             # ✅ Update statuses
+#             return_instance.return_status = "return_completed"
+#             return_instance.updated_at = timezone.now()
+#             return_instance.save()
+#
+#             payment.paid = False
+#             payment.save()
+#
+#             stripe_payment.paid = False
+#             stripe_payment.save()
+#
+#             # ✅ Notify user
+#             subject = f"Refund processed for Return {return_instance.return_serial}"
+#             message = (
+#                 f"Hello {return_instance.client.username},\n\n"
+#                 f"Your refund for order {return_instance.order_item.order.order_id} "
+#                 f"has been processed successfully.\n\n"
+#                 f"Refund Amount: ${refund_amount}\n"
+#                 f"Reference: {refund['id']}\n"
+#             )
+#             send_refund_notification(return_instance.client.email, subject, message)
+#
+#             messages.success(request, f"Refund processed for {return_instance.return_serial}.")
+#             return redirect("superuser:admin_returns")
+#
+#         except Exception as e:
+#             messages.error(request, f"Error processing refund: {str(e)}")
+#             return redirect("superuser:admin_returns")
+#
+#
 class ReturnDeleteView(LoginRequiredMixin, PermissionRequiredMixin, View):
     permission_required = 'is_staff'
 
     def post(self, request, return_serial, *args, **kwargs):
         try:
             return_instance = get_object_or_404(Return, return_serial=return_serial)
+            user_email = return_instance.client.email
+            username = return_instance.client.username
+            order_id = return_instance.order_item.order.order_id
+
             return_instance.delete()
+
+            subject = f"Return {return_serial} Deleted"
+            message = (
+                f"Hello {username},\n\n"
+                f"Your return request for order {order_id} (Return ID: {return_serial}) "
+                f"has been deleted by admin.\n\n"
+                f"If you believe this is an error, please contact support.\n\n"
+                f"Thank you."
+            )
+            send_refund_notification(user_email, subject, message)
+
             messages.success(request, f"Return {return_serial} deleted successfully.")
-        except Return.DoesNotExist:
-            messages.error(request, "Return request not found.")
+            return redirect('superuser:admin_returns')
+
         except Exception as e:
             messages.error(request, f"Error deleting return: {str(e)}")
         return redirect('superuser:admin_returns')
     
+
+class AdminProcessRefundView(View):
+    def post(self, request, *args, **kwargs):
+        return_serial = request.POST.get("hidden_transaction_id")
+        refund_amount = float(request.POST.get("final_refund_amount") or request.POST.get("hidden_transaction_amount", 0))
+        admin_note = request.POST.get("hidden_admin_note")
+        user_note = request.POST.get("hidden_user_note")
+
+        return_instance = get_object_or_404(Return, return_serial=return_serial, return_status="approved")
+        payment = return_instance.order_item.order.payment
+
+        if not payment:
+            messages.error(request, "Payment record not found.")
+            return redirect("superuser:admin_returns")
+
+        success, msg, refund_id = process_refund(payment, return_serial, refund_amount, admin_note, user_note)
+
+        if success:
+            return_instance.return_status = "return_completed"
+            return_instance.is_refunded = True
+            return_instance.refund_id = refund_id
+            return_instance.updated_at = timezone.now()
+            return_instance.save()
+
+            messages.success(request, f"Refund successful: {msg}")
+        else:
+            messages.error(request, f"Refund failed: {msg}")
+
+        return redirect("superuser:admin_returns")
+
 
 class NotificationListView(ListView):
     model = Notification
@@ -1581,6 +1682,7 @@ class NotificationCreateView(CreateView):
         messages.success(request, "Notification sent successfully!")
         return redirect("superuser:notifications_list")
 
+
 class EditNotificationView(UpdateView):
     model = Notification
     fields = ['title', 'message']
@@ -1590,6 +1692,7 @@ class EditNotificationView(UpdateView):
     def form_valid(self, form):
         messages.success(self.request, "Notification updated successfully.")
         return super().form_valid(form)
+
 
 class DeleteNotificationView(View):
     def post(self, request, pk):

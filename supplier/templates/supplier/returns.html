@@ -13,6 +13,34 @@ Supplier Returns
     <div id="kt_app_content" class="app-content flex-column-fluid mx-5">
       <div id="kt_app_content_container" class="app-container container-fluid">
 
+        <!-- === Count Summary === -->
+        <div class="row text-center mb-3 mt-3">
+          <div class="col-12 col-md-3 mb-4">
+            <div class="card h-100 py-4">
+              <div class="fw-bolder text-primary">ALL RETURNS</div>
+              <div class="card-count text-primary fw-bolder">{{ count_all }}</div>
+            </div>
+          </div>
+          <div class="col-12 col-md-3 mb-4">
+            <div class="card h-100 py-4">
+              <div class="fw-bolder text-success">APPROVED</div>
+              <div class="card-count text-success fw-bolder">{{ count_approved }}</div>
+            </div>
+          </div>
+          <div class="col-12 col-md-3 mb-4">
+            <div class="card h-100 py-4">
+              <div class="fw-bolder text-warning">PENDING</div>
+              <div class="card-count text-warning fw-bolder">{{ count_pending }}</div>
+            </div>
+          </div>
+          <div class="col-12 col-md-3 mb-4">
+            <div class="card h-100 py-4">
+              <div class="fw-bolder text-danger">REJECTED</div>
+              <div class="card-count text-danger fw-bolder">{{ count_rejected }}</div>
+            </div>
+          </div>
+        </div>
+
         <!-- Card -->
         <div class="card card-flush">
           <div class="card-header align-items-center py-5 gap-4">
@@ -28,6 +56,7 @@ Supplier Returns
                   <th class="text-center min-w-100px">Customer</th>
                   <th class="text-center min-w-100px">Option</th>
                   <th class="text-center min-w-100px">Price</th>
+                  <th class="text-center min-w-100px">Order ID</th>
                   <th class="text-center min-w-100px">Status</th>
                   <th class="text-center min-w-100px">Request Date</th>
                   <th class="text-center min-w-70px">Actions</th>
@@ -61,16 +90,17 @@ Supplier Returns
                     {{ return.order_item.payment_currency|default:"USD" }} {{ return.price|floatformat:2 }}
                   </td>
 
+                  <!-- Order ID -->
+                  <td class="text-center">{{ return.order_item.order.order_id }}</td>
+
                   <!-- Status -->
                   <td class="text-center">
-                    {% if return.return_status == "pending" %}
-                      <div class="badge badge-light-warning">Pending</div>
-                    {% elif return.return_status == "approved" %}
-                      <div class="badge badge-light-success">Approved</div>
-                    {% elif return.return_status == "rejected" %}
-                      <div class="badge badge-light-danger">Rejected</div>
+                    {% if return.return_status == "approved" %}
+                      <div class="badge badge-light-success">{{ return.get_return_status_display }}</div>
+                    {% elif return.return_status == "pending" %}
+                      <div class="badge badge-light-warning">{{ return.get_return_status_display }}</div>
                     {% else %}
-                      <div class="badge badge-light">Unknown</div>
+                      <div class="badge badge-light-danger">{{ return.get_return_status_display }}</div>
                     {% endif %}
                   </td>
 
