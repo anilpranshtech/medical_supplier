@@ -1,3 +1,7 @@
+import razorpay
+import stripe
+from django.conf import settings
+from django.core.mail import send_mail
 from django.http import QueryDict
 
 from django.shortcuts import render, redirect
@@ -45,3 +49,48 @@ def util_get_date_range(filter_date):
     except Exception as e:
         print(f"Error parsing date range: {e}")
         return None, None
+
+
+def send_refund_notification(user_email, subject, message):
+    """
+    Sends refund notification email to the user.
+    """
+    try:
+        send_mail(
+            subject,
+            message,
+            settings.DEFAULT_FROM_EMAIL,  # sender email
+            [user_email],
+            fail_silently=False,
+        )
+    except Exception as e:
+        # Optional: log error
+        print(f"Error sending refund email: {e}")
+
+
+def process_stripe_refund(payment_intent_id, amount=None):
+    """
+    Refunds a Stripe payment. If amount is None, full refund.
+    """
+    try:
+        refund = stripe.Refund.create(
+            payment_intent=payment_intent_id,
+            amount=int(amount * 100) if amount else None,  # amount in cents
+        )
+        return refund
+    except Exception as e:
+        return {"error": str(e)}
+
+
+def process_razorpay_refund(payment_id, amount=None):
+    """
+    Refunds a Razorpay payment. If amount is None, full refund.
+    """
+    try:
+        client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+        refund = client.payment.refund(payment_id, {
+            "amount": int(amount * 100) if amount else None
+        })
+        return refund
+    except Exception as e:
+        return {"error": str(e)}

@@ -621,18 +621,28 @@ class Payment(models.Model):
 
 
 class StripePayment(models.Model):
+    payment = models.OneToOneField("Payment", on_delete=models.CASCADE, related_name="stripe_payment", null=True, blank=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="stripe_payments")
     name = models.CharField(max_length=100)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     paid = models.BooleanField(default=True)
-    stripe_charge_id = models.CharField(max_length=100)
-    stripe_customer_id = models.CharField(max_length=100)
+
+    # Stripe IDs
+    stripe_payment_intent_id = models.CharField(max_length=150, blank=True, null=True)
+    stripe_charge_id = models.CharField(max_length=150, blank=True, null=True)
+    stripe_customer_id = models.CharField(max_length=150, blank=True, null=True)
+
+    # Extra metadata
     stripe_signature = models.CharField(max_length=255, blank=True, null=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ["-created_at"]
         verbose_name = verbose_name_plural = "Stripe Payment"
+
+    def __str__(self):
+        return f"{self.user.username} - {self.amount} ({'Paid' if self.paid else 'Unpaid'})"
 
 
 class RazorpayPayment(models.Model):

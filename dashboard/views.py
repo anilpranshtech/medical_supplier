@@ -1,6 +1,8 @@
 import uuid
 from decimal import Decimal
 from io import BytesIO
+
+import pm
 from django.contrib.auth.views import PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, \
     PasswordResetCompleteView
 from django.core.exceptions import ObjectDoesNotExist
@@ -1470,20 +1472,41 @@ class PaymentMethodView(LoginRequiredMixin, View):
                 elif payment_method == "stripe":
                     _, stripe_secret = self.get_stripe_key(request)
                     stripe.api_key = stripe_secret
-
                     token = request.POST.get("stripeToken")
                     crd_name = request.POST.get("crd_name")
 
                     customer = stripe.Customer.create(
                         email=user.email,
                         name=crd_name,
-                        source=token
                     )
-                    charge = stripe.Charge.create(
-                        customer=customer.id,
+
+                    pm = stripe.PaymentMethod.create(
+                        type="card",
+                        card={"token": token}
+                    )
+
+                    stripe.PaymentMethod.attach(
+                        pm.id,
+                        customer=customer.id
+                    )
+
+                    stripe.Customer.modify(
+                        customer.id,
+                        invoice_settings={"default_payment_method": pm.id}
+                    )
+
+                    intent = stripe.PaymentIntent.create(
                         amount=int(total * 100),
                         currency="usd",
-                        description="Product Payment"
+                        customer=customer.id,
+                        payment_method=pm.id,
+                        confirm=True,
+                        off_session=True,
+                        description="Product Payment",
+                        automatic_payment_methods={
+                            "enabled": True,
+                            "allow_redirects": "never"
+                        }
                     )
 
                     payment = Payment.objects.create(
@@ -1493,64 +1516,22 @@ class PaymentMethodView(LoginRequiredMixin, View):
                         payment_method="stripe",
                         paid=True
                     )
-                    logger.info(f"Created Stripe Payment {payment.id} for user {user.id}")
 
-                    StripePayment.objects.create(
-                        user=user,
-                        name=crd_name,
-                        amount=total,
-                        paid=True,
-                        stripe_charge_id=charge.id,
-                        stripe_customer_id=customer.id,
-                        stripe_signature=charge.payment_method,
+                    stripe_payment, created = StripePayment.objects.update_or_create(
+                        payment=payment,
+                        defaults={
+                            "user": user,
+                            "name": crd_name,
+                            "amount": total,
+                            "paid": True,
+                            "stripe_charge_id": intent.latest_charge,
+                            "stripe_payment_intent_id": intent.id,
+                            "stripe_customer_id": customer.id,
+                            "stripe_signature": intent.payment_method,
+                        }
                     )
 
                     order = create_orders_from_cart(user, payment_type="stripe", payment_status="paid", payment=payment)
-                    card_details = charge.payment_method_details.get("card") if charge.payment_method_details else None
-
-                    latest_address = CustomerBillingAddress.objects.filter(user=user, is_deleted=False).order_by('-id').first()
-                    if latest_address:
-                        for attr, value in {
-                            "customer_name": crd_name,
-                            "customer_address1": request.POST.get("customer_address1"),
-                            "customer_address2": request.POST.get("customer_address2"),
-                            "customer_city": request.POST.get("customer_city"),
-                            "customer_state": request.POST.get("customer_state"),
-                            "customer_postal_code": request.POST.get("customer_postal_code"),
-                            "customer_country": request.POST.get("customer_country"),
-                            "customer_country_code": request.POST.get("customer_country_code"),
-                            "is_old": True,
-                            "old_card": json.dumps({
-                                "brand": card_details.brand,
-                                "last4": card_details.last4,
-                                "exp_month": card_details.exp_month,
-                                "exp_year": card_details.exp_year
-                            }) if card_details else None
-                        }.items():
-                            if value:
-                                setattr(latest_address, attr, value)
-                        latest_address.save()
-                    else:
-                        CustomerBillingAddress.objects.create(
-                            user=user,
-                            customer_name=crd_name,
-                            customer_address1=request.POST.get("customer_address1"),
-                            customer_address2=request.POST.get("customer_address2"),
-                            customer_city=request.POST.get("customer_city"),
-                            customer_state=request.POST.get("customer_state"),
-                            customer_postal_code=request.POST.get("customer_postal_code"),
-                            customer_country=request.POST.get("customer_country"),
-                            customer_country_code=request.POST.get("customer_country_code"),
-                            is_old=True,
-                            old_card=json.dumps({
-                                "brand": card_details.brand,
-                                "last4": card_details.last4,
-                                "exp_month": card_details.exp_month,
-                                "exp_year": card_details.exp_year
-                            }) if card_details else None,
-                            is_default=True
-                        )
-
                     messages.success(request, "Payment Done Successfully.")
                     return redirect("dashboard:order_placed")
 
@@ -1794,7 +1775,7 @@ class MyOrdersView(LoginRequiredMixin, TemplateView):
         # Prefetch returns for items
         returns_prefetch = Prefetch(
             'items__returns',
-            queryset=Return.objects.all(),  # Adjust queryset if needed (e.g., filter by status)
+            queryset=Return.objects.all(),
             to_attr='all_returns'
         )
 
@@ -1806,7 +1787,7 @@ class MyOrdersView(LoginRequiredMixin, TemplateView):
                 main_image_prefetch,
                 user_reviews_prefetch,
                 'items__product',
-                returns_prefetch  # Add returns prefetch
+                returns_prefetch
             )
             .order_by('-created_at')
         )

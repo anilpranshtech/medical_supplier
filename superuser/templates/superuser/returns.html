@@ -105,7 +105,9 @@
                   <td>{{ return.return_serial }}</td>
                   <td>{{ return.order_item.product.name }}</td>
                   <td>{{ return.client.username }}</td>
-                  <td>{{ return.get_return_option_display }}</td>
+                  <td class="text-center">
+                    <span class="badge badge-light-info">{{ return.get_return_option_display }}</span>
+                  </td>
                   <td>
                     {% if return.return_status == "approved" %}
                       <div class="badge badge-light-success">{{ return.get_return_status_display }}</div>
@@ -118,7 +120,13 @@
                   <td>{{ return.order_item.payment_currency|default:"USD" }} {{ return.price|floatformat:2 }}</td>
                   <td>{{ return.order_item.order.order_id }}</td>
                   <td>{{ return.order_item.product.brand.supplier.username|default:"N/A" }}</td>
-                  <td>{{ return.request_date|date:"d M, Y" }}</td>
+                  <td class="text-center">
+                    <div class="badge badge-light fw-bold"
+                      data-bs-toggle="tooltip"
+                      title="{{ return.request_date|date:'F d Y P' }}">
+                      {{ return.request_date|date:"d M, Y" }}
+                    </div>
+                  </td>
                   <td class="text-center">
                     <!-- Actions Dropdown -->
                     <a href="#" class="btn btn-sm btn-light btn-flex btn-center btn-active-light-primary"
@@ -171,7 +179,7 @@
                     <div class="modal fade" id="updateReturnModal{{ return.id }}" tabindex="-1" aria-hidden="true">
                       <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content">
-                          <form method="POST" action="{% url 'superuser:admin_returns_update' return.return_serial %}">
+                          <form method="POST" action="{% url 'superuser:admin_returns_update_status' return.return_serial %}">
                             {% csrf_token %}
                             <div class="modal-header">
                               <h5 class="modal-title">Update Return Status</h5>
@@ -233,7 +241,7 @@
                             <h5 class="modal-title" id="refundModalLabel">Confirm Refund</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                           </div>
-                          <form method="POST" action="{% url 'superuser:stripe_refund' %}">
+                          <form method="POST" action="{% url 'superuser:process_refund' %}">
                             {% csrf_token %}
                             <div class="modal-body" style="text-align: left;">
                               <p class="mb-3 fw-semibold text-danger">⚠️ Do you really want to refund?</p>
