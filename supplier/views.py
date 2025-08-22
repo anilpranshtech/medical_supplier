@@ -1290,7 +1290,13 @@ class MarkNotificationReadView(SupplierPermissionMixin, View):
             "created_at": localtime(notif.created_at).strftime('%d %b %Y, %I:%M %p')
         })
 
-
+class DeleteNotificationView(LoginRequiredMixin, View):
+    def post(self, request, id):
+        # Retrieve the notification, ensuring it belongs to the current user
+        notification = get_object_or_404(Notification, id=id, recipient=request.user)
+        # Delete the notification
+        notification.delete()
+        return JsonResponse({'status': 'success'})
 class LogoutView(SupplierPermissionMixin, View):
     def get(self, request):
         logout(request)

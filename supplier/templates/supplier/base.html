@@ -92,6 +92,148 @@
         max-height: 300px;
         overflow-y: auto;
     }
+    /* ===== Notification Drawer (Right Sidebar) ===== */
+#notificationDrawer {
+    border-left: 1px solid #e9ecef;
+    border-radius: 14px 0 0 14px;
+    background: #ffffff;
+    box-shadow: -8px 0 28px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    font-family: "Inter", "Segoe UI", Roboto, sans-serif;
+}
+
+#notificationDrawer h5 {
+    font-size: 1.2rem;
+    color: #212529;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+}
+
+/* ===== Tabs Styling ===== */
+#notiTabs {
+    border-bottom: 1px solid #f1f3f5;
+    margin-top: 4px;
+}
+
+#notiTabs .nav-link {
+    font-weight: 500;
+    color: #6c757d;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 20px;
+    margin: 0 4px;
+    transition: all 0.25s ease-in-out;
+}
+
+#notiTabs .nav-link:hover {
+    background: #f8f9fa;
+    color: #212529;
+}
+
+#notiTabs .nav-link.active {
+    background: #0d6efd;
+    color: #fff !important;
+    font-weight: 600;
+    box-shadow: 0 3px 8px rgba(13, 110, 253, 0.25);
+}
+
+/* ===== Notification Items ===== */
+#notificationDrawer .border-bottom {
+    padding: 14px 14px 12px;
+    border-radius: 10px;
+    transition: all 0.25s ease;
+    border-bottom: 1px solid #f2f2f2 !important;
+    cursor: pointer;
+}
+
+#notificationDrawer .border-bottom:hover {
+    background: #fdfdfd;
+    transform: translateX(3px);
+}
+
+/* All Notifications */
+#notiAll .border-bottom {
+    border-left: 4px solid #ced4da;
+}
+
+/* Unread Notifications */
+#notiUnread .border-bottom {
+    border-left: 4px solid #dc3545;
+    background: #fff6f6;
+}
+
+#notiUnread h6 {
+    color: #c82333;
+    font-weight: 600;
+}
+
+/* Read Notifications */
+#notiRead .border-bottom {
+    border-left: 4px solid #198754;
+    background: #f5fdf7;
+}
+
+#notiRead h6 {
+    color: #146c43;
+    font-weight: 600;
+}
+
+/* Message Text */
+#notificationDrawer small {
+    font-size: 0.9rem;
+    color: #555;
+    line-height: 1.5;
+}
+
+/* ===== Time Badge ===== */
+.time-display {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #868e96;
+    margin-top: 6px;
+    display: inline-block;
+}
+
+
+#notificationPopup {
+    border-radius: 14px;
+    box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.18);
+    animation: popupFade 0.25s ease;
+    max-width: 420px;
+    border: 1px solid #f1f3f5;
+}
+
+#notificationPopup h5 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #212529;
+}
+
+#notificationPopup p {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #444;
+    margin-bottom: 0;
+}
+
+/* Overlay */
+#notificationOverlay {
+    backdrop-filter: blur(6px);
+    background: rgba(0, 0, 0, 0.45) !important;
+}
+
+/* Animation */
+@keyframes popupFade {
+    from {
+        transform: translate(-50%, -60%) scale(0.92);
+        opacity: 0;
+    }
+    to {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+}
+
     </style>
 
 </head>
@@ -151,126 +293,123 @@
                     </div>
                     <div class="app-navbar flex-shrink-0 gap-2 gap-lg-4">
 
-                        <!-- Notification data   -->
-                        <div class="app-navbar-item position-relative">
-                            <div onclick="toggleNotificationPanel()"
-                                 class="btn btn-icon border border-200 bg-gray-100 btn-color-gray-600 btn-active-color-primary w-40px h-40px"
-                                 style="cursor: pointer;">
-                                <i class="fas fa-bell fa-shake fs-4"></i>
-                                {% if unread_notifications %}
-                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                                      style="font-size: 0.75rem;">
-                                {{ unread_notifications|length }}
-                            </span>
-                                {% endif %}
-                            </div>
-                        </div>
+                       <!-- Notification data -->
+<div class="app-navbar-item position-relative">
+    <div onclick="toggleNotificationPanel()"
+         class="btn btn-icon border border-200 bg-gray-100 btn-color-gray-600 btn-active-color-primary w-40px h-40px"
+         style="cursor: pointer;">
+        <i class="fas fa-bell fa-shake fs-4"></i>
+        {% if unread_notifications %}
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+              style="font-size: 0.75rem;">
+            {{ unread_notifications|length }}
+        </span>
+        {% endif %}
+    </div>
+</div>
 
+<!-- Notification Drawer -->
+<div id="notificationDrawer" class="position-fixed top-0 end-0 bg-white shadow-lg"
+     style="width: 450px; height: 100vh; display: none; z-index: 1050; overflow-y: auto;">
+    <div class="d-flex justify-content-between align-items-center p-4 border-bottom">
+        <h5 class="mb-0 fw-bold">Notifications</h5>
+        <button class="btn btn-sm btn-light" onclick="toggleNotificationPanel()">&#10005;</button>
+    </div>
 
-                        <!-- Notification Drawer -->
-                        <div id="notificationDrawer" class="position-fixed top-0 end-0 bg-white shadow-lg"
-                             style="width: 450px; height: 100vh; display: none; z-index: 1050; overflow-y: auto;">
-                            <div class="d-flex justify-content-between align-items-center p-4 border-bottom">
-                                <h5 class="mb-0 fw-bold">Notifications</h5>
-                                <button class="btn btn-sm btn-light" onclick="toggleNotificationPanel()">&#10005;
-                                </button>
-                            </div>
+    <div class="p-4">
+        <ul class="nav nav-tabs" id="notiTabs">
+            <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#notiAll">All</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#notiRead">Read</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#notiUnread">Unread</a></li>
+        </ul>
 
-                            <div class="p-4">
-                                <ul class="nav nav-tabs" id="notiTabs">
-                                    <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab"
-                                                            href="#notiAll">All</a></li>
-                                    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab"
-                                                            href="#notiRead">Read</a></li>
-                                    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#notiUnread">Unread</a>
-                                    </li>
-                                </ul>
+        <div class="tab-content pt-4">
+            <!-- All Notifications -->
+            <div class="tab-pane fade show active" id="notiAll">
+                {% for n in all_notifications %}
+                <div class="border-bottom pb-3 mb-3 position-relative" data-id="{{ n.id }}" data-tab="all">
+                    <h6 class="mb-1">{{ n.title }}</h6>
+                    <small class="text-muted d-block long-message">
+                        {{ n.message }} - {{ n.recipient.username }}
+                    </small>
+                    <span class="badge bg-light time-display"
+                          data-created="{{ n.created_at|date:'c' }}"></span>
+                    <button class="btn btn-sm btn-light position-absolute top-0 end-0" onclick="deleteNotification('{{ n.id }}', 'all')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                {% empty %}
+                <p>No notifications.</p>
+                {% endfor %}
 
-                                <div class="tab-content pt-4">
-                                    <!-- All Notifications -->
-                                    <div class="tab-pane fade show active" id="notiAll">
-                                        {% for n in all_notifications %}
-                                        <div class="border-bottom pb-3 mb-3">
-                                            <h6 class="mb-1">{{ n.title }}</h6>
-                                            <small class="text-muted d-block long-message">
-                                                {{ n.message }} - {{ n.recipient.username }}
-                                            </small>
+                {% if all_notifications %}
+                <div class="text-center mt-4">
+                    <form method="post" action="{% url 'supplier:clear_all_notifications' %}">
+                        {% csrf_token %}
+                        <!-- <button type="button" class="btn btn-primary" onclick="clearAllNotifications()">Clear All</button> -->
+                    </form>
+                </div>
+                {% endif %}
+            </div>
 
-                                            <span class="badge bg-light time-display"
-                                                  data-created="{{ n.created_at|date:'c' }}"></span>
-                                        </div>
-                                        {% empty %}
-                                        <p>No notifications.</p>
-                                        {% endfor %}
+            <!-- Read Tab -->
+            <div class="tab-pane fade" id="notiRead">
+                {% for n in read_notifications %}
+                <div class="border-bottom pb-3 mb-3 position-relative" data-id="{{ n.id }}" data-tab="read">
+                    <h6 class="mb-1">{{ n.title }}</h6>
+                    <small class="text-muted d-block"
+                           style="white-space: pre-wrap; word-break: break-word;">
+                        {{ n.message }} - {{ n.recipient.username }}
+                    </small>
+                    <span class="badge bg-success text-white time-display"
+                          data-created="{{ n.created_at|date:'c' }}"></span>
+                    <button class="btn btn-sm btn-light position-absolute top-0 end-0" onclick="deleteNotification('{{ n.id }}', 'read')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                {% empty %}
+                <p>No read notifications.</p>
+                {% endfor %}
+            </div>
 
-                                        {% if all_notifications %}
-                                        <div class="text-center mt-4">
-                                            <form method="post" action="{% url 'supplier:clear_all_notifications' %}">
-                                                {% csrf_token %}
-                                                <button type="button" class="btn btn-primary"
-                                                        onclick="clearAllNotifications()">Clear All
-                                                </button>
+            <!-- Unread Tab -->
+            <div class="tab-pane fade" id="notiUnread">
+                {% for n in unread_notifications %}
+                <div class="border-bottom pb-3 mb-3 position-relative" data-id="{{ n.id }}" data-tab="unread"
+                     data-notification-id="{{ n.id }}" style="cursor: pointer;">
+                    <h6 class="mb-1 text-danger">{{ n.title }}</h6>
+                    <small class="text-muted d-block"
+                           style="white-space: pre-wrap; word-break: break-word;">
+                        {{ n.message }} - {{ n.recipient.username }}
+                    </small>
+                    <span class="badge bg-danger text-white time-display"
+                          data-created="{{ n.created_at|date:'c' }}"></span>
+                    <button class="btn btn-sm btn-light position-absolute top-0 end-0" onclick="deleteNotification('{{ n.id }}', 'unread')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                {% empty %}
+                <p>No unread notifications.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
 
-
-                                            </form>
-                                        </div>
-                                        {% endif %}
-                                    </div>
-
-                                    <!-- Read Tab -->
-                                    <div class="tab-pane fade" id="notiRead">
-                                        {% for n in read_notifications %}
-                                        <div class="border-bottom pb-3 mb-3" data-id="{{ n.id }}" data-tab="read">
-                                            <h6 class="mb-1">{{ n.title }}</h6>
-                                            <small class="text-muted d-block"
-                                                   style="white-space: pre-wrap; word-break: break-word;">
-                                                {{ n.message }} - {{ n.recipient.username }}
-                                            </small>
-
-                                            <span class="badge bg-success text-white time-display"
-                                                  data-created="{{ n.created_at|date:'c' }}"></span>
-                                        </div>
-                                        {% empty %}<p>No read notifications.</p>{% endfor %}
-                                    </div>
-
-                                    <!-- Unread Tab -->
-                                    <div class="tab-pane fade" id="notiUnread">
-                                        {% for n in unread_notifications %}
-                                        <div class="border-bottom pb-3 mb-3" data-id="{{ n.id }}" data-tab="unread"
-                                             data-notification-id="{{ n.id }}" style="cursor: pointer;">
-                                            <h6 class="mb-1 text-danger">{{ n.title }}</h6>
-                                            <small class="text-muted d-block"
-                                                   style="white-space: pre-wrap; word-break: break-word;">
-                                                {{ n.message }} - {{ n.recipient.username }}
-                                            </small>
-
-                                            <span class="badge bg-danger text-white time-display"
-                                                  data-created="{{ n.created_at|date:'c' }}"></span>
-                                        </div>
-                                        {% empty %}<p>No unread notifications.</p>{% endfor %}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-
-                        <!-- Step 3: Notification Popup -->
-
-                        <div id="notificationOverlay"
-                             class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-75"
-                             style="display: none; z-index: 1060;"></div>
-                        <div id="notificationPopup"
-                             class="position-fixed top-50 start-50 translate-middle bg-white rounded p-4"
-                             style="display: none; z-index: 1070; width: 400px;">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h5 id="popupTitle" class="mb-0"></h5>
-                                <button class="btn-close" onclick="closeNotificationPopup()"></button>
-                            </div>
-                            <div style="border-bottom: 1px solid #666; margin-bottom: 10px;"></div>
-                            <p id="popupMessage" class="mb-3 long-message"></p>
-
-
-                        </div>
+<!-- Notification Popup -->
+<div id="notificationOverlay"
+     class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-75"
+     style="display: none; z-index: 1060;"></div>
+<div id="notificationPopup"
+     class="position-fixed top-50 start-50 translate-middle bg-white rounded p-4"
+     style="display: none; z-index: 1070; width: 400px;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 id="popupTitle" class="mb-0"></h5>
+        <button class="btn-close" onclick="closeNotificationPopup()"></button>
+    </div>
+    <div style="border-bottom: 1px solid #666; margin-bottom: 10px;"></div>
+    <p id="popupMessage" class="mb-3 long-message"></p>
+</div>
 
                         <!--  User menu  -->
                         <div class="app-navbar-item" id="kt_header_user_menu_toggle">
@@ -497,141 +636,178 @@
 
 </body>
 <script>
-    function toggleNotificationPanel() {
-        const drawer = document.getElementById("notificationDrawer");
-        drawer.style.display = (drawer.style.display === "none" || drawer.style.display === "") ? "block" : "none";
-    }
+function toggleNotificationPanel() {
+    const drawer = document.getElementById("notificationDrawer");
+    drawer.style.display = (drawer.style.display === "none" || drawer.style.display === "") ? "block" : "none";
+}
 
-    function formatTimeElements() {
-        document.querySelectorAll(".time-display").forEach(el => {
-            const created = new Date(el.dataset.created);
-            const now = new Date();
-            const diff = (now - created) / 1000;
+function formatTimeElements() {
+    document.querySelectorAll(".time-display").forEach(el => {
+        const created = new Date(el.dataset.created);
+        const now = new Date();
+        const diff = (now - created) / 1000;
 
-            let text = "Just now";
-            if (diff > 60) text = `${Math.floor(diff / 60)} minute ago`;
-            if (diff > 3600) text = `${Math.floor(diff / 3600)} hour ago`;
+        let text = "Just now";
+        if (diff > 60) text = `${Math.floor(diff / 60)} minute ago`;
+        if (diff > 3600) text = `${Math.floor(diff / 3600)} hour ago`;
 
-            el.textContent = text;
-        });
-    }
+        el.textContent = text;
+    });
+}
 
-    function showNotificationPopup(title, message, notificationId, tabType) {
-        document.getElementById('popupTitle').textContent = title;
-        document.getElementById('popupMessage').textContent = message;
-        document.getElementById('notificationOverlay').style.display = 'block';
-        document.getElementById('notificationPopup').style.display = 'block';
-        document.getElementById('notificationPopup').dataset.notificationId = notificationId;
-        document.getElementById('notificationPopup').dataset.tab = tabType;
-    }
+function showNotificationPopup(title, message, notificationId, tabType) {
+    document.getElementById('popupTitle').textContent = title;
+    document.getElementById('popupMessage').textContent = message;
+    document.getElementById('notificationOverlay').style.display = 'block';
+    document.getElementById('notificationPopup').style.display = 'block';
+    document.getElementById('notificationPopup').dataset.notificationId = notificationId;
+    document.getElementById('notificationPopup').dataset.tab = tabType;
+}
 
-    function closeNotificationPopup() {
-        document.getElementById('notificationOverlay').style.display = 'none';
-        document.getElementById('notificationPopup').style.display = 'none';
+function closeNotificationPopup() {
+    document.getElementById('notificationOverlay').style.display = 'none';
+    document.getElementById('notificationPopup').style.display = 'none';
 
-        const popup = document.getElementById('notificationPopup');
-        const notificationId = popup.dataset.notificationId;
-        const tabType = popup.dataset.tab;
+    const popup = document.getElementById('notificationPopup');
+    const notificationId = popup.dataset.notificationId;
+    const tabType = popup.dataset.tab;
 
-        if (notificationId && tabType === 'unread') {
-            fetch(`/mark-notification-read/${notificationId}/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token }}',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({})
-            }).then(response => {
-                if (response.ok) {
+    if (notificationId && tabType === 'unread') {
+        fetch(`/mark-notification-read/${notificationId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({})
+        }).then(response => {
+            if (response.ok) {
+                const el = document.querySelector(`[data-notification-id="${notificationId}"]`);
+                if (el) el.remove();
 
-                    const el = document.querySelector(`[data-notification-id="${notificationId}"]`);
-                    if (el) el.remove();
+                const readTab = document.getElementById("notiRead");
+                const newRead = document.createElement("div");
+                newRead.className = "border-bottom pb-3 mb-3 position-relative";
+                newRead.setAttribute("data-id", notificationId);
+                newRead.setAttribute("data-tab", "read");
 
+                const now = new Date().toISOString();
+                const title = popup.querySelector('#popupTitle').textContent;
+                const message = popup.querySelector('#popupMessage').textContent;
 
-                    const readTab = document.getElementById("notiRead");
-                    const newRead = document.createElement("div");
-                    newRead.className = "border-bottom pb-3 mb-3";
-                    newRead.setAttribute("data-id", notificationId);
-                    newRead.setAttribute("data-tab", "read");
-
-                    const now = new Date().toISOString();
-                    const title = popup.querySelector('#popupTitle').textContent;
-                    const message = popup.querySelector('#popupMessage').textContent;
-
-                    newRead.innerHTML = `
+                newRead.innerHTML = `
                     <h6 class="mb-1">${title}</h6>
                     <small class="text-muted">${message}</small><br>
                     <span class="badge bg-success text-white time-display" data-created="${now}">Just now</span>
+                    <button class="btn btn-sm btn-light position-absolute top-0 end-0" onclick="deleteNotification('${notificationId}', 'read')">
+                        <i class="fas fa-times"></i>
+                    </button>
                 `;
 
-                    readTab.prepend(newRead);
+                readTab.prepend(newRead);
 
+                newRead.addEventListener('click', function () {
+                    showNotificationPopup(title, message, notificationId, 'read');
+                });
 
-                    newRead.addEventListener('click', function () {
-                        showNotificationPopup(title, message, notificationId, 'read');
-                    });
-
-
-                    formatTimeElements();
-                }
-            });
-        }
-    }
-
-
-    function attachNotificationClickHandlers() {
-        const notifications = document.querySelectorAll('.tab-content .border-bottom');
-        notifications.forEach(notification => {
-            const title = notification.querySelector('h6')?.textContent || '';
-            const message = notification.querySelector('small')?.textContent?.split(' - ')[0]?.trim() || '';
-            const notificationId = notification.dataset.id || '';
-            const tabType = notification.dataset.tab || '';
-
-            notification.addEventListener('click', function () {
-                showNotificationPopup(title, message, notificationId, tabType);
-            });
+                formatTimeElements();
+            }
         });
     }
+}
 
-
-    document.addEventListener('DOMContentLoaded', function () {
-        formatTimeElements();
-        attachNotificationClickHandlers();
-    });
-
-    function clearAllNotifications() {
-        fetch("{% url 'supplier:clear_all_notifications' %}", {
-            method: "POST",
+function deleteNotification(notificationId, tabType) {
+    if (confirm('Are you sure you want to delete this notification?')) {
+        fetch(`/delete-notification/${notificationId}/`, {
+            method: 'POST',
             headers: {
-                "X-CSRFToken": getCookie('csrftoken'),
-                "Content-Type": "application/json"
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
             },
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    document.getElementById("notiAll").innerHTML = "<p class='text-muted'>No notifications available.</p>";
+            body: JSON.stringify({})
+        }).then(response => {
+            if (response.ok) {
+                const el = document.querySelector(`[data-id="${notificationId}"]`);
+                if (el) el.remove();
+
+                // Update notification count
+                const unreadCount = document.querySelectorAll('#notiUnread .border-bottom').length;
+                const badge = document.querySelector('.badge.rounded-pill.bg-danger');
+                if (badge) {
+                    badge.textContent = unreadCount;
+                    if (unreadCount === 0) badge.remove();
                 }
-            });
+
+                // Check if tabs are empty
+                ['notiAll', 'notiRead', 'notiUnread'].forEach(tabId => {
+                    const tab = document.getElementById(tabId);
+                    if (tab.children.length === 0) {
+                        tab.innerHTML = "<p class='text-muted'>No notifications available.</p>";
+                    }
+                });
+            }
+        });
     }
+}
 
+function attachNotificationClickHandlers() {
+    const notifications = document.querySelectorAll('.tab-content .border-bottom');
+    notifications.forEach(notification => {
+        const title = notification.querySelector('h6')?.textContent || '';
+        const message = notification.querySelector('small')?.textContent?.split(' - ')[0]?.trim() || '';
+        const notificationId = notification.dataset.id || '';
+        const tabType = notification.dataset.tab || '';
 
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
+        // Avoid adding click listener to delete button
+        notification.querySelector('.btn-light')?.addEventListener('click', (e) => e.stopPropagation());
 
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
+        notification.addEventListener('click', function (e) {
+            if (!e.target.closest('.btn-light')) {
+                showNotificationPopup(title, message, notificationId, tabType);
+            }
+        });
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    formatTimeElements();
+    attachNotificationClickHandlers();
+});
+
+function clearAllNotifications() {
+    fetch("{% url 'supplier:clear_all_notifications' %}", {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": getCookie('csrftoken'),
+            "Content-Type": "application/json"
+        },
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                document.getElementById("notiAll").innerHTML = "<p class='text-muted'>No notifications available.</p>";
+                document.getElementById("notiRead").innerHTML = "<p class='text-muted'>No read notifications.</p>";
+                document.getElementById("notiUnread").innerHTML = "<p class='text-muted'>No unread notifications.</p>";
+                const badge = document.querySelector('.badge.rounded-pill.bg-danger');
+                if (badge) badge.remove();
+            }
+        });
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
             }
         }
-        return cookieValue;
     }
-
+    return cookieValue;
+}
 </script>
 
 

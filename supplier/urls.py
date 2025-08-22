@@ -51,6 +51,7 @@ urlpatterns = [
     path('mark-notification-read/<int:pk>/', MarkNotificationReadView.as_view(), name='mark_notification_read'),
     path('notifications/clear-all/', ClearAllNotificationsView.as_view(), name='clear_all_notifications'),
     path('mark-notification-read/<int:pk>/', MarkNotificationReadView.as_view(), name='mark_notification_read'),
+    path('delete-notification/<int:id>/', DeleteNotificationView.as_view(), name='delete_notification'),
    
     #RFQ Request for Quotation
     path('rfq/', RFQListView.as_view(), name='rfq_list'),

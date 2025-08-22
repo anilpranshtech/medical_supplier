@@ -1524,7 +1524,7 @@ class NotificationListView(ListView):
             )
 
         if created_date:
-            # Parse date range in format 
+          
             match = re.match(r'(\d{2}/\d{2}/\d{4}) - (\d{2}/\d{2}/\d{4})', created_date)
             if match:
                 start_date_str, end_date_str = match.groups()
@@ -1562,6 +1562,7 @@ class NotificationCreateView(CreateView):
         message = request.POST.get("message")
 
         if send_to == "single":
+            # Specific user(s)
             user_ids = request.POST.getlist("recipients")
             for uid in user_ids:
                 user = User.objects.get(id=uid)
@@ -1571,15 +1572,49 @@ class NotificationCreateView(CreateView):
                     title=title,
                     message=message,
                 )
-        else:
-            Notification.objects.create(
-                send_to=send_to,
-                title=title,
-                message=message,
-            )
+
+        elif send_to == "buyer":
+            # Retail + Wholesale Buyers
+            retail_users = User.objects.filter(retailprofile__isnull=False)
+            wholesale_users = User.objects.filter(wholesalebuyerprofile__isnull=False)
+            all_buyers = retail_users.union(wholesale_users)
+            for user in all_buyers:
+                Notification.objects.create(
+                    recipient=user,
+                    send_to="buyer",
+                    title=title,
+                    message=message,
+                )
+
+        elif send_to == "supplier":
+            # All Suppliers
+            supplier_users = User.objects.filter(supplierprofile__isnull=False)
+            for user in supplier_users:
+                Notification.objects.create(
+                    recipient=user,
+                    send_to="supplier",
+                    title=title,
+                    message=message,
+                )
+
+        elif send_to == "all":
+            # All Buyers + Suppliers
+            retail_users = User.objects.filter(retailprofile__isnull=False)
+            wholesale_users = User.objects.filter(wholesalebuyerprofile__isnull=False)
+            supplier_users = User.objects.filter(supplierprofile__isnull=False)
+
+            all_users = retail_users.union(wholesale_users).union(supplier_users)
+            for user in all_users:
+                Notification.objects.create(
+                    recipient=user,
+                    send_to="all",
+                    title=title,
+                    message=message,
+                )
 
         messages.success(request, "Notification sent successfully!")
         return redirect("superuser:notifications_list")
+
 
 class EditNotificationView(UpdateView):
     model = Notification
