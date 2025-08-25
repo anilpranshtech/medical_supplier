@@ -1,7 +1,7 @@
 import uuid
 from decimal import Decimal
 from io import BytesIO
-
+from django.utils.timezone import localtime
 import pm
 from django.contrib.auth.views import PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, \
     PasswordResetCompleteView
@@ -3196,3 +3196,42 @@ class RequestReturnView(LoginRequiredMixin, View):
                 )
         except Exception:
             pass  # Don't break the flow if notification fails
+
+class MarkNotificationReadView( View):
+    def post(self, request, pk):
+        try:
+            notif = Notification.objects.get(pk=pk)
+            notif.is_read = True
+            notif.save()
+            return JsonResponse({'success': True})
+        except Notification.DoesNotExist:
+            return JsonResponse({'error': 'Notification not found'}, status=404)
+
+
+class ClearAllNotificationsView(LoginRequiredMixin,  View):
+    def post(self, request, *args, **kwargs):
+        if request.user.is_superuser:
+            Notification.objects.all().delete()
+            return JsonResponse({'status': 'success'})
+        else:
+            return JsonResponse({'status': 'unauthorized'}, status=403)
+
+
+class MarkNotificationReadView( View):
+    def post(self, request, pk):
+        notif = Notification.objects.get(pk=pk)
+        notif.is_read = True
+        notif.save()
+        return JsonResponse({
+            "title": notif.title,
+            "message": notif.message,
+            "created_at": localtime(notif.created_at).strftime('%d %b %Y, %I:%M %p')
+        })
+
+class DeleteNotificationView(LoginRequiredMixin, View):
+    def post(self, request, id):
+        # Retrieve the notification, ensuring it belongs to the current user
+        notification = get_object_or_404(Notification, id=id, recipient=request.user)
+        # Delete the notification
+        notification.delete()
+        return JsonResponse({'status': 'success'})

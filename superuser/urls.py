@@ -59,6 +59,7 @@ urlpatterns = [
     path('most-viewed-products/', MostViewedProductsView.as_view(), name='view_product'),
    
     path('rating/', RatingView.as_view(), name='rating_list'),
+    #notification
     path("notifications/", NotificationListView.as_view(), name="notifications_list"),
     path("notifications/add/", NotificationCreateView.as_view(), name="add_notification"),
     path('notifications/edit/<int:pk>/', EditNotificationView.as_view(), name='edit_notification'),

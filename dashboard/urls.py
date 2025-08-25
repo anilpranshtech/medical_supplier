@@ -95,4 +95,11 @@ urlpatterns = [
     path("orders/<int:item_id>/return/", RequestReturnView.as_view(), name="request_return"),
     path('cancel-return/<int:return_id>/', CancelReturnView.as_view(), name='cancel_return'),
 
+    #notification
+    path('mark-notification-read/<int:pk>/', MarkNotificationReadView.as_view(), name='mark_notification_read'),
+    path('notifications/clear-all/', ClearAllNotificationsView.as_view(), name='clear_all_notifications'),
+    path('mark-notification-read/<int:pk>/', MarkNotificationReadView.as_view(), name='mark_notification_read'),
+    path('delete-notification/<int:id>/', DeleteNotificationView.as_view(), name='delete_notification'),
+   
+
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1223,7 +1223,7 @@ class BannerUpdateView(LoginRequiredMixin, View):
         return render(request, 'superuser/banner_edit.html', {'form': form, 'object': banner})
 
 
-class RFQListView(LoginRequiredMixin, SupplierPermissionMixin, ListView):
+class RFQListView(LoginRequiredMixin, ListView):
     template_name = 'superuser/rfq_list.html'
     context_object_name = 'rfqs'
 
@@ -1318,24 +1318,25 @@ class MostViewedProductsView(View):
                 distinct=True
             ),
             review_count=Count(
-                'reviews', 
+                'reviews',
                 distinct=True
             )
         ).prefetch_related(
             Prefetch(
-                'images',
+                'images',  
                 queryset=ProductImage.objects.order_by('-is_main', '-created_at'),
-                to_attr='images_list'
+                to_attr='prefetched_images'
             )
         ).order_by('-delivered_count')
-
+ 
         for product in products:
-            if hasattr(product, 'images_list') and product.images_list:
-                main_images = [img for img in product.images_list if img.is_main]
-                product.display_image = main_images[0] if main_images else product.images_list[0]
+            images = getattr(product, 'prefetched_images', [])
+            if images:
+                main_images = [img for img in images if img.is_main]
+                product.display_image = main_images[0] if main_images else images[0]
             else:
                 product.display_image = None
-
+ 
         context = {'products': products}
         return render(request, 'superuser/view_product.html', context)
 
