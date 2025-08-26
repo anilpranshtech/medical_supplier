@@ -299,7 +299,10 @@
                             </span>
                         {% endif %}
                     </div>
-
+<!-- Stock Status -->
+{% if stock_status %}
+<p class="text-red-500 font-semibold mb-4">{{ stock_status }}</p>
+{% endif %}
                     <!-- Buttons for Products -->
                     <div class="flex items-center gap-3 mt-4">
                         {% if request.user.is_authenticated %}
