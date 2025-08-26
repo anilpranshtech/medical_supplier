@@ -732,7 +732,7 @@ class UserListView(SupplierPermissionMixin, ListView):
     template_name = 'supplier/user_list.html'
     context_object_name = 'users'
     ordering = ['-date_joined']
-    paginate_by = 2   # 👈 Yaha pagination set kiya (2 records per page)
+    paginate_by = 2   
 
     def get_queryset(self):
         # Get all users
@@ -1889,7 +1889,7 @@ class RatingView(TemplateView):
 class SupplierReturnsView(LoginRequiredMixin, TemplateView):
     template_name = 'supplier/returns.html'
     login_url = 'dashboard:login'
-    paginate_by = 3   #  per page 3 returns
+    paginate_by = 3   
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1938,7 +1938,7 @@ class SupplierReturnsView(LoginRequiredMixin, TemplateView):
             'order_item__product', 'client'
         ).order_by('-request_date')
 
-        # Pagination 
+       
         paginator = Paginator(returns_qs, self.paginate_by)
         page_number = self.request.GET.get('page')
         page_obj = paginator.get_page(page_number)
@@ -1946,13 +1946,13 @@ class SupplierReturnsView(LoginRequiredMixin, TemplateView):
         context['returns'] = page_obj
         context['page_obj'] = page_obj
 
-        # Add products for the product filter dropdown
+     
         if user.is_superuser:
             context['products'] = Product.objects.all()
         else:
             context['products'] = Product.objects.filter(brand__supplier=user)
 
-        # Add Return model choices to context for template
+      
         context['return_option_choices'] = Return.RETURN_OPTION_CHOICES
         context['return_status_choices'] = Return.RETURN_STATUS_CHOICES
 
