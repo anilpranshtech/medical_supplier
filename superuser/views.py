@@ -51,7 +51,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class HomeView(LoginRequiredMixin, View):
+class HomeView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
     login_url = 'dashboard:login'
     template_name = 'superuser/home.html'
 
