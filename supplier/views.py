@@ -1799,10 +1799,11 @@ class RatingView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        user = self.request.user
 
         # Base queryset with annotations for average rating and review count
         products = (
-            Product.objects
+            Product.objects.filter(created_by=user)
             .annotate(
                 avg_rating=Avg('reviews__rating'),
                 review_count=Coalesce(
