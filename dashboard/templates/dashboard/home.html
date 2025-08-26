@@ -361,6 +361,96 @@
     .kt-wishlist-icon i.text-red-500 {
         color: #ff0000;
     }
+    /* Container for the cart button */
+.cart-button-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+
+.add-to-cart-btn,
+.show-login-modal {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 12px;
+    font-size: 0.875rem; 
+    font-weight: 600;
+    color: #1f2937; 
+    background-color: #f3f4f6; 
+    border: 1px solid #d1d5db; 
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.add-to-cart-btn i,
+.show-login-modal i {
+    font-size: 0.75rem; 
+}
+
+
+.add-to-cart-btn:hover,
+.show-login-modal:hover {
+    background-color: #e5e7eb; 
+    border-color: #9ca3af; 
+}
+
+
+.cart-quantity-controls {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.cart-quantity-controls button {
+    width: 28px;
+    height: 28px;
+    background-color: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease-in-out;
+}
+
+.cart-quantity-controls button:hover {
+    background-color: #e5e7eb;
+    border-color: #9ca3af;
+}
+
+
+.cart-quantity-controls .quantity {
+    min-width: 20px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+
+@media (max-width: 640px) {
+    .add-to-cart-btn,
+    .show-login-modal {
+        padding: 4px 10px;
+        font-size: 0.75rem;
+    }
+    .cart-quantity-controls button {
+        width: 24px;
+        height: 24px;
+        font-size: 0.75rem;
+    }
+    .cart-quantity-controls .quantity {
+        font-size: 0.75rem;
+        min-width: 18px;
+    }
+}
+
 </style>
 
 <!-- Begin Medical Banner Slider -->
@@ -464,23 +554,25 @@
                     </div>
                     <div class="flex items-center flex-wrap gap-2 px-1 product-actions">
                         {% if product.category.name not in 'Conference,Webinar,Event' %}
-                            {% if request.user.is_authenticated %}
-                                {% if product.id in user_cart_ids %}
-                                <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1"
-                                        style="background:#3b82f6; color:white;" data-product-id="{{ product.id }}">
-                                    In cart <i class="ki-filled ki-handcart text-white text-xs"></i>
-                                </button>
-                                {% else %}
-                                <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 add-to-cart-btn"
-                                        data-product-id="{{ product.id }}">
-                                    Add <i class="ki-filled ki-handcart text-xs"></i>
-                                </button>
-                                {% endif %}
-                            {% else %}
-                                <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 show-login-modal">
-                                    Add <i class="ki-filled ki-handcart text-xs"></i>
-                                </button>
-                            {% endif %}
+                           <div class="cart-button-container" data-product-id="{{ product.id }}">
+    {% if request.user.is_authenticated %}
+        {% if product.id in user_cart_ids %}
+            <div class="cart-quantity-controls flex items-center gap-2">
+                <button class="decrease-btn px-2 py-1 bg-gray-200 rounded text-sm">-</button>
+                <span class="quantity font-semibold">{{ user_cart_quantities|get_item:product.id }}</span>
+                <button class="increase-btn px-2 py-1 bg-gray-200 rounded text-sm">+</button>
+            </div>
+        {% else %}
+            <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 add-to-cart-btn">
+                Add <i class="ki-filled ki-handcart text-xs"></i>
+            </button>
+        {% endif %}
+    {% else %}
+        <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 show-login-modal">
+            Add <i class="ki-filled ki-handcart text-xs"></i>
+        </button>
+    {% endif %}
+</div>
                             {% if request.user.is_authenticated %}
                                 {% if product.show_rfq or product.Both %}
                                 <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 open-rfq-modal"
@@ -551,23 +643,25 @@
                                 {{ product.description|default:'No description available'|truncatechars:120 }}
                             </span>
                             <div class="flex items-center gap-4 flex-wrap">
-                                {% if request.user.is_authenticated %}
-                                    {% if product.id in user_cart_ids %}
-                                    <button class="kt-btn kt-btn-outline kt-btn-sm ms-1"
-                                            style="background:#3b82f6; color:white;" data-product-id="{{ product.id }}">
-                                        In cart <i class="ki-filled ki-handcart text-white"></i>
-                                    </button>
-                                    {% else %}
-                                    <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 add-to-cart-btn"
-                                            data-product-id="{{ product.id }}">
-                                        Add <i class="ki-filled ki-handcart"></i>
-                                    </button>
-                                    {% endif %}
-                                {% else %}
-                                    <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 show-login-modal">
-                                        Add <i class="ki-filled ki-handcart text-xs"></i>
-                                    </button>
-                                {% endif %}
+                                <div class="cart-button-container" data-product-id="{{ product.id }}">
+    {% if request.user.is_authenticated %}
+        {% if product.id in user_cart_ids %}
+            <div class="cart-quantity-controls flex items-center gap-2">
+                <button class="decrease-btn px-2 py-1 bg-gray-200 rounded text-sm">-</button>
+                <span class="quantity font-semibold">{{ user_cart_quantities|get_item:product.id }}</span>
+                <button class="increase-btn px-2 py-1 bg-gray-200 rounded text-sm">+</button>
+            </div>
+        {% else %}
+            <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 add-to-cart-btn">
+                Add <i class="ki-filled ki-handcart text-xs"></i>
+            </button>
+        {% endif %}
+    {% else %}
+        <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 show-login-modal">
+            Add <i class="ki-filled ki-handcart text-xs"></i>
+        </button>
+    {% endif %}
+</div>
                                 {% if request.user.is_authenticated %}
                                     {% if product.show_rfq or product.Both %}
                                     <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 open-rfq-modal"
@@ -656,23 +750,25 @@
                             </div>
                             <span class="text-base font-medium text-mono mb-3">{{ product.name|default:'Unnamed Product' }}</span>
                             <div class="flex items-center gap-2.5 mb-2.5 flex-wrap justify-center">
-                                {% if request.user.is_authenticated %}
-                                    {% if product.id in user_cart_ids %}
-                                    <button class="kt-btn kt-btn-outline kt-btn-sm ms-1"
-                                            style="background:#3b82f6; color:white;" data-product-id="{{ product.id }}">
-                                        In cart <i class="ki-filled ki-handcart text-white"></i>
-                                    </button>
-                                    {% else %}
-                                    <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 add-to-cart-btn"
-                                            data-product-id="{{ product.id }}">
-                                        Add <i class="ki-filled ki-handcart"></i>
-                                    </button>
-                                    {% endif %}
-                                {% else %}
-                                    <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 show-login-modal">
-                                        Add <i class="ki-filled ki-handcart text-xs"></i>
-                                    </button>
-                                {% endif %}
+                                <div class="cart-button-container" data-product-id="{{ product.id }}">
+    {% if request.user.is_authenticated %}
+        {% if product.id in user_cart_ids %}
+            <div class="cart-quantity-controls flex items-center gap-2">
+                <button class="decrease-btn px-2 py-1 bg-gray-200 rounded text-sm">-</button>
+                <span class="quantity font-semibold">{{ user_cart_quantities|get_item:product.id }}</span>
+                <button class="increase-btn px-2 py-1 bg-gray-200 rounded text-sm">+</button>
+            </div>
+        {% else %}
+            <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 add-to-cart-btn">
+                Add <i class="ki-filled ki-handcart text-xs"></i>
+            </button>
+        {% endif %}
+    {% else %}
+        <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 show-login-modal">
+            Add <i class="ki-filled ki-handcart text-xs"></i>
+        </button>
+    {% endif %}
+</div>
                                 {% if request.user.is_authenticated %}
                                     {% if product.show_rfq or product.Both %}
                                     <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 open-rfq-modal"
@@ -782,23 +878,25 @@
                                 </span>
                                 {% endif %}
                                 <span class="text-sm font-medium text-mono">${{ product.price|floatformat:2 }}</span>
-                                {% if request.user.is_authenticated %}
-                                    {% if product.id in user_cart_ids %}
-                                    <button class="kt-btn kt-btn-outline kt-btn-sm ms-1"
-                                            style="background:#3b82f6; color:white;" data-product-id="{{ product.id }}">
-                                        In cart <i class="ki-filled ki-handcart text-white"></i>
-                                    </button>
-                                    {% else %}
-                                    <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 add-to-cart-btn"
-                                            data-product-id="{{ product.id }}">
-                                        Add <i class="ki-filled ki-handcart"></i>
-                                    </button>
-                                    {% endif %}
-                                {% else %}
-                                    <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 show-login-modal">
-                                        Add <i class="ki-filled ki-handcart text-xs"></i>
-                                    </button>
-                                {% endif %}
+                               <div class="cart-button-container" data-product-id="{{ product.id }}">
+    {% if request.user.is_authenticated %}
+        {% if product.id in user_cart_ids %}
+            <div class="cart-quantity-controls flex items-center gap-2">
+                <button class="decrease-btn px-2 py-1 bg-gray-200 rounded text-sm">-</button>
+                <span class="quantity font-semibold">{{ user_cart_quantities|get_item:product.id }}</span>
+                <button class="increase-btn px-2 py-1 bg-gray-200 rounded text-sm">+</button>
+            </div>
+        {% else %}
+            <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 add-to-cart-btn">
+                Add <i class="ki-filled ki-handcart text-xs"></i>
+            </button>
+        {% endif %}
+    {% else %}
+        <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 show-login-modal">
+            Add <i class="ki-filled ki-handcart text-xs"></i>
+        </button>
+    {% endif %}
+</div>
                                 {% if request.user.is_authenticated %}
                                     {% if product.show_rfq or product.Both %}
                                     <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 open-rfq-modal"
@@ -898,23 +996,25 @@
                                 </span>
                                 {% endif %}
                                 <span class="text-sm font-medium text-mono">${{ product.price|floatformat:2 }}</span>
-                                {% if request.user.is_authenticated %}
-                                    {% if product.id in user_cart_ids %}
-                                    <button class="kt-btn kt-btn-outline kt-btn-sm ms-1"
-                                            style="background:#3b82f6; color:white;" data-product-id="{{ product.id }}">
-                                        In cart <i class="ki-filled ki-handcart text-white"></i>
-                                    </button>
-                                    {% else %}
-                                    <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 add-to-cart-btn"
-                                            data-product-id="{{ product.id }}">
-                                        Add <i class="ki-filled ki-handcart"></i>
-                                    </button>
-                                    {% endif %}
-                                {% else %}
-                                <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 show-login-modal">
-                                    Add <i class="ki-filled ki-handcart text-xs"></i>
-                                </button>
-                                {% endif %}
+                                <div class="cart-button-container" data-product-id="{{ product.id }}">
+    {% if request.user.is_authenticated %}
+        {% if product.id in user_cart_ids %}
+            <div class="cart-quantity-controls flex items-center gap-2">
+                <button class="decrease-btn px-2 py-1 bg-gray-200 rounded text-sm">-</button>
+                <span class="quantity font-semibold">{{ user_cart_quantities|get_item:product.id }}</span>
+                <button class="increase-btn px-2 py-1 bg-gray-200 rounded text-sm">+</button>
+            </div>
+        {% else %}
+            <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 add-to-cart-btn">
+                Add <i class="ki-filled ki-handcart text-xs"></i>
+            </button>
+        {% endif %}
+    {% else %}
+        <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 show-login-modal">
+            Add <i class="ki-filled ki-handcart text-xs"></i>
+        </button>
+    {% endif %}
+</div>
                                 {% if request.user.is_authenticated %}
                                     {% if product.show_rfq or product.Both %}
                                     <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 open-rfq-modal"
@@ -1014,23 +1114,25 @@
                                 </span>
                                 {% endif %}
                                 <span class="text-sm font-medium text-mono">${{ product.price|floatformat:2 }}</span>
-                                {% if request.user.is_authenticated %}
-                                    {% if product.id in user_cart_ids %}
-                                    <button class="kt-btn kt-btn-outline kt-btn-sm ms-1"
-                                            style="background:#3b82f6; color:white;" data-product-id="{{ product.id }}">
-                                        In cart <i class="ki-filled ki-handcart text-white"></i>
-                                    </button>
-                                    {% else %}
-                                    <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 add-to-cart-btn"
-                                            data-product-id="{{ product.id }}">
-                                        Add <i class="ki-filled ki-handcart"></i>
-                                    </button>
-                                    {% endif %}
-                                {% else %}
-                                <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 show-login-modal">
-                                    Add <i class="ki-filled ki-handcart text-xs"></i>
-                                </button>
-                                {% endif %}
+                                <div class="cart-button-container" data-product-id="{{ product.id }}">
+    {% if request.user.is_authenticated %}
+        {% if product.id in user_cart_ids %}
+            <div class="cart-quantity-controls flex items-center gap-2">
+                <button class="decrease-btn px-2 py-1 bg-gray-200 rounded text-sm">-</button>
+                <span class="quantity font-semibold">{{ user_cart_quantities|get_item:product.id }}</span>
+                <button class="increase-btn px-2 py-1 bg-gray-200 rounded text-sm">+</button>
+            </div>
+        {% else %}
+            <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 add-to-cart-btn">
+                Add <i class="ki-filled ki-handcart text-xs"></i>
+            </button>
+        {% endif %}
+    {% else %}
+        <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 show-login-modal">
+            Add <i class="ki-filled ki-handcart text-xs"></i>
+        </button>
+    {% endif %}
+</div>
                                 {% if request.user.is_authenticated %}
                                     {% if product.show_rfq or product.Both %}
                                     <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 open-rfq-modal"
@@ -1442,55 +1544,129 @@
     });
 
     // Add to Cart
-   document.addEventListener('DOMContentLoaded', () => {
-    const markAsInCart = (btn) => {
-        btn.disabled = false;
-        btn.classList.remove('kt-btn-outline');
-        btn.classList.add('kt-btn-success');
-        btn.style.background = '#3b82f6';
-        btn.style.color = 'white';
-        btn.innerHTML = `In cart <i class="ki-filled ki-handcart text-white"></i>`;
-        btn.onclick = null;
+document.addEventListener("DOMContentLoaded", () => {
+    // Get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    // Update UI for a specific product
+    const updateProductUI = (productId, quantity) => {
+        const container = document.querySelector(`.cart-button-container[data-product-id="${productId}"]`);
+        if (!container) return;
+
+        if (quantity > 0) {
+            container.innerHTML = `
+                <div class="cart-quantity-controls flex items-center gap-2">
+                    <button class="decrease-btn px-2 py-1 bg-gray-200 rounded text-sm">-</button>
+                    <span class="quantity font-semibold">${quantity}</span>
+                    <button class="increase-btn px-2 py-1 bg-gray-200 rounded text-sm">+</button>
+                </div>
+            `;
+        } else {
+            container.innerHTML = `
+                <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 add-to-cart-btn">
+                    Add <i class="ki-filled ki-handcart text-xs"></i>
+                </button>
+            `;
+        }
+        attachEventListenersToContainer(container);
     };
 
-    document.querySelectorAll('.add-to-cart-btn').forEach(button => {
-        button.addEventListener('click', () => {
-            const productId = button.dataset.productId;
+    // Attach event listeners to a specific container
+    const attachEventListenersToContainer = (container) => {
+        const productId = container.dataset.productId;
 
-            // show loader
-            button.disabled = true;
-            button.innerHTML = `<span class="loader inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span> Adding...`;
+        // Add button
+        const addBtn = container.querySelector('.add-to-cart-btn');
+        if (addBtn) {
+            addBtn.addEventListener('click', (e) => {
+                e.preventDefault(); // Prevent any default behavior
+                updateCart(productId, 1);
+            });
+        }
 
-            fetch("{% url 'dashboard:add_to_cart' %}", {
-                method: "POST",
-                headers: {
-                    "X-CSRFToken": csrftoken,
-                    "Content-Type": "application/x-www-form-urlencoded",
-                },
-                body: new URLSearchParams({
-                    product_id: productId,
-                    quantity: 1,
-                }),
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === "success") {
-                    document
-                        .querySelectorAll(`.add-to-cart-btn[data-product-id="${productId}"]`)
-                        .forEach(markAsInCart);
-                } else {
-                    button.disabled = false;
-                    button.innerHTML = `Add <i class="ki-filled ki-handcart text-xs"></i>`;
-                    alert("Something went wrong");
-                }
-            })
-            .catch(err => {
-                console.error("Add to cart error:", err);
-                button.disabled = false;
-                button.innerHTML = `Add <i class="ki-filled ki-handcart text-xs"></i>`;
+        // Increase button
+        const increaseBtn = container.querySelector('.increase-btn');
+        if (increaseBtn) {
+            increaseBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const qty = parseInt(container.querySelector('.quantity').innerText);
+                updateCart(productId, qty + 1);
+            });
+        }
+
+        // Decrease button
+        const decreaseBtn = container.querySelector('.decrease-btn');
+        if (decreaseBtn) {
+            decreaseBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const qty = parseInt(container.querySelector('.quantity').innerText);
+                updateCart(productId, qty - 1);
+            });
+        }
+    };
+
+    // Attach event listeners to all containers
+    const attachAllEventListeners = () => {
+        document.querySelectorAll('.cart-button-container').forEach(container => {
+            attachEventListenersToContainer(container);
+        });
+
+        // Login modal buttons
+        document.querySelectorAll('.show-login-modal').forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                // Replace with your login modal trigger code
+                console.log('Show login modal');
+                // Example: document.getElementById('loginModal').showModal();
             });
         });
-    });
+    };
+
+    // Update cart via AJAX
+    const updateCart = (productId, quantity) => {
+        fetch("{% url 'dashboard:update_cart_item' %}", {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": csrftoken,
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: new URLSearchParams({
+                product_id: productId,
+                quantity: quantity,
+            }),
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === "success") {
+                updateProductUI(productId, data.quantity);
+            } else if (data.status === "removed") {
+                updateProductUI(productId, 0);
+            } else if (data.status === "error" && data.message === "Authentication required") {
+                console.log('Show login modal');
+                // Trigger login modal
+            } else {
+                console.error('Cart update failed:', data.message);
+            }
+        })
+        .catch(err => console.error("Cart update error:", err));
+    };
+
+    // Initialize
+    attachAllEventListeners();
 });
 
     // Slider JavaScript

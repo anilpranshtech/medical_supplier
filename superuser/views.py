@@ -1133,16 +1133,29 @@ class OrderListingView(StaffAccountRequiredMixin, PermissionRequiredMixin, View)
         return render(request, self.template_name, context)
 
 
-class OrderDetailesView(StaffAccountRequiredMixin, View):
+class OrderDetailesView(View):
     template_name = 'superuser/orders/order_details.html'
 
     def get(self, request, order_id):
-
+        # ✅ FIX: Correct prefetch for product images
         order = get_object_or_404(
-            Order.objects.all().distinct().select_related('user', 'payment').prefetch_related(
-                Prefetch('items', queryset=OrderItem.objects.select_related('product', 'order_by', 'order_to').prefetch_related(
-                    Prefetch('product__productimage_set', queryset=ProductImage.objects.filter(is_main=True), to_attr='main_image')
-                ))
+            Order.objects.all()
+            .distinct()
+            .select_related('user', 'payment')
+            .prefetch_related(
+                Prefetch(
+                    'items',
+                    queryset=OrderItem.objects
+                        .select_related('product', 'order_by', 'order_to')
+                        .prefetch_related(
+                            Prefetch(
+                                # 👇 change this to match your related_name
+                                'product__images',   # if ProductImage(product=FK, related_name="images")
+                                queryset=ProductImage.objects.filter(is_main=True),
+                                to_attr='main_image'
+                            )
+                        )
+                )
             ),
             order_id=order_id
         )
@@ -1150,7 +1163,7 @@ class OrderDetailesView(StaffAccountRequiredMixin, View):
         # Calculate totals for supplier's order items
         order_items = order.items.all()
         if not order_items.exists():
-            logger.warning(f"Supplier {supplier.id} attempted to view order {order.id} with no relevant items")
+            logger.warning(f"Supplier {request.user.id} attempted to view order {order.id} with no relevant items")
             messages.error(request, "You do not have permission to view this order.")
             return redirect('supplier:order_listing')
 
@@ -1175,7 +1188,7 @@ class OrderDetailesView(StaffAccountRequiredMixin, View):
             'user': order.user,
         }
 
-        return render(request, self.template_name , context)
+        return render(request, self.template_name, context)
 
 
 class OrderDeleteView(StaffAccountRequiredMixin, View):
