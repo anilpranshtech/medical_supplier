@@ -201,7 +201,7 @@ from django.core.paginator import Paginator
 
 class ProductsView(LoginRequiredMixin, View):
     template_name = 'supplier/products.html'
-    paginate_by = 3   # 👈 Per page 3 products
+    paginate_by = 3   #  Per page 3 products
 
     def get(self, request):
         user = request.user
@@ -263,7 +263,7 @@ class ProductsView(LoginRequiredMixin, View):
             image = ProductImage.objects.filter(product=product).first()
             product.image_url = image.image.url if image else '/static/supplier/media/stock/ecommerce/placeholder.png'
 
-        # Pagination 👇
+        # Pagination 
         paginator = Paginator(products, self.paginate_by)
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number)
@@ -272,8 +272,8 @@ class ProductsView(LoginRequiredMixin, View):
         categories = ProductCategory.objects.all()
 
         return render(request, self.template_name, {
-            'products': page_obj,     # 👈 Only current page products
-            'page_obj': page_obj,     # 👈 For pagination.html
+            'products': page_obj,     #  Only current page products
+            'page_obj': page_obj,     #  For pagination.html
             'category': categories
         })
 

@@ -1139,7 +1139,6 @@ class OrderDetailesView(StaffAccountRequiredMixin,View):
     template_name = 'superuser/orders/order_details.html'
 
     def get(self, request, order_id):
-        # ✅ FIX: Correct prefetch for product images
         order = get_object_or_404(
             Order.objects.all()
             .distinct()
@@ -1151,8 +1150,8 @@ class OrderDetailesView(StaffAccountRequiredMixin,View):
                         .select_related('product', 'order_by', 'order_to')
                         .prefetch_related(
                             Prefetch(
-                                # 👇 change this to match your related_name
-                                'product__images',   # if ProductImage(product=FK, related_name="images")
+                             
+                                'product__images',   
                                 queryset=ProductImage.objects.filter(is_main=True),
                                 to_attr='main_image'
                             )
@@ -1280,9 +1279,9 @@ class RatingView(TemplateView):
 
 
 
-class BannerListView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):  # Add SupplierPermissionMixin if needed
+class BannerListView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView): 
     template_name = 'superuser/banner_list.html'
-    required_permissions = ('supplier.view_banner',)
+    required_permissions = ('superuser.view_banner',)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
