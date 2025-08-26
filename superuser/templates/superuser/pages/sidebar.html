@@ -195,11 +195,6 @@
                     </a>
                     {% endif %}
 
-
-
-
-
-
                     {% if "dashboard.view_ratingreview" in user_permissions_list  %}
                     <a class="menu-link {% if request.resolver_match.url_name == 'rating_list' %} active {% endif %}"
                        href="{% url 'superuser:rating_list' %}">
