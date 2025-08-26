@@ -433,13 +433,14 @@ class User_Accounts_AddNewUser(StaffAccountRequiredMixin, View):
         return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
 
 
-GROUP_PERMISSIONS_MODELS_LIST = ['user', 'product', 'order']
+GROUP_PERMISSIONS_MODELS_LIST = ['user', 'product', 'order', 'rfqrequest', 'banner', 'ratingreview', 'notification', ]
 
 class PermissionsUsers(LoginRequiredMixin, StaffAccountRequiredMixin, View):
     template_name = 'superuser/permissions/permissions.html'
 
     def get(self, request, *args, **kwargs):
-        skipped_permissions = ['delete_order', 'add_order', 'change_order']
+        skipped_permissions = ['delete_order', 'add_order', 'change_order', 'add_rfqrequest'
+                               'add_ratingreview', 'change_ratingreview', 'delete_ratingreview',]
 
 
         groups = Group.objects.all().order_by('pk')
@@ -518,7 +519,8 @@ class User_Permissions_EditGroup(StaffAccountRequiredMixin, View):
             if request.headers.get('HX-Request'):
                 id = kwargs['UID']
 
-                skipped_permissions = ['delete_order', 'add_order', 'change_order']
+                skipped_permissions = ['delete_order', 'add_order', 'change_order', 'add_rfqrequest'
+                                       'add_ratingreview', 'change_ratingreview', 'delete_ratingreview']
 
                 group_obj = get_object_or_404(Group, pk=id)
 
@@ -1198,8 +1200,9 @@ class OrderDeleteView(StaffAccountRequiredMixin, View):
         return JsonResponse({'success': True})
 
 
-class BannerListView(LoginRequiredMixin, TemplateView):  # Add SupplierPermissionMixin if needed
+class BannerListView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):  # Add SupplierPermissionMixin if needed
     template_name = 'superuser/banner_list.html'
+    required_permissions = ('supplier.view_banner',)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1236,17 +1239,17 @@ class BannerUpdateView(LoginRequiredMixin, View):
         return render(request, 'superuser/banner_edit.html', {'form': form, 'object': banner})
 
 
-class RFQListView(LoginRequiredMixin, ListView):
+class RFQListView(LoginRequiredMixin,PermissionRequiredMixin, StaffAccountRequiredMixin,ListView):
     template_name = 'superuser/rfq_list.html'
     context_object_name = 'rfqs'
+    required_permissions = ('dashboard.view_rfqrequest',)
 
     def get_queryset(self):
         user = self.request.user
         if user.is_superuser:
             return RFQRequest.objects.all()
-        elif hasattr(user, 'supplierprofile'):
-            return RFQRequest.objects.filter(product__created_by=user)
-        return RFQRequest.objects.none()
+
+        return RFQRequest.objects.all()
 
 
 class SupplierQuotationUpdateView(LoginRequiredMixin, SupplierPermissionMixin, UpdateView):
@@ -1296,8 +1299,9 @@ class SupplierQuotationUpdateView(LoginRequiredMixin, SupplierPermissionMixin, U
         return self.request.user.is_staff or self.request.user.is_superuser
 
 
-class RatingView(TemplateView):
+class RatingView(TemplateView, StaffAccountRequiredMixin, PermissionRequiredMixin, LoginRequiredMixin):
     template_name = "superuser/rating.html"
+    required_permissions = ('dashboard.view_ratingreview',)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1322,7 +1326,9 @@ class RatingView(TemplateView):
         return context
 
 
-class MostViewedProductsView(View):
+class MostViewedProductsView(View, PermissionRequiredMixin, StaffAccountRequiredMixin, LoginRequiredMixin):
+    required_permissions = ('dashboard.view_ratingreview',)
+
     def get(self, request):
         products = Product.objects.annotate(
             delivered_count=Count(
@@ -1617,11 +1623,13 @@ class AdminProcessRefundView(View):
         return redirect("superuser:admin_returns")
 
 
-class NotificationListView(ListView):
+class NotificationListView(PermissionRequiredMixin, StaffAccountRequiredMixin, ListView):
     model = Notification
     template_name = "superuser/notification.html"
     context_object_name = "notifications"
-    paginate_by = 5 
+    paginate_by = 5
+    required_permissions = ('dashboard.view_notification',)
+
 
     def get_queryset(self):
         queryset = super().get_queryset()

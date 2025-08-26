@@ -1,5 +1,8 @@
 {% extends 'superuser/superuser_base.html' %}
 {% load static %}
+{% load superuser_tags %}
+
+{% block title %}Rating & Review{% endblock title %}
 
 {% block content %}
 <style>
@@ -9,6 +12,7 @@
     }
 </style>
 
+{% tag_user_permissions_list request.user as user_permissions_list %}
 <div class="app-main flex-column flex-row-fluid" id="kt_app_main">
     <div class="d-flex flex-column flex-column-fluid">
         <div id="kt_app_content" class="app-content flex-column-fluid pt-0">
