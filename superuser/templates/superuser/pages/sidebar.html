@@ -180,8 +180,11 @@
                       <span class="menu-title">RFQ Requests</span>
                     </a>
                   </div>
+                    {% endif %}
                 
                 <div class="menu-item">
+
+                    {% if "supplier.view_banner" in user_permissions_list  %}
                     <a class="menu-link {% if request.resolver_match.url_name == 'banner_list' %} active {% endif %}"
                        href="{% url 'superuser:banner_list' %}">
                       <span class="menu-bullet">
@@ -190,19 +193,12 @@
 
                       <span class="menu-title">Upload Banner</span>
                     </a>
-                    <a class="menu-link {% if request.resolver_match.url_name == 'view_product' %} active {% endif %}"
-                    href="{% url 'superuser:view_product' %}">
-                    <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
-                    <span class="menu-title">View Products</span>
-                    </a>
+                    {% endif %}
 
-                    {% comment %} <a class="menu-link {% if request.resolver_match.url_name == 'rating_list' %} active {% endif %}"
-                    href="{% url 'superuser:rating_list' %}">
-                    <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
-                    <span class="menu-title">Rating</span>
-                </a> {% endcomment %}
 
-                  {% endif %}
+
+
+
 
                     {% if "dashboard.view_ratingreview" in user_permissions_list  %}
                     <a class="menu-link {% if request.resolver_match.url_name == 'rating_list' %} active {% endif %}"
