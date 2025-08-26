@@ -46,6 +46,8 @@ from datetime import date, timedelta
 from django.shortcuts import get_object_or_404, redirect, render
 from django.db.models import Avg
 from django.db.models import  ExpressionWrapper, DecimalField, Case, When
+from decimal import Decimal
+from django.db.models import Value
 
 import logging
 from .forms import *
@@ -160,16 +162,14 @@ class CategoryProductsView(TemplateView):
         try:
             category = ProductCategory.objects.get(pk=category_id)
         except ProductCategory.DoesNotExist:
-            category = None
-            context['products'] = []
-            context['category'] = None
+            context.update({'products': [], 'category': None})
             return context
 
-        # Fetch products with effective price annotation
         effective_price = ExpressionWrapper(
-            F('price') * (1 - F('offer_percentage') / 100.0),
+            F('price') * (1 - (F('offer_percentage') / Value(100, output_field=DecimalField()))),
             output_field=DecimalField(max_digits=10, decimal_places=2)
         )
+
         products = Product.objects.filter(category=category, is_active=True).annotate(
             effective_price=Case(
                 When(offer_active=True, offer_percentage__isnull=False, then=effective_price),
@@ -178,57 +178,49 @@ class CategoryProductsView(TemplateView):
             )
         )
 
-        # Enhance products with additional fields
         today = timezone.now().date()
         for product in products:
-            # Main image
+          
             main_img = ProductImage.objects.filter(product=product, is_main=True).first()
             product.main_image = main_img.image.url if main_img else None
 
-            # Delivery date
+        
             if product.delivery_time:
                 delivery_date = today + timedelta(days=product.delivery_time)
                 product.delivery_date = delivery_date.strftime('%a, %d %b')
             else:
                 product.delivery_date = 'N/A'
 
-            # Rating & reviews
+     
             reviews = RatingReview.objects.filter(product=product)
             total_reviews = reviews.count()
             avg_rating = reviews.aggregate(avg_rating=Avg('rating'))['avg_rating'] or 0.0
             product.rating = round(avg_rating, 1) if total_reviews > 0 else 0.0
             product.total_reviews = total_reviews
 
-            # Discounted price
+            
             if product.offer_active and product.offer_percentage:
-                product.discounted_price = product.price * (1 - product.offer_percentage / 100.0)
+                product.discounted_price = product.price * (
+                    Decimal(1) - Decimal(product.offer_percentage) / Decimal(100)
+                )
             else:
                 product.discounted_price = product.price
 
-        # User-specific data
+      
         if self.request.user.is_authenticated:
-            cart_ids = CartProduct.objects.filter(user=self.request.user).values_list('product_id', flat=True)
-            wishlist_ids = WishlistProduct.objects.filter(user=self.request.user).values_list('product_id', flat=True)
-            context['user_cart_ids'] = list(cart_ids)
-            context['user_wishlist_ids'] = list(wishlist_ids)
+            context['user_cart_ids'] = list(
+                CartProduct.objects.filter(user=self.request.user).values_list('product_id', flat=True)
+            )
+            context['user_wishlist_ids'] = list(
+                WishlistProduct.objects.filter(user=self.request.user).values_list('product_id', flat=True)
+            )
         else:
             context['user_cart_ids'] = []
             context['user_wishlist_ids'] = []
 
-        context.update({
-            'category': category,
-            'products': products,
-        })
-
+        context.update({'category': category, 'products': products})
         return context
     
-
-
-#-------------------------------------------------------------------------------------------------------------------------------------------------#
-
-
-
-
 
 class CustomLoginView(FormView):
     form_class = EmailOnlyLoginForm
@@ -1665,7 +1657,6 @@ class PaymentMethodView(LoginRequiredMixin, View):
                     )
 
                     order = create_orders_from_cart(user, payment_type="stripe", payment_status="paid", payment=payment)
-                            is_default=True
                     messages.success(request, "Payment Done Successfully.")
                     return redirect("dashboard:order_placed")
 

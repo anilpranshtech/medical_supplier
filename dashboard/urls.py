@@ -11,7 +11,7 @@ urlpatterns = [
   
     path('login/', CustomLoginView.as_view(), name='login'),
     path('', HomeView.as_view(), name='home'),
-    # path('category/<int:pk>/', CategoryProductsView.as_view(), name='category_products'),
+    path('category/<int:pk>/', CategoryProductsView.as_view(), name='category_products'),
     path('register/', RegistrationView.as_view(), name='register'),
     path('resend-otp/', ResendOTPView.as_view(), name='resend_otp'),
     path('profile/', UserProfileView.as_view(), name='profile'),
