@@ -1,16 +1,15 @@
 from django import forms
 from supplier.models import Banner  
+from django import forms
+from django.utils import timezone
+from dashboard.models import RFQRequest
 
 class BannerForm(forms.ModelForm):
     class Meta:
         model = Banner
         fields = ['title', 'image', 'link', 'is_active', 'order']
 
-from django import forms
-from django.utils import timezone
-from dashboard.models import RFQRequest,Product
-
-class SupplierRFQQuotationForm(forms.ModelForm):
+class SuperuserRFQQuotationForm(forms.ModelForm):
     class Meta:
         model = RFQRequest
         fields = [

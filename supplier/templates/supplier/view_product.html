@@ -1,23 +1,51 @@
-<!-- templates/supplier/view_product.html -->
+	
 {% extends 'supplier/base.html' %}
 {% load static %}
+
+{% block title %}Product Review Analytics{% endblock title %}
 
 {% block content %}
 <div class="app-main flex-column flex-row-fluid" id="kt_app_main">
     <div class="d-flex flex-column flex-column-fluid">
-        <div id="kt_app_content" class="app-content flex-column-fluid">
+        <div id="kt_app_content" class="app-content flex-column-fluid mx-5">
             <div id="kt_app_content_container" class="app-container container-fluid">
 
-                <!-- Page Header -->
-                
+                <!-- Filter Form -->
+                <form action="{% url 'supplier:view_product' %}" method="GET" class="mb-7" id="product_filter_form">
+                    <div class="card mb-7">
+                        <div class="card-body">
+                            <!-- Search -->
+                            <div class="d-flex align-items-start flex-column search-card">
+                                <div class="d-flex flex-column flex-sm-row w-100 gap-5">
+                                    <!-- Search Input -->
+                                    <div class="position-relative w-md-400px me-md-2">
+                                        <i class="bi bi-search fs-3 text-gray-500 position-absolute top-50 translate-middle ms-6"></i>
+                                        <input type="text" class="form-control form-control-solid ps-10" 
+                                               name="search" value="{{ search }}" 
+                                               placeholder="Search by Product Name or Brand" aria-label="Search Products" />
+                                    </div>
+                                    <!-- Buttons -->
+                                    <div class="d-flex align-items-center">
+                                        <button type="submit" class="btn btn-primary me-3">Search</button>
+                                        {% if request.GET and request.GET.urlencode %}
+                                        <a href="{% url 'supplier:view_product' %}" class="btn btn-primary me-3">Clear Filters</a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <small class="form-text text-muted">Choices: Product Name, Brand</small>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
                 <!-- Table Card -->
                 <div class="bg-white rounded-4 shadow-sm p-4">
                     <div class="d-flex justify-content-between align-items-center mb-6">
-                    <h2 class="fw-bold text-dark fs-2 mb-0">Product Review Analytics</h2>
-                    <a href="#" class="btn btn-primary px-4 py-2 rounded-2 shadow-sm">
-                        Total: {{ products|length }} Products
-                    </a>
-                </div>
+                        <h2 class="fw-bold text-dark fs-2 mb-0">Product Review Analytics</h2>
+                        <a href="#" class="btn btn-primary px-4 py-2 rounded-2 shadow-sm">
+                            Total: {{ products|length }} Products
+                        </a>
+                    </div>
 
                     {% if products %}
                     <table class="table align-middle mb-0">
@@ -29,7 +57,6 @@
                                 <th>Brand</th>
                                 <th class="text-center">Delivered</th>
                                 <th class="text-center">Reviews</th>
-                           
                             </tr>
                         </thead>
                         <tbody class="fw-semibold text-gray-700">
@@ -39,20 +66,19 @@
                                 <td class="ps-3">{{ product.id }}</td>
 
                                 <!-- Image -->
-                                <!-- view_product.html -->
-<td>
-    {% if product.display_image %}
-        <img src="{{ product.display_image.image.url }}" 
-             alt="{{ product.name }}" 
-             class="rounded" 
-             style="width:50px;height:50px;object-fit:cover;">
-    {% else %}
-        <div class="bg-light text-muted text-center rounded" 
-             style="width:50px;height:50px;line-height:50px;">
-            N/A
-        </div>
-    {% endif %}
-</td>
+                                <td>
+                                    {% if product.display_image %}
+                                        <img src="{{ product.display_image.image.url }}" 
+                                             alt="{{ product.name }}" 
+                                             class="rounded" 
+                                             style="width:50px;height:50px;object-fit:cover;">
+                                    {% else %}
+                                        <div class="bg-light text-muted text-center rounded" 
+                                             style="width:50px;height:50px;line-height:50px;">
+                                            N/A
+                                        </div>
+                                    {% endif %}
+                                </td>
 
                                 <!-- Product Name -->
                                 <td>{{ product.name }}</td>
@@ -77,8 +103,6 @@
                                         {{ product.review_count|default:"0" }}
                                     </span>
                                 </td>
-                                
-                                
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -90,9 +114,10 @@
                     </div>
                     {% endif %}
                 </div>
-
             </div>
+               {% include "supplier/pagination.html" %}
         </div>
+        
     </div>
 </div>
 

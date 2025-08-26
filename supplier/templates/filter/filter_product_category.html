@@ -1,0 +1,13 @@
+
+<div class="col-md-6 col-lg-6 col-xl-4 col-xxl-4">
+    <label class="fs-6 form-label fw-bold text-gray-900">Category</label>
+    <select class="form-select form-select-solid" data-control="select2" data-hide-search="true" name="status">
+        <option value="all" {% if request.GET.account_type == 'all' %}selected{% endif %}>All</option>
+        {% for cat in category %}
+            <option value="{{ cat.name }}" {% if request.GET.account_type == cat.name %}selected{% endif %}>{{ cat.name }}</option>
+        {% endfor %}
+    </select>
+</div>
+
+
+

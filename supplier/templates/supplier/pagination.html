@@ -1,0 +1,79 @@
+<div class="card card-flush my-5 w-100 mx-auto">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-sm-12 col-md-2 d-flex align-items-center justify-content-center justify-content-md-start">
+                <div class="dataTables_length">
+                    <span class=" text-muted">
+                        Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} records
+                    </span>
+                </div>
+            </div>
+
+            <div class="col-sm-12 col-md-8 d-flex align-items-center justify-content-center justify-content-md-center">
+                <div class="dataTables_paginate paging_simple_numbers" id="kt_ecommerce_products_table_paginate">
+                    <ul class="pagination">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item ">
+                                <a href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="page-link">
+                                    <span class="page-link page-text">First</span>
+                                </a>
+                            </li>
+                            <li class="page-item ">
+                                <a href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="page-link">
+                                    <span class="page-link page-text">Previous</span>
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link page-text">First</span>
+                            </li>
+                            <li class="page-item disabled">
+                                <span class="page-link page-text">Previous</span>
+                            </li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <a href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="page-link">{{num}}</a>
+                                </li>
+                            {% elif num > page_obj.number|add:'-5' and num < page_obj.number|add:'5' %}
+                                <li class="page-item">
+                                    <a href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="page-link">{{num}}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item ">
+                                <a href="?page={{ page_obj.next_page_number  }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="page-link">
+                                    <span class="page-link page-text">Next</span>
+                                </a>
+                            </li>
+                            <li class="page-item ">
+                                <a href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="page-link">
+                                    <span class="page-link page-text">Last</span>
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link page-text">Next</span>
+                            </li>
+                            <li class="page-item disabled">
+                                <span class="page-link page-text">Last</span>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-sm-12 col-md-2 d-flex align-items-center justify-content-center justify-content-md-end">
+                <div class="dataTables_length">
+                    <span class=" text-muted" style="float: right;">
+                        Total Pages: {{ page_obj.paginator.num_pages }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

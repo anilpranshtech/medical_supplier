@@ -1,55 +1,119 @@
+
 {% extends 'supplier/base.html' %}
 {% load static %}
 
 {% block title %}Manage Banners{% endblock title %}
 
 {% block content %}
+<!--begin::Main-->
 <div class="app-main flex-column flex-row-fluid" id="kt_app_main">
     <div class="d-flex flex-column flex-column-fluid">
-        <div id="kt_app_content" class="app-content flex-column-fluid">
+        <div id="kt_app_content" class="app-content flex-column-fluid mx-5">
             <div id="kt_app_content_container" class="app-container container-fluid">
+                <!-- Filter Form -->
+                <form action="{% url 'supplier:banner_list' %}" method="GET" class="mb-7" id="banner_filter_form">
+                    <div class="card mb-7">
+                        <div class="card-body">
+                            <!-- Search -->
+                            <div class="d-flex align-items-start flex-column search-card">
+                                <div class="d-flex flex-column flex-sm-row w-100 gap-5">
+                                    <!-- Search Input -->
+                                    <div class="position-relative w-md-400px me-md-2">
+                                        <i class="bi bi-search fs-3 text-gray-500 position-absolute top-50 translate-middle ms-6"></i>
+                                        <input type="text" class="form-control form-control-solid ps-10" name="search" value="{{ request.GET.search }}" placeholder="Search RFQs" aria-label="Search RFQs" />
+                                    </div>
+                                    <!-- Buttons and Sort -->
+                                    <div class="d-flex align-items-center">
+                                        <button type="submit" class="btn btn-primary me-3" aria-label="Search RFQs">Search</button>
+                                        {% if request.GET and request.GET.urlencode %}
+                                        <a href="{% url 'supplier:banner_list' %}" class="btn btn-primary me-3 mx-1">Clear Filters</a>
+                                        {% endif %}
+                                        <a href="#" class="btn btn-link me-3" data-bs-toggle="collapse" data-bs-target="#kt_advanced_search_form" aria-expanded="false" aria-controls="kt_advanced_search_form">Advanced Search</a>
+                                    </div>
+                                </div>
+                                <small class="form-text text-muted">Choices: Banner Tittle</small>
+                            </div>
+                            
 
-                <!-- Banners Table -->
-                <div class="card card-flush">
-                    <div class="card-header flex-wrap align-items-center justify-content-between py-5 gap-4">
-                        <div class="card-title">
-                            <h3 class="m-0">Banner List</h3>
-                        </div>
-                        <div class="card-toolbar">
-                            <a href="{% url 'supplier:banner_upload' %}" class="btn btn-sm btn-primary">
-                                <i class="bi bi-bookmark-plus-fill fs-2 me-1"></i> Add Banner
-                            </a>
+
+                            <!-- Advanced Filters -->
+                            <div class="collapse" id="kt_advanced_search_form">
+                                <div class="separator separator-dashed mt-9 mb-6"></div>
+                                <div class="row g-8 mb-8">
+                                    <div class="col-xxl-12">
+                                        <div class="row g-8">
+                                            <!-- Banner Status Filter -->
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-semibold">Status</label>
+                                                <select name="is_active" class="form-select form-select-solid" data-control="select2" data-placeholder="Select Status">
+                                                    <option value="">All</option>
+                                                    <option value="1" {% if is_active == '1' %}selected{% endif %}>Active</option>
+                                                    <option value="0" {% if is_active == '0' %}selected{% endif %}>Inactive</option>
+                                                </select>
+                                            </div>
+                                            <!-- Banner Order Filter -->
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-semibold">Order</label>
+                                                <input type="number" name="order" class="form-control form-control-solid" placeholder="Enter Order" value="{{ order }}">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
+                </form>
 
+                
+
+                <!-- Banners Table -->
+                <div class="card card-flush mt-5">
+                    <div class="card-header py-5">
+                        <div class="card-header flex-wrap align-items-end py-5 gap-4 pb-0">
+                            <div class="card-toolbar d-flex justify-content-end w-100">
+                                <a href="{% url 'supplier:banner_upload' %}" class="btn btn-primary">
+                                    Add Banner
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                     <div class="card-body pt-0 table-responsive">
                         {% if banners %}
-                        <table id="kt_banner_table" class="table align-middle table-row-dashed fs-6 gy-5">
+                        <table id="kt_banner_table" class="table align-middle table-row-dashed fs-6 gy-6">
                             <thead>
                                 <tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
-                                    <th class="text-start min-w-50px ps-5">ID</th>
+                                    <th class="text-start min-w-50px ps-6">ID</th>
                                     <th class="text-start min-w-150px">Image</th>
                                     <th class="text-start min-w-150px">Title</th>
                                     <th class="text-center min-w-100px">Order</th>
                                     <th class="text-center min-w-100px">Status</th>
                                     <th class="text-center min-w-150px">Link</th>
-                                    <th class="text-center min-w-100px">Action</th>
+                                    <th class="text-center min-w-100px">Actions</th>
                                 </tr>
                             </thead>
                             <tbody class="fw-semibold text-gray-600">
                                 {% for banner in banners %}
                                 <tr>
-                                    <td class="text-start ps-5">{{ banner.id }}</td>
+                                    <td class="text-start ps-6">{{ banner.id }}</td>
                                     <td class="text-start">
-                                        <img src="{{ banner.image.url }}" alt="Banner" class="h-50px rounded">
+                                        <div class="d-flex">
+                                            <a href="{% url 'supplier:banner_edit' banner.id %}" class="symbol symbol-50px">
+                                                <span class="symbol-label" style="background-image:url('{{ banner.image.url }}');"></span>
+                                            </a>
+                                            <div class="ms-5">
+                                                <a href="{% url 'supplier:banner_edit' banner.id %}" 
+                                                   class="text-gray-800 text-hover-primary fs-5 fw-bold"
+                                                   data-kt-ecommerce-banner-filter="banner_title">{{ banner.title }}</a>
+                                            </div>
+                                        </div>
                                     </td>
                                     <td class="text-start">{{ banner.title }}</td>
                                     <td class="text-center">{{ banner.order }}</td>
                                     <td class="text-center">
                                         {% if banner.is_active %}
-                                            <span class="badge badge-light-success">Active</span>
+                                            <div class="badge badge-light-success">Active</div>
                                         {% else %}
-                                            <span class="badge badge-light-danger">Inactive</span>
+                                            <div class="badge badge-light-danger">Inactive</div>
                                         {% endif %}
                                     </td>
                                     <td class="text-center">
@@ -60,10 +124,12 @@
                                         {% endif %}
                                     </td>
                                     <td class="text-center">
-                                        <a href="#" class="btn btn-sm btn-light btn-flex btn-center btn-active-light-primary" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">
-                                            Actions <i class="fas fa-angle-down fs-5 ms-1"></i>
+                                        <a href="#" class="btn btn-sm btn-light btn-flex btn-center btn-active-light-primary" 
+                                           data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">
+                                           Actions <i class="fas fa-angle-down fs-5 ms-1"></i>
                                         </a>
-                                        <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-125px py-4" data-kt-menu="true">
+                                        <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-125px py-4" 
+                                             data-kt-menu="true">
                                             <div class="menu-item px-3">
                                                 <a href="{% url 'supplier:banner_edit' banner.id %}" class="menu-link px-3">Edit</a>
                                             </div>
@@ -71,7 +137,8 @@
                                                 <a href="javascript:void(0);" class="menu-link px-3 delete-banner-btn" data-id="{{ banner.id }}">Delete</a>
                                             </div>
                                         </div>
-                                    </td>
+                                    </td>                                    
+
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -81,8 +148,8 @@
                         {% endif %}
                     </div>
                 </div>
-
             </div>
+            {% include "supplier/pagination.html" %}
         </div>
     </div>
 </div>
@@ -91,6 +158,7 @@
 {% block page_only_scripts %}
 <script>
     document.addEventListener("DOMContentLoaded", function () {
+        // Function to attach delete button listeners
         const deleteButtons = document.querySelectorAll(".delete-banner-btn");
         deleteButtons.forEach(btn => {
             btn.addEventListener("click", function () {
@@ -103,13 +171,19 @@
                         },
                     }).then(res => {
                         if (res.ok) {
-                            location.reload();
+                            location.reload(); 
                         } else {
                             alert("Failed to delete banner.");
                         }
                     });
                 }
             });
+        });
+
+        // Ensure form submits correctly
+        const filterForm = document.getElementById('banner_filter_form');
+        filterForm.addEventListener('submit', function (e) {
+            this.action = "{% url 'supplier:banner_list' %}";
         });
     });
 </script>

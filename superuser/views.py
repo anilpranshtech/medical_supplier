@@ -11,7 +11,6 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic import ListView
 from django.core.paginator import EmptyPage,PageNotAnInteger
-
 import supplier
 from superuser.filters import QS_filter_user, QS_Products_filter, QS_orders_filters
 from superuser.mixins import StaffAccountRequiredMixin, PermissionRequiredMixin
@@ -20,31 +19,25 @@ from django.contrib.contenttypes.models import ContentType
 from superuser.utils import requestParamsToDict
 from dashboard.models import *
 from django.conf import settings
-from dashboard.mixins import SupplierPermissionMixin
 #from superuser.forms import *
 from superuser.models import *
 from django.views.generic import TemplateView
-from django.views.generic import ListView
 from .forms import BannerForm
 from django.views.generic.edit import UpdateView
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib import messages
 from django.utils import timezone
 from django.template.loader import render_to_string
 from django.core.mail import EmailMessage
-from django.conf import settings
 from dashboard.models import RFQRequest
-from .forms import SupplierRFQQuotationForm
-from django.shortcuts import render, redirect, get_object_or_404
+from .forms import SuperuserRFQQuotationForm
 from django.views.generic import TemplateView, View
-from django.contrib.auth.mixins import LoginRequiredMixin
 from supplier.models import Banner 
 from supplier.forms import BannerForm  
-from supplier.models import Banner
 from superuser.forms import BannerForm
 from django.views import View
-from django.shortcuts import render
-from django.db.models import Count, Q
+from django.db.models import Avg, Count, Q, Sum, Value
+from django.db.models.functions import Coalesce
+from datetime import datetime, timedelta
+
 
 class HomeView(LoginRequiredMixin, View):
     login_url = 'dashboard:login'
@@ -123,7 +116,7 @@ class UsersAccounts(LoginRequiredMixin, PermissionRequiredMixin, StaffAccountReq
         context['permission_groups'] = Group.objects.all()
         
         return context
-    
+
 
 class UserDetailView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
     template_name = 'superuser/users/user_details.html'
@@ -592,6 +585,7 @@ class User_Permissions_EditGroup(StaffAccountRequiredMixin, View):
 #
 #         return render(request, self.template_name, {'products': products})
 
+
 class ProductsListView(LoginRequiredMixin,StaffAccountRequiredMixin, PermissionRequiredMixin, ListView):
     required_permissions = ('dashboard.view_product',)
     model = Product
@@ -614,7 +608,6 @@ class ProductsListView(LoginRequiredMixin,StaffAccountRequiredMixin, PermissionR
         context = super().get_context_data(**kwargs)
         context['category'] = ProductCategory.objects.all()
         return context
-
 
 
 class AddproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
@@ -952,6 +945,7 @@ class EditproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
             messages.error(request, 'Issue in Product updated !')
 
         return redirect('superuser:products_list')
+    
 
 class DeleteProductView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
     def post(self, request, pk):
@@ -961,7 +955,8 @@ class DeleteProductView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
             messages.success(request, "Product deleted successfully")
         except Exception as e:
             messages.error(request, "Failed to delete product.")
-        return redirect('superuser:products_list')  # or wherever the list is
+        return redirect('superuser:products_list')  #
+    
 
 class CreateProductCategoryView(StaffAccountRequiredMixin, View):
     def post(self, request):
@@ -977,6 +972,7 @@ class CreateProductCategoryView(StaffAccountRequiredMixin, View):
         ProductCategory.objects.create(name=name)
         messages.success(request, f"Category '{name}' created successfully.")
         return redirect('superuser:add_product')
+    
 
 class CreateProductSubCategoryView(StaffAccountRequiredMixin, View):
     def post(self, request):
@@ -994,6 +990,7 @@ class CreateProductSubCategoryView(StaffAccountRequiredMixin, View):
 
             messages.success(request, f"Sub-category '{name}' created successfully.")
         return redirect('superuser:add_product')
+    
 
 class CreateProductLastCategoryView(StaffAccountRequiredMixin, View):
     def post(self, request):
@@ -1154,14 +1151,121 @@ class OrderDeleteView(StaffAccountRequiredMixin, View):
         order.delete()
         return JsonResponse({'success': True})
 
+    
+class RatingView(TemplateView):
+    template_name = "superuser/rating.html"
 
-class BannerListView(LoginRequiredMixin, TemplateView):  # Add SupplierPermissionMixin if needed
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        products = (
+            Product.objects
+            .annotate(
+                avg_rating=Avg('reviews__rating'),
+                review_count=Coalesce(
+                    Count(
+                        'reviews',
+                        filter=Q(reviews__rating__isnull=False) & ~Q(reviews__review="") 
+                    ),
+                    Value(0)
+                )
+            )
+            .filter(avg_rating__isnull=False)
+            .order_by('-avg_rating')
+        )
+
+        context['products'] = products
+        return context
+
+
+# class MostViewedProductsView(View):
+#     def get(self, request):
+#         products = Product.objects.annotate(
+#             delivered_count=Count(
+#                 'orderitem',
+#                 filter=Q(orderitem__status='delivered'),
+#                 distinct=True
+#             ),
+#             review_count=Count(
+#                 'reviews',
+#                 distinct=True
+#             )
+#         ).prefetch_related(
+#             Prefetch(
+#                 'productimage_set',
+#                 queryset=ProductImage.objects.order_by('-is_main', '-created_at'),
+#                 to_attr='images'
+#             )
+#         ).order_by('-delivered_count')
+
+#         # Attach a display image to each product
+#         for product in products:
+#             if product.images:
+#                 main_images = [img for img in product.images if img.is_main]
+#                 product.display_image = main_images[0] if main_images else product.images[0]
+#             else:
+#                 product.display_image = None
+
+#         # All payments
+#         payments = Payment.objects.all()
+
+#         # Paid Money
+#         paid_money = payments.filter(paid=True).aggregate(total=Sum('amount'))['total'] or 0
+
+#         # Unpaid Money
+#         unpaid_money = payments.filter(paid=False).aggregate(total=Sum('amount'))['total'] or 0
+
+#         # Cash Money (COD only)
+#         cash_money = payments.filter(payment_method="cod").aggregate(total=Sum('amount'))['total'] or 0
+
+#         # Define context dictionary
+#         context = {
+#             'total_orders': paid_money,
+#             'pending_orders': unpaid_money,
+#             'cash_money': cash_money,
+#             'orders': payments,
+#             'products': products,
+#         }
+
+#         # Render template with context
+#         return render(request, "superuser/view_product.html", context)
+
+
+class BannerListView(LoginRequiredMixin,TemplateView):
     template_name = 'superuser/banner_list.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['form'] = BannerForm()
-        context['banners'] = Banner.objects.all().order_by('order')
+        banners = Banner.objects.all()
+
+        # ---- Filters ----
+        search_query = self.request.GET.get('search', '')  
+        is_active = self.request.GET.get('is_active', '')
+        order = self.request.GET.get('order', '')
+
+        if search_query:
+            banners = banners.filter(title__icontains=search_query)
+        if is_active in ['0', '1']:
+            banners = banners.filter(is_active=bool(int(is_active)))
+        if order:
+            try:
+                banners = banners.filter(order=int(order))
+            except ValueError:
+                pass
+
+        # ---- Pagination (3 per page) ----
+        paginator = Paginator(banners, 3)
+        page_number = self.request.GET.get("page")
+        page_obj = paginator.get_page(page_number)
+
+        # Context
+        context['page_obj'] = page_obj
+        context['banners'] = page_obj.object_list  
+        context['search'] = search_query
+        context['is_active'] = is_active
+        context['order'] = order
+
         return context
 
 
@@ -1193,22 +1297,66 @@ class BannerUpdateView(LoginRequiredMixin, View):
         return render(request, 'superuser/banner_edit.html', {'form': form, 'object': banner})
 
 
-class RFQListView(LoginRequiredMixin, SupplierPermissionMixin, ListView):
+class AdminRFQListView(LoginRequiredMixin, ListView):
     template_name = 'superuser/rfq_list.html'
     context_object_name = 'rfqs'
+    paginate_by = 2   
 
     def get_queryset(self):
         user = self.request.user
-        if user.is_superuser:
-            return RFQRequest.objects.all()
-        elif hasattr(user, 'supplierprofile'):
-            return RFQRequest.objects.filter(product__created_by=user)
-        return RFQRequest.objects.none()
+        queryset = RFQRequest.objects.all() if user.is_superuser else RFQRequest.objects.filter(product__created_by=user)
+
+        # Apply filters
+        search_query = self.request.GET.get('search', '')
+        status_filter = self.request.GET.get('status_filter', '')
+        quantity_filter = self.request.GET.get('quantity_filter', '')
+        created_at_from = self.request.GET.get('created_at_from', '')
+        created_at_to = self.request.GET.get('created_at_to', '')
+
+        if search_query:
+            queryset = queryset.filter(
+                Q(product__name__icontains=search_query) |
+                Q(requested_by__username__icontains=search_query) |
+                Q(company_name__icontains=search_query)
+            )
+
+        if status_filter and status_filter != 'all':
+            queryset = queryset.filter(status=status_filter)
+
+        if quantity_filter:
+            try:
+                quantity = int(quantity_filter)
+                if quantity > 0:
+                    queryset = queryset.filter(quantity__gte=quantity)
+            except ValueError:
+                pass  
+
+        if created_at_from:
+            try:
+                created_at_from = datetime.strptime(created_at_from, '%Y-%m-%d')
+                queryset = queryset.filter(created_at__gte=created_at_from)
+            except ValueError:
+                pass  
+
+        if created_at_to:
+            try:
+                created_at_to = datetime.strptime(created_at_to, '%Y-%m-%d')
+                created_at_to = created_at_to.replace(hour=23, minute=59, second=59)
+                queryset = queryset.filter(created_at__lte=created_at_to)
+            except ValueError:
+                pass  
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['status_choices'] = RFQRequest.STATUS_CHOICES
+        return context
 
 
-class SupplierQuotationUpdateView(LoginRequiredMixin, SupplierPermissionMixin, UpdateView):
+class AdminQuotationUpdateView(LoginRequiredMixin, UpdateView):
     model = RFQRequest
-    form_class = SupplierRFQQuotationForm
+    form_class = SuperuserRFQQuotationForm
     template_name = 'superuser/rfq_quotation_form.html'
     success_url = '/superuser/rfq/'  
 
@@ -1241,9 +1389,8 @@ class SupplierQuotationUpdateView(LoginRequiredMixin, SupplierPermissionMixin, U
             from_email=settings.DEFAULT_FROM_EMAIL,
             to=[recipient_email]
         )
-        email.content_subtype = 'html'  # so template renders as HTML
+        email.content_subtype = 'html' 
 
-        # Attach file if exists
         if rfq.quote_attached_file:
             email.attach_file(rfq.quote_attached_file.path)
 
@@ -1266,20 +1413,75 @@ class RatingView(TemplateView):
                 review_count=Coalesce(
                     Count(
                         'reviews',
-                        filter=Q(reviews__rating__isnull=False) & ~Q(reviews__review="") 
+                        filter=Q(reviews__rating__isnull=False) & ~Q(reviews__review="")
                     ),
                     Value(0)
                 )
             )
             .filter(avg_rating__isnull=False)
-            .order_by('-avg_rating')
         )
 
-        context['products'] = products
+        # Get query parameters
+        search_query = self.request.GET.get('search', '')
+        rating_filter = self.request.GET.get('rating_filter', 'all')
+        review_count = self.request.GET.get('review_count', 'all')
+        price_range = self.request.GET.get('price_range', 'all')
+
+        if search_query:
+            products = products.filter(
+                Q(name__icontains=search_query) |
+                Q(id__icontains=search_query)
+            )
+
+        if rating_filter != 'all':
+            try:
+                min_rating, max_rating = map(float, rating_filter.split('-'))
+                products = products.filter(
+                    avg_rating__gte=min_rating,
+                    avg_rating__lte=max_rating
+                )
+            except ValueError:
+                pass  
+
+        if review_count != 'all':
+            if review_count == '101-plus':
+                products = products.filter(review_count__gte=101)
+            else:
+                try:
+                    min_count, max_count = map(int, review_count.split('-'))
+                    products = products.filter(
+                        review_count__gte=min_count,
+                        review_count__lte=max_count
+                    )
+                except ValueError:
+                    pass 
+
+        if price_range != 'all':
+            if price_range == '201-plus':
+                products = products.filter(price__gte=201)
+            else:
+                try:
+                    min_price, max_price = map(int, price_range.split('-'))
+                    products = products.filter(
+                        price__gte=min_price,
+                        price__lte=max_price
+                    )
+                except ValueError:
+                    pass  
+
+        products = products.order_by('-avg_rating')
+
+        # ✅ Pagination setup (3 per page)
+        paginator = Paginator(products, 3)
+        page_number = self.request.GET.get("page")
+        page_obj = paginator.get_page(page_number)
+
+        context["page_obj"] = page_obj
+        context["products"] = page_obj.object_list  # current page items
         return context
 
 
-class MostViewedProductsView(View):
+class AdminMostViewedProductsView(View):
     def get(self, request):
         products = Product.objects.annotate(
             delivered_count=Count(
@@ -1293,15 +1495,17 @@ class MostViewedProductsView(View):
             )
         ).prefetch_related(
             Prefetch(
-                'productimage_set',
+                'images',  
                 queryset=ProductImage.objects.order_by('-is_main', '-created_at'),
-                to_attr='images'
+                to_attr='prefetched_images' 
             )
         ).order_by('-delivered_count')
+
         for product in products:
-            if product.images:
-                main_images = [img for img in product.images if img.is_main]
-                product.display_image = main_images[0] if main_images else product.images[0]
+            images = getattr(product, 'prefetched_images', [])
+            if images:
+                main_images = [img for img in images if img.is_main]
+                product.display_image = main_images[0] if main_images else images[0]
             else:
                 product.display_image = None
 
@@ -1321,7 +1525,14 @@ class AdminReturnsView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView
             'order_item__product', 'client'
         ).order_by('-request_date')
 
-        context['returns'] = qs
+        # ---- Pagination Setup ----
+        paginator = Paginator(qs, 3) 
+        page_number = self.request.GET.get("page")
+        page_obj = paginator.get_page(page_number)
+
+        # Add to context
+        context['page_obj'] = page_obj
+        context['returns'] = page_obj.object_list 
         context['count_all'] = qs.count()
         context['count_approved'] = qs.filter(return_status='approved').count()
         context['count_pending'] = qs.filter(return_status='pending').count()
@@ -1344,3 +1555,6 @@ class AdminReturnsView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView
             messages.error(request, "Invalid status selected.")
 
         return redirect('superuser:admin_returns')
+
+
+

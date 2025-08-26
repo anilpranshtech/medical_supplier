@@ -54,9 +54,9 @@ urlpatterns = [
     path('banner-upload/', BannerCreateView.as_view(), name='banner_upload'),
     path('banner-edit/<int:pk>/', BannerUpdateView.as_view(), name='banner_edit'),
 
-    path('rfq/', RFQListView.as_view(), name='rfq_list'),
-    path('rfq/<int:pk>/quote/', SupplierQuotationUpdateView.as_view(), name='rfq_quote'),
-    path('most-viewed-products/', MostViewedProductsView.as_view(), name='view_product'),
+    path('rfq/', AdminRFQListView.as_view(), name='rfq_list'),
+    path('rfq/<int:pk>/quote/', AdminQuotationUpdateView.as_view(), name='rfq_quote'),
+    path('most-viewed-products/', AdminMostViewedProductsView.as_view(), name='view_product'),
    
     path('rating/', RatingView.as_view(), name='rating_list'),
 

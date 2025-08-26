@@ -1,4 +1,4 @@
-{% extends 'supplier/base.html' %}
+{% extends "supplier/base.html" %}
 {% load static %}
 
 {% block content %}
@@ -55,7 +55,7 @@
                         <div class="card-count text-danger fw-bolder">${{ cash_money|floatformat:2 }}</div>
                     </div>
                     <div class="card">
-                        <div class="fw-bolder text-warning">Recevived Money</div>
+                        <div class="fw-bolder text-warning">Received Money</div>
                         <div class="card-count text-warning fw-bolder">00</div>
                     </div>
                     <div class="card">
@@ -64,62 +64,122 @@
                     </div>
                 </div>
 
-                <!-- Transactions Table -->
-                <div class="card card-flush mb-3">
-                    <div class="card-header align-items-center py-5 gap-2 gap-md-5">
-                        <div class="card-title">
-                            <div class="d-flex align-items-center position-relative my-1">
-                                <i class="fas fa-search fs-3 position-absolute ms-4"></i>
-                                <input type="text" id="search-order" class="form-control form-control-solid w-250px ps-12" placeholder="Search Transaction">
+                <!-- Filter Form -->
+                <form action="{% url 'supplier:transaction_list' %}" method="GET" id="transaction_filter_form">
+                    <div class="card mb-7">
+                        <div class="card-body">
+                            <!-- Search and Sort Filters -->
+                            <div class="d-flex align-items-start flex-column search-card">
+                                <div class="d-flex flex-column flex-sm-row w-100 gap-5">
+                                    <!-- Search Input -->
+                                    <div class="position-relative w-md-400px me-md-2">
+                                        <i class="bi bi-search fs-3 text-gray-500 position-absolute top-50 translate-middle ms-6"></i>
+                                        <input type="text" class="form-control form-control-solid ps-10" name="search" value="{{ request.GET.search }}" placeholder="Search Transactions" aria-label="Search Transactions" />
+                                    </div>
+                                    <!-- Buttons and Sort -->
+                                    <div class="d-flex align-items-center">
+                                        <button type="submit" class="btn btn-primary me-3" aria-label="Search Transactions">Search</button>
+                                        {% if request.GET and request.GET.urlencode %}
+                                        <a href="{% url 'supplier:transaction_list' %}" class="btn btn-primary me-3 mx-1">Clear Filters</a>
+                                        {% endif %}
+                                        <a href="#" class="btn btn-link me-3" data-bs-toggle="collapse" data-bs-target="#kt_advanced_search_form" aria-expanded="false" aria-controls="kt_advanced_search_form">Advanced Search</a>
+                                    </div>
+                                </div>
+                                <small class="form-text text-muted">Choices: User</small>
+                            </div>
+                            <!-- Advanced Search Filters -->
+                            <div class="collapse" id="kt_advanced_search_form">
+                                <div class="separator separator-dashed mt-9 mb-6"></div>
+                                <div class="row g-8 mb-8">
+                                    <div class="col-xxl-12">
+                                        <div class="row g-8">
+                                            <!-- Created At Filter (uncommented for completeness) -->
+                                            <div class="col-md-6 col-lg-6 col-xl-4 col-xxl-4">
+                                                <label class="fs-6 form-label fw-bold text-gray-900">Created At</label>
+                                                <select class="form-select form-select-solid" data-control="select2" data-hide-search="true" name="date_filter">
+                                                    <option value="all" {% if request.GET.date_filter == 'all' or not request.GET.date_filter %}selected{% endif %}>All</option>
+                                                    <option value="today" {% if request.GET.date_filter == 'today' %}selected{% endif %}>Today</option>
+                                                    <option value="last_7_days" {% if request.GET.date_filter == 'last_7_days' %}selected{% endif %}>Last 7 Days</option>
+                                                    <option value="last_30_days" {% if request.GET.date_filter == 'last_30_days' %}selected{% endif %}>Last 30 Days</option>
+                                                </select>
+                                            </div>
+                                            <!-- Status Filter -->
+                                            <div class="col-md-6 col-lg-6 col-xl-4 col-xxl-4">
+                                                <label class="fs-6 form-label fw-bold text-gray-900">Status</label>
+                                                <select class="form-select form-select-solid" data-control="select2" data-hide-search="true" name="status">
+                                                    <option value="all" {% if request.GET.status == 'all' or not request.GET.status %}selected{% endif %}>All</option>
+                                                    <option value="paid" {% if request.GET.status == 'paid' %}selected{% endif %}>Paid</option>
+                                                    <option value="unpaid" {% if request.GET.status == 'unpaid' %}selected{% endif %}>Unpaid</option>
+                                                </select>
+                                            </div>
+                                            <!-- Payment Method Filter -->
+                                            <div class="col-md-6 col-lg-6 col-xl-4 col-xxl-4">
+                                                <label class="fs-6 form-label fw-bold text-gray-900">Payment Method</label>
+                                                <select class="form-select form-select-solid" data-control="select2" data-hide-search="true" name="payment_method">
+                                                    <option value="all" {% if request.GET.payment_method == 'all' or not request.GET.payment_method %}selected{% endif %}>All</option>
+                                                    {% for method, label in payment_method_choices %}
+                                                    <option value="{{ method }}" {% if request.GET.payment_method == method %}selected{% endif %}>{{ label }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
+                </form>
+
+                <!-- Transactions Table -->
+                <div class="card card-flush mb-3">
+                    <div class="card-header align-items-center py-5 gap-2 gap-md-5">
+                        
+                    </div>
 
                     <div class="card-body table-responsive p-0">
-                 <table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_ecommerce_sales_table" style="margin:0;">
-    <thead>
-        <tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
-            <th class="text-center"> Transaction ID</th>
-            <th class="text-center">User</th>
-            <th class="text-center">Amount</th>
-            <th class="text-center">Payment Method</th>
-            <th class="text-center">Status</th>
-            <th class="text-center">Created At</th>
-        </tr>
-    </thead>
-    <tbody class="fw-semibold text-gray-600">
-        {% for payment in orders %}
-        <tr>
-            <td class="text-center">{{ payment.id }}</td>
-            <td class="text-center">
-                {% if payment.user %}
-                    {{ payment.user.get_full_name|default:payment.user.username }}
-                {% else %}
-                    {{ payment.name }}
-                {% endif %}
-            </td>
-            <td class="text-center">${{ payment.amount|floatformat:2 }}</td>
-            <td class="text-center">{{ payment.payment_method|title }}</td>
-            <td class="text-center">
-                {% if payment.paid %}
-                    <div class="badge badge-light-success">Paid</div>
-                {% else %}
-                    <div class="badge badge-light-danger">Unpaid</div>
-                {% endif %}
-            </td>
-            <td class="text-center">{{ payment.created_at|date:"d M Y" }}</td>
-        </tr>
-        {% empty %}
-        <tr>
-            <td colspan="6" class="text-center text-muted">No transactions available.</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-
+                        <table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_ecommerce_sales_table" style="margin:0;">
+                            <thead>
+                                <tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
+                                    <th class="text-center">Transaction ID</th>
+                                    <th class="text-center">User</th>
+                                    <th class="text-center">Amount</th>
+                                    <th class="text-center">Payment Method</th>
+                                    <th class="text-center">Status</th>
+                                    <th class="text-center">Created At</th>
+                                </tr>
+                            </thead>
+                            <tbody class="fw-semibold text-gray-600">
+                                {% for payment in orders %}
+                                <tr>
+                                    <td class="text-center">{{ payment.id }}</td>
+                                    <td class="text-center">
+                                        {% if payment.user %}
+                                            {{ payment.user.get_full_name|default:payment.user.username }}
+                                        {% else %}
+                                            {{ payment.name }}
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">${{ payment.amount|floatformat:2 }}</td>
+                                    <td class="text-center">{{ payment.get_payment_method_display }}</td>
+                                    <td class="text-center">
+                                        {% if payment.paid %}
+                                            <div class="badge badge-light-success">Paid</div>
+                                        {% else %}
+                                            <div class="badge badge-light-danger">Unpaid</div>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">{{ payment.created_at|date:"d M Y" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted">No transactions available.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-
+                   {% include "supplier/pagination.html" %}
             </div>
         </div>
     </div>
@@ -128,7 +188,15 @@
 {% block page_only_scripts %}
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        const searchInput = document.getElementById("search-order");
+        // Initialize Select2 for dropdowns
+        if (typeof $ !== 'undefined' && $.fn.select2) {
+            $('[data-control="select2"]').select2({
+                minimumResultsForSearch: Infinity
+            });
+        }
+
+        // Handle search input (client-side filtering)
+        const searchInput = document.querySelector('input[name="search"]');
         searchInput.addEventListener("keyup", function () {
             const query = this.value.toLowerCase();
             const rows = document.querySelectorAll("#kt_ecommerce_sales_table tbody tr");

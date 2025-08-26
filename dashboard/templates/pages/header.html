@@ -579,7 +579,7 @@
                             <div class="flex flex-col gap-1.5">
                                 <span class="text-sm text-foreground font-semibold">{{request.user.first_name}} {{request.user.last_name}}</span>
                                 <a class="text-xs text-secondary-foreground hover:text-primary font-medium"
-                                   href="https://keenthemes.com/metronic/tailwind/demo10/account/home/get-started">
+                                    href="{% url 'dashboard:user_profile' %}">
                                     {{request.user.email}}
                                 </a>
                             </div>
@@ -628,13 +628,21 @@
                                     {% endif %}
                                 </ul>
                             </div>
-                        </li>
+                       </li>
+                       
+{% comment %} 
+                        CONDITION become supplier {% endcomment %}
+                        {% if user.is_authenticated %}
+                        {% if not user.supplierprofile %}
                         <li>
                             <a class="kt-dropdown-menu-link flex items-center gap-2 px-4 py-2 hover:bg-secondary"
-                               href="{% url 'dashboard:request_role' %}">
-                                <i class="ki-filled ki-profile-circle text-base"></i> Become a Supplier
-                            </a>
+                            href="{% url 'dashboard:request_role' %}">
+                            <i class="ki-filled ki-profile-circle text-base"></i> Become a Supplier
+                        </a>
                         </li>
+                        {% endif %}
+                        {% endif %}
+
                         <li>
                             <div class="kt-dropdown-menu-separator border-t border-border my-1"></div>
                         </li>
@@ -731,12 +739,15 @@
                 <div class="border-e border-border h-6 hidden md:block"></div>
                 <div class="kt-menu-item relative group" data-kt-menu-item-toggle="dropdown"
                      data-kt-menu-item-trigger="hover">
+                    {% if user.is_authenticated %}
                     <a class="kt-menu-link flex items-center gap-2 px-3 py-2 text-2sm leading-none relative h-8.5 rounded-full border
-                            border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground"
-                       href="#">
-                        <i class="ki-filled ki-wallet text-base"></i>
-                        <span class="text-sm">Checkout</span>
+                    border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground"
+                    href="#">
+                    <i class="ki-filled ki-wallet text-base"></i>
+                    <span class="text-sm">Checkout</span>
                     </a>
+                    {% endif %}
+
                     <div class="kt-menu-dropdown absolute w-40 bg-background border border-border rounded-lg shadow-lg z-10 hidden mt-7 py-5 px-3">
                         <div class="kt-menu-item">
                             <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border

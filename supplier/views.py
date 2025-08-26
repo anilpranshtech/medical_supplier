@@ -32,15 +32,11 @@ from django.db.models import Sum, F, DecimalField, Prefetch
 from django.utils import timezone
 from datetime import timedelta
 from django.db.models import Avg, Count, Q, Value
-from django.db.models.functions import Coalesce
 from calendar import monthrange
 import logging
-from django.views import View
-from django.shortcuts import render
-from django.db.models import Count, Q
+from .forms import SupplierRFQQuotationForm
 
 logger = logging.getLogger(__name__)
-
 
 
 class HomeView(LoginRequiredMixin, SupplierPermissionMixin, View):
@@ -49,24 +45,18 @@ class HomeView(LoginRequiredMixin, SupplierPermissionMixin, View):
     def get(self, request):
         supplier = request.user
 
-        # Query orders for supplier's products
         supplier_order_items = OrderItem.objects.filter(order_to=supplier).select_related(
             'order', 'order_by', 'order_to', 'product__category'
         )
         orders = Order.objects.filter(items__order_to=supplier).distinct().select_related('user', 'payment')
 
-        # Total orders
         total_orders = orders.count()
-
-        # Subtotal for supplier's items
         subtotal = supplier_order_items.annotate(
             product_total=F('price') * F('quantity')
         ).aggregate(
             total=Coalesce(Sum('product_total'), 0, output_field=DecimalField())
         )['total']
         
-
-        # Top categories
         top_categories = supplier_order_items.annotate(
             category_name=F('product__category__name'),
             product_total=F('price') * F('quantity')
@@ -89,8 +79,6 @@ class HomeView(LoginRequiredMixin, SupplierPermissionMixin, View):
                 'total_sales': float(category['total_sales']),
                 'color': color_map.get(raw_color, raw_color)
             })
-
-        # Monthly sales data
         now = timezone.now()
         first_day = now.replace(day=1)
         last_day = now.replace(day=monthrange(now.year, now.month)[1])
@@ -206,19 +194,96 @@ class HomeView(LoginRequiredMixin, SupplierPermissionMixin, View):
         return render(request, 'supplier/home.html', context)
 
 
-class ProductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
-    template = 'supplier/products.html'
+
+from django.core.paginator import Paginator
+
+
+
+class ProductsView(LoginRequiredMixin, View):
+    template_name = 'supplier/products.html'
+    paginate_by = 3   # 👈 Per page 3 products
+
     def get(self, request):
         user = request.user
+        # Base queryset: Get products created by the logged-in user
         products = Product.objects.filter(created_by=user)
 
+        # Get filter parameters
+        sort_by = request.GET.get('sort_by', 'desc_created')
+        search_by = request.GET.get('search_by', '')
+        product_status = request.GET.get('product_status', 'all')
+        account_type = request.GET.get('account_type', 'all')
+        created_date = request.GET.get('created_date', '')
+
+        # Apply search filter
+        if search_by:
+            products = products.filter(
+                Q(name__icontains=search_by) |
+                Q(category__name__icontains=search_by) |
+                Q(sub_category__name__icontains=search_by) |
+                Q(last_category__name__icontains=search_by)
+            )
+
+        # Apply product status filter
+        if product_status != 'all':
+            if product_status == 'published':
+                products = products.filter(is_active=True)
+            elif product_status == 'inactive':
+                products = products.filter(is_active=False)
+
+        # Apply category filter
+        if account_type != 'all':
+            products = products.filter(category__name=account_type)
+
+        # Apply date range filter
+        if created_date:
+            try:
+                if ' - ' in created_date:
+                    start_date_str, end_date_str = created_date.split(' - ')
+                    start_date = datetime.strptime(start_date_str, '%m/%d/%Y')
+                    end_date = datetime.strptime(end_date_str, '%m/%d/%Y')
+                    products = products.filter(
+                        created_at__date__gte=start_date,
+                        created_at__date__lte=end_date
+                    )
+                else:
+                    single_date = datetime.strptime(created_date, '%m/%d/%Y')
+                    products = products.filter(created_at__date=single_date)
+            except ValueError:
+                pass  # Ignore invalid dates
+
+        # Apply sorting
+        if sort_by == 'asc_created':
+            products = products.order_by('created_at')
+        else:
+            products = products.order_by('-created_at')
+
+        # Attach image URLs to products
         for product in products:
             image = ProductImage.objects.filter(product=product).first()
             product.image_url = image.image.url if image else '/static/supplier/media/stock/ecommerce/placeholder.png'
 
-        return render(request, self.template, {'products': products})
-    
-    
+        # Pagination 👇
+        paginator = Paginator(products, self.paginate_by)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+
+        # Get categories for filter dropdown
+        categories = ProductCategory.objects.all()
+
+        return render(request, self.template_name, {
+            'products': page_obj,     # 👈 Only current page products
+            'page_obj': page_obj,     # 👈 For pagination.html
+            'category': categories
+        })
+
+       
+
+      
+
+
+
+
 class AddproductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
     template = 'supplier/add-product.html'
 
@@ -657,12 +722,15 @@ class AdminloginView(SupplierPermissionMixin, View):
         return render(request, 'supplier/sign-in.html')
 
 
+
+
 @method_decorator(login_required, name='dispatch')
 class UserListView(SupplierPermissionMixin, ListView):
     model = User
     template_name = 'supplier/user_list.html'
     context_object_name = 'users'
     ordering = ['-date_joined']
+    paginate_by = 2   # 👈 Yaha pagination set kiya (2 records per page)
 
     def get_queryset(self):
         # Get all users
@@ -681,13 +749,10 @@ class UserListView(SupplierPermissionMixin, ListView):
         search_query = self.request.GET.get('search', '')
         if search_query:
             queryset = queryset.filter(
-                username__icontains=search_query
-            ) | queryset.filter(
-                email__icontains=search_query
-            ) | queryset.filter(
-                first_name__icontains=search_query
-            ) | queryset.filter(
-                last_name__icontains=search_query
+                Q(username__icontains=search_query) |
+                Q(email__icontains=search_query) |
+                Q(first_name__icontains=search_query) |
+                Q(last_name__icontains=search_query)
             )
 
         return queryset
@@ -710,6 +775,7 @@ class UserListView(SupplierPermissionMixin, ListView):
         context['search_query'] = self.request.GET.get('search', '')
 
         return context
+
 
 
 @method_decorator(login_required, name='dispatch')
@@ -923,6 +989,7 @@ class UserDeleteView(SupplierPermissionMixin, View):
             return JsonResponse({'success': False, 'error': str(e)}, status=400)
 
 
+
 class OrderListingView(SupplierPermissionMixin, View):
     def get(self, request):
         status_filter = request.GET.get('status')
@@ -964,15 +1031,23 @@ class OrderListingView(SupplierPermissionMixin, View):
         pending_orders = orders.filter(status='pending').count()
         cancelled_orders = orders.filter(status='cancelled').count()
 
+        # ✅ Pagination (3 per page)
+        paginator = Paginator(orders, 3)  
+        page_number = request.GET.get("page")
+        page_obj = paginator.get_page(page_number)
+
         context = {
-            'orders': orders,
-            'order_totals': order_totals,  # key = order.pk, value = total price
-            'order_phones': order_phones,  # key = order.pk, value = phone number
+            'orders': page_obj,              # orders replaced with paginated list
+            'order_totals': order_totals,    # key = order.pk, value = total price
+            'order_phones': order_phones,    # key = order.pk, value = phone number
             'total_orders': total_orders,
             'completed_orders': completed_orders,
             'pending_orders': pending_orders,
             'cancelled_orders': cancelled_orders,
             'selected_status': status_filter or '',
+            'page_obj': page_obj,            # ✅ for pagination template
+            'paginator': paginator,
+            'is_paginated': page_obj.has_other_pages(),
         }
 
         logger.info(f"Supplier {supplier.id} viewed order listing with status filter: {status_filter}")
@@ -1310,29 +1385,71 @@ class RFQListView(LoginRequiredMixin, SupplierPermissionMixin, ListView):
         return RFQRequest.objects.none()
 
 
-from django.utils import timezone
-from django.contrib import messages
-from django.core.mail import EmailMessage
-from django.template.loader import render_to_string
-from django.conf import settings
-from django.shortcuts import redirect
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import UpdateView, ListView
 
-from .forms import SupplierRFQQuotationForm
 
 
 class RFQListView(LoginRequiredMixin, SupplierPermissionMixin, ListView):
     template_name = 'supplier/rfq_list.html'
     context_object_name = 'rfqs'
+    paginate_by = 2   # 👈 per page 2 RFQs
 
     def get_queryset(self):
         user = self.request.user
-        if user.is_superuser:
-            return RFQRequest.objects.all()
-        elif hasattr(user, 'supplierprofile'):
-            return RFQRequest.objects.filter(product__created_by=user)
-        return RFQRequest.objects.none()
+        queryset = RFQRequest.objects.all() if user.is_superuser else RFQRequest.objects.filter(product__created_by=user)
+
+        # Apply filters
+        search_query = self.request.GET.get('search', '')
+        status_filter = self.request.GET.get('status_filter', '')
+        quantity_filter = self.request.GET.get('quantity_filter', '')
+        created_at_from = self.request.GET.get('created_at_from', '')
+        created_at_to = self.request.GET.get('created_at_to', '')
+
+        # Search filter (Product, Requested By, Company)
+        if search_query:
+            queryset = queryset.filter(
+                Q(product__name__icontains=search_query) |
+                Q(requested_by__username__icontains=search_query) |
+                Q(company_name__icontains=search_query)
+            )
+
+        # Status filter
+        if status_filter and status_filter != 'all':
+            queryset = queryset.filter(status=status_filter)
+
+        # Quantity filter
+        if quantity_filter:
+            try:
+                quantity = int(quantity_filter)
+                if quantity > 0:
+                    queryset = queryset.filter(quantity__gte=quantity)
+            except ValueError:
+                pass  # Ignore invalid inputs
+
+        # Created At filter (from date)
+        if created_at_from:
+            try:
+                created_at_from = datetime.strptime(created_at_from, '%Y-%m-%d')
+                queryset = queryset.filter(created_at__gte=created_at_from)
+            except ValueError:
+                pass
+
+        # Created At filter (to date)
+        if created_at_to:
+            try:
+                created_at_to = datetime.strptime(created_at_to, '%Y-%m-%d')
+                created_at_to = created_at_to.replace(hour=23, minute=59, second=59)
+                queryset = queryset.filter(created_at__lte=created_at_to)
+            except ValueError:
+                pass
+
+        return queryset.order_by('-created_at')   # 👈 latest first
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['status_choices'] = RFQRequest.STATUS_CHOICES
+        return context
+
+
 
 
 class SupplierQuotationUpdateView(LoginRequiredMixin, SupplierPermissionMixin, UpdateView):
@@ -1405,121 +1522,239 @@ class SupplierQuotationUpdateView(LoginRequiredMixin, SupplierPermissionMixin, U
         return self.request.user.is_staff or self.request.user.is_superuser
 
 
-class BannerListView(LoginRequiredMixin, SupplierPermissionMixin, TemplateView):
-    template_name = 'supplier/banner_list.html'
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['form'] = BannerForm()
-        context['banners'] = Banner.objects.all().order_by('order')
-        return context
+# from django.core.paginator import Paginator
+# from django.contrib.auth.mixins import LoginRequiredMixin
+# from django.views.generic import TemplateView
+
+# class BannerListView(LoginRequiredMixin, SupplierPermissionMixin, TemplateView):
+#     template_name = 'supplier/banner_list.html'
+#     paginate_by = 2   # 👈 Per page 2 banners
+
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         context['form'] = BannerForm()
+#         banners = Banner.objects.all()
+
+#         # Handle filters
+#         search_query = self.request.GET.get('search', '') 
+#         is_active = self.request.GET.get('is_active', '')
+#         order = self.request.GET.get('order', '')
+
+#         # Apply filters
+#         if search_query:
+#             banners = banners.filter(title__icontains=search_query)
+#         if is_active in ['0', '1']:
+#             banners = banners.filter(is_active=bool(int(is_active)))
+#         if order:
+#             try:
+#                 banners = banners.filter(order=int(order))
+#             except ValueError:
+#                 pass
+
+#         # Pagination 👇
+#         paginator = Paginator(banners, self.paginate_by)
+#         page_number = self.request.GET.get('page')
+#         page_obj = paginator.get_page(page_number)
+
+#         # Send to context
+#         context['banners'] = page_obj
+#         context['page_obj'] = page_obj
+
+#         # Preserve filters for template
+#         context['search'] = search_query
+#         context['is_active'] = is_active
+#         context['order'] = order
+
+#         return context
 
 
-class BannerCreateView(LoginRequiredMixin, SupplierPermissionMixin, View):
-    def get(self, request):
-        form = BannerForm()
-        return render(request, 'supplier/banner_upload.html', {'form': form})
 
-    def post(self, request):
-        form = BannerForm(request.POST, request.FILES)
-        if form.is_valid():
-            form.save()
-            return redirect('supplier:banner_list')
-        return render(request, 'supplier/banner_upload.html', {'form': form})
+# class BannerCreateView(LoginRequiredMixin, SupplierPermissionMixin, View):
+#     def get(self, request):
+#         form = BannerForm()
+#         return render(request, 'supplier/banner_upload.html', {'form': form})
+
+#     def post(self, request):
+#         form = BannerForm(request.POST, request.FILES)
+#         if form.is_valid():
+#             form.save()
+#             return redirect('supplier:banner_list')
+#         return render(request, 'supplier/banner_upload.html', {'form': form})
 
 
-class BannerUpdateView(LoginRequiredMixin, SupplierPermissionMixin, View):
-    def get(self, request, pk):
-        banner = get_object_or_404(Banner, pk=pk)
-        form = BannerForm(instance=banner)
-        return render(request, 'supplier/banner_edit.html', {'form': form, 'object': banner})
+# class BannerUpdateView(LoginRequiredMixin, SupplierPermissionMixin, View):
+#     def get(self, request, pk):
+#         banner = get_object_or_404(Banner, pk=pk)
+#         form = BannerForm(instance=banner)
+#         return render(request, 'supplier/banner_edit.html', {'form': form, 'object': banner})
 
-    def post(self, request, pk):
-        banner = get_object_or_404(Banner, pk=pk)
-        form = BannerForm(request.POST, request.FILES, instance=banner)
-        if form.is_valid():
-            form.save()
-            return redirect('supplier:banner_list')
-        return render(request, 'supplier/view_product.html', {'form': form, 'object': banner})
-    
+#     def post(self, request, pk):
+#         banner = get_object_or_404(Banner, pk=pk)
+#         form = BannerForm(request.POST, request.FILES, instance=banner)
+#         if form.is_valid():
+#             form.save()
+#             return redirect('supplier:banner_list')
+#         return render(request, 'supplier/view_product.html', {'form': form, 'object': banner})
+
+
+
+
 
 class TransactionView(TemplateView):
     template_name = 'supplier/transaction.html'
+    paginate_by = 5  # ✅ per page kitne records
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        # All payments
+        # ----------------- Aggregates -----------------
+        all_payments = Payment.objects.all()
+        paid_money = all_payments.filter(paid=True).aggregate(total=Sum('amount'))['total'] or 0
+        unpaid_money = all_payments.filter(paid=False).aggregate(total=Sum('amount'))['total'] or 0
+        cash_money = all_payments.filter(payment_method="cod").aggregate(total=Sum('amount'))['total'] or 0
+
+        # ----------------- Filters -----------------
         payments = Payment.objects.all()
+        search = self.request.GET.get('search', '').strip()
+        if search:
+            query = Q()
+            query |= Q(name__icontains=search)
+            query |= Q(user__username__icontains=search)
+            query |= Q(user__first_name__icontains=search)
+            query |= Q(user__last_name__icontains=search)
 
-        # Paid Money
-        paid_money = payments.filter(paid=True).aggregate(total=Sum('amount'))['total'] or 0
+            # Annotate full name
+            payments = payments.annotate(
+                full_name=Concat(F('user__first_name'), Value(' '), F('user__last_name'))
+            )
+            query |= Q(full_name__icontains=search)
 
-        # Unpaid Money
-        unpaid_money = payments.filter(paid=False).aggregate(total=Sum('amount'))['total'] or 0
+            if search.isdigit():
+                query |= Q(id=int(search))
 
-        # Cash Money (COD only)
-        cash_money = payments.filter(payment_method="cod").aggregate(total=Sum('amount'))['total'] or 0
+            payments = payments.filter(query)
 
-        # Pass to template
+        payment_method = self.request.GET.get('payment_method', '')
+        if payment_method and payment_method != 'all':
+            payments = payments.filter(payment_method=payment_method)
+
+        status = self.request.GET.get('status', '')
+        if status and status != 'all':
+            paid_status = status == 'paid'
+            payments = payments.filter(paid=paid_status)
+
+        date_filter = self.request.GET.get('date_filter', '')
+        if date_filter and date_filter != 'all':
+            today = timezone.now().date()
+            if date_filter == 'today':
+                payments = payments.filter(created_at__date=today)
+            elif date_filter == 'last_7_days':
+                payments = payments.filter(created_at__date__gte=today - timedelta(days=7))
+            elif date_filter == 'last_30_days':
+                payments = payments.filter(created_at__date__gte=today - timedelta(days=30))
+
+        # Default sorting
+        payments = payments.order_by('-created_at')
+
+        # ----------------- ✅ Pagination -----------------
+        paginator = Paginator(payments, self.paginate_by)
+        page_number = self.request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+
+        # ----------------- Context -----------------
         context['total_orders'] = paid_money
         context['pending_orders'] = unpaid_money
         context['cash_money'] = cash_money
-        context['orders'] = payments
+        context['orders'] = page_obj  # ✅ ab ye paginated hoga
+        context['page_obj'] = page_obj
+        context['payment_method_choices'] = Payment._meta.get_field('payment_method').choices
 
         return context
-    
+
+
 
 class MostViewedProductsView(View):
+    paginate_by = 2   # 👈 Per page 2 products
+
     def get(self, request):
-        # Prefetch main images (or first image if no main exists)
+        # Get filter parameters
+        search = request.GET.get('search', '')
+        brand_filter = request.GET.get('brand_filter', 'all')
+        sort_by = request.GET.get('sort_by', 'desc_delivered')
+
+        # Base queryset with annotations
         products = Product.objects.annotate(
             delivered_count=Count(
-                'orderitem',  
+                'orderitem',
                 filter=Q(orderitem__status='delivered'),
                 distinct=True
             ),
             review_count=Count(
-                'reviews', 
+                'reviews',
                 distinct=True
             )
         ).prefetch_related(
             Prefetch(
-                'productimage_set',
+                'images',
                 queryset=ProductImage.objects.order_by('-is_main', '-created_at'),
-                to_attr='images'
+                to_attr='images_list'
             )
-        ).order_by('-delivered_count')
+        )
 
-        # Attach a display image to each product
+        # Apply filters
+        if search:
+            products = products.filter(
+                Q(name__icontains=search) |
+                Q(brand__name__icontains=search)
+            )
+        if brand_filter != 'all':
+            products = products.filter(brand__id=brand_filter)
+
+        # Apply sorting
+        if sort_by == 'asc_delivered':
+            products = products.order_by('delivered_count')
+        elif sort_by == 'desc_delivered':
+            products = products.order_by('-delivered_count')
+        elif sort_by == 'asc_reviews':
+            products = products.order_by('review_count')
+        elif sort_by == 'desc_reviews':
+            products = products.order_by('-review_count')
+
+        # Set display image for each product
         for product in products:
-            if product.images:
-                # Find main image or use first available
-                main_images = [img for img in product.images if img.is_main]
-                product.display_image = main_images[0] if main_images else product.images[0]
+            if product.images_list:
+                main_images = [img for img in product.images_list if img.is_main]
+                product.display_image = main_images[0] if main_images else product.images_list[0]
             else:
                 product.display_image = None
 
-        # All payments
+        # Payment calculations
         payments = Payment.objects.all()
-
-        # Paid Money
         paid_money = payments.filter(paid=True).aggregate(total=Sum('amount'))['total'] or 0
-
-        # Unpaid Money
         unpaid_money = payments.filter(paid=False).aggregate(total=Sum('amount'))['total'] or 0
-
-        # Cash Money (COD only)
         cash_money = payments.filter(payment_method="cod").aggregate(total=Sum('amount'))['total'] or 0
 
-        # Pass to template
-        context['total_orders'] = paid_money
-        context['pending_orders'] = unpaid_money
-        context['cash_money'] = cash_money
-        context['orders'] = payments
+        # Pagination 👇
+        paginator = Paginator(products, self.paginate_by)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
 
-        return context
+        # Context
+        context = {
+            'total_orders': paid_money,
+            'pending_orders': unpaid_money,
+            'cash_money': cash_money,
+            'orders': payments,
+            'products': page_obj,       # 👈 Only current page products
+            'page_obj': page_obj,       # 👈 For pagination.html
+            'brands': Brand.objects.all(), 
+            'search': search,          
+            'brand_filter': brand_filter, 
+            'sort_by': sort_by,         
+        }
 
+        return render(request, "supplier/view_product.html", context)
 
 class QuestionView(TemplateView):
     template_name = 'supplier/question.html'
@@ -1550,12 +1785,15 @@ class QuestionView(TemplateView):
         return redirect('supplier:question_list')
 
 
+
+
 class RatingView(TemplateView):
     template_name = "supplier/rating.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
+        # Base queryset with annotations for average rating and review count
         products = (
             Product.objects
             .annotate(
@@ -1563,41 +1801,160 @@ class RatingView(TemplateView):
                 review_count=Coalesce(
                     Count(
                         'reviews',
-                        filter=Q(reviews__rating__isnull=False) & ~Q(reviews__review="") 
+                        filter=Q(reviews__rating__isnull=False) & ~Q(reviews__review="")
                     ),
                     Value(0)
                 )
             )
             .filter(avg_rating__isnull=False)
-            .order_by('-avg_rating')
         )
 
-        context['products'] = products
+        # Get query parameters
+        search_query = self.request.GET.get('search', '')
+        rating_filter = self.request.GET.get('rating_filter', 'all')
+        review_count = self.request.GET.get('review_count', 'all')
+        price_range = self.request.GET.get('price_range', 'all')
+
+        # Apply search filter (Product ID or Product Name)
+        if search_query:
+            products = products.filter(
+                Q(name__icontains=search_query) |
+                Q(id__icontains=search_query)
+            )
+
+        # Apply rating filter
+        if rating_filter != 'all':
+            try:
+                min_rating, max_rating = map(float, rating_filter.split('-'))
+                products = products.filter(
+                    avg_rating__gte=min_rating,
+                    avg_rating__lte=max_rating
+                )
+            except ValueError:
+                pass  # Handle invalid rating_filter gracefully
+
+        # Apply review count filter
+        if review_count != 'all':
+            if review_count == '101-plus':
+                products = products.filter(review_count__gte=101)
+            else:
+                try:
+                    min_count, max_count = map(int, review_count.split('-'))
+                    products = products.filter(
+                        review_count__gte=min_count,
+                        review_count__lte=max_count
+                    )
+                except ValueError:
+                    pass  # Handle invalid review_count gracefully
+
+        # Apply price range filter
+        if price_range != 'all':
+            if price_range == '201-plus':
+                products = products.filter(price__gte=201)
+            else:
+                try:
+                    min_price, max_price = map(int, price_range.split('-'))
+                    products = products.filter(
+                        price__gte=min_price,
+                        price__lte=max_price
+                    )
+                except ValueError:
+                    pass  # Handle invalid price_range gracefully
+
+        # Order by average rating (descending)
+        products = products.order_by('-avg_rating')
+
+        # --- ✅ Pagination (3 per page) ---
+        paginator = Paginator(products, 2)  
+        page_number = self.request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+
+        # Context
+        context['products'] = page_obj
+        context['search_query'] = search_query
+        context['rating_filter'] = rating_filter
+        context['review_count'] = review_count
+        context['price_range'] = price_range
+        context['page_obj'] = page_obj  # for template pagination controls
+
         return context
-        context = {'products': products}
-        return render(request, 'supplier/view_product.html', context)
+
     
+
+
+
+
+
 
 class SupplierReturnsView(LoginRequiredMixin, TemplateView):
     template_name = 'supplier/returns.html'
     login_url = 'dashboard:login'
+    paginate_by = 3   # 👈 per page 3 returns
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
 
+        # Check user permissions
         if not (user.is_superuser or (hasattr(user, 'userprofile') and user.userprofile.is_supplier)):
             raise PermissionDenied("You are not authorized to access this page.")
 
+        # Base queryset for returns
         if user.is_superuser:
             returns_qs = Return.objects.all()
         else:
             returns_qs = Return.objects.filter(
                 order_item__product__brand__supplier=user
             )
-        context['returns'] = returns_qs.select_related(
+
+        # Apply filters from GET parameters
+        search_query = self.request.GET.get('search', '').strip()
+        product_filter = self.request.GET.get('product_filter', 'all')
+        return_option_filter = self.request.GET.get('return_option_filter', 'all')
+        return_status_filter = self.request.GET.get('return_status_filter', 'all')
+
+        # Search filter
+        if search_query:
+            returns_qs = returns_qs.filter(
+                Q(return_serial__icontains=search_query) |
+                Q(order_item__product__name__icontains=search_query) |
+                Q(client__username__icontains=search_query)
+            )
+
+        # Product filter
+        if product_filter != 'all':
+            returns_qs = returns_qs.filter(order_item__product__id=product_filter)
+
+        # Return option filter
+        if return_option_filter != 'all':
+            returns_qs = returns_qs.filter(return_option=return_option_filter)
+
+        # Return status filter
+        if return_status_filter != 'all':
+            returns_qs = returns_qs.filter(return_status=return_status_filter)
+
+        # Optimize queryset with select_related and order by request_date
+        returns_qs = returns_qs.select_related(
             'order_item__product', 'client'
         ).order_by('-request_date')
+
+        # Pagination 👇
+        paginator = Paginator(returns_qs, self.paginate_by)
+        page_number = self.request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+
+        context['returns'] = page_obj
+        context['page_obj'] = page_obj
+
+        # Add products for the product filter dropdown
+        if user.is_superuser:
+            context['products'] = Product.objects.all()
+        else:
+            context['products'] = Product.objects.filter(brand__supplier=user)
+
+        # Add Return model choices to context for template
+        context['return_option_choices'] = Return.RETURN_OPTION_CHOICES
+        context['return_status_choices'] = Return.RETURN_STATUS_CHOICES
 
         return context
 
@@ -1622,4 +1979,6 @@ class SupplierReturnsView(LoginRequiredMixin, TemplateView):
             )
         else:
             messages.error(request, "Invalid status selected.")
+
         return redirect('supplier:supplier_returns')
+
