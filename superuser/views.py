@@ -1,3 +1,4 @@
+import stripe
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.paginator import Paginator
@@ -11,12 +12,19 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic import ListView
 from django.core.paginator import EmptyPage,PageNotAnInteger
+from django.views.generic import ListView, CreateView, UpdateView, View
+from django.urls import reverse_lazy
+from datetime import datetime
+import re
+
 import supplier
 from superuser.filters import QS_filter_user, QS_Products_filter, QS_orders_filters
 from superuser.mixins import StaffAccountRequiredMixin, PermissionRequiredMixin
 from django.contrib.auth.models import User, Group, Permission
 from django.contrib.contenttypes.models import ContentType
-from superuser.utils import requestParamsToDict
+
+from .refunds import process_refund
+from .utils import *
 from dashboard.models import *
 from django.conf import settings
 #from superuser.forms import *
@@ -37,6 +45,10 @@ from django.views import View
 from django.db.models import Avg, Count, Q, Sum, Value
 from django.db.models.functions import Coalesce
 from datetime import datetime, timedelta
+from django.shortcuts import render
+from django.db.models import Count, Q
+import logging
+logger = logging.getLogger(__name__)
 
 
 class HomeView(LoginRequiredMixin, View):
@@ -416,13 +428,14 @@ class User_Accounts_AddNewUser(StaffAccountRequiredMixin, View):
         return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
 
 
-GROUP_PERMISSIONS_MODELS_LIST = ['user', 'product', 'order']
+GROUP_PERMISSIONS_MODELS_LIST = ['user', 'product', 'order', 'rfqrequest', 'banner', 'ratingreview', 'notification', ]
 
 class PermissionsUsers(LoginRequiredMixin, StaffAccountRequiredMixin, View):
     template_name = 'superuser/permissions/permissions.html'
 
     def get(self, request, *args, **kwargs):
-        skipped_permissions = ['delete_order', 'add_order', 'change_order']
+        skipped_permissions = ['delete_order', 'add_order', 'change_order', 'add_rfqrequest'
+                               'add_ratingreview', 'change_ratingreview', 'delete_ratingreview',]
 
 
         groups = Group.objects.all().order_by('pk')
@@ -501,7 +514,8 @@ class User_Permissions_EditGroup(StaffAccountRequiredMixin, View):
             if request.headers.get('HX-Request'):
                 id = kwargs['UID']
 
-                skipped_permissions = ['delete_order', 'add_order', 'change_order']
+                skipped_permissions = ['delete_order', 'add_order', 'change_order', 'add_rfqrequest'
+                                       'add_ratingreview', 'change_ratingreview', 'delete_ratingreview']
 
                 group_obj = get_object_or_404(Group, pk=id)
 
@@ -649,8 +663,12 @@ class AddproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
         both_selected = button_type == 'both'
         supplier = data.get('supplier')
 
-        sup_user = SupplierProfile.objects.get(id=supplier)
-        print('---------- supplier user -----------',sup_user)
+        try:
+            sup_user = SupplierProfile.objects.get(id=supplier)
+        except SupplierProfile.DoesNotExist:
+            messages.error(request, "Selected supplier does not exist.")
+            return self._render_form_with_context(request, data)
+
         def _is_event_category(self, category):
             event_keywords = ['conference', 'event', 'webinar']
             if category and category.name:
@@ -668,10 +686,14 @@ class AddproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
 
         ask_admin_to_publish = data.get('ask_admin_to_publish') == 'on'
 
+        # Handle brand creation
         brand_name = data.get('brand')
         brand = None
         if brand_name:
-            brand, _ = Brand.objects.get_or_create(name=brand_name)
+            brand, _ = Brand.objects.get_or_create(
+                name=brand_name,
+                defaults={'supplier': sup_user.user}
+            )
 
         try:
             product = Product.objects.create(
@@ -718,15 +740,14 @@ class AddproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
             category_obj = self._get_object(ProductCategory, data.get('category'))
             if _is_event_category(self, category_obj):
                 event = Event.objects.create(
-                    conference_link=data.get('conference_link') or None,
-                    speaker_name=data.get('speaker_name') or None,
-                    conference_at=data.get('conference_at') or None,
-                    duration=data.get('duration') or None,
-                    venue=data.get('venue') or None,
+                    conference_link=data.get('registration_link') or None,
+                    speaker_name=data.get('webinar_name') or None,
+                    conference_at=self._parse_date(data.get('webinar_date')) or None,
+                    duration=self._parse_duration(data.get('webinar_duration')) or None,
+                    venue=data.get('webinar_venue') or None,
                 )
                 product.event = event
                 product.save()
-
 
             main_image = files.get('main_image')
             if main_image:
@@ -774,6 +795,15 @@ class AddproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
         except:
             return None
 
+    def _parse_duration(self, val):
+        if not val:
+            return None
+        try:
+            h, m, s = map(int, val.split(':'))
+            return timedelta(hours=h, minutes=m, seconds=s)
+        except:
+            return None
+
     def _get_object(self, model, pk):
         if not pk:
             return None
@@ -787,6 +817,7 @@ class AddproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
             'categories': ProductCategory.objects.all(),
             'subcategories': ProductSubCategory.objects.all(),
             'lastcategories': ProductLastCategory.objects.all(),
+            'suppliers': SupplierProfile.objects.all(),
             **data.dict()
         })
 
@@ -947,6 +978,7 @@ class EditproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
         return redirect('superuser:products_list')
     
 
+
 class DeleteProductView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
     def post(self, request, pk):
         try:
@@ -957,6 +989,7 @@ class DeleteProductView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
             messages.error(request, "Failed to delete product.")
         return redirect('superuser:products_list')  #
     
+
 
 class CreateProductCategoryView(StaffAccountRequiredMixin, View):
     def post(self, request):
@@ -973,6 +1006,7 @@ class CreateProductCategoryView(StaffAccountRequiredMixin, View):
         messages.success(request, f"Category '{name}' created successfully.")
         return redirect('superuser:add_product')
     
+
 
 class CreateProductSubCategoryView(StaffAccountRequiredMixin, View):
     def post(self, request):
@@ -991,6 +1025,7 @@ class CreateProductSubCategoryView(StaffAccountRequiredMixin, View):
             messages.success(request, f"Sub-category '{name}' created successfully.")
         return redirect('superuser:add_product')
     
+
 
 class CreateProductLastCategoryView(StaffAccountRequiredMixin, View):
     def post(self, request):
@@ -1101,15 +1136,29 @@ class OrderListingView(StaffAccountRequiredMixin, PermissionRequiredMixin, View)
 
 
 class OrderDetailesView(StaffAccountRequiredMixin, View):
+class OrderDetailesView(View):
     template_name = 'superuser/orders/order_details.html'
 
     def get(self, request, order_id):
-
+        # ✅ FIX: Correct prefetch for product images
         order = get_object_or_404(
-            Order.objects.all().distinct().select_related('user', 'payment').prefetch_related(
-                Prefetch('items', queryset=OrderItem.objects.select_related('product', 'order_by', 'order_to').prefetch_related(
-                    Prefetch('product__productimage_set', queryset=ProductImage.objects.filter(is_main=True), to_attr='main_image')
-                ))
+            Order.objects.all()
+            .distinct()
+            .select_related('user', 'payment')
+            .prefetch_related(
+                Prefetch(
+                    'items',
+                    queryset=OrderItem.objects
+                        .select_related('product', 'order_by', 'order_to')
+                        .prefetch_related(
+                            Prefetch(
+                                # 👇 change this to match your related_name
+                                'product__images',   # if ProductImage(product=FK, related_name="images")
+                                queryset=ProductImage.objects.filter(is_main=True),
+                                to_attr='main_image'
+                            )
+                        )
+                )
             ),
             order_id=order_id
         )
@@ -1117,7 +1166,7 @@ class OrderDetailesView(StaffAccountRequiredMixin, View):
         # Calculate totals for supplier's order items
         order_items = order.items.all()
         if not order_items.exists():
-            logger.warning(f"Supplier {supplier.id} attempted to view order {order.id} with no relevant items")
+            logger.warning(f"Supplier {request.user.id} attempted to view order {order.id} with no relevant items")
             messages.error(request, "You do not have permission to view this order.")
             return redirect('supplier:order_listing')
 
@@ -1142,7 +1191,7 @@ class OrderDetailesView(StaffAccountRequiredMixin, View):
             'user': order.user,
         }
 
-        return render(request, self.template_name , context)
+        return render(request, self.template_name, context)
 
 
 class OrderDeleteView(StaffAccountRequiredMixin, View):
@@ -1231,8 +1280,10 @@ class RatingView(TemplateView):
 #         return render(request, "superuser/view_product.html", context)
 
 
-class BannerListView(LoginRequiredMixin,TemplateView):
+
+class BannerListView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):  # Add SupplierPermissionMixin if needed
     template_name = 'superuser/banner_list.html'
+    required_permissions = ('supplier.view_banner',)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1400,8 +1451,9 @@ class AdminQuotationUpdateView(LoginRequiredMixin, UpdateView):
         return self.request.user.is_staff or self.request.user.is_superuser
 
 
-class RatingView(TemplateView):
+class RatingView(TemplateView, StaffAccountRequiredMixin, PermissionRequiredMixin, LoginRequiredMixin):
     template_name = "superuser/rating.html"
+    required_permissions = ('dashboard.view_ratingreview',)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1490,7 +1542,7 @@ class AdminMostViewedProductsView(View):
                 distinct=True
             ),
             review_count=Count(
-                'reviews', 
+                'reviews',
                 distinct=True
             )
         ).prefetch_related(
@@ -1508,7 +1560,7 @@ class AdminMostViewedProductsView(View):
                 product.display_image = main_images[0] if main_images else images[0]
             else:
                 product.display_image = None
-
+ 
         context = {'products': products}
         return render(request, 'superuser/view_product.html', context)
 
@@ -1522,7 +1574,9 @@ class AdminReturnsView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView
         context = super().get_context_data(**kwargs)
 
         qs = Return.objects.select_related(
-            'order_item__product', 'client'
+            'order_item__product__brand',
+            'order_item__order__payment',
+            'client'
         ).order_by('-request_date')
 
         # ---- Pagination Setup ----
@@ -1537,20 +1591,22 @@ class AdminReturnsView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView
         context['count_approved'] = qs.filter(return_status='approved').count()
         context['count_pending'] = qs.filter(return_status='pending').count()
         context['count_rejected'] = qs.filter(return_status='rejected').count()
+        context['user_permissions_list'] = self.request.user.get_all_permissions()
 
         return context
 
-    def post(self, request, return_serial):
-        return_request = get_object_or_404(Return, return_serial=return_serial)
+
+class AdminReturnUpdateStatusView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    permission_required = 'is_staff'
+
+    def post(self, request, return_serial, *args, **kwargs):
+        return_instance = get_object_or_404(Return, return_serial=return_serial)
         new_status = request.POST.get('return_status')
 
-        if new_status in dict(Return.RETURN_STATUS_CHOICES):
-            return_request.return_status = new_status
-            return_request.save()
-            messages.success(
-                request,
-                f"Return {return_request.return_serial} updated to {return_request.get_return_status_display()}."
-            )
+        if new_status in dict(return_instance.RETURN_STATUS_CHOICES):
+            return_instance.return_status = new_status
+            return_instance.save()
+            messages.success(request, f"Return {return_serial} status updated to {new_status}.")
         else:
             messages.error(request, "Invalid status selected.")
 
@@ -1558,3 +1614,273 @@ class AdminReturnsView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView
 
 
 
+#
+#
+# class StripeRefundView(LoginRequiredMixin, PermissionRequiredMixin, View):
+#     permission_required = 'is_staff'
+#
+#     def post(self, request, *args, **kwargs):
+#         return_serial = request.POST.get("return_serial")
+#         refund_amount = request.POST.get("final_refund_amount")
+#         admin_note = request.POST.get("hidden_admin_note")
+#         user_note = request.POST.get("hidden_user_note")
+#
+#         try:
+#             return_instance = get_object_or_404(Return, return_serial=return_serial, return_status='approved')
+#             payment = return_instance.order_item.order.payment
+#
+#             if not (payment and payment.payment_method == 'stripe' and hasattr(payment, "stripe_payment")):
+#                 messages.error(request, "No linked Stripe payment found.")
+#                 return redirect("superuser:admin_returns")
+#
+#             stripe.api_key = settings.STRIPE_SECRET_KEY
+#             stripe_payment = payment.stripe_payment
+#
+#             # ✅ Refund using PaymentIntent or Charge
+#             if stripe_payment.stripe_payment_intent_id:
+#                 refund = stripe.Refund.create(
+#                     payment_intent=stripe_payment.stripe_payment_intent_id,
+#                     amount=int(float(refund_amount) * 100),
+#                     metadata={
+#                         "return_id": return_instance.return_serial,
+#                         "admin_notes": admin_note or "Processed by admin",
+#                         "description": user_note or "User-initiated return"
+#                     }
+#                 )
+#             elif stripe_payment.stripe_charge_id:
+#                 refund = stripe.Refund.create(
+#                     charge=stripe_payment.stripe_charge_id,
+#                     amount=int(float(refund_amount) * 100),
+#                     metadata={
+#                         "return_id": return_instance.return_serial,
+#                         "admin_notes": admin_note or "Processed by admin",
+#                         "description": user_note or "User-initiated return"
+#                     }
+#                 )
+#             else:
+#                 messages.error(request, "No PaymentIntent or Charge ID found.")
+#                 return redirect("superuser:admin_returns")
+#
+#             # ✅ Update statuses
+#             return_instance.return_status = "return_completed"
+#             return_instance.updated_at = timezone.now()
+#             return_instance.save()
+#
+#             payment.paid = False
+#             payment.save()
+#
+#             stripe_payment.paid = False
+#             stripe_payment.save()
+#
+#             # ✅ Notify user
+#             subject = f"Refund processed for Return {return_instance.return_serial}"
+#             message = (
+#                 f"Hello {return_instance.client.username},\n\n"
+#                 f"Your refund for order {return_instance.order_item.order.order_id} "
+#                 f"has been processed successfully.\n\n"
+#                 f"Refund Amount: ${refund_amount}\n"
+#                 f"Reference: {refund['id']}\n"
+#             )
+#             send_refund_notification(return_instance.client.email, subject, message)
+#
+#             messages.success(request, f"Refund processed for {return_instance.return_serial}.")
+#             return redirect("superuser:admin_returns")
+#
+#         except Exception as e:
+#             messages.error(request, f"Error processing refund: {str(e)}")
+#             return redirect("superuser:admin_returns")
+#
+#
+class ReturnDeleteView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    permission_required = 'is_staff'
+
+    def post(self, request, return_serial, *args, **kwargs):
+        try:
+            return_instance = get_object_or_404(Return, return_serial=return_serial)
+            user_email = return_instance.client.email
+            username = return_instance.client.username
+            order_id = return_instance.order_item.order.order_id
+
+            return_instance.delete()
+
+            subject = f"Return {return_serial} Deleted"
+            message = (
+                f"Hello {username},\n\n"
+                f"Your return request for order {order_id} (Return ID: {return_serial}) "
+                f"has been deleted by admin.\n\n"
+                f"If you believe this is an error, please contact support.\n\n"
+                f"Thank you."
+            )
+            send_refund_notification(user_email, subject, message)
+
+            messages.success(request, f"Return {return_serial} deleted successfully.")
+            return redirect('superuser:admin_returns')
+
+        except Exception as e:
+            messages.error(request, f"Error deleting return: {str(e)}")
+        return redirect('superuser:admin_returns')
+    
+
+class AdminProcessRefundView(View):
+    def post(self, request, *args, **kwargs):
+        return_serial = request.POST.get("hidden_transaction_id")
+        refund_amount = float(request.POST.get("final_refund_amount") or request.POST.get("hidden_transaction_amount", 0))
+        admin_note = request.POST.get("hidden_admin_note")
+        user_note = request.POST.get("hidden_user_note")
+
+        return_instance = get_object_or_404(Return, return_serial=return_serial, return_status="approved")
+        payment = return_instance.order_item.order.payment
+
+        if not payment:
+            messages.error(request, "Payment record not found.")
+            return redirect("superuser:admin_returns")
+
+        success, msg, refund_id = process_refund(payment, return_serial, refund_amount, admin_note, user_note)
+
+        if success:
+            return_instance.return_status = "return_completed"
+            return_instance.is_refunded = True
+            return_instance.refund_id = refund_id
+            return_instance.updated_at = timezone.now()
+            return_instance.save()
+
+            messages.success(request, f"Refund successful: {msg}")
+        else:
+            messages.error(request, f"Refund failed: {msg}")
+
+        return redirect("superuser:admin_returns")
+
+
+class NotificationListView(PermissionRequiredMixin, StaffAccountRequiredMixin, ListView):
+    model = Notification
+    template_name = "superuser/notification.html"
+    context_object_name = "notifications"
+    paginate_by = 5
+    required_permissions = ('dashboard.view_notification',)
+
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # filters
+        search_by = self.request.GET.get('search_by', '')
+        created_date = self.request.GET.get('created_date', '')
+        sort_filter = self.request.GET.get('filterSort', '')
+        checked_filter = self.request.GET.get('filterChecked', '')
+
+        if search_by:
+            queryset = queryset.filter(
+                Q(recipient__email__icontains=search_by) |
+                Q(title__icontains=search_by) |
+                Q(message__icontains=search_by)
+            )
+
+        if created_date:
+          
+            match = re.match(r'(\d{2}/\d{2}/\d{4}) - (\d{2}/\d{2}/\d{4})', created_date)
+            if match:
+                start_date_str, end_date_str = match.groups()
+                try:
+                    start_date = datetime.strptime(start_date_str, '%m/%d/%Y')
+                    end_date = datetime.strptime(end_date_str, '%m/%d/%Y').replace(hour=23, minute=59, second=59)
+                    queryset = queryset.filter(created_at__range=[start_date, end_date])
+                except ValueError:
+                    pass 
+
+        if checked_filter:
+            queryset = queryset.filter(is_read=(checked_filter == 'true'))
+        if sort_filter:
+            queryset = queryset.order_by('created_at' if sort_filter == 'asc' else '-created_at')
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["users"] = User.objects.all()
+        context["search_placeholder_text"] = "Search by User, Title, or Message"
+        context["search_help_text"] = "Search notifications by user email, title, or message content."
+        context["show_advance_search_link"] = True
+        return context
+
+class NotificationCreateView(CreateView):
+    model = Notification
+    template_name = "superuser/notification_form.html"
+    fields = ["title", "message", "send_to", "recipient"]
+    success_url = reverse_lazy("superuser:notifications_list")
+
+    def post(self, request, *args, **kwargs):
+        send_to = request.POST.get("send_to")
+        title = request.POST.get("title")
+        message = request.POST.get("message")
+
+        if send_to == "single":
+            # Specific user(s)
+            user_ids = request.POST.getlist("recipients")
+            for uid in user_ids:
+                user = User.objects.get(id=uid)
+                Notification.objects.create(
+                    recipient=user,
+                    send_to="single",
+                    title=title,
+                    message=message,
+                )
+
+        elif send_to == "buyer":
+            # Retail + Wholesale Buyers
+            retail_users = User.objects.filter(retailprofile__isnull=False)
+            wholesale_users = User.objects.filter(wholesalebuyerprofile__isnull=False)
+            all_buyers = retail_users.union(wholesale_users)
+            for user in all_buyers:
+                Notification.objects.create(
+                    recipient=user,
+                    send_to="buyer",
+                    title=title,
+                    message=message,
+                )
+
+        elif send_to == "supplier":
+            # All Suppliers
+            supplier_users = User.objects.filter(supplierprofile__isnull=False)
+            for user in supplier_users:
+                Notification.objects.create(
+                    recipient=user,
+                    send_to="supplier",
+                    title=title,
+                    message=message,
+                )
+
+        elif send_to == "all":
+            # All Buyers + Suppliers
+            retail_users = User.objects.filter(retailprofile__isnull=False)
+            wholesale_users = User.objects.filter(wholesalebuyerprofile__isnull=False)
+            supplier_users = User.objects.filter(supplierprofile__isnull=False)
+
+            all_users = retail_users.union(wholesale_users).union(supplier_users)
+            for user in all_users:
+                Notification.objects.create(
+                    recipient=user,
+                    send_to="all",
+                    title=title,
+                    message=message,
+                )
+
+        messages.success(request, "Notification sent successfully!")
+        return redirect("superuser:notifications_list")
+
+
+class EditNotificationView(UpdateView):
+    model = Notification
+    fields = ['title', 'message']
+    template_name = 'superuser/notification.html'
+    success_url = reverse_lazy('superuser:notifications_list')
+
+    def form_valid(self, form):
+        messages.success(self.request, "Notification updated successfully.")
+        return super().form_valid(form)
+
+
+class DeleteNotificationView(View):
+    def post(self, request, pk):
+        notification = get_object_or_404(Notification, pk=pk)
+        notification.delete()
+        messages.success(request, "Notification deleted successfully.")
+        return redirect('superuser:notifications_list')

@@ -1,6 +1,8 @@
 import uuid
 from decimal import Decimal
 from io import BytesIO
+from django.utils.timezone import localtime
+import pm
 from django.contrib.auth.views import PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, \
     PasswordResetCompleteView
 from django.core.exceptions import ObjectDoesNotExist
@@ -20,7 +22,7 @@ from django.utils.decorators import method_decorator
 from django.utils.html import strip_tags
 from django.utils.timezone import now, timezone
 from django.views import View
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.views.decorators.http import require_POST
 from razorpay.errors import SignatureVerificationError
 from django.db.models import Count, Prefetch, F
@@ -35,6 +37,7 @@ import razorpay
 import stripe
 from datetime import date, timedelta
 import random
+from django.db.models.functions import Coalesce
 import re
 import requests
 from supplier.models import *
@@ -95,22 +98,19 @@ class HomeView(TemplateView):
 
         # ---------------- New Arrivals ---------------- #
         recent_products = Product.objects.filter(
-            tag='recent',
-            is_active=True
+            tag='recent', is_active=True
         ).select_related('category', 'event').prefetch_related('images', 'reviews').order_by('-created_at')[:4]
         context['recent_products'] = set_product_fields(recent_products)
 
         # ---------------- Popular Medical Supplies ---------------- #
         popular_products = Product.objects.filter(
-            tag='popular',
-            is_active=True
+            tag='popular', is_active=True
         ).select_related('category', 'event').prefetch_related('images', 'reviews').order_by('-created_at')[:4]
         context['popular_products'] = set_product_fields(popular_products)
 
         # ---------------- Limited-Time Deals ---------------- #
         limited_products = Product.objects.filter(
-            tag='limited',
-            is_active=True
+            tag='limited', is_active=True
         ).select_related('category', 'event').prefetch_related('images', 'reviews').order_by('-created_at')[:4]
         context['limited_products'] = set_product_fields(limited_products)
 
@@ -124,30 +124,29 @@ class HomeView(TemplateView):
 
         # ---------------- Conference & Webinar Events ---------------- #
         conference_products = Product.objects.filter(
-            category__name__in=['Conference', 'Webinar', 'Event'],
-            is_active=True
+            category__name__in=['Conference', 'Webinar', 'Event'], is_active=True
         ).select_related('category', 'event').prefetch_related('images', 'reviews').order_by('-created_at')[:4]
         context['conference_products'] = set_product_fields(conference_products)
 
         # ---------------- Wishlist & Cart ---------------- #
         if self.request.user.is_authenticated:
+            cart_items = CartProduct.objects.filter(user=self.request.user)
+            context['user_cart_ids'] = list(cart_items.values_list('product_id', flat=True))
+            context['user_cart_quantities'] = {item.product_id: item.quantity for item in cart_items}
             context['user_wishlist_ids'] = list(
                 WishlistProduct.objects.filter(user=self.request.user).values_list('product_id', flat=True)
-            )
-            context['user_cart_ids'] = list(
-                CartProduct.objects.filter(user=self.request.user).values_list('product_id', flat=True)
             )
             context['user_registered_event_ids'] = list(
                 EventRegistration.objects.filter(user=self.request.user).values_list('product_id', flat=True)
             )
         else:
-            context['user_wishlist_ids'] = []
             context['user_cart_ids'] = []
+            context['user_cart_quantities'] = {}
+            context['user_wishlist_ids'] = []
             context['user_registered_event_ids'] = []
 
         # ---------------- Banners ---------------- #
         context['banners'] = Banner.objects.filter(is_active=True)
-
         return context
 
 
@@ -335,7 +334,7 @@ def generate_token():
 
 
 class RegistrationView(View):
-    recaptcha_secret = '6LdTHV8rAAAAAIgLr2wdtdtWExTS6xJpUpD8qEzh'
+    recaptcha_secret = '6LcldqwrAAAAAFeYWDuPvhw8cKrgGJ3dqKHuuYGq'
     template_name = 'dashboard/register.html'
 
     def get(self, request):
@@ -572,6 +571,7 @@ class SearchResultsGridView(TemplateView):
 
     def get(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
+        logger.debug(f"Context prepared: {context.keys()}")
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             html = render_to_string(self.template_name, context, request=request)
             return HttpResponse(html)
@@ -579,6 +579,7 @@ class SearchResultsGridView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        logger.debug(f"Initial context: {context}")
 
         category_id = self.request.GET.get('category')
         sub_category_id = self.request.GET.get('sub_category')
@@ -595,26 +596,62 @@ class SearchResultsGridView(TemplateView):
         context['search_query'] = search_query
         context['is_search_active'] = bool(search_query)
 
-        # Categories & Subcategories
+        # Define special categories
+        special_category_names = ['Conference', 'Webinar', 'Event']
+        logger.debug(f"special_category_names: {special_category_names}")
+
+        # Get regular categories (excluding special categories)
         last_categories_with_products = ProductLastCategory.objects.annotate(
             product_count=Count('product', filter=Q(product__is_active=True))
         ).filter(product_count__gt=0)
+        logger.debug(f"last_categories_with_products: {list(last_categories_with_products)}")
 
         valid_subcategory_ids = last_categories_with_products.values_list('sub_category_id', flat=True).distinct()
         subcategories_with_products = ProductSubCategory.objects.filter(
             id__in=valid_subcategory_ids
         ).prefetch_related('productlastcategory_set')
+        logger.debug(f"subcategories_with_products: {list(subcategories_with_products)}")
 
         valid_category_ids = subcategories_with_products.values_list('category_id', flat=True).distinct()
-        categories_with_products = ProductCategory.objects.filter(
+        regular_categories = ProductCategory.objects.filter(
             id__in=valid_category_ids
-        ).prefetch_related('productsubcategory_set')
+        ).exclude(name__in=special_category_names).prefetch_related('productsubcategory_set')
+        logger.debug(f"regular_categories: {list(regular_categories)}")
 
-        context['categories'] = categories_with_products
+        # Get special categories with product counts
+        special_categories = ProductCategory.objects.filter(
+            name__in=special_category_names
+        ).annotate(
+            product_count=Count('product', filter=Q(product__is_active=True))
+        ).filter(product_count__gt=0)
+        logger.debug(
+            f"special_categories type: {type(special_categories)}, value: {[f'ID: {c.id}, Name: {c.name}' for c in special_categories]}")
+
+        # Fetch conference products
+        conference_products = Product.objects.filter(
+            category__name__in=special_category_names,
+            is_active=True
+        ).annotate(
+            effective_price=Case(
+                When(offer_active=True, offer_percentage__isnull=False, then=ExpressionWrapper(
+                    F('price') * (1 - Coalesce(F('offer_percentage'), 0) / 100.0),
+                    output_field=DecimalField(max_digits=10, decimal_places=2)
+                )),
+                default=F('price'),
+                output_field=DecimalField(max_digits=10, decimal_places=2)
+            )
+        ).prefetch_related('images')[:4]
+        logger.debug(
+            f"conference_products: {[f'ID: {p.id}, Type: {type(p.id)}, Name: {p.name}, SKU: {p.supplier_sku}' for p in conference_products]}")
+
+        context['regular_categories'] = regular_categories
+        context['special_categories'] = special_categories
+        context['conference_products'] = conference_products
+        logger.debug(f"Context after setting categories: {context.keys()}")
 
         # Define effective price for sorting
         effective_price = ExpressionWrapper(
-            F('price') * (1 - F('offer_percentage') / 100.0),
+            F('price') * (1 - Coalesce(F('offer_percentage'), 0) / 100.0),
             output_field=DecimalField(max_digits=10, decimal_places=2)
         )
         products = Product.objects.annotate(
@@ -623,7 +660,7 @@ class SearchResultsGridView(TemplateView):
                 default=F('price'),
                 output_field=DecimalField(max_digits=10, decimal_places=2)
             )
-        ).prefetch_related('images')  # Add prefetch_related for images
+        ).prefetch_related('images')
 
         # Handle search query
         if search_query:
@@ -693,10 +730,35 @@ class SearchResultsGridView(TemplateView):
 
         elif category_id:
             try:
-                category = ProductCategory.objects.get(id=category_id)
-                subcategories = ProductSubCategory.objects.filter(category=category)
-                context['last_categories'] = last_categories_with_products.filter(sub_category__in=subcategories)
-                context['selected_category'] = category
+                try:
+                    category_id_int = int(category_id)
+                    category = ProductCategory.objects.get(id=category_id_int)
+                except ValueError:
+                    category = ProductCategory.objects.get(name=category_id)
+
+                if category.name in special_category_names:
+                    products = products.filter(category=category, is_active=True)
+                    if sort_by == '1':
+                        products = products.order_by('-effective_price')
+                    elif sort_by == '2':
+                        products = products.order_by('effective_price')
+                    else:
+                        products = products.order_by('-created_at')
+
+                    paginator = Paginator(products, 16)
+                    page_obj = paginator.get_page(page)
+
+                    context.update({
+                        'products': page_obj,
+                        'page_obj': page_obj,
+                        'paginator': paginator,
+                        'total_products': paginator.count,
+                        'selected_category': category
+                    })
+                else:
+                    subcategories = ProductSubCategory.objects.filter(category=category)
+                    context['last_categories'] = last_categories_with_products.filter(sub_category__in=subcategories)
+                    context['selected_category'] = category
             except ProductCategory.DoesNotExist:
                 context['last_categories'] = []
 
@@ -708,10 +770,14 @@ class SearchResultsGridView(TemplateView):
             wishlist_ids = WishlistProduct.objects.filter(user=self.request.user).values_list('product_id', flat=True)
             context['user_cart_ids'] = list(cart_ids)
             context['user_wishlist_ids'] = list(wishlist_ids)
+            context['user_registered_event_ids'] = list(
+                EventRegistration.objects.filter(user=self.request.user).values_list('product_id', flat=True))
         else:
             context['user_cart_ids'] = []
             context['user_wishlist_ids'] = []
+            context['user_registered_event_ids'] = []
 
+        logger.debug(f"Final context: {context.keys()}")
         return context
 
 #--------------------------------------------------------------------------------------------------------------------------------------------
@@ -722,6 +788,7 @@ class SearchResultsListView(TemplateView):
 
     def get(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
+        logger.debug(f"SearchResultsListView Context prepared: {context.keys()}")
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             html = render_to_string(self.template_name, context, request=request)
             return HttpResponse(html)
@@ -729,13 +796,14 @@ class SearchResultsListView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        request = self.request
+        logger.debug(f"Initial context: {context}")
 
-        category_id = request.GET.get('category')
-        sub_category_id = request.GET.get('sub_category')
-        last_category_id = request.GET.get('last_category')
-        sort_by = request.GET.get('sort_by')
-        page_number = request.GET.get('page', 1)
+        category_id = self.request.GET.get('category')
+        sub_category_id = self.request.GET.get('sub_category')
+        last_category_id = self.request.GET.get('last_category')
+        sort_by = self.request.GET.get('sort_by')
+        page_number = self.request.GET.get('page', 1)
+        search_query = self.request.GET.get('q', '').strip()
 
         context.update({
             'selected_category': None,
@@ -743,32 +811,65 @@ class SearchResultsListView(TemplateView):
             'selected_last_category': None,
             'page_obj': None,
             'total_products': 0,
+            'search_query': search_query,
+            'is_search_active': bool(search_query),
         })
 
-        # Categories & Subcategories with active products
+        # Define special categories
+        special_category_names = ['Conference', 'Webinar', 'Event']
+        logger.debug(f"special_category_names: {special_category_names}")
+
+        # Fetch regular categories (excluding special categories)
         last_categories_with_products = ProductLastCategory.objects.annotate(
             product_count=Count('product', filter=Q(product__is_active=True))
         ).filter(product_count__gt=0)
+        logger.debug(f"last_categories_with_products: {list(last_categories_with_products)}")
 
         valid_subcategory_ids = last_categories_with_products.values_list('sub_category_id', flat=True).distinct()
         subcategories_with_products = ProductSubCategory.objects.filter(
             id__in=valid_subcategory_ids
-        ).prefetch_related(
-            Prefetch('productlastcategory_set', queryset=last_categories_with_products)
-        )
+        ).prefetch_related('productlastcategory_set')
+        logger.debug(f"subcategories_with_products: {list(subcategories_with_products)}")
 
         valid_category_ids = subcategories_with_products.values_list('category_id', flat=True).distinct()
-        categories_with_products = ProductCategory.objects.filter(
+        regular_categories = ProductCategory.objects.filter(
             id__in=valid_category_ids
-        ).prefetch_related(
-            Prefetch('productsubcategory_set', queryset=subcategories_with_products)
-        )
+        ).exclude(name__in=special_category_names).prefetch_related('productsubcategory_set')
+        logger.debug(f"regular_categories: {list(regular_categories)}")
 
-        context['categories'] = categories_with_products
+        # Fetch special categories with product counts
+        special_categories = ProductCategory.objects.filter(
+            name__in=special_category_names
+        ).annotate(
+            product_count=Count('product', filter=Q(product__is_active=True))
+        ).filter(product_count__gt=0)
+        logger.debug(
+            f"special_categories type: {type(special_categories)}, value: {[f'ID: {c.id}, Name: {c.name}' for c in special_categories]}")
+
+        # Fetch conference products
+        conference_products = Product.objects.filter(
+            category__name__in=special_category_names,
+            is_active=True
+        ).annotate(
+            effective_price=Case(
+                When(offer_active=True, offer_percentage__isnull=False, then=ExpressionWrapper(
+                    F('price') * (1 - Coalesce(F('offer_percentage'), 0) / 100.0),
+                    output_field=DecimalField(max_digits=10, decimal_places=2)
+                )),
+                default=F('price'),
+                output_field=DecimalField(max_digits=10, decimal_places=2)
+            )
+        ).prefetch_related('images')[:4]
+        logger.debug(
+            f"conference_products: {[f'ID: {p.id}, Type: {type(p.id)}, Name: {p.name}, SKU: {p.supplier_sku}' for p in conference_products]}")
+
+        context['regular_categories'] = regular_categories
+        context['special_categories'] = special_categories
+        context['conference_products'] = conference_products
 
         # Base product queryset with effective price annotation
         effective_price = ExpressionWrapper(
-            F('price') * (1 - F('offer_percentage') / 100.0),
+            F('price') * (1 - Coalesce(F('offer_percentage'), 0) / 100.0),
             output_field=DecimalField(max_digits=10, decimal_places=2)
         )
         products_qs = Product.objects.annotate(
@@ -777,10 +878,34 @@ class SearchResultsListView(TemplateView):
                 default=F('price'),
                 output_field=DecimalField(max_digits=10, decimal_places=2)
             )
-        ).prefetch_related('images')  # Add prefetch_related for images
+        ).prefetch_related('images')
 
         # Filtering + sorting
-        if last_category_id:
+        if search_query:
+            search_terms = search_query.lower().split()
+            query = Q()
+            for term in search_terms:
+                query |= Q(name__icontains=term) | Q(keywords__icontains=term)
+            products_qs = products_qs.filter(query, is_active=True).distinct()
+
+            if sort_by == '1':
+                products_qs = products_qs.order_by('-effective_price')
+            elif sort_by == '2':
+                products_qs = products_qs.order_by('effective_price')
+            else:
+                products_qs = products_qs.order_by('-created_at')
+
+            paginator = Paginator(products_qs, 10)
+            page_obj = paginator.get_page(page_number)
+
+            context.update({
+                'products': page_obj,
+                'page_obj': page_obj,
+                'paginator': paginator,
+                'total_products': paginator.count,
+            })
+
+        elif last_category_id:
             try:
                 last_category = ProductLastCategory.objects.get(id=last_category_id)
                 products_qs = products_qs.filter(last_category=last_category, is_active=True)
@@ -806,6 +931,7 @@ class SearchResultsListView(TemplateView):
                 })
             except ProductLastCategory.DoesNotExist:
                 context['products'] = []
+
         elif sub_category_id:
             try:
                 sub_category = ProductSubCategory.objects.get(id=sub_category_id)
@@ -814,29 +940,60 @@ class SearchResultsListView(TemplateView):
                 context['selected_category'] = sub_category.category
             except ProductSubCategory.DoesNotExist:
                 context['last_categories'] = []
+
         elif category_id:
             try:
-                category = ProductCategory.objects.get(id=category_id)
-                subcategories = ProductSubCategory.objects.filter(category=category)
-                context['last_categories'] = last_categories_with_products.filter(sub_category__in=subcategories)
-                context['selected_category'] = category
+                try:
+                    category_id_int = int(category_id)
+                    category = ProductCategory.objects.get(id=category_id_int)
+                except ValueError:
+                    category = ProductCategory.objects.get(name=category_id)
+
+                if category.name in special_category_names:
+                    products_qs = products_qs.filter(category=category, is_active=True)
+                    if sort_by == '1':
+                        products_qs = products_qs.order_by('-effective_price')
+                    elif sort_by == '2':
+                        products_qs = products_qs.order_by('effective_price')
+                    else:
+                        products_qs = products_qs.order_by('-created_at')
+
+                    paginator = Paginator(products_qs, 10)
+                    page_obj = paginator.get_page(page_number)
+
+                    context.update({
+                        'products': page_obj,
+                        'page_obj': page_obj,
+                        'paginator': paginator,
+                        'total_products': paginator.count,
+                        'selected_category': category
+                    })
+                else:
+                    subcategories = ProductSubCategory.objects.filter(category=category)
+                    context['last_categories'] = last_categories_with_products.filter(sub_category__in=subcategories)
+                    context['selected_category'] = category
             except ProductCategory.DoesNotExist:
                 context['last_categories'] = []
+
         else:
             context['products'] = []
 
         # User-specific wishlist/cart IDs
-        if request.user.is_authenticated:
-            cart_ids = CartProduct.objects.filter(user=request.user).values_list('product_id', flat=True)
-            wishlist_ids = WishlistProduct.objects.filter(user=request.user).values_list('product_id', flat=True)
+        if self.request.user.is_authenticated:
+            cart_ids = CartProduct.objects.filter(user=self.request.user).values_list('product_id', flat=True)
+            wishlist_ids = WishlistProduct.objects.filter(user=self.request.user).values_list('product_id', flat=True)
             context['user_cart_ids'] = list(cart_ids)
             context['user_wishlist_ids'] = list(wishlist_ids)
+            context['user_registered_event_ids'] = list(
+                EventRegistration.objects.filter(user=self.request.user).values_list('product_id', flat=True))
         else:
             context['user_cart_ids'] = []
             context['user_wishlist_ids'] = []
+            context['user_registered_event_ids'] = []
 
+        logger.debug(f"Final context: {context.keys()}")
         return context
-    
+
 
 class ProductDetailsView(TemplateView):
     template_name = 'userdashboard/view/product_details.html'
@@ -967,19 +1124,17 @@ class EventRegisteredDataView(TemplateView):
 #         return context
 
 
-
-
 class CartAddView(LoginRequiredMixin, View):
     def get(self, request):
         cart_items = CartProduct.objects.filter(user=request.user).select_related('product')
         cart_data = []
         for item in cart_items:
             image = ''
-            if item.product.productimage_set.exists():
-                image = item.product.productimage_set.first().image.url
+            if item.product.images.exists():
+                image = item.product.images.first().image.url
 
             cart_data.append({
-                'id': item.product.id, 
+                'id': item.product.id,
                 'name': item.product.name,
                 'price': str(item.product.price),
                 'quantity': item.quantity,
@@ -1047,7 +1202,6 @@ class WishlistClearView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         WishlistProduct.objects.filter(user=request.user).delete()
         return JsonResponse({'status': 'cleared'})
-
 
 
 class WishlistView(LoginRequiredMixin, TemplateView):
@@ -1138,24 +1292,25 @@ def add_to_cart(request):
 def update_cart_item(request):
     if not request.user.is_authenticated:
         return JsonResponse({'status': 'error', 'message': 'Authentication required'}, status=401)
-    
+
     product_id = request.POST.get('product_id')
     quantity = int(request.POST.get('quantity', 1))
-    
+
     try:
         cart_item = CartProduct.objects.get(user=request.user, product_id=product_id)
-        cart_item.quantity = quantity
-        cart_item.save()
-        
-        return JsonResponse({
-            'status': 'success',
-            'product_id': product_id,
-            'quantity': quantity
-        })
-        
+        if quantity <= 0:
+            cart_item.delete()
+            return JsonResponse({'status': 'removed', 'product_id': product_id})
+        else:
+            cart_item.quantity = quantity
+            cart_item.save()
+            return JsonResponse({'status': 'success', 'product_id': product_id, 'quantity': cart_item.quantity})
     except CartProduct.DoesNotExist:
+        if quantity > 0:
+            product = get_object_or_404(Product, id=product_id)
+            cart_item = CartProduct.objects.create(user=request.user, product=product, quantity=quantity)
+            return JsonResponse({'status': 'success', 'product_id': product_id, 'quantity': cart_item.quantity})
         return JsonResponse({'status': 'error', 'message': 'Item not found'}, status=404)
-
 
 @require_POST
 def remove_from_cart(request):
@@ -1450,20 +1605,41 @@ class PaymentMethodView(LoginRequiredMixin, View):
                 elif payment_method == "stripe":
                     _, stripe_secret = self.get_stripe_key(request)
                     stripe.api_key = stripe_secret
-
                     token = request.POST.get("stripeToken")
                     crd_name = request.POST.get("crd_name")
 
                     customer = stripe.Customer.create(
                         email=user.email,
                         name=crd_name,
-                        source=token
                     )
-                    charge = stripe.Charge.create(
-                        customer=customer.id,
+
+                    pm = stripe.PaymentMethod.create(
+                        type="card",
+                        card={"token": token}
+                    )
+
+                    stripe.PaymentMethod.attach(
+                        pm.id,
+                        customer=customer.id
+                    )
+
+                    stripe.Customer.modify(
+                        customer.id,
+                        invoice_settings={"default_payment_method": pm.id}
+                    )
+
+                    intent = stripe.PaymentIntent.create(
                         amount=int(total * 100),
                         currency="usd",
-                        description="Product Payment"
+                        customer=customer.id,
+                        payment_method=pm.id,
+                        confirm=True,
+                        off_session=True,
+                        description="Product Payment",
+                        automatic_payment_methods={
+                            "enabled": True,
+                            "allow_redirects": "never"
+                        }
                     )
 
                     payment = Payment.objects.create(
@@ -1473,64 +1649,23 @@ class PaymentMethodView(LoginRequiredMixin, View):
                         payment_method="stripe",
                         paid=True
                     )
-                    logger.info(f"Created Stripe Payment {payment.id} for user {user.id}")
 
-                    StripePayment.objects.create(
-                        user=user,
-                        name=crd_name,
-                        amount=total,
-                        paid=True,
-                        stripe_charge_id=charge.id,
-                        stripe_customer_id=customer.id,
-                        stripe_signature=charge.payment_method,
+                    stripe_payment, created = StripePayment.objects.update_or_create(
+                        payment=payment,
+                        defaults={
+                            "user": user,
+                            "name": crd_name,
+                            "amount": total,
+                            "paid": True,
+                            "stripe_charge_id": intent.latest_charge,
+                            "stripe_payment_intent_id": intent.id,
+                            "stripe_customer_id": customer.id,
+                            "stripe_signature": intent.payment_method,
+                        }
                     )
 
                     order = create_orders_from_cart(user, payment_type="stripe", payment_status="paid", payment=payment)
-                    card_details = charge.payment_method_details.get("card") if charge.payment_method_details else None
-
-                    latest_address = CustomerBillingAddress.objects.filter(user=user, is_deleted=False).order_by('-id').first()
-                    if latest_address:
-                        for attr, value in {
-                            "customer_name": crd_name,
-                            "customer_address1": request.POST.get("customer_address1"),
-                            "customer_address2": request.POST.get("customer_address2"),
-                            "customer_city": request.POST.get("customer_city"),
-                            "customer_state": request.POST.get("customer_state"),
-                            "customer_postal_code": request.POST.get("customer_postal_code"),
-                            "customer_country": request.POST.get("customer_country"),
-                            "customer_country_code": request.POST.get("customer_country_code"),
-                            "is_old": True,
-                            "old_card": json.dumps({
-                                "brand": card_details.brand,
-                                "last4": card_details.last4,
-                                "exp_month": card_details.exp_month,
-                                "exp_year": card_details.exp_year
-                            }) if card_details else None
-                        }.items():
-                            if value:
-                                setattr(latest_address, attr, value)
-                        latest_address.save()
-                    else:
-                        CustomerBillingAddress.objects.create(
-                            user=user,
-                            customer_name=crd_name,
-                            customer_address1=request.POST.get("customer_address1"),
-                            customer_address2=request.POST.get("customer_address2"),
-                            customer_city=request.POST.get("customer_city"),
-                            customer_state=request.POST.get("customer_state"),
-                            customer_postal_code=request.POST.get("customer_postal_code"),
-                            customer_country=request.POST.get("customer_country"),
-                            customer_country_code=request.POST.get("customer_country_code"),
-                            is_old=True,
-                            old_card=json.dumps({
-                                "brand": card_details.brand,
-                                "last4": card_details.last4,
-                                "exp_month": card_details.exp_month,
-                                "exp_year": card_details.exp_year
-                            }) if card_details else None,
                             is_default=True
-                        )
-
                     messages.success(request, "Payment Done Successfully.")
                     return redirect("dashboard:order_placed")
 
@@ -1759,32 +1894,51 @@ class MyOrdersView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         user = self.request.user
 
+        # Prefetch main image for products
         main_image_prefetch = Prefetch(
             'items__product__images',
             queryset=ProductImage.objects.filter(is_main=True),
             to_attr='main_image'
         )
 
+        # Prefetch user reviews for products
         user_reviews_prefetch = Prefetch(
             'items__product__reviews',
             queryset=RatingReview.objects.filter(user=user),
             to_attr='user_reviews'
         )
 
+        # Prefetch returns for items
+        returns_prefetch = Prefetch(
+            'items__returns',
+            queryset=Return.objects.all(),
+            to_attr='all_returns'
+        )
+
+        # Fetch orders with related data
         orders_qs = (
             Order.objects.filter(user=user)
             .select_related('payment')
             .prefetch_related(
                 main_image_prefetch,
                 user_reviews_prefetch,
-                'items__product'
+                'items__product',
+                returns_prefetch
             )
             .order_by('-created_at')
         )
 
+        # Paginate the orders
         paginator = Paginator(orders_qs, 2)
         page_number = self.request.GET.get('page')
         page_obj = paginator.get_page(page_number)
+
+        # Add has_pending_returns flag to each item
+        for order in page_obj.object_list:
+            for item in order.items.all():
+                item.has_pending_returns = any(
+                    return_obj.return_status == 'pending' for return_obj in item.all_returns
+                )
 
         context['orders'] = page_obj.object_list
         context['page_obj'] = page_obj
@@ -1797,7 +1951,41 @@ class MyReturnsView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['returns'] = Return.objects.filter(client=self.request.user).select_related('order_item__product').order_by('-request_date')
+        user = self.request.user
+
+        returns_qs = (
+            Return.objects.filter(client=user)
+            .select_related('order_item__product', 'order_item__order')
+            .prefetch_related('order_item__product__images')
+            .order_by('-request_date')
+        )
+
+        # Filter by status if requested
+        status_filter = self.request.GET.get('status')
+        if status_filter and status_filter != 'all':
+            returns_qs = returns_qs.filter(return_status=status_filter)
+
+        from django.core.paginator import Paginator
+        paginator = Paginator(returns_qs, 10)
+        page_number = self.request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+
+        # Get status counts
+        status_counts = {
+            'all': Return.objects.filter(client=user).count(),
+            'pending': Return.objects.filter(client=user, return_status='pending').count(),
+            'return_completed': Return.objects.filter(client=user, return_status='return_completed').count(),
+            'replace_completed': Return.objects.filter(client=user, return_status='replace_completed').count(),
+            'cancelled': Return.objects.filter(client=user, return_status='cancelled').count(),
+        }
+
+        context.update({
+            'returns': page_obj.object_list,
+            'page_obj': page_obj,
+            'current_status': status_filter or 'all',
+            'status_counts': status_counts,
+        })
+
         return context
 
 
@@ -2704,7 +2892,6 @@ class SubscriptionPlanView(LoginRequiredMixin, TemplateView):
     template_name = 'userdashboard/view/subscription_plans.html'
     login_url = 'dashboard:login'
 
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
@@ -2938,47 +3125,212 @@ class PostQuestionView(LoginRequiredMixin, View):
         return redirect('dashboard:product_detail', pk=product.id)
 
 
-class RequestReturnView(View):
+class CancelReturnView(LoginRequiredMixin, View):
+    @method_decorator(csrf_protect)
+    def post(self, request, return_id):
+        return_obj = get_object_or_404(
+            Return,
+            id=return_id,
+            client=request.user,
+            return_status='pending'  # Only pending returns can be cancelled
+        )
+
+        try:
+            # Update return status to cancelled
+            return_obj.return_status = 'cancelled'
+            return_obj.updated_at = timezone.now()
+            return_obj.save()
+
+            messages.success(
+                request,
+                f"Return request {return_obj.return_serial} has been cancelled successfully."
+            )
+
+            # Notify admin about cancellation
+            self._notify_admin_return_cancelled(return_obj)
+
+        except Exception as e:
+            messages.error(
+                request,
+                "An error occurred while cancelling your return request. Please try again."
+            )
+
+        return redirect('dashboard:my_orders')
+
+    def _notify_admin_return_cancelled(self, return_obj):
+        """Send notification to admin about cancelled return"""
+        try:
+            from django.contrib.auth.models import User
+            admin_users = User.objects.filter(is_staff=True)
+
+            for admin in admin_users:
+                Notification.objects.create(
+                    recipient=admin,
+                    title="Return Request Cancelled",
+                    message=f"Return request {return_obj.return_serial} has been cancelled by {return_obj.client.get_full_name() or return_obj.client.username}"
+                )
+        except Exception:
+            pass
+
+
+class RequestReturnView(LoginRequiredMixin, View):
     def post(self, request, item_id):
         order_item = get_object_or_404(OrderItem, id=item_id, order__user=request.user)
 
-        if not order_item.can_return:
-            messages.error(
-                request,
-                f"Return period has expired. Deadline was: {order_item.return_deadline.strftime('%d %b, %Y') if order_item.return_deadline else 'N/A'}"
-            )
+        # Comprehensive validation
+        validation_error = self._validate_return_eligibility(order_item)
+        if validation_error:
+            messages.error(request, validation_error)
             return redirect('dashboard:my_orders')
 
         return_option = request.POST.get('return_option')
         price = request.POST.get('price')
+        reason = request.POST.get('reason', '').strip()
 
-        if not return_option or not price:
-            messages.error(request, "Invalid return request.")
+        # Validate form data
+        if not return_option:
+            messages.error(request, "Please select a return option.")
+            return redirect('dashboard:my_orders')
+
+        if return_option not in ['return', 'replace']:
+            messages.error(request, "Invalid return option selected.")
+            return redirect('dashboard:my_orders')
+
+        if not price:
+            messages.error(request, "Price information is missing.")
+            return redirect('dashboard:my_orders')
+
+        # Check if user already has a pending return for this item
+        existing_return = Return.objects.filter(
+            order_item=order_item,
+            return_status='pending'
+        ).first()
+
+        if existing_return:
+            messages.warning(
+                request,
+                f"You already have a pending return request for this item (ID: {existing_return.return_serial})"
+            )
             return redirect('dashboard:my_orders')
 
         # Generate unique return_serial
+        return_serial = self._generate_return_serial()
+
+        try:
+            return_obj = Return.objects.create(
+                return_serial=return_serial,
+                order_item=order_item,
+                client=request.user,
+                return_option=return_option,
+                price=price,
+                return_status='pending',
+                reason=reason
+            )
+            option_text = "refund" if return_option == "return" else "replacement"
+            messages.success(
+                request,
+                f"Return request for {option_text} submitted successfully! "
+                f"Return ID: {return_serial}. You will be notified once processed."
+            )
+            self._notify_admin_new_return(return_obj)
+        except Exception as e:
+            messages.error(request, "An error occurred while processing your return request. Please try again.")
+
+        return redirect('dashboard:my_orders')
+
+    def _validate_return_eligibility(self, order_item):
+        """Validate if the item is eligible for return"""
+
+        # Check if order is delivered
+        if order_item.order.status != 'delivered':
+            return f"This order hasn't been delivered yet. Current status: {order_item.order.get_status_display()}"
+
+        # Check if product is returnable
+        if not order_item.product.is_returnable:
+            return "This product is not eligible for returns according to our policy."
+
+        # Check return period
+        if not order_item.can_return:
+            if order_item.return_deadline:
+                return f"Return period has expired. The deadline was: {order_item.return_deadline.strftime('%d %b, %Y')}"
+            else:
+                return "Return period information is not available for this item."
+
+        return None  # No error
+
+    def _generate_return_serial(self):
+        """Generate unique return serial number"""
         base_serial = 'R'
         year = timezone.now().strftime('%y')
         month = timezone.now().strftime('%m')
-        unique_code = ''.join(random.choices('0123456789', k=3))
         suffix = 'R' + year
-        return_serial = f"{base_serial}{month}{unique_code}-{suffix}"
-        while Return.objects.filter(return_serial=return_serial).exists():
+
+        # Try to generate unique serial (max 10 attempts)
+        for _ in range(10):
             unique_code = ''.join(random.choices('0123456789', k=3))
             return_serial = f"{base_serial}{month}{unique_code}-{suffix}"
 
-        # Create return record
-        Return.objects.create(
-            return_serial=return_serial,
-            order_item=order_item,
-            client=request.user,
-            return_option=return_option,
-            price=price,
-            return_status='pending'
-        )
+            if not Return.objects.filter(return_serial=return_serial).exists():
+                return return_serial
 
-        messages.success(
-            request,
-            f"Return request submitted successfully. Return ID: {return_serial}"
-        )
-        return redirect('dashboard:my_orders')
+        # Fallback with timestamp if all random attempts fail
+        timestamp = timezone.now().strftime('%H%M%S')
+        return f"{base_serial}{month}{timestamp}-{suffix}"
+
+    def _notify_admin_new_return(self, return_obj):
+        """Send notification to admin about new return request"""
+        try:
+            # Create admin notification
+            from django.contrib.auth.models import User
+            admin_users = User.objects.filter(is_staff=True)
+
+            for admin in admin_users:
+                Notification.objects.create(
+                    recipient=admin,
+                    title="New Return Request",
+                    message=f"Return request {return_obj.return_serial} for {return_obj.order_item.product.name} by {return_obj.client.get_full_name() or return_obj.client.username}"
+                )
+        except Exception:
+            pass  # Don't break the flow if notification fails
+
+class MarkNotificationReadView( View):
+    def post(self, request, pk):
+        try:
+            notif = Notification.objects.get(pk=pk)
+            notif.is_read = True
+            notif.save()
+            return JsonResponse({'success': True})
+        except Notification.DoesNotExist:
+            return JsonResponse({'error': 'Notification not found'}, status=404)
+
+
+class ClearAllNotificationsView(LoginRequiredMixin,  View):
+    def post(self, request, *args, **kwargs):
+        if request.user.is_superuser:
+            Notification.objects.all().delete()
+            return JsonResponse({'status': 'success'})
+        else:
+            return JsonResponse({'status': 'unauthorized'}, status=403)
+
+
+class MarkNotificationReadView( View):
+    def post(self, request, pk):
+        notif = Notification.objects.get(pk=pk)
+        notif.is_read = True
+        notif.save()
+        return JsonResponse({
+            "title": notif.title,
+            "message": notif.message,
+            "created_at": localtime(notif.created_at).strftime('%d %b %Y, %I:%M %p')
+        })
+
+class DeleteNotificationView(LoginRequiredMixin, View):
+    def post(self, request, id):
+        # Retrieve the notification, ensuring it belongs to the current user
+        notification = get_object_or_404(Notification, id=id, recipient=request.user)
+        # Delete the notification
+        notification.delete()
+        return JsonResponse({'status': 'success'})
+
+
+        

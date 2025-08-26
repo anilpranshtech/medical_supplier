@@ -317,7 +317,7 @@ class AddproductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
         expiry_date = self._parse_date(data.get('expiry_date'))
         offer_start = self._parse_date(data.get('offer_start'))
         offer_end = self._parse_date(data.get('offer_end'))
-        button_type = data.get('button_type') 
+        button_type = data.get('button_type')
         show_add_to_cart = button_type in ['both', 'cart']
         show_rfq = button_type in ['both', 'rfq']
         both_selected = button_type == 'both'
@@ -328,11 +328,9 @@ class AddproductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
                 return category.name.lower() in event_keywords
             return False
 
-    
         if offer_start and offer_end and offer_end < offer_start:
             messages.warning(request, "Offer end date cannot be before start date.")
 
-        # Set offer active based on user role
         if request.user.is_superuser:
             offer_active = data.get('offer_active') == 'on'
         else:
@@ -340,10 +338,14 @@ class AddproductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
 
         ask_admin_to_publish = data.get('ask_admin_to_publish') == 'on'
 
+        # Handle brand creation
         brand_name = data.get('brand')
         brand = None
         if brand_name:
-            brand, _ = Brand.objects.get_or_create(name=brand_name)
+            brand, _ = Brand.objects.get_or_create(
+                name=brand_name,
+                defaults={'supplier': request.user}
+            )
 
         try:
             product = Product.objects.create(
@@ -391,15 +393,15 @@ class AddproductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
             category_obj = self._get_object(ProductCategory, data.get('category'))
             if _is_event_category(self, category_obj):
                 event = Event.objects.create(
-                    conference_link=data.get('conference_link') or None,
-                    speaker_name=data.get('speaker_name') or None,
-                    conference_at=data.get('conference_at') or None,
-                    duration=data.get('duration') or None,
-                    venue=data.get('venue') or None,
+                    conference_link=data.get('registration_link') or None,  # Updated to match form field
+                    speaker_name=data.get('webinar_name') or None,  # Updated to match form field
+                    conference_at=data.get('webinar_date') or None,  # Updated to match form field
+                    duration=data.get('webinar_duration') or None,  # Updated to match form field
+                    venue=data.get('webinar_venue') or None,  # Updated to match form field
                 )
                 product.event = event
                 product.save()
-         
+
             main_image = files.get('main_image')
             if main_image:
                 ProductImage.objects.create(product=product, image=main_image, is_main=True)
@@ -1365,7 +1367,13 @@ class MarkNotificationReadView(SupplierPermissionMixin, View):
             "created_at": localtime(notif.created_at).strftime('%d %b %Y, %I:%M %p')
         })
 
-
+class DeleteNotificationView(LoginRequiredMixin, View):
+    def post(self, request, id):
+        # Retrieve the notification, ensuring it belongs to the current user
+        notification = get_object_or_404(Notification, id=id, recipient=request.user)
+        # Delete the notification
+        notification.delete()
+        return JsonResponse({'status': 'success'})
 class LogoutView(SupplierPermissionMixin, View):
     def get(self, request):
         logout(request)
@@ -1391,7 +1399,7 @@ class RFQListView(LoginRequiredMixin, SupplierPermissionMixin, ListView):
 class RFQListView(LoginRequiredMixin, SupplierPermissionMixin, ListView):
     template_name = 'supplier/rfq_list.html'
     context_object_name = 'rfqs'
-    paginate_by = 2   # 👈 per page 2 RFQs
+    paginate_by = 2   #  per page 2 RFQs
 
     def get_queryset(self):
         user = self.request.user
@@ -1442,7 +1450,7 @@ class RFQListView(LoginRequiredMixin, SupplierPermissionMixin, ListView):
             except ValueError:
                 pass
 
-        return queryset.order_by('-created_at')   # 👈 latest first
+        return queryset.order_by('-created_at')   #  latest first
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1529,7 +1537,7 @@ class SupplierQuotationUpdateView(LoginRequiredMixin, SupplierPermissionMixin, U
 
 # class BannerListView(LoginRequiredMixin, SupplierPermissionMixin, TemplateView):
 #     template_name = 'supplier/banner_list.html'
-#     paginate_by = 2   # 👈 Per page 2 banners
+#     paginate_by = 2   #  Per page 2 banners
 
 #     def get_context_data(self, **kwargs):
 #         context = super().get_context_data(**kwargs)
@@ -1552,7 +1560,7 @@ class SupplierQuotationUpdateView(LoginRequiredMixin, SupplierPermissionMixin, U
 #             except ValueError:
 #                 pass
 
-#         # Pagination 👇
+#         # Pagination 
 #         paginator = Paginator(banners, self.paginate_by)
 #         page_number = self.request.GET.get('page')
 #         page_obj = paginator.get_page(page_number)
@@ -1675,7 +1683,7 @@ class TransactionView(TemplateView):
 
 
 class MostViewedProductsView(View):
-    paginate_by = 2   # 👈 Per page 2 products
+    paginate_by = 2   #  Per page 2 products
 
     def get(self, request):
         # Get filter parameters
@@ -1735,7 +1743,7 @@ class MostViewedProductsView(View):
         unpaid_money = payments.filter(paid=False).aggregate(total=Sum('amount'))['total'] or 0
         cash_money = payments.filter(payment_method="cod").aggregate(total=Sum('amount'))['total'] or 0
 
-        # Pagination 👇
+        # Pagination 
         paginator = Paginator(products, self.paginate_by)
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number)
@@ -1746,8 +1754,8 @@ class MostViewedProductsView(View):
             'pending_orders': unpaid_money,
             'cash_money': cash_money,
             'orders': payments,
-            'products': page_obj,       # 👈 Only current page products
-            'page_obj': page_obj,       # 👈 For pagination.html
+            'products': page_obj,       
+            'page_obj': page_obj,      
             'brands': Brand.objects.all(), 
             'search': search,          
             'brand_filter': brand_filter, 
@@ -1768,7 +1776,6 @@ class QuestionView(TemplateView):
         question_id = request.POST.get('question_id')
         reply_text = request.POST.get('reply_text')
         action_type = request.POST.get('action_type')
-
 
         if action_type == "reply":
             question = get_object_or_404(Question, id=question_id)
@@ -1864,7 +1871,7 @@ class RatingView(TemplateView):
         # Order by average rating (descending)
         products = products.order_by('-avg_rating')
 
-        # --- ✅ Pagination (3 per page) ---
+        # ---  Pagination (3 per page) ---
         paginator = Paginator(products, 2)  
         page_number = self.request.GET.get('page')
         page_obj = paginator.get_page(page_number)
@@ -1879,17 +1886,10 @@ class RatingView(TemplateView):
 
         return context
 
-    
-
-
-
-
-
-
 class SupplierReturnsView(LoginRequiredMixin, TemplateView):
     template_name = 'supplier/returns.html'
     login_url = 'dashboard:login'
-    paginate_by = 3   # 👈 per page 3 returns
+    paginate_by = 3   #  per page 3 returns
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1901,9 +1901,9 @@ class SupplierReturnsView(LoginRequiredMixin, TemplateView):
 
         # Base queryset for returns
         if user.is_superuser:
-            returns_qs = Return.objects.all()
+            qs = Return.objects.all()
         else:
-            returns_qs = Return.objects.filter(
+            qs = Return.objects.filter(
                 order_item__product__brand__supplier=user
             )
 
@@ -1938,7 +1938,7 @@ class SupplierReturnsView(LoginRequiredMixin, TemplateView):
             'order_item__product', 'client'
         ).order_by('-request_date')
 
-        # Pagination 👇
+        # Pagination 
         paginator = Paginator(returns_qs, self.paginate_by)
         page_number = self.request.GET.get('page')
         page_obj = paginator.get_page(page_number)
@@ -1968,9 +1968,10 @@ class SupplierReturnsView(LoginRequiredMixin, TemplateView):
                 return_serial=return_serial,
                 order_item__product__brand__supplier=user
             )
+
         new_status = request.POST.get('return_status')
 
-        if new_status in [choice[0] for choice in Return.RETURN_STATUS_CHOICES]:
+        if new_status in dict(Return.RETURN_STATUS_CHOICES):
             return_request.return_status = new_status
             return_request.save()
             messages.success(

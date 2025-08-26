@@ -151,11 +151,10 @@
 
 
           <!-- RFQ Requests -->
-
-          
+           {% if "dashboard.view_rfqrequest" in user_permissions_list or "supplier.view_banner" in user_permissions_list or "dashboard.view_ratingreview" in user_permissions_list or "dashboard.view_notification" in user_permissions_list %}
           <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}"
                data-kt-menu-placement="right-start"
-               class="menu-item py-2 {% if request.resolver_match.url_name == 'rfq_list' or request.resolver_match.url_name == 'banner_list' %} here show {% endif %}">
+               class="menu-item py-2 {% if request.resolver_match.url_name == 'rfq_list' or request.resolver_match.url_name == 'banner_list' or request.resolver_match.url_name == 'rating_list' or request.resolver_match.url_name == 'notifications_list'%} here show {% endif %}">
               <span class="menu-link menu-center">
                 <span class="menu-icon me-0">
                   <i class="fas fa-envelope-open-text fs-1"></i>
@@ -170,6 +169,8 @@
                 </div>
 
                 <div class="menu-sub menu-sub-accordion">
+
+                  {% if "dashboard.view_rfqrequest" in user_permissions_list  %}
                   <div class="menu-item">
                     <a class="menu-link {% if request.resolver_match.url_name == 'rfq_list' %} active {% endif %}"
                        href="{% url 'superuser:rfq_list' %}">
@@ -195,16 +196,52 @@
                     <span class="menu-title">View Products</span>
                     </a>
 
-                    <a class="menu-link {% if request.resolver_match.url_name == 'rating_list' %} active {% endif %}"
+                    {% comment %} <a class="menu-link {% if request.resolver_match.url_name == 'rating_list' %} active {% endif %}"
                     href="{% url 'superuser:rating_list' %}">
                     <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
                     <span class="menu-title">Rating</span>
-                </a>
+                </a> {% endcomment %}
 
+                  {% endif %}
+
+                    {% if "dashboard.view_ratingreview" in user_permissions_list  %}
+                    <a class="menu-link {% if request.resolver_match.url_name == 'rating_list' %} active {% endif %}"
+                       href="{% url 'superuser:rating_list' %}">
+                      <span class="menu-bullet">
+                        <span class="bullet bullet-dot"></span>
+                      </span> 
+
+                      <span class="menu-title">Rating</span>
+
+                      </a>
+                     {% endif %}
+
+                    {% if "dashboard.view_notification" in user_permissions_list  %}
+                    <a class="menu-link {% if request.resolver_match.url_name == 'notifications_list' %} active {% endif %}"
+                       href="{% url 'superuser:notifications_list' %}">
+                      <span class="menu-bullet">
+                        <span class="bullet bullet-dot"></span>
+                      </span> 
+
+                      <span class="menu-title">Notification</span>
+
+                      </a>
+                    {% endif %}
+
+                    {% if "dashboard.view_ratingreview" in user_permissions_list  %}
+                    <a class="menu-link {% if request.resolver_match.url_name == 'view_product' %} active {% endif %}"
+                        href="{% url 'superuser:view_product' %}">
+                        <span class="menu-bullet">
+                            <span class="bullet bullet-dot"></span>
+                            </span>
+                        <span class="menu-title">View Products</span>
+                    </a>
+                     {% endif %}
                   </div>
                 </div>
               </div>
           </div>
+            {% endif %}
 
         </div>
       </div>

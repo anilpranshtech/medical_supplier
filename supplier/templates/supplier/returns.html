@@ -76,6 +76,39 @@ Supplier Returns
                 </div>
               </div>
             </div>
+
+        <!-- === Count Summary === -->
+        <div class="row text-center mb-3 mt-3">
+          <div class="col-12 col-md-3 mb-4">
+            <div class="card h-100 py-4">
+              <div class="fw-bolder text-primary">ALL RETURNS</div>
+              <div class="card-count text-primary fw-bolder">{{ count_all }}</div>
+            </div>
+          </div>
+          <div class="col-12 col-md-3 mb-4">
+            <div class="card h-100 py-4">
+              <div class="fw-bolder text-success">APPROVED</div>
+              <div class="card-count text-success fw-bolder">{{ count_approved }}</div>
+            </div>
+          </div>
+          <div class="col-12 col-md-3 mb-4">
+            <div class="card h-100 py-4">
+              <div class="fw-bolder text-warning">PENDING</div>
+              <div class="card-count text-warning fw-bolder">{{ count_pending }}</div>
+            </div>
+          </div>
+          <div class="col-12 col-md-3 mb-4">
+            <div class="card h-100 py-4">
+              <div class="fw-bolder text-danger">REJECTED</div>
+              <div class="card-count text-danger fw-bolder">{{ count_rejected }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card -->
+        <div class="card card-flush">
+          <div class="card-header align-items-center py-5 gap-4">
+            <h3 class="card-title">Supplier Returns</h3>
           </div>
         </form>
         <!-- Returns Table -->
@@ -89,6 +122,7 @@ Supplier Returns
                   <th class="text-center min-w-100px">Customer</th>
                   <th class="text-center min-w-100px">Option</th>
                   <th class="text-center min-w-100px">Price</th>
+                  <th class="text-center min-w-100px">Order ID</th>
                   <th class="text-center min-w-100px">Status</th>
                   <th class="text-center min-w-100px">Request Date</th>
                   {% if "dashboard.change_return" in user_permissions_list %}

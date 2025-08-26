@@ -48,6 +48,13 @@ class ProductSubCategoryAdmin(admin.ModelAdmin):
 class Questions(admin.ModelAdmin):
     list_display = ['id', 'user', 'text','reply','replied_at']
 
+# @admin.register(Notification)
+# class Notification(admin.ModelAdmin):
+#     created_at = models.DateTimeField(default=timezone.now)
+#     list_display = ['id', 'SEND_TO_CHOICES','recipient', 'send_to','title','message','is_read','is_deleted','created_at']
+
+admin.site.register(Notification)
+
 
 @admin.register(ProductLastCategory)
 class ProductLastCategoryAdmin(admin.ModelAdmin):

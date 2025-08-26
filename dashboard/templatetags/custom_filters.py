@@ -3,6 +3,9 @@ from datetime import timedelta
 from django import template
 from django.utils import timezone
 
+import logging
+logger = logging.getLogger(__name__)
+
 register = template.Library()
 
 
@@ -138,3 +141,68 @@ def dictfilter(d, key):
     if isinstance(d, dict):
         return d.get(key, "")
     return ""
+
+
+@register.filter
+def return_debug(order_item):
+    """Debug filter to show return eligibility information"""
+    debug_info = {
+        'order_status': order_item.order.status,
+        'product_returnable': order_item.product.is_returnable,
+        'delivery_date': order_item.delivery_date,
+        'order_delivered_at': order_item.order.delivered_at,
+        'return_deadline': order_item.return_deadline,
+        'can_return': order_item.can_return,
+        'days_left': order_item.days_left_to_return if hasattr(order_item, 'days_left_to_return') else 'N/A'
+    }
+    return debug_info
+
+
+@register.filter
+def days_until_deadline(deadline):
+    """Calculate days until deadline"""
+    if not deadline:
+        return 0
+    days_left = (deadline - timezone.now()).days
+    return max(0, days_left)
+
+
+@register.simple_tag
+def return_status_class(order_item):
+    """Return CSS class based on return status"""
+    if not order_item.product.is_returnable:
+        return 'text-gray-500'
+    elif order_item.can_return:
+        days_left = order_item.days_left_to_return if hasattr(order_item, 'days_left_to_return') else 0
+        if days_left > 3:
+            return 'text-green-600'
+        elif days_left > 0:
+            return 'text-yellow-600'
+        else:
+            return 'text-red-600'
+    else:
+        return 'text-red-600'
+
+
+@register.filter
+def filter_by_name(value, name):
+    if hasattr(value, 'filter'):
+        result = value.filter(name=name).first()
+        logger.debug(f"filter_by_name: Queryset filtered, result: {result}")
+        return result
+    logger.error(f"filter_by_name received non-queryset: type={type(value)}, value={value}")
+    return None
+
+
+@register.filter
+def is_number(value):
+    try:
+        int(value)
+        return True
+    except (ValueError, TypeError):
+        return False
+
+
+@register.filter
+def get_type(value):
+    return str(type(value).__name__)

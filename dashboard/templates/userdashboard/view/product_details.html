@@ -399,6 +399,7 @@
                         </div>
 
                         <div id="event-details-content" class="text-sm text-gray-650 dark:text-gray-300 space-y-2 max-h-36 overflow-hidden transition-all duration-300">
+                            {% if request.user.is_authenticated %}
                             {% if event.conference_link %}
                             <p class="flex justify-between">
                                 <span class="font-semibold">Conference Link:</span>
@@ -432,6 +433,7 @@
                                 <span class="font-semibold">Venue:</span>
                                 {{ event.venue }}
                             </p>
+                            {% endif %}
                             {% endif %}
                         </div>
                         {% comment %}

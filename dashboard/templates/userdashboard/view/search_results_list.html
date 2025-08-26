@@ -129,6 +129,26 @@
         color: #3b82f6;
     }
 
+    .special-category-link {
+        display: block;
+        padding: 0.5rem 0;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #1f2937;
+        text-decoration: none;
+        transition: all 0.2s ease-in-out;
+    }
+
+    .special-category-link:hover {
+        color: #3b82f6;
+    }
+
+    .special-category-count {
+        font-size: 0.9rem;
+        color: #4b5563;
+        margin-left: 0.5rem;
+    }
+
     #rfqModal {
         z-index: 9999;
         backdrop-filter: blur(8px);
@@ -142,6 +162,8 @@
 
     .kt-modal {
         filter: none !important;
+        overflow-y: auto;
+        padding: 1rem;
     }
 
     .loader {
@@ -228,111 +250,115 @@
     /* Enhanced Responsiveness: Mobile (≤480px) */
     @media (max-width: 480px) {
         .kt-container-fixed {
-            padding: 0 10px; /* Reduce padding for small screens */
+            padding: 0 10px;
         }
 
         .kt-category-grid {
-            grid-template-columns: 1fr; /* Stack sidebar and product list */
+            grid-template-columns: 1fr;
             gap: 10px;
         }
 
         .amazon-sidebar {
-            border-right: none; /* Remove border for stacked layout */
+            border-right: none;
             padding-right: 0;
             padding-bottom: 16px;
-            border-bottom: 1px solid #e0e0e0; /* Add bottom border */
+            border-bottom: 1px solid #e0e0e0;
         }
 
         .amazon-sidebar h2 {
-            font-size: 1rem; /* Smaller heading */
+            font-size: 1rem;
         }
 
-        .category-button {
-            font-size: 0.9rem; /* Smaller button text */
+        .category-button, .special-category-link {
+            font-size: 0.9rem;
             padding: 0.4rem 0;
         }
 
         .subcategory-list a {
-            font-size: 0.85rem; /* Smaller subcategory text */
+            font-size: 0.85rem;
         }
 
         .kt-list-card {
             flex-direction: column;
             align-items: flex-start;
-            padding: 10px; /* Reduce padding */
+            padding: 10px;
         }
 
         .kt-list-card-image {
             width: 100%;
             height: auto;
-            aspect-ratio: 1/1; /* Maintain square aspect ratio */
+            aspect-ratio: 1/1;
             margin-right: 0;
             margin-bottom: 10px;
         }
 
         .kt-list-card-content h3 {
-            font-size: 1rem; /* Smaller product title */
+            font-size: 1rem;
         }
 
         .kt-list-card-content p {
-            font-size: 0.8rem; /* Smaller description */
+            font-size: 0.8rem;
         }
 
         .kt-list-card-actions {
             width: 100%;
             align-items: flex-start;
             margin-top: 10px;
-            min-width: unset; /* Remove min-width constraint */
+            min-width: unset;
         }
 
         .kt-list-card-actions .text-lg {
-            font-size: 1rem; /* Smaller price text */
+            font-size: 1rem;
         }
 
         .kt-btn, .kt-btn-sm {
-            font-size: 0.8rem; /* Smaller button text */
-            padding: 6px 12px; /* Adjust button padding */
+            font-size: 0.8rem;
+            padding: 6px 12px;
         }
 
         .discount-ribbon {
-            font-size: 10px; /* Smaller ribbon text */
+            font-size: 10px;
             padding: 4px 20px;
-            width: 120px; /* Smaller ribbon */
+            width: 120px;
             left: -20px;
         }
 
         .kt-select-wrapper {
-            width: 140px; /* Smaller dropdown */
+            width: 140px;
         }
 
         #rfqModal .kt-card {
-            width: 90%; /* Full width with margin */
+            width: 90%;
             margin: 0 16px;
-            max-width: 400px; /* Limit max width */
+            max-width: 400px;
         }
 
         #rfqModal .kt-card-content input,
         #rfqModal .kt-card-content textarea {
-            font-size: 0.85rem; /* Smaller input text */
+            font-size: 0.85rem;
         }
 
         #rfqModal .text-xl {
-            font-size: 1.1rem; /* Smaller modal title */
+            font-size: 1.1rem;
         }
 
         .kt-toggle-group .kt-btn-icon {
-            padding: 6px; /* Smaller icon buttons */
+            padding: 6px;
+        }
+
+        .special-category-count {
+            font-size: 0.8rem;
         }
     }
 
-    /* New: Tablet Support (481px–768px) */
+    /* Tablet Support (481px–768px) */
     @media (min-width: 481px) and (max-width: 768px) {
         .kt-container-fixed {
             padding: 0 15px;
         }
 
         .kt-category-grid {
-            grid-template-columns: 1fr; /* Stack for tablets */
+            grid-template-columns: 1fr;
             gap: 15px;
         }
 
@@ -347,7 +373,7 @@
             font-size: 1.1rem;
         }
 
-        .category-button {
+        .category-button, .special-category-link {
             font-size: 1rem;
         }
 
@@ -356,12 +382,12 @@
         }
 
         .kt-list-card {
-            flex-direction: row; /* Keep row layout for tablets */
+            flex-direction: row;
             padding: 12px;
         }
 
         .kt-list-card-image {
-            width: 100px; /* Slightly smaller image */
+            width: 100px;
             height: 100px;
             margin-right: 15px;
         }
@@ -375,7 +401,7 @@
         }
 
         .kt-list-card-actions {
-            min-width: 120px; /* Adjust for tablet */
+            min-width: 120px;
         }
 
         .kt-list-card-actions .text-lg {
@@ -410,16 +436,20 @@
         #rfqModal .text-xl {
             font-size: 1.2rem;
         }
+
+        .special-category-count {
+            font-size: 0.85rem;
+        }
     }
 
-    /* Existing Desktop Media Query (Adjusted) */
+    /* Desktop Media Query (Adjusted) */
     @media (min-width: 769px) {
         .kt-container-fixed {
-            padding: 0 20px; /* Consistent padding */
+            padding: 0 20px;
         }
 
         .kt-category-grid {
-            grid-template-columns: 0.8fr 3.2fr; /* Maintain original grid */
+            grid-template-columns: 0.8fr 3.2fr;
         }
 
         .amazon-sidebar {
@@ -447,37 +477,41 @@
 </style>
 
 <title>Category Results - Medical Supplies</title>
-<div class="kt-container-fixed mt-1" style="max-width: var(--custom-container-width, 90%);">
+<div class="kt-container-fixed mt-1" style="max-width: var(--custom-container-width, 95%);">
     <div class="flex flex-col items-stretch gap-7 mt-5 py-5">
         <!-- Results Header and Sorting -->
-        <div class="flex flex-wrap items-center gap-5 justify-between mt-3">
+        <div class="flex flex-wrap items-center gap-5 justify-between mt-5 py-4">
             <h3 id="results-header" class="text-sm text-mono font-medium">
                 {% if page_obj %}
                 {{ page_obj.start_index }} - {{ page_obj.end_index }} over {{ total_products }} results for
                 <span class="text-destructive">
-            {% if selected_last_category %}
-              {{ selected_last_category.name }}
-            {% elif selected_sub_category %}
-              {{ selected_sub_category.name }}
-            {% elif selected_category %}
-              {{ selected_category.name }}
-            {% else %}
-              Products
-            {% endif %}
-          </span>
+                    {% if search_query %}
+                        "{{ search_query }}"
+                    {% elif selected_last_category %}
+                        {{ selected_last_category.name }}
+                    {% elif selected_sub_category %}
+                        {{ selected_sub_category.name }}
+                    {% elif selected_category %}
+                        {{ selected_category.name }}
+                    {% else %}
+                        Products
+                    {% endif %}
+                </span>
                 {% else %}
                 0 - 0 over 0 results for
                 <span class="text-destructive">
-            {% if selected_last_category %}
-              {{ selected_last_category.name }}
-            {% elif selected_sub_category %}
-              {{ selected_sub_category.name }}
-            {% elif selected_category %}
-              {{ selected_category.name }}
-            {% else %}
-              Products
-            {% endif %}
-          </span>
+                    {% if search_query %}
+                        "{{ search_query }}"
+                    {% elif selected_last_category %}
+                        {{ selected_last_category.name }}
+                    {% elif selected_sub_category %}
+                        {{ selected_sub_category.name }}
+                    {% elif selected_category %}
+                        {{ selected_category.name }}
+                    {% else %}
+                        Products
+                    {% endif %}
+                </span>
                 {% endif %}
             </h3>
             <div class="flex items-center gap-2.5">
@@ -533,35 +567,52 @@
             <!-- Sidebar -->
             <div class="amazon-sidebar w-full md:w-1/4 pr-6">
                 <h2 class="text-base font-bold mb-4 uppercase pb-1">Category</h2>
-                {% for category in categories %}
+                <!-- Regular Categories with Dropdowns -->
+                {% for category in regular_categories %}
                 <div class="mb-3">
                     <button type="button"
                             onclick="toggleCategory('cat-{{ category.id }}')"
                             class="category-button"
-                            aria-expanded="false"
+                            aria-expanded="{% if forloop.first and not is_search_active %}true{% else %}false{% endif %}"
                             aria-controls="cat-{{ category.id }}">
                         <span>{{ category.name }}</span>
-                        <svg id="arrow-{{ category.id }}" class="w-4 h-4 transform transition-transform duration-200"
+                        <svg id="arrow-{{ category.id }}" class="w-4 h-4 transform transition-transform duration-200 {% if forloop.first and not is_search_active %}rotate-180{% endif %}"
                              xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
                              aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M19 9l-7 7-7-7"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                         </svg>
                     </button>
                     <div id="cat-{{ category.id }}"
-                         class="subcategory-list {% if forloop.first %}block{% else %}hidden{% endif %}">
+                         class="subcategory-list {% if forloop.first and not is_search_active %}block{% else %}hidden{% endif %}">
                         <ul>
-                            {% for lastcategory in category.last_categories %}
+                            {% for subcategory in category.productsubcategory_set.all %}
+                            {% for lastcategory in subcategory.productlastcategory_set.all %}
                             {% if lastcategory.product_count > 0 %}
                             <li>
-                                <a href="#" data-last-category="{{ lastcategory.id }}" class="category-link">{{ lastcategory.name }}</a>
+                                <a href="#" data-last-category="{{ lastcategory.id }}"
+                                   class="category-link {% if selected_last_category.id == lastcategory.id %}active{% endif %}">
+                                    {{ lastcategory.name }}
+                                </a>
                             </li>
                             {% endif %}
+                            {% endfor %}
                             {% endfor %}
                         </ul>
                     </div>
                 </div>
                 {% endfor %}
+                <!-- Special Categories without Dropdowns -->
+                {% if special_categories %}
+                <div class="mt-4">
+                    {% for category in special_categories %}
+                    <a href="#" data-category="{{ category.id }}"
+                       class="special-category-link {% if selected_category.id == category.id %}active{% endif %}">
+                        {{ category.name }}
+                        <span class="special-category-count">({{ category.product_count }})</span>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% endif %}
             </div>
 
             <!-- Product List -->
@@ -584,120 +635,148 @@
                 {% endfor %}
                 {% else %}
                 {% for product in products %}
-<div class="kt-list-card"
-     data-product-id="{{ product.id }}"
-     data-name="{{ product.name|escape }}"
-     data-description="{{ product.description|default:'No description available'|truncatechars:200|escape }}"
-     data-category="{% if product.last_category and product.last_category.sub_category and product.last_category.sub_category.category %}{{ product.last_category.sub_category.category.name }}{% endif %}"
-     data-price="{{ product.price|floatformat:2 }}"
-     {% if product.offer_percentage and product.offer_active %}
-     data-original-price="{{ product.price|floatformat:2 }}"
-     data-discount="save {{ product.offer_percentage|floatformat:0 }}%"
-     {% endif %}
->
-    <!-- Product Image -->
-    <div class="kt-list-card-image">
-        {% if product.offer_percentage and product.offer_active %}
-        <div class="discount-ribbon">save {{ product.offer_percentage|floatformat:0 }}%</div>
-        {% endif %}
-        <a href="{% url 'dashboard:product_detail' product.id %}" class="block">
-            <img alt="{{ product.name|escape }}" class="h-full w-full object-contain cursor-pointer"
-                 src="{{ product.get_main_image|default:'/static/default_product.png' }}">
-        </a>
-    </div>
+                <div class="kt-list-card"
+                     data-product-id="{{ product.id }}"
+                     data-name="{{ product.name|escape }}"
+                     data-description="{{ product.description|default:'No description available'|truncatechars:200|escape }}"
+                     data-category="{% if product.last_category and product.last_category.sub_category and product.last_category.sub_category.category %}{{ product.last_category.sub_category.category.name }}{% endif %}"
+                     data-price="{{ product.price|floatformat:2 }}"
+                     {% if product.offer_percentage and product.offer_active %}
+                     data-original-price="{{ product.price|floatformat:2 }}"
+                     data-discount="save {{ product.offer_percentage|floatformat:0 }}%"
+                     {% endif %}
+                >
+                    <!-- Product Image -->
+                    <div class="kt-list-card-image">
+                        {% if product.offer_percentage and product.offer_active %}
+                        <div class="discount-ribbon">save {{ product.offer_percentage|floatformat:0 }}%</div>
+                        {% endif %}
+                        <a href="{% url 'dashboard:product_detail' product.id %}" class="block">
+                            <img alt="{{ product.name|escape }}" class="h-full w-full object-contain cursor-pointer"
+                                 src="{{ product.get_main_image|default:'/static/default_product.png' }}">
+                        </a>
+                    </div>
 
-    <!-- Product Details -->
-    <div class="kt-list-card-content">
-        <h3 class="text-lg font-bold text-gray-650 mb-1">
-            <a href="{% url 'dashboard:product_detail' product.id %}" class="hover:text-primary">
-                {{ product.name|escape }}
-            </a>
-        </h3>
-        <p class="text-sm text-gray-200 mb-2">
-            {{ product.description|default:"No description available"|truncatechars:200 }}
-        </p>
-        <div class="flex items-center gap-4">
-            {% if product.average_rating %}
-            <span class="kt-badge
-                      {% if product.average_rating >= 4 %}kt-badge-success
-                      {% elif product.average_rating >= 2 %}kt-badge-warning
-                      {% else %}kt-badge-danger{% endif %}
-                      kt-badge-sm rounded-full gap-1">
-                      <i class="ki-solid ki-star text-white -mt-0.5"></i>
-                      {{ product.average_rating|floatformat:1 }}
-            </span>
-            {% endif %}
-        </div>
-    </div>
+                    <!-- Product Details -->
+                    <div class="kt-list-card-content">
+                        <h3 class="text-lg font-bold text-gray-650 mb-1">
+                            <a href="{% url 'dashboard:product_detail' product.id %}" class="hover:text-primary">
+                                {{ product.name|escape }}
+                            </a>
+                        </h3>
+                        <p class="text-sm text-gray-200 mb-2">
+                            {{ product.description|default:"No description available"|truncatechars:200 }}
+                        </p>
+                        <div class="flex items-center gap-4">
+                            {% if product.average_rating %}
+                            <span class="kt-badge
+                                      {% if product.average_rating >= 4 %}kt-badge-success
+                                      {% elif product.average_rating >= 2 %}kt-badge-warning
+                                      {% else %}kt-badge-danger{% endif %}
+                                      kt-badge-sm rounded-full gap-1">
+                                <i class="ki-solid ki-star text-white -mt-0.5"></i>
+                                {{ product.average_rating|floatformat:1 }}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
 
-    <!-- Price and Actions -->
-    <div class="kt-list-card-actions">
-        <div class="text-right mb-3">
-            {% if product.offer_percentage and product.offer_active %}
-            <span class="text-xs font-normal text-secondary-foreground line-through">
-                ${{ product.price|floatformat:2 }}
-            </span>
-            <div class="flex items-center gap-2">
-                <span class="text-lg font-bold text-mono">
-                    ${{ product.discounted_price|floatformat:2 }}
-                </span>
-            </div>
-            {% else %}
-            <span class="text-lg font-bold text-mono">
-                ${{ product.price|floatformat:2 }}
-            </span>
-            {% endif %}
-        </div>
-        <div class="flex items-center gap-2">
-            {% if request.user.is_authenticated %}
-            <span class="kt-wishlist-icon cursor-pointer"
-                  data-kt-wishlist-toggle="true"
-                  data-product-id="{{ product.id|default:'0' }}"
-                  title="{% if product.id in user_wishlist_ids %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}">
-                <i class="ki-solid ki-heart {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
-            </span>
-            {% else %}
-            <span class="kt-wishlist-icon cursor-pointer"
-                  data-kt-wishlist-toggle="true"
-                  data-product-id="{{ product.id|default:'0' }}"
-                  title="Login to Add to Wishlist">
-                <i class="ki-solid ki-heart"></i>
-            </span>
-            {% endif %}
+                    <!-- Price and Actions -->
+                    <div class="kt-list-card-actions">
+                        <div class="text-right mb-3">
+                            {% if product.category.name in 'Conference,Webinar,Event' %}
+                            {% if product.event and product.event.conference_at %}
+                            <p class="text-xs text-green-600 mt-1">
+                                Event Date: <strong>{{ product.event.conference_at|date:"D, d M Y, H:i" }}</strong>
+                            </p>
+                            {% endif %}
+                            {% if request.user.is_authenticated %}
+                            {% if product.event and product.event.conference_link %}
+                            <p class="text-xs text-gray-600 mt-1">
+                                Conference Link: <a href="{{ product.event.conference_link }}" class="text-blue-600 hover:underline" target="_blank" style="text-decoration: underline;">Join Here</a>
+                            </p>
+                            {% endif %}
+                            {% endif %}
+                            {% if product.event.speaker_name %}
+                            <p class="text-xs text-gray-600 mt-1">
+                                Speaker: <strong>{{ product.event.speaker_name }}</strong>
+                            </p>
+                            {% endif %}
+                            {% if product.event.venue %}
+                            <p class="text-xs text-gray-600 mt-1">
+                                Venue: <strong>{{ product.event.venue }}</strong>
+                            </p>
+                            {% endif %}
+                            {% endif %}
+                            {% if product.category.name not in 'Conference,Webinar,Event' %}
+                            {% if product.offer_percentage and product.offer_active %}
+                            <span class="text-xs font-normal text-secondary-foreground line-through">
+                                ${{ product.price|floatformat:2 }}
+                            </span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg font-bold text-mono">
+                                    ${{ product.discounted_price|floatformat:2 }}
+                                </span>
+                            </div>
+                            {% else %}
+                            <span class="text-lg font-bold text-mono">
+                                ${{ product.price|floatformat:2 }}
+                            </span>
+                            {% endif %}
+                            {% endif %}
+                        </div>
+                        <div class="flex items-center gap-2">
+                            {% if product.category.name not in 'Conference,Webinar,Event' %}
+                            {% if request.user.is_authenticated %}
+                            <span class="kt-wishlist-icon cursor-pointer"
+                                  data-kt-wishlist-toggle="true"
+                                  data-product-id="{{ product.id|default:'0' }}"
+                                  title="{% if product.id in user_wishlist_ids %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}">
+                                <i class="ki-solid ki-heart {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
+                            </span>
+                            {% else %}
+                            <span class="kt-wishlist-icon cursor-pointer"
+                                  data-kt-wishlist-toggle="true"
+                                  data-product-id="{{ product.id|default:'0' }}"
+                                  title="Login to Add to Wishlist">
+                                <i class="ki-solid ki-heart"></i>
+                            </span>
+                            {% endif %}
 
-            {% if product.id in user_cart_ids %}
-            <button class="kt-btn kt-btn-primary kt-btn-sm in-cart-button"
-                    data-product-id="{{ product.id }}"
-                    disabled>
-                In cart <i class="ki-filled ki-handcart text-white"></i>
-            </button>
-            {% else %}
-            <button class="kt-btn kt-btn-outline kt-btn-sm add-to-cart-btn"
-                    data-product-id="{{ product.id }}">
-                Add to cart <i class="ki-filled ki-handcart"></i>
-            </button>
-            {% endif %}
+                            {% if product.id in user_cart_ids %}
+                            <button class="kt-btn kt-btn-primary kt-btn-sm in-cart-button"
+                                    data-product-id="{{ product.id }}"
+                                    disabled>
+                                In cart <i class="ki-filled ki-handcart text-white"></i>
+                            </button>
+                            {% else %}
+                            <button class="kt-btn kt-btn-outline kt-btn-sm add-to-cart-btn"
+                                    data-product-id="{{ product.id }}">
+                                Add to cart <i class="ki-filled ki-handcart"></i>
+                            </button>
+                            {% endif %}
+                            {% endif %}
 
-            {% if request.user.is_authenticated %}
-            {% if product.show_rfq or product.Both %}
-            <button class="kt-btn kt-btn-outline kt-btn-sm open-rfq-modal"
-                    data-product-id="{{ product.id }}"
-                    data-product-name="{{ product.name|escape }}"
-                    data-product-price="{{ product.discounted_price|default:product.price|floatformat:2 }}"
-                    data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
-                    data-quantity="1">
-                RFQ <i class="ki-filled ki-directbox-default text-xs"></i>
-            </button>
-            {% endif %}
-            {% endif %}
-        </div>
-    </div>
-</div>
-{% empty %}
-<div class="col-span-1 text-center py-10">
-    <p>No products found.</p>
-</div>
-{% endfor %}
+                            {% if request.user.is_authenticated %}
+                            {% if product.show_rfq or product.Both %}
+                            <button class="kt-btn kt-btn-outline kt-btn-sm open-rfq-modal"
+                                    data-product-id="{{ product.id }}"
+                                    data-product-name="{{ product.name|escape }}"
+                                    data-product-price="{{ product.discounted_price|default:product.price|floatformat:2 }}"
+                                    data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
+                                    data-quantity="1">
+                                RFQ <i class="ki-filled ki-directbox-default text-xs"></i>
+                            </button>
+                            {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-span-1 text-center py-10">
+                    <p>No products found{% if search_query %} for "{{ search_query }}"{% endif %}.</p>
+                </div>
+                {% endfor %}
 
                 {# Pagination #}
                 <div id="pagination" class="mt-6">
@@ -706,8 +785,7 @@
                         <div class="flex justify-between items-center flex-wrap gap-4 px-4 py-4 mt-4 mb-4">
                             <!-- Left: Record Range -->
                             <div class="text-sm text-muted">
-                                Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{
-                                page_obj.paginator.count }} records
+                                Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} records
                             </div>
 
                             <!-- Center: Pagination Buttons -->
@@ -734,8 +812,7 @@
                                     {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
                                     <li>
                                         <a href="?{% query_replace page=num %}"
-                                           class="kt-btn kt-btn-outline pagination-link" data-page="{{ num }}">{{ num
-                                            }}</a>
+                                           class="kt-btn kt-btn-outline pagination-link" data-page="{{ num }}">{{ num }}</a>
                                     </li>
                                     {% endif %}
                                     {% endfor %}
@@ -801,8 +878,7 @@
                         <input type="text" name="company_name" id="rfqCompanyName"
                                class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                                required aria-required="true">
-                        <p class="text-xs text-red-500 mt-1 hidden" id="rfqCompanyNameError">Company name is
-                            required.</p>
+                        <p class="text-xs text-red-500 mt-1 hidden" id="rfqCompanyNameError">Company name is required.</p>
                     </div>
                     <div>
                         <label for="rfqQuantity"
@@ -811,8 +887,7 @@
                         <input type="number" name="quantity" id="rfqQuantity"
                                class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                                min="1" required aria-required="true">
-                        <p class="text-xs text-red-500 mt-1 hidden" id="rfqQuantityError">Quantity must be at least
-                            1.</p>
+                        <p class="text-xs text-red-500 mt-1 hidden" id="rfqQuantityError">Quantity must be at least 1.</p>
                     </div>
                     <div>
                         <label for="rfqMessage"
@@ -933,6 +1008,22 @@
                         });
                     }
 
+                    // Update active states for category links
+                    const categoryLinks = document.querySelectorAll('.category-link[data-last-category]');
+                    const specialCategoryLinks = document.querySelectorAll('.special-category-link[data-category]');
+                    categoryLinks.forEach(link => link.classList.remove('active'));
+                    specialCategoryLinks.forEach(link => link.classList.remove('active'));
+
+                    const lastCategoryId = urlParams.get('last_category');
+                    const categoryId = urlParams.get('category');
+                    if (lastCategoryId) {
+                        const targetLink = document.querySelector(`.category-link[data-last-category="${lastCategoryId}"]`);
+                        if (targetLink) targetLink.classList.add('active');
+                    } else if (categoryId) {
+                        const targetLink = document.querySelector(`.special-category-link[data-category="${categoryId}"]`);
+                        if (targetLink) targetLink.classList.add('active');
+                    }
+
                     window.history.pushState({}, '', url);
                     isFetching = false;
                 })
@@ -944,16 +1035,55 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
+        const lastCategoryIdFromUrl = new URLSearchParams(window.location.search).get('last_category');
+        const categoryIdFromUrl = new URLSearchParams(window.location.search).get('category');
+        const searchQuery = new URLSearchParams(window.location.search).get('q');
         const firstCategory = document.querySelector('[id^="cat-"]');
-        if (firstCategory) {
+
+        if (!searchQuery && firstCategory) {
             const firstCategoryId = firstCategory.id;
             const firstArrow = document.getElementById("arrow-" + firstCategoryId.replace("cat-", ""));
-            if (firstCategory && firstArrow) {
-                firstCategory.classList.remove("hidden");
-                firstArrow.classList.add("rotate-180");
-                const firstLastCategoryLink = firstCategory.querySelector('.category-link[data-last-category]');
-                if (firstLastCategoryLink && !window.location.search.includes('last_category')) {
-                    const firstLastCategoryId = firstLastCategoryLink.dataset.lastCategory;
+            let targetCategory = firstCategory;
+            let targetArrow = firstArrow;
+
+            // If a last category or special category is selected in the URL, find its parent category
+            if (lastCategoryIdFromUrl) {
+                const selectedLink = document.querySelector(`.category-link[data-last-category="${lastCategoryIdFromUrl}"]`);
+                if (selectedLink) {
+                    const parentCategory = selectedLink.closest('[id^="cat-"]');
+                    if (parentCategory) {
+                        targetCategory = parentCategory;
+                        targetArrow = document.getElementById("arrow-" + parentCategory.id.replace("cat-", ""));
+                    }
+                }
+            }
+
+            // Expand the target category
+            if (targetCategory && targetArrow) {
+                targetCategory.classList.remove("hidden");
+                targetArrow.classList.add("rotate-180");
+                document.querySelector(`button[onclick="toggleCategory('${targetCategory.id}')"]`).setAttribute('aria-expanded', 'true');
+            }
+
+            // Highlight the selected last category or special category
+            const categoryLinks = document.querySelectorAll('.category-link[data-last-category]');
+            const specialCategoryLinks = document.querySelectorAll('.special-category-link[data-category]');
+            categoryLinks.forEach(link => link.classList.remove('active'));
+            specialCategoryLinks.forEach(link => link.classList.remove('active'));
+
+            let targetLink = null;
+            if (lastCategoryIdFromUrl) {
+                targetLink = document.querySelector(`.category-link[data-last-category="${lastCategoryIdFromUrl}"]`);
+            } else if (categoryIdFromUrl) {
+                targetLink = document.querySelector(`.special-category-link[data-category="${categoryIdFromUrl}"]`);
+            } else if (firstCategory) {
+                targetLink = firstCategory.querySelector('.category-link[data-last-category]');
+            }
+
+            if (targetLink) {
+                targetLink.classList.add('active');
+                if (!lastCategoryIdFromUrl && !categoryIdFromUrl && targetLink.dataset.lastCategory) {
+                    const firstLastCategoryId = targetLink.dataset.lastCategory;
                     fetchProducts({last_category: firstLastCategoryId, page: 1});
                 }
             }
@@ -969,8 +1099,22 @@
                     last_category: lastCategoryId,
                     page: 1,
                     sort_by: new URLSearchParams(window.location.search).get('sort_by') || '',
-                    category: new URLSearchParams(window.location.search).get('category') || '',
-                    sub_category: new URLSearchParams(window.location.search).get('sub_category') || ''
+                    category: '',
+                    q: new URLSearchParams(window.location.search).get('q') || ''
+                });
+            }
+
+            // Special Category Link
+            const specialCategoryLink = e.target.closest('.special-category-link');
+            if (specialCategoryLink) {
+                e.preventDefault();
+                const categoryId = specialCategoryLink.dataset.category;
+                fetchProducts({
+                    category: categoryId,
+                    page: 1,
+                    sort_by: new URLSearchParams(window.location.search).get('sort_by') || '',
+                    last_category: '',
+                    q: new URLSearchParams(window.location.search).get('q') || ''
                 });
             }
 
@@ -985,7 +1129,7 @@
                     sort_by: params.get('sort_by'),
                     last_category: params.get('last_category'),
                     category: params.get('category'),
-                    sub_category: params.get('sub_category')
+                    q: params.get('q')
                 });
             }
 
@@ -993,6 +1137,16 @@
             const addToCartBtn = e.target.closest('.add-to-cart-btn');
             if (addToCartBtn) {
                 const productId = addToCartBtn.dataset.productId;
+                const originalText = addToCartBtn.innerHTML;
+                addToCartBtn.innerHTML = `
+                    <svg class="animate-spin h-4 w-4 text-white inline-block mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                    </svg>
+                    Adding...
+                `;
+                addToCartBtn.disabled = true;
+
                 fetch("{% url 'dashboard:add_to_cart' %}", {
                     method: "POST",
                     headers: {
@@ -1013,9 +1167,15 @@
                             addToCartBtn.disabled = true;
                         } else {
                             alert("Something went wrong");
+                            addToCartBtn.innerHTML = originalText;
+                            addToCartBtn.disabled = false;
                         }
                     })
-                    .catch(err => console.error("Add to cart error:", err));
+                    .catch(err => {
+                        console.error("Add to cart error:", err);
+                        addToCartBtn.innerHTML = originalText;
+                        addToCartBtn.disabled = false;
+                    });
             }
 
             // Wishlist
@@ -1088,7 +1248,7 @@
                     page: 1,
                     last_category: params.get('last_category'),
                     category: params.get('category'),
-                    sub_category: params.get('sub_category')
+                    q: params.get('q')
                 });
             }
 
@@ -1110,6 +1270,13 @@
                 selectDisplayElem.setAttribute('aria-expanded', selectDropdownElem.classList.contains('hidden') ? 'false' : 'true');
             });
         }
+
+        // RFQ Submit Loader
+        document.getElementById('rfqSubmitBtn').addEventListener('click', function(e) {
+            const btn = e.currentTarget;
+            const loader = btn.querySelector('.loader');
+            loader.style.display = 'inline-block';
+        });
     });
 </script>
 {% endblock content %}

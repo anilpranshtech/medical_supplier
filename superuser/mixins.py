@@ -25,6 +25,6 @@ class PermissionRequiredMixin:
     required_permissions = []
     def dispatch(self, request, *args, **kwargs):
         if not all(request.user.has_perm(perm) for perm in self.required_permissions):
-            messages.error(request, 'You do not have permission to perform this action.')
-            return redirect('admin:admin_home')
+            messages.error(request, 'You do not have permission to view or perform this action.')
+            return redirect('superuser:superuser')
         return super().dispatch(request, *args, **kwargs)

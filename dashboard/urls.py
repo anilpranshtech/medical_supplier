@@ -11,7 +11,7 @@ urlpatterns = [
   
     path('login/', CustomLoginView.as_view(), name='login'),
     path('', HomeView.as_view(), name='home'),
-    path('category/<int:pk>/', CategoryProductsView.as_view(), name='category_products'),
+    # path('category/<int:pk>/', CategoryProductsView.as_view(), name='category_products'),
     path('register/', RegistrationView.as_view(), name='register'),
     path('resend-otp/', ResendOTPView.as_view(), name='resend_otp'),
     path('profile/', UserProfileView.as_view(), name='profile'),
@@ -93,5 +93,13 @@ urlpatterns = [
 
     # Return
     path("orders/<int:item_id>/return/", RequestReturnView.as_view(), name="request_return"),
+    path('cancel-return/<int:return_id>/', CancelReturnView.as_view(), name='cancel_return'),
+
+    #notification
+    path('mark-notification-read/<int:pk>/', MarkNotificationReadView.as_view(), name='mark_notification_read'),
+    path('notifications/clear-all/', ClearAllNotificationsView.as_view(), name='clear_all_notifications'),
+    path('mark-notification-read/<int:pk>/', MarkNotificationReadView.as_view(), name='mark_notification_read'),
+    path('delete-notification/<int:id>/', DeleteNotificationView.as_view(), name='delete_notification'),
+   
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

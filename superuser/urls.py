@@ -59,8 +59,18 @@ urlpatterns = [
     path('most-viewed-products/', AdminMostViewedProductsView.as_view(), name='view_product'),
    
     path('rating/', RatingView.as_view(), name='rating_list'),
+    #notification
+    path("notifications/", NotificationListView.as_view(), name="notifications_list"),
+    path("notifications/add/", NotificationCreateView.as_view(), name="add_notification"),
+    path('notifications/edit/<int:pk>/', EditNotificationView.as_view(), name='edit_notification'),
+    path('notifications/delete/<int:pk>/', DeleteNotificationView.as_view(), name='delete_notification'),
 
     path('returns/', AdminReturnsView.as_view(), name='admin_returns'),
-    path('returns/<str:return_serial>/', AdminReturnsView.as_view(), name='admin_returns_update'),
+    path('returns/update/<str:return_serial>/', AdminReturnUpdateStatusView.as_view(), name='admin_returns_update_status'),
+    # path('returns/refund/', StripeRefundView.as_view(), name='stripe_refund'),
+    path('returns/delete/<str:return_serial>/', ReturnDeleteView.as_view(), name='admin_returns_delete'),
+
+    path('returns/refund/', AdminProcessRefundView.as_view(), name='process_refund'),
+
 
 ]

@@ -1,18 +1,7 @@
-# context_processors.py
-from utils.handle_user_profile import get_user_profile
-
-
-def header_avatar(request):
-    if request.user.is_authenticated:
-        profile, profile_type = get_user_profile(request.user)
-        if profile and profile.profile_picture:
-            return {"header_avatar_url": profile.profile_picture.url}
-    return {"header_avatar_url": None}
-
 from dashboard.models import Notification
 from django.contrib.auth.models import User
-from django.db.models import Q
-
+from dashboard import models 
+from django.db.models import Q 
 def notification_context(request):
     if not request.user.is_authenticated:
         return {
@@ -32,7 +21,7 @@ def notification_context(request):
         all_notifications = Notification.objects.filter(
             is_deleted=False
         ).filter(
-            Q(recipient=user) | Q(send_to="all_suppliers")   # ✅ fixed here
+            models.Q(recipient=user) | models.Q(recipient_type="all_suppliers")
         )
 
     # Other staff → normal users ka notification

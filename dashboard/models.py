@@ -136,6 +136,7 @@ class ProductLastCategory(models.Model):
 
 class Brand(models.Model):
     name = models.CharField(max_length=100)
+    supplier = models.ForeignKey(User, on_delete=models.CASCADE, related_name='brands')
 
     class Meta:
         verbose_name = verbose_name_plural ="Brand"
@@ -159,6 +160,7 @@ class Event(models.Model):
 
 
 class Product(models.Model):
+    id = models.AutoField(primary_key=True)
     # Category hierarchy
     category = models.ForeignKey(ProductCategory, on_delete=models.SET_NULL, null=True)
     sub_category = models.ForeignKey(ProductSubCategory, on_delete=models.SET_NULL, null=True)
@@ -359,17 +361,90 @@ class OrderItem(models.Model):
 
     @property
     def return_deadline(self):
+        """Calculate return deadline based on delivery date"""
+        # First check if the product is returnable
+        if not self.product.is_returnable:
+            return None
+
+        # Get delivery date - prioritize order item's delivery_date, then order's delivered_at
         delivered_on = self.delivery_date or self.order.delivered_at
+
+        # If no delivery date is set, but order status is 'delivered', use updated_at
+        if not delivered_on and self.order.status == 'delivered':
+            delivered_on = self.order.updated_at
+
         if not delivered_on:
             return None
-        return delivered_on + timedelta(days=15)
+
+        # Use product's return_time_limit or default to 15 days
+        return_days = self.product.return_time_limit or 15
+        return delivered_on + timedelta(days=return_days)
 
     @property
     def can_return(self):
+        """Check if item can be returned"""
+        # Must be delivered to be returnable
+        if self.order.status != 'delivered':
+            return False
+
+        # Product must be returnable
+        if not self.product.is_returnable:
+            return False
+
+        # Check if within return deadline
         deadline = self.return_deadline
         if not deadline:
             return False
+
         return timezone.now() <= deadline
+
+    @property
+    def days_left_to_return(self):
+        """Get number of days left to return"""
+        deadline = self.return_deadline
+        if not deadline:
+            return 0
+
+        days_left = (deadline - timezone.now()).days
+        return max(0, days_left)  # Return 0 if negative
+
+    def get_return_status_message(self):
+        """Get a user-friendly return status message"""
+        if not self.product.is_returnable:
+            return "This product is not returnable"
+
+        if self.order.status != 'delivered':
+            return "Product must be delivered before return request"
+
+        days_left = self.days_left_to_return
+        if days_left > 0:
+            return f"Return available for {days_left} more days"
+        else:
+            return "Return period has expired"
+
+    @property
+    def has_pending_return(self):
+        """Check if item has a pending return request"""
+        return self.returns.filter(return_status='pending').exists()
+
+    @property
+    def latest_return(self):
+        """Get the latest return request for this item"""
+        return self.returns.order_by('-request_date').first()
+
+    @property
+    def return_history(self):
+        """Get all return requests for this item"""
+        return self.returns.all().order_by('-request_date')
+
+    @property
+    def can_request_return(self):
+        """Check if user can request a new return (no pending returns)"""
+        return (
+                self.can_return and
+                not self.has_pending_return and
+                self.order.status == 'delivered'
+        )
 
     class Meta:
         ordering = ['-created_at']
@@ -463,8 +538,29 @@ class CartProduct(models.Model):
         verbose_name = verbose_name_plural = "Cart Product"
 
 
+# class Notification(models.Model):
+#     recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+#     title = models.CharField(max_length=255)
+#     message = models.TextField()
+#     is_read = models.BooleanField(default=False)
+#     is_deleted = models.BooleanField(default=False)
+#     created_at = models.DateTimeField(default=timezone.now)
+
+#     class Meta:
+#         ordering = ['-created_at']
+#         verbose_name = verbose_name_plural = "Notification"
+
 class Notification(models.Model):
-    recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    SEND_TO_CHOICES = [
+        ('buyer', 'All Buyers'),
+        ('supplier', 'All Suppliers'),
+        ('all', 'All Users'),
+        ('single', 'Specific User'),
+    ]
+
+    recipient = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='notifications')
+    send_to = models.CharField(max_length=20, choices=SEND_TO_CHOICES, default='single', null=True, blank=True)
+
     title = models.CharField(max_length=255)
     message = models.TextField()
     is_read = models.BooleanField(default=False)
@@ -473,7 +569,12 @@ class Notification(models.Model):
 
     class Meta:
         ordering = ['-created_at']
-        verbose_name = verbose_name_plural = "Notification"
+
+    def __str__(self):
+        if self.send_to == "single" and self.recipient:
+            return f"To {self.recipient.username} - {self.title}"
+        else:
+            return f"{self.get_send_to_display()} - {self.title}"
 
 
 class DeliveryPartner(models.Model):
@@ -486,7 +587,7 @@ class DeliveryPartner(models.Model):
     support_email = models.EmailField(blank=True, null=True)
     phone_number = models.CharField(max_length=20, blank=True, null=True)
     is_active = models.BooleanField(default=True)
-
+    
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -520,18 +621,28 @@ class Payment(models.Model):
 
 
 class StripePayment(models.Model):
+    payment = models.OneToOneField("Payment", on_delete=models.CASCADE, related_name="stripe_payment", null=True, blank=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="stripe_payments")
     name = models.CharField(max_length=100)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     paid = models.BooleanField(default=True)
-    stripe_charge_id = models.CharField(max_length=100)
-    stripe_customer_id = models.CharField(max_length=100)
+
+    # Stripe IDs
+    stripe_payment_intent_id = models.CharField(max_length=150, blank=True, null=True)
+    stripe_charge_id = models.CharField(max_length=150, blank=True, null=True)
+    stripe_customer_id = models.CharField(max_length=150, blank=True, null=True)
+
+    # Extra metadata
     stripe_signature = models.CharField(max_length=255, blank=True, null=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ["-created_at"]
         verbose_name = verbose_name_plural = "Stripe Payment"
+
+    def __str__(self):
+        return f"{self.user.username} - {self.amount} ({'Paid' if self.paid else 'Unpaid'})"
 
 
 class RazorpayPayment(models.Model):
@@ -879,7 +990,7 @@ class StripeSubscriptionMetadata(models.Model):
 
 class PendingSignup(models.Model):
     token = models.CharField(max_length=64, unique=True)
-    data = models.JSONField()
+    data = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
     def is_expired(self):
@@ -915,6 +1026,7 @@ class Return(models.Model):
     client = models.ForeignKey(User, on_delete=models.CASCADE, related_name='return_requests')
     return_option = models.CharField(max_length=20, choices=RETURN_OPTION_CHOICES)
     return_status = models.CharField(max_length=20, choices=RETURN_STATUS_CHOICES, default='pending')
+    reason = models.TextField(blank=True, null=True)
     request_date = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -930,6 +1042,10 @@ class Return(models.Model):
         from django.utils import timezone
         delivery_date = self.order_item.order.updated_at
         return (timezone.now() - delivery_date).days <= 15
+
+    @property
+    def is_refunded(self):
+        return self.return_status in ['return_completed', 'replace_completed']
 
     def save(self, *args, **kwargs):
         if not self.return_serial:
