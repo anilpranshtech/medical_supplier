@@ -990,7 +990,7 @@ class StripeSubscriptionMetadata(models.Model):
 
 class PendingSignup(models.Model):
     token = models.CharField(max_length=64, unique=True)
-    data = models.JSONField()
+    data = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
     def is_expired(self):

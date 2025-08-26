@@ -1,7 +1,12 @@
 {% extends 'superuser/superuser_base.html' %}
 {% load static %}
+{% load superuser_tags %}
 
+
+{% block title %}Manage Banners{% endblock title %}
 {% block content %}
+{% tag_user_permissions_list request.user as user_permissions_list %}
+
 <div class="app-main flex-column flex-row-fluid" id="kt_app_main">
     <div class="d-flex flex-column flex-column-fluid">
         <div id="kt_app_content" class="app-content flex-column-fluid pt-0">
@@ -67,14 +72,18 @@
 
                 <!-- Notification List -->
                 <div class="card card-flush mb-3">
+
                     <div class="card-header align-items-center py-5 gap-2 gap-md-5">
                         <div class="card-title">
                         </div>
+                       {% if "dashboard.add_notification" in user_permissions_list %}
                         <div class="card-toolbar">
                             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addNotificationModal">
                                 + Add Notification
                             </button>
                         </div>
+                        {% endif %}
+
                     </div>
                     <div class="card-body table-responsive p-0">
                         <table class="table align-middle table-row-dashed fs-6 gy-5" id="notificationTable">
@@ -86,7 +95,10 @@
                                     <th class="text-center">Is Checked</th>
                                     <th class="text-center">Is Deleted</th>
                                     <th class="text-center">Created At</th>
+
+                                    {% if "dashboard.change_notification" in user_permissions_list or "dashboard.delete_notification" in user_permissions_list %}
                                     <th class="text-center">Action</th>
+                                    {% endif %}
                                 </tr>
                             </thead>
                             <tbody class="fw-semibold text-gray-600" id="tableBody">
@@ -114,19 +126,29 @@
                                     <td class="text-center" data-date="{{ n.created_at|date:'Y-m-d H:i:s' }}">
                                         {{ n.created_at|date:"M d, Y, h:i a" }}
                                     </td>
+
+                                    {% if "dashboard.change_notification" in user_permissions_list or "dashboard.delete_notification" in user_permissions_list %}
                                     <td class="text-center">
                                         <div class="dropdown">
                                             <button class="btn btn-sm btn-light btn-active-light-primary" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                                 Actions <i class="bi bi-chevron-down"></i>
                                             </button>
                                             <ul class="dropdown-menu">
-                                                <li><a class="dropdown-item edit-notification" href="#" data-bs-toggle="modal" data-bs-target="#editNotificationModal" data-id="{{ n.id }}">Edit</a></li>
+                                                {% if "dashboard.change_notification" in user_permissions_list %}
+                                                <li>
+                                                    <a class="dropdown-item edit-notification" href="#" data-bs-toggle="modal" data-bs-target="#editNotificationModal" data-id="{{ n.id }}">Edit</a>
+                                                </li>
+                                                {% endif %}
+
+                                                {% if "dashboard.delete_notification" in user_permissions_list %}
                                                 <li>
                                                     <a class="dropdown-item delete-notification" href="#" data-bs-toggle="modal" data-bs-target="#deleteConfirmationModal" data-id="{{ n.id }}">Delete</a>
                                                 </li>
+                                                {% endif %}
                                             </ul>
                                         </div>
                                     </td>
+                                    {% endif %}
                                 </tr>
                                 {% empty %}
                                 <tr>

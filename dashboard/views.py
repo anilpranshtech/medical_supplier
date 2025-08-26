@@ -46,35 +46,49 @@ from datetime import date, timedelta
 from django.shortcuts import get_object_or_404, redirect, render
 from django.db.models import Avg
 from django.db.models import  ExpressionWrapper, DecimalField, Case, When
+from decimal import Decimal
+from django.db.models import Value
 
 import logging
 from .forms import *
 logger = logging.getLogger(__name__)
 
 
+# ---------------- HOME VIEW ---------------- #
 class HomeView(TemplateView):
     template_name = 'dashboard/home.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        today = date.today()
+        today = timezone.now().date()
 
         def set_product_fields(product_queryset):
+            """Helper to set image, rating, reviews, delivery date"""
             for product in product_queryset:
-                main_img = product.images.filter(is_main=True).first()
+                # Main image
+                main_img = ProductImage.objects.filter(product=product, is_main=True).first()
                 product.main_image = main_img.image.url if main_img else None
+
+                # Delivery date
                 if product.delivery_time:
                     delivery_date = today + timedelta(days=product.delivery_time)
                     product.delivery_date = delivery_date.strftime('%a, %d %b')
                 else:
                     product.delivery_date = 'N/A'
-                reviews = product.reviews.all()
+
+                # Rating & reviews
+                reviews = RatingReview.objects.filter(product=product)
                 total_reviews = reviews.count()
-                average_rating = reviews.aggregate(avg_rating=Avg('rating'))['avg_rating'] or 0.0
-                product.rating = round(average_rating, 1) if total_reviews > 0 else 0.0
+                avg_rating = reviews.aggregate(avg_rating=Avg('rating'))['avg_rating'] or 0.0
+                product.rating = round(avg_rating, 1) if total_reviews > 0 else 0.0
                 product.total_reviews = total_reviews
             return product_queryset
 
+        # ---------------- Categories ---------------- #
+        categories = ProductCategory.objects.all().order_by('-created_at')
+        context['categories'] = categories
+
+        # ---------------- Special Offers ---------------- #
         special_offers = Product.objects.filter(
             offer_active=True,
             offer_percentage__gt=0,
@@ -84,31 +98,39 @@ class HomeView(TemplateView):
         ).select_related('category', 'event').prefetch_related('images', 'reviews').order_by('-offer_percentage')[:3]
         context['special_offers'] = set_product_fields(special_offers)
 
+        # ---------------- New Arrivals ---------------- #
         recent_products = Product.objects.filter(
             tag='recent', is_active=True
         ).select_related('category', 'event').prefetch_related('images', 'reviews').order_by('-created_at')[:4]
         context['recent_products'] = set_product_fields(recent_products)
 
+        # ---------------- Popular Medical Supplies ---------------- #
         popular_products = Product.objects.filter(
             tag='popular', is_active=True
         ).select_related('category', 'event').prefetch_related('images', 'reviews').order_by('-created_at')[:4]
         context['popular_products'] = set_product_fields(popular_products)
 
+        # ---------------- Limited-Time Deals ---------------- #
         limited_products = Product.objects.filter(
             tag='limited', is_active=True
         ).select_related('category', 'event').prefetch_related('images', 'reviews').order_by('-created_at')[:4]
         context['limited_products'] = set_product_fields(limited_products)
 
+        # ---------------- Featured Products ---------------- #
         all_ids = list(Product.objects.filter(is_active=True).values_list('id', flat=True))
         random_ids = random.sample(all_ids, min(len(all_ids), 6))
-        featured_products = Product.objects.filter(id__in=random_ids).select_related('category', 'event').prefetch_related('images', 'reviews')
+        featured_products = Product.objects.filter(
+            id__in=random_ids
+        ).select_related('category', 'event').prefetch_related('images', 'reviews')
         context['featured_products'] = set_product_fields(featured_products)
 
+        # ---------------- Conference & Webinar Events ---------------- #
         conference_products = Product.objects.filter(
             category__name__in=['Conference', 'Webinar', 'Event'], is_active=True
         ).select_related('category', 'event').prefetch_related('images', 'reviews').order_by('-created_at')[:4]
         context['conference_products'] = set_product_fields(conference_products)
 
+        # ---------------- Wishlist & Cart ---------------- #
         if self.request.user.is_authenticated:
             cart_items = CartProduct.objects.filter(user=self.request.user)
             context['user_cart_ids'] = list(cart_items.values_list('product_id', flat=True))
@@ -125,8 +147,81 @@ class HomeView(TemplateView):
             context['user_wishlist_ids'] = []
             context['user_registered_event_ids'] = []
 
+        # ---------------- Banners ---------------- #
         context['banners'] = Banner.objects.filter(is_active=True)
         return context
+
+
+class CategoryProductsView(TemplateView):
+    template_name = 'userdashboard/view/category_products.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        category_id = self.kwargs.get("pk")
+
+        try:
+            category = ProductCategory.objects.get(pk=category_id)
+        except ProductCategory.DoesNotExist:
+            context.update({'products': [], 'category': None})
+            return context
+
+        effective_price = ExpressionWrapper(
+            F('price') * (1 - (F('offer_percentage') / Value(100, output_field=DecimalField()))),
+            output_field=DecimalField(max_digits=10, decimal_places=2)
+        )
+
+        products = Product.objects.filter(category=category, is_active=True).annotate(
+            effective_price=Case(
+                When(offer_active=True, offer_percentage__isnull=False, then=effective_price),
+                default=F('price'),
+                output_field=DecimalField(max_digits=10, decimal_places=2)
+            )
+        )
+
+        today = timezone.now().date()
+        for product in products:
+          
+            main_img = ProductImage.objects.filter(product=product, is_main=True).first()
+            product.main_image = main_img.image.url if main_img else None
+
+        
+            if product.delivery_time:
+                delivery_date = today + timedelta(days=product.delivery_time)
+                product.delivery_date = delivery_date.strftime('%a, %d %b')
+            else:
+                product.delivery_date = 'N/A'
+
+     
+            reviews = RatingReview.objects.filter(product=product)
+            total_reviews = reviews.count()
+            avg_rating = reviews.aggregate(avg_rating=Avg('rating'))['avg_rating'] or 0.0
+            product.rating = round(avg_rating, 1) if total_reviews > 0 else 0.0
+            product.total_reviews = total_reviews
+
+            
+            if product.offer_active and product.offer_percentage:
+                product.discounted_price = product.price * (
+                    Decimal(1) - Decimal(product.offer_percentage) / Decimal(100)
+                )
+            else:
+                product.discounted_price = product.price
+
+      
+        if self.request.user.is_authenticated:
+            context['user_cart_ids'] = list(
+                CartProduct.objects.filter(user=self.request.user).values_list('product_id', flat=True)
+            )
+            context['user_wishlist_ids'] = list(
+                WishlistProduct.objects.filter(user=self.request.user).values_list('product_id', flat=True)
+            )
+        else:
+            context['user_cart_ids'] = []
+            context['user_wishlist_ids'] = []
+
+        context.update({'category': category, 'products': products})
+        return context
+    
+
 class CustomLoginView(FormView):
     form_class = EmailOnlyLoginForm
     template_name = 'dashboard/login.html'
@@ -182,6 +277,49 @@ class CustomLoginView(FormView):
         # Default fallback
         return reverse_lazy('dashboard:home')
 
+
+class RequestRoleView(LoginRequiredMixin, View):
+    template_name = 'userdashboard/seller/request_role.html'
+    success_url = reverse_lazy('dashboard:home')
+
+    def get(self, request, *args, **kwargs):
+        form = SupplierProfileForm()
+        return render(request, self.template_name, {'form': form})
+
+    def post(self, request, *args, **kwargs):
+        form = SupplierProfileForm(request.POST, request.FILES)
+
+        # Check if already requested
+        if RoleRequest.objects.filter(user=request.user, requested_role='supplier').exists():
+            messages.error(request, "You already have a pending or approved supplier role request.")
+            return render(request, self.template_name, {'form': form})
+
+        if form.is_valid():
+            # Create role request
+            RoleRequest.objects.create(
+                user=request.user,
+                requested_role='supplier',
+                status='pending'
+            )
+
+            # Save supplier profile
+            SupplierProfile.objects.update_or_create(
+                user=request.user,
+                defaults=form.cleaned_data
+            )
+
+            messages.success(request, "Your supplier role request has been submitted successfully.")
+            return redirect(self.success_url)
+
+        messages.error(request, "Please correct the errors below.")
+        return render(request, self.template_name, {'form': form})
+    
+
+
+
+
+    
+#-------------------------------------------------------------------------------------------------------------------------------------------------
 
 def generate_token():
     return uuid.uuid4().hex
@@ -417,6 +555,8 @@ class SearchSuggestionsView(View):
 
         return JsonResponse({'suggestions': suggestions})
 
+#---------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 class SearchResultsGridView(TemplateView):
     template_name = 'userdashboard/view/search_results_grid.html'
@@ -632,6 +772,8 @@ class SearchResultsGridView(TemplateView):
         logger.debug(f"Final context: {context.keys()}")
         return context
 
+#--------------------------------------------------------------------------------------------------------------------------------------------
+    
 
 class SearchResultsListView(TemplateView):
     template_name = 'userdashboard/view/search_results_list.html'
@@ -1687,7 +1829,9 @@ class OrderPlacedView(LoginRequiredMixin, TemplateView):
         total = subtotal + shipping + vat
 
         # Estimated delivery date
-        max_delivery_days = max((item.product.delivery_time or 5) for item in order.items.all())
+        # max_delivery_days = max((item.product.delivery_time or 5) for item in order.items.all())
+        # estimated_delivery = timezone.now().date() + timedelta(days=max_delivery_days)
+        max_delivery_days = max(((item.product.delivery_time or 5) for item in order.items.all()), default=5)
         estimated_delivery = timezone.now().date() + timedelta(days=max_delivery_days)
 
         # Payment details
@@ -2562,46 +2706,6 @@ class PaymentStatusView(View):
 
 
 # ------------------------------------------------------------------------------------------------------------------------
-
-
-
-
-
-class RequestRoleView(LoginRequiredMixin, View):
-    template_name = 'userdashboard/seller/request_role.html'
-    success_url = reverse_lazy('dashboard:home')
-
-    def get(self, request, *args, **kwargs):
-        form = SupplierProfileForm()
-        return render(request, self.template_name, {'form': form})
-
-    def post(self, request, *args, **kwargs):
-        form = SupplierProfileForm(request.POST, request.FILES)
-
-        # Check if already requested
-        if RoleRequest.objects.filter(user=request.user, requested_role='supplier').exists():
-            messages.error(request, "You already have a pending or approved supplier role request.")
-            return render(request, self.template_name, {'form': form})
-
-        if form.is_valid():
-            # Create role request
-            RoleRequest.objects.create(
-                user=request.user,
-                requested_role='supplier',
-                status='pending'
-            )
-
-            # Save supplier profile
-            SupplierProfile.objects.update_or_create(
-                user=request.user,
-                defaults=form.cleaned_data
-            )
-
-            messages.success(request, "Your supplier role request has been submitted successfully.")
-            return redirect(self.success_url)
-
-        messages.error(request, "Please correct the errors below.")
-        return render(request, self.template_name, {'form': form})
 
 
 class ManageRequestsView(LoginRequiredMixin, UserPassesTestMixin, ListView):

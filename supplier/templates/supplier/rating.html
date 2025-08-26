@@ -7,6 +7,14 @@
         color: gold;
         font-size: 16px;
     }
+    body {
+        font-family: Arial, sans-serif;
+        margin: 30px;
+        background: #fff;
+    }
+    .search-card {
+        padding: 15px;
+    }
 </style>
 
 <div class="app-main flex-column flex-row-fluid mt-10" id="kt_app_main">
@@ -14,6 +22,86 @@
         <div id="kt_app_content" class="app-content flex-column-fluid pt-0">
             <div id="kt_app_content_container" class="app-container container-fluid">
 
+                <!-- Filter Form -->
+                <form action="{% url 'supplier:rating_list' %}" method="GET" id="rating_filter_form">
+                    <div class="card mb-7">
+                        <div class="card-body">
+                            <!-- Search and Sort Filters -->
+                            <div class="d-flex align-items-start flex-column search-card">
+                                <div class="d-flex flex-column flex-sm-row w-100 gap-5">
+                                    <!-- Search Input -->
+                                    <div class="position-relative w-md-400px me-md-2">
+                                        <i class="bi bi-search fs-3 text-gray-500 position-absolute top-50 translate-middle ms-6"></i>
+                                        <input type="text" class="form-control form-control-solid ps-10" name="search" value="{{ request.GET.search }}" placeholder="Search Products" aria-label="Search Products" />
+                                    </div>
+                                    <!-- Buttons and Sort -->
+                                    <div class="d-flex align-items-center">
+                                        <button type="submit" class="btn btn-primary me-3" aria-label="Search Products">Search</button>
+                                        {% if request.GET and request.GET.urlencode %}
+                                        <a href="{% url 'supplier:rating_list' %}" class="btn btn-primary me-3 mx-1">Clear Filters</a>
+                                        {% endif %}
+                                        <a href="#" class="btn btn-link me-3" data-bs-toggle="collapse" data-bs-target="#kt_advanced_search_form" aria-expanded="false" aria-controls="kt_advanced_search_form">Advanced Search</a>
+                                    </div>
+                                </div>
+                                <small class="form-text text-muted">Choices: Product Name, Product ID</small>
+                            </div>
+                            <!-- Advanced Search Filters -->
+                            <div class="collapse" id="kt_advanced_search_form">
+                                <div class="separator separator-dashed mt-9 mb-6"></div>
+                                <div class="row g-8 mb-8">
+                                    <div class="col-xxl-12">
+                                        <div class="row g-8">
+                                            <!-- Rating Range Filter -->
+                                            <div class="col-md-6 col-lg-6 col-xl-4 col-xxl-4">
+                                                <label class="fs-6 form-label fw-bold text-gray-900">Average Rating</label>
+                                                <select class="form-select form-select-solid" data-control="select2" data-hide-search="true" name="rating_filter">
+                                                    <option value="all" {% if request.GET.rating_filter == 'all' or not request.GET.rating_filter %}selected{% endif %}>All</option>
+                                                    <option value="4-5" {% if request.GET.rating_filter == '4-5' %}selected{% endif %}>4 - 5</option>
+                                                    <option value="3-4" {% if request.GET.rating_filter == '3-4' %}selected{% endif %}>3 - 4</option>
+                                                    <option value="2-3" {% if request.GET.rating_filter == '2-3' %}selected{% endif %}>2 - 3</option>
+                                                    <option value="1-2" {% if request.GET.rating_filter == '1-2' %}selected{% endif %}>1 - 2</option>
+                                                    <option value="0-1" {% if request.GET.rating_filter == '0-1' %}selected{% endif %}>0 - 1</option>
+                                                </select>
+                                            </div>
+                                            <!-- Review Count Filter -->
+                                            <div class="col-md-6 col-lg-6 col-xl-4 col-xxl-4">
+                                                <label class="fs-6 form-label fw-bold text-gray-900">Review Count</label>
+                                                <select class="form-select form-select-solid" data-control="select2" data-hide-search="true" name="review_count">
+                                                    <option value="all" {% if request.GET.review_count == 'all' or not request.GET.review_count %}selected{% endif %}>All</option>
+                                                    <option value="0-10" {% if request.GET.review_count == '0-10' %}selected{% endif %}>0 - 10</option>
+                                                    <option value="11-50" {% if request.GET.review_count == '11-50' %}selected{% endif %}>11 - 50</option>
+                                                    <option value="51-100" {% if request.GET.review_count == '51-100' %}selected{% endif %}>51 - 100</option>
+                                                    <option value="101-plus" {% if request.GET.review_count == '101-plus' %}selected{% endif %}>101+</option>
+                                                </select>
+                                            </div>
+
+                                            <!-- Price Range Filter -->
+                                            <div class="col-md-6 col-lg-6 col-xl-4 col-xxl-4">
+                                                <label class="fs-6 form-label fw-bold text-gray-900">Price Range</label>
+                                                <select class="form-select form-select-solid" data-control="select2" data-hide-search="true" name="price_range">
+                                                    <option value="all" {% if request.GET.price_range == 'all' or not request.GET.price_range %}selected{% endif %}>All</option>
+                                                    <option value="0-50" {% if request.GET.price_range == '0-50' %}selected{% endif %}>$0 - $50</option>
+                                                    <option value="51-100" {% if request.GET.price_range == '51-100' %}selected{% endif %}>$51 - $100</option>
+                                                    <option value="101-200" {% if request.GET.price_range == '101-200' %}selected{% endif %}>$101 - $200</option>
+                                                    <option value="201-plus" {% if request.GET.price_range == '201-plus' %}selected{% endif %}>$201+</option>
+                                                </select>
+                                            </div>
+
+
+                                           
+
+    
+
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Ratings Table -->
                 <div class="card card-flush mb-3">
                     <div class="card-header align-items-center py-5 gap-2 gap-md-5">
                         <div class="card-title">
@@ -37,7 +125,7 @@
                                 <tr>
                                     <td class="text-center">{{ p.id }}</td>
                                     <td class="text-center">{{ p.name }}</td>
-                                    <td class="text-center">{{ p.price }}</td>
+                                    <td class="text-center">${{ p.price|floatformat:2 }}</td>
                                     <td class="text-center">
                                         {% if p.avg_rating %}
                                             <span class="rating-star">★</span> {{ p.avg_rating|floatformat:1 }} / 5
@@ -58,9 +146,34 @@
                         </table>
                     </div>
                 </div>
-
+                {% include "supplier/pagination.html" %}
             </div>
         </div>
     </div>
 </div>
+
+{% block page_only_scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Initialize Select2 for dropdowns
+        if (typeof $ !== 'undefined' && $.fn.select2) {
+            $('[data-control="select2"]').select2({
+                minimumResultsForSearch: Infinity
+            });
+        }
+
+        // Handle search input (client-side filtering)
+        const searchInput = document.querySelector('input[name="search"]');
+        searchInput.addEventListener("keyup", function () {
+            const query = this.value.toLowerCase();
+            const rows = document.querySelectorAll("table tbody tr");
+
+            rows.forEach(row => {
+                const rowText = row.textContent.toLowerCase();
+                row.style.display = rowText.includes(query) ? "" : "none";
+            });
+        });
+    });
+</script>
+{% endblock page_only_scripts %}
 {% endblock %}

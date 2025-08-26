@@ -20,22 +20,51 @@
                 <div class="p-6">
                     <table class="w-full text-sm text-gray-650 dark:text-gray-100">
                         <tbody>
-                            <tr class="border-b border-gray-200 dark:border-gray-700">
-                                <td class="py-4 font-medium text-gray-650 dark:text-gray-100">Photo</td>
-                                <td class="py-4">
-                                    <form method="post" enctype="multipart/form-data" action="{% url 'dashboard:upload_avatar' %}">
-                                        {% csrf_token %}
-                                        <div class="flex items-center space-x-4">
-                                            <div class="relative w-16 h-16 rounded-full overflow-hidden border border-gray-300 dark:border-gray-600">
-                                                <img src="{% if header_avatar_url %}{{ header_avatar_url }}?{{ user.last_login.timestamp }}{% else %}{% static 'metronic/tailwind/dist/assets/media/avatars/default-avatar.png' %}{% endif %}" alt="Profile Photo" class="w-full h-full object-cover">
-                                                <input type="file" name="avatar" accept=".png, .jpg, .jpeg" class="absolute inset-0 opacity-0 cursor-pointer">
-                                            </div>
-                                            <span class="text-sm text-gray-500 dark:text-gray-100">150x150px JPEG, PNG Image</span>
-                                            <button type="submit" class="text-blue-600 hover:underline dark:text-blue-400 dark:hover:text-blue-300 text-sm">Upload</button>
-                                        </div>
-                                    </form>
-                                </td>
-                            </tr>
+                 <tr class="border-b border-gray-200 dark:border-gray-700">
+    <td class="py-4 font-medium text-gray-650 dark:text-gray-100">Photo</td>
+    <td class="py-4">
+        <form method="post" enctype="multipart/form-data" action="{% url 'dashboard:upload_avatar' %}">
+            {% csrf_token %}
+            <div class="flex items-center justify-between">
+                
+                <!-- Left Section: Photo + Info -->
+                <div class="flex items-center space-x-4">
+                    <!-- Profile Image -->
+                    <div class="relative w-16 h-16 rounded-full overflow-hidden border border-gray-300 dark:border-gray-600">
+                        <img src="{% if header_avatar_url %}{{ header_avatar_url }}?{{ user.last_login.timestamp }}{% else %}{% static 'metronic/tailwind/dist/assets/media/avatars/default-avatar.png' %}{% endif %}" 
+                             alt="Profile Photo" 
+                             class="w-full h-full object-cover">
+                    </div>
+
+                    <!-- Info Text -->
+                    <span class="text-sm text-gray-500 dark:text-gray-100">
+                        150x150px JPEG, PNG Image
+                    </span>
+                </div>
+
+                <!-- Right Section: Buttons (Inside Blank Box Area) -->
+                <div class="flex space-x-2">
+                    <!-- Hidden File Input -->
+                    <input type="file" name="avatar" id="avatarInput" accept=".png, .jpg, .jpeg" class="hidden">
+
+                    <!-- Change Image Button -->
+                    <button type="button" 
+                            onclick="document.getElementById('avatarInput').click()" 
+                            class="px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1">
+                        Change Image
+                    </button>
+
+                    <!-- Upload Button -->
+                    <button type="submit" 
+                            class="px-4 py-2 rounded-md bg-green-600 text-white text-sm font-medium hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1">
+                        Upload
+                    </button>
+                </div>
+            </div>
+        </form>
+    </td>
+</tr>
+
                             <tr class="border-b border-gray-200 dark:border-gray-700">
                                 <td class="py-4 font-medium text-gray-650 dark:text-gray-100">Name</td>
                                 <td class="py-4 text-gray-500 dark:text-gray-100">{{ user.first_name }} {{ user.last_name }}</td>

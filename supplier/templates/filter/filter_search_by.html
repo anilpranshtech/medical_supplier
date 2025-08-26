@@ -1,33 +1,22 @@
 <div class="d-flex align-items-start flex-column search-card">
     <div class="d-flex flex-column flex-sm-row w-100 gap-5">
-
         <div class="position-relative w-md-400px me-md-2">
             <i class="bi bi-search fs-3 text-gray-500 position-absolute top-50 translate-middle ms-6"></i>
-            <input type="text" class="form-control form-control-solid ps-10" name="search_by" value="{{request.GET.search_by}}" placeholder="{{search_placeholder_text}}" />
+            <input type="text" class="form-control form-control-solid ps-10" name="search_by" value="{{ request.GET.search_by|default:'' }}" placeholder="{{ search_placeholder_text }}" />
         </div>
-
-
         <div class="d-flex align-items-center">
-            <!-- Search button -->
-            <button type="submit" class="btn btn-primary me-3 " style="margin-left: -14px;">Search</button>
-
+            <button type="submit" class="btn btn-primary me-3">Search</button>
             {% if request.GET and request.GET.urlencode %}
-                <a href="{{ request.path }}" class="btn btn-primary me-3 mx-1 " style="margin-left: -14px;">Clear Filters</a>
+                <a href="{% url 'supplier:products_list' %}" class="btn btn-primary me-3 mx-1">Clear Filters</a>
+                
             {% endif %}
-
-            <!-- Advanced Search Toggle (optional) -->
             {% if show_advance_search_link %}
                 <a href="#" id="kt_horizontal_search_advanced_link" class="btn btn-link me-3"
                    data-bs-toggle="collapse" data-bs-target="#kt_advanced_search_form">
                     Advanced Search
                 </a>
             {% endif %}
-
-            <!-- Clear Filters button (shown only if any filter is applied) -->
-
         </div>
     </div>
-
-    <small class="form-text text-muted">{{search_help_text}}</small>
+    <small class="form-text text-muted">{{ search_help_text }}</small>
 </div>
-

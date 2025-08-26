@@ -58,12 +58,12 @@ urlpatterns = [
     path('rfq/<int:pk>/quote/', SupplierQuotationUpdateView.as_view(), name='rfq_quote'),
 
     #Banner Upload
-    path('banner-list/', BannerListView.as_view(), name='banner_list'),
-    path('banner-upload/', BannerCreateView.as_view(), name='banner_upload'),
-    path('banner-edit/<int:pk>/', BannerUpdateView.as_view(), name='banner_edit'),
+    # path('banner-list/', BannerListView.as_view(), name='banner_list'),
+    # path('banner-upload/', BannerCreateView.as_view(), name='banner_upload'),
+    # path('banner-edit/<int:pk>/', BannerUpdateView.as_view(), name='banner_edit'),
 
     path('transaction/', TransactionView.as_view(), name='transaction_list'),
-    path('question /', QuestionView.as_view(), name='question_list'),
+    path('question/', QuestionView.as_view(), name='question_list'),
     path('rating/', RatingView.as_view(), name='rating_list'),
     
     path('most-viewed-products/', MostViewedProductsView.as_view(), name='view_product'),
