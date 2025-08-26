@@ -1135,8 +1135,7 @@ class OrderListingView(StaffAccountRequiredMixin, PermissionRequiredMixin, View)
         return render(request, self.template_name, context)
 
 
-class OrderDetailesView(StaffAccountRequiredMixin, View):
-class OrderDetailesView(View):
+class OrderDetailesView(StaffAccountRequiredMixin,View):
     template_name = 'superuser/orders/order_details.html'
 
     def get(self, request, order_id):

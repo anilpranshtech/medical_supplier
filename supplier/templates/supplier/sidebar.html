@@ -199,13 +199,7 @@
                       </span>
                       <span class="menu-title">RFQ Requests</span>
                     </a>
-                    {% comment %} <a class="menu-link {% if request.resolver_match.url_name == 'banner_list' %} active {% endif %}"
-                       href="{% url 'supplier:banner_list' %}">
-                      <span class="menu-bullet">
-                        <span class="bullet bullet-dot"></span>
-                      </span>
-                      <span class="menu-title">Upload Banner</span>
-                    </a> {% endcomment %}
+
                     <a class="menu-link {% if request.resolver_match.url_name == 'view_product' %} active {% endif %}"
                     href="{% url 'supplier:view_product' %}">
                     <span class="menu-bullet">
@@ -213,7 +207,7 @@
                     </span>
                     <span class="menu-title">View Products</span>
                     </a>
-                    <a class="menu-link {% if request.resolver_match.url_name == 'rfq_list' %} active {% endif %}"
+                    <a class="menu-link {% if request.resolver_match.url_name == 'rating_list' %} active {% endif %}"
                        href="{% url 'supplier:rating_list' %}">
                       <span class="menu-bullet">
                         <span class="bullet bullet-dot"></span>
