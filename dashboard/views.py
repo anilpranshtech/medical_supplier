@@ -986,6 +986,11 @@ class SearchResultsListView(TemplateView):
         logger.debug(f"Final context: {context.keys()}")
         return context
 
+# views.py
+from django.views.generic import TemplateView
+from django.shortcuts import get_object_or_404
+from .models import Product, ProductImage, RatingReview, Event, EventRegistration, CartProduct, WishlistProduct, Question
+from django.db.models import Avg
 
 class ProductDetailsView(TemplateView):
     template_name = 'userdashboard/view/product_details.html'
@@ -1009,6 +1014,15 @@ class ProductDetailsView(TemplateView):
                 total_reviews = reviews.count()
                 avg_rating = reviews.aggregate(avg=Avg('rating'))['avg'] or 0
 
+                # Add stock status logic
+                stock_status = ""
+                if product.stock_quantity == 0:
+                    stock_status = "Out of Stock"
+                elif product.stock_quantity < 5:
+                    stock_status = f"Hurry, only {product.stock_quantity} available"
+                elif product.stock_quantity < 10:
+                    stock_status = "Only a few available"
+
                 if self.request.user.is_authenticated:
                     context['user_registered_event_ids'] = list(
                         EventRegistration.objects.filter(user=self.request.user).values_list('product_id', flat=True)
@@ -1022,7 +1036,6 @@ class ProductDetailsView(TemplateView):
 
                 event = product.event if hasattr(product, 'event') and product.event else None
 
-              
                 questions = (Question.objects
                              .select_related('user')
                              .filter(product=product)
@@ -1038,7 +1051,8 @@ class ProductDetailsView(TemplateView):
                     'user_cart_ids': user_cart_ids,
                     'user_wishlist_ids': user_wishlist_ids,
                     'event': event,
-                    'questions': questions,       
+                    'questions': questions,
+                    'stock_status': stock_status,  # Add stock status to context
                 })
 
             except Product.DoesNotExist:
@@ -3282,7 +3296,7 @@ class RequestReturnView(LoginRequiredMixin, View):
                     message=f"Return request {return_obj.return_serial} for {return_obj.order_item.product.name} by {return_obj.client.get_full_name() or return_obj.client.username}"
                 )
         except Exception:
-            pass  # Don't break the flow if notification fails
+            pass  
 
 class MarkNotificationReadView( View):
     def post(self, request, pk):
