@@ -1399,7 +1399,7 @@ class RFQListView(LoginRequiredMixin, SupplierPermissionMixin, ListView):
 class RFQListView(LoginRequiredMixin, SupplierPermissionMixin, ListView):
     template_name = 'supplier/rfq_list.html'
     context_object_name = 'rfqs'
-    paginate_by = 2   #  per page 2 RFQs
+    paginate_by = 2  
 
     def get_queryset(self):
         user = self.request.user
@@ -1537,7 +1537,7 @@ class SupplierQuotationUpdateView(LoginRequiredMixin, SupplierPermissionMixin, U
 
 # class BannerListView(LoginRequiredMixin, SupplierPermissionMixin, TemplateView):
 #     template_name = 'supplier/banner_list.html'
-#     paginate_by = 2   #  Per page 2 banners
+#     paginate_by = 2   
 
 #     def get_context_data(self, **kwargs):
 #         context = super().get_context_data(**kwargs)
@@ -1611,7 +1611,7 @@ class SupplierQuotationUpdateView(LoginRequiredMixin, SupplierPermissionMixin, U
 
 class TransactionView(TemplateView):
     template_name = 'supplier/transaction.html'
-    paginate_by = 5  # ✅ per page kitne records
+    paginate_by = 5 
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1674,7 +1674,7 @@ class TransactionView(TemplateView):
         context['total_orders'] = paid_money
         context['pending_orders'] = unpaid_money
         context['cash_money'] = cash_money
-        context['orders'] = page_obj  # ✅ ab ye paginated hoga
+        context['orders'] = page_obj  
         context['page_obj'] = page_obj
         context['payment_method_choices'] = Payment._meta.get_field('payment_method').choices
 
@@ -1683,7 +1683,7 @@ class TransactionView(TemplateView):
 
 
 class MostViewedProductsView(View):
-    paginate_by = 2   #  Per page 2 products
+    paginate_by = 2  
 
     def get(self, request):
         # Get filter parameters
