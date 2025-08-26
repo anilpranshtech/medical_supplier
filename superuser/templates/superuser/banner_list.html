@@ -65,51 +65,57 @@
 
         <!-- Table Section (IMPROVED UI) -->
         <div class="card shadow-sm">
-          <div class="card-body table-responsive">
-             {% if "supplier.add_banner" in user_permissions_list %}
-            <div class="card-toolbar px-5 pb-5">
-              <a href="{% url 'superuser:banner_upload' %}" class="btn btn-sm btn-primary">
-                <i class="bi bi-bookmark-plus-fill fs-2 me-1"></i> Add Banner
-              </a>
-            </div>
+
+            <!-- Card Header -->
+          <div class="card-header d-flex justify-content-between align-items-center px-5 py-3 border-0">
+            <h3 class="card-title fw-bold"></h3>
+            {% if "supplier.add_banner" in user_permissions_list %}
+            <a href="{% url 'superuser:banner_upload' %}" class="btn btn-sm btn-primary">
+              <i class="bi bi-bookmark-plus-fill fs-2 me-1"></i> Add Banner
+            </a>
             {% endif %}
+          </div>
+
+          <div class="card-body table-responsive">
+
             {% if banners %}
-            <table class="table table-hover table-row-dashed align-middle gy-5">
-              <thead class="bg-light">
-                <tr class="fw-bold text-gray-600 text-uppercase fs-7">
-                  <th class="ps-4">ID</th>
-                  <th>Image</th>
-                  <th>Title</th>
-                  <th class="text-center">Order</th>
-                  <th class="text-center">Status</th>
-                  <th class="text-center">Link</th>
+            <table class="table table-row-dashed align-middle gy-5" style="table-layout: fixed; width: 100%;">
+              <thead>
+                <tr class="fw-bold text-gray-600 text-uppercase fs-7 text-center">
+                  <th style="width: 8%;">ID</th>
+                  <th style="width: 20%;">Image</th>
+                  <th style="width: 14%;">Title</th>
+                  <th style="width: 14%;">Order</th>
+                  <th style="width: 14%;">Status</th>
+                  <th style="width: 14%;">Link</th>
                   {% if "supplier.change_banner" in user_permissions_list or "supplier.delete_banner" in user_permissions_list %}
-                  <th class="text-center">Actions</th>
+                  <th style="width: 16%;">Actions</th>
                   {% endif %}
                 </tr>
               </thead>
-              <tbody class="fw-semibold text-gray-700">
+              <tbody class="fw-semibold text-gray-700 text-center">
                 {% for banner in banners %}
                 <tr>
-                  <td class="ps-4">{{ banner.id }}</td>
+                  <td>{{ banner.id }}</td>
                   <td>
                     {% if banner.image %}
-                    <img src="{{ banner.image.url }}" alt="{{ banner.title }}" width="90" height="55"
-                         class="rounded shadow-sm border object-cover" />
+                    <img src="{{ banner.image.url }}" alt="{{ banner.title }}"
+                         class="rounded shadow-sm border"
+                         style="width: auto; height: 55px; object-fit: cover;" />
                     {% else %}
                     <span class="text-muted">No Image</span>
                     {% endif %}
                   </td>
                   <td>{{ banner.title }}</td>
-                  <td class="text-center">{{ banner.order }}</td>
-                  <td class="text-center">
+                  <td>{{ banner.order }}</td>
+                  <td>
                     {% if banner.is_active %}
                     <span class="badge bg-success">Active</span>
                     {% else %}
                     <span class="badge bg-danger">Inactive</span>
                     {% endif %}
                   </td>
-                  <td class="text-center">
+                  <td>
                     {% if banner.link %}
                     <a href="{{ banner.link }}" target="_blank" class="text-primary text-decoration-underline">
                       {{ banner.link|truncatechars:25 }}
@@ -119,7 +125,7 @@
                     {% endif %}
                   </td>
                   {% if "supplier.change_banner" in user_permissions_list or "supplier.delete_banner" in user_permissions_list %}
-                  <td class="text-center">
+                  <td>
                     <div class="dropdown">
                       <button class="btn btn-sm btn-light dropdown-toggle" data-bs-toggle="dropdown">
                         Actions
