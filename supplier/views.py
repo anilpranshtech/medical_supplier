@@ -25,7 +25,7 @@ from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.hashers import check_password
 from datetime import timezone, datetime 
 from django.db import IntegrityError, transaction
-from django.utils.dateparse import parse_date
+from django.utils.dateparse import parse_date, parse_datetime
 from django.utils.timezone import localtime
 from django.db.models.functions import Coalesce,TruncDay
 from django.db.models import Sum, F, DecimalField, Prefetch
@@ -201,7 +201,7 @@ from django.core.paginator import Paginator
 
 class ProductsView(LoginRequiredMixin, View):
     template_name = 'supplier/products.html'
-    paginate_by = 3   # 👈 Per page 3 products
+    paginate_by = 3   #  Per page 3 products
 
     def get(self, request):
         user = request.user
@@ -263,7 +263,7 @@ class ProductsView(LoginRequiredMixin, View):
             image = ProductImage.objects.filter(product=product).first()
             product.image_url = image.image.url if image else '/static/supplier/media/stock/ecommerce/placeholder.png'
 
-        # Pagination 👇
+        # Pagination 
         paginator = Paginator(products, self.paginate_by)
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number)
@@ -272,8 +272,8 @@ class ProductsView(LoginRequiredMixin, View):
         categories = ProductCategory.objects.all()
 
         return render(request, self.template_name, {
-            'products': page_obj,     # 👈 Only current page products
-            'page_obj': page_obj,     # 👈 For pagination.html
+            'products': page_obj,     #  Only current page products
+            'page_obj': page_obj,     #  For pagination.html
             'category': categories
         })
 
@@ -395,8 +395,8 @@ class AddproductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
                 event = Event.objects.create(
                     conference_link=data.get('registration_link') or None,  # Updated to match form field
                     speaker_name=data.get('webinar_name') or None,  # Updated to match form field
-                    conference_at=data.get('webinar_date') or None,  # Updated to match form field
-                    duration=data.get('webinar_duration') or None,  # Updated to match form field
+                    conference_at=self._parse_date(data.get('webinar_date')) or None,
+                    duration=self._parse_duration(data.get('webinar_duration')) or None,
                     venue=data.get('webinar_venue') or None,  # Updated to match form field
                 )
                 product.event = event
@@ -431,6 +431,22 @@ class AddproductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
         except:
             return None
 
+    def _parse_duration(self, val):
+        if not val:
+            return None
+        try:
+            if ":" in val:  # HH:MM[:SS]
+                parts = list(map(int, val.split(":")))
+                while len(parts) < 3:
+                    parts.append(0)  # pad missing seconds/minutes
+                h, m, s = parts
+                return timedelta(hours=h, minutes=m, seconds=s)
+            else:
+                # assume number = hours
+                return timedelta(hours=int(val))
+        except:
+            return None
+
     def _parse_int(self, val, min_value=None):
         if not val:
             return None
@@ -443,10 +459,9 @@ class AddproductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
             return None
 
     def _parse_date(self, val):
-        try:
-            return parse_date(val)
-        except:
+        if not val:
             return None
+        return parse_datetime(val) or parse_date(val)
 
     def _get_object(self, model, pk):
         if not pk:
@@ -732,7 +747,7 @@ class UserListView(SupplierPermissionMixin, ListView):
     template_name = 'supplier/user_list.html'
     context_object_name = 'users'
     ordering = ['-date_joined']
-    paginate_by = 2   # 👈 Yaha pagination set kiya (2 records per page)
+    paginate_by = 2   
 
     def get_queryset(self):
         # Get all users
@@ -1399,7 +1414,7 @@ class RFQListView(LoginRequiredMixin, SupplierPermissionMixin, ListView):
 class RFQListView(LoginRequiredMixin, SupplierPermissionMixin, ListView):
     template_name = 'supplier/rfq_list.html'
     context_object_name = 'rfqs'
-    paginate_by = 2   #  per page 2 RFQs
+    paginate_by = 2  
 
     def get_queryset(self):
         user = self.request.user
@@ -1537,7 +1552,7 @@ class SupplierQuotationUpdateView(LoginRequiredMixin, SupplierPermissionMixin, U
 
 # class BannerListView(LoginRequiredMixin, SupplierPermissionMixin, TemplateView):
 #     template_name = 'supplier/banner_list.html'
-#     paginate_by = 2   #  Per page 2 banners
+#     paginate_by = 2   
 
 #     def get_context_data(self, **kwargs):
 #         context = super().get_context_data(**kwargs)
@@ -1611,7 +1626,7 @@ class SupplierQuotationUpdateView(LoginRequiredMixin, SupplierPermissionMixin, U
 
 class TransactionView(TemplateView):
     template_name = 'supplier/transaction.html'
-    paginate_by = 5  # ✅ per page kitne records
+    paginate_by = 5 
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1674,7 +1689,7 @@ class TransactionView(TemplateView):
         context['total_orders'] = paid_money
         context['pending_orders'] = unpaid_money
         context['cash_money'] = cash_money
-        context['orders'] = page_obj  # ✅ ab ye paginated hoga
+        context['orders'] = page_obj  
         context['page_obj'] = page_obj
         context['payment_method_choices'] = Payment._meta.get_field('payment_method').choices
 
@@ -1683,7 +1698,7 @@ class TransactionView(TemplateView):
 
 
 class MostViewedProductsView(View):
-    paginate_by = 2   #  Per page 2 products
+    paginate_by = 2  
 
     def get(self, request):
         # Get filter parameters
@@ -1799,10 +1814,11 @@ class RatingView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        user = self.request.user
 
         # Base queryset with annotations for average rating and review count
         products = (
-            Product.objects
+            Product.objects.filter(created_by=user)
             .annotate(
                 avg_rating=Avg('reviews__rating'),
                 review_count=Coalesce(
@@ -1889,7 +1905,7 @@ class RatingView(TemplateView):
 class SupplierReturnsView(LoginRequiredMixin, TemplateView):
     template_name = 'supplier/returns.html'
     login_url = 'dashboard:login'
-    paginate_by = 3   #  per page 3 returns
+    paginate_by = 3   
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1938,7 +1954,7 @@ class SupplierReturnsView(LoginRequiredMixin, TemplateView):
             'order_item__product', 'client'
         ).order_by('-request_date')
 
-        # Pagination 
+       
         paginator = Paginator(returns_qs, self.paginate_by)
         page_number = self.request.GET.get('page')
         page_obj = paginator.get_page(page_number)
@@ -1946,13 +1962,13 @@ class SupplierReturnsView(LoginRequiredMixin, TemplateView):
         context['returns'] = page_obj
         context['page_obj'] = page_obj
 
-        # Add products for the product filter dropdown
+     
         if user.is_superuser:
             context['products'] = Product.objects.all()
         else:
             context['products'] = Product.objects.filter(brand__supplier=user)
 
-        # Add Return model choices to context for template
+      
         context['return_option_choices'] = Return.RETURN_OPTION_CHOICES
         context['return_status_choices'] = Return.RETURN_STATUS_CHOICES
 

@@ -7,7 +7,7 @@ from django.db.models import Prefetch, F, Sum, Avg, Value
 from django.db.models.functions import Coalesce
 from django.http import JsonResponse, Http404, HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
-from django.utils.dateparse import parse_date
+from django.utils.dateparse import parse_date, parse_datetime
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic import ListView
@@ -686,6 +686,10 @@ class AddproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
 
         ask_admin_to_publish = data.get('ask_admin_to_publish') == 'on'
 
+        print("----------------------------------------------",data.get('registration_link') ,
+                    data.get('webinar_name') ,data.get('webinar_date'),data.get('webinar_duration'),
+                    data.get('webinar_venue'))
+
         # Handle brand creation
         brand_name = data.get('brand')
         brand = None
@@ -790,17 +794,23 @@ class AddproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
             return None
 
     def _parse_date(self, val):
-        try:
-            return parse_date(val)
-        except:
+        if not val:
             return None
+        return parse_datetime(val) or parse_date(val)
 
     def _parse_duration(self, val):
         if not val:
             return None
         try:
-            h, m, s = map(int, val.split(':'))
-            return timedelta(hours=h, minutes=m, seconds=s)
+            if ":" in val:  # HH:MM[:SS]
+                parts = list(map(int, val.split(":")))
+                while len(parts) < 3:
+                    parts.append(0)  # pad missing seconds/minutes
+                h, m, s = parts
+                return timedelta(hours=h, minutes=m, seconds=s)
+            else:
+                # assume number = hours
+                return timedelta(hours=int(val))
         except:
             return None
 
@@ -1033,7 +1043,6 @@ class CreateProductCategoryView(StaffAccountRequiredMixin, View):
         ProductCategory.objects.create(name=name)
         messages.success(request, f"Category '{name}' created successfully.")
         return redirect('superuser:add_product')
-    
 
 
 class CreateProductSubCategoryView(StaffAccountRequiredMixin, View):
@@ -1167,7 +1176,6 @@ class OrderDetailesView(StaffAccountRequiredMixin,View):
     template_name = 'superuser/orders/order_details.html'
 
     def get(self, request, order_id):
-        # ✅ FIX: Correct prefetch for product images
         order = get_object_or_404(
             Order.objects.all()
             .distinct()
@@ -1179,8 +1187,8 @@ class OrderDetailesView(StaffAccountRequiredMixin,View):
                         .select_related('product', 'order_by', 'order_to')
                         .prefetch_related(
                             Prefetch(
-                                # 👇 change this to match your related_name
-                                'product__images',   # if ProductImage(product=FK, related_name="images")
+                             
+                                'product__images',   
                                 queryset=ProductImage.objects.filter(is_main=True),
                                 to_attr='main_image'
                             )
@@ -1308,9 +1316,9 @@ class RatingView(TemplateView):
 
 
 
-class BannerListView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):  # Add SupplierPermissionMixin if needed
+class BannerListView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView): 
     template_name = 'superuser/banner_list.html'
-    required_permissions = ('supplier.view_banner',)
+    required_permissions = ('superuser.view_banner',)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1911,3 +1919,75 @@ class DeleteNotificationView(View):
         notification.delete()
         messages.success(request, "Notification deleted successfully.")
         return redirect('superuser:notifications_list')
+
+
+# category get and post AJAX method
+
+class AJAXGetCategoriesView(StaffAccountRequiredMixin, View):
+    def get(self, request):
+        categories = ProductCategory.objects.values("id", "name").order_by("name")
+        return JsonResponse({"categories": list(categories)})
+
+class AJAXCreateCategory(StaffAccountRequiredMixin, View):
+    def post(self, request):
+        name = request.POST.get('name')
+        if not name:
+            return JsonResponse({"status": "error", "message": "Category name is required."}, status=400)
+
+        if ProductCategory.objects.filter(name__iexact=name).exists():
+            return JsonResponse({"status": "warning", "message": "This category already exists."}, status=400)
+
+        category = ProductCategory.objects.create(name=name)
+        return JsonResponse({"status": "success", "message": f"Category '{category.name}' created successfully."})
+
+
+def get_subcategories(request):
+    subcategories = ProductSubCategory.objects.all()
+
+    data = [
+        {"id": sub.id, "name": sub.name, "category": sub.category.name}
+        for sub in subcategories
+    ]
+    return JsonResponse(data, safe=False)
+
+class AJAXCreateSubCategory(StaffAccountRequiredMixin, View):
+    def post(self, request):
+        name = request.POST.get('name')
+        category_id = request.POST.get('category')
+
+        if not name or not category_id:
+            return JsonResponse({"status": "error", "message": "Sub-category name and parent category are required."}, status=400)
+
+        if ProductSubCategory.objects.filter(name__iexact=name, category_id=category_id).exists():
+            return JsonResponse({"status": "warning", "message": "This sub-category already exists."}, status=400)
+
+        subcat = ProductSubCategory.objects.create(name=name, category_id=category_id)
+
+        return JsonResponse({
+            "status": "success",
+            "message": f"Sub-category '{subcat.name}' created successfully.",
+            "id": subcat.id,
+            "name": subcat.name,
+            "category_id": subcat.category_id,
+        })
+
+class AJAXCreateLastCategory(StaffAccountRequiredMixin, View):
+    def post(self, request):
+        name = request.POST.get('name')
+        sub_category_id = request.POST.get('sub_category')
+
+        if not name or not sub_category_id:
+            return JsonResponse({"status": "error", "message": "Last category name and parent sub-category are required."}, status=400)
+
+        if ProductLastCategory.objects.filter(name__iexact=name, sub_category_id=sub_category_id).exists():
+            return JsonResponse({"status": "warning", "message": "This last category already exists."}, status=400)
+
+        lastcat = ProductLastCategory.objects.create(name=name, sub_category_id=sub_category_id)
+
+        return JsonResponse({
+            "status": "success",
+            "message": f"Last category '{lastcat.name}' created successfully.",
+            "id": lastcat.id,
+            "name": lastcat.name,
+            "sub_category_id": lastcat.sub_category_id,
+        })

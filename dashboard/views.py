@@ -3302,7 +3302,7 @@ class RequestReturnView(LoginRequiredMixin, View):
                     message=f"Return request {return_obj.return_serial} for {return_obj.order_item.product.name} by {return_obj.client.get_full_name() or return_obj.client.username}"
                 )
         except Exception:
-            pass  # Don't break the flow if notification fails
+            pass  
 
 class MarkNotificationReadView( View):
     def post(self, request, pk):
