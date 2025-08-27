@@ -9,7 +9,7 @@
     <div class="d-flex flex-column flex-column-fluid">
         <div id="kt_app_content" class="app-content flex-column-fluid">
             <div id="kt_app_content_container" class="app-container container-fluid">
-                <form class="form d-flex flex-column flex-lg-row" method="POST" action="{% url 'supplier:add_product' %}" enctype="multipart/form-data">
+                <form class="form d-flex flex-column flex-lg-row" id="main-form" method="POST" action="{% url 'supplier:add_product' %}" enctype="multipart/form-data">
                     {% csrf_token %}
 
                     <!-- Left Side Container (Fixed Width) -->
@@ -521,6 +521,7 @@
     </div>
 </div>
 
+{% comment %}
 <!-- Category Forms -->
 <div class="modal fade" id="createCategoryModal" tabindex="-1" aria-labelledby="createCategoryModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -545,7 +546,9 @@
         </form>
     </div>
 </div>
+{% endcomment %}
 
+{% comment %}
 <!-- Sub Category Form -->
 <div class="modal fade" id="createSubCategoryModal" tabindex="-1" aria-labelledby="createSubCategoryModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -578,7 +581,9 @@
         </div>
     </div>
 </div>
+{% endcomment %}
 
+{% comment %}
 <!-- Last Category Form -->
 <div class="modal fade" id="createLastCategoryModal" tabindex="-1" aria-labelledby="createLastCategoryModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -611,6 +616,110 @@
         </div>
     </div>
 </div>
+{% endcomment %}
+
+<!-- category AJAX method -->
+<div class="modal fade" id="createCategoryModal" tabindex="-1" aria-labelledby="createCategoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form id="createCategoryForm" method="post" action="{% url 'superuser:AJAX_create_category' %}">
+            {% csrf_token %}
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createCategoryModalLabel">Add New Category</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="category-message"></div> <!-- Success/Error message placeholder -->
+                    <div class="mb-3">
+                        <label for="category_name" class="form-label required">Category Name</label>
+                        <input type="text" class="form-control form-control-solid" name="name" id="category_name" placeholder="Enter category name" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" id="addCategoryBtn" class="btn btn-primary">
+                        <span class="btn-text">Add Category</span>
+                        <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Sub-category AJAX method -->
+<div class="modal fade" id="createSubCategoryModal" tabindex="-1" aria-labelledby="createSubCategoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createSubCategoryModalLabel">Create New Sub-Category</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="createSubCategoryForm" action="{% url 'superuser:AJAX_create_subcategory' %}" method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div id="subcategory-message"></div>
+                    <div class="mb-3">
+                        <label for="parent_category" class="form-label">Parent Category</label>
+                        <select class="form-select" id="parent_category" name="category" required>
+                            <option value="">Select a Category</option>
+                            {% for cat in categories %}
+                                <option value="{{ cat.id }}">{{ cat.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="subcategory_name" class="form-label">Sub-Category Name</label>
+                        <input type="text" class="form-control" id="subcategory_name" name="name" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" id="addSubCategoryBtn" class="btn btn-primary">
+                        <span class="btn-text">Create Sub-Category</span>
+                        <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Last-category -->
+<div class="modal fade" id="createLastCategoryModal" tabindex="-1" aria-labelledby="createLastCategoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createLastCategoryModalLabel">Create New Last Category</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="createLastCategoryForm" action="{% url 'superuser:AJAX_create_lastcategory' %}" method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div id="lastcategory-message"></div>
+                    <div class="mb-3">
+                        <label for="parent_subcategory" class="form-label">Parent Sub-Category</label>
+                        <select class="form-select" id="parent_subcategory" name="sub_category" required>
+                            <option value="">Select a Sub-Category</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="lastcategory_name" class="form-label">Last Category Name</label>
+                        <input type="text" class="form-control" id="lastcategory_name" name="name" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" id="addLastCategoryBtn" class="btn btn-primary">
+                        <span class="btn-text">Create Last Category</span>
+                        <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 
 {% endblock %}
 
@@ -619,7 +728,7 @@
 <script src="https://cdn.jsdelivr.net/npm/nouislider@15.7.0/dist/nouislider.min.js"></script>
 <script>
 $(document).ready(function () {
-    $('form').on('submit', function(e) {
+    $('#main-form').on('submit', function(e) {
         $('.indicator-label').hide();
         $('.indicator-progress').show();
         return true;
@@ -669,6 +778,20 @@ $(document).ready(function () {
         } else {
             $('#lastcategory_select').html('<option value="">Select a Last Category</option>').trigger('change');
         }
+    });
+
+    $('#createLastCategoryModal').on('show.bs.modal', function () {
+        $.ajax({
+            url: "{% url 'superuser:AJAX_get_subcategory' %}", // Django URL
+            data: {}, // you can pass {category_id: ...} if needed
+            success: function (data) {
+                let options = '<option value="">Select a Sub-Category</option>';
+                data.forEach(function (item) {
+                    options += `<option value="${item.id}">${item.name} (${item.category})</option>`;
+                });
+                $('#parent_subcategory').html(options);
+            }
+        });
     });
 
     // Discount percentage slider
@@ -806,5 +929,212 @@ document.addEventListener("DOMContentLoaded", function () {
     // Run on page load
     toggleFormFields();
 });
+
+
+
+function loadCategories(selectedId = null) {
+    $.ajax({
+        type: "GET",
+        url: "{% url 'superuser:AJAX_get_category' %}",  // 🔹 adjust if inside superuser namespace
+        success: function (response) {
+            let select = $("select[name='category']");
+            select.empty();
+            select.append('<option value="">Select a Category</option>');
+
+            response.categories.forEach(cat => {
+                let isSelected = selectedId && selectedId == cat.id;
+                select.append(new Option(cat.name, cat.id, isSelected, isSelected));
+            });
+
+            // If Select2 is used, refresh
+            select.trigger("change");
+        }
+    });
+}
+
+<!-- AJAX create category -->
+$(document).ready(function () {
+    loadCategories(); // initial load
+
+    $("#createCategoryForm").on("submit", function (e) {
+        e.preventDefault();
+
+        let form = $(this);
+        let url = form.attr("action");
+        let data = form.serialize();
+        let btn = $("#addCategoryBtn");
+
+        btn.prop("disabled", true);
+        btn.find(".btn-text").text("Adding...");
+        btn.find(".spinner-border").removeClass("d-none");
+
+        $.ajax({
+            type: "POST",
+            url: url,
+            data: data,
+            success: function (response) {
+                if (response.status === "success") {
+                    $("#category-message").html(
+                        `<div class="alert alert-success">${response.message}</div>`
+                    );
+
+                    // Reload categories and select the new one
+                    loadCategories(response.id);
+
+                    setTimeout(function () {
+                        $("#createCategoryModal").modal("hide");
+                        form[0].reset();
+                        $("#category-message").empty();
+                    }, 1000);
+                }
+            },
+            error: function (xhr) {
+                let res = xhr.responseJSON;
+                $("#category-message").html(
+                    `<div class="alert alert-danger">${res.message}</div>`
+                );
+            },
+            complete: function () {
+                btn.prop("disabled", false);
+                btn.find(".btn-text").text("Add Category");
+                btn.find(".spinner-border").addClass("d-none");
+            }
+        });
+    });
+});
+
+$(document).ready(function () {
+    $("#createSubCategoryForm").on("submit", function (e) {
+        e.preventDefault();
+
+        let form = $(this);
+        let url = form.attr("action");
+        let data = form.serialize();
+        let btn = $("#addSubCategoryBtn");
+
+        // Show loader
+        btn.prop("disabled", true);
+        btn.find(".btn-text").text("Creating...");
+        btn.find(".spinner-border").removeClass("d-none");
+
+        $.ajax({
+            type: "POST",
+            url: url,
+            data: data,
+            success: function (response) {
+            if (response.status === "success") {
+                $("#subcategory-message").html(
+                    `<div class="alert alert-success">${response.message}</div>`
+                );
+
+                // 🔹 Reload subcategories for the selected parent category
+                let categoryId = response.category_id;
+                if (categoryId) {
+                    $.ajax({
+                        url: "{% url 'supplier:get_subcategories' %}",
+                        data: {
+                            'category_id': categoryId
+                        },
+                        success: function (data) {
+                            let options = '<option value="">Select a Sub-Category</option>';
+                            data.forEach(function (item) {
+                                let selected = item.id === response.id ? "selected" : "";
+                                options += `<option value="${item.id}" ${selected}>${item.name}</option>`;
+                            });
+                            $('#subcategory_select').html(options).trigger('change');
+                        }
+                    });
+                }
+
+                setTimeout(function () {
+                    $("#createSubCategoryModal").modal("hide");
+                    form[0].reset();
+                    $("#subcategory-message").empty();
+                }, 1000);
+            }
+        },
+            error: function (xhr) {
+                let res = xhr.responseJSON;
+                $("#subcategory-message").html(
+                    `<div class="alert alert-danger">${res.message}</div>`
+                );
+            },
+            complete: function () {
+                // Reset button state
+                btn.prop("disabled", false);
+                btn.find(".btn-text").text("Create Sub-Category");
+                btn.find(".spinner-border").addClass("d-none");
+            }
+        });
+    });
+});
+
+$(document).ready(function () {
+    $("#createLastCategoryForm").on("submit", function (e) {
+        e.preventDefault();
+
+        let form = $(this);
+        let url = form.attr("action");
+        let data = form.serialize();
+        let btn = $("#addLastCategoryBtn");
+
+        // Show loader
+        btn.prop("disabled", true);
+        btn.find(".btn-text").text("Creating...");
+        btn.find(".spinner-border").removeClass("d-none");
+
+        $.ajax({
+            type: "POST",
+            url: url,
+            data: data,
+            success: function (response) {
+                if (response.status === "success") {
+                    $("#lastcategory-message").html(
+                        `<div class="alert alert-success">${response.message}</div>`
+                    );
+
+                    // 🔹 Reload last categories for the selected subcategory
+                    let subCategoryId = response.sub_category_id;
+                    if (subCategoryId) {
+                        $.ajax({
+                            url: "{% url 'supplier:get_lastcategories' %}",
+                            data: {
+                                'sub_id': subCategoryId   // 👈 use the same key as in your other AJAX call
+                            },
+                            success: function (data) {
+                                let options = '<option value="">Select a Last Category</option>';
+                                data.forEach(function (item) {
+                                    let selected = item.id === response.id ? "selected" : "";
+                                    options += `<option value="${item.id}" ${selected}>${item.name}</option>`;
+                                });
+                                $('#lastcategory_select').html(options).trigger('change');
+                            }
+                        });
+                    }
+
+
+                    setTimeout(function () {
+                        $("#createLastCategoryModal").modal("hide");
+                        form[0].reset();
+                        $("#lastcategory-message").empty();
+                    }, 1000);
+                }
+            },
+            error: function (xhr) {
+                let res = xhr.responseJSON;
+                $("#lastcategory-message").html(
+                    `<div class="alert alert-danger">${res.message}</div>`
+                );
+            },
+            complete: function () {
+                // Reset button
+                btn.prop("disabled", false);
+                btn.find(".btn-text").text("Create Last Category");
+                btn.find(".spinner-border").addClass("d-none");
+            }
+        });
+    });
+});
+
 </script>
 {% endblock page_only_scripts %}
