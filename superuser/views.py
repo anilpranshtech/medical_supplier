@@ -1005,7 +1005,6 @@ class CreateProductCategoryView(StaffAccountRequiredMixin, View):
         ProductCategory.objects.create(name=name)
         messages.success(request, f"Category '{name}' created successfully.")
         return redirect('superuser:add_product')
-    
 
 
 class CreateProductSubCategoryView(StaffAccountRequiredMixin, View):
@@ -1882,3 +1881,75 @@ class DeleteNotificationView(View):
         notification.delete()
         messages.success(request, "Notification deleted successfully.")
         return redirect('superuser:notifications_list')
+
+
+# category get and post AJAX method
+
+class AJAXGetCategoriesView(StaffAccountRequiredMixin, View):
+    def get(self, request):
+        categories = ProductCategory.objects.values("id", "name").order_by("name")
+        return JsonResponse({"categories": list(categories)})
+
+class AJAXCreateCategory(StaffAccountRequiredMixin, View):
+    def post(self, request):
+        name = request.POST.get('name')
+        if not name:
+            return JsonResponse({"status": "error", "message": "Category name is required."}, status=400)
+
+        if ProductCategory.objects.filter(name__iexact=name).exists():
+            return JsonResponse({"status": "warning", "message": "This category already exists."}, status=400)
+
+        category = ProductCategory.objects.create(name=name)
+        return JsonResponse({"status": "success", "message": f"Category '{category.name}' created successfully."})
+
+
+def get_subcategories(request):
+    subcategories = ProductSubCategory.objects.all()
+
+    data = [
+        {"id": sub.id, "name": sub.name, "category": sub.category.name}
+        for sub in subcategories
+    ]
+    return JsonResponse(data, safe=False)
+
+class AJAXCreateSubCategory(StaffAccountRequiredMixin, View):
+    def post(self, request):
+        name = request.POST.get('name')
+        category_id = request.POST.get('category')
+
+        if not name or not category_id:
+            return JsonResponse({"status": "error", "message": "Sub-category name and parent category are required."}, status=400)
+
+        if ProductSubCategory.objects.filter(name__iexact=name, category_id=category_id).exists():
+            return JsonResponse({"status": "warning", "message": "This sub-category already exists."}, status=400)
+
+        subcat = ProductSubCategory.objects.create(name=name, category_id=category_id)
+
+        return JsonResponse({
+            "status": "success",
+            "message": f"Sub-category '{subcat.name}' created successfully.",
+            "id": subcat.id,
+            "name": subcat.name,
+            "category_id": subcat.category_id,
+        })
+
+class AJAXCreateLastCategory(StaffAccountRequiredMixin, View):
+    def post(self, request):
+        name = request.POST.get('name')
+        sub_category_id = request.POST.get('sub_category')
+
+        if not name or not sub_category_id:
+            return JsonResponse({"status": "error", "message": "Last category name and parent sub-category are required."}, status=400)
+
+        if ProductLastCategory.objects.filter(name__iexact=name, sub_category_id=sub_category_id).exists():
+            return JsonResponse({"status": "warning", "message": "This last category already exists."}, status=400)
+
+        lastcat = ProductLastCategory.objects.create(name=name, sub_category_id=sub_category_id)
+
+        return JsonResponse({
+            "status": "success",
+            "message": f"Last category '{lastcat.name}' created successfully.",
+            "id": lastcat.id,
+            "name": lastcat.name,
+            "sub_category_id": lastcat.sub_category_id,
+        })
