@@ -7,7 +7,7 @@ from django.db.models import Prefetch, F, Sum, Avg, Value
 from django.db.models.functions import Coalesce
 from django.http import JsonResponse, Http404, HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
-from django.utils.dateparse import parse_date
+from django.utils.dateparse import parse_date, parse_datetime
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic import ListView
@@ -686,6 +686,10 @@ class AddproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
 
         ask_admin_to_publish = data.get('ask_admin_to_publish') == 'on'
 
+        print("----------------------------------------------",data.get('registration_link') ,
+                    data.get('webinar_name') ,data.get('webinar_date'),data.get('webinar_duration'),
+                    data.get('webinar_venue'))
+
         # Handle brand creation
         brand_name = data.get('brand')
         brand = None
@@ -790,17 +794,23 @@ class AddproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
             return None
 
     def _parse_date(self, val):
-        try:
-            return parse_date(val)
-        except:
+        if not val:
             return None
+        return parse_datetime(val) or parse_date(val)
 
     def _parse_duration(self, val):
         if not val:
             return None
         try:
-            h, m, s = map(int, val.split(':'))
-            return timedelta(hours=h, minutes=m, seconds=s)
+            if ":" in val:  # HH:MM[:SS]
+                parts = list(map(int, val.split(":")))
+                while len(parts) < 3:
+                    parts.append(0)  # pad missing seconds/minutes
+                h, m, s = parts
+                return timedelta(hours=h, minutes=m, seconds=s)
+            else:
+                # assume number = hours
+                return timedelta(hours=int(val))
         except:
             return None
 

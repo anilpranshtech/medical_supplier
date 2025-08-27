@@ -25,7 +25,7 @@ from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.hashers import check_password
 from datetime import timezone, datetime 
 from django.db import IntegrityError, transaction
-from django.utils.dateparse import parse_date
+from django.utils.dateparse import parse_date, parse_datetime
 from django.utils.timezone import localtime
 from django.db.models.functions import Coalesce,TruncDay
 from django.db.models import Sum, F, DecimalField, Prefetch
@@ -395,8 +395,8 @@ class AddproductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
                 event = Event.objects.create(
                     conference_link=data.get('registration_link') or None,  # Updated to match form field
                     speaker_name=data.get('webinar_name') or None,  # Updated to match form field
-                    conference_at=data.get('webinar_date') or None,  # Updated to match form field
-                    duration=data.get('webinar_duration') or None,  # Updated to match form field
+                    conference_at=self._parse_date(data.get('webinar_date')) or None,
+                    duration=self._parse_duration(data.get('webinar_duration')) or None,
                     venue=data.get('webinar_venue') or None,  # Updated to match form field
                 )
                 product.event = event
@@ -431,6 +431,22 @@ class AddproductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
         except:
             return None
 
+    def _parse_duration(self, val):
+        if not val:
+            return None
+        try:
+            if ":" in val:  # HH:MM[:SS]
+                parts = list(map(int, val.split(":")))
+                while len(parts) < 3:
+                    parts.append(0)  # pad missing seconds/minutes
+                h, m, s = parts
+                return timedelta(hours=h, minutes=m, seconds=s)
+            else:
+                # assume number = hours
+                return timedelta(hours=int(val))
+        except:
+            return None
+
     def _parse_int(self, val, min_value=None):
         if not val:
             return None
@@ -443,10 +459,9 @@ class AddproductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
             return None
 
     def _parse_date(self, val):
-        try:
-            return parse_date(val)
-        except:
+        if not val:
             return None
+        return parse_datetime(val) or parse_date(val)
 
     def _get_object(self, model, pk):
         if not pk:
