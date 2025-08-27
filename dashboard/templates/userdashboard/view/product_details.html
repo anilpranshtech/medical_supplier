@@ -5,7 +5,7 @@
 
 {% block content %}
 <style>
-    /* Modal styles */
+ 
     #loginRequiredModal, #rfqModal, #imageModal, #eventRegistrationModal, #questionModal {
         z-index: 9999;
         backdrop-filter: blur(8px);
@@ -190,11 +190,11 @@
     /* Center the Swiper containers */
     .mainSwiper, .thumbSwiper {
         width: 100%;
-        max-width: 510px; /* Matches the main image width */
+        max-width: 510px; 
         margin: 0 auto;
     }
 
-    /* Ensure thumbnails are centered */
+
     .thumbSwiper .swiper-wrapper {
         display: flex;
         justify-content: center;
@@ -202,18 +202,48 @@
         gap: 8px;
     }
 
-    /* Override Swiper's default transform for thumbnails */
     .thumbSwiper .swiper-wrapper {
         transform: none !important;
     }
 
-    /* Ensure the no-image placeholder is centered */
     .flex-col.items-center.justify-center {
         text-align: center;
     }
 
     .border.border-gray-200.dark\:border-gray-700.bg-gray-50.dark\:bg-gray-800.rounded-lg.overflow-hidden.shadow-sm.max-w-\[510px\].mx-auto {
         height: 510px;
+    }
+
+    
+    .related-products .grid {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .related-products .border {
+        transition: transform 0.2s ease-in-out;
+    }
+
+    .related-products .border:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .related-products img {
+        max-height: 192px; 
+        object-fit: contain;
+    }
+
+    .related-products h3 {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .related-products p {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 </style>
 
@@ -536,6 +566,78 @@
                             <p class="text-gray-500 mt-4">No reviews yet for this product.</p>
                         {% endif %}
                     </div>
+
+                    <!-- Added Related Products Section -->
+                    {% if related_products %}
+                    <div class="border-t border-gray-200 dark:border-gray-700 pt-6 mt-6 related-products">
+                        <h2 class="text-xl font-semibold text-gray-650 dark:text-white mb-4">Related Products</h2>
+                        <div class="grid grid-cols-4 gap-4">
+                            {% for related_product in related_products %}
+                            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800 shadow-sm">
+                                <a href="{% url 'dashboard:product_detail' related_product.id %}">
+                                    {% if related_product.main_image %}
+                                    <img src="{{ related_product.main_image }}" alt="{{ related_product.name }}" class="w-full h-48 object-contain rounded mb-3" loading="lazy" />
+                                    {% else %}
+                                    <img src="{% static 'default.png' %}" alt="Default Product Image" class="w-full h-48 object-contain rounded mb-3" loading="lazy" />
+                                    {% endif %}
+                                    <h3 class="text-base font-semibold text-gray-650 dark:text-white truncate">{{ related_product.name }}</h3>
+                                    <div class="flex items-center gap-2 mt-2">
+                                        {% if related_product.offer_active and related_product.offer_percentage and related_product.offer_percentage > 0 %}
+                                        <span class="text-sm font-medium text-gray-500 line-through">${{ related_product.price|floatformat:2 }}</span>
+                                        <span class="text-base font-bold text-gray-650 dark:text-white">${{ related_product.discounted_price|floatformat:2 }}</span>
+                                        {% else %}
+                                        <span class="text-base font-bold text-gray-650 dark:text-white">${{ related_product.price|floatformat:2 }}</span>
+                                        {% endif %}
+                                    </div>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 truncate">{{ related_product.description|default:'No description available' }}</p>
+                                    <div class="flex items-center gap-2 mt-3">
+                                        {% if request.user.is_authenticated %}
+                                            {% if related_product.id in user_cart_ids %}
+                                            <button class="kt-btn kt-btn-outline kt-btn-sm" style="background:#3b82f6; color:white;" disabled>
+                                                In cart <i class="ki-filled ki-handcart text-white"></i>
+                                            </button>
+                                            {% else %}
+                                            <button class="kt-btn kt-btn-outline kt-btn-sm add-to-cart-btn" data-product-id="{{ related_product.id }}">
+                                                Add <i class="ki-filled ki-handcart"></i>
+                                            </button>
+                                            {% endif %}
+                                        {% else %}
+                                            <button class="kt-btn kt-btn-outline kt-btn-sm show-login-modal">
+                                                Add <i class="ki-filled ki-handcart text-xs"></i>
+                                            </button>
+                                        {% endif %}
+                                        {% if request.user.is_authenticated %}
+                                            {% if related_product.show_rfq or related_product.Both %}
+                                                <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 open-rfq-modal"
+                                                        data-product-id="{{ related_product.id }}"
+                                                        data-product-name="{{ related_product.name }}"
+                                                        data-product-price="{{ related_product.discounted_price|default:related_product.price|floatformat:2 }}"
+                                                        data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
+                                                        data-quantity="1">
+                                                    RFQ <i class="ki-filled ki-directbox-default text-xs"></i>
+                                                </button>
+                                            {% endif %}
+                                        {% endif %}
+                                        {% if request.user.is_authenticated %}
+                                            <span class="kt-wishlist-icon cursor-pointer"
+                                                  data-kt-wishlist-toggle="true"
+                                                  data-product-id="{{ related_product.id }}"
+                                                  title="{% if related_product.id in user_wishlist_ids %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}">
+                                                <i class="ki-solid ki-heart {% if related_product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
+                                            </span>
+                                        {% else %}
+                                            <span class="kt-wishlist-icon cursor-pointer show-login-modal"
+                                                  title="Login to Add to Wishlist">
+                                                <i class="ki-solid ki-heart"></i>
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </a>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
                 {% endif %}
             </div>
         </div>
@@ -676,7 +778,7 @@
 <!-- q&a -->
 
 
-<!-- {# --- Post Question Modal --- #} -->
+<!-- {--- Post Question Modal --- #} -->
 <div id="questionModal" class="kt-modal hidden fixed inset-0 z-[9999] flex items-center justify-center bg-black/30 backdrop-blur-sm" data-kt-modal="true" role="dialog" aria-labelledby="questionModalTitle" aria-modal="true">
     <div class="kt-card w-full max-w-[600px] rounded-2xl border border-border bg-white dark:bg-background shadow-2xl transition-transform duration-300 ease-in-out transform scale-95">
         <div class="kt-card-header px-6 py-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
@@ -870,7 +972,7 @@
     });
 
     // Add to Cart
-// Add to Cart with loader
+
 document.addEventListener('DOMContentLoaded', () => {
     const markAsInCart = (btn) => {
         btn.classList.remove('kt-btn-outline');

@@ -553,7 +553,6 @@
 </div>
 
 {% endblock %}
-
 {% block page_only_scripts %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/nouislider@15.7.0/dist/nouislider.min.js"></script>
@@ -666,14 +665,16 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const webinarCategories = ["Webinar", "Conference", "Event"];
 
+    // Exclude supplier field from being hidden
     const fieldsToHide = [
-        "hide_field_supplier", "hide_field_product_quantity", "hide_field_warranty", "hide_field_condition",
-        "hide_field_return_time_limit", "hide_field_manufacture_date", "hide_field_expiry_date", "hide_field_barcode",
-        "hide_field_price", "hide_field_weight_unit", "hide_field_weight", "hide_field_delivery_time",
-        "hide_field_commission_percentage", "hide_field_supplier_sku", "hide_field_pcs_per_unit",
-        "hide_field_min_order_qty", "hide_field_low_stock_alert", "hide_field_button_type",
-        "hide_field_expiration_days", "hide_field_tag", "hide_field_offer_percentage", "hide_field_offer_start",
-        "hide_field_offer_end", "hide_field_offer_status", "hide_field_keywords", "hide_field_brochure"
+        "hide_field_product_quantity", "hide_field_warranty", "hide_field_condition",
+        "hide_field_return_time_limit", "hide_field_manufacture_date", "hide_field_expiry_date",
+        "hide_field_barcode", "hide_field_price", "hide_field_weight_unit", "hide_field_weight",
+        "hide_field_delivery_time", "hide_field_commission_percentage", "hide_field_supplier_sku",
+        "hide_field_pcs_per_unit", "hide_field_min_order_qty", "hide_field_low_stock_alert",
+        "hide_field_button_type", "hide_field_expiration_days", "hide_field_tag",
+        "hide_field_offer_percentage", "hide_field_offer_start", "hide_field_offer_end",
+        "hide_field_offer_status", "hide_field_keywords", "hide_field_brochure"
     ];
 
     function toggleFormFields() {
@@ -696,6 +697,17 @@ document.addEventListener("DOMContentLoaded", function () {
                 });
             }
         });
+
+        // Ensure supplier field is always visible and required
+        const supplierField = document.getElementById("hide_field_supplier");
+        if (supplierField) {
+            supplierField.style.display = "";
+            supplierField.querySelectorAll("select").forEach(el => {
+                if (el.hasAttribute("data-originally-required")) {
+                    el.setAttribute("required", "required");
+                }
+            });
+        }
 
         // Toggle webinar fields
         if (webinarFields) {
@@ -723,7 +735,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // Store original required state for fields
-    fieldsToHide.forEach(id => {
+    fieldsToHide.concat(["hide_field_supplier"]).forEach(id => {
         const field = document.getElementById(id);
         if (field) {
             field.querySelectorAll("input, select, textarea").forEach(el => {
