@@ -1086,8 +1086,10 @@ class EventRegistrationView(View):
 
         try:
             product = Product.objects.get(id=product_id)
+            event = product.event
             EventRegistration.objects.create(
                 product=product,
+                event = event,
                 full_name=full_name,
                 email=email,
                 message=message,
@@ -3352,4 +3354,3 @@ class DeleteNotificationView(LoginRequiredMixin, View):
         return JsonResponse({'status': 'success'})
 
 
-        
