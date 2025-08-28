@@ -148,6 +148,21 @@ class UserDetailView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
         }
         return render(request, self.template_name, context)
 
+    def post(self, request, *args, **kwargs):
+        user = get_object_or_404(User, pk=kwargs['pk'])
+        profile, created = AdminUserProfile.objects.get_or_create(user=user)
+
+        if 'delete_profile_picture' in request.POST:
+            if profile.profile_picture:
+                profile.profile_picture.delete()
+                profile.profile_picture = None
+            profile.save()
+        elif 'profile_picture' in request.FILES:
+            profile.profile_picture = request.FILES['profile_picture']
+            profile.save()
+
+        return redirect('superuser:user_detail', pk=user.pk)
+
 
 class User_Accounts_Update_Profile(StaffAccountRequiredMixin, View):
     def post(self, request, *args, **kwargs):
@@ -1349,7 +1364,7 @@ class BannerUpdateView(LoginRequiredMixin, View):
 class AdminRFQListView(LoginRequiredMixin, ListView):
     template_name = 'superuser/rfq_list.html'
     context_object_name = 'rfqs'
-    paginate_by = 2   
+    paginate_by = 10   
 
     def get_queryset(self):
         user = self.request.user
@@ -1521,8 +1536,8 @@ class RatingView(TemplateView, StaffAccountRequiredMixin, PermissionRequiredMixi
 
         products = products.order_by('-avg_rating')
 
-        # ✅ Pagination setup (3 per page)
-        paginator = Paginator(products, 3)
+        #  Pagination setup (3 per page)
+        paginator = Paginator(products, 12)
         page_number = self.request.GET.get("page")
         page_obj = paginator.get_page(page_number)
 
@@ -1578,7 +1593,7 @@ class AdminReturnsView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView
         ).order_by('-request_date')
 
         # ---- Pagination Setup ----
-        paginator = Paginator(qs, 3) 
+        paginator = Paginator(qs, 13) 
         page_number = self.request.GET.get("page")
         page_obj = paginator.get_page(page_number)
 
@@ -1753,7 +1768,7 @@ class NotificationListView(PermissionRequiredMixin, StaffAccountRequiredMixin, L
     model = Notification
     template_name = "superuser/notification.html"
     context_object_name = "notifications"
-    paginate_by = 5
+    paginate_by = 14
     required_permissions = ('dashboard.view_notification',)
 
 

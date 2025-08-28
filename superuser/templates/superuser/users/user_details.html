@@ -1,22 +1,55 @@
 {% extends 'superuser/superuser_base.html' %}
 {% load static %}
-
-
+{% load superuser_tags %}
 {% block content %}
-<!--begin::Main-->
 <div class="app-main flex-column flex-row-fluid" id="kt_app_main">
     <div class="d-flex flex-column flex-lg-row me-10 mt-10">
-        <!-- LEFT MENU       -->
         <div class="flex-column flex-lg-row-auto w-lg-250px w-xl-350px mb-10">
             <div class="card mb-5 mb-xl-8">
                 <div class="card-body">
-                    <div class="d-flex flex-center flex-column py-5">
+                    <div class="d-flex flex-column align-items-center py-5">
+                        <!-- Profile Image -->
+                        <div class="d-flex flex-column align-items-center">
+                            <form id="profileForm" method="post" enctype="multipart/form-data">
+                                {% csrf_token %}
+                        <!-- Hidden file input -->
+                                <input type="file" id="fileInput" name="profile_picture" accept="image/*" style="display:none;" 
+                                       onchange="document.getElementById('profileForm').submit();">
+                                <div style="display: flex; justify-content: center; align-items: center;">
 
-                        <a href="#" class="fs-3 text-gray-800 text-hover-primary fw-bold mb-3">{{ user }}</a>
+                        <div style="width: 80px; height: 80px; border: 2px solid #ffffff; border-radius: 50%; overflow: hidden; background-color: #f8f9fa;">
+                            {% if user.adminuserprofile.profile_picture %}
+                                <img src="{{ user.adminuserprofile.profile_picture.url }}"
+                                alt="Profile Picture"
+                                style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                            {% else %}
+                                <img src="{% static 'images/default-avatar.png' %}"
+                                alt="Default Avatar"
+                                style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                            {% endif %}
+                        </div>
+                    </div>
 
-                        <div class="mb-9">
-
-                            <div class="badge badge-lg badge-light-primary d-inline">
+                    <!-- Edit and Delete Buttons -->
+                        <div class="d-flex justify-content-center gap-2 mt-2">
+                                <button type="button" class="btn btn-xs btn-light-primary d-flex align-items-center justify-content-center" 
+                                     onclick="document.getElementById('fileInput').click();"
+                                    title="Edit Profile Picture">
+                                        <i class="bi bi-pencil-square fs-7 me-0"></i>
+                                    </button>
+                                {% if user.adminuserprofile.profile_picture %}
+                                    <button type="button" class="btn btn-xs btn-light-danger d-flex align-items-center justify-content-center" 
+                                    onclick="deleteProfilePicture();"
+                                    title="Delete Profile Picture">
+                                        <i class="bi bi-trash fs-7 me-0"></i>
+                                    </button>
+                                {% endif %}
+                                </div>
+                            </form>
+                            <span class="mt-2 fw-bold text-gray-800">{{ user.username }}</span>
+                        </div>
+                        <div class="mb-4 mt-2">
+                            <div class="badge badge-md badge-light-primary d-inline">
                                 {% if user.is_superuser %}
                                     Admin
                                 {% elif user.is_staff and not user.is_superuser %}
@@ -27,40 +60,37 @@
                             </div>
                         </div>
                     </div>
-
-                    <div class="d-flex flex-stack fs-4 py-3">
-                        <div class="fw-bold rotate collapsible" data-bs-toggle="collapse" href="#kt_user_view_details"
-                             role="button" aria-expanded="false" aria-controls="kt_user_view_details">Details
+                    <div class="d-flex flex-stack fs-4 py-2">
+                        <div class="fw-bold rotate collapsible"
+                             data-bs-toggle="collapse"
+                             href="#kt_user_view_details"
+                             role="button"
+                             aria-expanded="false"
+                             aria-controls="kt_user_view_details">
+                            Details
                             <span class="ms-2 rotate-180">
-                            <i class="bi bi-caret-down-fill text-black fs-3"></i>
-                        </span></div>
+                                <i class="bi bi-caret-down-fill text-black fs-3"></i>
+                            </span>
+                        </div>
 
-                        {% if "auth.change_user" in user_permissions_list  %}
+                        {% if "auth.change_user" in user_permissions_list %}
                         <span data-bs-toggle="tooltip" data-bs-trigger="hover" title="Edit customer details">
-                            <button class="btn btn-sm btn-light-primary" data-bs-toggle="modal"
+                            <button class="btn btn-sm btn-light-primary"
+                                    data-bs-toggle="modal"
                                     data-bs-target="#_model_user_profile_update">Edit</button>
                         </span>
                         {% endif %}
-
                     </div>
 
                     <div class="separator"></div>
 
                     {% include "superuser/snippets/models/user_detail_profile_info.html" %}
-
                 </div>
-
             </div>
-
         </div>
-
-
-        <!--  RIGHT MENU  -->
         <div class="flex-lg-row-fluid ms-lg-15">
-
-            <!-- Profile section  -->
-            <div class="card mb-5 ">
-
+            <!-- Profile section -->
+            <div class="card mb-5">
                 <div class="card-header border-0">
                     <div class="card-title">
                         <h2>Profile</h2>
@@ -68,292 +98,297 @@
                 </div>
 
                 <div class="card-body pt-0 pb-5">
+                    <div class="table-responsive">
+                        <table class="table align-middle table-row-dashed gy-5"
+                               id="kt_table_users_login_session">
+                            <tbody class="fs-6 fw-semibold text-gray-600">
+                            <tr>
+                                <td>Email</td>
+                                <td>{{ user.email }}</td>
+                                {% if "auth.can_change_user_email" in user_permissions_list %}
+                                <td class="text-end">
+                                    <a href="#"
+                                       class="btn btn-sm btn-flex btn-light-primary"
+                                       data-bs-toggle="modal"
+                                       data-bs-target="#_model_user_change_email">
+                                        <i class="bi bi-pencil fs-3"></i>Change Email</a>
+                                </td>
+                                {% endif %}
+                            </tr>
 
-                <div class="table-responsive">
-                    <!--begin::Table-->
-                    <table class="table align-middle table-row-dashed gy-5"
-                           id="kt_table_users_login_session">
-                        <tbody class="fs-6 fw-semibold text-gray-600">
-                        <tr>
-                            <td>Email</td>
-                            <td>{{user.email}}</td>
+                            <tr>
+                                <td>Password</td>
+                                <td>******</td>
+                                {% if "auth.change_user_password" in user_permissions_list %}
+                                <td class="text-end">
+                                    <a href="#"
+                                       class="btn btn-sm btn-flex btn-light-primary"
+                                       data-bs-toggle="modal"
+                                       data-bs-target="#_model_user_change_password">
+                                        <i class="bi bi-pencil fs-3"></i>Change Password</a>
+                                </td>
+                                {% endif %}
+                            </tr>
 
-
-                            {% if "auth.can_change_user_email" in user_permissions_list  %}
-                            <td class="text-end">
-                                <a href="#" class="btn btn-sm btn-flex btn-light-primary"
-                                   data-bs-toggle="modal" data-bs-target="#_model_user_change_email">
-                                    <i class="bi bi-pencil fs-3"></i>Change Email</a>
-                            </td>
-                            {% endif %}
-
-                        </tr>
-                        <tr>
-                            <td>Password</td>
-                            <td>******</td>
-
-                            {% if "auth.change_user_password" in user_permissions_list  %}
-                            <td class="text-end">
-                                <a href="#" class="btn btn-sm btn-flex btn-light-primary"
-                                   data-bs-toggle="modal" data-bs-target="#_model_user_change_password">
-                                    <i class="bi bi-pencil fs-3"></i>Change Password</a>
-                            </td>
-                            {% endif %}
-
-
-                        </tr>
-                        <tr>
-                            <td>Role</td>
-                            <td>{% if user.is_superuser %}
-                                    Admin
-                                {% elif user.is_staff and not user.is_superuser %}
-                                    Staff
-                                {% else %}
-                                    User
-                                {% endif %} </td>
-
-                            {% if request.user.is_superuser %}
-                            <td class="text-end">
-                                <a href="#" class="btn btn-sm btn-flex btn-light-primary"
-                                   data-bs-toggle="modal" data-bs-target="#_model_user_update_role">
-                                    <i class="bi bi-pencil fs-3"></i>Update Role</a>
-                            </td>
-                            {% endif %}
-
-                        </tr>
-
-                        </tbody>
-                    </table>
-
+                            <tr>
+                                <td>Role</td>
+                                <td>
+                                    {% if user.is_superuser %}
+                                        Admin
+                                    {% elif user.is_staff and not user.is_superuser %}
+                                        Staff
+                                    {% else %}
+                                        User
+                                    {% endif %}
+                                </td>
+                                {% if request.user.is_superuser %}
+                                <td class="text-end">
+                                    <a href="#"
+                                       class="btn btn-sm btn-flex btn-light-primary"
+                                       data-bs-toggle="modal"
+                                       data-bs-target="#_model_user_update_role">
+                                        <i class="bi bi-pencil fs-3"></i>Update Role</a>
+                                </td>
+                                {% endif %}
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-
             </div>
 
-            </div>
-
-            <!--  Permission section  -->
-            <div class="card pt-4 mb-6 ">
+            <!-- Permissions -->
+            <div class="card pt-4 mb-6">
                 <div class="card-header border-0">
                     <div class="card-title flex-column">
                         <h2>Permissions</h2>
-                        <div class="fs-6 fw-semibold text-muted">Displaying the user's permission groups and
-                            their access levels.
+                        <div class="fs-6 fw-semibold text-muted">
+                            Displaying the user's permission groups and their access levels.
                         </div>
                     </div>
 
                     {% if request.user.is_superuser %}
                     <div class="card-toolbar">
-                        <a href="#" class="btn btn-sm btn-flex btn-light-primary" data-bs-toggle="modal"
+                        <a href="#"
+                           class="btn btn-sm btn-flex btn-light-primary"
+                           data-bs-toggle="modal"
                            data-bs-target="#_model_user_modify_permission_groups">
                             <i class="bi bi-pencil fs-3"></i>Modify Groups</a>
                     </div>
                     {% endif %}
-
                 </div>
 
                 <div class="card-body pt-0">
                     {% for permission_group in user_permission_groups %}
-                    <button class="btn btn-light btn-sm me-5 px-5">
-                        {{permission_group.name}} <span class="badge badge-circle badge-danger ms-2">{{permission_group.permissions.count}}</span>
-                    </button>
+                        <button class="btn btn-light btn-sm me-5 px-5">
+                            {{ permission_group.name }}
+                            <span class="badge badge-circle badge-danger ms-2">
+                                {{ permission_group.permissions.count }}
+                            </span>
+                        </button>
                     {% empty %}
-                    <h4>No Permissions</h4>
+                        <h4>No Permissions</h4>
                     {% endfor %}
-
                 </div>
-
             </div>
 
-            <!--   Account status section -->
-            <div class="card pt-4 mb-6 ">
+            <!-- Account status -->
+            <div class="card pt-4 mb-6">
                 <div class="card-header border-0">
-
                     <div class="card-title">
                         <h2 class="fw-bold">Account Status</h2>
                     </div>
-
                     {% if request.user.is_superuser %}
                     <div class="card-toolbar">
-                        <a href="#" class="btn btn-sm btn-flex btn-light-primary" data-bs-toggle="modal"
+                        <a href="#"
+                           class="btn btn-sm btn-flex btn-light-primary"
+                           data-bs-toggle="modal"
                            data-bs-target="#_model_user_adjust_account_status">
                             <i class="bi bi-pencil fs-3"></i>Adjust Status</a>
                     </div>
                     {% endif %}
-
                 </div>
-
                 <div class="card-body pt-0">
-
                     {% if user.is_active %}
-                    <h3 class="text-success"> Active </h3>
+                        <h3 class="text-success">Active</h3>
                     {% else %}
-                    <h3 class="text-danger">Inactive</h3>
+                        <h3 class="text-danger">Inactive</h3>
                     {% endif %}
                 </div>
-
             </div>
 
-            <!--   Account delete         -->
+            <!-- Account delete -->
             <div class="card pt-4 mb-6 pb-7">
                 <div class="card-header border-0">
                     <div class="card-title flex-column">
                         <h2>Account Deletion</h2>
-                        <div class="fs-6 fw-semibold text-muted">Deleting account is a permanent action and
-                            cannot be undone.
+                        <div class="fs-6 fw-semibold text-muted">
+                            Deleting account is a permanent action and cannot be undone.
                         </div>
                     </div>
-
-                    {% if "auth.delete_user" in user_permissions_list  %}
+                    {% if "auth.delete_user" in user_permissions_list %}
                     <div class="card-toolbar">
-                        <a href="#" class="btn btn-sm btn-flex btn-danger"
+                        <a href="#"
+                           class="btn btn-sm btn-flex btn-danger"
                            onClick="deleteUserAccount('{{ user.id }}', this)">
                             <i class="bi bi-pencil fs-3"></i>Delete Account</a>
                     </div>
                     {% endif %}
-
-
                 </div>
-
             </div>
-
         </div>
-
     </div>
-
 </div>
-<!--end::Main-->
+
 
 {% include "superuser/snippets/models/_model_user_profile_update.html" %}
 {% include "superuser/snippets/models/_model_user_change_email.html" %}
 {% include "superuser/snippets/models/_model_user_change_password.html" %}
 {% include "superuser/snippets/models/_model_user_update_role.html" %}
-
 {% include "superuser/snippets/models/_model_user_adjust_account_status.html" %}
 {% include "superuser/snippets/models/_model_user_modify_permission_groups.html" %}
-
 {% endblock %}
-
 {% block page_only_scripts %}
 
 <script>
-
-<!-- Left portion profile update  -->
-    var KTModalUserUpdateProfile = (function () {
-        var form, submitButton, validator, modal, modalEl;
-
-        var handleForm = function () {
-            if (!form || !submitButton) {
-                console.error('Form or submitButton not found.');
-                return;
-            }
-
-            validator = FormValidation.formValidation(form, {
-                fields: {
-                    user_first_name: {
-                        validators: {
-                            notEmpty: { message: 'First name is required' },
-                            regexp: {
-                                regexp: /^[a-zA-Z]{1,30}$/,
-                                message: 'Only letters allowed, max 30 characters',
-                            },
-                        },
-                    },
-                    user_last_name: {
-                        validators: {
-                            notEmpty: { message: 'Last name is required' },
-                            regexp: {
-                                regexp: /^[a-zA-Z]{1,30}$/,
-                                message: 'Only letters allowed, max 30 characters',
-                            },
-                        },
-                    },
-                },
-                plugins: {
-                    trigger: new FormValidation.plugins.Trigger(),
-                    bootstrap: new FormValidation.plugins.Bootstrap5({
-                        rowSelector: '.fv-row',
-                        eleInvalidClass: 'is-invalid',
-                        eleValidClass: '',
-                    }),
-                },
-            });
-
-            submitButton.addEventListener('click', function (e) {
-                e.preventDefault();
-
-                if (validator) {
-                    validator.validate().then(function (status) {
-                        if (status === 'Valid') {
-                            submitButton.setAttribute('data-kt-indicator', 'on');
-                            submitButton.disabled = true;
-
-                            $.ajax({
-                                url: form.getAttribute('data-url'),
-                                method: 'POST',
-                                dataType: 'json',
-                                headers: {
-                                    'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val(),
-                                    'X-Requested-With': 'XMLHttpRequest'
-                                },
-                                data: $(form).serialize(),
-                                success: function (response) {
-                                    submitButton.removeAttribute('data-kt-indicator');
-                                    submitButton.disabled = false;
-
-                                    Swal.fire({
-                                        text: response.message || 'Profile updated successfully!',
-                                        icon: 'success',
-                                        buttonsStyling: false,
-                                        confirmButtonText: 'Ok, got it!',
-                                        customClass: {
-                                            confirmButton: 'btn btn-primary',
-                                        },
-                                    }).then(function () {
-                                        location.reload();
-                                    });
-                                },
-                                error: function (xhr) {
-                                    submitButton.removeAttribute('data-kt-indicator');
-                                    submitButton.disabled = false;
-
-                                    const response = xhr.responseJSON;
-                                    Swal.fire({
-                                        text: response?.message || 'Please check the fields and try again.',
-                                        icon: 'error',
-                                        buttonsStyling: false,
-                                        confirmButtonText: 'Ok, got it!',
-                                        customClass: {
-                                            confirmButton: 'btn fw-bold btn-light-primary',
-                                        },
-                                    });
-                                },
-                            });
-                        }
-                    });
-                }
-            });
-        };
-
-        return {
-            init: function () {
-                modalEl = document.querySelector('#_model_user_profile_update');
-                if (!modalEl) return;
-
-                modal = new bootstrap.Modal(modalEl);
-                form = document.querySelector('#_model_user_profile_update_form');
-                submitButton = document.querySelector('#_model_user_profile_update_submit');
-
-                handleForm();
-            },
-        };
-    })();
-
-    KTUtil.onDOMContentLoaded(function () {
-        KTModalUserUpdateProfile.init();
+<!-- Profile Picture Delete Function -->
+function deleteProfilePicture() {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            var hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = 'delete_profile_picture';
+            hiddenInput.value = '1';
+            document.getElementById('profileForm').appendChild(hiddenInput);
+            document.getElementById('profileForm').submit();
+        }
     });
+}
 
-<!--  Email update   -->
+<!-- Left portion profile update -->
+var KTModalUserUpdateProfile = (function () {
+    var form, submitButton, validator, modal, modalEl;
 
+    var handleForm = function () {
+        if (!form || !submitButton) {
+            console.error('Form or submitButton not found.');
+            return;
+        }
+
+        validator = FormValidation.formValidation(form, {
+            fields: {
+                user_first_name: {
+                    validators: {
+                        notEmpty: { message: 'First name is required' },
+                        regexp: {
+                            regexp: /^[a-zA-Z]{1,30}$/,
+                            message: 'Only letters allowed, max 30 characters',
+                        },
+                    },
+                },
+                user_last_name: {
+                    validators: {
+                        notEmpty: { message: 'Last name is required' },
+                        regexp: {
+                            regexp: /^[a-zA-Z]{1,30}$/,
+                            message: 'Only letters allowed, max 30 characters',
+                        },
+                    },
+                },
+            },
+            plugins: {
+                trigger: new FormValidation.plugins.Trigger(),
+                bootstrap: new FormValidation.plugins.Bootstrap5({
+                    rowSelector: '.fv-row',
+                    eleInvalidClass: 'is-invalid',
+                    eleValidClass: '',
+                }),
+            },
+        });
+
+        submitButton.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            if (validator) {
+                validator.validate().then(function (status) {
+                    if (status === 'Valid') {
+                        submitButton.setAttribute('data-kt-indicator', 'on');
+                        submitButton.disabled = true;
+
+                        $.ajax({
+                            url: form.getAttribute('data-url'),
+                            method: 'POST',
+                            dataType: 'json',
+                            headers: {
+                                'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val(),
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            data: $(form).serialize(),
+                            success: function (response) {
+                                submitButton.removeAttribute('data-kt-indicator');
+                                submitButton.disabled = false;
+
+                                Swal.fire({
+                                    text: response.message || 'Profile updated successfully!',
+                                    icon: 'success',
+                                    buttonsStyling: false,
+                                    confirmButtonText: 'Ok, got it!',
+                                    customClass: {
+                                        confirmButton: 'btn btn-primary',
+                                    },
+                                }).then(function () {
+                                    location.reload();
+                                });
+                            },
+                            error: function (xhr) {
+                                submitButton.removeAttribute('data-kt-indicator');
+                                submitButton.disabled = false;
+
+                                const response = xhr.responseJSON;
+                                Swal.fire({
+                                    text: response?.message || 'Please check the fields and try again.',
+                                    icon: 'error',
+                                    buttonsStyling: false,
+                                    confirmButtonText: 'Ok, got it!',
+                                    customClass: {
+                                        confirmButton: 'btn fw-bold btn-light-primary',
+                                    },
+                                });
+                            },
+                        });
+                    }
+                });
+            }
+        });
+    };
+
+    return {
+        init: function () {
+            modalEl = document.querySelector('#_model_user_profile_update');
+            if (!modalEl) return;
+
+            modal = new bootstrap.Modal(modalEl);
+            form = document.querySelector('#_model_user_profile_update_form');
+            submitButton = document.querySelector('#_model_user_profile_update_submit');
+
+            handleForm();
+        },
+    };
+})();
+
+KTUtil.onDOMContentLoaded(function () {
+    KTModalUserUpdateProfile.init();
+});
+
+<!-- Email update -->
 var KTModalUserChangeEmail = (function () {
     var form, submitButton, modal, modalEl;
 
@@ -382,7 +417,6 @@ var KTModalUserChangeEmail = (function () {
                 return;
             }
 
-            // UI loading state
             submitButton.setAttribute('data-kt-indicator', 'on');
             submitButton.disabled = true;
 
@@ -453,8 +487,7 @@ KTUtil.onDOMContentLoaded(function () {
     KTModalUserChangeEmail.init();
 });
 
-<!-- password update -->
-
+<!-- Password update -->
 var KTModalUserChangePassword = (function () {
     var form, submitButton, modalEl, modal;
 
@@ -478,7 +511,6 @@ var KTModalUserChangePassword = (function () {
                 return;
             }
 
-            // Show loader
             submitButton.setAttribute('data-kt-indicator', 'on');
             submitButton.disabled = true;
 
@@ -551,8 +583,7 @@ KTUtil.onDOMContentLoaded(function () {
     KTModalUserChangePassword.init();
 });
 
-<!-- Update role  -->
-
+<!-- Update role -->
 var KTModalUserUpdateRole = (function () {
     var form, submitButton, modal, modalEl;
 
@@ -565,7 +596,6 @@ var KTModalUserUpdateRole = (function () {
         submitButton.addEventListener('click', function (e) {
             e.preventDefault();
 
-            // Optional: Add simple validation
             const roleValue = form.querySelector('select[name="account_role"]').value;
             if (!roleValue) {
                 Swal.fire({
@@ -580,7 +610,6 @@ var KTModalUserUpdateRole = (function () {
                 return;
             }
 
-            // UI indicator and disable
             submitButton.setAttribute('data-kt-indicator', 'on');
             submitButton.disabled = true;
 
@@ -651,7 +680,7 @@ KTUtil.onDOMContentLoaded(function () {
     KTModalUserUpdateRole.init();
 });
 
-<!--  Update Account status  -->
+<!-- Update Account status -->
 var KTModalUserUpdateAccountStatus = (function () {
     var form, submitButton, modal, modalEl;
 
@@ -748,8 +777,7 @@ KTUtil.onDOMContentLoaded(function () {
     KTModalUserUpdateAccountStatus.init();
 });
 
-<!-- Account delete  -->
-
+<!-- Account delete -->
 function deleteUserAccount(userId, button) {
     Swal.fire({
         title: "Are you sure you want to delete the user account?",
@@ -763,7 +791,6 @@ function deleteUserAccount(userId, button) {
             confirmButton: "btn fw-bold btn-danger",
             cancelButton: "btn fw-bold btn-light-primary"
         },
-
     }).then((result) => {
         if (result.isConfirmed) {
             button.textContent = 'Please wait...';
@@ -771,7 +798,7 @@ function deleteUserAccount(userId, button) {
             const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
             $.ajax({
-                url: `/superuser/users/${userId}/delete/`,  // Important: include userId in URL
+                url: `/superuser/users/${userId}/delete/`,
                 type: 'POST',
                 data: {
                     csrfmiddlewaretoken: csrfToken
@@ -809,16 +836,11 @@ function deleteUserAccount(userId, button) {
     });
 }
 
-
-<!--  User modify permission group  -->
-
+<!-- User modify permission group -->
 var KTModalModifyUserGroups = (function () {
     var submitButton, validator, form, modal, modalEl;
 
-    // Handle form validation and submission
     var handleForm = function () {
-
-        // Initialize form validation rules
         if (!form || !submitButton) {
             console.error('Form or submitButton not found.');
             return;
@@ -844,11 +866,9 @@ var KTModalModifyUserGroups = (function () {
             },
         });
 
-        // Action buttons
         submitButton.addEventListener('click', function (e) {
             e.preventDefault();
 
-            // Validate form before submit
             if (validator) {
                 validator.validate().then(function (status) {
                     if (status === 'Valid') {
@@ -922,7 +942,6 @@ var KTModalModifyUserGroups = (function () {
     return {
         init: function () {
             modalEl = document.querySelector('#_model_user_modify_permission_groups');
-
             if (!modalEl) {
                 console.error('Modal element not found.');
                 return;
@@ -937,12 +956,8 @@ var KTModalModifyUserGroups = (function () {
     };
 })();
 
-// On document ready
 KTUtil.onDOMContentLoaded(function () {
     KTModalModifyUserGroups.init();
 });
-
-
 </script>
 {% endblock page_only_scripts %}
-
