@@ -986,12 +986,6 @@ class SearchResultsListView(TemplateView):
         logger.debug(f"Final context: {context.keys()}")
         return context
 
-# views.py
-from django.views.generic import TemplateView
-from django.shortcuts import get_object_or_404
-from .models import Product, ProductImage, RatingReview, Event, EventRegistration, CartProduct, WishlistProduct, Question
-from django.db.models import Avg
-
 class ProductDetailsView(TemplateView):
     template_name = 'userdashboard/view/product_details.html'
 
@@ -1014,7 +1008,6 @@ class ProductDetailsView(TemplateView):
                 total_reviews = reviews.count()
                 avg_rating = reviews.aggregate(avg=Avg('rating'))['avg'] or 0
 
-                # Add stock status logic
                 stock_status = ""
                 if product.stock_quantity == 0:
                     stock_status = "Out of Stock"
@@ -1022,6 +1015,17 @@ class ProductDetailsView(TemplateView):
                     stock_status = f"Hurry, only {product.stock_quantity} available"
                 elif product.stock_quantity < 10:
                     stock_status = "Only a few available"
+
+                related_products = []
+                if product.category and product.category.name.lower() not in ['event', 'webinar', 'conference']:
+                    related_products = Product.objects.filter(
+                        last_category=product.last_category
+                    ).exclude(id=product.id).select_related('brand', 'last_category')[:4] 
+
+             
+                    for related_product in related_products:
+                        main_img = ProductImage.objects.filter(product=related_product, is_main=True).first()
+                        related_product.main_image = main_img.image.url if main_img else None
 
                 if self.request.user.is_authenticated:
                     context['user_registered_event_ids'] = list(
@@ -1052,13 +1056,15 @@ class ProductDetailsView(TemplateView):
                     'user_wishlist_ids': user_wishlist_ids,
                     'event': event,
                     'questions': questions,
-                    'stock_status': stock_status,  # Add stock status to context
+                    'stock_status': stock_status,
+                    'related_products': related_products,  
                 })
 
             except Product.DoesNotExist:
                 context['product'] = None
                 context['other_images'] = []
                 context['event'] = None
+                context['related_products'] = [] 
 
         return context
 class EventRegistrationView(View):
@@ -1074,8 +1080,10 @@ class EventRegistrationView(View):
 
         try:
             product = Product.objects.get(id=product_id)
+            event = product.event
             EventRegistration.objects.create(
                 product=product,
+                event = event,
                 full_name=full_name,
                 email=email,
                 message=message,
@@ -3338,4 +3346,3 @@ class DeleteNotificationView(LoginRequiredMixin, View):
         return JsonResponse({'status': 'success'})
 
 
-        

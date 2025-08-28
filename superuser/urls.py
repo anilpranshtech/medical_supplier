@@ -45,6 +45,13 @@ urlpatterns = [
     path('create-last-category/', CreateProductLastCategoryView.as_view(), name='create_lastcategory'),
     path('delete-product-image/<int:pk>/', DeleteProductImageView.as_view(), name='delete_product_image'),
 
+    # AJAX category create
+    path('ajax-categories/get/', AJAXGetCategoriesView.as_view(), name='AJAX_get_category'),
+    path('ajax-categories/create/', AJAXCreateCategory.as_view(), name='AJAX_create_category'),
+    path('ajax-sub-category/get/', get_subcategories, name='AJAX_get_subcategory'),
+    path('ajax-sub-category/create/', AJAXCreateSubCategory.as_view(), name='AJAX_create_subcategory'),
+    path('ajax-last-category/create/', AJAXCreateLastCategory.as_view(), name='AJAX_create_lastcategory'),
+
     # Orders Urls
     path('orders/list/', OrderListingView.as_view(), name='orders_list'),
     path('order/detail/<slug:order_id>/', OrderDetailesView.as_view(), name='orders_detail'),

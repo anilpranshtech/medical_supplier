@@ -7,7 +7,7 @@ from django.db.models import Prefetch, F, Sum, Avg, Value
 from django.db.models.functions import Coalesce
 from django.http import JsonResponse, Http404, HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
-from django.utils.dateparse import parse_date
+from django.utils.dateparse import parse_date, parse_datetime
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic import ListView
@@ -701,6 +701,10 @@ class AddproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
 
         ask_admin_to_publish = data.get('ask_admin_to_publish') == 'on'
 
+        print("----------------------------------------------",data.get('registration_link') ,
+                    data.get('webinar_name') ,data.get('webinar_date'),data.get('webinar_duration'),
+                    data.get('webinar_venue'))
+
         # Handle brand creation
         brand_name = data.get('brand')
         brand = None
@@ -805,17 +809,23 @@ class AddproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
             return None
 
     def _parse_date(self, val):
-        try:
-            return parse_date(val)
-        except:
+        if not val:
             return None
+        return parse_datetime(val) or parse_date(val)
 
     def _parse_duration(self, val):
         if not val:
             return None
         try:
-            h, m, s = map(int, val.split(':'))
-            return timedelta(hours=h, minutes=m, seconds=s)
+            if ":" in val:  # HH:MM[:SS]
+                parts = list(map(int, val.split(":")))
+                while len(parts) < 3:
+                    parts.append(0)  # pad missing seconds/minutes
+                h, m, s = parts
+                return timedelta(hours=h, minutes=m, seconds=s)
+            else:
+                # assume number = hours
+                return timedelta(hours=int(val))
         except:
             return None
 
@@ -836,11 +846,10 @@ class AddproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
             **data.dict()
         })
 
-
 class EditproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
     template = 'superuser/products/edit_product.html'
 
-    def get(self, request, pk):
+    def get_context_data(self, pk):
         product = get_object_or_404(Product, pk=pk)
         product_images = ProductImage.objects.filter(product=product)
         main_image = product_images.filter(is_main=True).first()
@@ -851,9 +860,15 @@ class EditproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
         selling_countries = product.selling_countries if product.selling_countries else ''
         brochure_url = product.brochure.url if product.brochure else None
 
+        # Fetch event details
+        event = product.event
+        registration_link = event.conference_link if event else ''
+        webinar_name = event.speaker_name if event else ''
+        webinar_date = event.conference_at.strftime('%Y-%m-%dT%H:%M') if event and event.conference_at else ''
+        webinar_duration = str(event.duration) if event and event.duration else ''
+        webinar_venue = event.venue if event else ''
 
-        context = {
-
+        return {
             'pk': pk,
             'product': product,
             'product_name': product.name,
@@ -897,100 +912,123 @@ class EditproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
             'lastcategories': lastcategories,
             'suppliers': SupplierProfile.objects.all(),
             'sup_selected': product.created_by.email,
-            'sup_selected_id': product.created_by.id
+            'sup_selected_id': product.created_by.id,
+            'registration_link': registration_link,
+            'webinar_name': webinar_name,
+            'webinar_date': webinar_date,
+            'webinar_duration': webinar_duration,
+            'webinar_venue': webinar_venue,
         }
+
+    def get(self, request, pk):
+        context = self.get_context_data(pk)
         return render(request, self.template, context)
 
     def post(self, request, pk):
         try:
             product = get_object_or_404(Product, pk=pk)
-            product.name = request.POST.get('product_name')
-            product.description = request.POST.get('product_description')
-            product.price = request.POST.get('price')
-            product.stock_quantity = request.POST.get('product_quantity')
-            product.product_from = request.POST.get('product_from')
+
+            product.name = request.POST.get('product_name', '')
+            if not product.name:
+                raise ValueError("Product name is required")
+
+            product.description = request.POST.get('product_description', '')
+            product.price = request.POST.get('price', '0') or '0'
+            product.stock_quantity = request.POST.get('product_quantity', '0') or '0'
+            product.product_from = request.POST.get('product_from', '')
             product.selling_countries = request.POST.get('selling_countries', '')
             product.warranty = request.POST.get('warranty', 'none')
             product.condition = request.POST.get('condition', 'new')
-            product.return_time_limit = request.POST.get('return_time_limit')
-            product.manufacture_date = request.POST.get('manufacture_date')
-            product.expiry_date = request.POST.get('expiry_date')
-            product.weight = request.POST.get('weight')
+            product.return_time_limit = request.POST.get('return_time_limit', '7') or '7'
+            product.manufacture_date = request.POST.get('manufacture_date') or None
+            product.expiry_date = request.POST.get('expiry_date') or None
+            product.weight = request.POST.get('weight') or None
             product.weight_unit = request.POST.get('weight_unit', 'gm')
-            product.delivery_time = request.POST.get('delivery_time')
-            product.commission_percentage = request.POST.get('commission_percentage')
-            product.barcode = request.POST.get('barcode')
-            product.keywords = request.POST.get('keywords')
-            product.supplier_sku = request.POST.get('supplier_sku')
-            product.pcs_per_unit = request.POST.get('pcs_per_unit')
-            product.min_order_qty = request.POST.get('min_order_qty')
-            product.low_stock_alert = request.POST.get('low_stock_alert')
-            product.expiration_days = request.POST.get('expiration_days')
+            product.delivery_time = request.POST.get('delivery_time') or None
+            product.commission_percentage = request.POST.get('commission_percentage', '0') or '0'
+            product.barcode = request.POST.get('barcode', '')
+            product.keywords = request.POST.get('keywords', '')
+            product.supplier_sku = request.POST.get('supplier_sku', '')
+            product.pcs_per_unit = request.POST.get('pcs_per_unit', '1') or '1'
+            product.min_order_qty = request.POST.get('min_order_qty', '0') or '0'
+            product.low_stock_alert = request.POST.get('low_stock_alert', '0') or '0'
+            product.expiration_days = request.POST.get('expiration_days') or None
             product.tag = request.POST.get('tag', 'none')
-
-            offer_percentage = request.POST.get('offer_percentage')
-            if offer_percentage:
-                product.offer_percentage = offer_percentage
-
-            start_offer = request.POST.get('offer_start')
-            end_offer = request.POST.get('offer_end')
-
-            if start_offer:
-                product.offer_start = start_offer
-
-            if end_offer:
-                product.offer_end = end_offer
-
+            product.offer_percentage = request.POST.get('offer_percentage') or None
+            product.offer_start = request.POST.get('offer_start') or None
+            product.offer_end = request.POST.get('offer_end') or None
             product.is_active = request.POST.get('is_active') == 'True'
             category_id = request.POST.get('category')
-            if category_id:
-                try:
-                    product.category = ProductCategory.objects.get(pk=category_id)
-                except ProductCategory.DoesNotExist:
-                    product.category = None
-            sub_category_id = request.POST.get('sub_category')
-            if sub_category_id:
-                try:
-                    product.sub_category = ProductSubCategory.objects.get(pk=sub_category_id)
-                except ProductSubCategory.DoesNotExist:
-                    product.sub_category = None
-            last_category_id = request.POST.get('last_category')
-            if last_category_id:
-                try:
-                    product.last_category = ProductLastCategory.objects.get(pk=last_category_id)
-                except ProductLastCategory.DoesNotExist:
-                    product.last_category = None
+            product.category = ProductCategory.objects.get(pk=category_id) if category_id else None
 
+            sub_category_id = request.POST.get('sub_category')
+            product.sub_category = ProductSubCategory.objects.get(pk=sub_category_id) if sub_category_id else None
+
+            last_category_id = request.POST.get('last_category')
+            product.last_category = ProductLastCategory.objects.get(pk=last_category_id) if last_category_id else None
             if 'main_image' in request.FILES:
                 ProductImage.objects.filter(product=product, is_main=True).delete()
-                ProductImage.objects.create(
-                    product=product,
-                    image=request.FILES['main_image'],
-                    is_main=True
-                )
+                ProductImage.objects.create(product=product, image=request.FILES['main_image'], is_main=True)
+
             if 'gallery_images' in request.FILES:
                 for image in request.FILES.getlist('gallery_images'):
-                    ProductImage.objects.create(
-                        product=product,
-                        image=image,
-                        is_main=False
-                    )
+                    ProductImage.objects.create(product=product, image=image, is_main=False)
             brand_name = request.POST.get('brand')
             if brand_name:
-                    brand_obj, created = Brand.objects.get_or_create(name=brand_name)
-                    product.brand = brand_obj
+                brand_obj, _ = Brand.objects.get_or_create(name=brand_name)
+                product.brand = brand_obj
+            else:
+                product.brand = None
 
             if 'brochure' in request.FILES:
                 product.brochure = request.FILES['brochure']
+            if category_id:
+                category = ProductCategory.objects.get(pk=category_id)
+                if category.name in ["Webinar", "Conference", "Event"]:
+                    registration_link = request.POST.get('registration_link')
+                    speaker_name = request.POST.get('webinar_name')
+                    conference_at_str = request.POST.get('webinar_date')
+                    duration_str = request.POST.get('webinar_duration')
+                    venue = request.POST.get('webinar_venue')
+
+                    if not all([registration_link, speaker_name, conference_at_str, duration_str, venue]):
+                        raise ValueError("All event fields are required for Webinar/Conference/Event")
+
+                    event = product.event if product.event else Event()
+                    event.conference_link = registration_link
+                    event.speaker_name = speaker_name
+                    event.conference_at = datetime.strptime(conference_at_str, '%Y-%m-%dT%H:%M')
+
+                    try:
+                        parts = duration_str.split(':')
+                        if len(parts) == 3:  
+                            h, m, s = map(int, parts)
+                        elif len(parts) == 2:  
+                            h, m = map(int, parts)
+                            s = 0
+                        elif len(parts) == 1:  
+                            h, m, s = 0, int(parts[0]), 0
+                        else:
+                            raise ValueError
+                        event.duration = timedelta(hours=h, minutes=m, seconds=s)
+                    except ValueError:
+                        raise ValueError("Invalid duration format. Use HH:MM[:SS] or just MM")
+
+                    event.venue = venue
+                    event.save()
+                    product.event = event
+                else:
+                    product.event = None
 
             product.save()
-
             messages.success(request, 'Product updated successfully!')
-        except Exception as e:
-            print('exception in edit product --- ',e)
-            messages.error(request, 'Issue in Product updated !')
+            return redirect('superuser:products_list')
 
-        return redirect('superuser:products_list')
+        except Exception as e:
+            print(f'Exception in edit product: {str(e)}')
+            messages.error(request, f'Issue in Product update: {str(e)}')
+            context = self.get_context_data(pk)
+            return render(request, self.template, context)
     
 
 
@@ -1020,7 +1058,6 @@ class CreateProductCategoryView(StaffAccountRequiredMixin, View):
         ProductCategory.objects.create(name=name)
         messages.success(request, f"Category '{name}' created successfully.")
         return redirect('superuser:add_product')
-    
 
 
 class CreateProductSubCategoryView(StaffAccountRequiredMixin, View):
@@ -1897,3 +1934,75 @@ class DeleteNotificationView(View):
         notification.delete()
         messages.success(request, "Notification deleted successfully.")
         return redirect('superuser:notifications_list')
+
+
+# category get and post AJAX method
+
+class AJAXGetCategoriesView(StaffAccountRequiredMixin, View):
+    def get(self, request):
+        categories = ProductCategory.objects.values("id", "name").order_by("name")
+        return JsonResponse({"categories": list(categories)})
+
+class AJAXCreateCategory(StaffAccountRequiredMixin, View):
+    def post(self, request):
+        name = request.POST.get('name')
+        if not name:
+            return JsonResponse({"status": "error", "message": "Category name is required."}, status=400)
+
+        if ProductCategory.objects.filter(name__iexact=name).exists():
+            return JsonResponse({"status": "warning", "message": "This category already exists."}, status=400)
+
+        category = ProductCategory.objects.create(name=name)
+        return JsonResponse({"status": "success", "message": f"Category '{category.name}' created successfully."})
+
+
+def get_subcategories(request):
+    subcategories = ProductSubCategory.objects.all()
+
+    data = [
+        {"id": sub.id, "name": sub.name, "category": sub.category.name}
+        for sub in subcategories
+    ]
+    return JsonResponse(data, safe=False)
+
+class AJAXCreateSubCategory(StaffAccountRequiredMixin, View):
+    def post(self, request):
+        name = request.POST.get('name')
+        category_id = request.POST.get('category')
+
+        if not name or not category_id:
+            return JsonResponse({"status": "error", "message": "Sub-category name and parent category are required."}, status=400)
+
+        if ProductSubCategory.objects.filter(name__iexact=name, category_id=category_id).exists():
+            return JsonResponse({"status": "warning", "message": "This sub-category already exists."}, status=400)
+
+        subcat = ProductSubCategory.objects.create(name=name, category_id=category_id)
+
+        return JsonResponse({
+            "status": "success",
+            "message": f"Sub-category '{subcat.name}' created successfully.",
+            "id": subcat.id,
+            "name": subcat.name,
+            "category_id": subcat.category_id,
+        })
+
+class AJAXCreateLastCategory(StaffAccountRequiredMixin, View):
+    def post(self, request):
+        name = request.POST.get('name')
+        sub_category_id = request.POST.get('sub_category')
+
+        if not name or not sub_category_id:
+            return JsonResponse({"status": "error", "message": "Last category name and parent sub-category are required."}, status=400)
+
+        if ProductLastCategory.objects.filter(name__iexact=name, sub_category_id=sub_category_id).exists():
+            return JsonResponse({"status": "warning", "message": "This last category already exists."}, status=400)
+
+        lastcat = ProductLastCategory.objects.create(name=name, sub_category_id=sub_category_id)
+
+        return JsonResponse({
+            "status": "success",
+            "message": f"Last category '{lastcat.name}' created successfully.",
+            "id": lastcat.id,
+            "name": lastcat.name,
+            "sub_category_id": lastcat.sub_category_id,
+        })
