@@ -116,8 +116,14 @@ class HomeView(TemplateView):
         ).select_related('category', 'event').prefetch_related('images', 'reviews').order_by('-created_at')[:4]
         context['limited_products'] = set_product_fields(limited_products)
 
-        # ---------------- Featured Products ---------------- #
-        all_ids = list(Product.objects.filter(is_active=True).values_list('id', flat=True))
+        # ---------------- Featured Products (exclude Conference, Webinar, Event) ---------------- #
+        all_ids = list(
+            Product.objects.filter(
+                is_active=True
+            ).exclude(
+                category__name__in=['Conference', 'Webinar', 'Event']
+            ).values_list('id', flat=True)
+        )
         random_ids = random.sample(all_ids, min(len(all_ids), 6))
         featured_products = Product.objects.filter(
             id__in=random_ids
@@ -2326,14 +2332,16 @@ class UserProfile(LoginRequiredMixin, TemplateView):
             default_address = None
         context['default_address'] = default_address
 
-        # Order summary
+       # Order summary
         orders = Order.objects.filter(user=user)
         context.update({
             'total_orders': orders.count(),
             'pending_orders': orders.filter(status='pending').count(),
             'delivered_orders': orders.filter(status='delivered').count(),
             'cancelled_orders': orders.filter(status='cancelled').count(),
+            'return_orders': Return.objects.filter(client=user).count(),  
         })
+
 
         # Wishlist count
         context['wishlist_count'] = WishlistProduct.objects.filter(user=user).count()

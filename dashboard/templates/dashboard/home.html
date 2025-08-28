@@ -1459,131 +1459,97 @@
         });
     });
 
-    // Add to Cart
-document.addEventListener("DOMContentLoaded", () => {
-    // Get CSRF token
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
+    // Add to Cart with Event Delegation
+    document.addEventListener("DOMContentLoaded", () => {
+        // Update UI for a specific product
+        const updateProductUI = (productId, quantity) => {
+            const containers = document.querySelectorAll(`.cart-button-container[data-product-id="${productId}"]`);
+            containers.forEach(container => {
+                if (!container) return;
+
+                if (quantity > 0) {
+                    container.innerHTML = `
+                        <div class="cart-quantity-controls flex items-center gap-2">
+                            <button class="decrease-btn px-2 py-1 bg-gray-200 rounded text-sm">-</button>
+                            <span class="quantity font-semibold">${quantity}</span>
+                            <button class="increase-btn px-2 py-1 bg-gray-200 rounded text-sm">+</button>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = `
+                        <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 add-to-cart-btn">
+                            Add <i class="ki-filled ki-handcart text-xs"></i>
+                        </button>
+                    `;
                 }
-            }
-        }
-        return cookieValue;
-    }
-    const csrftoken = getCookie('csrftoken');
+            });
+        };
 
-    // Update UI for a specific product
-    const updateProductUI = (productId, quantity) => {
-        const container = document.querySelector(`.cart-button-container[data-product-id="${productId}"]`);
-        if (!container) return;
-
-        if (quantity > 0) {
-            container.innerHTML = `
-                <div class="cart-quantity-controls flex items-center gap-2">
-                    <button class="decrease-btn px-2 py-1 bg-gray-200 rounded text-sm">-</button>
-                    <span class="quantity font-semibold">${quantity}</span>
-                    <button class="increase-btn px-2 py-1 bg-gray-200 rounded text-sm">+</button>
-                </div>
-            `;
-        } else {
-            container.innerHTML = `
-                <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 add-to-cart-btn">
-                    Add <i class="ki-filled ki-handcart text-xs"></i>
-                </button>
-            `;
-        }
-        attachEventListenersToContainer(container);
-    };
-
-    // Attach event listeners to a specific container
-    const attachEventListenersToContainer = (container) => {
-        const productId = container.dataset.productId;
-
-        // Add button
-        const addBtn = container.querySelector('.add-to-cart-btn');
-        if (addBtn) {
-            addBtn.addEventListener('click', (e) => {
-                e.preventDefault(); // Prevent any default behavior
+        // Event delegation for cart buttons
+        document.addEventListener('click', (e) => {
+            // Handle Add to Cart button
+            if (e.target.closest('.add-to-cart-btn')) {
+                e.preventDefault();
+                const container = e.target.closest('.cart-button-container');
+                const productId = container.dataset.productId;
                 updateCart(productId, 1);
-            });
-        }
-
-        // Increase button
-        const increaseBtn = container.querySelector('.increase-btn');
-        if (increaseBtn) {
-            increaseBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                const qty = parseInt(container.querySelector('.quantity').innerText);
-                updateCart(productId, qty + 1);
-            });
-        }
-
-        // Decrease button
-        const decreaseBtn = container.querySelector('.decrease-btn');
-        if (decreaseBtn) {
-            decreaseBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                const qty = parseInt(container.querySelector('.quantity').innerText);
-                updateCart(productId, qty - 1);
-            });
-        }
-    };
-
-    // Attach event listeners to all containers
-    const attachAllEventListeners = () => {
-        document.querySelectorAll('.cart-button-container').forEach(container => {
-            attachEventListenersToContainer(container);
-        });
-
-        // Login modal buttons
-        document.querySelectorAll('.show-login-modal').forEach(button => {
-            button.addEventListener('click', (e) => {
-                e.preventDefault();
-                // Replace with your login modal trigger code
-                console.log('Show login modal');
-                // Example: document.getElementById('loginModal').showModal();
-            });
-        });
-    };
-
-    // Update cart via AJAX
-    const updateCart = (productId, quantity) => {
-        fetch("{% url 'dashboard:update_cart_item' %}", {
-            method: "POST",
-            headers: {
-                "X-CSRFToken": csrftoken,
-                "Content-Type": "application/x-www-form-urlencoded",
-            },
-            body: new URLSearchParams({
-                product_id: productId,
-                quantity: quantity,
-            }),
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.status === "success") {
-                updateProductUI(productId, data.quantity);
-            } else if (data.status === "removed") {
-                updateProductUI(productId, 0);
-            } else if (data.status === "error" && data.message === "Authentication required") {
-                console.log('Show login modal');
-                // Trigger login modal
-            } else {
-                console.error('Cart update failed:', data.message);
             }
-        })
-        .catch(err => console.error("Cart update error:", err));
-    };
+            
+            // Handle Increase button
+            else if (e.target.closest('.increase-btn')) {
+                e.preventDefault();
+                const container = e.target.closest('.cart-button-container');
+                const productId = container.dataset.productId;
+                const quantityEl = container.querySelector('.quantity');
+                const qty = parseInt(quantityEl.innerText);
+                updateCart(productId, qty + 1);
+            }
+            
+            // Handle Decrease button
+            else if (e.target.closest('.decrease-btn')) {
+                e.preventDefault();
+                const container = e.target.closest('.cart-button-container');
+                const productId = container.dataset.productId;
+                const quantityEl = container.querySelector('.quantity');
+                const qty = parseInt(quantityEl.innerText);
+                updateCart(productId, qty - 1);
+            }
+            
+            // Handle Login modal buttons
+            else if (e.target.closest('.show-login-modal')) {
+                e.preventDefault();
+                openLoginModal();
+            }
+        });
 
-    // Initialize
-    attachAllEventListeners();
-});
+        // Update cart via AJAX
+        const updateCart = (productId, quantity) => {
+            fetch("{% url 'dashboard:update_cart_item' %}", {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": csrftoken,
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+                body: new URLSearchParams({
+                    product_id: productId,
+                    quantity: quantity,
+                }),
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "success") {
+                    updateProductUI(productId, data.quantity);
+                } else if (data.status === "removed") {
+                    updateProductUI(productId, 0);
+                } else if (data.status === "error" && data.message === "Authentication required") {
+                    openLoginModal();
+                } else {
+                    console.error('Cart update failed:', data.message);
+                }
+            })
+            .catch(err => console.error("Cart update error:", err));
+        };
+    });
 
     // Slider JavaScript
     let currentSlide = 0;

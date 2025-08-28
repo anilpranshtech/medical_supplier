@@ -759,11 +759,18 @@
     </div>
 
     <div class="p-4">
-        <ul class="nav nav-tabs" id="notiTabs">
-            <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#notiAll">All</a></li>
-            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#notiRead">Read</a></li>
-            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#notiUnread">Unread</a></li>
+        <ul class="nav nav-tabs" id="notiTabs" style="display:flex; flex-wrap:nowrap;">
+            <li class="nav-item">
+                <a class="nav-link active" data-bs-toggle="tab" href="#notiAll">All</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#notiRead">Read</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#notiUnread">Unread</a>
+            </li>
         </ul>
+        
 
         <div class="tab-content pt-4">
             <!-- All Notifications -->

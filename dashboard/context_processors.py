@@ -23,29 +23,29 @@ def notification_context(request):
 
     user = request.user
 
-    # Superuser → can see all notifications
+    # Superuser → all
     if user.is_superuser:
         all_notifications = Notification.objects.filter(is_deleted=False)
 
-    # Supplier → only his own notifications + "all suppliers"
+    # Supplier → his own + all suppliers
     elif hasattr(user, 'retailprofile'):  
         all_notifications = Notification.objects.filter(
             is_deleted=False
         ).filter(
-            Q(recipient=user) | Q(send_to="all_suppliers")   # ✅ fixed here
+            Q(recipient=user) | Q(send_to="all_suppliers")
         )
 
-    # Other staff → normal users ka notification
+    # Staff → notifications for normal users
     elif user.is_staff:
         normal_users = User.objects.filter(is_staff=False, is_superuser=False)
         all_notifications = Notification.objects.filter(recipient__in=normal_users, is_deleted=False)
 
+    # Normal user → only his
     else:
-        # Normal user → only his notifications
         all_notifications = Notification.objects.filter(recipient=user, is_deleted=False)
 
     return {
-        'all_notifications': all_notifications,
-        'read_notifications': all_notifications.filter(is_read=True),
-        'unread_notifications': all_notifications.filter(is_read=False),
+        'all_notifications': all_notifications.order_by('-created_at'),
+        'read_notifications': all_notifications.filter(is_read=True).order_by('-created_at'),
+        'unread_notifications': all_notifications.filter(is_read=False).order_by('-created_at'),
     }
