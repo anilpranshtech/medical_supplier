@@ -478,13 +478,13 @@
             <div class="kt-card product-card">
                 <div class="kt-card-content flex flex-col justify-between p-2 gap-3 h-full">
                     <div>
+                        <!-- Product Image -->
                         <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[150px] sm:h-[200px] mb-2 shadow-none">
                             <a href="{% url 'dashboard:product_detail' product.id %}" class="block">
                                 <img alt="{{ product.name|default:'Unnamed Product' }}"
                                      class="h-[100px] sm:h-[150px] shrink-0 object-contain cursor-pointer"
                                      src="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"/>
                             </a>
-                            {% if product.category.name not in 'Conference,Webinar,Event' %}
                             {% if request.user.is_authenticated %}
                             <span class="kt-wishlist-icon absolute top-2 end-2 cursor-pointer"
                                   data-kt-wishlist-toggle="true"
@@ -498,42 +498,32 @@
                                 <i class="ki-solid ki-heart"></i>
                             </span>
                             {% endif %}
-                            {% endif %}
                         </div>
+
+                        <!-- Product Name -->
                         <h3 class="text-sm font-semibold text-gray-650 leading-snug truncate hover:text-primary transition">
                             <a href="{% url 'dashboard:product_detail' product.id %}" class="block">{{ product.name }}</a>
                         </h3>
+
+                        <!-- Product Description -->
                         <p class="text-xs sm:text-sm text-gray-650 mt-1 truncate">
                             {{ product.description|default:"No description available"|truncatechars:120 }}
                         </p>
-                        {% if product.category.name in 'Conference,Webinar,Event' %}
-                            {% if product.event and product.event.conference_at %}
-                            <p class="text-xs text-green-600 mt-1">
-                                Event Date: <strong>{{ product.event.conference_at|date:"D, d M Y, H:i" }}</strong>
-                            </p>
-                            {% endif %}
-                        {% if request.user.is_authenticated %}
-                            {% if product.event and product.event.conference_link %}
-                            <p class="text-xs text-gray-600 mt-1">
-                                Conference Link: <a href="{{ product.event.conference_link }}" class="text-blue-600 hover:underline" target="_blank" style="text-decoration: underline;">Join Here</a>
-                            </p>
-                            {% endif %}
-                        {% endif %}
-                        {% else %}
-                            {% if product.delivery_date %}
-                            <p class="text-xs text-green-600 mt-0.5">
-                                Delivery by: <strong>{{ product.delivery_date }}</strong>
-                            </p>
-                            {% endif %}
+
+                        <!-- Delivery Date -->
+                        {% if product.delivery_date %}
+                        <p class="text-xs text-green-600 mt-0.5">
+                            Delivery by: <strong>{{ product.delivery_date }}</strong>
+                        </p>
                         {% endif %}
                     </div>
+
+                    <!-- Rating, Reviews & Price -->
                     <div class="flex items-center justify-between flex-wrap gap-2 px-1 pb-1">
-                        {% if product.category.name not in 'Conference,Webinar,Event' %}
                         <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1">
                             <i class="ki-solid ki-star text-white -mt-0.5"></i>
                             {{ product.rating|default:"0.0" }}
                         </span>
-                        {% endif %}
                         {% if product.total_reviews > 0 %}
                         <span>
                             <span class="text-[11px] text-white/80 ml-1">
@@ -541,7 +531,6 @@
                             </span>
                         </span>
                         {% endif %}
-                        {% if product.category.name not in 'Conference,Webinar,Event' %}
                         <div class="flex items-center flex-nowrap gap-1 whitespace-nowrap">
                             {% if product.original_price and product.original_price > product.price %}
                             <span class="text-xs font-normal text-secondary-foreground line-through">
@@ -550,58 +539,40 @@
                             {% endif %}
                             <span class="text-sm font-medium text-mono">${{ product.price|floatformat:2 }}</span>
                         </div>
-                        {% endif %}
                     </div>
+
+                    <!-- Cart & RFQ Buttons -->
                     <div class="flex items-center flex-wrap gap-2 px-1 product-actions">
-                        {% if product.category.name not in 'Conference,Webinar,Event' %}
-                           <div class="cart-button-container" data-product-id="{{ product.id }}">
-    {% if request.user.is_authenticated %}
-        {% if product.id in user_cart_ids %}
-            <div class="cart-quantity-controls flex items-center gap-2">
-                <button class="decrease-btn px-2 py-1 bg-gray-200 rounded text-sm">-</button>
-                <span class="quantity font-semibold">{{ user_cart_quantities|get_item:product.id }}</span>
-                <button class="increase-btn px-2 py-1 bg-gray-200 rounded text-sm">+</button>
-            </div>
-        {% else %}
-            <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 add-to-cart-btn">
-                Add <i class="ki-filled ki-handcart text-xs"></i>
-            </button>
-        {% endif %}
-    {% else %}
-        <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 show-login-modal">
-            Add <i class="ki-filled ki-handcart text-xs"></i>
-        </button>
-    {% endif %}
-</div>
+                        <div class="cart-button-container" data-product-id="{{ product.id }}">
                             {% if request.user.is_authenticated %}
-                                {% if product.show_rfq or product.Both %}
-                                <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 open-rfq-modal"
-                                        data-product-id="{{ product.id }}"
-                                        data-product-name="{{ product.name }}"
-                                        data-product-price="{{ product.price }}"
-                                        data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
-                                        data-quantity="1">
-                                    RFQ <i class="ki-filled ki-directbox-default text-xs"></i>
-                                </button>
-                                {% endif %}
-                            {% endif %}
-                        {% else %}
-                            {% if request.user.is_authenticated %}
-                                {% if product.id in user_registered_event_ids %}
-                                <button class="kt-btn kt-btn-xs bg-blue-600 text-white hover:bg-blue-700 cursor-not-allowed" disabled>
-                                    Registered
-                                </button>
+                                {% if product.id in user_cart_ids %}
+                                    <div class="cart-quantity-controls flex items-center gap-2">
+                                        <button class="decrease-btn px-2 py-1 bg-gray-200 rounded text-sm">-</button>
+                                        <span class="quantity font-semibold">{{ user_cart_quantities|get_item:product.id }}</span>
+                                        <button class="increase-btn px-2 py-1 bg-gray-200 rounded text-sm">+</button>
+                                    </div>
                                 {% else %}
-                                <button class="kt-btn kt-btn-xs bg-blue-600 text-white hover:bg-blue-700 open-event-registration-modal"
-                                        data-product-id="{{ product.id }}"
-                                        data-event-name="{{ product.name }}">
-                                    Register for Event
-                                </button>
+                                    <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 add-to-cart-btn">
+                                        Add <i class="ki-filled ki-handcart text-xs"></i>
+                                    </button>
                                 {% endif %}
                             {% else %}
-                                <button class="kt-btn kt-btn-xs bg-blue-600 text-white hover:bg-blue-700 show-login-modal">
-                                    Register for Event
+                                <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 show-login-modal">
+                                    Add <i class="ki-filled ki-handcart text-xs"></i>
                                 </button>
+                            {% endif %}
+                        </div>
+
+                        {% if request.user.is_authenticated %}
+                            {% if product.show_rfq or product.Both %}
+                            <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 open-rfq-modal"
+                                    data-product-id="{{ product.id }}"
+                                    data-product-name="{{ product.name }}"
+                                    data-product-price="{{ product.price }}"
+                                    data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
+                                    data-quantity="1">
+                                RFQ <i class="ki-filled ki-directbox-default text-xs"></i>
+                            </button>
                             {% endif %}
                         {% endif %}
                     </div>
@@ -616,6 +587,7 @@
     </div>
 </div>
 <!-- End Featured Products -->
+
 <!-- Special Offers -->
 <div class="section-container special-offers-container">
     {% if special_offers %}
