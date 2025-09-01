@@ -1868,9 +1868,9 @@ class RatingView(TemplateView):
                         review_count__lte=max_count
                     )
                 except ValueError:
-                    pass  # Handle invalid review_count gracefully
+                    pass  
 
-        # Apply price range filter
+    
         if price_range != 'all':
             if price_range == '201-plus':
                 products = products.filter(price__gte=201)
@@ -1882,23 +1882,22 @@ class RatingView(TemplateView):
                         price__lte=max_price
                     )
                 except ValueError:
-                    pass  # Handle invalid price_range gracefully
+                    pass 
 
-        # Order by average rating (descending)
+       
         products = products.order_by('-avg_rating')
 
-        # ---  Pagination (3 per page) ---
         paginator = Paginator(products, 2)  
         page_number = self.request.GET.get('page')
         page_obj = paginator.get_page(page_number)
 
-        # Context
+       
         context['products'] = page_obj
         context['search_query'] = search_query
         context['rating_filter'] = rating_filter
         context['review_count'] = review_count
         context['price_range'] = price_range
-        context['page_obj'] = page_obj  # for template pagination controls
+        context['page_obj'] = page_obj 
 
         return context
 
