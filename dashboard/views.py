@@ -780,7 +780,6 @@ class SearchResultsGridView(TemplateView):
 
 #--------------------------------------------------------------------------------------------------------------------------------------------
     
-
 class SearchResultsListView(TemplateView):
     template_name = 'userdashboard/view/search_results_list.html'
 
@@ -791,10 +790,11 @@ class SearchResultsListView(TemplateView):
             html = render_to_string(self.template_name, context, request=request)
             return HttpResponse(html)
         return super().get(request, *args, **kwargs)
+        
 
     def get_context_data(self, **kwargs):
+       
         context = super().get_context_data(**kwargs)
-        logger.debug(f"Initial context: {context}")
 
         category_id = self.request.GET.get('category')
         sub_category_id = self.request.GET.get('sub_category')
@@ -803,6 +803,7 @@ class SearchResultsListView(TemplateView):
         page_number = self.request.GET.get('page', 1)
         search_query = self.request.GET.get('q', '').strip()
 
+        # Base context
         context.update({
             'selected_category': None,
             'selected_sub_category': None,
@@ -813,59 +814,63 @@ class SearchResultsListView(TemplateView):
             'is_search_active': bool(search_query),
         })
 
-        # Define special categories
+        # Special categories
         special_category_names = ['Conference', 'Webinar', 'Event']
-        logger.debug(f"special_category_names: {special_category_names}")
 
-        # Fetch regular categories (excluding special categories)
+        # Last categories with products
         last_categories_with_products = ProductLastCategory.objects.annotate(
             product_count=Count('product', filter=Q(product__is_active=True))
         ).filter(product_count__gt=0)
-        logger.debug(f"last_categories_with_products: {list(last_categories_with_products)}")
 
+        # Subcategories
         valid_subcategory_ids = last_categories_with_products.values_list('sub_category_id', flat=True).distinct()
         subcategories_with_products = ProductSubCategory.objects.filter(
             id__in=valid_subcategory_ids
         ).prefetch_related('productlastcategory_set')
-        logger.debug(f"subcategories_with_products: {list(subcategories_with_products)}")
 
+        # Regular categories
         valid_category_ids = subcategories_with_products.values_list('category_id', flat=True).distinct()
         regular_categories = ProductCategory.objects.filter(
             id__in=valid_category_ids
         ).exclude(name__in=special_category_names).prefetch_related('productsubcategory_set')
-        logger.debug(f"regular_categories: {list(regular_categories)}")
 
-        # Fetch special categories with product counts
+        # Special categories with products
         special_categories = ProductCategory.objects.filter(
             name__in=special_category_names
         ).annotate(
             product_count=Count('product', filter=Q(product__is_active=True))
         ).filter(product_count__gt=0)
-        logger.debug(
-            f"special_categories type: {type(special_categories)}, value: {[f'ID: {c.id}, Name: {c.name}' for c in special_categories]}")
 
-        # Fetch conference products
+        # Conference products (limit 4)
         conference_products = Product.objects.filter(
             category__name__in=special_category_names,
             is_active=True
         ).annotate(
             effective_price=Case(
-                When(offer_active=True, offer_percentage__isnull=False, then=ExpressionWrapper(
-                    F('price') * (1 - Coalesce(F('offer_percentage'), 0) / 100.0),
-                    output_field=DecimalField(max_digits=10, decimal_places=2)
-                )),
+                When(offer_active=True, offer_percentage__isnull=False,
+                     then=ExpressionWrapper(
+                         F('price') * (1 - Coalesce(F('offer_percentage'), 0) / 100.0),
+                         output_field=DecimalField(max_digits=10, decimal_places=2)
+                     )),
                 default=F('price'),
                 output_field=DecimalField(max_digits=10, decimal_places=2)
             )
         ).prefetch_related('images')[:4]
-        logger.debug(
-            f"conference_products: {[f'ID: {p.id}, Type: {type(p.id)}, Name: {p.name}, SKU: {p.supplier_sku}' for p in conference_products]}")
 
+        # Attach category + last categories mapping
+        category_last_map = {}
+        for category in regular_categories:
+            subcategories = subcategories_with_products.filter(category=category)
+            last_cats = last_categories_with_products.filter(sub_category__in=subcategories)
+            category_last_map[category.id] = last_cats
+
+        # Add to context
         context['regular_categories'] = regular_categories
         context['special_categories'] = special_categories
         context['conference_products'] = conference_products
+        context['category_last_map'] = category_last_map
 
-        # Base product queryset with effective price annotation
+        # Product queryset
         effective_price = ExpressionWrapper(
             F('price') * (1 - Coalesce(F('offer_percentage'), 0) / 100.0),
             output_field=DecimalField(max_digits=10, decimal_places=2)
@@ -895,7 +900,6 @@ class SearchResultsListView(TemplateView):
 
             paginator = Paginator(products_qs, 10)
             page_obj = paginator.get_page(page_number)
-
             context.update({
                 'products': page_obj,
                 'page_obj': page_obj,
@@ -989,7 +993,6 @@ class SearchResultsListView(TemplateView):
             context['user_wishlist_ids'] = []
             context['user_registered_event_ids'] = []
 
-        logger.debug(f"Final context: {context.keys()}")
         return context
 
 class ProductDetailsView(TemplateView):
