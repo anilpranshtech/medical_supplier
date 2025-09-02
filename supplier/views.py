@@ -1350,7 +1350,6 @@ class DeleteCartItemView(LoginRequiredMixin, SupplierPermissionMixin, View):
         except CartProduct.DoesNotExist:
             return JsonResponse({"success": False, "message": "Item not found"}, status=404)
 
-
 class MarkNotificationReadView(SupplierPermissionMixin, View):
     def post(self, request, pk):
         try:
@@ -1389,6 +1388,7 @@ class DeleteNotificationView(LoginRequiredMixin, View):
         # Delete the notification
         notification.delete()
         return JsonResponse({'status': 'success'})
+    
 class LogoutView(SupplierPermissionMixin, View):
     def get(self, request):
         logout(request)
@@ -1784,7 +1784,13 @@ class QuestionView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['questions'] = Question.objects.select_related('user').order_by('-created_at')
+        user_products = Product.objects.filter(created_by=self.request.user)
+
+        context['questions'] = (
+            Question.objects.filter(product__in=user_products)
+            .select_related('user', 'product')
+            .order_by('-created_at')
+        )
         return context
 
     def post(self, request, *args, **kwargs):
@@ -1792,15 +1798,16 @@ class QuestionView(TemplateView):
         reply_text = request.POST.get('reply_text')
         action_type = request.POST.get('action_type')
 
+        user_products = Product.objects.filter(created_by=request.user)
+        question = get_object_or_404(Question, id=question_id, product__in=user_products)
+
         if action_type == "reply":
-            question = get_object_or_404(Question, id=question_id)
             question.reply = reply_text
             question.replied_at = timezone.now()
             question.save()
             messages.success(request, "Reply sent successfully.")
 
         elif action_type == "delete":
-            question = get_object_or_404(Question, id=question_id)
             question.delete()
             messages.success(request, "Question deleted successfully.")
 

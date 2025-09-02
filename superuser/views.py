@@ -2006,3 +2006,35 @@ class AJAXCreateLastCategory(StaffAccountRequiredMixin, View):
             "name": lastcat.name,
             "sub_category_id": lastcat.sub_category_id,
         })
+
+
+class AdminQuestionView(StaffAccountRequiredMixin, TemplateView):
+    template_name = 'superuser/question_list.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['questions'] = (
+            Question.objects.all()
+            .select_related('user', 'product')
+            .order_by('-created_at')
+        )
+        return context
+
+    def post(self, request, *args, **kwargs):
+        question_id = request.POST.get('question_id')
+        reply_text = request.POST.get('reply_text')
+        action_type = request.POST.get('action_type')
+
+        question = get_object_or_404(Question, id=question_id)
+
+        if action_type == "reply":
+            question.reply = reply_text
+            question.replied_at = timezone.now()
+            question.save()
+            messages.success(request, "Reply sent successfully.")
+
+        elif action_type == "delete":
+            question.delete()
+            messages.success(request, "Question deleted successfully.")
+
+        return redirect('superuser:question_list')
