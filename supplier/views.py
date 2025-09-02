@@ -201,7 +201,7 @@ from django.core.paginator import Paginator
 
 class ProductsView(LoginRequiredMixin, View):
     template_name = 'supplier/products.html'
-    paginate_by = 3   #  Per page 3 products
+    paginate_by = 15   #  Per page 3 products
 
     def get(self, request):
         user = request.user
@@ -747,7 +747,7 @@ class UserListView(SupplierPermissionMixin, ListView):
     template_name = 'supplier/user_list.html'
     context_object_name = 'users'
     ordering = ['-date_joined']
-    paginate_by = 2   
+    paginate_by = 12   
 
     def get_queryset(self):
         # Get all users
@@ -1049,7 +1049,7 @@ class OrderListingView(SupplierPermissionMixin, View):
         cancelled_orders = orders.filter(status='cancelled').count()
 
         # ✅ Pagination (3 per page)
-        paginator = Paginator(orders, 3)  
+        paginator = Paginator(orders, 15)  
         page_number = request.GET.get("page")
         page_obj = paginator.get_page(page_number)
 
@@ -1414,7 +1414,7 @@ class RFQListView(LoginRequiredMixin, SupplierPermissionMixin, ListView):
 class RFQListView(LoginRequiredMixin, SupplierPermissionMixin, ListView):
     template_name = 'supplier/rfq_list.html'
     context_object_name = 'rfqs'
-    paginate_by = 2  
+    paginate_by = 15
 
     def get_queryset(self):
         user = self.request.user
@@ -1552,7 +1552,7 @@ class SupplierQuotationUpdateView(LoginRequiredMixin, SupplierPermissionMixin, U
 
 # class BannerListView(LoginRequiredMixin, SupplierPermissionMixin, TemplateView):
 #     template_name = 'supplier/banner_list.html'
-#     paginate_by = 2   
+#     paginate_by = 12   
 
 #     def get_context_data(self, **kwargs):
 #         context = super().get_context_data(**kwargs)
@@ -1626,7 +1626,7 @@ class SupplierQuotationUpdateView(LoginRequiredMixin, SupplierPermissionMixin, U
 
 class TransactionView(TemplateView):
     template_name = 'supplier/transaction.html'
-    paginate_by = 5 
+    paginate_by = 15 
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1698,7 +1698,7 @@ class TransactionView(TemplateView):
 
 
 class MostViewedProductsView(View):
-    paginate_by = 2  
+    paginate_by = 12  
 
     def get(self, request):
         # Get filter parameters
@@ -1894,7 +1894,7 @@ class RatingView(TemplateView):
        
         products = products.order_by('-avg_rating')
 
-        paginator = Paginator(products, 2)  
+        paginator = Paginator(products, 12)  
         page_number = self.request.GET.get('page')
         page_obj = paginator.get_page(page_number)
 
@@ -1911,7 +1911,7 @@ class RatingView(TemplateView):
 class SupplierReturnsView(LoginRequiredMixin, TemplateView):
     template_name = 'supplier/returns.html'
     login_url = 'dashboard:login'
-    paginate_by = 3   
+    paginate_by = 14  
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
