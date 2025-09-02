@@ -1810,27 +1810,27 @@ class QuestionView(TemplateView):
 
 
 class RatingView(TemplateView):
-    template_name = "supplier/rating.html"
+    template_name = "supplier/rating.html"  
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
 
-        # Base queryset with annotations for average rating and review count
-        products = (
-            Product.objects.filter(created_by=user)
-            .annotate(
-                avg_rating=Avg('reviews__rating'),
-                review_count=Coalesce(
-                    Count(
-                        'reviews',
-                        filter=Q(reviews__rating__isnull=False) & ~Q(reviews__review="")
-                    ),
-                    Value(0)
-                )
+        if user.is_superuser:
+            products = Product.objects.all()
+        else:
+            products = Product.objects.filter(created_by=user)
+
+        products = products.annotate(
+            avg_rating=Avg('reviews__rating'),
+            review_count=Coalesce(
+                Count(
+                    'reviews',
+                    filter=Q(reviews__rating__isnull=False) & ~Q(reviews__review="")
+                ),
+                Value(0)
             )
-            .filter(avg_rating__isnull=False)
-        )
+        ).filter(avg_rating__isnull=False)
 
         # Get query parameters
         search_query = self.request.GET.get('search', '')
@@ -1838,7 +1838,7 @@ class RatingView(TemplateView):
         review_count = self.request.GET.get('review_count', 'all')
         price_range = self.request.GET.get('price_range', 'all')
 
-        # Apply search filter (Product ID or Product Name)
+        # Apply search filter (Product ID or Name)
         if search_query:
             products = products.filter(
                 Q(name__icontains=search_query) |
@@ -1854,7 +1854,7 @@ class RatingView(TemplateView):
                     avg_rating__lte=max_rating
                 )
             except ValueError:
-                pass  # Handle invalid rating_filter gracefully
+                pass  # invalid filter
 
         # Apply review count filter
         if review_count != 'all':
@@ -1868,9 +1868,9 @@ class RatingView(TemplateView):
                         review_count__lte=max_count
                     )
                 except ValueError:
-                    pass  
+                    pass
 
-    
+        # Apply price range filter
         if price_range != 'all':
             if price_range == '201-plus':
                 products = products.filter(price__gte=201)
@@ -1882,25 +1882,27 @@ class RatingView(TemplateView):
                         price__lte=max_price
                     )
                 except ValueError:
-                    pass 
+                    pass
 
-       
+
         products = products.order_by('-avg_rating')
 
-        paginator = Paginator(products, 2)  
+        # Pagination
+        paginator = Paginator(products, 10)  
         page_number = self.request.GET.get('page')
         page_obj = paginator.get_page(page_number)
 
-       
-        context['products'] = page_obj
-        context['search_query'] = search_query
-        context['rating_filter'] = rating_filter
-        context['review_count'] = review_count
-        context['price_range'] = price_range
-        context['page_obj'] = page_obj 
+     
+        context.update({
+            'products': page_obj,
+            'search_query': search_query,
+            'rating_filter': rating_filter,
+            'review_count': review_count,
+            'price_range': price_range,
+            'page_obj': page_obj,
+        })
 
         return context
-
 class SupplierReturnsView(LoginRequiredMixin, TemplateView):
     template_name = 'supplier/returns.html'
     login_url = 'dashboard:login'

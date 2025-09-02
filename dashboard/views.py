@@ -3357,3 +3357,40 @@ class DeleteNotificationView(LoginRequiredMixin, View):
         return JsonResponse({'status': 'success'})
 
 
+
+
+
+class CategoryProductListView(TemplateView):
+    template_name = "userdashboard/view/category_products_list.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        category_id = self.kwargs["category_id"]
+        category = ProductCategory.objects.get(id=category_id)
+
+        last_categories = ProductLastCategory.objects.filter(sub_category__category=category)
+
+        products = Product.objects.filter(category=category, is_active=True)
+
+        user_cart_ids = []
+        user_cart_quantities = {}
+        user_wishlist_ids = []
+
+        if self.request.user.is_authenticated:
+        
+            cart_items = CartProduct.objects.filter(user=self.request.user)
+            user_cart_ids = [item.product.id for item in cart_items]
+            user_cart_quantities = {item.product.id: item.quantity for item in cart_items}
+
+       
+            wishlist_items = WishlistProduct.objects.filter(user=self.request.user)
+            user_wishlist_ids = [item.product.id for item in wishlist_items]
+
+        context["category"] = category
+        context["last_categories"] = last_categories
+        context["products"] = products
+        context["user_cart_ids"] = user_cart_ids
+        context["user_cart_quantities"] = user_cart_quantities
+        context["user_wishlist_ids"] = user_wishlist_ids
+        return context
+

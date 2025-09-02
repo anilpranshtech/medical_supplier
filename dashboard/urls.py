@@ -11,7 +11,7 @@ urlpatterns = [
   
     path('login/', CustomLoginView.as_view(), name='login'),
     path('', HomeView.as_view(), name='home'),
-    path('category/<int:pk>/', CategoryProductsView.as_view(), name='category_products'),
+    # path('category/<int:pk>/', CategoryProductsView.as_view(), name='category_products'),
     path('register/', RegistrationView.as_view(), name='register'),
     path('resend-otp/', ResendOTPView.as_view(), name='resend_otp'),
     path('profile/', UserProfileView.as_view(), name='profile'),
@@ -20,6 +20,7 @@ urlpatterns = [
     # user dashboard
     path('search-results-grid/', views.SearchResultsGridView.as_view(), name='search_results_grid'),
     path('search-results-list/', views.SearchResultsListView.as_view(), name='search_results_list'),
+    
     path('search-suggestions/', views.SearchSuggestionsView.as_view(), name='search_suggestions'),
     path('product-detail/<int:pk>/', views.ProductDetailsView.as_view(), name='product_detail'),
     path('product/<int:pk>/registrations/', EventRegisteredDataView.as_view(), name='event_registered_data'),
@@ -100,6 +101,8 @@ urlpatterns = [
     path('notifications/clear-all/', ClearAllNotificationsView.as_view(), name='clear_all_notifications'),
     path('mark-notification-read/<int:pk>/', MarkNotificationReadView.as_view(), name='mark_notification_read'),
     path('delete-notification/<int:id>/', DeleteNotificationView.as_view(), name='delete_notification'),
-   
+
+    path("category/<int:category_id>/", views.CategoryProductListView.as_view(), name="category_products_list"),
+    
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -49,3 +49,10 @@ def notification_context(request):
         'read_notifications': all_notifications.filter(is_read=True).order_by('-created_at'),
         'unread_notifications': all_notifications.filter(is_read=False).order_by('-created_at'),
     }
+
+
+from .models import ProductCategory
+
+def categories_processor(request):
+    categories = ProductCategory.objects.all()
+    return {"categories": categories}

@@ -82,6 +82,7 @@ TEMPLATES = [
                 'supplier.context_processors.notification_context',
                 'dashboard.context_processors.notification_context',
                 'dashboard.context_processors.header_avatar',
+                'dashboard.context_processors.categories_processor',
             ],
         },
     },
