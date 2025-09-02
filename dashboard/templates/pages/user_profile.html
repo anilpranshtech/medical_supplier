@@ -333,23 +333,34 @@ document.addEventListener('DOMContentLoaded', function () {
             e.preventDefault();
             const formData = new FormData(this);
             fetch(this.action, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    alert(data.message);
-                    window.location.reload();
-                } else {
-                    alert(data.message + (data.errors ? ': ' + JSON.stringify(data.errors) : ''));
-                }
-            })
-            .catch(() => alert('An error occurred. Please try again.'));
+    method: 'POST',
+    body: formData,
+    headers: {
+        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        'X-Requested-With': 'XMLHttpRequest'
+    }
+})
+.then(async response => {
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+        return response.json();
+    } else {
+        const text = await response.text();
+        throw new Error("Server returned HTML instead of JSON:\n" + text);
+    }
+})
+.then(data => {
+    if (data.status === 'success') {
+        alert(data.message);
+        window.location.reload();
+    } else {
+        alert(data.message + (data.errors ? ': ' + JSON.stringify(data.errors) : ''));
+    }
+})
+.catch(error => {
+    console.error("Fetch error:", error);
+    alert("Upload failed. Check console for details.");
+});
         });
     });
 });

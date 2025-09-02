@@ -2386,20 +2386,36 @@ class UserProfile(LoginRequiredMixin, TemplateView):
 
 class UploadAvatarView(LoginRequiredMixin, View):
     def post(self, request):
-        profile, profile_type = get_user_profile(request.user)
-        if profile:
+        try:
+            profile, profile_type = get_user_profile(request.user)
+            if not profile:
+                if request.headers.get("x-requested-with") == "XMLHttpRequest":
+                    return JsonResponse({"status": "error", "message": "Profile not found."}, status=404)
+                messages.error(request, "Profile not found.")
+                return redirect('dashboard:user_profile')
+
             if 'avatar' in request.FILES:
                 profile.profile_picture = request.FILES['avatar']
                 profile.save()
+                if request.headers.get("x-requested-with") == "XMLHttpRequest":
+                    return JsonResponse({"status": "success", "message": "Avatar updated successfully."})
                 messages.success(request, "Avatar updated successfully.")
+
             elif 'avatar_remove' in request.POST:
                 if profile.profile_picture:
                     profile.profile_picture.delete(save=True)
+                if request.headers.get("x-requested-with") == "XMLHttpRequest":
+                    return JsonResponse({"status": "success", "message": "Avatar removed successfully."})
                 messages.success(request, "Avatar removed successfully.")
-        else:
-            messages.error(request, "Profile not found.")
-        return redirect('dashboard:user_profile')
 
+            return redirect('dashboard:user_profile')
+
+        except Exception as e:
+            print("Error in image upload -----", e)
+            if request.headers.get("x-requested-with") == "XMLHttpRequest":
+                return JsonResponse({"status": "error", "message": "Something went wrong.", "errors": str(e)}, status=500)
+            messages.error(request, "Something went wrong.")
+            return redirect('dashboard:user_profile')
 
 class EditProfileView(LoginRequiredMixin, View):
     def post(self, request):

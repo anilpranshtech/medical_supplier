@@ -228,6 +228,14 @@
                         <span class="menu-title">View Products</span>
                     </a>
                      {% endif %}
+
+                      <a class="menu-link {% if request.resolver_match.url_name == 'question_list' %} active {% endif %}"
+                        href="{% url 'superuser:question_list' %}">
+                        <span class="menu-bullet">
+                            <span class="bullet bullet-dot"></span>
+                            </span>
+                        <span class="menu-title">Question</span>
+                    </a>
                   </div>
                 </div>
               </div>
