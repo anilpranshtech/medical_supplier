@@ -10,7 +10,7 @@
                     <div class="d-flex flex-column align-items-center py-5">
                         <!-- Profile Image -->
                         <div class="d-flex flex-column align-items-center">
-                            <form id="profileForm" method="post" enctype="multipart/form-data">
+                            <form id="profileForm" method="post" action="{% url 'superuser:user_detail' user.id %}" enctype="multipart/form-data" >
                                 {% csrf_token %}
                         <!-- Hidden file input -->
                                 <input type="file" id="fileInput" name="profile_picture" accept="image/*" style="display:none;" 
