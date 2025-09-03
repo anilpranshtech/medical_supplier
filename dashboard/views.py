@@ -1357,30 +1357,45 @@ class ShippingInfoView(LoginRequiredMixin, TemplateView):
         context['user'] = user
 
         # Get phone number
-        phone = None
+        # phone = None
         profile_type = None
         try:
             profile = RetailProfile.objects.get(user=user)
-            phone = phone
+            phone = profile.phone
             profile_type = 'retailer'
+            print('Profle Retailer ---', phone)
         except RetailProfile.DoesNotExist:
             try:
                 profile = WholesaleBuyerProfile.objects.get(user=user)
-                phone = phone
+                phone = profile.phone
                 profile_type = 'wholesaler'
+                print('Profle wholesaler ---', phone)
             except WholesaleBuyerProfile.DoesNotExist:
                 try:
                     profile = SupplierProfile.objects.get(user=user)
-                    phone = phone
+                    phone = profile.phone
                     profile_type = 'supplier'
+                    print('Profle SupplierProfile ---', phone)
                 except SupplierProfile.DoesNotExist:
+                    phone = None
                     pass
-        context['phone'] = phone or 'Not set'
+
+        context['phone'] = phone
+        print("Phone", phone)
         context['profile_type'] = profile_type
 
         # Get all non-deleted addresses
-        context['addresses'] = CustomerBillingAddress.objects.filter(user=user, is_deleted=False)
-        context['default_address'] = CustomerBillingAddress.objects.filter(user=user, is_default=True, is_deleted=False).first()
+        addresses = CustomerBillingAddress.objects.filter(user=user, is_deleted=False)
+        default_address = CustomerBillingAddress.objects.filter(user=user, is_default=True, is_deleted=False).first()
+
+        context['addresses'] = addresses
+        context['default_address'] = default_address
+
+        if len(addresses) > 0 and default_address:
+            display_payment_button = True
+        else:
+            display_payment_button = False
+        context['display_payment_button'] = display_payment_button
 
         # Order summary based on CartProduct
         cart_items = CartProduct.objects.filter(user=user).select_related('product')
@@ -1417,6 +1432,28 @@ class AddAddressView(LoginRequiredMixin, FormView):
         messages.error(self.request, "Failed to add address. Please check the form.")
         return super().form_invalid(form)
 
+class ManageAddressView(LoginRequiredMixin, FormView):
+    form_class = AddressForm
+    template_name = 'userdashboard/view/add_address.html'
+    def form_valid(self, form):
+        address = form.save(commit=False)
+        address.user = self.request.user
+        if address.is_default:
+            CustomerBillingAddress.objects.filter(
+                user=self.request.user, is_default=True
+            ).update(is_default=False)
+        address.save()
+        return JsonResponse({
+            "status": "success",
+            "message": "Address added successfully."
+        })
+
+    def form_invalid(self, form):
+        return JsonResponse({
+            "status": "error",
+            "message": "Failed to add address",
+            "errors": form.errors
+        }, status=400)
 
 class EditAddressView(LoginRequiredMixin, UpdateView):
     model = CustomerBillingAddress
@@ -1457,6 +1494,56 @@ class SetDefaultAddressView(LoginRequiredMixin, View):
         address.is_default = True
         address.save()
         return JsonResponse({'status': 'success'})
+
+
+
+
+class ManageEditAddressView(LoginRequiredMixin, UpdateView):
+    model = CustomerBillingAddress
+    form_class = AddressForm
+    template_name = 'userdashboard/view/edit_address.html'
+    success_url = reverse_lazy('dashboard:shipping_info')
+
+    def get_queryset(self):
+        return CustomerBillingAddress.objects.filter(user=self.request.user, is_deleted=False)
+
+    def form_valid(self, form):
+        address = form.save(commit=False)
+        if address.is_default:
+            CustomerBillingAddress.objects.filter(
+                user=self.request.user,
+                is_default=True
+            ).exclude(id=address.id).update(is_default=False)
+        address.save()
+
+        return JsonResponse({
+            "status": "success",
+            "message": "Address updated successfully."
+        })
+
+    def form_invalid(self, form):
+        return JsonResponse({
+            "status": "error",
+            "message": "Failed to update address",
+            "errors": form.errors
+        }, status=400)
+
+
+class ManageRemoveAddressView(LoginRequiredMixin, View):
+    def post(self, request, address_id):
+        address = get_object_or_404(
+            CustomerBillingAddress,
+            id=address_id,
+            user=request.user,
+            is_deleted=False
+        )
+        address.is_deleted = True
+        address.save()
+
+        return JsonResponse({
+            "status": "success",
+            "message": "Address removed successfully."
+        })
 
 
 def generate_order_id():
@@ -2336,6 +2423,10 @@ class UserProfile(LoginRequiredMixin, TemplateView):
         except CustomerBillingAddress.DoesNotExist:
             default_address = None
         context['default_address'] = default_address
+
+        addresses = CustomerBillingAddress.objects.filter(user=user, is_deleted=False)
+        context['addresses'] = addresses
+        print("Addresses -------", addresses)
 
        # Order summary
         orders = Order.objects.filter(user=user)

@@ -41,6 +41,8 @@ urlpatterns = [
     path('remove-from-cart/', remove_from_cart, name='remove_from_cart'),
     path('shipping-info/', views.ShippingInfoView.as_view(), name='shipping_info'),
     path('profile/add-address/', views.AddAddressView.as_view(), name='add_address'),
+    path('manage/add-address/', views.ManageAddressView.as_view(), name='manage_add_address'),
+
     path('profile/edit-address/<int:pk>/', views.EditAddressView.as_view(), name='edit_address'),
     path('profile/remove-address/<int:address_id>/', views.RemoveAddressView.as_view(), name='remove_address'),
     path('profile/set-default-address/', views.SetDefaultAddressView.as_view(), name='set_default_address'),
@@ -59,6 +61,10 @@ urlpatterns = [
     path('profile/edit/', views.EditProfileView.as_view(), name='edit_profile'),
     path('profile/edit-email/', views.EditEmailView.as_view(), name='edit_email'),
     path('profile/edit-phone/', views.EditPhoneView.as_view(), name='edit_phone'),
+
+    path('manage/add-address/', views.ManageAddressView.as_view(), name='manage_add_address'),
+    path('manage/edit-address/<int:pk>/', views.ManageEditAddressView.as_view(), name='manage_edit_address'),
+    path('manage/remove-address/<int:address_id>/', views.ManageRemoveAddressView.as_view(), name='manage_remove_address'),
 
     path('user-signup/', views.SignUpView.as_view(), name='user_signup'),
     path('verify-otp/', views.VerifyOTPView.as_view(), name='verify_otp'),
