@@ -15,13 +15,12 @@
     <div class="d-flex flex-column flex-column-fluid">
         <div id="kt_app_content" class="app-content flex-column-fluid">
             <div id="kt_app_content_container" class="app-container container-fluid">
-               <form   class="form d-flex flex-column flex-lg-row"  method="POST" action="{% url 'supplier:edit_product' pk=product.id %}" enctype="multipart/form-data">
+                <form class="form d-flex flex-column flex-lg-row" method="POST" action="{% url 'supplier:edit_product' pk=product.id %}" enctype="multipart/form-data">
                     {% csrf_token %}
                     
                     <!-- Left Side Container (Fixed Width) -->
                     <div class="d-flex flex-column gap-7 gap-lg-10 w-100 w-lg-300px mb-7 me-lg-10">
                         <!-- Thumbnail + Gallery Card -->
-                   
                         <div class="card card-flush py-4">
                             <div class="card-header">
                                 <div class="card-title">
@@ -32,14 +31,12 @@
                                 <!-- Main Thumbnail Upload -->
                                 <div class="image-input image-input-outline mb-3" data-kt-image-input="true" style="background-image: url('{% if main_image_url %}{{ main_image_url }}{% else %}https://preview.keenthemes.com/metronic8/demo58/assets/media/svg/files/blank-image.svg{% endif %}')">
                                     <div class="image-input-wrapper w-150px h-150px" style="background-image: url('{% if main_image_url %}{{ main_image_url }}{% endif %}')"></div>
-
                                     <label class="btn btn-icon btn-circle btn-active-color-primary w-25px h-25px bg-body shadow"
                                         data-kt-image-input-action="change" data-bs-toggle="tooltip" title="Change avatar">
                                         <i class="fas fa-pen fs-7 text-primary"></i>
                                         <input type="file" name="main_image" accept=".png, .jpg, .jpeg" />
                                         <input type="hidden" name="main_image_remove" />
                                     </label>
-
                                     {% if main_image_url %}
                                     <span class="btn btn-icon btn-circle btn-active-color-primary w-25px h-25px bg-body shadow"
                                         data-kt-image-input-action="remove" data-bs-toggle="tooltip" title="Remove avatar">
@@ -47,13 +44,10 @@
                                     </span>
                                     {% endif %}
                                 </div>
-
                                 <div class="text-muted fs-7 mb-4">Upload the main thumbnail image. Only *.png, *.jpg and *.jpeg image files are accepted</div>
-
                                 <!-- Another Images Upload -->
                                 <label class="form-label fw-bold">Another Images</label>
                                 <input type="file" name="gallery_images" multiple accept=".png, .jpg, .jpeg" class="form-control mb-3" />
-
                                 <!-- Display existing gallery images -->
                                 {% if gallery_images %}
                                 <div class="mt-3">
@@ -72,20 +66,16 @@
                                 {% endif %}
                             </div>
                         </div>
-
                         <!-- Status Card -->
                         <div class="card card-flush py-4">
                             <div class="card-header">
                                 <div class="card-title">
                                     <h2>Status</h2>
                                 </div>
-
                             </div>
                             <div class="card-body pt-0">
-
                                 <label class="form-label required">Product status</label>
                                 <select class="form-select mb-2" data-control="select2" data-hide-search="true" data-placeholder="Select an option" id="kt_ecommerce_add_product_status_select" name="is_active" required>
-
                                     <option value="True" {% if is_active == 'True' %}selected{% endif %}>Published</option>
                                     <option value="False" {% if is_active == 'False' %}selected{% endif %}>Draft</option>
                                 </select>
@@ -96,7 +86,6 @@
                                 </div>
                             </div>
                         </div>
-
                         <!-- Categories Card -->
                         <div class="card card-flush py-4">
                             <div class="card-header">
@@ -116,7 +105,6 @@
                                 <button type="button" class="btn btn-light-primary btn-sm mb-10" data-bs-toggle="modal" data-bs-target="#createCategoryModal">
                                     <i class="fas fa-plus fs-2 text-primary"></i> Create new category
                                 </button>
-                                
                                 <label class="form-label">Sub-Categories</label>
                                 <select class="form-select mb-2" name="sub_category" id="subcategory_select" data-control="select2" data-placeholder="Select an option" data-allow-clear="true">
                                     <option value="">Select a Sub-Category</option>
@@ -128,7 +116,6 @@
                                 <button type="button" class="btn btn-light-primary btn-sm mb-10" data-bs-toggle="modal" data-bs-target="#createSubCategoryModal">
                                     <i class="fas fa-plus fs-2 text-primary"></i> Create new sub-category
                                 </button>
-
                                 <label class="form-label">Last Categories</label>
                                 <select class="form-select mb-2" name="last_category" id="lastcategory_select" data-control="select2" data-placeholder="Select an option" data-allow-clear="true">
                                     <option value="">Select a Last Category</option>
@@ -143,8 +130,6 @@
                             </div>
                         </div>
                     </div>
-
-                 ``
                     <!-- Right Side Container -->
                     <div class="d-flex flex-column flex-row-fluid gap-7 gap-lg-10">
                         <div class="row">
@@ -162,37 +147,31 @@
                                             <input type="text" name="product_name" class="form-control mb-2" placeholder="Product name" value="{{ product_name }}" required />
                                             <div class="text-muted fs-7">A product name is required and recommended to be unique.</div>
                                         </div>
-
                                         <div>
                                             <label class="form-label">Description</label>
                                             <textarea name="product_description" class="form-control" placeholder="Product description">{{ product_description|default:'' }}</textarea><br>
                                         </div>
-
-                                        <div class="mb-10 mt-4 fv-row">
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_product_quantity">
                                             <label class="form-label required">Quantity</label>
                                             <input type="number" name="product_quantity" class="form-control mb-2" placeholder="Enter available quantity" value="{{ product_quantity }}" min="0" required />
                                             <div class="text-muted fs-7">Specify how many items are available in stock.</div>
                                         </div>
-
                                         <div class="mb-10 mt-4 fv-row">
                                             <label class="form-label required">Brand</label>
                                             <input type="text" name="brand" class="form-control" placeholder="Enter brand" value="{{ brand }}" required/>
                                             <div class="text-muted fs-7">Enter the product brand (new or existing).</div>
                                         </div>
-
                                         <div class="mb-10 mt-4 fv-row">
                                             <label class="form-label required">Product From</label>
                                             <input type="text" name="product_from" class="form-control mb-2" placeholder="e.g., India, China" value="{{ product_from }}" required/>
                                             <div class="text-muted fs-7">Country of origin.</div>
                                         </div>
-                                        
                                         <div class="mb-10 mt-4 fv-row">
                                             <label class="form-label required">Selling Countries</label>
                                             <input type="text" name="selling_countries" class="form-control mb-2" placeholder="e.g., India, USA, UK" value="{{ selling_countries|default:'' }}" required />
                                             <div class="text-muted fs-7">Comma-separated country names (e.g., India, USA, UK).</div>
                                         </div>
-
-                                        <div class="mb-10 mt-4 fv-row">
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_warranty">
                                             <label class="form-label">Warranty</label>
                                             <select class="form-select mb-2" name="warranty" data-control="select2" data-hide-search="true" data-placeholder="Select a warranty option">
                                                 <option value="none" {% if warranty == 'none' %}selected{% endif %}>None</option>
@@ -201,8 +180,7 @@
                                             </select>
                                             <div class="text-muted fs-7">Select the product warranty.</div>
                                         </div>
-
-                                        <div class="mb-10 mt-4 fv-row">
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_condition">
                                             <label class="form-label">Condition</label>
                                             <select class="form-select mb-2" name="condition" data-control="select2" data-hide-search="true" data-placeholder="Select a condition">
                                                 <option value="new" {% if condition == 'new' %}selected{% endif %}>New</option>
@@ -210,7 +188,6 @@
                                             </select>
                                             <div class="text-muted fs-7">Set the product condition.</div>
                                         </div>
-
                                         <div class="mb-10 mt-4 fv-row">
                                             <label class="form-label">Is Returnable?</label>
                                             <div class="form-check form-switch">
@@ -218,32 +195,25 @@
                                                 <label class="form-check-label" for="is_returnable">Enable product return</label>
                                             </div>
                                         </div>
-
                                         <div class="mb-10 mt-4 fv-row" id="hide_field_return_time_limit">
                                             <label class="form-label required">Return Time Limit (Days)</label>
-                                            <input type="number" name="return_time_limit" class="form-control mb-2"
-                                                   placeholder="Enter return time limit in days"
-                                                   value="{{ product.return_time_limit|default:7 }}" min="0"/>
+                                            <input type="number" name="return_time_limit" class="form-control mb-2" placeholder="Enter return time limit in days" value="{{ product.return_time_limit|default:7 }}" min="0"/>
                                             <div class="text-muted fs-7">Number of days for product return.</div>
                                         </div>
-                                        
-                                       
-                                        <div class="mb-10 mt-4 fv-row">
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_manufacture_date">
                                             <label class="form-label required">Manufacture Date</label>
                                             <input type="date" name="manufacture_date" class="form-control mb-2" placeholder="Select manufacture date" value="{{ manufacture_date }}" required/>
                                             <div class="text-muted fs-7">Date of manufacture.</div>
                                         </div>
-
-                                        <div class="mb-10 mt-4 fv-row">
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_expiry_date">
                                             <label class="form-label required">Expiry Date</label>
                                             <input type="date" name="expiry_date" class="form-control mb-2" placeholder="Select expiry date" value="{{ expiry_date }}" required/>
                                             <div class="text-muted fs-7">Date of expiry.</div>
                                         </div>
                                     </div>
                                 </div>
-
                                 <!-- Pricing Card -->
-                                <div class="card card-flush py-4 mt-7">
+                                <div class="card card-flush py-4 mt-7" id="hide_field_price">
                                     <div class="card-header">
                                         <div class="card-title">
                                             <h2>Pricing</h2>
@@ -255,7 +225,6 @@
                                             <input type="text" name="price" class="form-control mb-2" placeholder="Product price" value="{{ price|default:'' }}" required />
                                             <div class="text-muted fs-7">Set the product price.</div>
                                         </div>
-                                        
                                         <div class="fv-row mb-10">
                                             <label class="fs-6 fw-semibold mb-2 required">
                                                 Discount Type
@@ -267,7 +236,7 @@
                                                 <div class="col">
                                                     <label class="btn btn-outline btn-outline-dashed btn-active-light-primary d-flex text-start p-6" data-kt-button="true">
                                                         <span class="form-check form-check-custom form-check-solid form-check-sm align-items-start mt-1">
-                                                            <input class="form-check-input" type="radio" name="discount_option" value="1" />
+                                                            <input class="form-check-input" type="radio" name="discount_option" value="1" {% if discount_option == '1' %}checked{% endif %} />
                                                         </span>
                                                         <span class="ms-5">
                                                             <span class="fs-4 fw-bold text-gray-800 d-block">No Discount</span>
@@ -275,9 +244,9 @@
                                                     </label>
                                                 </div>
                                                 <div class="col">
-                                                    <label class="btn btn-outline btn-outline-dashed btn-active-light-primary active d-flex text-start p-6" data-kt-button="true">
+                                                    <label class="btn btn-outline btn-outline-dashed btn-active-light-primary d-flex text-start p-6" data-kt-button="true">
                                                         <span class="form-check form-check-custom form-check-solid form-check-sm align-items-start mt-1">
-                                                            <input class="form-check-input" type="radio" name="discount_option" value="2" checked="checked" />
+                                                            <input class="form-check-input" type="radio" name="discount_option" value="2" {% if discount_option == '2' %}checked{% endif %} />
                                                         </span>
                                                         <span class="ms-5">
                                                             <span class="fs-4 fw-bold text-gray-800 d-block">Percentage %</span>
@@ -287,7 +256,7 @@
                                                 <div class="col">
                                                     <label class="btn btn-outline btn-outline-dashed btn-active-light-primary d-flex text-start p-6" data-kt-button="true">
                                                         <span class="form-check form-check-custom form-check-solid form-check-sm align-items-start mt-1">
-                                                            <input class="form-check-input" type="radio" name="discount_option" value="3" />
+                                                            <input class="form-check-input" type="radio" name="discount_option" value="3" {% if discount_option == '3' %}checked{% endif %} />
                                                         </span>
                                                         <span class="ms-5">
                                                             <span class="fs-4 fw-bold text-gray-800 d-block">Fixed Price</span>
@@ -296,30 +265,25 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        
                                         <div class="mb-10 fv-row" id="kt_ecommerce_add_product_discount_percentage">
                                             <label class="form-label">Set Discount Percentage</label>
                                             <div class="d-flex flex-column text-center mb-5">
                                                 <div class="d-flex align-items-start justify-content-center mb-7">
-                                                    <span class="fw-bold fs-3x" id="kt_ecommerce_add_product_discount_label">0</span>
+                                                    <span class="fw-bold fs-3x" id="kt_ecommerce_add_product_discount_label">{{ discount_percentage|default:0 }}</span>
                                                     <span class="fw-bold fs-4 mt-1 ms-2">%</span>
                                                 </div>
                                                 <div id="kt_ecommerce_add_product_discount_slider" class="noUi-sm"></div>
                                             </div>
                                             <div class="text-muted fs-7">Set a percentage discount to be applied on this product.</div>
                                         </div>
-                                        
                                         <div class="d-none mb-10 fv-row" id="kt_ecommerce_add_product_discount_fixed">
                                             <label class="form-label">Fixed Discounted Price</label>
-                                            <input type="text" name="discounted_price" class="form-control mb-2" placeholder="Discounted price" />
+                                            <input type="text" name="discounted_price" class="form-control mb-2" placeholder="Discounted price" value="{{ discounted_price|default:'' }}" />
                                             <div class="text-muted fs-7">Set the discounted product price. The product will be reduced at the determined fixed price</div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-
-
-
                             <!-- Right Column in Right Container -->
                             <div class="col-lg-6">
                                 <!-- Additional Details Card -->
@@ -330,8 +294,7 @@
                                         </div>
                                     </div>
                                     <div class="card-body pt-0">
-
-                                        <div class="mb-10 mt-4 fv-row">
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_weight_unit">
                                             <label class="form-label">Weight Unit</label>
                                             <select class="form-select mb-2" name="weight_unit" data-control="select2" data-hide-search="true" data-placeholder="Select weight unit">
                                                 <option value="gm" {% if weight_unit == 'gm' %}selected{% endif %}>Gram</option>
@@ -341,40 +304,33 @@
                                             </select>
                                             <div class="text-muted fs-7">Unit of product weight.</div>
                                         </div>
-
-                                        <div class="mb-10 mt-4 fv-row">
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_weight">
                                             <label class="form-label required">Weight</label>
                                             <input type="number" name="weight" class="form-control mb-2" placeholder="Enter product weight" value="{{ weight }}" min="0" step="0.01" required/>
                                             <div class="text-muted fs-7">Product weight.</div>
                                         </div>
-                                        <div class="mb-10 mt-4 fv-row">
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_delivery_time">
                                             <label class="form-label required">Delivery Time (Days)</label>
                                             <input type="number" name="delivery_time" class="form-control mb-2" placeholder="Enter estimated delivery time in days" value="{{ delivery_time }}" min="0" required/>
                                             <div class="text-muted fs-7">Estimated delivery time in days.</div>
                                         </div>
-
-                                         <div class="mb-10 mt-4 fv-row">
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_keywords">
                                             <label class="form-label required">Keywords</label>
                                             <input type="text" name="keywords" class="form-control mb-2" placeholder="Comma-separated keywords" value="{{ keywords }}" required/>
                                             <div class="text-muted fs-7">Comma-separated keywords for product search.</div>
                                         </div>
-                                        
-
-                                        <div class="mb-10 mt-4 fv-row">
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_commission_percentage">
                                             <label class="form-label required">Commission Percentage</label>
                                             <input type="number" name="commission_percentage" class="form-control mb-2" placeholder="Enter commission percentage" value="{{ commission_percentage }}" min="0" max="100" step="0.01" required/>
                                             <div class="text-muted fs-7">Commission percentage for the product.</div>
                                         </div>
-                                        
-                                        <div class="mb-10 mt-4 fv-row">
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_barcode">
                                             <label class="form-label">Barcode</label>
                                             <input type="text" name="barcode" class="form-control mb-2" placeholder="Enter barcode" value="{{ barcode }}" />
                                             <div class="text-muted fs-7">Product barcode.</div>
                                         </div>
-
-                                        <div class="mb-10 mt-4 fv-row">
-                                            <label class="form-label ">Brochure</label>
-
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_brochure">
+                                            <label class="form-label">Brochure</label>
                                             {% if brochure_url %}
                                                 <div class="mb-2">
                                                     <a href="{{ brochure_url }}" target="_blank" class="btn btn-sm btn-light-primary">
@@ -382,44 +338,35 @@
                                                     </a>
                                                 </div>
                                             {% endif %}
-
                                             <input type="file" name="brochure" class="form-control mb-2" accept=".pdf, .doc, .docx" />
                                             <div class="text-muted fs-7">Upload product brochure (PDF, DOC).</div>
                                         </div>
-                                        
-                                        
-
-                                        <div class="mb-10 mt-4 fv-row">
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_supplier_sku">
                                             <label class="form-label required">Supplier SKU</label>
                                             <input type="text" name="supplier_sku" class="form-control mb-2" placeholder="Enter supplier SKU" value="{{ supplier_sku }}" required/>
                                             <div class="text-muted fs-7">Supplier Stock Keeping Unit.</div>
                                         </div>
-                                        
-                                        <div class="mb-10 mt-4 fv-row">
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_pcs_per_unit">
                                             <label class="form-label required">Pcs Per Unit</label>
                                             <input type="number" name="pcs_per_unit" class="form-control mb-2" placeholder="Enter pieces per unit" value="{{ pcs_per_unit }}" min="1" required/>
                                             <div class="text-muted fs-7">Number of pieces in one unit of the product.</div>
                                         </div>
-                                        
-                                        <div class="mb-10 mt-4 fv-row">
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_min_order_qty">
                                             <label class="form-label required">Min Order Qty</label>
                                             <input type="number" name="min_order_qty" class="form-control mb-2" placeholder="Enter minimum order quantity" value="{{ min_order_qty }}" min="1" required/>
                                             <div class="text-muted fs-7">Minimum quantity required for an order.</div>
                                         </div>
-                                        
-                                        <div class="mb-10 mt-4 fv-row">
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_low_stock_alert">
                                             <label class="form-label required">Low Stock Alert</label>
                                             <input type="number" name="low_stock_alert" class="form-control mb-2" placeholder="Enter low stock alert level" value="{{ low_stock_alert }}" min="0" required/>
                                             <div class="text-muted fs-7">Alert when stock falls below this level.</div>
                                         </div>
-                                        
-                                        <div class="mb-10 mt-4 fv-row">
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_expiration_days">
                                             <label class="form-label required">Expiration Days</label>
                                             <input type="number" name="expiration_days" class="form-control mb-2" placeholder="Enter expiration days" value="{{ expiration_days }}" min="0" required/>
                                             <div class="text-muted fs-7">Number of days until product expires.</div>
                                         </div>
-                                        
-                                        <div class="mb-10 mt-4 fv-row">
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_tag">
                                             <label class="form-label">Tag</label>
                                             <select class="form-select mb-2" name="tag" data-control="select2" data-hide-search="true" data-placeholder="Select a tag">
                                                 <option value="none" {% if tag == 'none' %}selected{% endif %}>None</option>
@@ -429,30 +376,57 @@
                                             </select>
                                             <div class="text-muted fs-7">Assign a tag to the product.</div>
                                         </div>
-                                        
-                                        <div class="mb-10 mt-4 fv-row">
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_offer_percentage">
                                             <label class="form-label">Offer Percentage</label>
                                             <input type="number" name="offer_percentage" class="form-control mb-2" placeholder="Enter offer percentage" value="{{ offer_percentage }}" min="0" max="100" step="0.01" />
                                             <div class="text-muted fs-7">Percentage discount for the product.</div>
                                         </div>
-                                        
-                                        <div class="mb-10 mt-4 fv-row">
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_offer_start">
                                             <label class="form-label">Offer Start</label>
                                             <input type="date" name="offer_start" class="form-control mb-2" placeholder="Select offer start date" value="{{ offer_start }}" />
                                             <div class="text-muted fs-7">Date when the offer starts.</div>
                                         </div>
-                                        
-                                        <div class="mb-10 mt-4 fv-row">
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_offer_end">
                                             <label class="form-label">Offer End</label>
                                             <input type="date" name="offer_end" class="form-control mb-2" placeholder="Select offer end date" value="{{ offer_end }}" />
                                             <div class="text-muted fs-7">Date when the offer ends.</div>
                                         </div>
-
+                                    </div>
+                                </div>
+                                <!-- Webinar Fields -->
+                                <div id="webinar_fields" class="d-none">
+                                    <div class="card card-flush py-4 mt-7">
+                                        <div class="card-header">
+                                            <div class="card-title">
+                                                <h2>Event Details</h2>
+                                            </div>
+                                        </div>
+                                        <div class="card-body pt-0">
+                                            <div class="mb-10 fv-row">
+                                                <label class="form-label required">Registration Link</label>
+                                                <input type="url" name="registration_link" class="form-control" value="{{ product.registration_link|default:'' }}" required />
+                                            </div>
+                                            <div class="mb-10 fv-row">
+                                                <label class="form-label required">Event Name</label>
+                                                <input type="text" name="webinar_name" class="form-control" value="{{ product.webinar_name|default:'' }}" required />
+                                            </div>
+                                            <div class="mb-10 fv-row">
+                                                <label class="form-label required">Date</label>
+                                                <input type="datetime-local" name="webinar_date" class="form-control" value="{{ product.webinar_date|default:''|date:'Y-m-d\TH:i' }}" required />
+                                            </div>
+                                            <div class="mb-10 fv-row">
+                                                <label class="form-label required">Duration</label>
+                                                <input type="text" name="webinar_duration" class="form-control" value="{{ product.webinar_duration|default:'' }}" required />
+                                            </div>
+                                            <div class="mb-10 fv-row">
+                                                <label class="form-label required">Venue</label>
+                                                <input type="text" name="webinar_venue" class="form-control" value="{{ product.webinar_venue|default:'' }}" required />
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-
                         <!-- Save/Cancel Buttons -->
                         <div class="d-flex justify-content-end">
                             <a href="{% url 'supplier:products_list' %}" id="kt_ecommerce_add_product_cancel" class="btn btn-light me-5">
@@ -497,7 +471,7 @@
     </div>
 </div>
 
-<!-- sub category add -->
+<!-- Sub category add -->
 <div class="modal fade" id="createSubCategoryModal" tabindex="-1" aria-labelledby="createSubCategoryModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -507,7 +481,6 @@
             </div>
             <form action="{% url 'supplier:create_subcategory' %}" method="post"> {% csrf_token %}
                 <div class="modal-body">
-
                     <div class="mb-3">
                         <label for="parent_category" class="form-label">Parent Category</label>
                         <select class="form-select" id="parent_category" name="category" required>
@@ -517,13 +490,10 @@
                             {% endfor %}
                         </select>
                     </div>
-
                     <div class="mb-3">
                         <label for="subcategory_name" class="form-label">Sub-Category Name</label>
                         <input type="text" class="form-control" id="subcategory_name" name="name" required>
                     </div>
-
-
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -544,7 +514,6 @@
             </div>
             <form action="{% url 'supplier:create_lastcategory' %}" method="post"> {% csrf_token %}
                 <div class="modal-body">
-
                     <div class="mb-3">
                         <label for="parent_subcategory" class="form-label">Parent Sub-Category</label>
                         <select class="form-select" id="parent_subcategory" name="sub_category" required>
@@ -554,12 +523,10 @@
                             {% endfor %}
                         </select>
                     </div>
-
                     <div class="mb-3">
                         <label for="lastcategory_name" class="form-label">Last Category Name</label>
                         <input type="text" class="form-control" id="lastcategory_name" name="name" required>
                     </div>
-
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -577,19 +544,14 @@
 <script src="https://cdn.jsdelivr.net/npm/nouislider@15.7.0/dist/nouislider.min.js"></script>
 <script>
 $(document).ready(function () {
-
-    // ---------------------------
     // Form submit loader
-    // ---------------------------
     $('form').on('submit', function(e) {
         $('.indicator-label').hide();
         $('.indicator-progress').show();
         return true;
     });
 
-    // ---------------------------
     // Subcategory AJAX
-    // ---------------------------
     $('select[name="category"]').on('change', function () {
         let categoryId = $(this).val();
         if (categoryId) {
@@ -611,13 +573,10 @@ $(document).ready(function () {
         }
 
         // Run toggle for webinar fields & return time limit on category change
-        toggleWebinarFields();
-        toggleReturnTimeLimit();
+        toggleFormFields();
     });
 
-    // ---------------------------
     // Lastcategory AJAX
-    // ---------------------------
     $('#subcategory_select').on('change', function () {
         let subCatId = $(this).val();
         if (subCatId) {
@@ -637,9 +596,7 @@ $(document).ready(function () {
         }
     });
 
-    // ---------------------------
     // Discount option toggle
-    // ---------------------------
     const radios = document.querySelectorAll('input[name="discount_option"]');
     const percentageSection = document.getElementById('kt_ecommerce_add_product_discount_percentage');
     const fixedSection = document.getElementById('kt_ecommerce_add_product_discount_fixed');
@@ -650,7 +607,7 @@ $(document).ready(function () {
 
         if (sliderElement) {
             noUiSlider.create(sliderElement, {
-                start: 0,
+                start: {{ discount_percentage|default:0 }},
                 step: 1,
                 connect: [true, false],
                 range: { 'min': 0, 'max': 100 }
@@ -680,77 +637,100 @@ $(document).ready(function () {
         if (checkedRadio) checkedRadio.dispatchEvent(new Event('change'));
     }
 
-    // ---------------------------
     // Webinar fields toggle
-    // ---------------------------
     const webinarCategories = ["Webinar", "Conference", "Event"];
     const fieldsToHide = [
-        "hide_field_product_quantity", "hide_fields_warrenty", "hide_field_condition",
+        "hide_field_product_quantity", "hide_field_warranty", "hide_field_condition",
         "hide_field_return_time_limit", "hide_field_manufacture_date", "hide_field_expiry_date",
         "hide_field_barcode", "hide_field_price", "hide_field_weight_unit", "hide_field_weight",
         "hide_field_delivery_time", "hide_field_commission_percentage", "hide_field_supplier_sku",
         "hide_field_pcs_per_unit", "hide_field_min_order_qty", "hide_field_low_stock_alert",
-        "hide_field_button_type", "hide_field_expiration_days", "hide_field_tag",
-        "hide_field_offer_percentage", "hide_field_offer_start", "hide_field_offer_end",
-        "hide_field_offer_status", "hide_field_ask_admin_to_publish"
+        "hide_field_expiration_days", "hide_field_tag", "hide_field_offer_percentage",
+        "hide_field_offer_start", "hide_field_offer_end", "hide_field_keywords",
+        "hide_field_brochure"
     ];
 
     const webinarFields = document.getElementById("webinar_fields");
-    const categorySelect = $('select[name="category"]');
+    const categorySelect = document.querySelector('select[name="category"]');
+    const isReturnableToggle = document.getElementById("is_returnable");
+    const returnTimeLimitField = document.getElementById("hide_field_return_time_limit");
 
-    function toggleWebinarFields() {
-        const selectedText = categorySelect.find('option:selected').text().trim();
+    function toggleFormFields() {
+        const selectedText = categorySelect.options[categorySelect.selectedIndex]?.text.trim() || "";
         const isWebinar = webinarCategories.includes(selectedText);
 
+        // Toggle visibility and required status for fields in fieldsToHide
         fieldsToHide.forEach(id => {
             const field = document.getElementById(id);
             if (field) {
                 field.style.display = isWebinar ? "none" : "";
                 field.querySelectorAll("input, select, textarea").forEach(el => {
-                    el.required = !isWebinar;
+                    if (isWebinar) {
+                        el.removeAttribute("required");
+                    } else {
+                        if (el.hasAttribute("data-originally-required")) {
+                            el.setAttribute("required", "required");
+                        }
+                    }
                 });
             }
         });
 
+        // Toggle webinar fields
         if (webinarFields) {
             webinarFields.classList.toggle("d-none", !isWebinar);
             webinarFields.querySelectorAll("input").forEach(el => {
-                el.required = isWebinar;
+                if (isWebinar) {
+                    el.setAttribute("required", "required");
+                } else {
+                    el.removeAttribute("required");
+                }
+            });
+        }
+
+        // Handle return time limit field visibility based on is_returnable toggle
+        if (isReturnableToggle && returnTimeLimitField) {
+            returnTimeLimitField.style.display = isReturnableToggle.checked && !isWebinar ? "" : "none";
+            returnTimeLimitField.querySelectorAll("input").forEach(el => {
+                if (isReturnableToggle.checked && !isWebinar) {
+                    el.setAttribute("required", "required");
+                } else {
+                    el.removeAttribute("required");
+                }
             });
         }
 
         // Disable returnable toggle if webinar
-        if ($('#is_returnable').length) {
+        if (isReturnableToggle) {
+            isReturnableToggle.disabled = isWebinar;
             if (isWebinar) {
-                $('#is_returnable').prop('checked', false).prop('disabled', true);
-            } else {
-                $('#is_returnable').prop('disabled', false);
+                isReturnableToggle.checked = false;
             }
-            toggleReturnTimeLimit();
         }
     }
 
-    // ---------------------------
-    // Returnable toggle
-    // ---------------------------
-    function toggleReturnTimeLimit() {
-        if ($('#is_returnable').is(':checked')) {
-            $('#hide_field_return_time_limit').show();
-            $('#hide_field_return_time_limit input').attr('required', true);
-        } else {
-            $('#hide_field_return_time_limit').hide();
-            $('#hide_field_return_time_limit input').removeAttr('required');
+    // Store original required state for fields
+    fieldsToHide.forEach(id => {
+        const field = document.getElementById(id);
+        if (field) {
+            field.querySelectorAll("input, select, textarea").forEach(el => {
+                if (el.hasAttribute("required")) {
+                    el.setAttribute("data-originally-required", "true");
+                }
+            });
         }
-    }
-
-    // Run toggles on page load
-    toggleWebinarFields();
-    toggleReturnTimeLimit();
-
-    $('#is_returnable').on('change', toggleReturnTimeLimit);
-    $(document).ready(function() {
-        toggleReturnTimeLimit(); // Run on page load
     });
+
+    // Attach listeners
+    if (categorySelect) {
+        categorySelect.addEventListener("change", toggleFormFields);
+    }
+    if (isReturnableToggle) {
+        isReturnableToggle.addEventListener("change", toggleFormFields);
+    }
+
+    // Run on page load
+    toggleFormFields();
 });
 </script>
 {% endblock page_only_scripts %}

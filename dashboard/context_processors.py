@@ -12,7 +12,6 @@ def header_avatar(request):
 
 
 
-
 def notification_context(request):
     if not request.user.is_authenticated:
         return {
@@ -23,32 +22,22 @@ def notification_context(request):
 
     user = request.user
 
-    
-    if user.is_superuser:
-        all_notifications = Notification.objects.filter(
-            is_deleted=False
-        ).exclude(send_to="supplier")
+    base_query = Notification.objects.filter(is_deleted=False)
 
-    
-    elif hasattr(user, 'supplierprofile'):
-        all_notifications = Notification.objects.filter(
-            is_deleted=False
-        ).filter(
-            Q(recipient=user) | Q(send_to="supplier") | Q(send_to="all")
+    if user.is_superuser or user.is_staff:
+        all_notifications = base_query.filter(
+            Q(recipient=user, send_to="single") | Q(send_to="all") | Q(send_to="buyer")
         )
 
-
-    elif user.is_staff:
-        all_notifications = Notification.objects.filter(
-            is_deleted=False
-        ).exclude(send_to="supplier")
-
+    elif hasattr(user, 'supplierprofile'):
+        all_notifications = base_query.filter(
+            Q(recipient=user, send_to="single") | Q(send_to="supplier") | Q(send_to="all")
+        )
 
     else:
-        all_notifications = Notification.objects.filter(
-            is_deleted=False
-        ).filter(
-            Q(recipient=user) | Q(send_to="buyer") | Q(send_to="all")
+
+        all_notifications = base_query.filter(
+            Q(recipient=user, send_to="single") | Q(send_to="buyer") | Q(send_to="all")
         )
 
     return {
@@ -56,8 +45,6 @@ def notification_context(request):
         'read_notifications': all_notifications.filter(is_read=True).order_by('-created_at'),
         'unread_notifications': all_notifications.filter(is_read=False).order_by('-created_at'),
     }
-
-
 
 from .models import ProductCategory
 
