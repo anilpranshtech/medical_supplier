@@ -1,6 +1,6 @@
 # context_processors.py
 from utils.handle_user_profile import get_user_profile
-from .models import ProductCategory
+from .models import ProductCategory, Notification
 
 
 def header_avatar(request):
