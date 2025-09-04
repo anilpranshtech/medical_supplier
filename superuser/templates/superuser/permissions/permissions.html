@@ -1,5 +1,7 @@
 {% extends 'superuser/superuser_base.html' %}
+{% load superuser_tags %}
 {% load static %}
+
 
 {% block title %}
 Permissions
@@ -46,7 +48,7 @@ Permissions
                                     {% for perm in group.permissions.all %}
                                         {% if forloop.counter <= 7 %}
                                             <div class="d-flex align-items-center py-2">
-                                                <span class="bullet bg-primary me-3"></span>{{ perm.name }}
+                                                <span class="bullet bg-primary me-3"></span>{{ perm.name|tag_format_permission_name }}
                                             </div>
                                         {% elif forloop.counter == 8 %}
                                             <div class="d-flex align-items-center py-2">

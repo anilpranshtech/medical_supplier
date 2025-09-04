@@ -1,3 +1,4 @@
+{% load superuser_tags %}
 <!--begin::Alert-->
 <div class="alert  bg-light-primary d-flex flex-column flex-sm-row p-3 mb-10">
     <!--begin::Icon-->
@@ -46,7 +47,7 @@
                      {% for model_name, model_data in permissions_by_model.items %}
                             <tr>
                                 <td class="text-gray-600 fs-4" style="width:20%;">
-                                    {{ model_name }}
+                                    {{ model_name|tag_format_model_name }}
                                 </td>
                                 <td>
                                     <div class="row">
@@ -67,7 +68,7 @@
                                                    id="{{ model_name }}_{{ permission.codename }}"
                                                    onclick="togglePermission(this, '{{ model_name }}')"
                                                    {% if permission.codename in group_permissions %} checked {% endif %} />
-                                                <span class="form-check-label">{{ permission.name }}</span>
+                                                <span class="form-check-label">{{ permission.name|tag_format_permission_name }}</span>
                                             </label>
                                         </div>
                                         {% empty %}
