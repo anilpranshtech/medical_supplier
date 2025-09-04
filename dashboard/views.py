@@ -3317,18 +3317,39 @@ class RequestReturnView(LoginRequiredMixin, View):
         except Exception:
             pass  
 
-class MarkNotificationReadView( View):
+
+
+class MarkNotificationReadView(View):
     def post(self, request, pk):
         try:
-            notif = Notification.objects.get(pk=pk)
+            notif = Notification.objects.get(pk=pk, recipient=request.user)
             notif.is_read = True
             notif.save()
-            return JsonResponse({'success': True})
+            return JsonResponse({
+                "success": True,
+                "title": notif.title,
+                "message": notif.message,
+                "created_at": localtime(notif.created_at).strftime('%d %b %Y, %I:%M %p')
+            })
         except Notification.DoesNotExist:
-            return JsonResponse({'error': 'Notification not found'}, status=404)
+            return JsonResponse({'error': 'Notification not found or not authorized'}, status=404)
 
+class MarkNotificationUnreadView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        try:
+            notif = Notification.objects.get(pk=pk, recipient=request.user)
+            notif.is_read = False
+            notif.save()
+            return JsonResponse({
+                "success": True,
+                "title": notif.title,
+                "message": notif.message,
+                "created_at": localtime(notif.created_at).strftime('%d %b %Y, %I:%M %p')
+            })
+        except Notification.DoesNotExist:
+            return JsonResponse({'error': 'Notification not found or not authorized'}, status=404)
 
-class ClearAllNotificationsView(LoginRequiredMixin,  View):
+class ClearAllNotificationsView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         if request.user.is_superuser:
             Notification.objects.all().delete()
@@ -3336,23 +3357,9 @@ class ClearAllNotificationsView(LoginRequiredMixin,  View):
         else:
             return JsonResponse({'status': 'unauthorized'}, status=403)
 
-
-class MarkNotificationReadView( View):
-    def post(self, request, pk):
-        notif = Notification.objects.get(pk=pk)
-        notif.is_read = True
-        notif.save()
-        return JsonResponse({
-            "title": notif.title,
-            "message": notif.message,
-            "created_at": localtime(notif.created_at).strftime('%d %b %Y, %I:%M %p')
-        })
-
 class DeleteNotificationView(LoginRequiredMixin, View):
     def post(self, request, id):
-        # Retrieve the notification, ensuring it belongs to the current user
         notification = get_object_or_404(Notification, id=id, recipient=request.user)
-        # Delete the notification
         notification.delete()
         return JsonResponse({'status': 'success'})
 
