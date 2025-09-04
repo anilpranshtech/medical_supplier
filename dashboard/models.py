@@ -570,6 +570,11 @@ class Notification(models.Model):
     class Meta:
         ordering = ['-created_at']
 
+    def delete(self, using=None, keep_parents=False):
+        is_deleted = True
+
+
+
     def __str__(self):
         if self.send_to == "single" and self.recipient:
             return f"To {self.recipient.username} - {self.title}"
