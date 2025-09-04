@@ -288,3 +288,4 @@ class ReturnAdmin(admin.ModelAdmin):
     list_filter = ('return_option', 'return_status')
     search_fields = ('return_serial', 'order_item', 'client', 'return_option', 'return_status')
 
+admin.site.register(AdminUserProfile)

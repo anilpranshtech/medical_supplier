@@ -106,19 +106,22 @@
                                 <i class="ki-filled ki-black-left text-base"></i>
                                 Shopping Cart
                             </a>
-                          <a id="payment-method-btn" class="kt-btn kt-btn-primary relative" href="{% url 'dashboard:payment_method' %}">
-    <span class="btn-text flex items-center gap-1">
-        Select Payment Method
-        <i class="ki-filled ki-black-right text-base"></i>
-    </span>
-    <span class="btn-loader hidden flex items-center gap-1">
-        <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-        </svg>
-        Select Payment Method...
-    </span>
-</a>
+
+                            {% if display_payment_button %}
+                            <a id="payment-method-btn" class="kt-btn kt-btn-primary relative" href="{% url 'dashboard:payment_method' %}">
+                                <span class="btn-text flex items-center gap-1">
+                                    Select Payment Method
+                                    <i class="ki-filled ki-black-right text-base"></i>
+                                </span>
+                                <span class="btn-loader hidden flex items-center gap-1">
+                                    <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                                    </svg>
+                                    Select Payment Method...
+                                </span>
+                            </a>
+                            {% endif %}
 
                         </div>
                     </div>
@@ -213,18 +216,19 @@
                             </button>
                         </div>
                         <div class="kt-card-content flex flex-col space-y-3 p-5 kt-scrollable-y-auto">
-                            <div class="flex flex-col gap-1.5">
-                                <label class="text-2sm font-semibold text-mono">Address Title</label>
+                            <div class="
+                            flex flex-col gap-1.5">
+                                <label class="text-2sm font-semibold text-mono">Address Title<span style="color:red;">*</span></label>
                                 <input type="text" name="address_title" class="kt-input"
                                        placeholder="e.g., Home, Office" required>
                             </div>
                             <div class="flex flex-col gap-1.5">
-                                <label class="text-2sm font-semibold text-mono">Full Name</label>
+                                <label class="text-2sm font-semibold text-mono">Full Name<span style="color:red;">*</span></label>
                                 <input type="text" name="customer_name" class="kt-input" placeholder="Full Name"
-                                       value="{{ user.first_name }} {{ user.last_name }}" required>
+                                        required>
                             </div>
                             <div class="flex flex-col gap-1.5">
-                                <label class="text-2sm font-semibold text-mono">Street Address</label>
+                                <label class="text-2sm font-semibold text-mono">Street Address<span style="color:red;">*</span></label>
                                 <input type="text" name="customer_address1" class="kt-input"
                                        placeholder="Street Address" required>
                             </div>
@@ -234,27 +238,27 @@
                                        placeholder="Apartment, Suite, etc.">
                             </div>
                             <div class="flex flex-col gap-1.5">
-                                <label class="text-2sm font-semibold text-mono">City</label>
+                                <label class="text-2sm font-semibold text-mono">City<span style="color:red;">*</span></label>
                                 <input type="text" name="customer_city" class="kt-input" placeholder="City" required>
                             </div>
                             <div class="flex flex-col gap-1.5">
-                                <label class="text-2sm font-semibold text-mono">State</label>
+                                <label class="text-2sm font-semibold text-mono">State<span style="color:red;">*</span></label>
                                 <input type="text" name="customer_state" class="kt-input" placeholder="State" required>
                             </div>
                             <div class="flex flex-col gap-1.5">
-                                <label class="text-2sm font-semibold text-mono">Postal Code</label>
-                                <input type="text" name="customer_postal_code" class="kt-input"
+                                <label class="text-2sm font-semibold text-mono">Postal Code<span style="color:red;">*</span></label>
+                                <input type="number" name="customer_postal_code" class="kt-input"
                                        placeholder="Postal Code" required>
                             </div>
                             <div class="flex flex-col gap-1.5">
-                                <label class="text-2sm font-semibold text-mono">Country</label>
+                                <label class="text-2sm font-semibold text-mono">Country<span style="color:red;">*</span></label>
                                 <input type="text" name="customer_country" class="kt-input" placeholder="Country"
                                        required>
                             </div>
                             <div class="flex flex-col gap-1.5">
-                                <label class="text-2sm font-semibold text-mono">Phone Number</label>
-                                <input type="tel" name="phone" class="kt-input" placeholder="+1234567890"
-                                       value="{{ phone }}" required>
+                                <label class="text-2sm font-semibold text-mono">Phone Number<span style="color:red;">*</span></label>
+                                <input type="number" name="phone"  class="kt-input" placeholder="Phone Number"
+                                        required>
                             </div>
                             <div class="flex items-center gap-2">
                                 <input type="checkbox" name="is_default" id="is_default">
@@ -266,17 +270,17 @@
                                 <i class="ki-filled ki-cross text-base"></i>Cancel
                             </button>
                            <button id="save-address-btn" class="kt-btn kt-btn-primary relative" type="submit">
-    <span class="btn-text flex items-center gap-1">
-        <i class="ki-filled ki-check text-base"></i>Save Address
-    </span>
-    <span class="btn-loader hidden flex items-center gap-1">
-        <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-        </svg>
-        Saving...
-    </span>
-</button>
+                                <span class="btn-text flex items-center gap-1">
+                                    <i class="ki-filled ki-check text-base"></i>Save Address
+                                </span>
+                                <span class="btn-loader hidden flex items-center gap-1">
+                                    <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                                    </svg>
+                                    Saving...
+                                </span>
+                            </button>
 
                         </div>
                     </form>

@@ -1357,30 +1357,45 @@ class ShippingInfoView(LoginRequiredMixin, TemplateView):
         context['user'] = user
 
         # Get phone number
-        phone = None
+        # phone = None
         profile_type = None
         try:
             profile = RetailProfile.objects.get(user=user)
-            phone = phone
+            phone = profile.phone
             profile_type = 'retailer'
+            print('Profle Retailer ---', phone)
         except RetailProfile.DoesNotExist:
             try:
                 profile = WholesaleBuyerProfile.objects.get(user=user)
-                phone = phone
+                phone = profile.phone
                 profile_type = 'wholesaler'
+                print('Profle wholesaler ---', phone)
             except WholesaleBuyerProfile.DoesNotExist:
                 try:
                     profile = SupplierProfile.objects.get(user=user)
-                    phone = phone
+                    phone = profile.phone
                     profile_type = 'supplier'
+                    print('Profle SupplierProfile ---', phone)
                 except SupplierProfile.DoesNotExist:
+                    phone = None
                     pass
-        context['phone'] = phone or 'Not set'
+
+        context['phone'] = phone
+        print("Phone", phone)
         context['profile_type'] = profile_type
 
         # Get all non-deleted addresses
-        context['addresses'] = CustomerBillingAddress.objects.filter(user=user, is_deleted=False)
-        context['default_address'] = CustomerBillingAddress.objects.filter(user=user, is_default=True, is_deleted=False).first()
+        addresses = CustomerBillingAddress.objects.filter(user=user, is_deleted=False)
+        default_address = CustomerBillingAddress.objects.filter(user=user, is_default=True, is_deleted=False).first()
+
+        context['addresses'] = addresses
+        context['default_address'] = default_address
+
+        if len(addresses) > 0 and default_address:
+            display_payment_button = True
+        else:
+            display_payment_button = False
+        context['display_payment_button'] = display_payment_button
 
         # Order summary based on CartProduct
         cart_items = CartProduct.objects.filter(user=user).select_related('product')
@@ -1417,6 +1432,28 @@ class AddAddressView(LoginRequiredMixin, FormView):
         messages.error(self.request, "Failed to add address. Please check the form.")
         return super().form_invalid(form)
 
+class ManageAddressView(LoginRequiredMixin, FormView):
+    form_class = AddressForm
+    template_name = 'userdashboard/view/add_address.html'
+    def form_valid(self, form):
+        address = form.save(commit=False)
+        address.user = self.request.user
+        if address.is_default:
+            CustomerBillingAddress.objects.filter(
+                user=self.request.user, is_default=True
+            ).update(is_default=False)
+        address.save()
+        return JsonResponse({
+            "status": "success",
+            "message": "Address added successfully."
+        })
+
+    def form_invalid(self, form):
+        return JsonResponse({
+            "status": "error",
+            "message": "Failed to add address",
+            "errors": form.errors
+        }, status=400)
 
 class EditAddressView(LoginRequiredMixin, UpdateView):
     model = CustomerBillingAddress
@@ -1457,6 +1494,56 @@ class SetDefaultAddressView(LoginRequiredMixin, View):
         address.is_default = True
         address.save()
         return JsonResponse({'status': 'success'})
+
+
+
+
+class ManageEditAddressView(LoginRequiredMixin, UpdateView):
+    model = CustomerBillingAddress
+    form_class = AddressForm
+    template_name = 'userdashboard/view/edit_address.html'
+    success_url = reverse_lazy('dashboard:shipping_info')
+
+    def get_queryset(self):
+        return CustomerBillingAddress.objects.filter(user=self.request.user, is_deleted=False)
+
+    def form_valid(self, form):
+        address = form.save(commit=False)
+        if address.is_default:
+            CustomerBillingAddress.objects.filter(
+                user=self.request.user,
+                is_default=True
+            ).exclude(id=address.id).update(is_default=False)
+        address.save()
+
+        return JsonResponse({
+            "status": "success",
+            "message": "Address updated successfully."
+        })
+
+    def form_invalid(self, form):
+        return JsonResponse({
+            "status": "error",
+            "message": "Failed to update address",
+            "errors": form.errors
+        }, status=400)
+
+
+class ManageRemoveAddressView(LoginRequiredMixin, View):
+    def post(self, request, address_id):
+        address = get_object_or_404(
+            CustomerBillingAddress,
+            id=address_id,
+            user=request.user,
+            is_deleted=False
+        )
+        address.is_deleted = True
+        address.save()
+
+        return JsonResponse({
+            "status": "success",
+            "message": "Address removed successfully."
+        })
 
 
 def generate_order_id():
@@ -2337,6 +2424,10 @@ class UserProfile(LoginRequiredMixin, TemplateView):
             default_address = None
         context['default_address'] = default_address
 
+        addresses = CustomerBillingAddress.objects.filter(user=user, is_deleted=False)
+        context['addresses'] = addresses
+        print("Addresses -------", addresses)
+
        # Order summary
         orders = Order.objects.filter(user=user)
         context.update({
@@ -2386,20 +2477,36 @@ class UserProfile(LoginRequiredMixin, TemplateView):
 
 class UploadAvatarView(LoginRequiredMixin, View):
     def post(self, request):
-        profile, profile_type = get_user_profile(request.user)
-        if profile:
+        try:
+            profile, profile_type = get_user_profile(request.user)
+            if not profile:
+                if request.headers.get("x-requested-with") == "XMLHttpRequest":
+                    return JsonResponse({"status": "error", "message": "Profile not found."}, status=404)
+                messages.error(request, "Profile not found.")
+                return redirect('dashboard:user_profile')
+
             if 'avatar' in request.FILES:
                 profile.profile_picture = request.FILES['avatar']
                 profile.save()
+                if request.headers.get("x-requested-with") == "XMLHttpRequest":
+                    return JsonResponse({"status": "success", "message": "Avatar updated successfully."})
                 messages.success(request, "Avatar updated successfully.")
+
             elif 'avatar_remove' in request.POST:
                 if profile.profile_picture:
                     profile.profile_picture.delete(save=True)
+                if request.headers.get("x-requested-with") == "XMLHttpRequest":
+                    return JsonResponse({"status": "success", "message": "Avatar removed successfully."})
                 messages.success(request, "Avatar removed successfully.")
-        else:
-            messages.error(request, "Profile not found.")
-        return redirect('dashboard:user_profile')
 
+            return redirect('dashboard:user_profile')
+
+        except Exception as e:
+            print("Error in image upload -----", e)
+            if request.headers.get("x-requested-with") == "XMLHttpRequest":
+                return JsonResponse({"status": "error", "message": "Something went wrong.", "errors": str(e)}, status=500)
+            messages.error(request, "Something went wrong.")
+            return redirect('dashboard:user_profile')
 
 class EditProfileView(LoginRequiredMixin, View):
     def post(self, request):
@@ -2458,6 +2565,7 @@ class EditEmailView(LoginRequiredMixin, View):
 class EditPhoneView(LoginRequiredMixin, View):
     def post(self, request):
         phone_number = request.POST.get("phone")
+        print('----Phone ----', phone_number)
 
         if not phone_number:
             return JsonResponse({
@@ -2467,18 +2575,11 @@ class EditPhoneView(LoginRequiredMixin, View):
 
         try:
             with transaction.atomic():
-                if request.user.is_superuser:
-                    profile, created = AdminUserProfile.objects.get_or_create(user=request.user)
-                    profile.phone = phone_number
-                    profile.save()
-                    return JsonResponse({
-                        'status': 'success',
-                        'message': 'Phone number updated successfully'
-                    })
 
                 if hasattr(request.user, "retailprofile"):
                     request.user.retailprofile.phone = phone_number
                     request.user.retailprofile.save()
+                    print('----Phone Updated in retailprofile ----', phone_number)
                     return JsonResponse({
                         'status': 'success',
                         'message': 'Phone number updated successfully'
@@ -2487,6 +2588,7 @@ class EditPhoneView(LoginRequiredMixin, View):
                 elif hasattr(request.user, "wholesalebuyerprofile"):
                     request.user.wholesalebuyerprofile.phone = phone_number
                     request.user.wholesalebuyerprofile.save()
+                    print('----Phone Updated in wholesalebuyerprofile ----', phone_number)
                     return JsonResponse({
                         'status': 'success',
                         'message': 'Phone number updated successfully'
@@ -2495,6 +2597,17 @@ class EditPhoneView(LoginRequiredMixin, View):
                 elif hasattr(request.user, "supplierprofile"):
                     request.user.supplierprofile.phone = phone_number
                     request.user.supplierprofile.save()
+                    print('----Phone Updated in supplierprofile ----', phone_number)
+                    return JsonResponse({
+                        'status': 'success',
+                        'message': 'Phone number updated successfully'
+                    })
+
+                elif request.user.is_superuser:
+                    profile, created = AdminUserProfile.objects.get_or_create(user=request.user)
+                    profile.phone = phone_number
+                    profile.save()
+                    print('----Phone Updated in admin side ----', phone_number)
                     return JsonResponse({
                         'status': 'success',
                         'message': 'Phone number updated successfully'
@@ -3363,4 +3476,41 @@ class DeleteNotificationView(LoginRequiredMixin, View):
         notification.delete()
         return JsonResponse({'status': 'success'})
 
+
+
+
+
+class CategoryProductListView(TemplateView):
+    template_name = "userdashboard/view/category_products_list.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        category_id = self.kwargs["category_id"]
+        category = ProductCategory.objects.get(id=category_id)
+
+        last_categories = ProductLastCategory.objects.filter(sub_category__category=category)
+
+        products = Product.objects.filter(category=category, is_active=True)
+
+        user_cart_ids = []
+        user_cart_quantities = {}
+        user_wishlist_ids = []
+
+        if self.request.user.is_authenticated:
+        
+            cart_items = CartProduct.objects.filter(user=self.request.user)
+            user_cart_ids = [item.product.id for item in cart_items]
+            user_cart_quantities = {item.product.id: item.quantity for item in cart_items}
+
+       
+            wishlist_items = WishlistProduct.objects.filter(user=self.request.user)
+            user_wishlist_ids = [item.product.id for item in wishlist_items]
+
+        context["category"] = category
+        context["last_categories"] = last_categories
+        context["products"] = products
+        context["user_cart_ids"] = user_cart_ids
+        context["user_cart_quantities"] = user_cart_quantities
+        context["user_wishlist_ids"] = user_wishlist_ids
+        return context
 

@@ -805,6 +805,46 @@
                         <span class="text-sm">My Orders</span>
                     </a>
                 </div>
+                <div class="border-e border-border h-6 hidden md:block"></div>
+                <div class="kt-menu-item relative">
+                    <!-- Categories Button -->
+                    <a id="categories-btn"
+                       class="kt-menu-link flex items-center gap-2 px-3 py-2 text-2sm leading-none relative h-8.5 rounded-full border cursor-pointer
+                        {% if request.resolver_match.url_name == 'categories' %}
+                            bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
+                        {% else %}
+                            border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
+                        {% endif %}">
+                        <i class="ki-filled ki-package text-base"></i>
+                        <span class="text-sm">Categories</span>
+                    </a>
+                
+                    <!-- Categories Popup -->
+                    <div id="categories-popup"
+                         class="hidden fixed top-20 left-1/2 -translate-x-1/2 bg-white shadow-lg rounded-lg p-6 z-50 w-[850px] max-h-[500px] overflow-hidden">
+                        <!-- Scrollable inner content -->
+                        <div class="grid grid-cols-4 gap-8 overflow-y-auto max-h-[420px] pr-2">
+                            {% for category in categories %}
+    <div class="flex flex-col items-center text-center">
+        <a href="{% url 'dashboard:category_products_list' category.id %}">
+            <div class="w-24 h-24 flex items-center justify-center rounded-full bg-gray-100 overflow-hidden border border-gray-200">
+                {% if category.image %}
+                    <img src="{{ category.image.url }}" alt="{{ category.name }}" 
+                         class="w-full h-full object-cover rounded-full">
+                {% else %}
+                    <span class="text-lg font-bold">{{ category.name|first }}</span>
+                {% endif %}
+            </div>
+            <p class="text-sm mt-2 truncate w-24">{{ category.name }}</p>
+        </a>
+    </div>
+{% endfor %}
+
+                        </div>
+                    </div>
+                </div>
+                
+
             </div>
         </div>
     </header>
@@ -1541,7 +1581,21 @@ handleOrientationChange();
 </script>
 
 
+<script>
+    const btn = document.getElementById("categories-btn");
+    const popup = document.getElementById("categories-popup");
 
+    btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        popup.classList.toggle("hidden");
+    });
 
+    // Close if clicked outside
+    document.addEventListener("click", (e) => {
+        if (!popup.contains(e.target) && !btn.contains(e.target)) {
+            popup.classList.add("hidden");
+        }
+    });
+</script>
 </body>
 </html>

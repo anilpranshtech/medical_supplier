@@ -59,3 +59,8 @@ def notification_context(request):
 
 
 
+from .models import ProductCategory
+
+def categories_processor(request):
+    categories = ProductCategory.objects.all()
+    return {"categories": categories}
