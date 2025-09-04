@@ -1946,14 +1946,17 @@ class AJAXGetCategoriesView(StaffAccountRequiredMixin, View):
 class AJAXCreateCategory(StaffAccountRequiredMixin, View):
     def post(self, request):
         name = request.POST.get('name')
+        image = request.FILES.get('image')  
+
         if not name:
             return JsonResponse({"status": "error", "message": "Category name is required."}, status=400)
 
         if ProductCategory.objects.filter(name__iexact=name).exists():
             return JsonResponse({"status": "warning", "message": "This category already exists."}, status=400)
 
-        category = ProductCategory.objects.create(name=name)
-        return JsonResponse({"status": "success", "message": f"Category '{category.name}' created successfully."})
+        category = ProductCategory.objects.create(name=name, image=image)  # <-- save image
+        return JsonResponse({"status": "success", "message": f"Category '{category.name}' created successfully.", "id": category.id})
+
 
 
 def get_subcategories(request):
@@ -1990,6 +1993,7 @@ class AJAXCreateLastCategory(StaffAccountRequiredMixin, View):
     def post(self, request):
         name = request.POST.get('name')
         sub_category_id = request.POST.get('sub_category')
+        image = request.FILES.get('image')  
 
         if not name or not sub_category_id:
             return JsonResponse({"status": "error", "message": "Last category name and parent sub-category are required."}, status=400)
@@ -1997,7 +2001,11 @@ class AJAXCreateLastCategory(StaffAccountRequiredMixin, View):
         if ProductLastCategory.objects.filter(name__iexact=name, sub_category_id=sub_category_id).exists():
             return JsonResponse({"status": "warning", "message": "This last category already exists."}, status=400)
 
-        lastcat = ProductLastCategory.objects.create(name=name, sub_category_id=sub_category_id)
+        lastcat = ProductLastCategory.objects.create(
+            name=name,
+            sub_category_id=sub_category_id,
+            image=image 
+        )
 
         return JsonResponse({
             "status": "success",

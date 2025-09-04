@@ -29,7 +29,7 @@ urlpatterns = [
     path('superuser/', include('superuser.urls', namespace='superuser')),
     
     path('api_v1/', include('medical_api.urls')),
-]
+]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 
 

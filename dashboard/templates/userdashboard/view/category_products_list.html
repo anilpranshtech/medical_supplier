@@ -4,24 +4,24 @@
 
 {% block content %}
 <style>
-    /* Filter Buttons (Retained from Original) */
+
     .filter-btn img,
     .filter-btn div.default-circle {
-        border: 2px solid #d1d5db; /* gray-300 */
-        border-radius: 9999px;     /* fully round */
+        border: 2px solid #d1d5db; 
+        border-radius: 9999px;    
         transition: border 0.2s ease-in-out;
     }
     
     .filter-btn.active img,
     .filter-btn.active div.default-circle {
-        border: 2px solid #000; /* black border */
+        border: 2px solid #000; 
     }
 
-    /* Product Card Styles from home.html */
+  
     .product-card {
         transition: transform 0.3s ease, box-shadow 0.3s ease;
-        position: relative; /* Added for discount ribbon positioning */
-        overflow: hidden; /* Ensure ribbon doesn't overflow */
+        position: relative;
+        overflow: hidden; 
     }
 
     .product-card:hover {
@@ -160,7 +160,6 @@
         border-bottom: 10px solid transparent;
     }
 
-    /* Responsive Adjustments from home.html */
     @media (min-width: 1536px) {
         .xl\:grid-cols-8 {
             grid-template-columns: repeat(8, minmax(0, 1fr));
@@ -229,14 +228,15 @@
 
 <div class="container mx-auto p-6 section-container">
     <!-- Title -->
-    <h2 class="text-xl font-bold mb-4">Products in {{ category.name }}</h2>
+  
+    <br><br><h2 class="text-xl font-bold mb-4">Products in {{ category.name }}</h2>
 
     <!-- Last Category Filter Buttons -->
     <div class="flex flex-wrap gap-6 mb-6 justify-center">
         <!-- All Button -->
         <div class="text-center">
             <button class="filter-btn flex flex-col items-center" data-category="all">
-                <img src="{% static 'images/all.png' %}" alt="All" class="w-20 h-20 object-cover rounded-full">
+                <img src="{% static 'images/all.jpg' %}" alt="All" class="w-20 h-20 object-cover rounded-full">
                 <span class="mt-2 text-sm font-medium">All</span>
             </button>
         </div>

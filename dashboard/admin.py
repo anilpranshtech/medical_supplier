@@ -23,6 +23,10 @@ class SupplierProfileAdmin(admin.ModelAdmin):
 class ProductProfileAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'description', 'price')
 
+@admin.register(Contact)
+class ContactAdmin(admin.ModelAdmin):
+    list_display = ('id', 'full_name', 'email', 'phone','subject','message','created_at','display_phone','display_email','display_address')
+
 
 @admin.register(ProductImage)
 class ProductImageAdmin(admin.ModelAdmin):

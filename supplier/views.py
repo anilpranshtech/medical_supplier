@@ -1012,23 +1012,22 @@ class OrderListingView(SupplierPermissionMixin, View):
         status_filter = request.GET.get('status')
         supplier = request.user
 
-        # Filter order items for the current supplier and annotate item totals
         item_queryset = OrderItem.objects.filter(order_to=supplier).annotate(
             item_total=F('price') * F('quantity')
         )
 
-        # Fetch orders where items belong to the current supplier
+   
         orders = Order.objects.filter(
             items__order_to=supplier
         ).distinct().select_related('user', 'payment').prefetch_related(
             Prefetch('items', queryset=item_queryset, to_attr='filtered_items')
         )
 
-        # Apply status filter if selected
+     
         if status_filter:
             orders = orders.filter(status=status_filter)
 
-        # Totals and phone mapping
+     
         order_totals = {}
         order_phones = {}
 
@@ -1038,31 +1037,31 @@ class OrderListingView(SupplierPermissionMixin, View):
             for item in order.filtered_items:
                 total += float(item.item_total or 0)
                 if item.phone_number and phone_number == "---":
-                    phone_number = item.phone_number  # Get first valid phone
+                    phone_number = item.phone_number  
             order_totals[order.pk] = total
             order_phones[order.pk] = phone_number
 
-        # Status counters
+      
         total_orders = orders.count()
         completed_orders = orders.filter(status='completed').count()
         pending_orders = orders.filter(status='pending').count()
         cancelled_orders = orders.filter(status='cancelled').count()
 
-        # ✅ Pagination (3 per page)
+
         paginator = Paginator(orders, 15)  
         page_number = request.GET.get("page")
         page_obj = paginator.get_page(page_number)
 
         context = {
-            'orders': page_obj,              # orders replaced with paginated list
-            'order_totals': order_totals,    # key = order.pk, value = total price
-            'order_phones': order_phones,    # key = order.pk, value = phone number
+            'orders': page_obj,            
+            'order_totals': order_totals,  
+            'order_phones': order_phones,    
             'total_orders': total_orders,
             'completed_orders': completed_orders,
             'pending_orders': pending_orders,
             'cancelled_orders': cancelled_orders,
             'selected_status': status_filter or '',
-            'page_obj': page_obj,            # ✅ for pagination template
+            'page_obj': page_obj,           
             'paginator': paginator,
             'is_paginated': page_obj.has_other_pages(),
         }
@@ -1075,15 +1074,26 @@ class OrderDetailsView(SupplierPermissionMixin, View):
     def get(self, request, order_id):
         supplier = request.user
         order = get_object_or_404(
-            Order.objects.filter(items__order_to=supplier).distinct().select_related('user', 'payment').prefetch_related(
-                Prefetch('items', queryset=OrderItem.objects.select_related('product', 'order_by', 'order_to').prefetch_related(
-                    Prefetch('product__productimage_set', queryset=ProductImage.objects.filter(is_main=True), to_attr='main_image')
-                ))
+            Order.objects.filter(items__order_to=supplier)
+            .distinct()
+            .select_related('user', 'payment')
+            .prefetch_related(
+                Prefetch(
+                    'items',
+                    queryset=OrderItem.objects
+                        .select_related('product', 'order_by', 'order_to')
+                        .prefetch_related(
+                            Prefetch(
+                                'product__images',
+                                queryset=ProductImage.objects.filter(is_main=True),
+                                to_attr='main_image'
+                            )
+                        )
+                )
             ),
             order_id=order_id
         )
 
-        # Calculate totals for supplier's order items
         order_items = order.items.filter(order_to=supplier)
         if not order_items.exists():
             logger.warning(f"Supplier {supplier.id} attempted to view order {order.id} with no relevant items")
@@ -1112,6 +1122,7 @@ class OrderDetailsView(SupplierPermissionMixin, View):
         }
         logger.info(f"Supplier {supplier.id} viewed details for order {order.order_id}")
         return render(request, 'supplier/order-details.html', context)
+
 
 
 class OrderDeleteView(SupplierPermissionMixin, View):

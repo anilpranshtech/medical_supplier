@@ -1,7 +1,7 @@
 # context_processors.py
 from utils.handle_user_profile import get_user_profile
-from dashboard.models import Notification
-from django.db.models import Q
+from .models import ProductCategory, Notification
+
 
 def header_avatar(request):
     if request.user.is_authenticated:
@@ -49,5 +49,7 @@ def notification_context(request):
 from .models import ProductCategory
 
 def categories_processor(request):
-    categories = ProductCategory.objects.all()
+    categories = ProductCategory.objects.filter(
+        product__last_category__isnull=False
+    ).distinct()
     return {"categories": categories}

@@ -621,7 +621,7 @@
 <!-- category AJAX method -->
 <div class="modal fade" id="createCategoryModal" tabindex="-1" aria-labelledby="createCategoryModalLabel" aria-hidden="true">
     <div class="modal-dialog">
-        <form id="createCategoryForm" method="post" action="{% url 'superuser:AJAX_create_category' %}">
+        <form id="createCategoryForm" method="post" action="{% url 'superuser:AJAX_create_category' %}" enctype="multipart/form-data">
             {% csrf_token %}
             <div class="modal-content">
                 <div class="modal-header">
@@ -634,6 +634,10 @@
                         <label for="category_name" class="form-label required">Category Name</label>
                         <input type="text" class="form-control form-control-solid" name="name" id="category_name" placeholder="Enter category name" required>
                     </div>
+                    <div class="mb-3">
+                        <label for="category_image" class="form-label">Category Image</label>
+                        <input type="file" class="form-control" name="image" id="category_image" accept="image/*">
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
@@ -644,6 +648,7 @@
                 </div>
             </div>
         </form>
+        
     </div>
 </div>
 
@@ -693,7 +698,7 @@
                 <h5 class="modal-title" id="createLastCategoryModalLabel">Create New Last Category</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="createLastCategoryForm" action="{% url 'superuser:AJAX_create_lastcategory' %}" method="post">
+            <form id="createLastCategoryForm" action="{% url 'superuser:AJAX_create_lastcategory' %}" method="post" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div class="modal-body">
                     <div id="lastcategory-message"></div>
@@ -707,6 +712,10 @@
                         <label for="lastcategory_name" class="form-label">Last Category Name</label>
                         <input type="text" class="form-control" id="lastcategory_name" name="name" required>
                     </div>
+                    <div class="mb-3">
+                        <label for="lastcategory_image" class="form-label">Last Category Image</label>
+                        <input type="file" class="form-control" name="image" id="lastcategory_image" accept="image/*">
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -716,7 +725,7 @@
                     </button>
                 </div>
             </form>
-        </div>
+            
     </div>
 </div>
 
@@ -959,9 +968,9 @@ $(document).ready(function () {
     $("#createCategoryForm").on("submit", function (e) {
         e.preventDefault();
 
-        let form = $(this);
-        let url = form.attr("action");
-        let data = form.serialize();
+        let form = $(this)[0];
+        let formData = new FormData(form);
+        let url = $(this).attr("action");
         let btn = $("#addCategoryBtn");
 
         btn.prop("disabled", true);
@@ -971,7 +980,9 @@ $(document).ready(function () {
         $.ajax({
             type: "POST",
             url: url,
-            data: data,
+            data: formData,
+            processData: false, // Important for FormData
+            contentType: false, // Important for FormData
             success: function (response) {
                 if (response.status === "success") {
                     $("#category-message").html(
@@ -983,7 +994,7 @@ $(document).ready(function () {
 
                     setTimeout(function () {
                         $("#createCategoryModal").modal("hide");
-                        form[0].reset();
+                        form.reset();
                         $("#category-message").empty();
                     }, 1000);
                 }
@@ -1073,12 +1084,11 @@ $(document).ready(function () {
     $("#createLastCategoryForm").on("submit", function (e) {
         e.preventDefault();
 
-        let form = $(this);
-        let url = form.attr("action");
-        let data = form.serialize();
+        let form = $(this)[0];
+        let formData = new FormData(form);
+        let url = $(this).attr("action");
         let btn = $("#addLastCategoryBtn");
 
-        // Show loader
         btn.prop("disabled", true);
         btn.find(".btn-text").text("Creating...");
         btn.find(".spinner-border").removeClass("d-none");
@@ -1086,21 +1096,21 @@ $(document).ready(function () {
         $.ajax({
             type: "POST",
             url: url,
-            data: data,
+            data: formData,
+            processData: false,  // Important for FormData
+            contentType: false,  // Important for FormData
             success: function (response) {
                 if (response.status === "success") {
                     $("#lastcategory-message").html(
                         `<div class="alert alert-success">${response.message}</div>`
                     );
 
-                    // 🔹 Reload last categories for the selected subcategory
+                    // Reload last categories
                     let subCategoryId = response.sub_category_id;
                     if (subCategoryId) {
                         $.ajax({
                             url: "{% url 'supplier:get_lastcategories' %}",
-                            data: {
-                                'sub_id': subCategoryId   // 👈 use the same key as in your other AJAX call
-                            },
+                            data: { 'sub_id': subCategoryId },
                             success: function (data) {
                                 let options = '<option value="">Select a Last Category</option>';
                                 data.forEach(function (item) {
@@ -1112,10 +1122,9 @@ $(document).ready(function () {
                         });
                     }
 
-
                     setTimeout(function () {
                         $("#createLastCategoryModal").modal("hide");
-                        form[0].reset();
+                        form.reset();
                         $("#lastcategory-message").empty();
                     }, 1000);
                 }
@@ -1127,7 +1136,6 @@ $(document).ready(function () {
                 );
             },
             complete: function () {
-                // Reset button
                 btn.prop("disabled", false);
                 btn.find(".btn-text").text("Create Last Category");
                 btn.find(".spinner-border").addClass("d-none");
