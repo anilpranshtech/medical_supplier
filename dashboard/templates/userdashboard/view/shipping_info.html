@@ -218,17 +218,17 @@
                         <div class="kt-card-content flex flex-col space-y-3 p-5 kt-scrollable-y-auto">
                             <div class="
                             flex flex-col gap-1.5">
-                                <label class="text-2sm font-semibold text-mono">Address Title</label>
+                                <label class="text-2sm font-semibold text-mono">Address Title<span style="color:red;">*</span></label>
                                 <input type="text" name="address_title" class="kt-input"
                                        placeholder="e.g., Home, Office" required>
                             </div>
                             <div class="flex flex-col gap-1.5">
-                                <label class="text-2sm font-semibold text-mono">Full Name</label>
+                                <label class="text-2sm font-semibold text-mono">Full Name<span style="color:red;">*</span></label>
                                 <input type="text" name="customer_name" class="kt-input" placeholder="Full Name"
-                                       value="{{ user.first_name }} {{ user.last_name }}" required>
+                                        required>
                             </div>
                             <div class="flex flex-col gap-1.5">
-                                <label class="text-2sm font-semibold text-mono">Street Address</label>
+                                <label class="text-2sm font-semibold text-mono">Street Address<span style="color:red;">*</span></label>
                                 <input type="text" name="customer_address1" class="kt-input"
                                        placeholder="Street Address" required>
                             </div>
@@ -238,26 +238,26 @@
                                        placeholder="Apartment, Suite, etc.">
                             </div>
                             <div class="flex flex-col gap-1.5">
-                                <label class="text-2sm font-semibold text-mono">City</label>
+                                <label class="text-2sm font-semibold text-mono">City<span style="color:red;">*</span></label>
                                 <input type="text" name="customer_city" class="kt-input" placeholder="City" required>
                             </div>
                             <div class="flex flex-col gap-1.5">
-                                <label class="text-2sm font-semibold text-mono">State</label>
+                                <label class="text-2sm font-semibold text-mono">State<span style="color:red;">*</span></label>
                                 <input type="text" name="customer_state" class="kt-input" placeholder="State" required>
                             </div>
                             <div class="flex flex-col gap-1.5">
-                                <label class="text-2sm font-semibold text-mono">Postal Code</label>
+                                <label class="text-2sm font-semibold text-mono">Postal Code<span style="color:red;">*</span></label>
                                 <input type="number" name="customer_postal_code" class="kt-input"
                                        placeholder="Postal Code" required>
                             </div>
                             <div class="flex flex-col gap-1.5">
-                                <label class="text-2sm font-semibold text-mono">Country</label>
+                                <label class="text-2sm font-semibold text-mono">Country<span style="color:red;">*</span></label>
                                 <input type="text" name="customer_country" class="kt-input" placeholder="Country"
                                        required>
                             </div>
                             <div class="flex flex-col gap-1.5">
-                                <label class="text-2sm font-semibold text-mono">Phone Number</label>
-                                <input type="number" name="phone"  class="kt-input" placeholder="+1234567890"
+                                <label class="text-2sm font-semibold text-mono">Phone Number<span style="color:red;">*</span></label>
+                                <input type="number" name="phone"  class="kt-input" placeholder="Phone Number"
                                         required>
                             </div>
                             <div class="flex items-center gap-2">

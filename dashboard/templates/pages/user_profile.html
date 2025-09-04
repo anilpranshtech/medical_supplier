@@ -187,11 +187,9 @@
                         <div>
                             <p class="text-sm font-medium text-gray-650 dark:text-gray-300">Phone</p>
                             <p class="text-sm text-gray-500 dark:text-gray-100">
-                                {% if default_address and default_address.phone %}
-                                    {{ default_address.phone }}
-                                {% else %}
-                                    {{ phone|default:"Not set" }}
-                                {% endif %}
+
+                                    {{ phone|default:"---" }}
+
                             </p>
                         </div>
                         <button class="text-blue-600 hover:underline dark:text-blue-400 dark:hover:text-blue-300 text-sm" data-modal-toggle="modal_edit_phone">Edit</button>
@@ -281,7 +279,7 @@
                     </button>
                 </div>
                 <div class="p-6">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Email Address</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Email Address<span style="color:red;">*</span></label>
                     <input type="email" name="email" class="block w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 transition-colors duration-200" value="{{ user.email }}" required>
                 </div>
                 <div class="p-5 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700">
@@ -308,8 +306,10 @@
                     </button>
                 </div>
                 <div class="p-6">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Phone Number</label>
-                    <input type="tel" name="phone" class="block w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 transition-colors duration-200" value="{% if default_address and default_address.phone %}{{ default_address.phone }}{% else %}{{ phone|default:'' }}{% endif %}" placeholder="+1234567890" required>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Phone Number<span style="color:red;">*</span></label>
+                    <input type="tel" name="phone" class="block w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500
+                    focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 transition-colors duration-200"
+                           value="{{ phone|default:'---' }}" placeholder="Enter Phone Number" required>
                 </div>
                 <div class="p-5 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700">
                     <button type="button" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200" onclick="closeModal('modal_edit_phone')">
@@ -337,20 +337,20 @@
                 <div class="p-6 space-y-6">
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">First Name</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">First Name<span style="color:red;">*</span></label>
                             <input type="text" name="first_name" class="block w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 transition-colors duration-200" value="{{ user.first_name }}" required>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Last Name</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Last Name<span style="color:red;">*</span></label>
                             <input type="text" name="last_name" class="block w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 transition-colors duration-200" value="{{ user.last_name }}" required>
                         </div>
                     </div>
                     <div id="dynamic-profile-field">
                         {% if profile_type == 'doctor' %}
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Specialization</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Specialization<span style="color:red;">*</span></label>
                             <input type="text" name="speciality" class="block w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 transition-colors duration-200" value="{{ profile.speciality }}">
                         {% elif profile_type in 'medical_supplier|corporate|wholesaler|supplier' %}
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Company Name</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Company Name<span style="color:red;">*</span></label>
                             <input type="text" name="company_name" class="block w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 transition-colors duration-200" value="{{ profile.company_name }}">
                         {% endif %}
                     </div>
@@ -383,17 +383,17 @@
                 <div class="kt-card-content flex flex-col space-y-3 p-5 kt-scrollable-y-auto">
                     <div class="
                     flex flex-col gap-1.5">
-                        <label class="text-2sm font-semibold text-mono">Address Title</label>
+                        <label class="text-2sm font-semibold text-mono">Address Title<span style="color:red;">*</span></label>
                         <input type="text" name="address_title" class="kt-input"
                                placeholder="e.g., Home, Office" required>
                     </div>
                     <div class="flex flex-col gap-1.5">
-                        <label class="text-2sm font-semibold text-mono">Full Name</label>
+                        <label class="text-2sm font-semibold text-mono">Full Name<span style="color:red;">*</span></label>
                         <input type="text" name="customer_name" class="kt-input" placeholder="Full Name"
-                               value="{{ user.first_name }} {{ user.last_name }}" required>
+                                required>
                     </div>
                     <div class="flex flex-col gap-1.5">
-                        <label class="text-2sm font-semibold text-mono">Street Address</label>
+                        <label class="text-2sm font-semibold text-mono">Street Address<span style="color:red;">*</span></label>
                         <input type="text" name="customer_address1" class="kt-input"
                                placeholder="Street Address" required>
                     </div>
@@ -403,26 +403,26 @@
                                placeholder="Apartment, Suite, etc.">
                     </div>
                     <div class="flex flex-col gap-1.5">
-                        <label class="text-2sm font-semibold text-mono">City</label>
+                        <label class="text-2sm font-semibold text-mono">City<span style="color:red;">*</span></label>
                         <input type="text" name="customer_city" class="kt-input" placeholder="City" required>
                     </div>
                     <div class="flex flex-col gap-1.5">
-                        <label class="text-2sm font-semibold text-mono">State</label>
+                        <label class="text-2sm font-semibold text-mono">State<span style="color:red;">*</span></label>
                         <input type="text" name="customer_state" class="kt-input" placeholder="State" required>
                     </div>
                     <div class="flex flex-col gap-1.5">
-                        <label class="text-2sm font-semibold text-mono">Postal Code</label>
+                        <label class="text-2sm font-semibold text-mono">Postal Code<span style="color:red;">*</span></label>
                         <input type="number" name="customer_postal_code" class="kt-input"
                                placeholder="Postal Code" required>
                     </div>
                     <div class="flex flex-col gap-1.5">
-                        <label class="text-2sm font-semibold text-mono">Country</label>
+                        <label class="text-2sm font-semibold text-mono">Country<span style="color:red;">*</span></label>
                         <input type="text" name="customer_country" class="kt-input" placeholder="Country"
                                required>
                     </div>
                     <div class="flex flex-col gap-1.5">
-                        <label class="text-2sm font-semibold text-mono">Phone Number</label>
-                        <input type="number" name="phone"  class="kt-input" placeholder="+1234567890"
+                        <label class="text-2sm font-semibold text-mono">Phone Number<span style="color:red;">*</span></label>
+                        <input type="number" name="phone"  class="kt-input" placeholder="Phone Number"
                                 required>
                     </div>
                     <div class="flex items-center gap-2">

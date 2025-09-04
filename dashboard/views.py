@@ -2565,6 +2565,7 @@ class EditEmailView(LoginRequiredMixin, View):
 class EditPhoneView(LoginRequiredMixin, View):
     def post(self, request):
         phone_number = request.POST.get("phone")
+        print('----Phone ----', phone_number)
 
         if not phone_number:
             return JsonResponse({
@@ -2574,18 +2575,11 @@ class EditPhoneView(LoginRequiredMixin, View):
 
         try:
             with transaction.atomic():
-                if request.user.is_superuser:
-                    profile, created = AdminUserProfile.objects.get_or_create(user=request.user)
-                    profile.phone = phone_number
-                    profile.save()
-                    return JsonResponse({
-                        'status': 'success',
-                        'message': 'Phone number updated successfully'
-                    })
 
                 if hasattr(request.user, "retailprofile"):
                     request.user.retailprofile.phone = phone_number
                     request.user.retailprofile.save()
+                    print('----Phone Updated in retailprofile ----', phone_number)
                     return JsonResponse({
                         'status': 'success',
                         'message': 'Phone number updated successfully'
@@ -2594,6 +2588,7 @@ class EditPhoneView(LoginRequiredMixin, View):
                 elif hasattr(request.user, "wholesalebuyerprofile"):
                     request.user.wholesalebuyerprofile.phone = phone_number
                     request.user.wholesalebuyerprofile.save()
+                    print('----Phone Updated in wholesalebuyerprofile ----', phone_number)
                     return JsonResponse({
                         'status': 'success',
                         'message': 'Phone number updated successfully'
@@ -2602,6 +2597,17 @@ class EditPhoneView(LoginRequiredMixin, View):
                 elif hasattr(request.user, "supplierprofile"):
                     request.user.supplierprofile.phone = phone_number
                     request.user.supplierprofile.save()
+                    print('----Phone Updated in supplierprofile ----', phone_number)
+                    return JsonResponse({
+                        'status': 'success',
+                        'message': 'Phone number updated successfully'
+                    })
+
+                elif request.user.is_superuser:
+                    profile, created = AdminUserProfile.objects.get_or_create(user=request.user)
+                    profile.phone = phone_number
+                    profile.save()
+                    print('----Phone Updated in admin side ----', phone_number)
                     return JsonResponse({
                         'status': 'success',
                         'message': 'Phone number updated successfully'
