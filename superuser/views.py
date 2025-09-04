@@ -449,7 +449,7 @@ class PermissionsUsers(LoginRequiredMixin, StaffAccountRequiredMixin, View):
     template_name = 'superuser/permissions/permissions.html'
 
     def get(self, request, *args, **kwargs):
-        skipped_permissions = ['delete_order', 'add_order', 'change_order', 'add_rfqrequest'
+        skipped_permissions = ['add_order',  'add_rfqrequest' #'delete_order', 'change_order',
                                'add_ratingreview', 'change_ratingreview', 'delete_ratingreview',]
 
 
@@ -529,7 +529,7 @@ class User_Permissions_EditGroup(StaffAccountRequiredMixin, View):
             if request.headers.get('HX-Request'):
                 id = kwargs['UID']
 
-                skipped_permissions = ['delete_order', 'add_order', 'change_order', 'add_rfqrequest'
+                skipped_permissions = ['add_order', 'add_rfqrequest' #'delete_order', 'change_order',
                                        'add_ratingreview', 'change_ratingreview', 'delete_ratingreview']
 
                 group_obj = get_object_or_404(Group, pk=id)
