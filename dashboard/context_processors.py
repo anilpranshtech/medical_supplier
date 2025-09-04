@@ -10,9 +10,8 @@ def header_avatar(request):
             return {"header_avatar_url": profile.profile_picture.url}
     return {"header_avatar_url": None}
 
-from dashboard.models import Notification
-from django.contrib.auth.models import User
-from django.db.models import Q
+
+
 
 def notification_context(request):
     if not request.user.is_authenticated:
@@ -24,26 +23,33 @@ def notification_context(request):
 
     user = request.user
 
-    # Superuser → all
+    
     if user.is_superuser:
-        all_notifications = Notification.objects.filter(is_deleted=False)
+        all_notifications = Notification.objects.filter(
+            is_deleted=False
+        ).exclude(send_to="supplier")
 
-    # Supplier → his own + all suppliers
-    elif hasattr(user, 'retailprofile'):  
+    
+    elif hasattr(user, 'supplierprofile'):
         all_notifications = Notification.objects.filter(
             is_deleted=False
         ).filter(
-            Q(recipient=user) | Q(send_to="all_suppliers")
+            Q(recipient=user) | Q(send_to="supplier") | Q(send_to="all")
         )
 
-    # Staff → notifications for normal users
-    elif user.is_staff:
-        normal_users = User.objects.filter(is_staff=False, is_superuser=False)
-        all_notifications = Notification.objects.filter(recipient__in=normal_users, is_deleted=False)
 
-    # Normal user → only his
+    elif user.is_staff:
+        all_notifications = Notification.objects.filter(
+            is_deleted=False
+        ).exclude(send_to="supplier")
+
+
     else:
-        all_notifications = Notification.objects.filter(recipient=user, is_deleted=False)
+        all_notifications = Notification.objects.filter(
+            is_deleted=False
+        ).filter(
+            Q(recipient=user) | Q(send_to="buyer") | Q(send_to="all")
+        )
 
     return {
         'all_notifications': all_notifications.order_by('-created_at'),

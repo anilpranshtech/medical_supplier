@@ -72,13 +72,83 @@
                                     {% endif %}
                                 </td>
                                 <td class="py-4 text-right">
-                                    <a href="{% url 'dashboard:shipping_info' %}" class="text-blue-600 hover:underline dark:text-blue-400 dark:hover:text-blue-300 text-sm">Manage</a>
+                                    {% comment %}<a href="{% url 'dashboard:shipping_info' %}" class="text-blue-600 hover:underline dark:text-blue-400 dark:hover:text-blue-300 text-sm">Manage</a>{% endcomment %}
                                 </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
+
+
+            <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700 mt-6">
+                <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                    <h2 class="text-lg font-semibold text-gray-650 dark:text-gray-100">Manage Addresses</h2>
+
+                    <button class="kt-btn kt-btn-outline text-white bg-blue-600 rounded-lg shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            data-kt-modal-toggle="#modal_add_address">
+                        <i class="ki-filled ki-plus text-base text-white"></i>
+                        Add New Address
+                    </button>
+                </div>
+                <div class="p-6">
+                    <div class="grid sm:grid-cols-2 gap-5" id="address-list">
+                            {% for address in addresses %}
+                            <div class="kt-card" data-address-id="{{ address.id }}">
+                                <div class="kt-card-header px-5">
+                                    <h3 class="kt-card-title">
+                                        {{ address.address_title|default:"Address" }}
+                                    </h3>
+                                    {% comment %}
+                                    {% if address.is_default %}
+                                    <span class="kt-badge kt-badge-outline kt-badge-success">
+                                        <i class="ki-filled ki-check-circle text-base"></i>Default Selected</span>
+                                    {% endif %}
+                                    {% endcomment %}
+                                </div>
+                                <div class="kt-card-content px-5 space-y-4">
+                                    <div class="flex flex-col gap-1.5">
+                                            <span class="text-2sm font-semibold text-mono mb-1.5">
+                                                {{ user.first_name }} {{ user.last_name }}
+                                            </span>
+                                        <div class="flex flex-col gap-2 text-2sm font-normal text-mono">
+                                            <span>{{ address.customer_address1 }}</span>
+                                            {% if address.customer_address2 %}
+                                            <span>{{ address.customer_address2 }}</span>
+                                            {% endif %}
+                                            <span>{{ address.customer_city }}, {{ address.customer_state }} {{ address.customer_postal_code }}</span>
+                                            <span>{{ address.customer_country }}</span>
+                                            <span>Phone number: {{ address.phone|default:phone }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex justify-between items-center min-h-8.5">
+                                        <div class="flex items-center gap-5">
+                                            <a class="kt-link kt-link-underlined kt-link-dashed"
+                                               href="{% url 'dashboard:edit_address' address.id %}"
+                                               data-kt-action="edit">Edit</a>
+                                            <a class="kt-link kt-link-underlined kt-link-dashed"
+                                               href="{% url 'dashboard:remove_address' address.id %}"
+                                               data-kt-action="remove">Remove</a>
+                                        </div>
+                                        {% comment %}
+                                        {% if not address.is_default %}
+                                        <button class="kt-btn kt-btn-outline kt-btn-sm" data-kt-action="select"
+                                                data-address-id="{{ address.id }}">
+                                            <i class="ki-filled ki-check text-base"></i>Select Address
+                                        </button>
+                                        {% endif %}
+                                        {% endcomment %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <p class="text-center font-bold text-gray-600">No addresses added</p>
+                            {% endfor %}
+                        </div>
+                </div>
+            </div>
+
+
             <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700 mt-6">
                 <div class="p-6 border-b border-gray-200 dark:border-gray-700">
                     <h2 class="text-lg font-semibold text-gray-650 dark:text-gray-100">Payment Methods</h2>
@@ -87,13 +157,21 @@
                     <p class="text-sm text-gray-500 dark:text-gray-100">
                         {% if payment_method %}
                             {{ payment_method.type }} - {{ payment_method.details }}
+
                         {% else %}
                             No payment method added
                         {% endif %}
                     </p>
-                    <a href="{% url 'dashboard:payment_method' %}" class="mt-2 inline-block text-blue-600 hover:underline dark:text-blue-400 dark:hover:text-blue-300 text-sm">Manage Payment Options</a>
+                    {% comment %}
+                    <a href="{% url 'dashboard:payment_method' %}" class="mt-2 inline-block text-blue-600 hover:underline dark:text-blue-400 dark:hover:text-blue-300 text-sm">
+                        Manage Payment Options
+                    </a>
+                    {% endcomment %}
                 </div>
             </div>
+
+
+
         </div>
 
         <div class="space-y-6">
@@ -113,11 +191,9 @@
                         <div>
                             <p class="text-sm font-medium text-gray-650 dark:text-gray-300">Phone</p>
                             <p class="text-sm text-gray-500 dark:text-gray-100">
-                                {% if default_address and default_address.phone %}
-                                    {{ default_address.phone }}
-                                {% else %}
-                                    {{ phone|default:"Not set" }}
-                                {% endif %}
+
+                                    {{ phone|default:"---" }}
+
                             </p>
                         </div>
                         <button class="text-blue-600 hover:underline dark:text-blue-400 dark:hover:text-blue-300 text-sm" data-modal-toggle="modal_edit_phone">Edit</button>
@@ -126,25 +202,25 @@
             </div>
 
             <!-- Order Summary -->
-<div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700 mt-5">
-    <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-        <h2 class="text-lg font-semibold text-gray-650 dark:text-gray-100">Order Summary</h2>
-        <a href="{% url 'dashboard:my_orders' %}" 
-           class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-           View Orders
-        </a>
-    </div>
-    <div class="p-6 grid grid-cols-2 gap-4">
-        <div>
-            <p class="text-sm text-gray-650 dark:text-gray-300">Total Orders</p>
-            <p class="text-lg font-bold text-gray-400 dark:text-gray-100">{{ total_orders }}</p>
-        </div>
-        <div>
-            <p class="text-sm text-gray-650 dark:text-gray-300">Return Orders</p>
-            <p class="text-lg font-bold text-blue-600 dark:text-blue-400">{{ return_orders }}</p>
-        </div>
-    </div>
-</div>
+            <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700 mt-5">
+                <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                    <h2 class="text-lg font-semibold text-gray-650 dark:text-gray-100">Order Summary</h2>
+                    <a href="{% url 'dashboard:my_orders' %}"
+                       class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                       View Orders
+                    </a>
+                </div>
+                <div class="p-6 grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-sm text-gray-650 dark:text-gray-300">Total Orders</p>
+                        <p class="text-lg font-bold text-gray-400 dark:text-gray-100">{{ total_orders }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-650 dark:text-gray-300">Return Orders</p>
+                        <p class="text-lg font-bold text-blue-600 dark:text-blue-400">{{ return_orders }}</p>
+                    </div>
+                </div>
+            </div>
 
 
             <!-- Wishlist -->
@@ -207,7 +283,7 @@
                     </button>
                 </div>
                 <div class="p-6">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Email Address</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Email Address<span style="color:red;">*</span></label>
                     <input type="email" name="email" class="block w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 transition-colors duration-200" value="{{ user.email }}" required>
                 </div>
                 <div class="p-5 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700">
@@ -234,8 +310,10 @@
                     </button>
                 </div>
                 <div class="p-6">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Phone Number</label>
-                    <input type="tel" name="phone" class="block w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 transition-colors duration-200" value="{% if default_address and default_address.phone %}{{ default_address.phone }}{% else %}{{ phone|default:'' }}{% endif %}" placeholder="+1234567890" required>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Phone Number<span style="color:red;">*</span></label>
+                    <input type="tel" name="phone" class="block w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500
+                    focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 transition-colors duration-200"
+                           value="{{ phone|default:'---' }}" placeholder="Enter Phone Number" required>
                 </div>
                 <div class="p-5 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700">
                     <button type="button" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200" onclick="closeModal('modal_edit_phone')">
@@ -263,20 +341,20 @@
                 <div class="p-6 space-y-6">
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">First Name</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">First Name<span style="color:red;">*</span></label>
                             <input type="text" name="first_name" class="block w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 transition-colors duration-200" value="{{ user.first_name }}" required>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Last Name</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Last Name<span style="color:red;">*</span></label>
                             <input type="text" name="last_name" class="block w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 transition-colors duration-200" value="{{ user.last_name }}" required>
                         </div>
                     </div>
                     <div id="dynamic-profile-field">
                         {% if profile_type == 'doctor' %}
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Specialization</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Specialization<span style="color:red;">*</span></label>
                             <input type="text" name="speciality" class="block w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 transition-colors duration-200" value="{{ profile.speciality }}">
                         {% elif profile_type in 'medical_supplier|corporate|wholesaler|supplier' %}
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Company Name</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Company Name<span style="color:red;">*</span></label>
                             <input type="text" name="company_name" class="block w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 transition-colors duration-200" value="{{ profile.company_name }}">
                         {% endif %}
                     </div>
@@ -292,6 +370,201 @@
             </form>
         </div>
     </div>
+
+    <!--  ADD Address Modal -->
+    <div class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 mt-7 py-10"
+         data-kt-modal="true" id="modal_add_address">
+        <div class="kt-card w-full max-w-[500px] rounded-xl border border-border bg-background mx-auto my-auto">
+            <form method="post" action="{% url 'dashboard:manage_add_address' %}">
+                {% csrf_token %}
+                <div class="kt-card-header px-5 flex items-center justify-between">
+                    <h3 class="kt-card-title">Add New Address</h3>
+                    <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0"
+                            data-kt-modal-dismiss="true" type="button">
+                        <i class="ki-filled ki-cross text-base"></i>
+                    </button>
+                </div>
+                <div class="kt-card-content flex flex-col space-y-3 p-5 kt-scrollable-y-auto">
+                    <div class="
+                    flex flex-col gap-1.5">
+                        <label class="text-2sm font-semibold text-mono">Address Title<span style="color:red;">*</span></label>
+                        <input type="text" name="address_title" class="kt-input"
+                               placeholder="e.g., Home, Office" required>
+                    </div>
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-2sm font-semibold text-mono">Full Name<span style="color:red;">*</span></label>
+                        <input type="text" name="customer_name" class="kt-input" placeholder="Full Name"
+                                required>
+                    </div>
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-2sm font-semibold text-mono">Street Address<span style="color:red;">*</span></label>
+                        <input type="text" name="customer_address1" class="kt-input"
+                               placeholder="Street Address" required>
+                    </div>
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-2sm font-semibold text-mono">Street Address 2 (Optional)</label>
+                        <input type="text" name="customer_address2" class="kt-input"
+                               placeholder="Apartment, Suite, etc.">
+                    </div>
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-2sm font-semibold text-mono">City<span style="color:red;">*</span></label>
+                        <input type="text" name="customer_city" class="kt-input" placeholder="City" required>
+                    </div>
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-2sm font-semibold text-mono">State<span style="color:red;">*</span></label>
+                        <input type="text" name="customer_state" class="kt-input" placeholder="State" required>
+                    </div>
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-2sm font-semibold text-mono">Postal Code<span style="color:red;">*</span></label>
+                        <input type="number" name="customer_postal_code" class="kt-input"
+                               placeholder="Postal Code" required>
+                    </div>
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-2sm font-semibold text-mono">Country<span style="color:red;">*</span></label>
+                        <input type="text" name="customer_country" class="kt-input" placeholder="Country"
+                               required>
+                    </div>
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-2sm font-semibold text-mono">Phone Number<span style="color:red;">*</span></label>
+                        <input type="number" name="phone"  class="kt-input" placeholder="Phone Number"
+                                required>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" name="is_default" id="is_default">
+                        <label for="is_default" class="text-2sm font-semibold text-mono">Set as Default</label>
+                    </div>
+                </div>
+                <div class="kt-card-footer px-5 flex justify-end gap-3">
+                    <button class="kt-btn kt-btn-outline" data-kt-modal-dismiss="true" type="button">
+                        <i class="ki-filled ki-cross text-base"></i>Cancel
+                    </button>
+                   <button id="save-address-btn" class="kt-btn kt-btn-primary relative" type="submit">
+                        <span class="btn-text flex items-center gap-1">
+                            <i class="ki-filled ki-check text-base"></i>Save Address
+                        </span>
+                        <span class="btn-loader hidden flex items-center gap-1">
+                            <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                            </svg>
+                            Saving...
+                        </span>
+                    </button>
+
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!--  Edit Address Modal -->
+    <div class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 mt-7 py-10"
+         data-kt-modal="true" id="modal_edit_address" style="backdrop-filter: blur(4px);">
+        <div class="kt-card w-full max-w-[500px] rounded-xl border border-border bg-background mt-7">
+            <form method="post" action="{% url 'dashboard:manage_edit_address' 0 %}" id="edit-address-form">
+                {% csrf_token %}
+                <input type="hidden" name="address_id" id="edit-address-id">
+                <div class="kt-card-header px-5 flex items-center justify-between">
+                    <h3 class="kt-card-title">Edit Address</h3>
+                    <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0"
+                            data-kt-modal-dismiss="true" type="button">
+                        <i class="ki-filled ki-cross text-base"></i>
+                    </button>
+                </div>
+                <div class="kt-card-content flex flex-col space-y-3 p-5 kt-scrollable-y-auto">
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-2sm font-semibold text-mono">Address Title</label>
+                        <input type="text" name="address_title" id="edit-address-title" class="kt-input"
+                               required>
+                    </div>
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-2sm font-semibold text-mono">Street Address</label>
+                        <input type="text" name="customer_address1" id="edit-address-line1" class="kt-input"
+                               required>
+                    </div>
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-2sm font-semibold text-mono">Street Address 2</label>
+                        <input type="text" name="customer_address2" id="edit-address-line2" class="kt-input">
+                    </div>
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-2sm font-semibold text-mono">City</label>
+                        <input type="text" name="customer_city" id="edit-city" class="kt-input" required>
+                    </div>
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-2sm font-semibold text-mono">State</label>
+                        <input type="text" name="customer_state" id="edit-state" class="kt-input" required>
+                    </div>
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-2sm font-semibold text-mono">Postal Code</label>
+                        <input type="text" name="customer_postal_code" id="edit-postal" class="kt-input"
+                               required>
+                    </div>
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-2sm font-semibold text-mono">Country</label>
+                        <input type="text" name="customer_country" id="edit-country" class="kt-input" required>
+                    </div>
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-2sm font-semibold text-mono">Phone Number</label>
+                        <input type="tel" name="phone" id="edit-phone" class="kt-input" placeholder="+1234567890"
+                               value="{{ phone }}" required>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" name="is_default" id="edit-is-default">
+                        <label for="edit-is-default" class="text-2sm font-semibold text-mono">Set as
+                            Default</label>
+                    </div>
+                </div>
+                <div class="kt-card-footer px-5 flex justify-end gap-3">
+                    <button class="kt-btn kt-btn-outline" data-kt-modal-dismiss="true" type="button">
+                        <i class="ki-filled ki-cross text-base"></i>Cancel
+                    </button>
+                   <button id="update-address-btn" class="kt-btn kt-btn-primary relative" type="submit">
+                        <span class="btn-text flex items-center gap-1">
+                            <i class="ki-filled ki-check text-base"></i>Update Address
+                        </span>
+                        <span class="btn-loader hidden flex items-center gap-1">
+                            <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                            </svg>
+                            Updating...
+                        </span>
+                    </button>
+
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!--  Remove Address Modal -->
+    <div class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 mt-7 py-10"
+         data-kt-modal="true" id="modal_remove_address" style="backdrop-filter: blur(4px);">
+        <div class="kt-card w-full max-w-[400px] rounded-xl border border-border bg-background">
+            <form method="post" action="{% url 'dashboard:manage_remove_address' 0 %}" id="remove-address-form">
+                {% csrf_token %}
+                <input type="hidden" name="address_id" id="remove-address-id">
+                <div class="kt-card-header px-5 flex items-center justify-between">
+                    <h3 class="kt-card-title">Confirm Remove</h3>
+                    <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost" data-kt-modal-dismiss="true"
+                            type="button">
+                        <i class="ki-filled ki-cross text-base"></i>
+                    </button>
+                </div>
+                <div class="kt-card-content px-5 py-4 text-sm text-muted-foreground">
+                    Are you sure you want to remove this address?
+                </div>
+                <div class="kt-card-footer px-5 flex justify-end gap-3">
+                    <button class="kt-btn kt-btn-outline" data-kt-modal-dismiss="true" type="button">
+                        <i class="ki-filled ki-cross text-base"></i>Cancel
+                    </button>
+                    <button class="kt-btn kt-btn-danger" type="submit">
+                        <i class="ki-filled ki-check text-base"></i>Remove
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
 </div>
 
 <script>
@@ -378,5 +651,69 @@ function closeModal(id) {
         imagePreview.src = "{% if header_avatar_url %}{{ header_avatar_url }}?{{ user.last_login.timestamp }}{% else %}{% static 'metronic/tailwind/dist/assets/media/avatars/default-avatar.png' %}{% endif %}";
     }
 }
+
+ document.addEventListener('DOMContentLoaded', function() {
+    const saveBtn = document.getElementById('save-address-btn');
+    const form = saveBtn.closest('form');
+    const text = saveBtn.querySelector('.btn-text');
+    const loader = saveBtn.querySelector('.btn-loader');
+
+    form.addEventListener('submit', function() {
+        text.classList.add('hidden');
+        loader.classList.remove('hidden');
+        saveBtn.disabled = true;
+    });
+});
+
+// Edit Address Button Handling
+    document.querySelectorAll('[data-kt-action="edit"]').forEach(link => {
+        link.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            const card = this.closest('[data-address-id]');
+            const addressId = card.dataset.addressId;
+            const title = card.querySelector('.kt-card-title').textContent.trim();
+            const lines = card.querySelectorAll('.kt-card-content span');
+
+            document.getElementById('edit-address-id').value = addressId;
+            document.getElementById('edit-address-title').value = title;
+            document.getElementById('edit-address-line1').value = lines[1]?.textContent.trim();
+            document.getElementById('edit-address-line2').value = lines[2]?.textContent.trim() || '';
+            document.getElementById('edit-city').value = lines[lines.length - 3]?.textContent.split(',')[0]?.trim() || '';
+            document.getElementById('edit-state').value = lines[lines.length - 3]?.textContent.split(',')[1]?.split(' ')[1]?.trim() || '';
+            document.getElementById('edit-postal').value = lines[lines.length - 3]?.textContent.split(',')[1]?.split(' ')[2]?.trim() || '';
+            document.getElementById('edit-country').value = lines[lines.length - 2]?.textContent.trim() || '';
+            document.getElementById('edit-phone').value = lines[lines.length - 1]?.textContent.replace('Phone number: ', '').trim() || '';
+
+            const form = document.getElementById('edit-address-form');
+            form.action = `{% url 'dashboard:manage_edit_address' 0 %}`.replace("0", addressId);
+
+            document.getElementById('modal_edit_address').classList.remove('hidden');
+        });
+    });
+
+    // Remove Address Confirmation Modal
+    document.querySelectorAll('[data-kt-action="remove"]').forEach(link => {
+        link.addEventListener('click', function (e) {
+            e.preventDefault();
+            const card = this.closest('[data-address-id]');
+            const addressId = card.dataset.addressId;
+
+            document.getElementById('remove-address-id').value = addressId;
+            document.getElementById('remove-address-form').action = `{% url 'dashboard:manage_remove_address' 0 %}`.replace("0", addressId);
+
+            document.getElementById('modal_remove_address').classList.remove('hidden');
+        });
+    });
+
+
+document.querySelectorAll('[data-kt-modal-dismiss="true"]').forEach(button => {
+    button.addEventListener("click", () => {
+        const modal = button.closest(".kt-modal");
+        if (modal) {
+            modal.classList.add("hidden");
+        }
+    });
+});
 </script>
 {% endblock content %}
