@@ -1,0 +1,50 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block content %}
+<section class="py-16 font-[Poppins]">
+  <div class="container mx-auto px-6 lg:px-20 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+
+    <!-- Left Content -->
+    <div class="space-y-6">
+      <h1 class="text-4xl font-bold text-gray-900 mb-4">About Us</h1>
+
+      <p class="text-lg leading-relaxed font-normal text-gray-700">
+        Welcome to <span class="font-semibold">MedicalSupplierz.com</span> – your global gateway to the medical supply industry. 
+        Our mission is to simplify sourcing and distribution of medical supplies by bridging the gap between suppliers and professionals worldwide.
+      </p>
+
+      <h2 class="text-2xl font-semibold mt-6">Who We Are</h2>
+      <p class="text-lg leading-relaxed font-normal text-gray-700">
+        <span class="font-semibold">MedicalSupplierz.com</span> connects suppliers and buyers. 
+        With over <span class="font-semibold">800 registered suppliers</span>, we bring the global market to your fingertips.
+      </p>
+
+      <h2 class="text-2xl font-semibold mt-6">Our Core Features</h2>
+      <ul class="list-disc pl-6 space-y-2 text-lg font-normal text-gray-700">
+        <li><strong>Lead Generation:</strong> Access to qualified sales leads.</li>
+        <li><strong>Global Market Access:</strong> Expand globally with flexible logistics.</li>
+        <li><strong>Professional Development:</strong> Access to suppliers, comparisons, and events.</li>
+        <li><strong>Integration with Associations:</strong> High standards in education and ethics.</li>
+      </ul>
+
+      <h2 class="text-2xl font-semibold mt-6">Our Vision</h2>
+      <p class="text-lg leading-relaxed font-normal text-gray-700">
+        At <span class="font-semibold">MedicalSupplierz.com</span>, we believe in giving healthcare professionals 
+        the tools to make informed decisions quickly. We connect people and products, foster innovation, and support better patient outcomes.
+      </p>
+
+      <h2 class="text-2xl font-semibold mt-6">Contact Us</h2>
+      <p class="text-lg leading-relaxed font-normal text-gray-700">
+        Reach out to us at 
+        <a href="mailto:info@medicalsupplierz.com" class="text-blue-600 hover:underline">info@medicalsupplierz.com</a>
+      </p>
+    </div>
+
+    <!-- Right Image -->
+    <div class="flex justify-center">
+      <img src="{% static 'images/about.png' %}" alt="About Us Illustration" class="w-full max-w-lg">
+    </div>
+  </div>
+</section>
+{% endblock %}

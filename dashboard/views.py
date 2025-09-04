@@ -85,7 +85,11 @@ class HomeView(TemplateView):
             return product_queryset
 
         # ---------------- Categories ---------------- #
-        categories = ProductCategory.objects.all().order_by('-created_at')
+        # Show only categories that actually have products in last_category
+        categories = ProductCategory.objects.filter(
+            product__last_category__isnull=False,
+            product__is_active=True
+        ).distinct().order_by('-created_at')
         context['categories'] = categories
 
         # ---------------- Special Offers ---------------- #
@@ -155,9 +159,8 @@ class HomeView(TemplateView):
 
         # ---------------- Banners ---------------- #
         context['banners'] = Banner.objects.filter(is_active=True)
+
         return context
-
-
 class CategoryProductsView(TemplateView):
     template_name = 'userdashboard/view/category_products.html'
 
@@ -3410,3 +3413,29 @@ class CategoryProductListView(TemplateView):
         context["user_wishlist_ids"] = user_wishlist_ids
         return context
 
+
+class AboutView(TemplateView):
+    template_name = "pages/about.html"  
+
+class PrivacyPolicyView(TemplateView):
+    template_name = "pages/privacy_policy.html"
+
+class TermsConditionsView(TemplateView):
+    template_name = "pages/terms_conditions.html"
+
+class ContactUsView(FormView):
+    template_name = "pages/contact_us.html"
+    form_class = ContactForm
+    success_url = reverse_lazy('dashboard:contact_us')
+
+    def form_valid(self, form):
+        form.save()
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # fetch the first entry that contains display info
+        context['contact_info'] = Contact.objects.filter(
+            display_phone__isnull=False
+        ).first()
+        return context

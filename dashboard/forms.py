@@ -212,3 +212,15 @@ class RFQRequestForm(forms.ModelForm):
     class Meta:
         model = RFQRequest
         fields = ['product', 'quantity', 'company_name', 'message']
+
+class ContactForm(forms.ModelForm):
+    class Meta:
+        model = Contact
+        fields = ['full_name', 'email', 'phone', 'subject', 'message']
+        widgets = {
+            'full_name': forms.TextInput(attrs={'class': 'w-full p-3 border rounded'}),
+            'email': forms.EmailInput(attrs={'class': 'w-full p-3 border rounded'}),
+            'phone': forms.TextInput(attrs={'class': 'w-full p-3 border rounded'}),
+            'subject': forms.TextInput(attrs={'class': 'w-full p-3 border rounded'}),
+            'message': forms.Textarea(attrs={'class': 'w-full p-3 border rounded', 'rows': 5}),
+        }

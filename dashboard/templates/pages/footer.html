@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Health Equipment</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+  <style>
+    html, body {
+      height: 100%; /* Full height page */
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+    }
+  
+    main {
+      flex: 1; /* Take remaining space to push footer down */
+    }
+  
+    footer {
+      margin-top: auto; /* Push footer to bottom */
+    }
+  </style>
+  
+</head>
+<body>
+
+ 
+
+  <!-- Footer -->
+  <footer class="bg-gray-900 text-white py-10 w-full">
+    <div class="container mx-auto px-6 lg:px-20 flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
+      
+      <!-- Left Section -->
+      <div>
+        <h3 class="text-lg font-bold mb-3">For Help</h3>
+        <ul class="space-y-2 text-sm">
+          <li><a href="{% url 'dashboard:about' %}" class="hover:underline">About us</a></li>
+          <li><a href="{% url 'dashboard:privacy_policy' %}" class="hover:underline">Privacy & Policy</a></li>
+          <li><a href="{% url 'dashboard:terms_conditions' %}" class="hover:underline">Terms & Conditions</a></li>
+          <li><a href="{% url 'dashboard:contact_us' %}" class="hover:underline">Contact us</a></li>
+        </ul>
+      </div>
+  
+      <!-- Right Section -->
+      <div>
+        <h3 class="text-lg font-bold mb-3">Contact Us</h3>
+        <ul class="space-y-2 text-sm">
+          <li><a href="mailto:info@healthequipment.com" class="hover:underline">info@healthequipment.com</a></li>
+          <li>+965-94941155</li>
+          <li><i class="bi bi-geo-alt"></i> Ahmedabad, City</li>
+        </ul>
+      </div>
+  
+      <!-- Social Media -->
+      <div>
+        <h3 class="text-lg font-bold mb-3">Follow Us</h3>
+        <div class="flex space-x-2 text-xl">
+          <a href="#" class="hover:text-gray-300"><i class="bi bi-facebook"></i></a>
+          <a href="#" class="hover:text-gray-300"><i class="bi bi-twitter-x"></i></a>
+          <a href="#" class="hover:text-gray-300"><i class="bi bi-youtube"></i></a>
+          <a href="#" class="hover:text-gray-300"><i class="bi bi-instagram"></i></a>
+          <a href="#" class="hover:text-gray-300"><i class="bi bi-pinterest"></i></a>
+          <a href="#" class="hover:text-gray-300"><i class="bi bi-linkedin"></i></a>
+        </div>
+      </div>
+      
+    </div>
+    
+    <!-- Bottom Bar -->
+    <div class="mt-8 border-t border-gray-700 pt-4 text-center text-xs text-gray-400">
+      © 2025 Health Equipment
+    </div>
+  </footer>
+
+</body>
+</html>

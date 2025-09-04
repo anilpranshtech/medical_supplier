@@ -236,7 +236,7 @@ class Product(models.Model):
         return self.price
 
     def get_main_image(self):
-        main_image = self.images.filter(is_main=True).first()  # ✅ use related_name
+        main_image = self.images.filter(is_main=True).first()
         if main_image:
             return main_image.image.url
         first_image = self.images.first()
@@ -1061,3 +1061,18 @@ class Return(models.Model):
                 unique_code = ''.join(random.choices('0123456789', k=3))
                 self.return_serial = f"{base_serial}{month}{unique_code}-{suffix}"
         super().save(*args, **kwargs)
+
+
+class Contact(models.Model):
+    full_name = models.CharField(max_length=150)
+    email = models.EmailField()
+    phone = models.CharField(max_length=20)
+    subject = models.CharField(max_length=200)
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    display_phone = models.CharField(max_length=20, blank=True, null=True)
+    display_email = models.EmailField(blank=True, null=True)
+    display_address = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.full_name} - {self.subject}"

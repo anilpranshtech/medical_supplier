@@ -103,6 +103,11 @@ urlpatterns = [
     path('delete-notification/<int:id>/', DeleteNotificationView.as_view(), name='delete_notification'),
 
     path("category/<int:category_id>/", views.CategoryProductListView.as_view(), name="category_products_list"),
-    
+    path("about/", AboutView.as_view(), name="about"),
+    path('privacy-policy/', PrivacyPolicyView.as_view(), name="privacy_policy"),
+    path('terms-conditions/', TermsConditionsView.as_view(), name="terms_conditions"),
+    path('contact-us/', ContactUsView.as_view(), name='contact_us'),
 
+    
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
