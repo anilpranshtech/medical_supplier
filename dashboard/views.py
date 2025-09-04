@@ -2,7 +2,7 @@ import uuid
 from decimal import Decimal
 from io import BytesIO
 from django.utils.timezone import localtime
-import pm
+# import pm
 from django.contrib.auth.views import PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, \
     PasswordResetCompleteView
 from django.core.exceptions import ObjectDoesNotExist
