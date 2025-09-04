@@ -78,6 +78,7 @@ urlpatterns = [
     path('returns/delete/<str:return_serial>/', ReturnDeleteView.as_view(), name='admin_returns_delete'),
 
     path('returns/refund/', AdminProcessRefundView.as_view(), name='process_refund'),
+    path('question/', AdminQuestionView.as_view(), name='question_list'),
 
 
 ]

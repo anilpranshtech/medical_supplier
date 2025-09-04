@@ -1,4 +1,3 @@
-
 {% extends "pages/base.html" %}
 {% load static %}
 {% block content %}
@@ -422,15 +421,21 @@
                         </ul>
                     </div>
                 </div>
-                <div class="kt-toggle-group" data-kt-tabs="true" data-kt-tabs-initialized="true">
-                    <a class="kt-btn kt-btn-icon active" href="{% url 'dashboard:search_results_grid' %}?{{ request.GET.urlencode }}"
-                       data-kt-tab-toggle="#shop1_grids">
+                <div class="kt-toggle-group" data-kt-tabs="true">
+                    <a id="grid-btn" class="kt-btn kt-btn-icon"
+                       href="{% url 'dashboard:search_results_grid' %}?{{ request.GET.urlencode }}"
+                       aria-label="Grid view"
+                       onclick="setViewPreference('grid')">
                         <i class="ki-filled ki-category"></i>
                     </a>
-                    <a class="kt-btn kt-btn-icon" data-kt-tab-toggle="#shop1_lists" href="{% url 'dashboard:search_results_list' %}?{{ request.GET.urlencode }}">
+                    <a id="list-btn" class="kt-btn kt-btn-icon"
+                       href="{% url 'dashboard:search_results_list' %}?{{ request.GET.urlencode }}"
+                       aria-label="List view"
+                       onclick="setViewPreference('list')">
                         <i class="ki-filled ki-row-horizontal"></i>
                     </a>
                 </div>
+                
             </div>
         </div>
         <!-- Category and Product Grid -->
@@ -447,7 +452,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                             </svg>
                         </button>
-                        <div id="cat-{{ category.id }}" class="subcategory-list {% if forloop.first and not is_search_active %}block{% else %}hidden{% endif %}">
+                        <div id="cat-{{ category.id }}" class="subcategory-list hidden">
                             <ul>
                                 {% for subcategory in category.productsubcategory_set.all %}
                                     {% for lastcategory in subcategory.productlastcategory_set.all %}
@@ -741,9 +746,59 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // Initialize first category open state
+    const searchQuery = new URLSearchParams(window.location.search).get('q');
+    if (!searchQuery) {
+        const firstCategory = document.querySelector('[id^="cat-"]');
+        if (firstCategory) {
+            const firstCategoryId = firstCategory.id;
+            const firstArrow = document.getElementById("arrow-" + firstCategoryId.replace("cat-", ""));
+            if (firstCategory && firstArrow) {
+                // Ensure all categories are closed first
+                document.querySelectorAll('[id^="cat-"]').forEach(el => el.classList.add('hidden'));
+                document.querySelectorAll('[id^="arrow-"]').forEach(arrow => arrow.classList.remove('rotate-180'));
+                // Open the first category
+                firstCategory.classList.remove("hidden");
+                firstArrow.classList.add("rotate-180");
+                localStorage.setItem('openCategory', firstCategoryId);
+
+                const firstLastCategoryLink = firstCategory.querySelector('.category-link[data-last-category]');
+                if (firstLastCategoryLink) {
+                    const firstLastCategoryId = firstLastCategoryLink.dataset.lastCategory;
+                    fetchProducts({ last_category: firstLastCategoryId, page: 1 });
+                }
+            }
+        }
+    }
 });
 
-// Existing Event Listeners
+// Toggle Category Function
+function toggleCategory(id) {
+    const content = document.getElementById(id);
+    const arrow = document.getElementById("arrow-" + id.replace("cat-", ""));
+    const alreadyOpen = !content.classList.contains("hidden");
+
+    // Close all categories and reset arrows
+    document.querySelectorAll('[id^="cat-"]').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('[id^="arrow-"]').forEach(arrow => arrow.classList.remove('rotate-180'));
+
+    // Toggle the selected category
+    if (!alreadyOpen) {
+        content.classList.remove("hidden");
+        arrow.classList.add("rotate-180");
+        localStorage.setItem('openCategory', id);
+    } else {
+        localStorage.removeItem('openCategory');
+    }
+}
+
+// RFQ Modal Close Function
+function closeRFQModal() {
+    document.getElementById('rfqModal').classList.add('hidden');
+}
+
+// Event Listeners
 document.addEventListener('click', function(e) {
     const sidebar = document.querySelector('.amazon-sidebar');
     const toggleButton = document.querySelector('.sidebar-toggle');
@@ -775,11 +830,14 @@ document.addEventListener('click', function(e) {
             const firstCategoryId = firstCategory.id;
             const firstArrow = document.getElementById("arrow-" + firstCategoryId.replace("cat-", ""));
             if (firstCategory && firstArrow) {
+                // Close all categories and reset arrows
                 document.querySelectorAll('[id^="cat-"]').forEach(el => el.classList.add('hidden'));
                 document.querySelectorAll('[id^="arrow-"]').forEach(arrow => arrow.classList.remove('rotate-180'));
+                // Open the first category
                 firstCategory.classList.remove("hidden");
                 firstArrow.classList.add("rotate-180");
-                
+                localStorage.setItem('openCategory', firstCategoryId);
+
                 const firstLastCategoryLink = firstCategory.querySelector('.category-link[data-last-category]');
                 if (firstLastCategoryLink) {
                     const firstLastCategoryId = firstLastCategoryLink.dataset.lastCategory;
@@ -798,6 +856,17 @@ document.addEventListener('click', function(e) {
         e.preventDefault();
         const link = e.target.closest('.category-link');
         const lastCategoryId = link.dataset.lastCategory;
+        const categoryId = link.closest('[id^="cat-"]').id;
+        const arrow = document.getElementById("arrow-" + categoryId.replace("cat-", ""));
+        
+        // Ensure only the clicked category is open
+        document.querySelectorAll('[id^="cat-"]').forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('[id^="arrow-"]').forEach(arrow => arrow.classList.remove('rotate-180'));
+        const content = document.getElementById(categoryId);
+        content.classList.remove("hidden");
+        arrow.classList.add("rotate-180");
+        localStorage.setItem('openCategory', categoryId);
+
         if (sidebar) {
             sidebar.style.display = '';
             sidebar.classList.remove('hidden');
@@ -813,8 +882,6 @@ document.addEventListener('click', function(e) {
         e.preventDefault();
         const link = e.target.closest('.special-category-link');
         const categoryId = link.dataset.category;
-        const sidebar = document.querySelector('.amazon-sidebar');
-        const toggleButton = document.querySelector('.sidebar-toggle');
         if (sidebar) {
             sidebar.style.display = '';
             sidebar.classList.remove('hidden');
@@ -824,7 +891,7 @@ document.addEventListener('click', function(e) {
         }
         fetchProducts({ category: categoryId, page: 1 });
     }
-    
+
     // Handle pagination 
     if (e.target.closest('.pagination-link')) {
         e.preventDefault();
@@ -839,58 +906,57 @@ document.addEventListener('click', function(e) {
             q: params.get('q') 
         });
     }
-    
+
     // Handle add to cart buttons
     if (e.target.closest('.add-to-cart-btn')) {
-    const button = e.target.closest('.add-to-cart-btn');
-    const productId = button.dataset.productId;
+        const button = e.target.closest('.add-to-cart-btn');
+        const productId = button.dataset.productId;
 
-    // Save original text
-    const originalText = button.innerHTML;
+        // Save original text
+        const originalText = button.innerHTML;
 
-    // Show loader inside button
-    button.innerHTML = `
-        <svg class="animate-spin h-4 w-4 text-white inline-block mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-        </svg>
-        Adding...
-    `;
-    button.disabled = true; // Prevent multiple clicks
+        // Show loader inside button
+        button.innerHTML = `
+            <svg class="animate-spin h-4 w-4 text-white inline-block mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+            </svg>
+            Adding...
+        `;
+        button.disabled = true; // Prevent multiple clicks
 
-    fetch("{% url 'dashboard:add_to_cart' %}", {
-        method: "POST",
-        headers: {
-            "X-CSRFToken": csrftoken,
-            "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams({
-            product_id: productId,
-            quantity: 1,
-        }),
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.status === "success") {
-            button.classList.remove('kt-btn-outline');
-            button.style.background = '#3b82f6';
-            button.style.color = 'white';
-            button.innerHTML = `In cart <i class="ki-filled ki-handcart text-white"></i>`;
-            button.disabled = false;
-        } else {
-            alert("Something went wrong");
+        fetch("{% url 'dashboard:add_to_cart' %}", {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": csrftoken,
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: new URLSearchParams({
+                product_id: productId,
+                quantity: 1,
+            }),
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === "success") {
+                button.classList.remove('kt-btn-outline');
+                button.style.background = '#3b82f6';
+                button.style.color = 'white';
+                button.innerHTML = `In cart <i class="ki-filled ki-handcart text-white"></i>`;
+                button.disabled = false;
+            } else {
+                alert("Something went wrong");
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }
+        })
+        .catch(err => {
+            console.error("Add to cart error:", err);
             button.innerHTML = originalText;
             button.disabled = false;
-        }
-    })
-    .catch(err => {
-        console.error("Add to cart error:", err);
-        button.innerHTML = originalText;
-        button.disabled = false;
-    });
-}
+        });
+    }
 
-    
     // Handle wishlist buttons
     if (e.target.closest('.kt-wishlist-icon')) {
         const button = e.target.closest('.kt-wishlist-icon');
@@ -938,29 +1004,6 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// Toggle Category Function
-function toggleCategory(id) {
-    const content = document.getElementById(id);
-    const arrow = document.getElementById("arrow-" + id.replace("cat-", ""));
-    const alreadyOpen = !content.classList.contains("hidden");
-
-    document.querySelectorAll('[id^="cat-"]').forEach(el => el.classList.add('hidden'));
-    document.querySelectorAll('[id^="arrow-"]').forEach(arrow => arrow.classList.remove('rotate-180'));
-
-    if (!alreadyOpen) {
-        content.classList.remove("hidden");
-        arrow.classList.add("rotate-180");
-        localStorage.setItem('openCategory', id);
-    } else {
-        localStorage.removeItem('openCategory');
-    }
-}
-
-// RFQ Modal Close Function
-function closeRFQModal() {
-    document.getElementById('rfqModal').classList.add('hidden');
-}
-
 // Initialize on DOM load
 document.addEventListener('DOMContentLoaded', () => {
     const searchQuery = new URLSearchParams(window.location.search).get('q');
@@ -981,32 +1024,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     } else if (clearButton) {
         clearButton.style.display = 'none';
-    }
-
-    if (!searchQuery) {
-        if (sidebar) {
-            sidebar.style.display = '';
-            sidebar.classList.remove('hidden');
-        }
-        if (toggleButton && window.innerWidth < 768) {
-            sidebar.classList.add('hidden');
-            toggleButton.style.display = 'block';
-        }
-        const firstCategory = document.querySelector('[id^="cat-"]');
-        if (firstCategory) {
-            const firstCategoryId = firstCategory.id;
-            const firstArrow = document.getElementById("arrow-" + firstCategoryId.replace("cat-", ""));
-            if (firstCategory && firstArrow) {
-                firstCategory.classList.remove("hidden");
-                firstArrow.classList.add("rotate-180");
-                
-                const firstLastCategoryLink = firstCategory.querySelector('.category-link[data-last-category]');
-                if (firstLastCategoryLink) {
-                    const firstLastCategoryId = firstLastCategoryLink.dataset.lastCategory;
-                    fetchProducts({ last_category: firstLastCategoryId, page: 1 });
-                }
-            }
-        }
     }
 
     const searchForm = document.getElementById('search-form');
@@ -1192,25 +1209,30 @@ function fetchProducts(params) {
     })
     .catch(error => console.error('Fetch products error:', error));
 }
-    //loader
-    document.getElementById('rfqSubmitBtn').addEventListener('click', function(e) {
+
+// Loader for RFQ submit
+document.getElementById('rfqSubmitBtn').addEventListener('click', function(e) {
     const btn = e.currentTarget;
     const loader = btn.querySelector('.loader');
-
-    // Show loader
     loader.style.display = 'inline-block';
+});
 
-   
+function setViewPreference(viewType) {
+    localStorage.setItem("view_mode", viewType);
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    const viewMode = localStorage.getItem("view_mode");
+
+    if (viewMode === "list") {
+        if (!window.location.href.includes("search-results-list")) {
+            window.location.href = "{% url 'dashboard:search_results_list' %}?{{ request.GET.urlencode }}";
+        }
+    } else if (viewMode === "grid") {
+        if (!window.location.href.includes("search-results-grid")) {
+            window.location.href = "{% url 'dashboard:search_results_grid' %}?{{ request.GET.urlencode }}";
+        }
+    }
 });
 </script>
 {% endblock content %}
-
-
-
-
-
-
-    
-	
-
-

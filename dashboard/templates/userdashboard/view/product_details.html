@@ -271,8 +271,6 @@
                             </div>
                             {% endfor %}
                         </div>
-                        <div class="swiper-button-prev bg-white dark:bg-gray-800 shadow-md"></div>
-                        <div class="swiper-button-next bg-white dark:bg-gray-800 shadow-md"></div>
                     </div>
                 </div>
                     </div>
@@ -288,11 +286,14 @@
                         {% for img in other_images %}
                         <div class="swiper-slide w-16 h-16 cursor-pointer">
                             <img src="{{ img.image.url }}" alt="Thumbnail" class="w-full h-full object-cover border border-gray-200 dark:border-gray-700 rounded" loading="lazy" />
+                            
                         </div>
                         {% endfor %}
+                     <div class="swiper-button-prev bg-white dark:bg-gray-800 shadow-md"></div>
+                        <div class="swiper-button-next bg-white dark:bg-gray-800 shadow-md"></div>  
                     </div>
                 </div>
-            {% else %}
+                {% else %}
                 <div class="flex flex-col items-center justify-center border border-gray-200 dark:border-gray-700 rounded-lg p-6 bg-white dark:bg-gray-800 text-red-500">
                     <img src="{% static 'default.png' %}" alt="Default Product Image" class="w-48 h-48 object-cover" loading="lazy" />
                     <p class="mt-4">Image not available. Please check the URL or try again.</p>
@@ -300,7 +301,8 @@
                 </div>
             {% endif %}
         </div>
-            <!-- Product Details -->
+        
+        <!-- Product Details -->
             <div>
                 <!-- Description -->
                 <h2 class="text-xl font-semibold text-gray-650 dark:text-white mb-3">Product Information</h2>

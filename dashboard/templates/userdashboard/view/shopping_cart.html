@@ -204,6 +204,7 @@
                                 <i class="ki-filled ki-plus text-base"></i>
                                 Add Items
                             </a>
+
                             <a id="shipping-info-btn" class="kt-btn kt-btn-primary relative"
                                href="{% url 'dashboard:shipping_info' %}">
                                 <span class="btn-text flex items-center gap-1">
@@ -220,6 +221,7 @@
                                     Shipping Info...
                                 </span>
                             </a>
+
                         </div>
                     </div>
                     <div class="col-span-1">
@@ -288,6 +290,7 @@
 </div>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+
     document.querySelectorAll('[id^="cart-item-"]').forEach(item => {
         const priceElement = item.querySelector('.text-sm.font-semibold.text-mono span');
         const originalPrice = parseFloat(priceElement.textContent.replace('$', '')) / parseInt(item.querySelector('.quantity').textContent);
@@ -408,16 +411,33 @@ document.addEventListener('DOMContentLoaded', function() {
     function checkEmptyCart() {
         const cartItems = document.querySelectorAll('[id^="cart-item-"]');
         const emptyMessage = document.querySelector('.kt-card-content .text-muted.text-sm');
+        const shippingBtn = document.getElementById("shipping-info-btn");
 
-        if (cartItems.length === 0 && !emptyMessage) {
-            const newEmptyMessage = document.createElement('p');
-            newEmptyMessage.className = 'text-muted text-sm font-normal text-center text-secondary-foreground mx-5 mt-5';
-            newEmptyMessage.textContent = 'No products available in Cart';
-            document.querySelector('.kt-card-content').appendChild(newEmptyMessage);
-        } else if (cartItems.length > 0 && emptyMessage) {
-            emptyMessage.remove();
+        if (cartItems.length === 0) {
+            if (!emptyMessage) {
+                const newEmptyMessage = document.createElement('p');
+                newEmptyMessage.className = 'text-muted text-sm font-normal text-center text-secondary-foreground mx-5 mt-5';
+                newEmptyMessage.textContent = 'No products available in Cart';
+                document.querySelector('.kt-card-content').appendChild(newEmptyMessage);
+            }
+
+            console.log('Cart empty → hiding Shipping Info button');
+            if (shippingBtn) {
+                shippingBtn.style.display = "none"; // 🔥 hide
+            }
+        } else {
+            if (emptyMessage) {
+                emptyMessage.remove();
+            }
+
+            console.log('Cart has items → showing Shipping Info button');
+            if (shippingBtn) {
+                shippingBtn.style.display = "inline-flex"; // 🔥 show again
+            }
         }
     }
+
+    checkEmptyCart();
 });
 //loader
 document.addEventListener("DOMContentLoaded", function () {

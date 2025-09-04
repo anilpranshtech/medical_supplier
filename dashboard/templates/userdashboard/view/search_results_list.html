@@ -548,14 +548,16 @@
 
                 <!-- View Toggle -->
                 <div class="kt-toggle-group" data-kt-tabs="true">
-                    <a class="kt-btn kt-btn-icon"
+                    <a id="grid-btn" class="kt-btn kt-btn-icon"
                        href="{% url 'dashboard:search_results_grid' %}?{{ request.GET.urlencode }}"
-                       aria-label="Grid view">
+                       aria-label="Grid view"
+                       onclick="setViewPreference('grid')">
                         <i class="ki-filled ki-category"></i>
                     </a>
-                    <a class="kt-btn kt-btn-icon active"
+                    <a id="list-btn" class="kt-btn kt-btn-icon"
                        href="{% url 'dashboard:search_results_list' %}?{{ request.GET.urlencode }}"
-                       aria-label="List view">
+                       aria-label="List view"
+                       onclick="setViewPreference('list')">
                         <i class="ki-filled ki-row-horizontal"></i>
                     </a>
                 </div>
@@ -573,40 +575,39 @@
                     <button type="button"
                             onclick="toggleCategory('cat-{{ category.id }}')"
                             class="category-button"
-                            aria-expanded="{% if forloop.first and not is_search_active %}true{% else %}false{% endif %}"
+                            aria-expanded="false"
                             aria-controls="cat-{{ category.id }}">
                         <span>{{ category.name }}</span>
-                        <svg id="arrow-{{ category.id }}" class="w-4 h-4 transform transition-transform duration-200 {% if forloop.first and not is_search_active %}rotate-180{% endif %}"
+                        <svg id="arrow-{{ category.id }}" class="w-4 h-4 transform transition-transform duration-200"
                              xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
                              aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                         </svg>
                     </button>
                     <div id="cat-{{ category.id }}"
-                         class="subcategory-list {% if forloop.first and not is_search_active %}block{% else %}hidden{% endif %}">
+                         class="subcategory-list hidden">
                         <ul>
-                            {% for subcategory in category.productsubcategory_set.all %}
-                            {% for lastcategory in subcategory.productlastcategory_set.all %}
-                            {% if lastcategory.product_count > 0 %}
+                            {% for lastcategory in category_last_map|get_item:category.id %}
                             <li>
                                 <a href="#" data-last-category="{{ lastcategory.id }}"
-                                   class="category-link {% if selected_last_category.id == lastcategory.id %}active{% endif %}">
-                                    {{ lastcategory.name }}
+                                   class="category-link {% if selected_last_category and selected_last_category.id == lastcategory.id %}active{% endif %}">
+                                    {{ lastcategory.name }} 
                                 </a>
                             </li>
-                            {% endif %}
-                            {% endfor %}
+                            {% empty %}
+                            <li>No subcategories available</li>
                             {% endfor %}
                         </ul>
                     </div>
                 </div>
                 {% endfor %}
+
                 <!-- Special Categories without Dropdowns -->
                 {% if special_categories %}
                 <div class="mt-4">
                     {% for category in special_categories %}
                     <a href="#" data-category="{{ category.id }}"
-                       class="special-category-link {% if selected_category.id == category.id %}active{% endif %}">
+                       class="special-category-link {% if selected_category and selected_category.id == category.id %}active{% endif %}">
                         {{ category.name }}
                         <span class="special-category-count">({{ category.product_count }})</span>
                     </a>
@@ -938,10 +939,12 @@
         const arrow = document.getElementById("arrow-" + id.replace("cat-", ""));
         const alreadyOpen = !content.classList.contains("hidden");
 
+        // Close all categories and reset arrows and aria-expanded
         document.querySelectorAll('[id^="cat-"]').forEach(el => el.classList.add('hidden'));
         document.querySelectorAll('[id^="arrow-"]').forEach(a => a.classList.remove('rotate-180'));
         document.querySelectorAll('.category-button').forEach(btn => btn.setAttribute('aria-expanded', 'false'));
 
+        // Toggle the selected category
         if (!alreadyOpen) {
             content.classList.remove("hidden");
             arrow.classList.add("rotate-180");
@@ -1018,7 +1021,23 @@
                     const categoryId = urlParams.get('category');
                     if (lastCategoryId) {
                         const targetLink = document.querySelector(`.category-link[data-last-category="${lastCategoryId}"]`);
-                        if (targetLink) targetLink.classList.add('active');
+                        if (targetLink) {
+                            targetLink.classList.add('active');
+                            // Ensure the parent category is open
+                            const parentCategory = targetLink.closest('[id^="cat-"]');
+                            if (parentCategory) {
+                                const parentCategoryId = parentCategory.id;
+                                const parentArrow = document.getElementById("arrow-" + parentCategoryId.replace("cat-", ""));
+                                const parentButton = document.querySelector(`button[onclick="toggleCategory('${parentCategoryId}')"]`);
+                                document.querySelectorAll('[id^="cat-"]').forEach(el => el.classList.add('hidden'));
+                                document.querySelectorAll('[id^="arrow-"]').forEach(a => a.classList.remove('rotate-180'));
+                                document.querySelectorAll('.category-button').forEach(btn => btn.setAttribute('aria-expanded', 'false'));
+                                parentCategory.classList.remove('hidden');
+                                parentArrow.classList.add('rotate-180');
+                                parentButton.setAttribute('aria-expanded', 'true');
+                                localStorage.setItem('openCategory', parentCategoryId);
+                            }
+                        }
                     } else if (categoryId) {
                         const targetLink = document.querySelector(`.special-category-link[data-category="${categoryId}"]`);
                         if (targetLink) targetLink.classList.add('active');
@@ -1040,53 +1059,64 @@
         const searchQuery = new URLSearchParams(window.location.search).get('q');
         const firstCategory = document.querySelector('[id^="cat-"]');
 
-        if (!searchQuery && firstCategory) {
+        // Initialize category state
+        if (!searchQuery && !lastCategoryIdFromUrl && !categoryIdFromUrl && firstCategory) {
             const firstCategoryId = firstCategory.id;
             const firstArrow = document.getElementById("arrow-" + firstCategoryId.replace("cat-", ""));
-            let targetCategory = firstCategory;
-            let targetArrow = firstArrow;
+            const firstButton = document.querySelector(`button[onclick="toggleCategory('${firstCategoryId}')"]`);
 
-            // If a last category or special category is selected in the URL, find its parent category
-            if (lastCategoryIdFromUrl) {
-                const selectedLink = document.querySelector(`.category-link[data-last-category="${lastCategoryIdFromUrl}"]`);
-                if (selectedLink) {
-                    const parentCategory = selectedLink.closest('[id^="cat-"]');
-                    if (parentCategory) {
-                        targetCategory = parentCategory;
-                        targetArrow = document.getElementById("arrow-" + parentCategory.id.replace("cat-", ""));
-                    }
+            // Close all categories first
+            document.querySelectorAll('[id^="cat-"]').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('[id^="arrow-"]').forEach(a => a.classList.remove('rotate-180'));
+            document.querySelectorAll('.category-button').forEach(btn => btn.setAttribute('aria-expanded', 'false'));
+
+            // Open the first category
+            firstCategory.classList.remove("hidden");
+            firstArrow.classList.add("rotate-180");
+            firstButton.setAttribute('aria-expanded', 'true');
+            localStorage.setItem('openCategory', firstCategoryId);
+
+            // Fetch products for the first subcategory if available
+            const firstLastCategoryLink = firstCategory.querySelector('.category-link[data-last-category]');
+            if (firstLastCategoryLink) {
+                firstLastCategoryLink.classList.add('active');
+                const firstLastCategoryId = firstLastCategoryLink.dataset.lastCategory;
+                fetchProducts({last_category: firstLastCategoryId, page: 1});
+            }
+        } else if (lastCategoryIdFromUrl) {
+            // Handle case where a last category is specified in the URL
+            const selectedLink = document.querySelector(`.category-link[data-last-category="${lastCategoryIdFromUrl}"]`);
+            if (selectedLink) {
+                selectedLink.classList.add('active');
+                const parentCategory = selectedLink.closest('[id^="cat-"]');
+                if (parentCategory) {
+                    const parentCategoryId = parentCategory.id;
+                    const parentArrow = document.getElementById("arrow-" + parentCategoryId.replace("cat-", ""));
+                    const parentButton = document.querySelector(`button[onclick="toggleCategory('${parentCategoryId}')"]`);
+
+                    // Close all categories first
+                    document.querySelectorAll('[id^="cat-"]').forEach(el => el.classList.add('hidden'));
+                    document.querySelectorAll('[id^="arrow-"]').forEach(a => a.classList.remove('rotate-180'));
+                    document.querySelectorAll('.category-button').forEach(btn => btn.setAttribute('aria-expanded', 'false'));
+
+                    // Open the parent category
+                    parentCategory.classList.remove('hidden');
+                    parentArrow.classList.add('rotate-180');
+                    parentButton.setAttribute('aria-expanded', 'true');
+                    localStorage.setItem('openCategory', parentCategoryId);
                 }
             }
-
-            // Expand the target category
-            if (targetCategory && targetArrow) {
-                targetCategory.classList.remove("hidden");
-                targetArrow.classList.add("rotate-180");
-                document.querySelector(`button[onclick="toggleCategory('${targetCategory.id}')"]`).setAttribute('aria-expanded', 'true');
+        } else if (categoryIdFromUrl) {
+            // Highlight special category if selected
+            const selectedLink = document.querySelector(`.special-category-link[data-category="${categoryIdFromUrl}"]`);
+            if (selectedLink) {
+                selectedLink.classList.add('active');
             }
-
-            // Highlight the selected last category or special category
-            const categoryLinks = document.querySelectorAll('.category-link[data-last-category]');
-            const specialCategoryLinks = document.querySelectorAll('.special-category-link[data-category]');
-            categoryLinks.forEach(link => link.classList.remove('active'));
-            specialCategoryLinks.forEach(link => link.classList.remove('active'));
-
-            let targetLink = null;
-            if (lastCategoryIdFromUrl) {
-                targetLink = document.querySelector(`.category-link[data-last-category="${lastCategoryIdFromUrl}"]`);
-            } else if (categoryIdFromUrl) {
-                targetLink = document.querySelector(`.special-category-link[data-category="${categoryIdFromUrl}"]`);
-            } else if (firstCategory) {
-                targetLink = firstCategory.querySelector('.category-link[data-last-category]');
-            }
-
-            if (targetLink) {
-                targetLink.classList.add('active');
-                if (!lastCategoryIdFromUrl && !categoryIdFromUrl && targetLink.dataset.lastCategory) {
-                    const firstLastCategoryId = targetLink.dataset.lastCategory;
-                    fetchProducts({last_category: firstLastCategoryId, page: 1});
-                }
-            }
+            // Close all categories
+            document.querySelectorAll('[id^="cat-"]').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('[id^="arrow-"]').forEach(a => a.classList.remove('rotate-180'));
+            document.querySelectorAll('.category-button').forEach(btn => btn.setAttribute('aria-expanded', 'false'));
+            localStorage.removeItem('openCategory');
         }
 
         document.addEventListener('click', (e) => {
@@ -1109,6 +1139,11 @@
             if (specialCategoryLink) {
                 e.preventDefault();
                 const categoryId = specialCategoryLink.dataset.category;
+                // Close all categories when selecting a special category
+                document.querySelectorAll('[id^="cat-"]').forEach(el => el.classList.add('hidden'));
+                document.querySelectorAll('[id^="arrow-"]').forEach(a => a.classList.remove('rotate-180'));
+                document.querySelectorAll('.category-button').forEach(btn => btn.setAttribute('aria-expanded', 'false'));
+                localStorage.removeItem('openCategory');
                 fetchProducts({
                     category: categoryId,
                     page: 1,
@@ -1277,6 +1312,26 @@
             const loader = btn.querySelector('.loader');
             loader.style.display = 'inline-block';
         });
+    });
+
+    function setViewPreference(viewType) {
+        localStorage.setItem("view_mode", viewType);
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const viewMode = localStorage.getItem("view_mode");
+
+        if (viewMode === "list") {
+            // Redirect user to list view if not already there
+            if (!window.location.href.includes("search-results-list")) {
+                window.location.href = "{% url 'dashboard:search_results_list' %}?{{ request.GET.urlencode }}";
+            }
+        } else if (viewMode === "grid") {
+            // Redirect user to grid view if not already there
+            if (!window.location.href.includes("search-results-grid")) {
+                window.location.href = "{% url 'dashboard:search_results_grid' %}?{{ request.GET.urlencode }}";
+            }
+        }
     });
 </script>
 {% endblock content %}

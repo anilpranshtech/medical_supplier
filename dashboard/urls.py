@@ -11,7 +11,7 @@ urlpatterns = [
   
     path('login/', CustomLoginView.as_view(), name='login'),
     path('', HomeView.as_view(), name='home'),
-    path('category/<int:pk>/', CategoryProductsView.as_view(), name='category_products'),
+    # path('category/<int:pk>/', CategoryProductsView.as_view(), name='category_products'),
     path('register/', RegistrationView.as_view(), name='register'),
     path('resend-otp/', ResendOTPView.as_view(), name='resend_otp'),
     path('profile/', UserProfileView.as_view(), name='profile'),
@@ -20,6 +20,7 @@ urlpatterns = [
     # user dashboard
     path('search-results-grid/', views.SearchResultsGridView.as_view(), name='search_results_grid'),
     path('search-results-list/', views.SearchResultsListView.as_view(), name='search_results_list'),
+    
     path('search-suggestions/', views.SearchSuggestionsView.as_view(), name='search_suggestions'),
     path('product-detail/<int:pk>/', views.ProductDetailsView.as_view(), name='product_detail'),
     path('product/<int:pk>/registrations/', EventRegisteredDataView.as_view(), name='event_registered_data'),
@@ -40,6 +41,8 @@ urlpatterns = [
     path('remove-from-cart/', remove_from_cart, name='remove_from_cart'),
     path('shipping-info/', views.ShippingInfoView.as_view(), name='shipping_info'),
     path('profile/add-address/', views.AddAddressView.as_view(), name='add_address'),
+    path('manage/add-address/', views.ManageAddressView.as_view(), name='manage_add_address'),
+
     path('profile/edit-address/<int:pk>/', views.EditAddressView.as_view(), name='edit_address'),
     path('profile/remove-address/<int:address_id>/', views.RemoveAddressView.as_view(), name='remove_address'),
     path('profile/set-default-address/', views.SetDefaultAddressView.as_view(), name='set_default_address'),
@@ -58,6 +61,10 @@ urlpatterns = [
     path('profile/edit/', views.EditProfileView.as_view(), name='edit_profile'),
     path('profile/edit-email/', views.EditEmailView.as_view(), name='edit_email'),
     path('profile/edit-phone/', views.EditPhoneView.as_view(), name='edit_phone'),
+
+    path('manage/add-address/', views.ManageAddressView.as_view(), name='manage_add_address'),
+    path('manage/edit-address/<int:pk>/', views.ManageEditAddressView.as_view(), name='manage_edit_address'),
+    path('manage/remove-address/<int:address_id>/', views.ManageRemoveAddressView.as_view(), name='manage_remove_address'),
 
     path('user-signup/', views.SignUpView.as_view(), name='user_signup'),
     path('verify-otp/', views.VerifyOTPView.as_view(), name='verify_otp'),
@@ -100,6 +107,8 @@ urlpatterns = [
     path('notifications/clear-all/', ClearAllNotificationsView.as_view(), name='clear_all_notifications'),
     path('mark-notification-read/<int:pk>/', MarkNotificationReadView.as_view(), name='mark_notification_read'),
     path('delete-notification/<int:id>/', DeleteNotificationView.as_view(), name='delete_notification'),
-   
+
+    path("category/<int:category_id>/", views.CategoryProductListView.as_view(), name="category_products_list"),
+    
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

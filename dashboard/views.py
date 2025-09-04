@@ -780,7 +780,6 @@ class SearchResultsGridView(TemplateView):
 
 #--------------------------------------------------------------------------------------------------------------------------------------------
     
-
 class SearchResultsListView(TemplateView):
     template_name = 'userdashboard/view/search_results_list.html'
 
@@ -791,10 +790,11 @@ class SearchResultsListView(TemplateView):
             html = render_to_string(self.template_name, context, request=request)
             return HttpResponse(html)
         return super().get(request, *args, **kwargs)
+        
 
     def get_context_data(self, **kwargs):
+       
         context = super().get_context_data(**kwargs)
-        logger.debug(f"Initial context: {context}")
 
         category_id = self.request.GET.get('category')
         sub_category_id = self.request.GET.get('sub_category')
@@ -803,6 +803,7 @@ class SearchResultsListView(TemplateView):
         page_number = self.request.GET.get('page', 1)
         search_query = self.request.GET.get('q', '').strip()
 
+        # Base context
         context.update({
             'selected_category': None,
             'selected_sub_category': None,
@@ -813,59 +814,63 @@ class SearchResultsListView(TemplateView):
             'is_search_active': bool(search_query),
         })
 
-        # Define special categories
+        # Special categories
         special_category_names = ['Conference', 'Webinar', 'Event']
-        logger.debug(f"special_category_names: {special_category_names}")
 
-        # Fetch regular categories (excluding special categories)
+        # Last categories with products
         last_categories_with_products = ProductLastCategory.objects.annotate(
             product_count=Count('product', filter=Q(product__is_active=True))
         ).filter(product_count__gt=0)
-        logger.debug(f"last_categories_with_products: {list(last_categories_with_products)}")
 
+        # Subcategories
         valid_subcategory_ids = last_categories_with_products.values_list('sub_category_id', flat=True).distinct()
         subcategories_with_products = ProductSubCategory.objects.filter(
             id__in=valid_subcategory_ids
         ).prefetch_related('productlastcategory_set')
-        logger.debug(f"subcategories_with_products: {list(subcategories_with_products)}")
 
+        # Regular categories
         valid_category_ids = subcategories_with_products.values_list('category_id', flat=True).distinct()
         regular_categories = ProductCategory.objects.filter(
             id__in=valid_category_ids
         ).exclude(name__in=special_category_names).prefetch_related('productsubcategory_set')
-        logger.debug(f"regular_categories: {list(regular_categories)}")
 
-        # Fetch special categories with product counts
+        # Special categories with products
         special_categories = ProductCategory.objects.filter(
             name__in=special_category_names
         ).annotate(
             product_count=Count('product', filter=Q(product__is_active=True))
         ).filter(product_count__gt=0)
-        logger.debug(
-            f"special_categories type: {type(special_categories)}, value: {[f'ID: {c.id}, Name: {c.name}' for c in special_categories]}")
 
-        # Fetch conference products
+        # Conference products (limit 4)
         conference_products = Product.objects.filter(
             category__name__in=special_category_names,
             is_active=True
         ).annotate(
             effective_price=Case(
-                When(offer_active=True, offer_percentage__isnull=False, then=ExpressionWrapper(
-                    F('price') * (1 - Coalesce(F('offer_percentage'), 0) / 100.0),
-                    output_field=DecimalField(max_digits=10, decimal_places=2)
-                )),
+                When(offer_active=True, offer_percentage__isnull=False,
+                     then=ExpressionWrapper(
+                         F('price') * (1 - Coalesce(F('offer_percentage'), 0) / 100.0),
+                         output_field=DecimalField(max_digits=10, decimal_places=2)
+                     )),
                 default=F('price'),
                 output_field=DecimalField(max_digits=10, decimal_places=2)
             )
         ).prefetch_related('images')[:4]
-        logger.debug(
-            f"conference_products: {[f'ID: {p.id}, Type: {type(p.id)}, Name: {p.name}, SKU: {p.supplier_sku}' for p in conference_products]}")
 
+        # Attach category + last categories mapping
+        category_last_map = {}
+        for category in regular_categories:
+            subcategories = subcategories_with_products.filter(category=category)
+            last_cats = last_categories_with_products.filter(sub_category__in=subcategories)
+            category_last_map[category.id] = last_cats
+
+        # Add to context
         context['regular_categories'] = regular_categories
         context['special_categories'] = special_categories
         context['conference_products'] = conference_products
+        context['category_last_map'] = category_last_map
 
-        # Base product queryset with effective price annotation
+        # Product queryset
         effective_price = ExpressionWrapper(
             F('price') * (1 - Coalesce(F('offer_percentage'), 0) / 100.0),
             output_field=DecimalField(max_digits=10, decimal_places=2)
@@ -895,7 +900,6 @@ class SearchResultsListView(TemplateView):
 
             paginator = Paginator(products_qs, 10)
             page_obj = paginator.get_page(page_number)
-
             context.update({
                 'products': page_obj,
                 'page_obj': page_obj,
@@ -989,7 +993,6 @@ class SearchResultsListView(TemplateView):
             context['user_wishlist_ids'] = []
             context['user_registered_event_ids'] = []
 
-        logger.debug(f"Final context: {context.keys()}")
         return context
 
 class ProductDetailsView(TemplateView):
@@ -1354,30 +1357,45 @@ class ShippingInfoView(LoginRequiredMixin, TemplateView):
         context['user'] = user
 
         # Get phone number
-        phone = None
+        # phone = None
         profile_type = None
         try:
             profile = RetailProfile.objects.get(user=user)
-            phone = phone
+            phone = profile.phone
             profile_type = 'retailer'
+            print('Profle Retailer ---', phone)
         except RetailProfile.DoesNotExist:
             try:
                 profile = WholesaleBuyerProfile.objects.get(user=user)
-                phone = phone
+                phone = profile.phone
                 profile_type = 'wholesaler'
+                print('Profle wholesaler ---', phone)
             except WholesaleBuyerProfile.DoesNotExist:
                 try:
                     profile = SupplierProfile.objects.get(user=user)
-                    phone = phone
+                    phone = profile.phone
                     profile_type = 'supplier'
+                    print('Profle SupplierProfile ---', phone)
                 except SupplierProfile.DoesNotExist:
+                    phone = None
                     pass
-        context['phone'] = phone or 'Not set'
+
+        context['phone'] = phone
+        print("Phone", phone)
         context['profile_type'] = profile_type
 
         # Get all non-deleted addresses
-        context['addresses'] = CustomerBillingAddress.objects.filter(user=user, is_deleted=False)
-        context['default_address'] = CustomerBillingAddress.objects.filter(user=user, is_default=True, is_deleted=False).first()
+        addresses = CustomerBillingAddress.objects.filter(user=user, is_deleted=False)
+        default_address = CustomerBillingAddress.objects.filter(user=user, is_default=True, is_deleted=False).first()
+
+        context['addresses'] = addresses
+        context['default_address'] = default_address
+
+        if len(addresses) > 0 and default_address:
+            display_payment_button = True
+        else:
+            display_payment_button = False
+        context['display_payment_button'] = display_payment_button
 
         # Order summary based on CartProduct
         cart_items = CartProduct.objects.filter(user=user).select_related('product')
@@ -1414,6 +1432,28 @@ class AddAddressView(LoginRequiredMixin, FormView):
         messages.error(self.request, "Failed to add address. Please check the form.")
         return super().form_invalid(form)
 
+class ManageAddressView(LoginRequiredMixin, FormView):
+    form_class = AddressForm
+    template_name = 'userdashboard/view/add_address.html'
+    def form_valid(self, form):
+        address = form.save(commit=False)
+        address.user = self.request.user
+        if address.is_default:
+            CustomerBillingAddress.objects.filter(
+                user=self.request.user, is_default=True
+            ).update(is_default=False)
+        address.save()
+        return JsonResponse({
+            "status": "success",
+            "message": "Address added successfully."
+        })
+
+    def form_invalid(self, form):
+        return JsonResponse({
+            "status": "error",
+            "message": "Failed to add address",
+            "errors": form.errors
+        }, status=400)
 
 class EditAddressView(LoginRequiredMixin, UpdateView):
     model = CustomerBillingAddress
@@ -1454,6 +1494,56 @@ class SetDefaultAddressView(LoginRequiredMixin, View):
         address.is_default = True
         address.save()
         return JsonResponse({'status': 'success'})
+
+
+
+
+class ManageEditAddressView(LoginRequiredMixin, UpdateView):
+    model = CustomerBillingAddress
+    form_class = AddressForm
+    template_name = 'userdashboard/view/edit_address.html'
+    success_url = reverse_lazy('dashboard:shipping_info')
+
+    def get_queryset(self):
+        return CustomerBillingAddress.objects.filter(user=self.request.user, is_deleted=False)
+
+    def form_valid(self, form):
+        address = form.save(commit=False)
+        if address.is_default:
+            CustomerBillingAddress.objects.filter(
+                user=self.request.user,
+                is_default=True
+            ).exclude(id=address.id).update(is_default=False)
+        address.save()
+
+        return JsonResponse({
+            "status": "success",
+            "message": "Address updated successfully."
+        })
+
+    def form_invalid(self, form):
+        return JsonResponse({
+            "status": "error",
+            "message": "Failed to update address",
+            "errors": form.errors
+        }, status=400)
+
+
+class ManageRemoveAddressView(LoginRequiredMixin, View):
+    def post(self, request, address_id):
+        address = get_object_or_404(
+            CustomerBillingAddress,
+            id=address_id,
+            user=request.user,
+            is_deleted=False
+        )
+        address.is_deleted = True
+        address.save()
+
+        return JsonResponse({
+            "status": "success",
+            "message": "Address removed successfully."
+        })
 
 
 def generate_order_id():
@@ -2334,6 +2424,10 @@ class UserProfile(LoginRequiredMixin, TemplateView):
             default_address = None
         context['default_address'] = default_address
 
+        addresses = CustomerBillingAddress.objects.filter(user=user, is_deleted=False)
+        context['addresses'] = addresses
+        print("Addresses -------", addresses)
+
        # Order summary
         orders = Order.objects.filter(user=user)
         context.update({
@@ -2383,20 +2477,36 @@ class UserProfile(LoginRequiredMixin, TemplateView):
 
 class UploadAvatarView(LoginRequiredMixin, View):
     def post(self, request):
-        profile, profile_type = get_user_profile(request.user)
-        if profile:
+        try:
+            profile, profile_type = get_user_profile(request.user)
+            if not profile:
+                if request.headers.get("x-requested-with") == "XMLHttpRequest":
+                    return JsonResponse({"status": "error", "message": "Profile not found."}, status=404)
+                messages.error(request, "Profile not found.")
+                return redirect('dashboard:user_profile')
+
             if 'avatar' in request.FILES:
                 profile.profile_picture = request.FILES['avatar']
                 profile.save()
+                if request.headers.get("x-requested-with") == "XMLHttpRequest":
+                    return JsonResponse({"status": "success", "message": "Avatar updated successfully."})
                 messages.success(request, "Avatar updated successfully.")
+
             elif 'avatar_remove' in request.POST:
                 if profile.profile_picture:
                     profile.profile_picture.delete(save=True)
+                if request.headers.get("x-requested-with") == "XMLHttpRequest":
+                    return JsonResponse({"status": "success", "message": "Avatar removed successfully."})
                 messages.success(request, "Avatar removed successfully.")
-        else:
-            messages.error(request, "Profile not found.")
-        return redirect('dashboard:user_profile')
 
+            return redirect('dashboard:user_profile')
+
+        except Exception as e:
+            print("Error in image upload -----", e)
+            if request.headers.get("x-requested-with") == "XMLHttpRequest":
+                return JsonResponse({"status": "error", "message": "Something went wrong.", "errors": str(e)}, status=500)
+            messages.error(request, "Something went wrong.")
+            return redirect('dashboard:user_profile')
 
 class EditProfileView(LoginRequiredMixin, View):
     def post(self, request):
@@ -2455,6 +2565,7 @@ class EditEmailView(LoginRequiredMixin, View):
 class EditPhoneView(LoginRequiredMixin, View):
     def post(self, request):
         phone_number = request.POST.get("phone")
+        print('----Phone ----', phone_number)
 
         if not phone_number:
             return JsonResponse({
@@ -2464,18 +2575,11 @@ class EditPhoneView(LoginRequiredMixin, View):
 
         try:
             with transaction.atomic():
-                if request.user.is_superuser:
-                    profile, created = AdminUserProfile.objects.get_or_create(user=request.user)
-                    profile.phone = phone_number
-                    profile.save()
-                    return JsonResponse({
-                        'status': 'success',
-                        'message': 'Phone number updated successfully'
-                    })
 
                 if hasattr(request.user, "retailprofile"):
                     request.user.retailprofile.phone = phone_number
                     request.user.retailprofile.save()
+                    print('----Phone Updated in retailprofile ----', phone_number)
                     return JsonResponse({
                         'status': 'success',
                         'message': 'Phone number updated successfully'
@@ -2484,6 +2588,7 @@ class EditPhoneView(LoginRequiredMixin, View):
                 elif hasattr(request.user, "wholesalebuyerprofile"):
                     request.user.wholesalebuyerprofile.phone = phone_number
                     request.user.wholesalebuyerprofile.save()
+                    print('----Phone Updated in wholesalebuyerprofile ----', phone_number)
                     return JsonResponse({
                         'status': 'success',
                         'message': 'Phone number updated successfully'
@@ -2492,6 +2597,17 @@ class EditPhoneView(LoginRequiredMixin, View):
                 elif hasattr(request.user, "supplierprofile"):
                     request.user.supplierprofile.phone = phone_number
                     request.user.supplierprofile.save()
+                    print('----Phone Updated in supplierprofile ----', phone_number)
+                    return JsonResponse({
+                        'status': 'success',
+                        'message': 'Phone number updated successfully'
+                    })
+
+                elif request.user.is_superuser:
+                    profile, created = AdminUserProfile.objects.get_or_create(user=request.user)
+                    profile.phone = phone_number
+                    profile.save()
+                    print('----Phone Updated in admin side ----', phone_number)
                     return JsonResponse({
                         'status': 'success',
                         'message': 'Phone number updated successfully'
@@ -3314,18 +3430,39 @@ class RequestReturnView(LoginRequiredMixin, View):
         except Exception:
             pass  
 
-class MarkNotificationReadView( View):
+
+
+class MarkNotificationReadView(View):
     def post(self, request, pk):
         try:
-            notif = Notification.objects.get(pk=pk)
+            notif = Notification.objects.get(pk=pk, recipient=request.user)
             notif.is_read = True
             notif.save()
-            return JsonResponse({'success': True})
+            return JsonResponse({
+                "success": True,
+                "title": notif.title,
+                "message": notif.message,
+                "created_at": localtime(notif.created_at).strftime('%d %b %Y, %I:%M %p')
+            })
         except Notification.DoesNotExist:
-            return JsonResponse({'error': 'Notification not found'}, status=404)
+            return JsonResponse({'error': 'Notification not found or not authorized'}, status=404)
 
+class MarkNotificationUnreadView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        try:
+            notif = Notification.objects.get(pk=pk, recipient=request.user)
+            notif.is_read = False
+            notif.save()
+            return JsonResponse({
+                "success": True,
+                "title": notif.title,
+                "message": notif.message,
+                "created_at": localtime(notif.created_at).strftime('%d %b %Y, %I:%M %p')
+            })
+        except Notification.DoesNotExist:
+            return JsonResponse({'error': 'Notification not found or not authorized'}, status=404)
 
-class ClearAllNotificationsView(LoginRequiredMixin,  View):
+class ClearAllNotificationsView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         if request.user.is_superuser:
             Notification.objects.all().delete()
@@ -3333,24 +3470,47 @@ class ClearAllNotificationsView(LoginRequiredMixin,  View):
         else:
             return JsonResponse({'status': 'unauthorized'}, status=403)
 
-
-class MarkNotificationReadView( View):
-    def post(self, request, pk):
-        notif = Notification.objects.get(pk=pk)
-        notif.is_read = True
-        notif.save()
-        return JsonResponse({
-            "title": notif.title,
-            "message": notif.message,
-            "created_at": localtime(notif.created_at).strftime('%d %b %Y, %I:%M %p')
-        })
-
 class DeleteNotificationView(LoginRequiredMixin, View):
     def post(self, request, id):
-        # Retrieve the notification, ensuring it belongs to the current user
         notification = get_object_or_404(Notification, id=id, recipient=request.user)
-        # Delete the notification
         notification.delete()
         return JsonResponse({'status': 'success'})
 
+
+
+
+
+class CategoryProductListView(TemplateView):
+    template_name = "userdashboard/view/category_products_list.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        category_id = self.kwargs["category_id"]
+        category = ProductCategory.objects.get(id=category_id)
+
+        last_categories = ProductLastCategory.objects.filter(sub_category__category=category)
+
+        products = Product.objects.filter(category=category, is_active=True)
+
+        user_cart_ids = []
+        user_cart_quantities = {}
+        user_wishlist_ids = []
+
+        if self.request.user.is_authenticated:
+        
+            cart_items = CartProduct.objects.filter(user=self.request.user)
+            user_cart_ids = [item.product.id for item in cart_items]
+            user_cart_quantities = {item.product.id: item.quantity for item in cart_items}
+
+       
+            wishlist_items = WishlistProduct.objects.filter(user=self.request.user)
+            user_wishlist_ids = [item.product.id for item in wishlist_items]
+
+        context["category"] = category
+        context["last_categories"] = last_categories
+        context["products"] = products
+        context["user_cart_ids"] = user_cart_ids
+        context["user_cart_quantities"] = user_cart_quantities
+        context["user_wishlist_ids"] = user_wishlist_ids
+        return context
 

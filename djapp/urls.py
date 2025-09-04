@@ -30,8 +30,6 @@ urlpatterns = [
     
     path('api_v1/', include('medical_api.urls')),
 ]
-if settings.DEBUG:
-    urlpatterns += static(settings.STATIC_URL, document_root=os.path.join(settings.BASE_DIR, 'static'))
 
 
 
