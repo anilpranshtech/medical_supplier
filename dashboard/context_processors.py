@@ -20,6 +20,8 @@ def header_avatar(request):
     return {"header_avatar_url": None}
 
 
+from dashboard.models import Notification  
+
 def notification_context(request):
     if not request.user.is_authenticated:
         return {

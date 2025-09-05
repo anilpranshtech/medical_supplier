@@ -137,20 +137,20 @@
                         <div class="row">
                             <div class="col-lg-6">
                                 <!-- General Information Card -->
-                                <div class="card card-flush py-4">
+                                <div class="card card-flush py-4" id="hide_field_general_info">
                                     <div class="card-header">
                                         <div class="card-title">
                                             <h2>General Information</h2>
                                         </div>
                                     </div>
                                     <div class="card-body pt-0">
-                                        <div class="mb-10 fv-row">
+                                        <div class="mb-10 fv-row" id="hide_field_product_name">
                                             <label class="required form-label">Product Name</label>
                                             <input type="text" name="product_name" class="form-control mb-2" placeholder="Product name" value="{{ product_name }}" required />
                                             <div class="text-muted fs-7">A product name is required and recommended to be unique.</div>
                                         </div>
 
-                                        <div>
+                                        <div id="hide_field_description" class="mb-10 fv-row">
                                             <label class="form-label">Description</label>
                                             <textarea name="product_description" class="form-control" placeholder="Product description">{{ product_description|default:'' }}</textarea><br>
                                         </div>
@@ -161,19 +161,19 @@
                                             <div class="text-muted fs-7">Specify how many items are available in stock.</div>
                                         </div>
 
-                                        <div class="mb-10 mt-4 fv-row">
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_brand">
                                             <label class="form-label required">Brand</label>
                                             <input type="text" name="brand" class="form-control" placeholder="Enter brand" required />
                                             <div class="text-muted fs-7">Enter the product brand (new or existing).</div>
                                         </div>
 
-                                        <div class="mb-10 mt-4 fv-row">
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_product_from">
                                             <label class="form-label required">Product From</label>
                                             <input type="text" name="product_from" class="form-control mb-2" placeholder="e.g., India, China" value="{{ product_from }}" required />
                                             <div class="text-muted fs-7">Country of origin.</div>
                                         </div>
 
-                                        <div class="mb-10 mt-4 fv-row">
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_selling_countries">
                                             <label class="form-label required">Selling Countries</label>
                                             <input type="text" name="selling_countries" class="form-control mb-2" placeholder="e.g., India, USA, UK" value="{{ selling_countries|default:'' }}" required />
                                             <div class="text-muted fs-7">Comma-separated country names (e.g., India, USA, UK).</div>
@@ -312,7 +312,7 @@
                             <!-- Right Column in Right Container -->
                             <div class="col-lg-6">
                                 <!-- Additional Details Card -->
-                                <div class="card card-flush py-4">
+                                <div class="card card-flush py-4" id="hide_field_additional_info">
                                     <div class="card-header">
                                         <div class="card-title">
                                             <h2>Additional Details</h2>
@@ -340,7 +340,7 @@
                                             <div class="text-muted fs-7">Estimated delivery time in days.</div>
                                         </div>
 
-                                        <div class="mb-10 mt-4 fv-row">
+                                        <div class="mb-10 mt-4 fv-row"  id="hide_field_keywords">
                                             <label class="form-label required">Keywords</label>
                                             <input type="text" name="keywords" class="form-control mb-2" placeholder="Comma-separated keywords" value="{{ keywords }}" required />
                                             <div class="text-muted fs-7">Comma-separated keywords for product search.</div>
@@ -352,7 +352,7 @@
                                             <div class="text-muted fs-7">Commission percentage for the product.</div>
                                         </div>
 
-                                        <div class="mb-10 mt-4 fv-row">
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_brochure">
                                             <label class="form-label required">Brochure</label>
                                             <input type="file" name="brochure" class="form-control mb-2" accept=".pdf, .doc, .docx" required />
                                             <div class="text-muted fs-7">Upload product brochure (PDF, DOC).</div>
@@ -859,21 +859,35 @@ document.addEventListener("DOMContentLoaded", function () {
     const webinarCategories = ["Webinar", "Conference", "Event"];
 
     const fieldsToHide = [
-        "hide_field_product_name", "hide_field_brand", "hide_field_product_from", "hide_field_selling_countries",
+        "hide_field_product_name","hide_field_description", "hide_field_brand", "hide_field_product_from", "hide_field_selling_countries",
         "hide_field_product_quantity", "hide_field_warranty", "hide_field_condition", "hide_field_return_time_limit",
         "hide_field_manufacture_date", "hide_field_expiry_date", "hide_field_barcode", "hide_field_price",
         "hide_field_weight_unit", "hide_field_weight", "hide_field_delivery_time", "hide_field_commission_percentage",
-        "hide_field_supplier_sku", "hide_field_pcs_per_unit", "hide_field_min_order_qty", "hide_field_low_stock_alert",
+        "hide_field_supplier_sku", "hide_field_pcs_per_unit", "hide_field_min_order_qty", "hide_field_low_stock_alert", 
         "hide_field_button_type", "hide_field_expiration_days", "hide_field_tag", "hide_field_offer_percentage",
         "hide_field_offer_start", "hide_field_offer_end", "hide_field_offer_status", "hide_field_ask_admin_to_publish",
-        "hide_field_keywords", "hide_field_brochure"
+        "hide_field_keywords", "hide_field_brochure", "hide_field_general_info","hide_field_additional_info"
     ];
+
+    const generalInfoContainer = document.querySelector('.d-flex.flex-column.flex-row-fluid'); // Right Side Container
 
     function toggleFormFields() {
         const selectedText = categorySelect.options[categorySelect.selectedIndex]?.text.trim() || "";
         const isWebinar = webinarCategories.includes(selectedText);
 
-        // Toggle visibility and required status for fields in fieldsToHide
+        // Move webinarFields into general info container if webinar
+        if (webinarFields) {
+            if (isWebinar) {
+                webinarFields.classList.remove("d-none");
+                generalInfoContainer.insertBefore(webinarFields, generalInfoContainer.firstChild);
+                webinarFields.querySelectorAll("input").forEach(el => el.setAttribute("required", "required"));
+            } else {
+                webinarFields.classList.add("d-none");
+                webinarFields.querySelectorAll("input").forEach(el => el.removeAttribute("required"));
+            }
+        }
+
+        // Hide or show other fields
         fieldsToHide.forEach(id => {
             const field = document.getElementById(id);
             if (field) {
@@ -890,19 +904,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
 
-        // Toggle webinar fields
-        if (webinarFields) {
-            webinarFields.classList.toggle("d-none", !isWebinar);
-            webinarFields.querySelectorAll("input").forEach(el => {
-                if (isWebinar) {
-                    el.setAttribute("required", "required");
-                } else {
-                    el.removeAttribute("required");
-                }
-            });
-        }
-
-        // Handle return time limit field visibility based on is_returnable toggle
+        // Handle return time limit separately
         if (isReturnableToggle && returnTimeLimitField) {
             returnTimeLimitField.style.display = isReturnableToggle.checked && !isWebinar ? "" : "none";
             returnTimeLimitField.querySelectorAll("input").forEach(el => {
@@ -927,15 +929,9 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // Attach listeners
-    if (categorySelect) {
-        categorySelect.addEventListener("change", toggleFormFields);
-    }
-    if (isReturnableToggle) {
-        isReturnableToggle.addEventListener("change", toggleFormFields);
-    }
+    if (categorySelect) categorySelect.addEventListener("change", toggleFormFields);
+    if (isReturnableToggle) isReturnableToggle.addEventListener("change", toggleFormFields);
 
-    // Run on page load
     toggleFormFields();
 });
 
