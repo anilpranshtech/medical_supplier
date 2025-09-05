@@ -52,8 +52,10 @@ logger = logging.getLogger(__name__)
 
 
 class HomeView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
-    login_url = 'dashboard:login'
     template_name = 'superuser/home.html'
+    login_url = 'dashboard:login'
+    redirect_field_name = None
+
 
     def get(self, request):
         if not request.user.is_authenticated:
