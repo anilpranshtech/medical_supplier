@@ -524,7 +524,8 @@ class EditproductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
             'offer_percentage': product.offer_percentage,
             'offer_start': product.offer_start.strftime('%Y-%m-%d') if product.offer_start else '',
             'offer_end': product.offer_end.strftime('%Y-%m-%d') if product.offer_end else '',
-            'is_active': 'True' if product.is_active else 'False',
+            'offer_active': product.offer_active,   
+            'ask_admin_to_publish': product.ask_admin_to_publish,  
             'brand': product.brand.name if product.brand else '',
             'categories': categories,
             'category_id': product.category.id if product.category else None,
@@ -581,6 +582,9 @@ class EditproductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
             offer_percentage = request.POST.get('offer_percentage')
             if offer_percentage:
                 product.offer_percentage = float(offer_percentage)
+            # Offer status and approval request
+            product.offer_active = request.POST.get('offer_active') == 'on'
+            product.ask_admin_to_publish = request.POST.get('ask_admin_to_publish') == 'on'
 
             # Category
             category_id = request.POST.get('category')

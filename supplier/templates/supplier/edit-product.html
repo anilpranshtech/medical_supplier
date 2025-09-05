@@ -299,8 +299,7 @@
                                             <select class="form-select mb-2" name="weight_unit" data-control="select2" data-hide-search="true" data-placeholder="Select weight unit">
                                                 <option value="gm" {% if weight_unit == 'gm' %}selected{% endif %}>Gram</option>
                                                 <option value="kg" {% if weight_unit == 'kg' %}selected{% endif %}>Kilogram</option>
-                                                <option value="cm" {% if weight_unit == 'cm' %}selected{% endif %}>Centimeter</option>
-                                                <option value="ltr" {% if weight_unit == 'ltr' %}selected{% endif %}>Liter</option>
+                                               
                                             </select>
                                             <div class="text-muted fs-7">Unit of product weight.</div>
                                         </div>
@@ -391,6 +390,24 @@
                                             <input type="date" name="offer_end" class="form-control mb-2" placeholder="Select offer end date" value="{{ offer_end }}" />
                                             <div class="text-muted fs-7">Date when the offer ends.</div>
                                         </div>
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_offer_status">
+                                            <label class="form-label">Offer Status</label>
+                                            <div class="form-check form-switch">
+                                                <input type="checkbox" class="form-check-input" name="offer_active"
+                                                       {% if offer_active %}checked{% endif %}
+                                                       {% if not request.user.is_superuser %}disabled{% endif %}>
+                                                <label class="form-check-label text-muted">Activate offer</label>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_ask_admin_to_publish">
+                                            <label class="form-label">Ask Admin to Approve Offer</label>
+                                            <div class="form-check">
+                                                <input type="checkbox" class="form-check-input" name="ask_admin_to_publish"
+                                                       {% if ask_admin_to_publish %}checked{% endif %}>
+                                                <label class="form-check-label">Request admin to publish the offer</label>
+                                            </div>
+                                        </div>  
                                     </div>
                                 </div>
                                 <!-- Webinar Fields -->

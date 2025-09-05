@@ -35,7 +35,7 @@
                                 <!-- Main Thumbnail Upload -->
                                 <div class="image-input image-input-empty image-input-outline image-input-placeholder mb-3" data-kt-image-input="true">
                                     <div class="image-input-wrapper w-150px h-150px"></div>
-
+                                    
                                     <label class="btn btn-icon btn-circle btn-active-color-primary w-25px h-25px bg-body shadow"
                                         data-kt-image-input-action="change" data-bs-toggle="tooltip" title="Change avatar">
                                         <i class="fas fa-pen fs-7 text-primary"></i>
@@ -54,7 +54,7 @@
                                     </span>
                                 </div>
 
-                                <div class="text-muted fs-7 mb-4">Upload the main thumbnail image. Only *.png, *.jpg and *.jpeg image files are accepted</div>
+                                <div class="text-muted fs-7 mb-4">Upload the main thumbnail image<span style="color: red;">*</span></div>
 
                                 <!-- Gallery Images Upload -->
                                 <label class="form-label fw-bold">Another Images</label>
@@ -144,11 +144,12 @@
                                         </div>
                                     </div>
                                     <div class="card-body pt-0">
-                                        <div class="mb-10 fv-row" id="hide_field_product_name">
+                                        <div class="mb-10 fv-row">
                                             <label class="required form-label">Product Name</label>
-                                            <input type="text" name="product_name" class="form-control mb-2" placeholder="Product name" value="{{ product_name }}" required />
-                                            <div class="text-muted fs-7">A product name is required and recommended to be unique.</div>
-                                        </div>
+                                            <input type="text" id="product_name" name="product_name" class="form-control mb-2" 
+                                                   placeholder="Product name" value="{{ product_name }}" required />
+                                            <div class="text-muted fs-7">A product name is required (letters & numbers, max 10 characters).</div>
+                                        </div> 
 
                                         <div id="hide_field_description" class="mb-10 fv-row">
                                             <label class="form-label">Description</label>
@@ -157,7 +158,7 @@
 
                                         <div class="mb-10 mt-4 fv-row" id="hide_field_product_quantity">
                                             <label class="form-label required">Quantity</label>
-                                            <input type="number" name="product_quantity" class="form-control mb-2" placeholder="Enter available quantity" value="{{ product_quantity }}" min="0" required />
+                                            <input type="number" name="product_quantity" class="form-control mb-2" placeholder="Enter available quantity" value="{{ product_quantity }}" min="1" required />
                                             <div class="text-muted fs-7">Specify how many items are available in stock.</div>
                                         </div>
 
@@ -167,15 +168,17 @@
                                             <div class="text-muted fs-7">Enter the product brand (new or existing).</div>
                                         </div>
 
-                                        <div class="mb-10 mt-4 fv-row" id="hide_field_product_from">
+                                        <div class="mb-10 mt-4 fv-row">
                                             <label class="form-label required">Product From</label>
-                                            <input type="text" name="product_from" class="form-control mb-2" placeholder="e.g., India, China" value="{{ product_from }}" required />
-                                            <div class="text-muted fs-7">Country of origin.</div>
+                                            <input type="text" id="product_from" name="product_from" class="form-control mb-2" 
+                                                   placeholder="e.g., India, China" value="{{ product_from }}" required />
+                                            <div class="text-muted fs-7">Country of origin (only letters allowed).</div>
                                         </div>
-
-                                        <div class="mb-10 mt-4 fv-row" id="hide_field_selling_countries">
+                                        
+                                        <div class="mb-10 mt-4 fv-row">
                                             <label class="form-label required">Selling Countries</label>
-                                            <input type="text" name="selling_countries" class="form-control mb-2" placeholder="e.g., India, USA, UK" value="{{ selling_countries|default:'' }}" required />
+                                            <input type="text" id="selling_countries" name="selling_countries" class="form-control mb-2" 
+                                                   placeholder="e.g., India, USA, UK" value="{{ selling_countries|default:'' }}" required />
                                             <div class="text-muted fs-7">Comma-separated country names (e.g., India, USA, UK).</div>
                                         </div>
 
@@ -208,21 +211,32 @@
 
                                         <div class="mb-10 mt-4 fv-row" id="hide_field_return_time_limit">
                                             <label class="form-label required">Return Time Limit (Days)</label>
-                                            <input type="number" name="return_time_limit" class="form-control mb-2" placeholder="Enter return time limit in days" value="{{ return_time_limit }}" min="0" required />
+                                            <input type="number" name="return_time_limit" class="form-control mb-2" placeholder="Enter return time limit in days" value="{{ return_time_limit }}" min="1" required />
                                             <div class="text-muted fs-7">Number of days for product return.</div>
                                         </div>
 
                                         <div class="mb-10 mt-4 fv-row" id="hide_field_manufacture_date">
                                             <label class="form-label required">Manufacture Date</label>
-                                            <input type="date" name="manufacture_date" class="form-control mb-2" placeholder="Select manufacture date" value="{{ manufacture_date }}" required />
+                                            <input type="date" 
+                                                   id="manufacture_date"
+                                                   name="manufacture_date" 
+                                                   class="form-control mb-2" 
+                                                   placeholder="Select manufacture date" 
+                                                   required />
                                             <div class="text-muted fs-7">Date of manufacture.</div>
                                         </div>
-
+                                        
                                         <div class="mb-10 mt-4 fv-row" id="hide_field_expiry_date">
                                             <label class="form-label required">Expiry Date</label>
-                                            <input type="date" name="expiry_date" class="form-control mb-2" placeholder="Select expiry date" value="{{ expiry_date }}" required />
+                                            <input type="date" 
+                                                   id="expiry_date"
+                                                   name="expiry_date" 
+                                                   class="form-control mb-2" 
+                                                   placeholder="Select expiry date" 
+                                                   required />
                                             <div class="text-muted fs-7">Date of expiry.</div>
                                         </div>
+                                        
 
                                         <div class="mb-10 mt-4 fv-row" id="hide_field_barcode">
                                             <label class="form-label required">Barcode</label>
@@ -240,11 +254,13 @@
                                         </div>
                                     </div>
                                     <div class="card-body pt-0">
-                                        <div class="mb-10 fv-row">
-                                            <label class="required form-label">Base Price</label>
-                                            <input type="text" name="price" class="form-control mb-2" placeholder="Product price" value="{{ price|default:'' }}" required />
-                                            <div class="text-muted fs-7">Set the product price.</div>
-                                        </div>
+                                       <div class="mb-10 fv-row">
+    <label class="required form-label">Base Price</label>
+    <input type="text" id="price" name="price" class="form-control mb-2" 
+           placeholder="Product price" value="{{ price|default:'' }}" required />
+    <div class="text-muted fs-7">Enter a valid product price (1 - 999999, up to 2 decimals).</div>
+</div>
+
 
                                         <div class="fv-row mb-10">
                                             <label class="fs-6 fw-semibold mb-2">
@@ -330,25 +346,25 @@
 
                                         <div class="mb-10 mt-4 fv-row" id="hide_field_weight">
                                             <label class="form-label required">Weight</label>
-                                            <input type="number" name="weight" class="form-control mb-2" placeholder="Enter product weight" value="{{ weight }}" min="0" step="0.01" required />
+                                            <input type="number" name="weight" class="form-control mb-2" placeholder="Enter product weight" value="{{ weight }}" min="1" step="0.01" required />
                                             <div class="text-muted fs-7">Product weight.</div>
                                         </div>
 
                                         <div class="mb-10 mt-4 fv-row" id="hide_field_delivery_time">
                                             <label class="form-label required">Delivery Time (Days)</label>
-                                            <input type="number" name="delivery_time" class="form-control mb-2" placeholder="Enter estimated delivery time in days" value="{{ delivery_time }}" min="0" required />
+                                            <input type="number" name="delivery_time" class="form-control mb-2" placeholder="Enter estimated delivery time in days" value="{{ delivery_time }}" min="1" required />
                                             <div class="text-muted fs-7">Estimated delivery time in days.</div>
                                         </div>
 
-                                        <div class="mb-10 mt-4 fv-row"  id="hide_field_keywords">
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_keywords">
                                             <label class="form-label required">Keywords</label>
-                                            <input type="text" name="keywords" class="form-control mb-2" placeholder="Comma-separated keywords" value="{{ keywords }}" required />
+                                            <input type="text" id="keywords" name="keywords" class="form-control mb-2" 
+                                                   placeholder="Comma-separated keywords" value="{{ keywords }}" required />
                                             <div class="text-muted fs-7">Comma-separated keywords for product search.</div>
                                         </div>
-
                                         <div class="mb-10 mt-4 fv-row" id="hide_field_commission_percentage">
                                             <label class="form-label required">Commission Percentage</label>
-                                            <input type="number" name="commission_percentage" class="form-control mb-2" placeholder="Enter commission percentage" value="{{ commission_percentage }}" min="0" max="100" step="0.01" required />
+                                            <input type="number" name="commission_percentage" class="form-control mb-2" placeholder="Enter commission percentage" value="{{ commission_percentage }}" min="1" max="100" step="0.01" required />
                                             <div class="text-muted fs-7">Commission percentage for the product.</div>
                                         </div>
 
@@ -378,7 +394,7 @@
 
                                         <div class="mb-10 mt-4 fv-row" id="hide_field_low_stock_alert">
                                             <label class="form-label required">Low Stock Alert</label>
-                                            <input type="number" name="low_stock_alert" class="form-control mb-2" placeholder="Enter low stock alert level" value="{{ low_stock_alert }}" min="0" required />
+                                            <input type="number" name="low_stock_alert" class="form-control mb-2" placeholder="Enter low stock alert level" value="{{ low_stock_alert }}" min="1" required />
                                             <div class="text-muted fs-7">Alert when stock falls below this level.</div>
                                         </div>
 
@@ -411,7 +427,7 @@
 
                                         <div class="mb-10 mt-4 fv-row" id="hide_field_expiration_days">
                                             <label class="form-label required">Expiration Days</label>
-                                            <input type="number" name="expiration_days" class="form-control mb-2" placeholder="Enter expiration days" value="{{ expiration_days }}" min="0" required />
+                                            <input type="number" name="expiration_days" class="form-control mb-2" placeholder="Enter expiration days" value="{{ expiration_days }}" min="1" required />
                                             <div class="text-muted fs-7">Number of days until product expires.</div>
                                         </div>
 
@@ -430,19 +446,19 @@
                                             <label class="form-label">Offer Percentage</label>
                                             <input type="number" name="offer_percentage" class="form-control mb-2"
                                                    placeholder="Enter offer percentage" value="{{ offer_percentage }}"
-                                                   min="0" max="100" step="0.01" />
+                                                   min="1" max="100" step="0.01" />
                                             <div class="text-muted fs-7">Percentage discount for the product.</div>
                                         </div>
 
                                         <div class="mb-10 mt-4 fv-row" id="hide_field_offer_start">
                                             <label class="form-label">Offer Start</label>
-                                            <input type="date" name="offer_start" class="form-control mb-2"
+                                            <input type="date" id="offer_start" name="offer_start" class="form-control mb-2"
                                                    placeholder="Select offer start date" value="{{ offer_start }}" />
                                         </div>
-
+                                        
                                         <div class="mb-10 mt-4 fv-row" id="hide_field_offer_end">
                                             <label class="form-label">Offer End</label>
-                                            <input type="date" name="offer_end" class="form-control mb-2"
+                                            <input type="date" id="offer_end" name="offer_end" class="form-control mb-2"
                                                    placeholder="Select offer end date" value="{{ offer_end }}" />
                                         </div>
 
@@ -1141,4 +1157,124 @@ $(document).ready(function () {
 });
 
 </script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const manufactureDate = document.getElementById("manufacture_date");
+        const expiryDate = document.getElementById("expiry_date");
+        const offerStart = document.getElementById("offer_start");
+        const offerEnd = document.getElementById("offer_end");
+        const keywords = document.getElementById("keywords");
+        const productName = document.querySelector('input[name="product_name"]');
+        const productFrom = document.querySelector('input[name="product_from"]');
+        const sellingCountries = document.querySelector('input[name="selling_countries"]');
+        const price = document.getElementById("price"); // Base Price
+    
+        const today = new Date().toISOString().split("T")[0];
+    
+        // ================== Date Validations ==================
+        manufactureDate?.addEventListener("input", function () {
+            if (manufactureDate.value > today) {
+                manufactureDate.setCustomValidity("Manufacture Date cannot be in the future.");
+            } else {
+                manufactureDate.setCustomValidity("");
+            }
+        });
+    
+        expiryDate?.addEventListener("input", function () {
+            if (manufactureDate.value && expiryDate.value <= manufactureDate.value) {
+                expiryDate.setCustomValidity("Expiry Date must be later than Manufacture Date.");
+            } else {
+                expiryDate.setCustomValidity("");
+            }
+        });
+    
+        offerStart?.addEventListener("input", function () {
+            if (offerStart.value < today) {
+                offerStart.setCustomValidity("Offer Start Date cannot be in the past.");
+            } else if (offerEnd.value && offerStart.value >= offerEnd.value) {
+                offerStart.setCustomValidity("Offer Start Date must be earlier than Offer End Date.");
+            } else {
+                offerStart.setCustomValidity("");
+            }
+        });
+    
+        offerEnd?.addEventListener("input", function () {
+            if (offerStart.value && offerEnd.value <= offerStart.value) {
+                offerEnd.setCustomValidity("Offer End Date must be later than Offer Start Date.");
+            } else {
+                offerEnd.setCustomValidity("");
+            }
+        });
+    
+        // ================== Keywords Validation ==================
+        keywords?.addEventListener("input", function () {
+            const regex = /^[a-zA-Z\s]+(,[a-zA-Z\s]+)*$/;
+            if (keywords.value.trim() === "") {
+                keywords.setCustomValidity("Keywords field cannot be empty.");
+            } else if (!regex.test(keywords.value)) {
+                keywords.setCustomValidity("Only text and commas are allowed. Numbers or special characters are not allowed.");
+            } else {
+                keywords.setCustomValidity("");
+            }
+        });
+    
+        // ================== Product Name Validation ==================
+        productName?.addEventListener("input", function () {
+            const regex = /^[a-zA-Z0-9\s\-_]+$/;
+            if (productName.value.trim() === "") {
+                productName.setCustomValidity("Product Name cannot be empty.");
+            } else if (!regex.test(productName.value)) {
+                productName.setCustomValidity("Product Name can only contain letters, numbers, spaces, hyphen (-), and underscore (_).");
+            } else {
+                productName.setCustomValidity("");
+            }
+        });
+    
+        // ================== Product From Validation ==================
+        productFrom?.addEventListener("input", function () {
+            const regex = /^[a-zA-Z\s]+$/;
+            if (productFrom.value.trim() === "") {
+                productFrom.setCustomValidity("Product From cannot be empty.");
+            } else if (!regex.test(productFrom.value)) {
+                productFrom.setCustomValidity("Product From can only contain letters and spaces.");
+            } else {
+                productFrom.setCustomValidity("");
+            }
+        });
+    
+        // ================== Selling Countries Validation ==================
+        sellingCountries?.addEventListener("input", function () {
+            const regex = /^[a-zA-Z\s]+(,[a-zA-Z\s]+)*$/;
+            if (sellingCountries.value.trim() === "") {
+                sellingCountries.setCustomValidity("Selling Countries cannot be empty.");
+            } else if (!regex.test(sellingCountries.value)) {
+                sellingCountries.setCustomValidity("Only country names separated by commas are allowed (letters and spaces only).");
+            } else {
+                sellingCountries.setCustomValidity("");
+            }
+        });
+    
+        // ================== Base Price Validation ==================
+        price?.addEventListener("input", function () {
+            let value = price.value.trim();
+            price.value = value; // remove leading/trailing spaces immediately
+    
+            const regex = /^\d+(\.\d{1,2})?$/; // numbers with max 2 decimals
+    
+            if (value === "") {
+                price.setCustomValidity("Base Price cannot be empty.");
+            } else if (!regex.test(value)) {
+                price.setCustomValidity("Enter a valid price (numbers only, up to 2 decimals).");
+            } else if (parseFloat(value) <= 0) {
+                price.setCustomValidity("Base Price must be greater than 0.");
+            } else if (parseFloat(value) > 999999) {
+                price.setCustomValidity("Base Price cannot exceed 999999.");
+            } else {
+                price.setCustomValidity("");
+            }
+        });
+    });
+    </script>
+    
 {% endblock page_only_scripts %}

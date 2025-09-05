@@ -897,7 +897,7 @@ class EditproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
             'offer_percentage': product.offer_percentage,
             'offer_start': product.offer_start.strftime('%Y-%m-%d') if product.offer_start else '',
             'offer_end': product.offer_end.strftime('%Y-%m-%d') if product.offer_end else '',
-            'is_active': 'True' if product.is_active else 'False',
+            'offer_active': product.offer_active, 
             'brand': product.brand.name if product.brand else '',
             'categories': categories,
             'category_id': product.category.id if product.category else None,
@@ -960,6 +960,7 @@ class EditproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
             product.is_active = request.POST.get('is_active') == 'True'
             category_id = request.POST.get('category')
             product.category = ProductCategory.objects.get(pk=category_id) if category_id else None
+            product.offer_active = request.POST.get('offer_active') == 'on'
 
             sub_category_id = request.POST.get('sub_category')
             product.sub_category = ProductSubCategory.objects.get(pk=sub_category_id) if sub_category_id else None
