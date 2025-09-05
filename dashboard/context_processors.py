@@ -20,7 +20,6 @@ def header_avatar(request):
     return {"header_avatar_url": None}
 
 
-from dashboard.models import Notification  
 
 def notification_context(request):
     if not request.user.is_authenticated:
@@ -35,15 +34,22 @@ def notification_context(request):
 
     if user.is_superuser or user.is_staff:
         all_notifications = base_query.filter(
-            Q(recipient=user, send_to="single") | Q(send_to="all") | Q(send_to="buyer") | Q(send_to="supplier")
+            Q(recipient=user, send_to="single") |
+            Q(send_to="all") |
+            Q(send_to="buyer") |
+            Q(send_to="supplier")
         )
     elif hasattr(user, 'supplierprofile'):
         all_notifications = base_query.filter(
-            Q(recipient=user, send_to="single") | Q(send_to="supplier") | Q(send_to="all")
+            Q(recipient=user, send_to="single") |
+            Q(send_to="supplier") |
+            Q(send_to="all")
         )
     else:
         all_notifications = base_query.filter(
-            Q(recipient=user, send_to="single") | Q(send_to="buyer") | Q(send_to="all")
+            Q(recipient=user, send_to="single") |
+            Q(send_to="buyer") |
+            Q(send_to="all")
         )
 
     return {
@@ -51,3 +57,4 @@ def notification_context(request):
         'read_notifications': all_notifications.filter(is_read=True).order_by('-created_at'),
         'unread_notifications': all_notifications.filter(is_read=False).order_by('-created_at'),
     }
+

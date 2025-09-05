@@ -550,6 +550,39 @@ class CartProduct(models.Model):
 #         ordering = ['-created_at']
 #         verbose_name = verbose_name_plural = "Notification"
 
+# class Notification(models.Model):
+#     SEND_TO_CHOICES = [
+#         ('buyer', 'All Buyers'),
+#         ('supplier', 'All Suppliers'),
+#         ('all', 'All Users'),
+#         ('single', 'Specific User'),
+#     ]
+
+#     recipient = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='notifications')
+#     send_to = models.CharField(max_length=20, choices=SEND_TO_CHOICES, default='single', null=True, blank=True)
+
+#     title = models.CharField(max_length=255)
+#     message = models.TextField()
+#     is_read = models.BooleanField(default=False)
+#     is_deleted = models.BooleanField(default=False)
+#     created_at = models.DateTimeField(default=timezone.now)
+
+#     class Meta:
+#         ordering = ['-created_at']
+
+#     def delete(self, using=None, keep_parents=False):
+#         is_deleted = True
+
+
+
+#     def __str__(self):
+#         if self.send_to == "single" and self.recipient:
+#             return f"To {self.recipient.username} - {self.title}"
+#         else:
+#             return f"{self.get_send_to_display()} - {self.title}"
+
+
+
 class Notification(models.Model):
     SEND_TO_CHOICES = [
         ('buyer', 'All Buyers'),
@@ -558,28 +591,32 @@ class Notification(models.Model):
         ('single', 'Specific User'),
     ]
 
-    recipient = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='notifications')
-    send_to = models.CharField(max_length=20, choices=SEND_TO_CHOICES, default='single', null=True, blank=True)
+    recipient = models.ForeignKey(
+        User, on_delete=models.CASCADE, null=True, blank=True, related_name='notifications'
+    )
+    send_to = models.CharField(
+        max_length=20, choices=SEND_TO_CHOICES, default='single', null=True, blank=True
+    )
 
     title = models.CharField(max_length=255)
     message = models.TextField()
     is_read = models.BooleanField(default=False)
-    is_deleted = models.BooleanField(default=False)
+    is_deleted = models.BooleanField(default=False)   
     created_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
         ordering = ['-created_at']
 
     def delete(self, using=None, keep_parents=False):
-        is_deleted = True
-
-
+        self.is_deleted = True
+        self.save(update_fields=["is_deleted"])
 
     def __str__(self):
         if self.send_to == "single" and self.recipient:
             return f"To {self.recipient.username} - {self.title}"
         else:
             return f"{self.get_send_to_display()} - {self.title}"
+
 
 
 class DeliveryPartner(models.Model):

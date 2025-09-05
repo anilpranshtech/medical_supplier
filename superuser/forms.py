@@ -11,6 +11,17 @@ class BannerForm(forms.ModelForm):
         model = Banner
         fields = ['title', 'image', 'link', 'is_active', 'order']
 
+    def clean_order(self):
+        order = self.cleaned_data.get('order')
+        # Exclude the current instance (useful when editing)
+        qs = Banner.objects.filter(order=order)
+        if self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+
+        if qs.exists():
+            raise forms.ValidationError(f"A banner with order {order} already exists. Please choose a different order.")
+        return order
+
 class SuperuserRFQQuotationForm(forms.ModelForm):
     class Meta:
         model = RFQRequest

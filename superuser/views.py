@@ -52,8 +52,10 @@ logger = logging.getLogger(__name__)
 
 
 class HomeView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
-    login_url = 'dashboard:login'
     template_name = 'superuser/home.html'
+    login_url = 'dashboard:login'
+    redirect_field_name = None
+
 
     def get(self, request):
         if not request.user.is_authenticated:
@@ -372,9 +374,9 @@ class User_Accounts_AddNewUser(StaffAccountRequiredMixin, View):
             return JsonResponse({'status': 'error', 'message': 'Email is already exist.'}, status=400)
 
         # check 3- check if email has + sign
-        if '+' in post_dict.get('user_email_address'):
-            return JsonResponse({'status': 'error', 'message': 'Invalid Email! Plus(+) sign is not allowed.'},
-                                status=400)
+        # if '+' in post_dict.get('user_email_address'):
+        #     return JsonResponse({'status': 'error', 'message': 'Invalid Email! Plus(+) sign is not allowed.'},
+        #                         status=400)
 
         account_role = post_dict.get('account_role', None)
         if account_role == 'user':
