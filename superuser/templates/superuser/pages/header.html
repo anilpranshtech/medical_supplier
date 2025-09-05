@@ -25,23 +25,26 @@
                  data-kt-search-layout="menu" data-kt-search-responsive="true" data-kt-menu-trigger="auto"
                  data-kt-menu-permanent="true" data-kt-menu-placement="bottom-start">
 
-                <button class="btn btn-sm position-relative mx-3 fw-bolder" style="background:#ffcccc ;color: #ff0000; width:190px;">
+                <a href="{% url 'superuser:user_accounts' %}" class="btn btn-sm position-relative mx-3 fw-bolder" style="background:#ffcccc ;color: #ff0000; width:190px;">
                     Total Users <br>{% tag_total_users %}
-                </button>
-                <button class="btn btn-sm position-relative mx-3 fw-bolder" style="background:#e6ccff ;color: #8c1aff; width:190px;">
-                    Active Users <br>{% tag_total_active_users %}
-                </button>
-                <button class="btn btn-sm position-relative mx-3 fw-bolder" style="background:#cce6ff ;color: #0066cc; width:190px;">
-                    Retailer <br> {% tag_total_retailer %}
-                </button>
-                <button class="btn btn-sm position-relative mx-3 fw-bolder" style="background:#fff0b3 ;color: #e69900 ; width:190px;">
-                    Wholesaler <br> {% tag_total_wholesaler %}
-                </button>
+                </a>
 
-                <button class="btn btn-sm position-relative mx-3 fw-bolder"
-                        onclick="window.location='';" style="background:#c2f0c2; color:#29a329; width:190px;">
+                <a href="{% url 'superuser:user_accounts' %}?account_status=active" class="btn btn-sm position-relative mx-3 fw-bolder" style="background:#e6ccff ;color: #8c1aff; width:190px;">
+                    Active Users <br>{% tag_total_active_users %}
+                </a>
+
+                <a href="{% url 'superuser:user_accounts' %}?account_type=retailer" class="btn btn-sm position-relative mx-3 fw-bolder" style="background:#cce6ff ;color: #0066cc; width:190px;">
+                    Retailer <br> {% tag_total_retailer %}
+                </a>
+
+                <a href="{% url 'superuser:user_accounts' %}?account_type=wholesaler" class="btn btn-sm position-relative mx-3 fw-bolder" style="background:#fff0b3 ;color: #e69900 ; width:190px;">
+                    Wholesaler <br> {% tag_total_wholesaler %}
+                </a>
+
+                <a href="{% url 'superuser:user_accounts' %}?account_type=supplier" class="btn btn-sm position-relative mx-3 fw-bolder"
+                        style="background:#c2f0c2; color:#29a329; width:190px;">
                     Supplier <br> {% tag_total_suppliers %}
-                </button>
+                </a>
             </div>
 
 

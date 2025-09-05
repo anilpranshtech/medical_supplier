@@ -1,7 +1,16 @@
 # context_processors.py
 from utils.handle_user_profile import get_user_profile
+from .models import ProductCategory, Notification
 from .models import ProductCategory
+from django.db.models import Q
 
+
+
+def categories_processor(request):
+    categories = ProductCategory.objects.filter(
+        product__last_category__isnull=False
+    ).distinct()
+    return {"categories": categories}
 
 def header_avatar(request):
     if request.user.is_authenticated:
@@ -22,33 +31,19 @@ def notification_context(request):
         }
 
     user = request.user
+    base_query = Notification.objects.filter(is_deleted=False)
 
-    
-    if user.is_superuser:
-        all_notifications = Notification.objects.filter(
-            is_deleted=False
-        ).exclude(send_to="supplier")
-
-    
-    elif hasattr(user, 'supplierprofile'):
-        all_notifications = Notification.objects.filter(
-            is_deleted=False
-        ).filter(
-            Q(recipient=user) | Q(send_to="supplier") | Q(send_to="all")
+    if user.is_superuser or user.is_staff:
+        all_notifications = base_query.filter(
+            Q(recipient=user, send_to="single") | Q(send_to="all") | Q(send_to="buyer") | Q(send_to="supplier")
         )
-
-
-    elif user.is_staff:
-        all_notifications = Notification.objects.filter(
-            is_deleted=False
-        ).exclude(send_to="supplier")
-
-
+    elif hasattr(user, 'supplierprofile'):
+        all_notifications = base_query.filter(
+            Q(recipient=user, send_to="single") | Q(send_to="supplier") | Q(send_to="all")
+        )
     else:
-        all_notifications = Notification.objects.filter(
-            is_deleted=False
-        ).filter(
-            Q(recipient=user) | Q(send_to="buyer") | Q(send_to="all")
+        all_notifications = base_query.filter(
+            Q(recipient=user, send_to="single") | Q(send_to="buyer") | Q(send_to="all")
         )
 
     return {
@@ -56,13 +51,3 @@ def notification_context(request):
         'read_notifications': all_notifications.filter(is_read=True).order_by('-created_at'),
         'unread_notifications': all_notifications.filter(is_read=False).order_by('-created_at'),
     }
-
-
-
-from .models import ProductCategory
-
-def categories_processor(request):
-    categories = ProductCategory.objects.filter(
-        product__last_category__isnull=False
-    ).distinct()
-    return {"categories": categories}
