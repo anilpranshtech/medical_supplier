@@ -3435,10 +3435,10 @@ class RequestReturnView(LoginRequiredMixin, View):
 
 
 
-class MarkNotificationReadView(View):
+class MarkNotificationReadView(LoginRequiredMixin, View):
     def post(self, request, pk):
         try:
-            notif = Notification.objects.get(pk=pk, recipient=request.user)
+            notif = Notification.objects.get(pk=pk, recipient=request.user, is_deleted=False)
             notif.is_read = True
             notif.save()
             return JsonResponse({
@@ -3450,10 +3450,11 @@ class MarkNotificationReadView(View):
         except Notification.DoesNotExist:
             return JsonResponse({'error': 'Notification not found or not authorized'}, status=404)
 
+
 class MarkNotificationUnreadView(LoginRequiredMixin, View):
     def post(self, request, pk):
         try:
-            notif = Notification.objects.get(pk=pk, recipient=request.user)
+            notif = Notification.objects.get(pk=pk, recipient=request.user, is_deleted=False)
             notif.is_read = False
             notif.save()
             return JsonResponse({
@@ -3465,19 +3466,24 @@ class MarkNotificationUnreadView(LoginRequiredMixin, View):
         except Notification.DoesNotExist:
             return JsonResponse({'error': 'Notification not found or not authorized'}, status=404)
 
+
 class ClearAllNotificationsView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         if request.user.is_superuser:
-            Notification.objects.all().delete()
+            Notification.objects.all().update(is_deleted=True)
             return JsonResponse({'status': 'success'})
         else:
             return JsonResponse({'status': 'unauthorized'}, status=403)
 
+
 class DeleteNotificationView(LoginRequiredMixin, View):
     def post(self, request, id):
-        notification = get_object_or_404(Notification, id=id, recipient=request.user)
-        notification.delete()
+        notification = get_object_or_404(
+            Notification, id=id, recipient=request.user, is_deleted=False
+        )
+        notification.delete()  
         return JsonResponse({'status': 'success'})
+
 
 
 

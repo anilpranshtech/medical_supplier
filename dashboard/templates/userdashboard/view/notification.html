@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
+ <style>
         .long-message {
             white-space: pre-wrap;
             word-break: break-word;
@@ -98,80 +98,104 @@
             font-weight: 500;
         }
         .notification-item.all {
-            background: #f1f1f1;
-            border-left: 5px solid #9e9e9e;
+            background: #f5f5f5;
+            border-left: 5px solid #757575;
         }
-        .notification-item.all h6 { color: #616161; }
+        .notification-item.all h6 {
+            color: #424242;
+        }
         .notification-item.all small,
-        .notification-item.all .time-display { color: #757575; }
+        .notification-item.all .time-display {
+            color: #616161;
+        }
         .notification-item.read {
             background: #e8f5e9;
             border-left: 5px solid #4caf50;
         }
-        .notification-item.read h6 { color: #2e7d32; }
+        .notification-item.read h6 {
+            color: #2e7d32;
+        }
         .notification-item.read small,
-        .notification-item.read .time-display { color: #388e3c; }
+        .notification-item.read .time-display {
+            color: #388e3c;
+        }
         .notification-item.unread {
             background: #ffebee;
             border-left: 5px solid #f44336;
         }
-        .notification-item.unread h6 { color: #c62828; }
+        .notification-item.unread h6 {
+            color: #c62828;
+        }
         .notification-item.unread small,
-        .notification-item.unread .time-display { color: #d32f2f; }
+        .notification-item.unread .time-display {
+            color: #d32f2f;
+        }
         .delete-btn {
             position: absolute;
             top: 15px;
             right: 20px;
             background: none;
             border: none;
-            font-size: 0.9rem;
+            font-size: 1.5rem;
             color: #d32f2f;
             cursor: pointer;
+            padding: 5px 10px; 
         }
         #notificationPopup {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            width: 300px;
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            width: 400px;
+            max-height: 80vh;
             z-index: 1070;
             display: none;
             animation: popupFade 0.3s ease;
+            overflow-y: auto;
         }
         #notificationPopup h5 {
-            margin: 0 0 10px;
-            font-size: 1.1rem;
-            font-weight: 600;
+            margin: 0 0 15px;
+            font-size: 1.25rem;
+            font-weight: 700;
             color: #1c2526;
+            text-align: center;
         }
         #notificationPopup .btn-close {
             position: absolute;
-            top: 10px;
-            right: 10px;
+            top: 15px;
+            right: 15px;
             background: none;
             border: none;
-            font-size: 1.2rem;
+            font-size: 1.5rem;
             cursor: pointer;
             color: #666;
+            transition: color 0.2s ease;
+        }
+        #notificationPopup .btn-close:hover {
+            color: #333;
         }
         #notificationPopup p {
-            margin: 0;
-            font-size: 0.9rem;
+            margin: 0 0 20px;
+            font-size: 1rem;
             color: #1c2526;
-            line-height: 1.4;
+            line-height: 1.6;
+            text-align: center;
+            padding: 0 20px;
         }
-        #notificationPopup .btn-cancel {
-            margin-top: 10px;
-            background: #f44336;
-            color: #fff;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 5px;
-            cursor: pointer;
+        #overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            z-index: 1060;
+            display: none;
         }
         @keyframes popupFade {
             from { transform: translate(-50%, -60%) scale(0.92); opacity: 0; }
@@ -180,6 +204,7 @@
     </style>
 </head>
 <body>
+<div id="overlay"></div>
 <div class="app-navbar-item position-relative">
     <a href="#" onclick="toggleNotificationPanel()"
        class="btn btn-icon btn-custom btn-active-light btn-active-color-primary w-35px h-35px">
@@ -264,7 +289,6 @@
     <button class="btn-close" onclick="closeNotificationPopup()">&times;</button>
     <h5 id="popupTitle"></h5>
     <p id="popupMessage" class="long-message"></p>
-   
 </div>
 <script>
 function toggleNotificationPanel() {
@@ -277,14 +301,10 @@ function toggleNotificationPanel() {
 }
 
 function switchTab(tabId, element) {
-   
     document.querySelectorAll('.tab-pane').forEach(pane => {
         pane.classList.remove('active');
     });
-    
- 
     document.getElementById(tabId).classList.add('active');
-
     document.querySelectorAll('.nav-link').forEach(link => {
         link.classList.remove('active');
     });
@@ -315,11 +335,9 @@ function showNotificationPopup(notificationId, tabType) {
     popupTitle.textContent = title;
     popupMessage.textContent = message;
     popup.style.display = 'block';
+    document.getElementById('overlay').style.display = 'block';
     popup.dataset.notificationId = notificationId;
     popup.dataset.tab = tabType;
-    if (tabType === 'unread') {
-        markNotificationAsRead(notificationId, title, message);
-    }
 }
 
 function markNotificationAsRead(notificationId, title, message) {
@@ -359,7 +377,7 @@ function markNotificationAsRead(notificationId, title, message) {
                 const allEl = allTab.querySelector(`[data-notification-id="${notificationId}"]`);
                 if (allEl) {
                     allEl.classList.remove('unread');
-                    allEl.classList.add('read');
+                    allEl.classList.add('all');
                     allEl.setAttribute("data-is-read", "true");
                 }
                 if (!document.querySelector('#notiUnread .notification-item[data-notification-id]')) {
@@ -373,77 +391,21 @@ function markNotificationAsRead(notificationId, title, message) {
     .catch(error => console.error('Error marking notification as read:', error));
 }
 
-function cancelNotification() {
+function closeNotificationPopup() {
     const popup = document.getElementById('notificationPopup');
     const notificationId = popup.dataset.notificationId;
     const tabType = popup.dataset.tab;
-    
+    popup.style.display = 'none';
+    document.getElementById('overlay').style.display = 'none';
     if (tabType === 'unread') {
-        fetch(`/mark-notification-unread/${notificationId}/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken'),
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({})
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                const readEl = document.querySelector(`#notiRead [data-notification-id="${notificationId}"]`);
-                if (readEl) readEl.remove();
-                
-                const unreadTab = document.getElementById("notiUnread");
-                const existingUnread = unreadTab.querySelector(`[data-notification-id="${notificationId}"]`);
-                if (!existingUnread) {
-                    const notification = document.querySelector(`[data-notification-id="${notificationId}"]`);
-                    const title = notification.dataset.title;
-                    const message = notification.dataset.message;
-                    const newUnread = document.createElement("div");
-                    newUnread.className = "notification-item unread";
-                    newUnread.setAttribute("data-id", notificationId);
-                    newUnread.setAttribute("data-tab", "unread");
-                    newUnread.setAttribute("data-notification-id", notificationId);
-                    newUnread.setAttribute("data-title", title);
-                    newUnread.setAttribute("data-message", message);
-                    newUnread.setAttribute("data-is-read", "false");
-                    const now = new Date().toISOString();
-                    newUnread.innerHTML = `
-                        <h6>${title}</h6>
-                        <small class="long-message">${message}</small>
-                        <span class="time-display" data-created="${now}">Just now</span>
-                        <button class="delete-btn" onclick="deleteNotification('${notificationId}')">&times;</button>
-                    `;
-                    unreadTab.insertBefore(newUnread, unreadTab.firstChild);
-                    
-                    const allTab = document.getElementById("notiAll");
-                    const allEl = allTab.querySelector(`[data-notification-id="${notificationId}"]`);
-                    if (allEl) {
-                        allEl.classList.remove('read');
-                        allEl.classList.add('unread');
-                        allEl.setAttribute("data-is-read", "false");
-                    }
-                    
-                    if (unreadTab.querySelector('.notification-item.unread:not([data-notification-id])')) {
-                        unreadTab.querySelector('.notification-item.unread:not([data-notification-id])').remove();
-                    }
-                    
-                    updateNotificationCount();
-                    attachNotificationClickHandlers();
-                }
-            }
-            closeNotificationPopup();
-        })
-        .catch(error => console.error('Error marking notification as unread:', error));
-    } else {
-        closeNotificationPopup();
+        const notification = document.querySelector(`[data-notification-id="${notificationId}"]`);
+        if (notification) {
+            const title = notification.dataset.title;
+            const message = notification.dataset.message;
+            markNotificationAsRead(notificationId, title, message);
+        }
     }
 }
-
-function closeNotificationPopup() {
-    document.getElementById('notificationPopup').style.display = 'none';
-}
-
 function deleteNotification(notificationId) {
     if (confirm('Are you sure you want to delete this notification?')) {
         fetch(`/delete-notification/${notificationId}/`, {
@@ -458,18 +420,21 @@ function deleteNotification(notificationId) {
         .then(data => {
             if (data.status === 'success') {
                 document.querySelectorAll(`[data-notification-id="${notificationId}"]`).forEach(el => el.remove());
+
                 ['notiAll', 'notiRead', 'notiUnread'].forEach(tabId => {
                     const tab = document.getElementById(tabId);
                     if (!tab.querySelector('.notification-item[data-notification-id]')) {
                         tab.innerHTML = `<div class="notification-item ${tabId === 'notiRead' ? 'read' : tabId === 'notiUnread' ? 'unread' : 'all'}">No ${tabId === 'notiAll' ? '' : tabId === 'notiRead' ? 'read' : 'unread'} notifications.</div>`;
                     }
                 });
+
                 updateNotificationCount();
             }
         })
         .catch(error => console.error('Error deleting notification:', error));
     }
 }
+
 
 function updateNotificationCount() {
     const unreadCount = document.querySelectorAll('#notiUnread .notification-item[data-notification-id]').length;
