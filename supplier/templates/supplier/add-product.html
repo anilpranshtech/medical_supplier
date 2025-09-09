@@ -254,14 +254,19 @@
                                         </div>
                                     </div>
                                     <div class="card-body pt-0">
-                                       <div class="mb-10 fv-row">
-    <label class="required form-label">Base Price</label>
-    <input type="text" id="price" name="price" class="form-control mb-2" 
-           placeholder="Product price" value="{{ price|default:'' }}" required />
-    <div class="text-muted fs-7">Enter a valid product price (1 - 999999, up to 2 decimals).</div>
-</div>
-
-
+                                        <div class="mb-10 fv-row">
+                                            <label class="required form-label">Base Price</label>
+                                            <input type="text" id="base_price" name="base_price" class="form-control mb-2"
+                                                   placeholder="Product price" value="{{ base_price|default:'' }}" required />
+                                            <div class="text-muted fs-7">Enter a valid product price (1 - 999999, up to 2 decimals).</div>
+                                        </div>
+                                        <div class="mb-10 fv-row d-none" id="discount_price_container">
+                                            <label class="required form-label">Discount Price</label>
+                                            <input type="text" id="discount_price" name="discount_price" class="form-control mb-2"
+                                                   placeholder="Discounted price" value="{{ discount_price|default:'' }}" readonly />
+                                            <div class="text-muted fs-7">The discounted price will be calculated based on the discount percentage.</div>
+                                        </div>
+                                
                                         <div class="fv-row mb-10">
                                             <label class="fs-6 fw-semibold mb-2">
                                                 Discount Type
@@ -273,14 +278,13 @@
                                                 <div class="col">
                                                     <label class="btn btn-outline btn-outline-dashed btn-active-light-primary d-flex text-start p-6" data-kt-button="true">
                                                         <span class="form-check form-check-custom form-check-solid form-check-sm align-items-start mt-1">
-                                                            <input class="form-check-input" type="radio" name="discount_option" value="1" required/>
+                                                            <input class="form-check-input" type="radio" name="discount_option" value="1" required />
                                                         </span>
                                                         <span class="ms-5">
                                                             <span class="fs-4 fw-bold text-gray-800 d-block">No Discount</span>
                                                         </span>
                                                     </label>
                                                 </div>
-
                                                 <div class="col">
                                                     <label class="btn btn-outline btn-outline-dashed btn-active-light-primary active d-flex text-start p-6" data-kt-button="true">
                                                         <span class="form-check form-check-custom form-check-solid form-check-sm align-items-start mt-1">
@@ -303,26 +307,28 @@
                                                 </div>
                                             </div>
                                         </div>
-
+                                
                                         <div class="mb-10 fv-row" id="kt_ecommerce_add_product_discount_percentage">
                                             <label class="form-label">Set Discount Percentage</label>
                                             <div class="d-flex flex-column text-center mb-5">
                                                 <div class="d-flex align-items-start justify-content-center mb-7">
-                                                    <span class="fw-bold fs-3x" id="kt_ecommerce_add_product_discount_label">0</span>
+                                                    <span class="fw-bold fs-3x" id="kt_ecommerce_add_product_discount_label">{{ offer_percentage|default:'0' }}</span>
                                                     <span class="fw-bold fs-4 mt-1 ms-2">%</span>
                                                 </div>
                                                 <div id="kt_ecommerce_add_product_discount_slider" class="noUi-sm"></div>
                                             </div>
                                             <div class="text-muted fs-7">Set a percentage discount to be applied on this product.</div>
+                                            <input type="hidden" id="offer_percentage" name="offer_percentage" value="{{ offer_percentage|default:'0' }}" />
                                         </div>
-
+                                
                                         <div class="d-none mb-10 fv-row" id="kt_ecommerce_add_product_discount_fixed">
                                             <label class="form-label">Fixed Discounted Price</label>
-                                            <input type="text" name="discounted_price" class="form-control mb-2" placeholder="Discounted price" />
-                                            <div class="text-muted fs-7">Set the discounted product price. The product will be reduced at the determined fixed price</div>
+                                            <input type="text" id="fixed_discounted_price" name="discounted_price" class="form-control mb-2" placeholder="Discounted price" value="{{ discount_price|default:'' }}" />
+                                            <div class="text-muted fs-7">Set the discounted product price. The product will be reduced at the determined fixed price.</div>
                                         </div>
                                     </div>
                                 </div>
+                                
                             </div>
 
                             <!-- Right Column in Right Container -->
@@ -442,13 +448,13 @@
                                             <div class="text-muted fs-7">Assign a tag to the product.</div>
                                         </div>
 
-                                        <div class="mb-10 mt-4 fv-row" id="hide_field_offer_percentage">
+                                        <!-- <div class="mb-10 mt-4 fv-row" id="hide_field_offer_percentage">
                                             <label class="form-label">Offer Percentage</label>
                                             <input type="number" name="offer_percentage" class="form-control mb-2"
                                                    placeholder="Enter offer percentage" value="{{ offer_percentage }}"
                                                    min="1" max="100" step="0.01" />
                                             <div class="text-muted fs-7">Percentage discount for the product.</div>
-                                        </div>
+                                        </div> -->
 
                                         <div class="mb-10 mt-4 fv-row" id="hide_field_offer_start">
                                             <label class="form-label">Offer Start</label>
@@ -819,51 +825,7 @@ $(document).ready(function () {
         });
     });
 
-    // Discount percentage slider
-    const radios = document.querySelectorAll('input[name="discount_option"]');
-    const percentageSection = document.getElementById('kt_ecommerce_add_product_discount_percentage');
-    const fixedSection = document.getElementById('kt_ecommerce_add_product_discount_fixed');
-
-    if (percentageSection && fixedSection) {
-        const discountLabel = document.getElementById('kt_ecommerce_add_product_discount_label');
-        const sliderElement = document.getElementById('kt_ecommerce_add_product_discount_slider');
-
-        if (sliderElement) {
-            noUiSlider.create(sliderElement, {
-                start: 0,
-                step: 1,
-                connect: [true, false],
-                range: {
-                    'min': 0,
-                    'max': 100
-                }
-            });
-
-            sliderElement.noUiSlider.on('update', function (values, handle) {
-                discountLabel.textContent = Math.round(values[handle]);
-            });
-        }
-
-        radios.forEach(function (radio) {
-            radio.addEventListener('change', function () {
-                if (this.value === '1') {
-                    percentageSection.classList.add('d-none');
-                    fixedSection.classList.add('d-none');
-                } else if (this.value === '2') {
-                    percentageSection.classList.remove('d-none');
-                    fixedSection.classList.add('d-none');
-                } else if (this.value === '3') {
-                    percentageSection.classList.add('d-none');
-                    fixedSection.classList.remove('d-none');
-                }
-            });
-        });
-
-        const checkedRadio = document.querySelector('input[name="discount_option"]:checked');
-        if (checkedRadio) {
-            checkedRadio.dispatchEvent(new Event('change'));
-        }
-    }
+   
 });
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -956,7 +918,7 @@ document.addEventListener("DOMContentLoaded", function () {
 function loadCategories(selectedId = null) {
     $.ajax({
         type: "GET",
-        url: "{% url 'superuser:AJAX_get_category' %}",  // 🔹 adjust if inside superuser namespace
+        url: "{% url 'superuser:AJAX_get_category' %}", 
         success: function (response) {
             let select = $("select[name='category']");
             select.empty();
@@ -967,7 +929,7 @@ function loadCategories(selectedId = null) {
                 select.append(new Option(cat.name, cat.id, isSelected, isSelected));
             });
 
-            // If Select2 is used, refresh
+        
             select.trigger("change");
         }
     });
@@ -1160,6 +1122,50 @@ $(document).ready(function () {
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
+        // Function to show validation error
+        function showValidationError(element, message) {
+            // Add red border
+            element.classList.add("is-invalid");
+            
+            // Create or update error message
+            let errorElement = element.nextElementSibling;
+            if (!errorElement || !errorElement.classList.contains("invalid-feedback")) {
+                errorElement = document.createElement("div");
+                errorElement.className = "invalid-feedback";
+                element.parentNode.insertBefore(errorElement, element.nextSibling);
+            }
+            
+            errorElement.innerHTML = message;
+            errorElement.style.display = "block";
+            errorElement.style.color = "red";
+        }
+    
+        // Function to clear validation error
+        function clearValidationError(element) {
+            element.classList.remove("is-invalid");
+            const errorElement = element.nextElementSibling;
+            if (errorElement && errorElement.classList.contains("invalid-feedback")) {
+                errorElement.style.display = "none";
+            }
+        }
+    
+        // Add CSS for red border
+        const style = document.createElement('style');
+        style.innerHTML = `
+            .is-invalid {
+                border-color: #f1416c !important;
+                border-radius: 4px;
+            }
+            .invalid-feedback {
+                display: none;
+                width: 100%;
+                margin-top: 0.25rem;
+                font-size: 0.875em;
+                color: #f1416c;
+            }
+        `;
+        document.head.appendChild(style);
+    
         const manufactureDate = document.getElementById("manufacture_date");
         const expiryDate = document.getElementById("expiry_date");
         const offerStart = document.getElementById("offer_start");
@@ -1168,112 +1174,408 @@ $(document).ready(function () {
         const productName = document.querySelector('input[name="product_name"]');
         const productFrom = document.querySelector('input[name="product_from"]');
         const sellingCountries = document.querySelector('input[name="selling_countries"]');
-        const price = document.getElementById("price"); // Base Price
+        const basePrice = document.getElementById("base_price");
+        const discountPrice = document.getElementById("discount_price");
+        const fixedPrice = document.getElementById("fixed_discounted_price");
+        
+        // Fields with min=1 validation
+        const productQuantity = document.querySelector('input[name="product_quantity"]');
+        const returnTimeLimit = document.querySelector('input[name="return_time_limit"]');
+        const weight = document.querySelector('input[name="weight"]');
+        const deliveryTime = document.querySelector('input[name="delivery_time"]');
+        const commissionPercentage = document.querySelector('input[name="commission_percentage"]');
+        const pcsPerUnit = document.querySelector('input[name="pcs_per_unit"]');
+        const minOrderQty = document.querySelector('input[name="min_order_qty"]');
+        const lowStockAlert = document.querySelector('input[name="low_stock_alert"]');
+        const expirationDays = document.querySelector('input[name="expiration_days"]');
     
         const today = new Date().toISOString().split("T")[0];
     
+        // ================== Generic min=1 validation function ==================
+        function validateMinValue(field, fieldName) {
+            clearValidationError(field);
+            const value = parseFloat(field.value);
+            
+            if (field.value.trim() === "") {
+                showValidationError(field, `${fieldName} cannot be empty.`);
+                return false;
+            } else if (isNaN(value) || value < 1) {
+                showValidationError(field, `${fieldName} must be at least 1.`);
+                return false;
+            }
+            return true;
+        }
+    
         // ================== Date Validations ==================
         manufactureDate?.addEventListener("input", function () {
-            if (manufactureDate.value > today) {
-                manufactureDate.setCustomValidity("Manufacture Date cannot be in the future.");
-            } else {
-                manufactureDate.setCustomValidity("");
+            clearValidationError(this);
+            if (this.value > today) {
+                showValidationError(this, "Manufacture Date cannot be in the future.");
             }
         });
     
         expiryDate?.addEventListener("input", function () {
-            if (manufactureDate.value && expiryDate.value <= manufactureDate.value) {
-                expiryDate.setCustomValidity("Expiry Date must be later than Manufacture Date.");
-            } else {
-                expiryDate.setCustomValidity("");
+            clearValidationError(this);
+            if (manufactureDate.value && this.value <= manufactureDate.value) {
+                showValidationError(this, "Expiry Date must be later than Manufacture Date.");
             }
         });
     
         offerStart?.addEventListener("input", function () {
-            if (offerStart.value < today) {
-                offerStart.setCustomValidity("Offer Start Date cannot be in the past.");
-            } else if (offerEnd.value && offerStart.value >= offerEnd.value) {
-                offerStart.setCustomValidity("Offer Start Date must be earlier than Offer End Date.");
-            } else {
-                offerStart.setCustomValidity("");
+            clearValidationError(this);
+            if (this.value < today) {
+                showValidationError(this, "Offer Start Date cannot be in the past.");
+            } else if (offerEnd.value && this.value >= offerEnd.value) {
+                showValidationError(this, "Offer Start Date must be earlier than Offer End Date.");
             }
         });
     
         offerEnd?.addEventListener("input", function () {
-            if (offerStart.value && offerEnd.value <= offerStart.value) {
-                offerEnd.setCustomValidity("Offer End Date must be later than Offer Start Date.");
-            } else {
-                offerEnd.setCustomValidity("");
+            clearValidationError(this);
+            if (offerStart.value && this.value <= offerStart.value) {
+                showValidationError(this, "Offer End Date must be later than Offer Start Date.");
             }
         });
     
         // ================== Keywords Validation ==================
         keywords?.addEventListener("input", function () {
+            clearValidationError(this);
             const regex = /^[a-zA-Z\s]+(,[a-zA-Z\s]+)*$/;
-            if (keywords.value.trim() === "") {
-                keywords.setCustomValidity("Keywords field cannot be empty.");
-            } else if (!regex.test(keywords.value)) {
-                keywords.setCustomValidity("Only text and commas are allowed. Numbers or special characters are not allowed.");
-            } else {
-                keywords.setCustomValidity("");
+            if (this.value.trim() === "") {
+                showValidationError(this, "Keywords field cannot be empty.");
+            } else if (!regex.test(this.value)) {
+                showValidationError(this, "Only text and commas are allowed. Numbers or special characters are not allowed.");
             }
         });
     
         // ================== Product Name Validation ==================
-        productName?.addEventListener("input", function () {
+        productName?.addEventListener("input", function () {    
+            clearValidationError(this);
             const regex = /^[a-zA-Z0-9\s\-_]+$/;
-            if (productName.value.trim() === "") {
-                productName.setCustomValidity("Product Name cannot be empty.");
-            } else if (!regex.test(productName.value)) {
-                productName.setCustomValidity("Product Name can only contain letters, numbers, spaces, hyphen (-), and underscore (_).");
-            } else {
-                productName.setCustomValidity("");
+            if (this.value.trim() === "") {
+                showValidationError(this, "Product Name cannot be empty.");
+            } else if (!regex.test(this.value)) {
+                showValidationError(this, "Product Name can only contain letters, numbers, spaces, hyphen (-), and underscore (_).");
             }
         });
     
         // ================== Product From Validation ==================
         productFrom?.addEventListener("input", function () {
+            clearValidationError(this);
             const regex = /^[a-zA-Z\s]+$/;
-            if (productFrom.value.trim() === "") {
-                productFrom.setCustomValidity("Product From cannot be empty.");
-            } else if (!regex.test(productFrom.value)) {
-                productFrom.setCustomValidity("Product From can only contain letters and spaces.");
-            } else {
-                productFrom.setCustomValidity("");
+            if (this.value.trim() === "") {
+                showValidationError(this, "Product From cannot be empty.");
+            } else if (!regex.test(this.value)) {
+                showValidationError(this, "Product From can only contain letters and spaces.");
             }
         });
     
         // ================== Selling Countries Validation ==================
         sellingCountries?.addEventListener("input", function () {
+            clearValidationError(this);
             const regex = /^[a-zA-Z\s]+(,[a-zA-Z\s]+)*$/;
-            if (sellingCountries.value.trim() === "") {
-                sellingCountries.setCustomValidity("Selling Countries cannot be empty.");
-            } else if (!regex.test(sellingCountries.value)) {
-                sellingCountries.setCustomValidity("Only country names separated by commas are allowed (letters and spaces only).");
-            } else {
-                sellingCountries.setCustomValidity("");
+            if (this.value.trim() === "") {
+                showValidationError(this, "Selling Countries cannot be empty.");
+            } else if (!regex.test(this.value)) {
+                showValidationError(this, "Only country names separated by commas are allowed (letters and spaces only).");
             }
         });
     
         // ================== Base Price Validation ==================
-        price?.addEventListener("input", function () {
-            let value = price.value.trim();
-            price.value = value; // remove leading/trailing spaces immediately
-    
+        function validateBasePrice() {
+            clearValidationError(basePrice);
+            let value = basePrice.value.trim();
             const regex = /^\d+(\.\d{1,2})?$/; // numbers with max 2 decimals
     
             if (value === "") {
-                price.setCustomValidity("Base Price cannot be empty.");
+                showValidationError(basePrice, "Base Price cannot be empty.");
             } else if (!regex.test(value)) {
-                price.setCustomValidity("Enter a valid price (numbers only, up to 2 decimals).");
+                showValidationError(basePrice, "Enter a valid price (numbers only, up to 2 decimals).");
             } else if (parseFloat(value) <= 0) {
-                price.setCustomValidity("Base Price must be greater than 0.");
+                showValidationError(basePrice, "Base Price must be greater than 0.");
             } else if (parseFloat(value) > 999999) {
-                price.setCustomValidity("Base Price cannot exceed 999999.");
-            } else {
-                price.setCustomValidity("");
+                showValidationError(basePrice, "Base Price cannot exceed 999999.");
+            }
+        }
+        
+        basePrice?.addEventListener("input", validateBasePrice);
+    
+        // ================== Discount Price Validation ==================
+        function validateDiscountPrice() {
+            if (!discountPrice) return;
+            clearValidationError(discountPrice);
+            let base = parseFloat(basePrice.value) || 0;
+            let discount = parseFloat(discountPrice.value) || 0;
+    
+            if (discount > base) {
+                showValidationError(discountPrice, "Discount Price cannot be greater than Base Price.");
+            }
+        }
+        
+        discountPrice?.addEventListener("input", validateDiscountPrice);
+        basePrice?.addEventListener("input", validateDiscountPrice);
+    
+        // ================== Fixed Price Validation ==================
+        function validateFixedPrice() {
+            if (!fixedPrice) return;
+            clearValidationError(fixedPrice);
+            let base = parseFloat(basePrice.value) || 0;
+            let fixed = parseFloat(fixedPrice.value) || 0;
+    
+            if (fixed > base) {
+                showValidationError(fixedPrice, "Fixed Discount Price cannot be greater than Base Price.");
+            }
+        }
+        
+        fixedPrice?.addEventListener("input", validateFixedPrice);
+        basePrice?.addEventListener("input", validateFixedPrice);
+    
+        // ================== Min=1 Fields Validation ==================
+        productQuantity?.addEventListener("input", function() {
+            validateMinValue(this, "Quantity");
+        });
+        
+        returnTimeLimit?.addEventListener("input", function() {
+            validateMinValue(this, "Return Time Limit");
+        });
+        
+        weight?.addEventListener("input", function() {
+            validateMinValue(this, "Weight");
+        });
+        
+        deliveryTime?.addEventListener("input", function() {
+            validateMinValue(this, "Delivery Time");
+        });
+        
+        commissionPercentage?.addEventListener("input", function() {
+            clearValidationError(this);
+            const value = parseFloat(this.value);
+            
+            if (this.value.trim() === "") {
+                showValidationError(this, "Commission Percentage cannot be empty.");
+            } else if (isNaN(value) || value < 1 || value > 100) {
+                showValidationError(this, "Commission Percentage must be between 1 and 100.");
             }
         });
+        
+        pcsPerUnit?.addEventListener("input", function() {
+            validateMinValue(this, "Pieces Per Unit");
+        });
+        
+        minOrderQty?.addEventListener("input", function() {
+            validateMinValue(this, "Minimum Order Quantity");
+        });
+        
+        lowStockAlert?.addEventListener("input", function() {
+            validateMinValue(this, "Low Stock Alert");
+        });
+        
+        expirationDays?.addEventListener("input", function() {
+            validateMinValue(this, "Expiration Days");
+        });
+    
+        // Form submission validation
+        const form = document.getElementById("main-form");
+        if (form) {
+            form.addEventListener("submit", function (e) {
+                let isValid = true;
+                
+                // Validate all fields before submission
+                const validateFunctions = [
+                    validateBasePrice,
+                    validateDiscountPrice,
+                    validateFixedPrice
+                ];
+                
+                validateFunctions.forEach(func => {
+                    try {
+                        func();
+                    } catch (e) {
+                        console.error("Validation error:", e);
+                    }
+                });
+                
+                // Validate min=1 fields
+                const minValueFields = [
+                    {field: productQuantity, name: "Quantity"},
+                    {field: returnTimeLimit, name: "Return Time Limit"},
+                    {field: weight, name: "Weight"},
+                    {field: deliveryTime, name: "Delivery Time"},
+                    {field: commissionPercentage, name: "Commission Percentage"},
+                    {field: pcsPerUnit, name: "Pieces Per Unit"},
+                    {field: minOrderQty, name: "Minimum Order Quantity"},
+                    {field: lowStockAlert, name: "Low Stock Alert"},
+                    {field: expirationDays, name: "Expiration Days"}
+                ];
+                
+                minValueFields.forEach(item => {
+                    if (item.field && !validateMinValue(item.field, item.name)) {
+                        isValid = false;
+                    }
+                });
+                
+                // Check if any field has validation error
+                const invalidFields = form.querySelectorAll(".is-invalid");
+                if (invalidFields.length > 0) {
+                    e.preventDefault();
+                    isValid = false;
+                    
+                    // Scroll to first error
+                    invalidFields[0].scrollIntoView({
+                        behavior: "smooth",
+                        block: "center"
+                    });
+                }
+                
+                return isValid;
+            });
+        }
+    });
+    </script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const radios = document.querySelectorAll('input[name="discount_option"]');
+        const percentageSection = document.getElementById('kt_ecommerce_add_product_discount_percentage');
+        const fixedSection = document.getElementById('kt_ecommerce_add_product_discount_fixed');
+        const basePriceInput = document.getElementById('base_price');
+        const discountPriceInput = document.getElementById('discount_price');
+        const discountPriceContainer = document.getElementById('discount_price_container');
+        const fixedPriceInput = document.getElementById('fixed_discounted_price');
+        const offerPercentageInput = document.getElementById('offer_percentage');
+        const discountLabel = document.getElementById('kt_ecommerce_add_product_discount_label');
+    
+        if (percentageSection && fixedSection && basePriceInput && discountPriceInput && discountPriceContainer && offerPercentageInput && discountLabel) {
+            const sliderElement = document.getElementById('kt_ecommerce_add_product_discount_slider');
+    
+            // Initialize noUiSlider
+            if (sliderElement) {
+                noUiSlider.create(sliderElement, {
+                    start: parseInt(offerPercentageInput.value) || 0,
+                    step: 1,
+                    connect: [true, false],
+                    range: {
+                        'min': 0,
+                        'max': 100
+                    },
+                    format: {
+                        to: function (value) {
+                            return Math.round(value);
+                        },
+                        from: function (value) {
+                            return Number(value);
+                        }
+                    }
+                });
+    
+                // Update discount label, hidden input, and discount price on slider change
+                sliderElement.noUiSlider.on('update', function (values, handle) {
+                    const percentage = values[handle];
+                    discountLabel.textContent = percentage;
+                    offerPercentageInput.value = percentage;
+                    updateDiscountPrice();
+                    console.log('Slider updated, offer_percentage:', percentage); // Debug
+                });
+            }
+    
+            // Function to calculate and update discount price
+            function updateDiscountPrice() {
+                const basePrice = parseFloat(basePriceInput.value) || 0;
+                const selectedOption = document.querySelector('input[name="discount_option"]:checked').value;
+    
+                if (selectedOption === '1') {
+                    // No Discount
+                    discountPriceInput.value = basePrice.toFixed(2);
+                    discountPriceContainer.classList.add('d-none');
+                    offerPercentageInput.value = 0;
+                } else if (selectedOption === '2') {
+                    // Percentage Discount
+                    const percentage = parseFloat(offerPercentageInput.value) || 0;
+                    const discountAmount = basePrice * (percentage / 100);
+                    discountPriceInput.value = (basePrice - discountAmount).toFixed(2);
+                    discountPriceContainer.classList.remove('d-none');
+                } else if (selectedOption === '3') {
+                    // Fixed Price
+                    const fixedPrice = parseFloat(fixedPriceInput.value) || basePrice;
+                    discountPriceInput.value = fixedPrice.toFixed(2);
+                    discountPriceContainer.classList.add('d-none');
+                    offerPercentageInput.value = 0;
+                }
+                console.log('offer_percentage:', offerPercentageInput.value, 'discount_price:', discountPriceInput.value); // Debug
+            }
+    
+            // Update discount price on base price change
+            basePriceInput.addEventListener('input', function () {
+                const value = parseFloat(this.value);
+                if (isNaN(value) || value < 1 || value > 999999) {
+                    this.classList.add('is-invalid');
+                    this.nextElementSibling.textContent = 'Please enter a valid price (1 - 999999, up to 2 decimals).';
+                } else {
+                    this.classList.remove('is-invalid');
+                    this.nextElementSibling.textContent = 'Enter a valid product price (1 - 999999, up to 2 decimals).';
+                }
+                updateDiscountPrice();
+            });
+    
+            // Update discount price on fixed price change
+            if (fixedPriceInput) {
+                fixedPriceInput.addEventListener('input', function () {
+                    const value = parseFloat(this.value);
+                    if (isNaN(value) || value < 0 || value > 999999) {
+                        this.classList.add('is-invalid');
+                        this.nextElementSibling.textContent = 'Please enter a valid discounted price (0 - 999999, up to 2 decimals).';
+                    } else {
+                        this.classList.remove('is-invalid');
+                        this.nextElementSibling.textContent = 'Set the discounted product price.';
+                    }
+                    updateDiscountPrice();
+                });
+            }
+    
+            // Handle discount option radio button changes
+            radios.forEach(function (radio) {
+                radio.addEventListener('change', function () {
+                    if (this.value === '1') {
+                        percentageSection.classList.add('d-none');
+                        fixedSection.classList.add('d-none');
+                        discountPriceContainer.classList.add('d-none');
+                        offerPercentageInput.value = 0;
+                    } else if (this.value === '2') {
+                        percentageSection.classList.remove('d-none');
+                        fixedSection.classList.add('d-none');
+                        discountPriceContainer.classList.remove('d-none');
+                        if (sliderElement && sliderElement.noUiSlider) {
+                            offerPercentageInput.value = sliderElement.noUiSlider.get();
+                            discountLabel.textContent = offerPercentageInput.value;
+                        }
+                    } else if (this.value === '3') {
+                        percentageSection.classList.add('d-none');
+                        fixedSection.classList.remove('d-none');
+                        discountPriceContainer.classList.add('d-none');
+                        offerPercentageInput.value = 0;
+                    }
+                    updateDiscountPrice();
+                    console.log('Discount option changed, offer_percentage:', offerPercentageInput.value, 'discount_price:', discountPriceInput.value); // Debug
+                });
+            });
+    
+            // Trigger initial update based on selected radio
+            const checkedRadio = document.querySelector('input[name="discount_option"]:checked');
+            if (checkedRadio) {
+                checkedRadio.dispatchEvent(new Event('change'));
+            }
+    
+            // Debugging: Log form submission data
+            const form = document.querySelector('form');
+            if (form) {
+                form.addEventListener('submit', function (event) {
+                    const formData = new FormData(form);
+                    console.log('Form data:', Object.fromEntries(formData));
+                });
+            }
+        } else {
+            console.error('Required elements not found'); 
+        }
     });
     </script>
     

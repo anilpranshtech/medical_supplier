@@ -188,6 +188,7 @@ class Product(models.Model):
     # B2B / Pricing
     supplier_sku = models.CharField(max_length=100, blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    discount_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True) 
     commission_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0.0)
     weight = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     weight_unit = models.CharField(max_length=10, choices=[('gm', 'Gram'), ('kg', 'Kilogram'), ('cm', 'Centimeter'), ('ltr', 'Liter')], null=True,blank=True)
@@ -252,7 +253,7 @@ class Product(models.Model):
 
     class Meta:
         ordering = ['-created_at']
-        verbose_name = verbose_name_plural = "Product"
+        verbose_name = verbose_name_plural = "Product"  
     
     
 class ProductImage(models.Model):
