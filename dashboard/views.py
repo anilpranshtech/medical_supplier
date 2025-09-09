@@ -335,13 +335,12 @@ def generate_token():
 
 
 class RegistrationView(View):
-    recaptcha_secret = '6LcldqwrAAAAAFeYWDuPvhw8cKrgGJ3dqKHuuYGq'
+    recaptcha_secret = '6LdTHV8rAAAAAIgLr2wdtdtWExTS6xJpUpD8qEzh'
     template_name = 'dashboard/register.html'
 
     def get(self, request):
-        # Render the registration form with necessary context
         context = {
-            'form_data': {},  # Empty dict for initial form rendering
+            'form_data': {},
             'nationalities': Nationality.objects.all(),
             'residencies': Residency.objects.all(),
             'country_codes': CountryCode.objects.all(),
@@ -351,28 +350,25 @@ class RegistrationView(View):
 
     def post(self, request):
         step = request.POST.get("step")
-
         if step == "register":
             return self.handle_registration(request)
         elif step == "verify_otp":
             return self.handle_otp(request)
         return JsonResponse({"success": False, "errors": {"general": "Invalid step"}}, status=400)
-    
-    
 
     def handle_registration(self, request):
         errors = {}
-        # reCAPTCHA verification
+
+        # reCAPTCHA
         recaptcha_response = request.POST.get('g-recaptcha-response')
         recaptcha_result = requests.post(
             'https://www.google.com/recaptcha/api/siteverify',
             data={'secret': self.recaptcha_secret, 'response': recaptcha_response}
         ).json()
-
         if not recaptcha_result.get('success'):
             errors['recaptcha'] = 'Invalid reCAPTCHA.'
 
-        # Collect data
+        # Collect form data
         first_name = request.POST.get('first_name')
         last_name = request.POST.get('last_name')
         email = request.POST.get('email')
@@ -400,9 +396,9 @@ class RegistrationView(View):
         if "error" in otp_response:
             return JsonResponse({'success': False, 'errors': {'phone': otp_response["error"]}}, status=400)
 
-        # Save pending data
+        # Save pending data (store as JSON string!)
         token = uuid.uuid4().hex
-        PendingSignup.objects.create(token=token, data=request.POST.dict())
+        PendingSignup.objects.create(token=token, data=json.dumps(request.POST.dict()))
 
         return JsonResponse({'success': True, 'token': token})
 
@@ -419,7 +415,12 @@ class RegistrationView(View):
             pending.delete()
             return JsonResponse({'success': False, 'errors': {'general': 'Token expired.'}}, status=400)
 
-        data = pending.data
+        # Load JSON back to dict
+        try:
+            data = json.loads(pending.data)
+        except Exception:
+            return JsonResponse({'success': False, 'errors': {'general': 'Corrupted signup data.'}}, status=500)
+
         phone = data.get('phone')
 
         # Verify OTP
@@ -437,10 +438,6 @@ class RegistrationView(View):
                     first_name=data['first_name'],
                     last_name=data['last_name']
                 )
-
-                if hasattr(user, 'phone'):
-                    user.phone = phone
-                    user.save()
 
                 user_type = data.get('user_type')
                 buyer_type = data.get('buyer_type')
@@ -493,14 +490,18 @@ class ResendOTPView(View):
             return JsonResponse({'message': 'No token provided.'}, status=400)
         try:
             pending = PendingSignup.objects.get(token=token)
-            phone = pending.data.get('phone')
+            try:
+                data = json.loads(pending.data) 
+            except Exception:
+                return JsonResponse({'message': 'Corrupted signup data'}, status=500)
+
+            phone = data.get('phone')
             otp_response = send_phone_otp(phone, TEXTDRIP_OTP_TOKEN)
             if "error" in otp_response:
                 return JsonResponse({'message': otp_response["error"]}, status=400)
             return JsonResponse({'message': 'OTP resent successfully'})
         except PendingSignup.DoesNotExist:
             return JsonResponse({'message': 'Invalid or expired token'}, status=400)
-
 
 class UserProfileView(LoginRequiredMixin, TemplateView):
     template_name = 'dashboard/profile.html'
