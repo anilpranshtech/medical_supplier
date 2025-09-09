@@ -1122,50 +1122,6 @@ $(document).ready(function () {
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        // Function to show validation error
-        function showValidationError(element, message) {
-            // Add red border
-            element.classList.add("is-invalid");
-            
-            // Create or update error message
-            let errorElement = element.nextElementSibling;
-            if (!errorElement || !errorElement.classList.contains("invalid-feedback")) {
-                errorElement = document.createElement("div");
-                errorElement.className = "invalid-feedback";
-                element.parentNode.insertBefore(errorElement, element.nextSibling);
-            }
-            
-            errorElement.innerHTML = message;
-            errorElement.style.display = "block";
-            errorElement.style.color = "red";
-        }
-    
-        // Function to clear validation error
-        function clearValidationError(element) {
-            element.classList.remove("is-invalid");
-            const errorElement = element.nextElementSibling;
-            if (errorElement && errorElement.classList.contains("invalid-feedback")) {
-                errorElement.style.display = "none";
-            }
-        }
-    
-        // Add CSS for red border
-        const style = document.createElement('style');
-        style.innerHTML = `
-            .is-invalid {
-                border-color: #f1416c !important;
-                border-radius: 4px;
-            }
-            .invalid-feedback {
-                display: none;
-                width: 100%;
-                margin-top: 0.25rem;
-                font-size: 0.875em;
-                color: #f1416c;
-            }
-        `;
-        document.head.appendChild(style);
-    
         const manufactureDate = document.getElementById("manufacture_date");
         const expiryDate = document.getElementById("expiry_date");
         const offerStart = document.getElementById("offer_start");
@@ -1174,263 +1130,146 @@ $(document).ready(function () {
         const productName = document.querySelector('input[name="product_name"]');
         const productFrom = document.querySelector('input[name="product_from"]');
         const sellingCountries = document.querySelector('input[name="selling_countries"]');
+    
         const basePrice = document.getElementById("base_price");
         const discountPrice = document.getElementById("discount_price");
         const fixedPrice = document.getElementById("fixed_discounted_price");
-        
-        // Fields with min=1 validation
-        const productQuantity = document.querySelector('input[name="product_quantity"]');
-        const returnTimeLimit = document.querySelector('input[name="return_time_limit"]');
-        const weight = document.querySelector('input[name="weight"]');
-        const deliveryTime = document.querySelector('input[name="delivery_time"]');
-        const commissionPercentage = document.querySelector('input[name="commission_percentage"]');
-        const pcsPerUnit = document.querySelector('input[name="pcs_per_unit"]');
-        const minOrderQty = document.querySelector('input[name="min_order_qty"]');
-        const lowStockAlert = document.querySelector('input[name="low_stock_alert"]');
-        const expirationDays = document.querySelector('input[name="expiration_days"]');
     
         const today = new Date().toISOString().split("T")[0];
     
-        // ================== Generic min=1 validation function ==================
-        function validateMinValue(field, fieldName) {
-            clearValidationError(field);
-            const value = parseFloat(field.value);
-            
-            if (field.value.trim() === "") {
-                showValidationError(field, `${fieldName} cannot be empty.`);
-                return false;
-            } else if (isNaN(value) || value < 1) {
-                showValidationError(field, `${fieldName} must be at least 1.`);
-                return false;
-            }
-            return true;
-        }
-    
         // ================== Date Validations ==================
         manufactureDate?.addEventListener("input", function () {
-            clearValidationError(this);
-            if (this.value > today) {
-                showValidationError(this, "Manufacture Date cannot be in the future.");
+            if (manufactureDate.value > today) {
+                manufactureDate.setCustomValidity("Manufacture Date cannot be in the future.");
+            } else {
+                manufactureDate.setCustomValidity("");
             }
         });
     
         expiryDate?.addEventListener("input", function () {
-            clearValidationError(this);
-            if (manufactureDate.value && this.value <= manufactureDate.value) {
-                showValidationError(this, "Expiry Date must be later than Manufacture Date.");
+            if (manufactureDate.value && expiryDate.value <= manufactureDate.value) {
+                expiryDate.setCustomValidity("Expiry Date must be later than Manufacture Date.");
+            } else {
+                expiryDate.setCustomValidity("");
             }
         });
     
         offerStart?.addEventListener("input", function () {
-            clearValidationError(this);
-            if (this.value < today) {
-                showValidationError(this, "Offer Start Date cannot be in the past.");
-            } else if (offerEnd.value && this.value >= offerEnd.value) {
-                showValidationError(this, "Offer Start Date must be earlier than Offer End Date.");
+            if (offerStart.value < today) {
+                offerStart.setCustomValidity("Offer Start Date cannot be in the past.");
+            } else if (offerEnd.value && offerStart.value >= offerEnd.value) {
+                offerStart.setCustomValidity("Offer Start Date must be earlier than Offer End Date.");
+            } else {
+                offerStart.setCustomValidity("");
             }
         });
     
         offerEnd?.addEventListener("input", function () {
-            clearValidationError(this);
-            if (offerStart.value && this.value <= offerStart.value) {
-                showValidationError(this, "Offer End Date must be later than Offer Start Date.");
+            if (offerStart.value && offerEnd.value <= offerStart.value) {
+                offerEnd.setCustomValidity("Offer End Date must be later than Offer Start Date.");
+            } else {
+                offerEnd.setCustomValidity("");
             }
         });
     
         // ================== Keywords Validation ==================
         keywords?.addEventListener("input", function () {
-            clearValidationError(this);
             const regex = /^[a-zA-Z\s]+(,[a-zA-Z\s]+)*$/;
-            if (this.value.trim() === "") {
-                showValidationError(this, "Keywords field cannot be empty.");
-            } else if (!regex.test(this.value)) {
-                showValidationError(this, "Only text and commas are allowed. Numbers or special characters are not allowed.");
+            if (keywords.value.trim() === "") {
+                keywords.setCustomValidity("Keywords field cannot be empty.");
+            } else if (!regex.test(keywords.value)) {
+                keywords.setCustomValidity("Only text and commas are allowed. Numbers or special characters are not allowed.");
+            } else {
+                keywords.setCustomValidity("");
             }
         });
     
         // ================== Product Name Validation ==================
-        productName?.addEventListener("input", function () {    
-            clearValidationError(this);
+        productName?.addEventListener("input", function () {
             const regex = /^[a-zA-Z0-9\s\-_]+$/;
-            if (this.value.trim() === "") {
-                showValidationError(this, "Product Name cannot be empty.");
-            } else if (!regex.test(this.value)) {
-                showValidationError(this, "Product Name can only contain letters, numbers, spaces, hyphen (-), and underscore (_).");
+            if (productName.value.trim() === "") {
+                productName.setCustomValidity("Product Name cannot be empty.");
+            } else if (!regex.test(productName.value)) {
+                productName.setCustomValidity("Product Name can only contain letters, numbers, spaces, hyphen (-), and underscore (_).");
+            } else {
+                productName.setCustomValidity("");
             }
         });
     
         // ================== Product From Validation ==================
         productFrom?.addEventListener("input", function () {
-            clearValidationError(this);
             const regex = /^[a-zA-Z\s]+$/;
-            if (this.value.trim() === "") {
-                showValidationError(this, "Product From cannot be empty.");
-            } else if (!regex.test(this.value)) {
-                showValidationError(this, "Product From can only contain letters and spaces.");
+            if (productFrom.value.trim() === "") {
+                productFrom.setCustomValidity("Product From cannot be empty.");
+            } else if (!regex.test(productFrom.value)) {
+                productFrom.setCustomValidity("Product From can only contain letters and spaces.");
+            } else {
+                productFrom.setCustomValidity("");
             }
         });
     
         // ================== Selling Countries Validation ==================
         sellingCountries?.addEventListener("input", function () {
-            clearValidationError(this);
             const regex = /^[a-zA-Z\s]+(,[a-zA-Z\s]+)*$/;
-            if (this.value.trim() === "") {
-                showValidationError(this, "Selling Countries cannot be empty.");
-            } else if (!regex.test(this.value)) {
-                showValidationError(this, "Only country names separated by commas are allowed (letters and spaces only).");
+            if (sellingCountries.value.trim() === "") {
+                sellingCountries.setCustomValidity("Selling Countries cannot be empty.");
+            } else if (!regex.test(sellingCountries.value)) {
+                sellingCountries.setCustomValidity("Only country names separated by commas are allowed (letters and spaces only).");
+            } else {
+                sellingCountries.setCustomValidity("");
             }
         });
     
         // ================== Base Price Validation ==================
         function validateBasePrice() {
-            clearValidationError(basePrice);
             let value = basePrice.value.trim();
             const regex = /^\d+(\.\d{1,2})?$/; // numbers with max 2 decimals
     
             if (value === "") {
-                showValidationError(basePrice, "Base Price cannot be empty.");
+                basePrice.setCustomValidity("Base Price cannot be empty.");
             } else if (!regex.test(value)) {
-                showValidationError(basePrice, "Enter a valid price (numbers only, up to 2 decimals).");
+                basePrice.setCustomValidity("Enter a valid price (numbers only, up to 2 decimals).");
             } else if (parseFloat(value) <= 0) {
-                showValidationError(basePrice, "Base Price must be greater than 0.");
+                basePrice.setCustomValidity("Base Price must be greater than 0.");
             } else if (parseFloat(value) > 999999) {
-                showValidationError(basePrice, "Base Price cannot exceed 999999.");
+                basePrice.setCustomValidity("Base Price cannot exceed 999999.");
+            } else {
+                basePrice.setCustomValidity("");
             }
         }
-        
         basePrice?.addEventListener("input", validateBasePrice);
     
         // ================== Discount Price Validation ==================
         function validateDiscountPrice() {
             if (!discountPrice) return;
-            clearValidationError(discountPrice);
             let base = parseFloat(basePrice.value) || 0;
             let discount = parseFloat(discountPrice.value) || 0;
     
             if (discount > base) {
-                showValidationError(discountPrice, "Discount Price cannot be greater than Base Price.");
+                discountPrice.setCustomValidity("Discount Price cannot be greater than Base Price.");
+            } else {
+                discountPrice.setCustomValidity("");
             }
         }
-        
         discountPrice?.addEventListener("input", validateDiscountPrice);
         basePrice?.addEventListener("input", validateDiscountPrice);
     
         // ================== Fixed Price Validation ==================
         function validateFixedPrice() {
             if (!fixedPrice) return;
-            clearValidationError(fixedPrice);
             let base = parseFloat(basePrice.value) || 0;
             let fixed = parseFloat(fixedPrice.value) || 0;
     
             if (fixed > base) {
-                showValidationError(fixedPrice, "Fixed Discount Price cannot be greater than Base Price.");
+                fixedPrice.setCustomValidity("Fixed Discount Price cannot be greater than Base Price.");
+            } else {
+                fixedPrice.setCustomValidity("");
             }
         }
-        
         fixedPrice?.addEventListener("input", validateFixedPrice);
         basePrice?.addEventListener("input", validateFixedPrice);
-    
-        // ================== Min=1 Fields Validation ==================
-        productQuantity?.addEventListener("input", function() {
-            validateMinValue(this, "Quantity");
-        });
-        
-        returnTimeLimit?.addEventListener("input", function() {
-            validateMinValue(this, "Return Time Limit");
-        });
-        
-        weight?.addEventListener("input", function() {
-            validateMinValue(this, "Weight");
-        });
-        
-        deliveryTime?.addEventListener("input", function() {
-            validateMinValue(this, "Delivery Time");
-        });
-        
-        commissionPercentage?.addEventListener("input", function() {
-            clearValidationError(this);
-            const value = parseFloat(this.value);
-            
-            if (this.value.trim() === "") {
-                showValidationError(this, "Commission Percentage cannot be empty.");
-            } else if (isNaN(value) || value < 1 || value > 100) {
-                showValidationError(this, "Commission Percentage must be between 1 and 100.");
-            }
-        });
-        
-        pcsPerUnit?.addEventListener("input", function() {
-            validateMinValue(this, "Pieces Per Unit");
-        });
-        
-        minOrderQty?.addEventListener("input", function() {
-            validateMinValue(this, "Minimum Order Quantity");
-        });
-        
-        lowStockAlert?.addEventListener("input", function() {
-            validateMinValue(this, "Low Stock Alert");
-        });
-        
-        expirationDays?.addEventListener("input", function() {
-            validateMinValue(this, "Expiration Days");
-        });
-    
-        // Form submission validation
-        const form = document.getElementById("main-form");
-        if (form) {
-            form.addEventListener("submit", function (e) {
-                let isValid = true;
-                
-                // Validate all fields before submission
-                const validateFunctions = [
-                    validateBasePrice,
-                    validateDiscountPrice,
-                    validateFixedPrice
-                ];
-                
-                validateFunctions.forEach(func => {
-                    try {
-                        func();
-                    } catch (e) {
-                        console.error("Validation error:", e);
-                    }
-                });
-                
-                // Validate min=1 fields
-                const minValueFields = [
-                    {field: productQuantity, name: "Quantity"},
-                    {field: returnTimeLimit, name: "Return Time Limit"},
-                    {field: weight, name: "Weight"},
-                    {field: deliveryTime, name: "Delivery Time"},
-                    {field: commissionPercentage, name: "Commission Percentage"},
-                    {field: pcsPerUnit, name: "Pieces Per Unit"},
-                    {field: minOrderQty, name: "Minimum Order Quantity"},
-                    {field: lowStockAlert, name: "Low Stock Alert"},
-                    {field: expirationDays, name: "Expiration Days"}
-                ];
-                
-                minValueFields.forEach(item => {
-                    if (item.field && !validateMinValue(item.field, item.name)) {
-                        isValid = false;
-                    }
-                });
-                
-                // Check if any field has validation error
-                const invalidFields = form.querySelectorAll(".is-invalid");
-                if (invalidFields.length > 0) {
-                    e.preventDefault();
-                    isValid = false;
-                    
-                    // Scroll to first error
-                    invalidFields[0].scrollIntoView({
-                        behavior: "smooth",
-                        block: "center"
-                    });
-                }
-                
-                return isValid;
-            });
-        }
     });
+    
     </script>
 
 <script>

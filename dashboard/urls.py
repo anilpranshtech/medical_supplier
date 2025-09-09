@@ -16,7 +16,7 @@ urlpatterns = [
     path('resend-otp/', ResendOTPView.as_view(), name='resend_otp'),
     path('profile/', UserProfileView.as_view(), name='profile'),
     path('upload-profile-picture/', views.UploadProfilePictureView.as_view(), name='upload_profile_picture'),
-
+    
     # user dashboard
     path('search-results-grid/', views.SearchResultsGridView.as_view(), name='search_results_grid'),
     path('search-results-list/', views.SearchResultsListView.as_view(), name='search_results_list'),
