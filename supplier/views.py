@@ -35,6 +35,8 @@ from django.db.models import Avg, Count, Q, Value
 from calendar import monthrange
 import logging
 from .forms import SupplierRFQQuotationForm
+from django.core.paginator import Paginator
+
 
 logger = logging.getLogger(__name__)
 
@@ -193,19 +195,12 @@ class HomeView(LoginRequiredMixin, SupplierPermissionMixin, View):
         logger.info(f"Supplier {supplier.id} accessed dashboard: {total_orders} orders, {this_month_sales} sales")
         return render(request, 'supplier/home.html', context)
 
-
-
-from django.core.paginator import Paginator
-
-
-
 class ProductsView(LoginRequiredMixin, View):
     template_name = 'supplier/products.html'
-    paginate_by = 15   #  Per page 3 products
+    paginate_by = 15  
 
     def get(self, request):
         user = request.user
-        # Base queryset: Get products created by the logged-in user
         products = Product.objects.filter(created_by=user)
 
         # Get filter parameters
@@ -250,7 +245,7 @@ class ProductsView(LoginRequiredMixin, View):
                     single_date = datetime.strptime(created_date, '%m/%d/%Y')
                     products = products.filter(created_at__date=single_date)
             except ValueError:
-                pass  # Ignore invalid dates
+                pass  
 
         # Apply sorting
         if sort_by == 'asc_created':
@@ -372,22 +367,20 @@ class AddproductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
             )
 
         try:
-            # Calculate price, offer_percentage, and discount_price based on discount option
             price = base_price
             final_offer_percentage = 0
             final_discount_price = None
 
             if discount_option == '2' and offer_percentage is not None:
-                # Percentage discount: Save offer_percentage and discount_price
                 final_offer_percentage = offer_percentage
                 final_discount_price = discount_price if discount_price is not None else base_price * (1 - offer_percentage / 100)
             elif discount_option == '3' and fixed_price is not None:
-                # Fixed discount: Save fixed_price as discount_price and use it as price
+         
                 price = fixed_price
                 final_discount_price = fixed_price
-            # For 'No Discount' (discount_option == '1'), keep defaults (price = base_price, others = 0/None)
 
-            print(f"Saving product with price: {price}, offer_percentage: {final_offer_percentage}, discount_price: {final_discount_price}")  # Debug
+
+            print(f"Saving product with price: {price}, offer_percentage: {final_offer_percentage}, discount_price: {final_discount_price}") 
 
             product = Product.objects.create(
                 name=name,

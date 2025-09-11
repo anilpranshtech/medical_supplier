@@ -88,6 +88,9 @@ class SupplierProfile(models.Model):
     company_name = models.CharField(max_length=255)
     license_number = models.CharField(max_length=100)
     is_verified = models.BooleanField(default=False)
+    email_confirmed = models.BooleanField(default=False)
+    
+    
 
     class Meta:
         verbose_name = verbose_name_plural ="Supplier Profile"
@@ -1030,9 +1033,8 @@ class StripeSubscriptionMetadata(models.Model):
 #     def __str__(self):
 #         return f"{self.user.email} - {self.plan.name}"
 
-
 class PendingSignup(models.Model):
-    token = models.CharField(max_length=64, unique=True)
+    token = models.CharField(max_length=64, unique=True)  
     data = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 

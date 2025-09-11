@@ -889,95 +889,63 @@
     });
 
     $('#otpForm').submit(function (e) {
-        e.preventDefault();
-        const otpValue = $('#otp').val();
-        $('.otp-input').removeClass('input-error');
-        otpError.style.display = 'none';
-        messageDiv.style.display = 'none';
+    e.preventDefault();
+    const otpValue = $('#otp').val();
+    $('.otp-input').removeClass('input-error');
+    otpError.style.display = 'none';
+    messageDiv.style.display = 'none';
 
-        if (!otpValue || otpValue.length !== 6) {
-            $('.otp-input').addClass('input-error');
-            otpError.style.display = 'block';
-            return;
-        }
+    if (!otpValue || otpValue.length !== 6) {
+        $('.otp-input').addClass('input-error');
+        otpError.style.display = 'block';
+        return;
+    }
 
-        if (!regToken) {
-            messageDiv.textContent = 'Registration token is missing. Please try registering again.';
-            messageDiv.className = 'error-message';
-            messageDiv.style.display = 'block';
-            setTimeout(() => messageDiv.style.display = 'none', 5000);
-            return;
-        }
+    if (!regToken) {
+        messageDiv.textContent = 'Registration token is missing. Please try registering again.';
+        messageDiv.className = 'error-message';
+        messageDiv.style.display = 'block';
+        setTimeout(() => messageDiv.style.display = 'none', 5000);
+        return;
+    }
 
-        $.ajax({
-            url: "{% url 'dashboard:register' %}",
-            type: "POST",
-            data: { step: 'verify_otp', token: regToken, otp: otpValue },
-            headers: { 'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val() },
-            success: function (res) {
-                if (res.success) {
-                    messageDiv.textContent = 'Account created successfully!';
-                    messageDiv.className = 'success-message';
-                    messageDiv.style.display = 'block';
-                    setTimeout(() => window.location.href = res.redirect, 2000);
-                }
-            },
-            error: function (xhr) {
-                $('.otp-input').addClass('input-error');
-                const errors = xhr.responseJSON.errors;
-                if (errors.otp) {
-                    otpError.textContent = errors.otp;
-                    otpError.style.display = 'block';
-                } else if (errors.general) {
-                    messageDiv.textContent = errors.general;
-                    messageDiv.className = 'error-message';
-                    messageDiv.style.display = 'block';
-                }
-                setTimeout(() => {
-                    otpError.style.display = 'none';
-                    messageDiv.style.display = 'none';
-                }, 5000);
-            }
-        });
-    });
-
-    // Resend OTP
-    let isResendDisabled = false;
-    resendLink.addEventListener('click', () => {
-        if (isResendDisabled || !regToken) return;
-        isResendDisabled = true;
-        resendLink.classList.add('disabled');
-        resendLink.textContent = 'Resending...';
-
-        $.ajax({
-            url: '{% url "dashboard:resend_otp" %}',
-            type: 'POST',
-            data: { token: regToken },
-            headers: { 'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val() },
-            success: function (res) {
-                messageDiv.textContent = res.message || 'OTP resent successfully';
-                messageDiv.className = res.message.includes('successfully') ? 'success-message' : 'error-message';
+    $.ajax({
+        url: "{% url 'dashboard:register' %}",
+        type: "POST",
+        data: { step: 'verify_otp', token: regToken, otp: otpValue },
+        headers: { 'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val() },
+        success: function (data, status, xhr) {
+            if (xhr.getResponseHeader('Content-Type').includes('text/html')) {
+                // Supplier flow: HTML response 
+                document.open();
+                document.write(data);
+                document.close();
+            } else if (data.success) {
+                // Retailer/Wholesaler flow: JSON response
+                messageDiv.textContent = 'Account created successfully!';
+                messageDiv.className = 'success-message';
                 messageDiv.style.display = 'block';
-                setTimeout(() => messageDiv.style.display = 'none', 5000);
-                setTimeout(() => {
-                    isResendDisabled = false;
-                    resendLink.classList.remove('disabled');
-                    resendLink.textContent = 'Resend OTP';
-                }, 30000);
-            },
-            error: function () {
-                messageDiv.textContent = 'Failed to resend OTP. Please try again.';
+                setTimeout(() => window.location.href = data.redirect, 2000);
+            }
+        },
+        error: function (xhr) {
+            $('.otp-input').addClass('input-error');
+            const errors = xhr.responseJSON ? xhr.responseJSON.errors : {};
+            if (errors.otp) {
+                otpError.textContent = errors.otp;
+                otpError.style.display = 'block';
+            } else if (errors.general) {
+                messageDiv.textContent = errors.general;
                 messageDiv.className = 'error-message';
                 messageDiv.style.display = 'block';
-                setTimeout(() => messageDiv.style.display = 'none', 5000);
-                setTimeout(() => {
-                    isResendDisabled = false;
-                    resendLink.classList.remove('disabled');
-                    resendLink.textContent = 'Resend OTP';
-                }, 30000);
             }
-        });
+            setTimeout(() => {
+                otpError.style.display = 'none';
+                messageDiv.style.display = 'none';
+            }, 5000);
+        }
     });
+});
 </script>
 </body>
 </html>

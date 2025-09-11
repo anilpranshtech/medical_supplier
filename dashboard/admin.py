@@ -16,7 +16,7 @@ class WholesaleBuyerProfileAdmin(admin.ModelAdmin):
 
 @admin.register(SupplierProfile)
 class SupplierProfileAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'profile_picture', 'phone', 'company_name', 'license_number', 'is_verified')
+    list_display = ('id', 'user', 'profile_picture', 'phone', 'company_name', 'license_number', 'is_verified','email_confirmed')
 
 
 @admin.register(Product)
@@ -27,6 +27,7 @@ class ProductProfileAdmin(admin.ModelAdmin):
 class ContactAdmin(admin.ModelAdmin):
     list_display = ('id', 'full_name', 'email', 'phone','subject','message','created_at','display_phone','display_email','display_address')
 
+admin.site.register(PendingSignup)
 
 @admin.register(ProductImage)
 class ProductImageAdmin(admin.ModelAdmin):

@@ -54,7 +54,6 @@ from .forms import *
 logger = logging.getLogger(__name__)
 
 
-# ---------------- HOME VIEW ---------------- #
 class HomeView(TemplateView):
     template_name = 'dashboard/home.html'
 
@@ -161,6 +160,8 @@ class HomeView(TemplateView):
         context['banners'] = Banner.objects.filter(is_active=True)
 
         return context
+
+        
 class CategoryProductsView(TemplateView):
     template_name = 'userdashboard/view/category_products.html'
 
@@ -331,8 +332,13 @@ class RequestRoleView(LoginRequiredMixin, View):
 #-------------------------------------------------------------------------------------------------------------------------------------------------
 
 def generate_token():
-    return uuid.uuid4().hex
-
+        return uuid.uuid4().hex
+        
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+from django.conf import settings
+from django.contrib.auth import get_user_model
 
 class RegistrationView(View):
     recaptcha_secret = '6LdTHV8rAAAAAIgLr2wdtdtWExTS6xJpUpD8qEzh'
@@ -359,7 +365,7 @@ class RegistrationView(View):
     def handle_registration(self, request):
         errors = {}
 
-        # reCAPTCHA
+        # reCAPTCHA validation
         recaptcha_response = request.POST.get('g-recaptcha-response')
         recaptcha_result = requests.post(
             'https://www.google.com/recaptcha/api/siteverify',
@@ -396,9 +402,15 @@ class RegistrationView(View):
         if "error" in otp_response:
             return JsonResponse({'success': False, 'errors': {'phone': otp_response["error"]}}, status=400)
 
-        # Save pending data (store as JSON string!)
+        # One token for OTP + Email
         token = uuid.uuid4().hex
-        PendingSignup.objects.create(token=token, data=json.dumps(request.POST.dict()))
+        data = request.POST.dict()
+        data['confirm_token'] = token
+
+        try:
+            PendingSignup.objects.create(token=token, data=json.dumps(data))
+        except Exception as e:
+            return JsonResponse({'success': False, 'errors': {'general': f'Error saving pending signup: {str(e)}'}}, status=500)
 
         return JsonResponse({'success': True, 'token': token})
 
@@ -415,20 +427,16 @@ class RegistrationView(View):
             pending.delete()
             return JsonResponse({'success': False, 'errors': {'general': 'Token expired.'}}, status=400)
 
-        # Load JSON back to dict
         try:
             data = json.loads(pending.data)
         except Exception:
             return JsonResponse({'success': False, 'errors': {'general': 'Corrupted signup data.'}}, status=500)
 
         phone = data.get('phone')
-
-        # Verify OTP
         result = verify_mobile_otp(VERIFY_URL, TEXTDRIP_OTP_TOKEN, phone, otp)
         if not (result.get("success") or result.get("status") is True):
             return JsonResponse({'success': False, 'errors': {'otp': result.get("message", "OTP verification failed.")}}, status=400)
 
-        # Create user
         try:
             with transaction.atomic():
                 user = User.objects.create_user(
@@ -447,14 +455,32 @@ class RegistrationView(View):
                         user=user,
                         phone=phone,
                         company_name=data.get('supplier_company_name', ''),
-                        license_number=data.get('license_number', '')
+                        license_number=data.get('license_number', ''),
+                        email_confirmed=False  # must confirm by email
                     )
+                    confirm_link = f"{settings.SITE_URL}/confirm-email/{token}/"
+                    html_message = render_to_string('dashboard/confirmation_email.html', {
+                        'user_name': f"{data['first_name']} {data['last_name']}",
+                        'confirm_link': confirm_link
+                    })
+                    send_mail(
+                        'Confirm Your Account - Medical Supplierz',
+                        strip_tags(html_message),
+                        settings.DEFAULT_FROM_EMAIL,
+                        [data['email']],
+                        html_message=html_message,
+                    )
+                    # keep PendingSignup until email confirmed
+                    return render(request, 'dashboard/register_success.html', {
+                        'token': token,
+                        'email': data['email']
+                    })
+
                 elif buyer_type == 'retailer':
                     nationality = Nationality.objects.filter(id=data.get('nationality')).first()
                     residency = Residency.objects.filter(id=data.get('residency')).first()
                     country_code = CountryCode.objects.filter(id=data.get('country_code')).first()
                     speciality = Speciality.objects.filter(id=data.get('speciality')).first()
-
                     RetailProfile.objects.create(
                         user=user,
                         phone=phone,
@@ -483,6 +509,58 @@ class RegistrationView(View):
             return JsonResponse({'success': False, 'errors': {'general': f'Error creating account: {str(e)}'}}, status=500)
 
 
+class ConfirmEmailView(View):
+    def get(self, request, token):
+        try:
+            pending = PendingSignup.objects.get(token=token)
+            data = json.loads(pending.data)
+            email = data.get('email')
+
+            user = User.objects.filter(username=email).first()
+            if user and hasattr(user, 'supplierprofile'):
+                user.supplierprofile.email_confirmed = True
+                user.supplierprofile.save()
+
+            pending.delete()
+            return redirect('supplier:supplier')
+        except PendingSignup.DoesNotExist:
+            return JsonResponse({'message': 'Invalid or expired confirmation link.'}, status=400)
+        except Exception as e:
+            return JsonResponse({'message': f'Error confirming email: {str(e)}'}, status=500)
+
+
+class ResendEmailView(View):
+    def post(self, request):
+        token = request.POST.get('token')
+        email = request.POST.get('email')
+        if not token or not email:
+            return JsonResponse({'message': 'Token or email missing.'}, status=400)
+
+        try:
+            pending = PendingSignup.objects.get(token=token)
+            data = json.loads(pending.data)
+            if data.get('email') != email:
+                return JsonResponse({'message': 'Invalid email for this token.'}, status=400)
+
+            confirm_link = f"{settings.SITE_URL}/confirm-email/{token}/"
+            html_message = render_to_string('dashboard/confirmation_email.html', {
+                'user_name': f"{data['first_name']} {data['last_name']}",
+                'confirm_link': confirm_link
+            })
+            send_mail(
+                'Confirm Your Account - Medical Supplierz',
+                strip_tags(html_message),
+                settings.DEFAULT_FROM_EMAIL,
+                [email],
+                html_message=html_message,
+            )
+            return JsonResponse({'message': 'Email resent successfully.'})
+        except PendingSignup.DoesNotExist:
+            return JsonResponse({'message': 'Invalid or expired token.'}, status=400)
+        except Exception as e:
+            return JsonResponse({'message': f'Failed to resend email: {str(e)}'}, status=500)
+
+
 class ResendOTPView(View):
     def post(self, request):
         token = request.POST.get('token')
@@ -490,11 +568,7 @@ class ResendOTPView(View):
             return JsonResponse({'message': 'No token provided.'}, status=400)
         try:
             pending = PendingSignup.objects.get(token=token)
-            try:
-                data = json.loads(pending.data) 
-            except Exception:
-                return JsonResponse({'message': 'Corrupted signup data'}, status=500)
-
+            data = json.loads(pending.data)
             phone = data.get('phone')
             otp_response = send_phone_otp(phone, TEXTDRIP_OTP_TOKEN)
             if "error" in otp_response:
