@@ -278,7 +278,7 @@ class CustomLoginView(FormView):
 
         # Redirect based on profile existence
         if hasattr(user, 'supplierprofile'):
-            return reverse_lazy('supplier:supplier')
+            return reverse_lazy('supplier:user_information')
         elif hasattr(user, 'retailprofile'):
             return reverse_lazy('dashboard:home')
         elif hasattr(user, 'wholesalebuyerprofile'):
@@ -1782,7 +1782,7 @@ class PaymentMethodView(LoginRequiredMixin, View):
                         name=user.get_full_name() or user.email,
                         amount=total,
                         paid=False,
-                        cod_tracking_id="COD123456",  # Replace with dynamic tracking ID
+                        cod_tracking_id="COD123456",  
                         delivery_partner=delivery_partner
                     )
 
@@ -3619,7 +3619,6 @@ class ContactUsView(FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # fetch the first entry that contains display info
         context['contact_info'] = Contact.objects.filter(
             display_phone__isnull=False
         ).first()

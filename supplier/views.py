@@ -34,14 +34,15 @@ from datetime import timedelta
 from django.db.models import Avg, Count, Q, Value
 from calendar import monthrange
 import logging
+from .mixins import OnboardingRequiredMixin
 from .forms import SupplierRFQQuotationForm
 from django.core.paginator import Paginator
-
+from decimal import Decimal 
 
 logger = logging.getLogger(__name__)
 
 
-class HomeView(LoginRequiredMixin, SupplierPermissionMixin, View):
+class HomeView(LoginRequiredMixin, SupplierPermissionMixin,OnboardingRequiredMixin, View):
     login_url = 'supplier:admin_login'
 
     def get(self, request):
@@ -195,7 +196,7 @@ class HomeView(LoginRequiredMixin, SupplierPermissionMixin, View):
         logger.info(f"Supplier {supplier.id} accessed dashboard: {total_orders} orders, {this_month_sales} sales")
         return render(request, 'supplier/home.html', context)
 
-class ProductsView(LoginRequiredMixin, View):
+class ProductsView(LoginRequiredMixin,OnboardingRequiredMixin, View):
     template_name = 'supplier/products.html'
     paginate_by = 15  
 
@@ -263,24 +264,23 @@ class ProductsView(LoginRequiredMixin, View):
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number)
 
-        # Get categories for filter dropdown
         categories = ProductCategory.objects.all()
 
         return render(request, self.template_name, {
-            'products': page_obj,     #  Only current page products
-            'page_obj': page_obj,     #  For pagination.html
+            'products': page_obj,     
+            'page_obj': page_obj,     
             'category': categories
         })
 
-       
-
-      
-
-
-
-
-class AddproductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
+class AddproductsView(LoginRequiredMixin, SupplierPermissionMixin,OnboardingRequiredMixin, View):
     template = 'supplier/add-product.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        profile = SupplierProfile.objects.get(user=request.user)
+        if not profile.selling_categories.exists():
+            messages.warning(request, "Please select your selling categories before adding a product.")
+            return redirect("supplier:selling_categories")  
+        return super().dispatch(request, *args, **kwargs)
 
     def get(self, request):
         context = {
@@ -516,7 +516,8 @@ class AddproductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
             'discounted_price': data.get('discounted_price', ''),
             **data.dict()
         })
-from decimal import Decimal   
+
+    
 class EditproductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
     template = 'supplier/edit-product.html'
 
@@ -948,7 +949,7 @@ class AdminloginView(SupplierPermissionMixin, View):
 
 
 @method_decorator(login_required, name='dispatch')
-class UserListView(SupplierPermissionMixin, ListView):
+class UserListView(SupplierPermissionMixin,OnboardingRequiredMixin, ListView):
     model = User
     template_name = 'supplier/user_list.html'
     context_object_name = 'users'
@@ -1213,7 +1214,7 @@ class UserDeleteView(SupplierPermissionMixin, View):
 
 
 
-class OrderListingView(SupplierPermissionMixin, View):
+class OrderListingView(SupplierPermissionMixin, OnboardingRequiredMixin,View):
     def get(self, request):
         status_filter = request.GET.get('status')
         supplier = request.user
@@ -1357,7 +1358,7 @@ class UserProfileView(SupplierPermissionMixin, View):
         return render(request, 'supplier/user-profile.html')
 
 
-class UserOverView(SupplierPermissionMixin, View):
+class UserOverView(SupplierPermissionMixin, OnboardingRequiredMixin,View):
     def get(self, request):
         return render(request, 'supplier/overview.html')
 
@@ -1612,7 +1613,7 @@ class LogoutView(SupplierPermissionMixin, View):
         return redirect('supplier:admin_login') 
 
 
-class RFQListView(LoginRequiredMixin, SupplierPermissionMixin, ListView):
+class RFQListView(LoginRequiredMixin, SupplierPermissionMixin, OnboardingRequiredMixin,ListView):
     template_name = 'supplier/rfq_list.html'
     context_object_name = 'rfqs'
 
@@ -1628,7 +1629,7 @@ class RFQListView(LoginRequiredMixin, SupplierPermissionMixin, ListView):
 
 
 
-class RFQListView(LoginRequiredMixin, SupplierPermissionMixin, ListView):
+class RFQListView(LoginRequiredMixin, SupplierPermissionMixin,OnboardingRequiredMixin, ListView):
     template_name = 'supplier/rfq_list.html'
     context_object_name = 'rfqs'
     paginate_by = 15
@@ -1841,7 +1842,7 @@ class SupplierQuotationUpdateView(LoginRequiredMixin, SupplierPermissionMixin, U
 
 
 
-class TransactionView(TemplateView):
+class TransactionView(OnboardingRequiredMixin,TemplateView):
     template_name = 'supplier/transaction.html'
     paginate_by = 15 
 
@@ -1914,7 +1915,7 @@ class TransactionView(TemplateView):
 
 
 
-class MostViewedProductsView(View):
+class MostViewedProductsView(OnboardingRequiredMixin,View):
     paginate_by = 12  
 
     def get(self, request):
@@ -1996,7 +1997,7 @@ class MostViewedProductsView(View):
 
         return render(request, "supplier/view_product.html", context)
 
-class QuestionView(TemplateView):
+class QuestionView(OnboardingRequiredMixin,TemplateView):
     template_name = 'supplier/question.html'
 
     def get_context_data(self, **kwargs):
@@ -2033,7 +2034,7 @@ class QuestionView(TemplateView):
 
 
 
-class RatingView(TemplateView):
+class RatingView(OnboardingRequiredMixin,TemplateView):
     template_name = "supplier/rating.html"  
 
     def get_context_data(self, **kwargs):
@@ -2127,7 +2128,7 @@ class RatingView(TemplateView):
         })
 
         return context
-class SupplierReturnsView(LoginRequiredMixin, TemplateView):
+class SupplierReturnsView(LoginRequiredMixin, OnboardingRequiredMixin,TemplateView):
     template_name = 'supplier/returns.html'
     login_url = 'dashboard:login'
     paginate_by = 14  
@@ -2224,3 +2225,250 @@ class SupplierReturnsView(LoginRequiredMixin, TemplateView):
 
         return redirect('supplier:supplier_returns')
 
+
+class UserInformationView(FormView):
+    template_name = "supplier/user_information.html"
+    form_class = UserInformationForm
+    success_url = reverse_lazy("supplier:business_information")  
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
+
+    def get_initial(self):
+        user = self.request.user
+        profile, created = SupplierProfile.objects.get_or_create(user=user)
+        return {
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "email": user.email,
+            "phone": profile.phone,
+            "job_title": profile.job_title,
+            "supplier_type": profile.supplier_type,
+            "are_you_buyer_b2b": profile.are_you_buyer_b2b,
+            "selling_for": profile.selling_for,
+            "meta_description": profile.meta_description,
+            "meta_keywords": profile.meta_keywords,
+        }
+
+    def form_valid(self, form):
+        user = self.request.user
+        profile, created = SupplierProfile.objects.get_or_create(user=user)
+        user.first_name = form.cleaned_data["first_name"]
+        user.last_name = form.cleaned_data["last_name"]
+        user.email = form.cleaned_data["email"]
+        user.save()
+
+        for field in [
+            "profile_picture",
+            "phone",
+            "job_title",
+            "supplier_type",
+            "are_you_buyer_b2b",
+            "selling_for",
+            "meta_description",
+            "meta_keywords",
+        ]:
+            setattr(profile, field, form.cleaned_data[field])
+        profile.save()
+
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["step"] = 1
+        context["progress"] = 12  
+        return context
+
+
+class BusinessInformationView(FormView):
+    template_name = "supplier/user_information.html"  
+    form_class = BusinessInformationForm
+    success_url = reverse_lazy("supplier:bank_details") 
+
+    def get_initial(self):
+        user = self.request.user
+        profile, created = SupplierProfile.objects.get_or_create(user=user)
+        return {
+            "business_name": profile.business_name,
+            "registration_number": profile.registration_number,
+            "authorized_person_name": profile.authorized_person_name,
+        }
+
+    def form_valid(self, form):
+        user = self.request.user
+        profile, created = SupplierProfile.objects.get_or_create(user=user)
+
+        # Save business info
+        for field in form.cleaned_data:
+            setattr(profile, field, form.cleaned_data[field])
+        profile.save()
+
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["step"] = 2
+        context["progress"] = 25  
+        return context
+
+class BankDetailsView(TemplateView):
+    template_name = "supplier/user_information.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["step"] = 3
+        context["progress"] = 38  
+        return context
+class BankDetailsView(TemplateView):
+    template_name = "supplier/user_information.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        profile, created = SupplierProfile.objects.get_or_create(user=self.request.user)
+        context["step"] = 3
+        context["progress"] = 50  
+        context["form"] = BankDetailsForm(instance=profile)
+        return context
+
+    def post(self, request, *args, **kwargs):
+        profile, created = SupplierProfile.objects.get_or_create(user=request.user)
+        form = BankDetailsForm(request.POST, request.FILES, instance=profile)
+        if form.is_valid():
+            form.save()
+            return redirect("supplier:selling_categories")  
+        context = self.get_context_data()
+        context["form"] = form
+        return self.render_to_response(context) 
+
+class SellingCategoriesView(TemplateView):
+    template_name = "supplier/user_information.html"
+
+    def get(self, request, *args, **kwargs):
+        profile = SupplierProfile.objects.get(user=request.user)
+        form = SellingCategoriesForm(instance=profile)
+        return self.render_to_response({
+            "form": form,
+            "step": 4,
+            "progress": 65,
+        })
+
+    def post(self, request, *args, **kwargs):
+        profile = SupplierProfile.objects.get(user=request.user)
+        form = SellingCategoriesForm(request.POST, instance=profile)
+        if form.is_valid():
+            form.save()
+            return redirect("supplier:supplier_description") 
+        return self.render_to_response({
+            "form": form,
+            "step": 4,
+            "progress": 65,
+        })
+
+class SupplierDescriptionView(TemplateView):
+    template_name = "supplier/user_information.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        profile, _ = SupplierProfile.objects.get_or_create(user=self.request.user)
+        form = SupplierDescriptionForm(instance=profile)
+        context["form"] = form
+        context["step"] = 5
+        context["progress"] = 80
+        return context
+
+    def post(self, request, *args, **kwargs):
+        profile, _ = SupplierProfile.objects.get_or_create(user=request.user)
+        form = SupplierDescriptionForm(request.POST, request.FILES, instance=profile)
+        if form.is_valid():
+            form.save()
+            return redirect("supplier:pickup_shipping") 
+        return self.render_to_response({
+            "form": form,
+            "step": 5,
+            "progress": 80
+        })
+
+    
+class PickupShippingView(TemplateView):
+    template_name = "supplier/user_information.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        profile = SupplierProfile.objects.get(user=self.request.user)
+        form = PickupandShipping(instance=profile)
+        context["form"] = form
+        context["step"] = 6
+        context["progress"] = 90
+        return context
+
+    def post(self, request, *args, **kwargs):
+        profile = SupplierProfile.objects.get(user=request.user)
+        form = PickupandShipping(request.POST, request.FILES, instance=profile)
+
+        if form.is_valid():
+            form.save()
+            return redirect("supplier:supplier_documents") 
+        context = self.get_context_data()
+        context["form"] = form
+        return self.render_to_response(context)
+
+    
+class SupplierDocumentsView(TemplateView):
+    template_name = "supplier/user_information.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        step = 7
+        supplier_profile = SupplierProfile.objects.get(user=self.request.user)
+
+        form = SupplierDocumentsForm(instance=supplier_profile)
+
+        context["step"] = step
+        context["progress"] = 95
+        context["form"] = form
+        return context
+
+    def post(self, request, *args, **kwargs):
+        supplier_profile = SupplierProfile.objects.get(user=request.user)
+        form = SupplierDocumentsForm(request.POST, request.FILES, instance=supplier_profile)
+        
+        if form.is_valid():
+            form.save()
+            return redirect("supplier:supplier_status") 
+
+        context = self.get_context_data()
+        context["form"] = form
+        return self.render_to_response(context)
+
+
+class SupplierStatusView(View):
+    template_name = "supplier/user_information.html"
+
+    def get(self, request):
+        supplier_profile = SupplierProfile.objects.get(user=request.user)
+        form = SupplierStatusForm(instance=supplier_profile)  
+        context = {
+            "supplier_profile": supplier_profile,
+            "form": form,
+            "step": 8,
+            "progress": 100,
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request):
+        supplier_profile = SupplierProfile.objects.get(user=request.user)
+        form = SupplierStatusForm(request.POST, instance=supplier_profile)
+        if form.is_valid():
+            profile = form.save(commit=False)
+            profile.onboarding_complete = True 
+            form.save()
+            return redirect('supplier:supplier')  
+        context = {
+            "supplier_profile": supplier_profile,
+            "form": form,
+            "step": 8,
+            "progress": 100,
+        }
+        return render(request, self.template_name, context)

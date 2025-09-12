@@ -1,0 +1,159 @@
+{% extends 'supplier/base.html' %}
+{% load static %}
+{% block content %}
+<style>
+
+    .profile-container {
+        display: flex;
+        gap: 20px;
+        align-items: flex-start;
+    }
+
+    .sidebar { 
+        width: 20%; 
+        background: #f8f9fa; 
+        padding: 20px; 
+        border-radius: 8px;
+    }
+    .sidebar ul { list-style: none; padding: 0; margin: 0; }
+    .sidebar ul li { padding: 10px; margin-bottom: 5px; border-left: 4px solid transparent; cursor: pointer; }
+    .sidebar ul li.active { font-weight: bold; border-left-color: #0d6efd; background: #e9ecef; }
+    .content { 
+        flex: 1; 
+        background: #fff; 
+        padding: 20px; 
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .progress { background: #e9ecef; height: 10px; width: 100%; border-radius: 5px; margin-bottom: 20px; }
+    .progress-bar { height: 10px; background: #0d6efd; width: {{ progress }}%; border-radius: 5px; }
+
+    .form-group { margin-bottom: 15px; }
+    .form-group label { font-weight: bold; display: block; margin-bottom: 5px; }
+    .btn { background: #0d6efd; color: #fff; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+    .btn:hover { background: #0b5ed7; }
+    
+</style>
+<h2>Dashboard &gt; Complete Profile</h2>
+<h3>My Profile</h3>
+
+<!-- Progress bar -->
+<div class="progress">
+    <div class="progress-bar" style="width: {{ progress }}%;"></div>
+</div>
+
+<!-- Wrapper for sidebar + form -->
+<div class="profile-container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <ul>
+            <li class="{% if step == 1 %}active{% endif %}">User Information</li>
+            <li class="{% if step == 2 %}active{% endif %}">Business Information</li>
+            <li class="{% if step == 3 %}active{% endif %}">Bank Details</li>
+            <li class="{% if step == 4 %}active{% endif %}">Selling Categories</li>
+            <li class="{% if step == 5 %}active{% endif %}">Supplier Description</li>
+            <li class="{% if step == 6 %}active{% endif %}">Pickup and Shipping</li>
+            <li class="{% if step == 7 %}active{% endif %}">Supplier Documents</li>
+            <li class="{% if step == 8 %}active{% endif %}">Status</li>
+        </ul>
+    </div>
+
+    <!-- Content Area -->
+    <div class="content">
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            {% if step == 1 %}
+                <h4>User Information</h4>
+                <div class="form-group">{{ form.first_name.label_tag }} {{ form.first_name }}</div>
+                <div class="form-group">{{ form.last_name.label_tag }} {{ form.last_name }}</div>
+                <div class="form-group">{{ form.email.label_tag }} {{ form.email }}</div>
+                <div class="form-group">{{ form.phone.label_tag }} {{ form.phone }}</div>
+                <div class="form-group">{{ form.profile_picture.label_tag }} {{ form.profile_picture }}</div>
+                <div class="form-group">{{ form.job_title.label_tag }} {{ form.job_title }}</div>
+                <div class="form-group">{{ form.supplier_type.label_tag }} {{ form.supplier_type }}</div>
+                <div class="form-group">{{ form.are_you_buyer_b2b.label_tag }} {{ form.are_you_buyer_b2b }}</div>
+                <div class="form-group">{{ form.selling_for.label_tag }} {{ form.selling_for }}</div>
+                <div class="form-group">{{ form.meta_description.label_tag }} {{ form.meta_description }}</div>
+                <div class="form-group">{{ form.meta_keywords.label_tag }} {{ form.meta_keywords }}</div>
+
+                {% elif step == 2 %}
+                <h4>Business Information</h4>
+                <div class="form-group">{{ form.business_name.label_tag }} {{ form.business_name }}</div>
+                <div class="form-group">{{ form.company_logo.label_tag }} {{ form.company_logo }}</div>
+                <div class="form-group">{{ form.registration_number.label_tag }} {{ form.registration_number }}</div>
+                <div class="form-group">{{ form.company_commercial_license.label_tag }} {{ form.company_commercial_license }}</div>
+                <div class="form-group">{{ form.authorized_person_name.label_tag }} {{ form.authorized_person_name }}</div>
+                <div class="form-group">{{ form.iso_certificate.label_tag }} {{ form.iso_certificate }}</div>
+                <div class="form-group">{{ form.export_import_license.label_tag }} {{ form.export_import_license }}</div>
+        
+            
+                
+
+                {% elif step == 3 %}
+                <h4>Bank Details</h4>
+                <div class="form-group">{{ form.account_holder_name.label_tag }} {{ form.account_holder_name }}</div>
+                <div class="form-group">{{ form.account_number.label_tag }} {{ form.account_number }}</div>
+                <div class="form-group">{{ form.iban_code.label_tag }} {{ form.iban_code }}</div>
+                <div class="form-group">{{ form.iban_certificate.label_tag }} {{ form.iban_certificate }}</div>
+                <div class="form-group">{{ form.bank_name.label_tag }} {{ form.bank_name }}</div>
+                <div class="form-group">{{ form.swift_code.label_tag }} {{ form.swift_code }}</div>
+       
+            
+
+                {% elif step == 4 %}
+                <h4>Selling Categories</h4>
+                <div class="form-group">
+                    {{ form.selling_categories }}
+                </div>
+            
+
+                {% elif step == 5 %}
+                <h4>Supplier Description</h4>
+                <div class="form-group">{{ form.facebook.label_tag }} {{ form.facebook }}</div>
+                <div class="form-group">{{ form.instagram.label_tag }} {{ form.instagram }}</div>
+                <div class="form-group">{{ form.twitter.label_tag }} {{ form.twitter }}</div>
+                <div class="form-group">{{ form.google_page.label_tag }} {{ form.google_page }}</div>
+                <div class="form-group">{{ form.linkedin.label_tag }} {{ form.linkedin }}</div>
+                <div class="form-group">{{ form.short_description.label_tag }} {{ form.short_description }}</div>
+                <div class="form-group">{{ form.shipping_and_payment_terms.label_tag }} {{ form.shipping_and_payment_terms }}</div>
+                <div class="form-group">{{ form.return_policy.label_tag }} {{ form.return_policy }}</div>
+                <div class="form-group">{{ form.banner.label_tag }} {{ form.banner }}</div>
+
+                {% elif step == 6 %}
+                <h4>Pickup and Shipping</h4>
+                <div class="form-group">{{ form.country.label_tag }} {{ form.country }}</div>
+                <div class="form-group">{{ form.state.label_tag }} {{ form.state }}</div>
+                <div class="form-group">{{ form.city.label_tag }} {{ form.city }}</div>
+                <div class="form-group">{{ form.zip_code.label_tag }} {{ form.zip_code }}</div>
+                <div class="form-group">
+                    {{ form.support_pickup }} {{ form.support_pickup.label_tag }}
+                </div>
+            
+                {% elif step == 7 %}
+                <h4>Supplier Documents</h4>
+                <div class="form-group">{{ form.signature_authority_doc.label_tag }} {{ form.signature_authority_doc }}</div>
+                <div class="form-group">{{ form.memorandum_of_association.label_tag }} {{ form.memorandum_of_association }}</div>
+                <div class="form-group">{{ form.ce_certificate.label_tag }} {{ form.ce_certificate }}</div>
+                <div class="form-group">{{ form.fda_certificate.label_tag }} {{ form.fda_certificate }}</div>
+                <div class="form-group">{{ form.other_certificate_1.label_tag }} {{ form.other_certificate_1 }}</div>
+                <div class="form-group">{{ form.other_certificate_2.label_tag }} {{ form.other_certificate_2 }}</div>
+                <div class="form-group">{{ form.other_supporting_doc_1.label_tag }} {{ form.other_supporting_doc_1 }}</div>
+                <div class="form-group">{{ form.other_supporting_doc_2.label_tag }} {{ form.other_supporting_doc_2 }}</div>
+                <div class="form-group">{{ form.other_supporting_doc_3.label_tag }} {{ form.other_supporting_doc_3 }}</div>
+           
+                {% elif step == 8 %}
+                <h4>Status</h4>
+                <div class="form-group">{{ form.current_status.label_tag }} {{ form.current_status }}</div>
+                <div class="form-group">{{ form.request_for.label_tag }} {{ form.request_for }}</div>
+                <div class="form-group">{{ form.equest_reason.label_tag }} {{ form.equest_reason }} </div>
+                {% endif %}
+
+            <br>
+            <button type="submit" class="btn">Save & Continue</button>
+        </form>
+    </div>
+</div>
+
+
+{% endblock %}
