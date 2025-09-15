@@ -1,48 +1,124 @@
 {% extends 'supplier/base.html' %}
 {% load static %}
+
 {% block content %}
 <style>
-
+    body {
+        margin: 0;
+        padding: 0;
+        background: #f8f9fa;
+        overflow-x: hidden;
+        font-family: Arial, sans-serif;
+    }
+    .page-title { font-size: 22px; margin-bottom: 5px; color: #333; }
+    .section-title { font-size: 18px; margin-bottom: 20px; color: #555; }
+    .progress-wrapper {
+        max-width: 98%;
+        padding: 0 20px;
+        box-sizing: border-box;
+        margin-bottom: 25px;
+    }
+    .progress { background: #e9ecef; height: 12px; width: 100%; border-radius: 6px; overflow: hidden; }
+    .progress-bar { height: 12px; background: linear-gradient(90deg,#0d6efd,#4dabf7); width: {{ progress }}%; border-radius: 6px; transition: width 0.5s ease-in-out; }
     .profile-container {
         display: flex;
         gap: 20px;
         align-items: flex-start;
+        padding: 0 20px;
+        box-sizing: border-box;
+        flex-wrap: wrap;
     }
-
     .sidebar { 
-        width: 20%; 
-        background: #f8f9fa; 
-        padding: 20px; 
-        border-radius: 8px;
-    }
-    .sidebar ul { list-style: none; padding: 0; margin: 0; }
-    .sidebar ul li { padding: 10px; margin-bottom: 5px; border-left: 4px solid transparent; cursor: pointer; }
-    .sidebar ul li.active { font-weight: bold; border-left-color: #0d6efd; background: #e9ecef; }
-    .content { 
-        flex: 1; 
+        flex: 0 0 22%; 
+        min-width: 220px;
         background: #fff; 
         padding: 20px; 
-        border-radius: 8px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        overflow: visible;
     }
-    .progress { background: #e9ecef; height: 10px; width: 100%; border-radius: 5px; margin-bottom: 20px; }
-    .progress-bar { height: 10px; background: #0d6efd; width: {{ progress }}%; border-radius: 5px; }
+    .sidebar ul { list-style: none; padding: 0; margin: 0; }
+    .sidebar ul li { 
+        padding: 12px; 
+        margin-bottom: 8px; 
+        border-left: 4px solid transparent; 
+        cursor: pointer; 
+        border-radius: 6px;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+    }
+    .sidebar ul li:hover { background: #f1f4ff; border-left-color: #0d6efd; }
+    .sidebar ul li.active { font-weight: bold; border-left-color: #0d6efd; background: #e9f2ff; color: #0d6efd; }
+    .content { 
+        flex: 1; 
+        min-width: 300px;
+        max-width: 75%;
+        background: #fff; 
+        padding: 25px; 
+        border-radius: 12px;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        animation: fadeIn 0.3s ease-in-out;
+        overflow: visible; /* Remove scrollbar */
+        box-sizing: border-box;
+    }
 
-    .form-group { margin-bottom: 15px; }
-    .form-group label { font-weight: bold; display: block; margin-bottom: 5px; }
-    .btn { background: #0d6efd; color: #fff; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+    /* Form */
+    .form-group { margin-bottom: 18px; }
+    .form-group label { font-weight: 600; display: block; margin-bottom: 6px; color: #444; }
+    .form-group input, 
+    .form-group select, 
+    .form-group textarea {
+        width: 100%; 
+        padding: 10px; 
+        border: 1px solid #ddd; 
+        border-radius: 6px; 
+        outline: none; 
+        transition: all 0.3s ease;
+        box-sizing: border-box;
+    }
+    .form-group input:focus, 
+    .form-group select:focus, 
+    .form-group textarea:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 3px rgba(13,110,253,0.15);
+    }
+    .btn { 
+        background: #0d6efd; 
+        color: #fff; 
+        border: none; 
+        padding: 12px 28px; 
+        border-radius: 6px; 
+        cursor: pointer; 
+        font-size: 15px;
+        transition: background 0.3s ease;
+    }
     .btn:hover { background: #0b5ed7; }
-    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media screen and (max-width: 1024px){
+        .profile-container {
+            flex-direction: column;
+        }
+        .sidebar, .content {
+            max-width: 100%;
+        }
+        .progress-wrapper {
+            padding: 0 10px;
+        }
+    }
 </style>
-<h2>Dashboard &gt; Complete Profile</h2>
-<h3>My Profile</h3>
+<h2 class="page-title">Dashboard &gt; Complete Profile</h2>
+<h3 class="section-title">My Profile</h3>
 
 <!-- Progress bar -->
-<div class="progress">
-    <div class="progress-bar" style="width: {{ progress }}%;"></div>
+<div class="progress-wrapper">
+    <div class="progress">
+        <div class="progress-bar" style="width: {{ progress }}%;"></div>
+    </div>
 </div>
-
-<!-- Wrapper for sidebar + form -->
 <div class="profile-container">
     <!-- Sidebar -->
     <div class="sidebar">
@@ -77,7 +153,7 @@
                 <div class="form-group">{{ form.meta_description.label_tag }} {{ form.meta_description }}</div>
                 <div class="form-group">{{ form.meta_keywords.label_tag }} {{ form.meta_keywords }}</div>
 
-                {% elif step == 2 %}
+            {% elif step == 2 %}
                 <h4>Business Information</h4>
                 <div class="form-group">{{ form.business_name.label_tag }} {{ form.business_name }}</div>
                 <div class="form-group">{{ form.company_logo.label_tag }} {{ form.company_logo }}</div>
@@ -86,11 +162,8 @@
                 <div class="form-group">{{ form.authorized_person_name.label_tag }} {{ form.authorized_person_name }}</div>
                 <div class="form-group">{{ form.iso_certificate.label_tag }} {{ form.iso_certificate }}</div>
                 <div class="form-group">{{ form.export_import_license.label_tag }} {{ form.export_import_license }}</div>
-        
             
-                
-
-                {% elif step == 3 %}
+            {% elif step == 3 %}
                 <h4>Bank Details</h4>
                 <div class="form-group">{{ form.account_holder_name.label_tag }} {{ form.account_holder_name }}</div>
                 <div class="form-group">{{ form.account_number.label_tag }} {{ form.account_number }}</div>
@@ -99,16 +172,11 @@
                 <div class="form-group">{{ form.bank_name.label_tag }} {{ form.bank_name }}</div>
                 <div class="form-group">{{ form.swift_code.label_tag }} {{ form.swift_code }}</div>
        
-            
-
-                {% elif step == 4 %}
+            {% elif step == 4 %}
                 <h4>Selling Categories</h4>
-                <div class="form-group">
-                    {{ form.selling_categories }}
-                </div>
+                <div class="form-group">{{ form.selling_categories }}</div>
             
-
-                {% elif step == 5 %}
+            {% elif step == 5 %}
                 <h4>Supplier Description</h4>
                 <div class="form-group">{{ form.facebook.label_tag }} {{ form.facebook }}</div>
                 <div class="form-group">{{ form.instagram.label_tag }} {{ form.instagram }}</div>
@@ -120,17 +188,15 @@
                 <div class="form-group">{{ form.return_policy.label_tag }} {{ form.return_policy }}</div>
                 <div class="form-group">{{ form.banner.label_tag }} {{ form.banner }}</div>
 
-                {% elif step == 6 %}
+            {% elif step == 6 %}
                 <h4>Pickup and Shipping</h4>
                 <div class="form-group">{{ form.country.label_tag }} {{ form.country }}</div>
                 <div class="form-group">{{ form.state.label_tag }} {{ form.state }}</div>
                 <div class="form-group">{{ form.city.label_tag }} {{ form.city }}</div>
                 <div class="form-group">{{ form.zip_code.label_tag }} {{ form.zip_code }}</div>
-                <div class="form-group">
-                    {{ form.support_pickup }} {{ form.support_pickup.label_tag }}
-                </div>
+                <div class="form-group">{{ form.support_pickup }} {{ form.support_pickup.label_tag }}</div>
             
-                {% elif step == 7 %}
+            {% elif step == 7 %}
                 <h4>Supplier Documents</h4>
                 <div class="form-group">{{ form.signature_authority_doc.label_tag }} {{ form.signature_authority_doc }}</div>
                 <div class="form-group">{{ form.memorandum_of_association.label_tag }} {{ form.memorandum_of_association }}</div>
@@ -142,12 +208,12 @@
                 <div class="form-group">{{ form.other_supporting_doc_2.label_tag }} {{ form.other_supporting_doc_2 }}</div>
                 <div class="form-group">{{ form.other_supporting_doc_3.label_tag }} {{ form.other_supporting_doc_3 }}</div>
            
-                {% elif step == 8 %}
+            {% elif step == 8 %}
                 <h4>Status</h4>
                 <div class="form-group">{{ form.current_status.label_tag }} {{ form.current_status }}</div>
                 <div class="form-group">{{ form.request_for.label_tag }} {{ form.request_for }}</div>
                 <div class="form-group">{{ form.equest_reason.label_tag }} {{ form.equest_reason }} </div>
-                {% endif %}
+            {% endif %}
 
             <br>
             <button type="submit" class="btn">Save & Continue</button>
