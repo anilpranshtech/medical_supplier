@@ -31,6 +31,18 @@ class UserInformationForm(forms.ModelForm):
     first_name = forms.CharField(required=True)
     last_name = forms.CharField(required=True)
     email = forms.EmailField(required=True)
+    profile_picture = forms.ImageField(required=True)
+    phone = forms.CharField(required=True)
+    job_title = forms.CharField(required=True)
+    supplier_type = forms.CharField(required=True)
+    are_you_buyer_b2b = forms.ChoiceField(
+        choices=[('yes', 'Yes'), ('no', 'No')],
+        required=True,
+
+    )
+    selling_for = forms.CharField(required=True)
+    meta_description = forms.CharField(required=True, widget=forms.Textarea)
+    meta_keywords = forms.CharField(required=True, widget=forms.Textarea)
 
     class Meta:
         model = SupplierProfile
@@ -53,6 +65,7 @@ class UserInformationForm(forms.ModelForm):
             self.fields["last_name"].initial = user.last_name
             self.fields["email"].initial = user.email
 
+
 class BusinessInformationForm(forms.ModelForm):
     class Meta:
         model = SupplierProfile
@@ -65,6 +78,11 @@ class BusinessInformationForm(forms.ModelForm):
             "iso_certificate",
             "export_import_license",
         ]
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.required = True
+            
 class BankDetailsForm(forms.ModelForm):
     class Meta:
         model = SupplierProfile
