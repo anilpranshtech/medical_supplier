@@ -2234,8 +2234,10 @@ class UserInformationView(FormView):
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs["user"] = self.request.user
+        profile, created = SupplierProfile.objects.get_or_create(user=self.request.user)
+        kwargs["instance"] = profile 
         return kwargs
-
+                    
     def get_initial(self):
         user = self.request.user
         profile, created = SupplierProfile.objects.get_or_create(user=user)
@@ -2274,7 +2276,7 @@ class UserInformationView(FormView):
         profile.save()
 
         return super().form_valid(form)
-
+    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["step"] = 1

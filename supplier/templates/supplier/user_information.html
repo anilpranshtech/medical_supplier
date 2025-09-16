@@ -107,6 +107,17 @@
             padding: 0 10px;
         }
     }
+    .form-group { margin-bottom: 15px; }
+    .errorlist {
+        color: red;
+        font-size: 0.9em;
+        margin-top: 5px;
+        list-style: none;
+        padding-left: 0;
+    }
+    .error-input {
+        border: 1px solid red !important;
+    }
 </style>
 <h2 class="page-title">Dashboard &gt; Complete Profile</h2>
 <h3 class="section-title">My Profile</h3>
@@ -138,28 +149,29 @@
             {% csrf_token %}
 
             {% if step == 1 %}
-                <h4>User Information</h4>
-                <div class="form-group">{{ form.first_name.label_tag }} {{ form.first_name }}</div>
-                <div class="form-group">{{ form.last_name.label_tag }} {{ form.last_name }}</div>
-                <div class="form-group">{{ form.email.label_tag }} {{ form.email }}</div>
-                <div class="form-group">{{ form.phone.label_tag }} {{ form.phone }}</div>
-                <div class="form-group">{{ form.profile_picture.label_tag }} {{ form.profile_picture }}</div>
-                <div class="form-group">{{ form.job_title.label_tag }} {{ form.job_title }}</div>
-                <div class="form-group">{{ form.supplier_type.label_tag }} {{ form.supplier_type }}</div>
-                <div class="form-group">{{ form.are_you_buyer_b2b.label_tag }} {{ form.are_you_buyer_b2b }}</div>
-                <div class="form-group">{{ form.selling_for.label_tag }} {{ form.selling_for }}</div>
-                <div class="form-group">{{ form.meta_description.label_tag }} {{ form.meta_description }}</div>
-                <div class="form-group">{{ form.meta_keywords.label_tag }} {{ form.meta_keywords }}</div>
-
-            {% elif step == 2 %}
-                <h4>Business Information</h4>
-                <div class="form-group">{{ form.business_name.label_tag }} {{ form.business_name }}</div>
-                <div class="form-group">{{ form.company_logo.label_tag }} {{ form.company_logo }}</div>
-                <div class="form-group">{{ form.registration_number.label_tag }} {{ form.registration_number }}</div>
-                <div class="form-group">{{ form.company_commercial_license.label_tag }} {{ form.company_commercial_license }}</div>
-                <div class="form-group">{{ form.authorized_person_name.label_tag }} {{ form.authorized_person_name }}</div>
-                <div class="form-group">{{ form.iso_certificate.label_tag }} {{ form.iso_certificate }}</div>
-                <div class="form-group">{{ form.export_import_license.label_tag }} {{ form.export_import_license }}</div>
+            <h4>User Information</h4>
+            <div class="form-group"><label style="display:inline;">{{ form.first_name.label }}<span style="color:red">*</span></label>{{ form.first_name }}</div>
+            <div class="form-group"> <label style="display:inline;">{{ form.last_name.label }}<span style="color:red">*</span></label>{{ form.last_name }}</div>
+            <div class="form-group"><label style="display:inline;">{{ form.email.label }}<span style="color:red">*</span></label>{{ form.email }}</div>
+            <div class="form-group"><label style="display:inline;">{{ form.phone.label }}<span style="color:red">*</span></label>{{ form.phone }}</div>
+            <div class="form-group"><label style="display:inline;">{{ form.profile_picture.label }}<span style="color:red">*</span></label>{{ form.profile_picture }}{% if form.instance.profile_picture %}<div style="margin-top:10px;"><img src="{{ form.instance.profile_picture.url }}" alt="Profile Picture" width="120" height="120" style="border-radius: 5px; border:1px solid #ddd;"></div>{% endif %}</div>
+            <div class="form-group"> <label style="display:inline;">{{ form.job_title.label }}<span style="color:red">*</span></label>{{ form.job_title }} </div>
+           <div class="form-group"><label style="display:inline;">{{ form.supplier_type.label }}<span style="color:red">*</span> </label>{{ form.supplier_type }}</div>
+           <div class="form-group"><label style="display:inline;">{{ form.are_you_buyer_b2b.label }}<span style="color:red">*</span></label> {{ form.are_you_buyer_b2b }} </div>
+           <div class="form-group"><label style="display:inline;">{{ form.selling_for.label }}<span style="color:red">*</span></label>{{ form.selling_for }}</div>
+           <div class="form-group"><label style="display:inline;">{{ form.meta_description.label }}<span style="color:red">*</span></label>{{ form.meta_description }}</div>
+           <div class="form-group"><label style="display:inline;">{{ form.meta_keywords.label }}<span style="color:red">*</span></label>{{ form.meta_keywords }}</div>
+    
+           {% elif step == 2 %}
+           <h4>Business Information</h4>
+           <div class="form-group"><label style="display:inline;">{{ form.business_name.label }}<span style="color:red">*</span></label>{{ form.business_name }}</div>
+           <div class="form-group"><label style="display:inline;">{{ form.company_logo.label }}<span style="color:red">*</span></label>{{ form.company_logo }}</div>
+           <div class="form-group"><label style="display:inline;">{{ form.registration_number.label }}<span style="color:red">*</span></label>{{ form.registration_number }}</div>
+           <div class="form-group"><label style="display:inline;">{{ form.company_commercial_license.label }}<span style="color:red">*</span></label>{{ form.company_commercial_license }}</div>
+           <div class="form-group"><label style="display:inline;">{{ form.authorized_person_name.label }}<span style="color:red">*</span></label>{{ form.authorized_person_name }}</div>
+           <div class="form-group"><label style="display:inline;">{{ form.iso_certificate.label }}<span style="color:red">*</span></label>{{ form.iso_certificate }}</div>
+           <div class="form-group"><label style="display:inline;">{{ form.export_import_license.label }}<span style="color:red">*</span></label>{{ form.export_import_license }}</div>
+  
             
             {% elif step == 3 %}
                 <h4>Bank Details</h4>
@@ -218,6 +230,16 @@
         </form>
     </div>
 </div>
-
+<script>
+    // Add red border to inputs with errors
+    document.addEventListener('DOMContentLoaded', function() {
+        const inputs = document.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => {
+            if (input.parentElement.querySelector('.errorlist')) {
+                input.classList.add('error-input');
+            }
+        });
+    });
+</script>
 
 {% endblock %}
