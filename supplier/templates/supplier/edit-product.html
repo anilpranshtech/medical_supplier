@@ -212,77 +212,86 @@
                                         </div>
                                     </div>
                                 </div>
-                                <!-- Pricing Card -->
-                                <div class="card card-flush py-4 mt-7" id="hide_field_price">
-                                    <div class="card-header">
-                                        <div class="card-title">
-                                            <h2>Pricing</h2>
-                                        </div>
-                                    </div>
-                                    <div class="card-body pt-0">
-                                        <div class="mb-10 fv-row">
-                                            <label class="required form-label">Base Price</label>
-                                            <input type="text" name="price" class="form-control mb-2" placeholder="Product price" value="{{ price|default:'' }}" required />
-                                            <div class="text-muted fs-7">Set the product price.</div>
-                                        </div>
-                                        <div class="fv-row mb-10">
-                                            <label class="fs-6 fw-semibold mb-2 required">
-                                                Discount Type
-                                                <span class="ms-1" data-bs-toggle="tooltip" title="Select a discount type that will be applied to this product">
-                                                    <i class="fas fa-info-circle text-gray-500 fs-6"></i>
-                                                </span>
-                                            </label>
-                                            <div class="row row-cols-1 row-cols-md-3 row-cols-lg-1 row-cols-xl-3 g-9" data-kt-buttons="true" data-kt-buttons-target="[data-kt-button='true']">
-                                                <div class="col">
-                                                    <label class="btn btn-outline btn-outline-dashed btn-active-light-primary d-flex text-start p-6" data-kt-button="true">
-                                                        <span class="form-check form-check-custom form-check-solid form-check-sm align-items-start mt-1">
-                                                            <input class="form-check-input" type="radio" name="discount_option" value="1" {% if discount_option == '1' %}checked{% endif %} />
-                                                        </span>
-                                                        <span class="ms-5">
-                                                            <span class="fs-4 fw-bold text-gray-800 d-block">No Discount</span>
-                                                        </span>
-                                                    </label>
-                                                </div>
-                                                <div class="col">
-                                                    <label class="btn btn-outline btn-outline-dashed btn-active-light-primary d-flex text-start p-6" data-kt-button="true">
-                                                        <span class="form-check form-check-custom form-check-solid form-check-sm align-items-start mt-1">
-                                                            <input class="form-check-input" type="radio" name="discount_option" value="2" {% if discount_option == '2' %}checked{% endif %} />
-                                                        </span>
-                                                        <span class="ms-5">
-                                                            <span class="fs-4 fw-bold text-gray-800 d-block">Percentage %</span>
-                                                        </span>
-                                                    </label>
-                                                </div>
-                                                <div class="col">
-                                                    <label class="btn btn-outline btn-outline-dashed btn-active-light-primary d-flex text-start p-6" data-kt-button="true">
-                                                        <span class="form-check form-check-custom form-check-solid form-check-sm align-items-start mt-1">
-                                                            <input class="form-check-input" type="radio" name="discount_option" value="3" {% if discount_option == '3' %}checked{% endif %} />
-                                                        </span>
-                                                        <span class="ms-5">
-                                                            <span class="fs-4 fw-bold text-gray-800 d-block">Fixed Price</span>
-                                                        </span>
-                                                    </label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="mb-10 fv-row" id="kt_ecommerce_add_product_discount_percentage">
-                                            <label class="form-label">Set Discount Percentage</label>
-                                            <div class="d-flex flex-column text-center mb-5">
-                                                <div class="d-flex align-items-start justify-content-center mb-7">
-                                                    <span class="fw-bold fs-3x" id="kt_ecommerce_add_product_discount_label">{{ discount_percentage|default:0 }}</span>
-                                                    <span class="fw-bold fs-4 mt-1 ms-2">%</span>
-                                                </div>
-                                                <div id="kt_ecommerce_add_product_discount_slider" class="noUi-sm"></div>
-                                            </div>
-                                            <div class="text-muted fs-7">Set a percentage discount to be applied on this product.</div>
-                                        </div>
-                                        <div class="d-none mb-10 fv-row" id="kt_ecommerce_add_product_discount_fixed">
-                                            <label class="form-label">Fixed Discounted Price</label>
-                                            <input type="text" name="discounted_price" class="form-control mb-2" placeholder="Discounted price" value="{{ discounted_price|default:'' }}" />
-                                            <div class="text-muted fs-7">Set the discounted product price. The product will be reduced at the determined fixed price</div>
-                                        </div>
-                                    </div>
-                                </div>
+                             <!-- Pricing Card -->
+<div class="card card-flush py-4 mt-7" id="hide_field_price">
+    <div class="card-header">
+        <div class="card-title">
+            <h2>Pricing</h2>
+        </div>
+    </div>
+    <div class="card-body pt-0">
+        <div class="mb-10 fv-row">
+            <label class="required form-label">Base Price</label>
+            <input type="text" id="base_price" name="base_price" class="form-control mb-2"
+                   placeholder="Product price" value="{{ base_price|default:'' }}" required />
+            <div class="text-muted fs-7">Enter a valid product price (1 - 999999, up to 2 decimals).</div>
+        </div>
+        <div class="mb-10 fv-row d-none" id="discount_price_container">
+            <label class="required form-label">Discount Price</label>
+            <input type="text" id="discount_price" name="discount_price" class="form-control mb-2"
+                   placeholder="Discounted price" value="{{ discount_price|default:'' }}" readonly />
+            <div class="text-muted fs-7">The discounted price will be calculated based on the discount percentage.</div>
+        </div>
+        <div class="fv-row mb-10">
+            <label class="fs-6 fw-semibold mb-2 required">
+                Discount Type
+                <span class="ms-1" data-bs-toggle="tooltip" title="Select a discount type that will be applied to this product">
+                    <i class="fas fa-info-circle text-gray-500 fs-6"></i>
+                </span>
+            </label>
+            <div class="row row-cols-1 row-cols-md-3 row-cols-lg-1 row-cols-xl-3 g-9" data-kt-buttons="true" data-kt-buttons-target="[data-kt-button='true']">
+                <div class="col">
+                    <label class="btn btn-outline btn-outline-dashed btn-active-light-primary d-flex text-start p-6" data-kt-button="true">
+                        <span class="form-check form-check-custom form-check-solid form-check-sm align-items-start mt-1">
+                            <input class="form-check-input" type="radio" name="discount_option" value="1" {% if discount_option == '1' %}checked{% endif %} />
+                        </span>
+                        <span class="ms-5">
+                            <span class="fs-4 fw-bold text-gray-800 d-block">No Discount</span>
+                        </span>
+                    </label>
+                </div>
+                <div class="col">
+                    <label class="btn btn-outline btn-outline-dashed btn-active-light-primary d-flex text-start p-6" data-kt-button="true">
+                        <span class="form-check form-check-custom form-check-solid form-check-sm align-items-start mt-1">
+                            <input class="form-check-input" type="radio" name="discount_option" value="2" {% if discount_option == '2' %}checked{% endif %} />
+                        </span>
+                        <span class="ms-5">
+                            <span class="fs-4 fw-bold text-gray-800 d-block">Percentage %</span>
+                        </span>
+                    </label>
+                </div>
+                <div class="col">
+                    <label class="btn btn-outline btn-outline-dashed btn-active-light-primary d-flex text-start p-6" data-kt-button="true">
+                        <span class="form-check form-check-custom form-check-solid form-check-sm align-items-start mt-1">
+                            <input class="form-check-input" type="radio" name="discount_option" value="3" {% if discount_option == '3' %}checked{% endif %} />
+                        </span>
+                        <span class="ms-5">
+                            <span class="fs-4 fw-bold text-gray-800 d-block">Fixed Price</span>
+                        </span>
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="mb-10 fv-row" id="kt_ecommerce_add_product_discount_percentage">
+            <label class="form-label">Set Discount Percentage</label>
+            <div class="d-flex flex-column text-center mb-5">
+                <div class="d-flex align-items-start justify-content-center mb-7">
+                    <span class="fw-bold fs-3x" id="kt_ecommerce_add_product_discount_label">{{ offer_percentage|default:1 }}</span>
+                    <span class="fw-bold fs-4 mt-1 ms-2">%</span>
+                </div>
+                <div id="kt_ecommerce_add_product_discount_slider" class="noUi-sm"></div>
+            </div>
+            <div class="text-muted fs-7">Set a percentage discount (1% to 100%) to be applied on this product.</div>
+            <input type="hidden" id="offer_percentage" name="offer_percentage" value="{{ offer_percentage|default:1 }}" />
+        </div>
+        <div class="d-none mb-10 fv-row" id="kt_ecommerce_add_product_discount_fixed">
+            <label class="form-label">Fixed Discounted Price</label>
+            <input type="text" id="fixed_discounted_price" name="discounted_price" class="form-control mb-2"
+                   placeholder="Discounted price" value="{{ discounted_price|default:'' }}" />
+            <div class="text-muted fs-7">Set the discounted product price. The product will be reduced at the determined fixed price.</div>
+        </div>
+    </div>
+</div>
                             </div>
                             <!-- Right Column in Right Container -->
                             <div class="col-lg-6">
@@ -299,8 +308,7 @@
                                             <select class="form-select mb-2" name="weight_unit" data-control="select2" data-hide-search="true" data-placeholder="Select weight unit">
                                                 <option value="gm" {% if weight_unit == 'gm' %}selected{% endif %}>Gram</option>
                                                 <option value="kg" {% if weight_unit == 'kg' %}selected{% endif %}>Kilogram</option>
-                                                <option value="cm" {% if weight_unit == 'cm' %}selected{% endif %}>Centimeter</option>
-                                                <option value="ltr" {% if weight_unit == 'ltr' %}selected{% endif %}>Liter</option>
+                                               
                                             </select>
                                             <div class="text-muted fs-7">Unit of product weight.</div>
                                         </div>
@@ -376,11 +384,11 @@
                                             </select>
                                             <div class="text-muted fs-7">Assign a tag to the product.</div>
                                         </div>
-                                        <div class="mb-10 mt-4 fv-row" id="hide_field_offer_percentage">
+                                        <!-- <div class="mb-10 mt-4 fv-row" id="hide_field_offer_percentage">
                                             <label class="form-label">Offer Percentage</label>
                                             <input type="number" name="offer_percentage" class="form-control mb-2" placeholder="Enter offer percentage" value="{{ offer_percentage }}" min="0" max="100" step="0.01" />
                                             <div class="text-muted fs-7">Percentage discount for the product.</div>
-                                        </div>
+                                        </div> -->
                                         <div class="mb-10 mt-4 fv-row" id="hide_field_offer_start">
                                             <label class="form-label">Offer Start</label>
                                             <input type="date" name="offer_start" class="form-control mb-2" placeholder="Select offer start date" value="{{ offer_start }}" />
@@ -391,6 +399,24 @@
                                             <input type="date" name="offer_end" class="form-control mb-2" placeholder="Select offer end date" value="{{ offer_end }}" />
                                             <div class="text-muted fs-7">Date when the offer ends.</div>
                                         </div>
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_offer_status">
+                                            <label class="form-label">Offer Status</label>
+                                            <div class="form-check form-switch">
+                                                <input type="checkbox" class="form-check-input" name="offer_active"
+                                                       {% if offer_active %}checked{% endif %}
+                                                       {% if not request.user.is_superuser %}disabled{% endif %}>
+                                                <label class="form-check-label text-muted">Activate offer</label>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_ask_admin_to_publish">
+                                            <label class="form-label">Ask Admin to Approve Offer</label>
+                                            <div class="form-check">
+                                                <input type="checkbox" class="form-check-input" name="ask_admin_to_publish"
+                                                       {% if ask_admin_to_publish %}checked{% endif %}>
+                                                <label class="form-check-label">Request admin to publish the offer</label>
+                                            </div>
+                                        </div>  
                                     </div>
                                 </div>
                                 <!-- Webinar Fields -->
@@ -548,6 +574,8 @@ $(document).ready(function () {
     $('form').on('submit', function(e) {
         $('.indicator-label').hide();
         $('.indicator-progress').show();
+        const formData = new FormData(this);
+        console.log('Form data on submit:', Object.fromEntries(formData));
         return true;
     });
 
@@ -561,7 +589,7 @@ $(document).ready(function () {
                 success: function (data) {
                     let options = '<option value="">Select a Sub-Category</option>';
                     data.forEach(function (item) {
-                        options += `<option value="${item.id}">${item.name}</option>`;
+                        options += `<option value="${item.id}" ${item.id == '{{ selected_sub_category }}' ? 'selected' : ''}>${item.name}</option>`;
                     });
                     $('#subcategory_select').html(options).trigger('change');
                     $('#lastcategory_select').html('<option value="">Select a Last Category</option>').trigger('change');
@@ -571,8 +599,6 @@ $(document).ready(function () {
             $('#subcategory_select').html('<option value="">Select a Sub-Category</option>').trigger('change');
             $('#lastcategory_select').html('<option value="">Select a Last Category</option>').trigger('change');
         }
-
-        // Run toggle for webinar fields & return time limit on category change
         toggleFormFields();
     });
 
@@ -586,7 +612,7 @@ $(document).ready(function () {
                 success: function (data) {
                     let options = '<option value="">Select a Last Category</option>';
                     data.forEach(function (item) {
-                        options += `<option value="${item.id}">${item.name}</option>`;
+                        options += `<option value="${item.id}" ${item.id == '{{ selected_last_category }}' ? 'selected' : ''}>${item.name}</option>`;
                     });
                     $('#lastcategory_select').html(options).trigger('change');
                 }
@@ -596,45 +622,167 @@ $(document).ready(function () {
         }
     });
 
-    // Discount option toggle
+    // Discount option toggle and calculations
     const radios = document.querySelectorAll('input[name="discount_option"]');
     const percentageSection = document.getElementById('kt_ecommerce_add_product_discount_percentage');
     const fixedSection = document.getElementById('kt_ecommerce_add_product_discount_fixed');
+    const basePriceInput = document.getElementById('base_price');
+    const discountPriceInput = document.getElementById('discount_price');
+    const discountPriceContainer = document.getElementById('discount_price_container');
+    const fixedPriceInput = document.getElementById('fixed_discounted_price');
+    const offerPercentageInput = document.getElementById('offer_percentage');
+    const discountLabel = document.getElementById('kt_ecommerce_add_product_discount_label');
 
-    if (percentageSection && fixedSection) {
-        const discountLabel = document.getElementById('kt_ecommerce_add_product_discount_label');
+    if (percentageSection && fixedSection && basePriceInput && discountPriceInput && discountPriceContainer && offerPercentageInput && discountLabel) {
         const sliderElement = document.getElementById('kt_ecommerce_add_product_discount_slider');
 
+        // Initialize noUiSlider with minimum 1% for percentage discounts
         if (sliderElement) {
+            const initialPercentage = Math.max(parseInt(offerPercentageInput.value) || 1, 1);
             noUiSlider.create(sliderElement, {
-                start: {{ discount_percentage|default:0 }},
+                start: initialPercentage,
                 step: 1,
                 connect: [true, false],
-                range: { 'min': 0, 'max': 100 }
+                range: {
+                    'min': 1,
+                    'max': 100
+                },
+                format: {
+                    to: function (value) {
+                        return Math.round(value);
+                    },
+                    from: function (value) {
+                        return Number(value);
+                    }
+                }
             });
 
+            // Update discount label, hidden input, and discount price on slider change
             sliderElement.noUiSlider.on('update', function (values, handle) {
-                discountLabel.textContent = Math.round(values[handle]);
+                const percentage = values[handle];
+                discountLabel.textContent = percentage;
+                offerPercentageInput.value = percentage;
+                updateDiscountPrice();
+                console.log('Slider updated, offer_percentage:', percentage, 'base_price:', basePriceInput.value);
             });
         }
 
+        // Function to calculate and update discount price
+        function updateDiscountPrice() {
+            const basePrice = parseFloat(basePriceInput.value) || 0;
+            const selectedOption = document.querySelector('input[name="discount_option"]:checked')?.value;
+
+            if (!selectedOption) {
+                console.error('No discount option selected');
+                return;
+            }
+
+            if (selectedOption === '1') {
+                discountPriceInput.value = basePrice.toFixed(2);
+                discountPriceContainer.classList.add('d-none');
+                offerPercentageInput.value = 0;
+            } else if (selectedOption === '2') {
+                const percentage = Math.max(parseFloat(offerPercentageInput.value) || 1, 1);
+                offerPercentageInput.value = percentage;
+                discountLabel.textContent = percentage;
+                const discountAmount = basePrice * (percentage / 100);
+                discountPriceInput.value = (basePrice - discountAmount).toFixed(2);
+                discountPriceContainer.classList.remove('d-none');
+            } else if (selectedOption === '3') {
+                const fixedPrice = parseFloat(fixedPriceInput.value) || basePrice;
+                discountPriceInput.value = fixedPrice.toFixed(2);
+                discountPriceContainer.classList.add('d-none');
+                offerPercentageInput.value = 0;
+            }
+            console.log('updateDiscountPrice - base_price:', basePriceInput.value, 'offer_percentage:', offerPercentageInput.value, 'discount_price:', discountPriceInput.value);
+        }
+
+        // Update discount price on base price change
+        basePriceInput.addEventListener('input', function () {
+            const value = parseFloat(this.value);
+            if (isNaN(value) || value < 1 || value > 999999) {
+                this.classList.add('is-invalid');
+                this.nextElementSibling.textContent = 'Please enter a valid price (1 - 999999, up to 2 decimals).';
+            } else {
+                this.classList.remove('is-invalid');
+                this.nextElementSibling.textContent = 'Enter a valid product price (1 - 999999, up to 2 decimals).';
+            }
+            updateDiscountPrice();
+        });
+
+        // Update discount price on fixed price change
+        if (fixedPriceInput) {
+            fixedPriceInput.addEventListener('input', function () {
+                const value = parseFloat(this.value);
+                if (isNaN(value) || value < 0 || value > 999999) {
+                    this.classList.add('is-invalid');
+                    this.nextElementSibling.textContent = 'Please enter a valid discounted price (0 - 999999, up to 2 decimals).';
+                } else {
+                    this.classList.remove('is-invalid');
+                    this.nextElementSibling.textContent = 'Set the discounted product price.';
+                }
+                updateDiscountPrice();
+            });
+        }
+
+        // Handle discount option radio button changes
         radios.forEach(function (radio) {
             radio.addEventListener('change', function () {
                 if (this.value === '1') {
                     percentageSection.classList.add('d-none');
                     fixedSection.classList.add('d-none');
+                    discountPriceContainer.classList.add('d-none');
+                    offerPercentageInput.value = 0;
                 } else if (this.value === '2') {
                     percentageSection.classList.remove('d-none');
                     fixedSection.classList.add('d-none');
+                    discountPriceContainer.classList.remove('d-none');
+                    if (sliderElement && sliderElement.noUiSlider) {
+                        const currentPercentage = Math.max(parseInt(sliderElement.noUiSlider.get()) || 1, 1);
+                        sliderElement.noUiSlider.set(currentPercentage);
+                        offerPercentageInput.value = currentPercentage;
+                        discountLabel.textContent = currentPercentage;
+                    }
                 } else if (this.value === '3') {
                     percentageSection.classList.add('d-none');
                     fixedSection.classList.remove('d-none');
+                    discountPriceContainer.classList.add('d-none');
+                    offerPercentageInput.value = 0;
                 }
+                updateDiscountPrice();
+                console.log('Discount option changed, base_price:', basePriceInput.value, 'offer_percentage:', offerPercentageInput.value, 'discount_price:', discountPriceInput.value);
             });
         });
 
+        // Trigger initial update based on selected radio
         const checkedRadio = document.querySelector('input[name="discount_option"]:checked');
-        if (checkedRadio) checkedRadio.dispatchEvent(new Event('change'));
+        if (checkedRadio) {
+            checkedRadio.dispatchEvent(new Event('change'));
+        } else {
+            console.error('No discount option radio button is checked on page load');
+        }
+
+        // Prevent form submission if offer_percentage is 0 for percentage discount
+        const form = document.querySelector('form');
+        if (form) {
+            form.addEventListener('submit', function (event) {
+                const selectedOption = document.querySelector('input[name="discount_option"]:checked')?.value;
+                if (selectedOption === '2' && (parseFloat(offerPercentageInput.value) <= 0)) {
+                    event.preventDefault();
+                    alert('Please select a discount percentage greater than 0.');
+                    percentageSection.classList.remove('d-none');
+                    discountPriceContainer.classList.remove('d-none');
+                    if (sliderElement && sliderElement.noUiSlider) {
+                        sliderElement.noUiSlider.set(1);
+                        offerPercentageInput.value = 1;
+                        discountLabel.textContent = 1;
+                        updateDiscountPrice();
+                    }
+                }
+            });
+        }
+    } else {
+        console.error('Required elements not found');
     }
 
     // Webinar fields toggle
@@ -659,7 +807,6 @@ $(document).ready(function () {
         const selectedText = categorySelect.options[categorySelect.selectedIndex]?.text.trim() || "";
         const isWebinar = webinarCategories.includes(selectedText);
 
-        // Toggle visibility and required status for fields in fieldsToHide
         fieldsToHide.forEach(id => {
             const field = document.getElementById(id);
             if (field) {
@@ -676,7 +823,6 @@ $(document).ready(function () {
             }
         });
 
-        // Toggle webinar fields
         if (webinarFields) {
             webinarFields.classList.toggle("d-none", !isWebinar);
             webinarFields.querySelectorAll("input").forEach(el => {
@@ -688,7 +834,6 @@ $(document).ready(function () {
             });
         }
 
-        // Handle return time limit field visibility based on is_returnable toggle
         if (isReturnableToggle && returnTimeLimitField) {
             returnTimeLimitField.style.display = isReturnableToggle.checked && !isWebinar ? "" : "none";
             returnTimeLimitField.querySelectorAll("input").forEach(el => {
@@ -700,7 +845,6 @@ $(document).ready(function () {
             });
         }
 
-        // Disable returnable toggle if webinar
         if (isReturnableToggle) {
             isReturnableToggle.disabled = isWebinar;
             if (isWebinar) {
@@ -709,7 +853,6 @@ $(document).ready(function () {
         }
     }
 
-    // Store original required state for fields
     fieldsToHide.forEach(id => {
         const field = document.getElementById(id);
         if (field) {
@@ -721,7 +864,6 @@ $(document).ready(function () {
         }
     });
 
-    // Attach listeners
     if (categorySelect) {
         categorySelect.addEventListener("change", toggleFormFields);
     }
@@ -729,7 +871,6 @@ $(document).ready(function () {
         isReturnableToggle.addEventListener("change", toggleFormFields);
     }
 
-    // Run on page load
     toggleFormFields();
 });
 </script>

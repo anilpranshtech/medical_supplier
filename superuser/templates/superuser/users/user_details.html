@@ -23,8 +23,11 @@
                                 alt="Profile Picture"
                                 style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
                             {% else %}
-                                <img src="/media/avatars/image.png" alt="Avatar"
-                                 style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                                <div style="width: 100%; height: 100%; border-radius: 50%;
+                background: #f0f0f0; display: flex; align-items: center;
+                justify-content: center;">
+        <i class="bi bi-person" style="font-size: 2rem; color: #6c757d;"></i>
+    </div>
 
                             {% endif %}
                         </div>

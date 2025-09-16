@@ -13,10 +13,12 @@ urlpatterns = [
     path('', HomeView.as_view(), name='home'),
     # path('category/<int:pk>/', CategoryProductsView.as_view(), name='category_products'),
     path('register/', RegistrationView.as_view(), name='register'),
+    path('resend-email/', views.ResendEmailView.as_view(), name='resend_email'),
+    path('confirm-email/<str:token>/', views.ConfirmEmailView.as_view(), name='confirm_email'),
     path('resend-otp/', ResendOTPView.as_view(), name='resend_otp'),
     path('profile/', UserProfileView.as_view(), name='profile'),
     path('upload-profile-picture/', views.UploadProfilePictureView.as_view(), name='upload_profile_picture'),
-
+    
     # user dashboard
     path('search-results-grid/', views.SearchResultsGridView.as_view(), name='search_results_grid'),
     path('search-results-list/', views.SearchResultsListView.as_view(), name='search_results_list'),

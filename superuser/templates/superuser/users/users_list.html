@@ -285,6 +285,15 @@ var KTModalUserAddNewAccount = (function () {
                         },
                     },
                 },
+                user_phone_number: {
+                    validators: {
+                        notEmpty: { message: 'Phone number is required' },
+                        regexp: {
+                            regexp: /^[0-9]{10}$/,
+                            message: 'Enter a valid 10-digit phone number',
+                        },
+                    },
+                },
                 user_email_address: {
                     validators: {
                         notEmpty: { message: 'Email is required' },
@@ -324,6 +333,8 @@ var KTModalUserAddNewAccount = (function () {
                 }),
             },
         });
+
+        form._fv = validator;
 
         submitButton.addEventListener('click', function (e) {
             e.preventDefault();
@@ -401,5 +412,24 @@ KTUtil.onDOMContentLoaded(function () {
     KTModalUserAddNewAccount.init();
 });
 
+<!-- Clear the form data  -->
+document.addEventListener("DOMContentLoaded", function () {
+    const modalEl = document.getElementById("_model_add_new_user");
+    const formEl = document.getElementById("_model_add_new_user_form");
+
+    modalEl.addEventListener("show.bs.modal", function () {
+        formEl.reset();
+        $(formEl).find('select').val('').trigger('change');
+
+        if (formEl._fv) {
+            formEl._fv.resetForm(true);
+        }
+    });
+
+});
+
+
+
 </script>
+
 {% endblock page_only_scripts %}

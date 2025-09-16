@@ -14,9 +14,7 @@ class WholesaleBuyerProfileAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'profile_picture', 'phone', 'company_name', 'gst_number', 'department', 'purchase_capacity')
 
 
-@admin.register(SupplierProfile)
-class SupplierProfileAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'profile_picture', 'phone', 'company_name', 'license_number', 'is_verified')
+admin.site.register(SupplierProfile)
 
 
 @admin.register(Product)
@@ -27,6 +25,7 @@ class ProductProfileAdmin(admin.ModelAdmin):
 class ContactAdmin(admin.ModelAdmin):
     list_display = ('id', 'full_name', 'email', 'phone','subject','message','created_at','display_phone','display_email','display_address')
 
+admin.site.register(PendingSignup)
 
 @admin.register(ProductImage)
 class ProductImageAdmin(admin.ModelAdmin):
@@ -293,3 +292,6 @@ class ReturnAdmin(admin.ModelAdmin):
     search_fields = ('return_serial', 'order_item', 'client', 'return_option', 'return_status')
 
 admin.site.register(AdminUserProfile)
+admin.site.register(Country)
+admin.site.register(State)
+admin.site.register(City)

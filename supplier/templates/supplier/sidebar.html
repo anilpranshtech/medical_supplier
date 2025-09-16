@@ -6,7 +6,44 @@
          data-kt-scroll-dependencies="#kt_app_sidebar_logo, #kt_app_sidebar_footer" data-kt-scroll-wrappers="#kt_app_sidebar_menu" data-kt-scroll-offset="5px">
 
        <div id="kt_aside_menu" class="menu menu-rounded menu-column menu-title-gray-600 menu-state-primary menu-state-icon-primary
+
             menu-state-bullet-primary  menu-arrow-gray-500 fw-semibold fs-6" data-kt-menu="true">
+
+            
+<!-- User Profile -->
+<div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="right-start"
+class="menu-item py-2 {% if request.resolver_match.url_name == 'user_list' or request.resolver_match.url_name == 'order_listing' %} here show {% endif %}">
+<span class="menu-link menu-center">
+   <span class="menu-icon me-0">
+    <i class="fas fa-user fs-1"></i>
+   </span>
+</span>
+
+<div class="menu-sub menu-sub-dropdown px-2 py-4 w-250px mh-75 overflow-auto">
+    <div class="menu-item ">
+       <div class="menu-content ">
+           <span class="menu-section fs-5 fw-bolder ps-1 py-1">
+               User Profile
+           </span>
+       </div>
+
+   </div>
+<div class="menu-sub menu-sub-accordion">
+            <div class="menu-item {% if request.resolver_match.url_name == 'user_list' %} here show {% endif %}">
+                <a class="menu-link" href="{% url 'supplier:user_information' %}">
+                   <span class="menu-bullet">
+                       <span class="bullet bullet-dot"></span>
+                   </span>
+                    <span class="menu-title">User Profile</span>
+               </a>
+           </div>
+   
+       </div>
+
+</div>
+
+</div>
+
 
 
             <!-- Home -->
@@ -29,14 +66,14 @@
                   </div>
 
                   <div class="menu-sub menu-sub-accordion">
-                           <div class="menu-item {% if request.resolver_match.url_name == 'user_list' %} here show {% endif %}">
+                           <!-- <div class="menu-item {% if request.resolver_match.url_name == 'user_list' %} here show {% endif %}">
                                <a class="menu-link" href="{% url 'supplier:user_list' %}">
                                   <span class="menu-bullet">
                                       <span class="bullet bullet-dot"></span>
                                   </span>
                                    <span class="menu-title">User List</span>
                               </a>
-                          </div>
+                          </div> -->
                       <div class="menu-item {% if request.resolver_match.url_name == 'order_listing' %} here show {% endif %}">
                                <a class="menu-link" href="{% url 'supplier:order_listing' %}">
                                   <span class="menu-bullet">
@@ -45,12 +82,9 @@
                                    <span class="menu-title">Sale/Order</span>
                               </a>
                           </div>
-
-                      </div>
-
-              </div>
-
-          </div>
+                          </div>
+                     </div>
+                     </div>
 
           <!-- Pages  -->
           <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="right-start"
@@ -233,9 +267,7 @@
                 </div>
               </div>
             </div>
-
-
-      </div>
+</div>
    </div>
 
     <div class="d-flex flex-column flex-center pb-4 pb-lg-8" id="kt_app_sidebar_footer">

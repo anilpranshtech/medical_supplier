@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome | Medical Supplierz</title>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #e6f0fa 0%, #f5faff 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 {
+            color: #007bff;
+            font-size: 2.5em;
+            font-weight: 700;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+        h2 {
+            color: #1a3c6d;
+            font-size: 1.8em;
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+        p {
+            font-size: 1.1em;
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        button {
+            background: linear-gradient(90deg, #007bff 0%, #00a1d6 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1em;
+            font-weight: 500;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            width: 200px;
+        }
+        button:hover {
+            background: linear-gradient(90deg, #0056b3 0%, #007bff 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+        }
+        button:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+        input[type="hidden"] {
+            display: none;
+        }
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 20px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+        .modal-content h3 {
+            color: #d32f2f;
+            font-size: 1.5em;
+            margin-bottom: 15px;
+        }
+        .modal-content p {
+            color: #333;
+            font-size: 1em;
+            margin-bottom: 20px;
+        }
+        .modal-content button {
+            width: 100px;
+            background: linear-gradient(90deg, #d32f2f 0%, #f44336 100%);
+        }
+        .modal-content button:hover {
+            background: linear-gradient(90deg, #b71c1c 0%, #d32f2f 100%);
+        }
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            h1 {
+                font-size: 2em;
+            }
+            h2 {
+                font-size: 1.5em;
+            }
+            button {
+                width: 100%;
+                max-width: 250px;
+            }
+            .modal-content {
+                padding: 15px;
+                width: 95%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>MEDICAL SUPPLIERZ</h1>
+        <h2>Welcome</h2>
+        <p>Thank you for registering!</p>
+        <p>We have sent you an email with instructions and the next steps to complete your registration.</p>
+        <input type="hidden" id="token" value="{{ token }}">
+        <input type="hidden" id="email" value="{{ email }}">
+        <div class="button-container">
+            <button onclick="resendEmail()">Resend</button>
+            <button onclick="window.location.href='{% url 'dashboard:login' %}'">Login with another email</button>
+        </div>
+    </div>
+
+    <!-- Unauthorized Modal -->
+    <div class="modal" id="unauthorizedModal">
+        <div class="modal-content">
+            <h3>Unauthorized</h3>
+            <p>Your session is invalid or has expired. Please log in again.</p>
+            <button onclick="window.location.href='{% url 'dashboard:login' %}'">OK</button>
+        </div>
+    </div>
+  
+    <script>
+        function resendEmail() {
+            const token = document.getElementById('token').value;
+            const email = document.getElementById('email').value;
+            const modal = document.getElementById('unauthorizedModal');
+
+            fetch("{% url 'dashboard:resend_email' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ token: token, email: email })
+            })
+            .then(response => {
+                if (response.status === 401 || response.status === 400) {
+                    // Show unauthorized modal for 401 or 400 (missing token/email)
+                    modal.style.display = 'flex';
+                    throw new Error('Unauthorized or invalid request');
+                }
+                if (!response.ok) {
+                    throw new Error('Server error: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert(data.message || 'Email resent successfully!');
+            })
+            .catch(error => {
+                if (error.message !== 'Unauthorized or invalid request') {
+                    console.error('Error:', error);
+                    alert('Failed to resend email. Please try again or contact support.');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

@@ -81,16 +81,7 @@ class WholesaleBuyerProfile(models.Model):
         verbose_name = verbose_name_plural ="Wholesale Buyer Profile"
 
 
-class SupplierProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    profile_picture = models.ImageField(upload_to='profile_pics/', null=True, blank=True)
-    phone = models.CharField(max_length=20, blank=True, null=True)
-    company_name = models.CharField(max_length=255)
-    license_number = models.CharField(max_length=100)
-    is_verified = models.BooleanField(default=False)
 
-    class Meta:
-        verbose_name = verbose_name_plural ="Supplier Profile"
 
 
 class ProductCategory(models.Model):
@@ -105,6 +96,119 @@ class ProductCategory(models.Model):
     class Meta:
         ordering = ["-created_at"]
         verbose_name = verbose_name_plural ="Product Category"
+
+from django.db import models
+from django.contrib.auth.models import User
+
+SUPPLIER_TYPE_CHOICES = [
+    ('distributor', 'Distributor'),
+    ('supplier', 'Supplier'),
+]
+
+B2B_CHOICES = [
+    ('yes', 'Yes'),
+    ('no', 'No'),
+]
+class Country(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.name
+
+class State(models.Model):
+    country = models.ForeignKey(Country, on_delete=models.CASCADE, related_name="states")
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"{self.name}, {self.country.name}"
+
+class City(models.Model):
+    state = models.ForeignKey(State, on_delete=models.CASCADE, related_name="cities")
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"{self.name}, {self.state.name}"
+class SupplierProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    onboarding_complete = models.BooleanField(default=False)
+    profile_picture = models.ImageField(upload_to='profile_pics/', null=True, blank=True)
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    company_name = models.CharField(max_length=255)
+    license_number = models.CharField(max_length=100)
+    is_verified = models.BooleanField(default=False)
+    email_confirmed = models.BooleanField(default=False)
+
+    # New fields
+    job_title = models.CharField(max_length=255, blank=True, null=True)
+    supplier_type = models.CharField(max_length=20, choices=SUPPLIER_TYPE_CHOICES, blank=True, null=True)
+    are_you_buyer_b2b = models.CharField(max_length=3, choices=B2B_CHOICES, blank=True, null=True)
+    selling_for = models.CharField(max_length=255, blank=True, null=True)
+    meta_description = models.TextField(blank=True, null=True)
+    meta_keywords = models.TextField(blank=True, null=True)
+
+    # New Business Information fields
+    business_name = models.CharField(max_length=255, blank=True, null=True)
+    company_logo = models.ImageField(upload_to='company_logos/', null=True, blank=True)
+    registration_number = models.CharField(max_length=100, blank=True, null=True)
+    company_commercial_license = models.ImageField(upload_to='commercial_licenses/', null=True, blank=True)
+    authorized_person_name = models.CharField(max_length=255, blank=True, null=True)
+    iso_certificate = models.ImageField(upload_to='iso_certificates/', null=True, blank=True)
+    export_import_license = models.ImageField(upload_to='export_import_licenses/', null=True, blank=True)
+
+     # 🔹 Bank Details
+    account_holder_name = models.CharField(max_length=255, blank=True, null=True)
+    account_number = models.CharField(max_length=50, blank=True, null=True)
+    iban_code = models.CharField(max_length=50, blank=True, null=True)
+    iban_certificate = models.ImageField(upload_to='iban_certificates/', null=True, blank=True)
+    bank_name = models.CharField(max_length=255, blank=True, null=True)
+    swift_code = models.CharField(max_length=50, blank=True, null=True)
+
+    # 🔹 Selling Categories (Many to Many with ProductCategory)
+    selling_categories = models.ManyToManyField(ProductCategory, blank=True, related_name="suppliers")
+
+    # 🔹 Supplier description fields
+    facebook = models.URLField(max_length=500, blank=True, null=True)
+    instagram = models.URLField(max_length=500, blank=True, null=True)
+    twitter = models.URLField(max_length=500, blank=True, null=True)
+    google_page = models.URLField(max_length=500, blank=True, null=True)
+    linkedin = models.URLField(max_length=500, blank=True, null=True)
+
+    short_description = models.TextField(blank=True, null=True)
+    shipping_and_payment_terms = models.TextField(blank=True, null=True)
+    return_policy = models.TextField(blank=True, null=True)
+
+    banner = models.ImageField(upload_to='supplier_banners/', null=True, blank=True)
+
+
+      # 🔹 pickup Description Fields
+    country = models.ForeignKey(Country, on_delete=models.SET_NULL, null=True, blank=True)
+    state = models.ForeignKey(State, on_delete=models.SET_NULL, null=True, blank=True)
+    city = models.ForeignKey(City, on_delete=models.SET_NULL, null=True, blank=True)
+    zip_code = models.CharField(max_length=20, blank=True, null=True)
+    support_pickup = models.BooleanField(default=False)
+
+    # 🔹 Suppier Documents
+    signature_authority_doc = models.ImageField(upload_to='supplier_docs/signature_authority/', null=True, blank=True)
+    memorandum_of_association = models.ImageField(upload_to='supplier_docs/memorandum/', null=True, blank=True)
+    ce_certificate = models.ImageField(upload_to='supplier_docs/ce_certificates/', null=True, blank=True)
+    fda_certificate = models.ImageField(upload_to='supplier_docs/fda_certificates/', null=True, blank=True)
+    other_certificate_1 = models.ImageField(upload_to='supplier_docs/other_certificates/', null=True, blank=True)
+    other_certificate_2 = models.ImageField(upload_to='supplier_docs/other_certificates/', null=True, blank=True)
+    other_supporting_doc_1 = models.ImageField(upload_to='supplier_docs/other_supporting_docs/', null=True, blank=True)
+    other_supporting_doc_2 = models.ImageField(upload_to='supplier_docs/other_supporting_docs/', null=True, blank=True)
+    other_supporting_doc_3 = models.ImageField(upload_to='supplier_docs/other_supporting_docs/', null=True, blank=True)
+
+    #Status 
+    current_status = models.CharField(max_length=10, choices=[('active','Active'),('inactive','Inactive')], default='active')
+    request_for = models.CharField(max_length=10, choices=[('vacation','Vacation'),('close','Close'),('none','None')], default='none')
+    equest_reason = models.TextField(blank=True, null=True)
+
+    class Meta:
+        verbose_name = "Supplier Profile"
+        verbose_name_plural = "Supplier Profiles"
+
+    def __str__(self):
+        return f"{self.user.username} - {self.company_name}"
 
 
 class ProductSubCategory(models.Model):
@@ -188,6 +292,7 @@ class Product(models.Model):
     # B2B / Pricing
     supplier_sku = models.CharField(max_length=100, blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    discount_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True) 
     commission_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0.0)
     weight = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     weight_unit = models.CharField(max_length=10, choices=[('gm', 'Gram'), ('kg', 'Kilogram'), ('cm', 'Centimeter'), ('ltr', 'Liter')], null=True,blank=True)
@@ -252,7 +357,7 @@ class Product(models.Model):
 
     class Meta:
         ordering = ['-created_at']
-        verbose_name = verbose_name_plural = "Product"
+        verbose_name = verbose_name_plural = "Product"  
     
     
 class ProductImage(models.Model):
@@ -1029,9 +1134,8 @@ class StripeSubscriptionMetadata(models.Model):
 #     def __str__(self):
 #         return f"{self.user.email} - {self.plan.name}"
 
-
 class PendingSignup(models.Model):
-    token = models.CharField(max_length=64, unique=True)
+    token = models.CharField(max_length=64, unique=True)  
     data = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
