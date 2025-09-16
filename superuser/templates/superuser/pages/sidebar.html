@@ -204,6 +204,15 @@
                     </a>
                 </div>
                 {% endif %}
+                <div class="menu-item">
+                    <a class="menu-link {% if request.resolver_match.url_name == 'view_product' %} active {% endif %}"
+                        href="{% url 'superuser:categories' %}">
+                        <span class="menu-bullet">
+                            <span class="bullet bullet-dot"></span>
+                            </span>
+                        <span class="menu-title">Categories</span>
+                    </a>
+                </div>
 
             </div>
           </div>

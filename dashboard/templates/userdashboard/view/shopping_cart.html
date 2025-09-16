@@ -166,11 +166,22 @@
                                             </div>
                                         </div>
                                         <div class="flex flex-col gap-1.5 w-full sm:w-auto">
-                                            <div class="flex items-center gap-2 justify-end">
-                                                <button class="decrease-btn px-2 py-1 bg-gray-200 rounded" data-product-id="{{ item.product.id }}">-</button>
-                                                <span class="text-xs font-normal text-secondary-foreground text-end quantity">{{ item.quantity }}</span>
-                                                <button class="increase-btn px-2 py-1 bg-gray-200 rounded" data-product-id="{{ item.product.id }}">+</button>
+                                           <div class="flex items-center justify-end space-x-1">
+                                            <button 
+                                                class="decrease-btn w-7 h-7 flex items-center justify-center border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-100"
+                                                data-product-id="{{ item.product.id }}">
+                                                −
+                                            </button>
+                                            <span class="w-8 text-center text-sm font-medium text-gray-900 quantity">
+                                                {{ item.quantity }}
+                                            </span>
+                                            <button 
+                                                class="increase-btn w-7 h-7 flex items-center justify-center border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-100"
+                                                data-product-id="{{ item.product.id }}">
+                                                +
+                                            </button>
                                             </div>
+
                                             <div class="flex items-center flex-wrap gap-1.5 justify-end">
                                                 {% if item.product.offer_percentage and item.product.offer_active %}
                                                 <span class="text-sm font-normal text-secondary-foreground line-through">

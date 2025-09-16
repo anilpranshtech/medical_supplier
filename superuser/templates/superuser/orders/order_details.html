@@ -2,8 +2,6 @@
 {% load static %}
 
 {% block content %}
-
-
 <div class="app-main flex-column flex-row-fluid " id="kt_app_main">
     <div class="d-flex flex-column flex-column-fluid">
 
@@ -170,7 +168,18 @@
                                                     </span>
                                                 </div>
                                             </td>
-                                            <td class="fw-bold text-end">{{ order.payment.payment_method }}</td>
+                                            <td class="fw-bold text-end">
+                                            {% if order.payment.payment_method == 'stripe' %}
+                                                Card 
+                                            {% elif order.payment.payment_method == 'razorpay' %}
+                                                UPI
+                                            {% elif order.payment.payment_method == 'cod' %}
+                                                Cash on Delivery
+                                            {% else %}
+                                            {{ order.payment.payment_method|title }}
+                                            {% endif %}
+                                            </td>
+
                                         <tr>
                                             <td class="text-muted">
                                                 <div class="d-flex align-items-center">
@@ -399,7 +408,7 @@
 </div>
 
 {% endblock %}
-
 {% block page_only_scripts %}
-
 {% endblock page_only_scripts %}
+
+

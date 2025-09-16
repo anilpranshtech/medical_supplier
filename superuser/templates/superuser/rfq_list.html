@@ -127,7 +127,7 @@ RFQ Lists
                                         </div>
 
                                         <div class="menu-item px-3">
-                                            <a href="{% url 'superuser:rfq_quote' rfq.id %}" class="menu-link px-3">
+                                            <a href="{% url 'superuser:rfq_quote' rfq.id %}" class="menu-link w-100 justify-content-center">
                                                 Edit
                                             </a>
                                         </div>
@@ -135,7 +135,8 @@ RFQ Lists
 
                                         {% if "dashboard.delete_rfqrequest" in user_permissions_list %}
                                         <div class="menu-item px-3">
-                                            <a href="javascript:void(0);" class="menu-link px-3 delete-rfq-btn" data-id="{{ rfq.id }}">
+                                            <a href="javascript:void(0);" class="menu-link w-100 justify-content-center px-3 delete-rfq-btn "
+ data-id="{{ rfq.id }}">
                                                 Delete
                                             </a>
                                         </div>

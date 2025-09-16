@@ -80,5 +80,14 @@ urlpatterns = [
     path('returns/refund/', AdminProcessRefundView.as_view(), name='process_refund'),
     path('question/', AdminQuestionView.as_view(), name='question_list'),
 
-
+    #category
+    path("categories/", CategoryListView.as_view(), name="categories"),
+    path('add-category/', CategoryCreateView.as_view(), name='add_category'),
+    path('edit-category/', CategoryEditView.as_view(), name='edit_category'),
+    path('delete-category/', CategoryDeleteView.as_view(), name='delete_category'),
+    #sub category
+    path('subcategories/', CategorySubListView.as_view(), name='subcategory_list'),
+    path('subcategories/add/', SubCategoryCreateView.as_view(), name='add_subcategory'),
+    path('subcategories/edit/', SubCategoryEditView.as_view(), name='edit_subcategory'),
+    path('subcategories/delete/', SubCategoryDeleteView.as_view(), name='delete_subcategory'),
 ]

@@ -174,11 +174,32 @@ class User_Accounts_Update_Profile(StaffAccountRequiredMixin, View):
 
         try:
             user = User.objects.get(pk=user_id)
-
             user.first_name = post_dict.get('user_first_name', '').strip()
             user.last_name = post_dict.get('user_last_name', '').strip()
-
             user.save()
+
+            #Retail Profile 
+            retail_profile = RetailProfile.objects.filter(user=user).first()
+            if retail_profile:
+                retail_profile.age = post_dict.get('age', '').strip()
+                retail_profile.medical_needs = post_dict.get('medical_needs', '').strip()
+                retail_profile.save()
+
+            #Wholesale Profile
+            wholesale_profile = WholesaleBuyerProfile.objects.filter(user=user).first()
+            if wholesale_profile:
+                wholesale_profile.company_name = post_dict.get('company_name', '').strip()
+                wholesale_profile.gst_number = post_dict.get('gst_number', '').strip()
+                wholesale_profile.department = post_dict.get('department', '').strip()
+                wholesale_profile.purchase_capacity = post_dict.get('purchase_capacity', '').strip()
+                wholesale_profile.save()
+
+            #Supplier Profie
+            supplier_profile = SupplierProfile.objects.filter(user=user).first()
+            if supplier_profile:
+                supplier_profile.company_name = post_dict.get('company_name', '').strip()
+                supplier_profile.license_number = post_dict.get('license_number', '').strip()
+                supplier_profile.save()
 
             return JsonResponse({'status': 'valid', 'message': 'Profile has been updated!'}, status=200)
 
@@ -868,6 +889,8 @@ class EditproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
         webinar_duration = str(event.duration) if event and event.duration else ''
         webinar_venue = event.venue if event else ''
 
+        is_returnable = product.return_time_limit > 0 if product.return_time_limit else False
+
         return {
             'pk': pk,
             'product': product,
@@ -879,6 +902,7 @@ class EditproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
             'selling_countries': selling_countries,
             'warranty': product.warranty,
             'condition': product.condition,
+            'is_returnable': is_returnable,  
             'return_time_limit': product.return_time_limit,
             'manufacture_date': product.manufacture_date.strftime('%Y-%m-%d') if product.manufacture_date else '',
             'expiry_date': product.expiry_date.strftime('%Y-%m-%d') if product.expiry_date else '',
@@ -939,7 +963,8 @@ class EditproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
             product.selling_countries = request.POST.get('selling_countries', '')
             product.warranty = request.POST.get('warranty', 'none')
             product.condition = request.POST.get('condition', 'new')
-            product.return_time_limit = request.POST.get('return_time_limit', '7') or '7'
+            is_returnable = request.POST.get('is_returnable') == 'on'
+            product.return_time_limit = request.POST.get('return_time_limit', '0') if is_returnable else '0'
             product.manufacture_date = request.POST.get('manufacture_date') or None
             product.expiry_date = request.POST.get('expiry_date') or None
             product.weight = request.POST.get('weight') or None
@@ -960,12 +985,11 @@ class EditproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
             product.is_active = request.POST.get('is_active') == 'True'
             category_id = request.POST.get('category')
             product.category = ProductCategory.objects.get(pk=category_id) if category_id else None
-
             sub_category_id = request.POST.get('sub_category')
             product.sub_category = ProductSubCategory.objects.get(pk=sub_category_id) if sub_category_id else None
-
             last_category_id = request.POST.get('last_category')
             product.last_category = ProductLastCategory.objects.get(pk=last_category_id) if last_category_id else None
+
             if 'main_image' in request.FILES:
                 ProductImage.objects.filter(product=product, is_main=True).delete()
                 ProductImage.objects.create(product=product, image=request.FILES['main_image'], is_main=True)
@@ -973,6 +997,7 @@ class EditproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
             if 'gallery_images' in request.FILES:
                 for image in request.FILES.getlist('gallery_images'):
                     ProductImage.objects.create(product=product, image=image, is_main=False)
+
             brand_name = request.POST.get('brand')
             if brand_name:
                 brand_obj, _ = Brand.objects.get_or_create(name=brand_name)
@@ -982,6 +1007,7 @@ class EditproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
 
             if 'brochure' in request.FILES:
                 product.brochure = request.FILES['brochure']
+
             if category_id:
                 category = ProductCategory.objects.get(pk=category_id)
                 if category.name in ["Webinar", "Conference", "Event"]:
@@ -1001,12 +1027,12 @@ class EditproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
 
                     try:
                         parts = duration_str.split(':')
-                        if len(parts) == 3:  
+                        if len(parts) == 3:
                             h, m, s = map(int, parts)
-                        elif len(parts) == 2:  
+                        elif len(parts) == 2:
                             h, m = map(int, parts)
                             s = 0
-                        elif len(parts) == 1:  
+                        elif len(parts) == 1:
                             h, m, s = 0, int(parts[0]), 0
                         else:
                             raise ValueError
@@ -1583,6 +1609,7 @@ class RatingView(TemplateView, StaffAccountRequiredMixin, PermissionRequiredMixi
         return context
 
 
+
 class AdminMostViewedProductsView(View):
     def get(self, request):
         products = Product.objects.annotate(
@@ -1595,6 +1622,8 @@ class AdminMostViewedProductsView(View):
                 'reviews',
                 distinct=True
             )
+        ).filter(
+            Q(delivered_count__gt=0) | Q(review_count__gt=0) 
         ).prefetch_related(
             Prefetch(
                 'images',  
@@ -1610,7 +1639,7 @@ class AdminMostViewedProductsView(View):
                 product.display_image = main_images[0] if main_images else images[0]
             else:
                 product.display_image = None
- 
+
         context = {'products': products}
         return render(request, 'superuser/view_product.html', context)
 
@@ -2016,6 +2045,7 @@ class AJAXCreateLastCategory(StaffAccountRequiredMixin, View):
         })
 
 
+
 class AdminQuestionView(StaffAccountRequiredMixin, TemplateView):
     template_name = 'superuser/question_list.html'
 
@@ -2046,3 +2076,123 @@ class AdminQuestionView(StaffAccountRequiredMixin, TemplateView):
             messages.success(request, "Question deleted successfully.")
 
         return redirect('superuser:question_list')
+
+
+
+class CategoryListView(View):
+    def get(self, request):
+        categories = ProductCategory.objects.exclude(
+            Q(name__iexact="event") | Q(name__iexact="webinar") | Q(name__iexact="conference")
+        )
+        return render(request, "superuser/categories/categories.html", {'categories': categories})
+    
+class CategoryCreateView(View):
+    def get(self, request):
+        return render(request, 'superuser/categories/add_category_modal.html')
+
+    def post(self, request):
+        name = request.POST.get('name')
+        image = request.FILES.get('image')
+
+        # Validate the form data manually
+        if not name:
+            return JsonResponse({'status': 'error', 'message': 'Category name is required'})
+
+        try:
+            category = ProductCategory.objects.create(name=name, image=image)
+            return JsonResponse({'status': 'success', 'message': 'Category added successfully'})
+        except ValidationError as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+        
+
+class CategoryEditView(View):
+    def post(self, request):
+        category_id = request.POST.get('id')
+        name = request.POST.get('name')
+        image = request.FILES.get('image')
+
+        if not name:
+            return JsonResponse({'status': 'error', 'message': 'Category name is required'})
+
+        try:
+            category = ProductCategory.objects.get(id=category_id)
+            category.name = name
+            if image:
+                category.image = image
+            category.save()
+            return JsonResponse({'status': 'success', 'message': 'Category updated successfully'})
+        except ProductCategory.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Category not found'})
+        except ValidationError as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+        
+
+class CategoryDeleteView(View):
+    def post(self, request):
+        category_id = request.POST.get('id')
+        try:
+            category = ProductCategory.objects.get(id=category_id)
+            category.delete()
+            return JsonResponse({'status': 'success', 'message': 'Category deleted successfully'})
+        except ProductCategory.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Category not found'})
+
+
+class CategorySubListView(View):
+    def get(self, request):
+        subcategories = ProductSubCategory.objects.all().select_related('category')
+        return render(request, "superuser/categories/sub_categories.html", {'subcategories': subcategories})
+
+class SubCategoryCreateView(View):
+    def get(self, request):
+        categories = ProductCategory.objects.all()
+        return render(request, 'superuser/categories/add_subcategory_modal.html', {'categories': categories})
+
+    def post(self, request):
+        name = request.POST.get('name')
+        category_id = request.POST.get('category')
+
+        if not name or not category_id:
+            return JsonResponse({'status': 'error', 'message': 'Subcategory name and category are required'})
+
+        try:
+            category = ProductCategory.objects.get(id=category_id)
+            subcategory = ProductSubCategory.objects.create(name=name, category=category)
+            return JsonResponse({'status': 'success', 'message': 'Subcategory added successfully'})
+        except ProductCategory.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Category not found'})
+        except ValidationError as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+
+class SubCategoryEditView(View):
+    def post(self, request):
+        subcategory_id = request.POST.get('id')
+        name = request.POST.get('name')
+        category_id = request.POST.get('category')
+
+        if not name or not category_id:
+            return JsonResponse({'status': 'error', 'message': 'Subcategory name and category are required'})
+
+        try:
+            subcategory = ProductSubCategory.objects.get(id=subcategory_id)
+            subcategory.name = name
+            subcategory.category = ProductCategory.objects.get(id=category_id)
+            subcategory.save()
+            return JsonResponse({'status': 'success', 'message': 'Subcategory updated successfully'})
+        except ProductSubCategory.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Subcategory not found'})
+        except ProductCategory.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Category not found'})
+        except ValidationError as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+
+class SubCategoryDeleteView(View):
+    def post(self, request):
+        subcategory_id = request.POST.get('id')
+        try:
+            subcategory = ProductSubCategory.objects.get(id=subcategory_id)
+            subcategory.delete()
+            return JsonResponse({'status': 'success', 'message': 'Subcategory deleted successfully'})
+        except ProductSubCategory.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Subcategory not found'})
+

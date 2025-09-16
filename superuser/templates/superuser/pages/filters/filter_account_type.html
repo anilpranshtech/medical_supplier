@@ -6,6 +6,7 @@
         <option value="retailer" {% if request.GET.account_type == 'retailer' %} selected {% endif %}>Retailer</option>
         <option value="wholesaler" {% if request.GET.account_type == 'wholesaler' %} selected {% endif %}>Wholesaler</option>
         <option value="supplier" {% if request.GET.account_type == 'supplier' %} selected {% endif %}>Supplier</option>
+        <option value="superuser" {% if request.GET.account_type == 'superuser' %} selected {% endif %}>Superuser</option>
     </select>
 
 </div>

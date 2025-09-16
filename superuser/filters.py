@@ -42,6 +42,8 @@ def QS_filter_user(filter_dict={}):
         filters &= Q(wholesalebuyerprofile__isnull=False)
     elif user_type == 'supplier':
         filters &= Q(supplierprofile__isnull=False)
+    elif user_type == 'superuser':
+        filters &= Q(is_superuser=True)
 
     if permission_group and permission_group != 'all':
         try:

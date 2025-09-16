@@ -123,10 +123,19 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        <span class="fw-bold">{{ order.payment.payment_method|title|default:"N/A" }}</span>
-                                    </td>
-
-                                    <td>
+                                    <span class="fw-bold">
+                                    {% if order.payment.payment_method == 'stripe' %}
+                                        Card 
+                                    {% elif order.payment.payment_method == 'razorpay' %}
+                                        UPI
+                                    {% elif order.payment.payment_method == 'cod' %}
+                                        Cash on Delivery
+                                    {% else %}
+                                    {{ order.payment.payment_method|title }}
+                                    {% endif %}
+                                    </span>
+                                </td>
+                                <td>
                                         <div class="badge badge-light fw-bold" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ order.created_at|date:'F d Y P' }}">
                                             {{ order.created_at|date:'F d Y' | default:'No date found' }}
                                         </div>

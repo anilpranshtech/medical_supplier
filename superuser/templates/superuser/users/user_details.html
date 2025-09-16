@@ -272,7 +272,6 @@ function deleteProfilePicture() {
         }
     });
 }
-
 <!-- Left portion profile update -->
 var KTModalUserUpdateProfile = (function () {
     var form, submitButton, validator, modal, modalEl;
@@ -282,28 +281,70 @@ var KTModalUserUpdateProfile = (function () {
             console.error('Form or submitButton not found.');
             return;
         }
-
-        validator = FormValidation.formValidation(form, {
-            fields: {
-                user_first_name: {
-                    validators: {
-                        notEmpty: { message: 'First name is required' },
-                        regexp: {
-                            regexp: /^[a-zA-Z]{1,30}$/,
-                            message: 'Only letters allowed, max 30 characters',
-                        },
-                    },
-                },
-                user_last_name: {
-                    validators: {
-                        notEmpty: { message: 'Last name is required' },
-                        regexp: {
-                            regexp: /^[a-zA-Z]{1,30}$/,
-                            message: 'Only letters allowed, max 30 characters',
-                        },
+        var validationRules = {
+            user_first_name: {
+                validators: {
+                    notEmpty: { message: 'First name is required' },
+                    regexp: {
+                        regexp: /^[a-zA-Z\s]{1,30}$/,
+                        message: 'Only letters and spaces allowed, max 30 characters',
                     },
                 },
             },
+            user_last_name: {
+                validators: {
+                    notEmpty: { message: 'Last name is required' },
+                    regexp: {
+                        regexp: /^[a-zA-Z\s]{1,30}$/,
+                        message: 'Only letters and spaces allowed, max 30 characters',
+                    },
+                },
+            },
+        };
+
+        // retail profile 
+        if (form.querySelector('input[name="age"]')) {
+            validationRules.age = {
+                validators: {
+                    numeric: {
+                        message: 'Age must be a number',
+                    },
+                },
+            };
+        }
+
+        //  wholesale profile 
+        if (form.querySelector('input[name="company_name"]')) {
+            validationRules.company_name = {
+                validators: {
+                    notEmpty: { message: 'Company name is required' },
+                },
+            };
+            
+            validationRules.gst_number = {
+                validators: {
+                    notEmpty: { message: 'GST number is required' },
+                },
+            };
+        }
+
+        //  supplier profile 
+        if (form.querySelector('input[name="license_number"]')) {
+            validationRules.company_name = {
+                validators: {
+                    notEmpty: { message: 'Company name is required' },
+                },
+            };
+            
+            validationRules.license_number = {
+                validators: {
+                    notEmpty: { message: 'License number is required' },
+                },
+            };
+        }
+
+        validator = FormValidation.formValidation(form, {
+            fields: validationRules,
             plugins: {
                 trigger: new FormValidation.plugins.Trigger(),
                 bootstrap: new FormValidation.plugins.Bootstrap5({
@@ -322,16 +363,26 @@ var KTModalUserUpdateProfile = (function () {
                     if (status === 'Valid') {
                         submitButton.setAttribute('data-kt-indicator', 'on');
                         submitButton.disabled = true;
+                        var formData = new FormData();
+                        var formElements = form.elements;
+                        for (var i = 0; i < formElements.length; i++) {
+                            var element = formElements[i];
+                            if (element.name && element.type !== 'file') {
+                                formData.append(element.name, element.value);
+                            }
+                        }
+                        formData.append('csrfmiddlewaretoken', $('input[name="csrfmiddlewaretoken"]').val());
 
                         $.ajax({
                             url: form.getAttribute('data-url'),
                             method: 'POST',
                             dataType: 'json',
                             headers: {
-                                'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val(),
                                 'X-Requested-With': 'XMLHttpRequest'
                             },
-                            data: $(form).serialize(),
+                            data: formData,
+                            processData: false,
+                            contentType: false,
                             success: function (response) {
                                 submitButton.removeAttribute('data-kt-indicator');
                                 submitButton.disabled = false;

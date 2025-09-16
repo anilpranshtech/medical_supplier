@@ -564,8 +564,6 @@ class SearchSuggestionsView(View):
 
         return JsonResponse({'suggestions': suggestions})
 
-#---------------------------------------------------------------------------------------------------------------------------------------------------------
-
 
 class SearchResultsGridView(TemplateView):
     template_name = 'userdashboard/view/search_results_grid.html'
@@ -3481,7 +3479,7 @@ class DeleteNotificationView(LoginRequiredMixin, View):
         notification = get_object_or_404(
             Notification, id=id, recipient=request.user, is_deleted=False
         )
-        notification.delete()  
+        notification.delete()  # Calls soft delete
         return JsonResponse({'status': 'success'})
 
 
