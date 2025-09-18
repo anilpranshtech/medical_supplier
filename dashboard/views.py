@@ -276,7 +276,8 @@ class CustomLoginView(FormView):
     def get_success_url(self):
         user = self.request.user
 
-        # Redirect based on profile existence
+        if user.is_superuser or user.is_staff:
+            return reverse_lazy('superuser:superuser')
         if hasattr(user, 'supplierprofile'):
             return reverse_lazy('supplier:user_information')
         elif hasattr(user, 'retailprofile'):

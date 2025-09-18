@@ -292,7 +292,7 @@
                             {% if order.status == 'delivered' %}
                                 <!-- Show existing returns status first -->
                                 {% for return_req in item.returns.all %}
-                                    <div class="mb-3 p-3 rounded-lg border-l-4
+                                    <div class="mb-3 p-3 rounded-lg border-l-4 mt-3 border
                                         {% if return_req.return_status == 'pending' %}bg-yellow-50 border-yellow-400
                                         {% elif return_req.return_status == 'return_completed' %}bg-green-50 border-green-400
                                         {% elif return_req.return_status == 'replace_completed' %}bg-blue-50 border-blue-400
