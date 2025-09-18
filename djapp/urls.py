@@ -25,10 +25,7 @@ urlpatterns = [
     path('', include('dashboard.urls', namespace='dashboard')),
     path('', include('supplier.urls', namespace='supplier')),
     path('ckeditor/', include('ckeditor_uploader.urls')),
-  
-
     path('superuser/', include('superuser.urls', namespace='superuser')),
-    
     path('api_v1/', include('medical_api.urls')),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

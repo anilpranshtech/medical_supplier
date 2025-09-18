@@ -67,7 +67,7 @@
     .form-group select, 
     .form-group textarea {
         width: 100%; 
-        padding: 10px; 
+        padding: 10px;
         border: 1px solid #ddd; 
         border-radius: 6px; 
         outline: none; 
@@ -118,6 +118,18 @@
     .error-input {
         border: 1px solid red !important;
     }
+    .form-control.is-invalid {
+    border: 1px solid red !important;
+}
+
+.text-danger {
+    color: red;
+    font-size: 14px;
+}
+input.is-invalid, textarea.is-invalid, select.is-invalid {
+    border: 1px solid red !important;
+}
+
 </style>
 <h2 class="page-title">Dashboard &gt; Complete Profile</h2>
 <h3 class="section-title">My Profile</h3>
@@ -150,12 +162,38 @@
 
             {% if step == 1 %}
             <h4>User Information</h4>
-            <div class="form-group"><label style="display:inline;">{{ form.first_name.label }}<span style="color:red">*</span></label>{{ form.first_name }}</div>
-            <div class="form-group"> <label style="display:inline;">{{ form.last_name.label }}<span style="color:red">*</span></label>{{ form.last_name }}</div>
+            <div class="form-group">
+                <label>{{ form.first_name.label }} <span style="color:red">*</span></label>
+                {{ form.first_name }}
+                {% if form.first_name.errors %}
+                    <div class="text-danger">{{ form.first_name.errors|striptags }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label>{{ form.last_name.label }} <span style="color:red">*</span></label>
+                {{ form.last_name }}
+                {% if form.last_name.errors %}
+                    <div class="text-danger">{{ form.last_name.errors|striptags }}</div>
+                {% endif %}
+            </div>
             <div class="form-group"><label style="display:inline;">{{ form.email.label }}<span style="color:red">*</span></label>{{ form.email }}</div>
-            <div class="form-group"><label style="display:inline;">{{ form.phone.label }}<span style="color:red">*</span></label>{{ form.phone }}</div>
+            <div class="form-group">
+                <label>{{ form.phone.label }} <span style="color:red">*</span></label>
+                {{ form.phone }}
+                {% if form.phone.errors %}
+                    <div class="text-danger">{{ form.phone.errors|striptags }}</div>
+                {% endif %}
+            </div>
             <div class="form-group"><label style="display:inline;">{{ form.profile_picture.label }}<span style="color:red">*</span></label>{{ form.profile_picture }}{% if form.instance.profile_picture %}<div style="margin-top:10px;"><img src="{{ form.instance.profile_picture.url }}" alt="Profile Picture" width="120" height="120" style="border-radius: 5px; border:1px solid #ddd;"></div>{% endif %}</div>
-            <div class="form-group"> <label style="display:inline;">{{ form.job_title.label }}<span style="color:red">*</span></label>{{ form.job_title }} </div>
+            <div class="form-group">
+                <label>{{ form.job_title.label }} <span style="color:red">*</span></label>
+                {{ form.job_title }}
+                {% if form.job_title.errors %}
+                    <div class="text-danger">{{ form.job_title.errors|striptags }}</div>
+                {% endif %}
+            </div>
+            
            <div class="form-group"><label style="display:inline;">{{ form.supplier_type.label }}<span style="color:red">*</span> </label>{{ form.supplier_type }}</div>
            <div class="form-group"><label style="display:inline;">{{ form.are_you_buyer_b2b.label }}<span style="color:red">*</span></label> {{ form.are_you_buyer_b2b }} </div>
            <div class="form-group"><label style="display:inline;">{{ form.selling_for.label }}<span style="color:red">*</span></label>{{ form.selling_for }}</div>
@@ -163,24 +201,121 @@
            <div class="form-group"><label style="display:inline;">{{ form.meta_keywords.label }}<span style="color:red">*</span></label>{{ form.meta_keywords }}</div>
     
            {% elif step == 2 %}
-           <h4>Business Information</h4>
-           <div class="form-group"><label style="display:inline;">{{ form.business_name.label }}<span style="color:red">*</span></label>{{ form.business_name }}</div>
-           <div class="form-group"><label style="display:inline;">{{ form.company_logo.label }}<span style="color:red">*</span></label>{{ form.company_logo }}</div>
-           <div class="form-group"><label style="display:inline;">{{ form.registration_number.label }}<span style="color:red">*</span></label>{{ form.registration_number }}</div>
-           <div class="form-group"><label style="display:inline;">{{ form.company_commercial_license.label }}<span style="color:red">*</span></label>{{ form.company_commercial_license }}</div>
-           <div class="form-group"><label style="display:inline;">{{ form.authorized_person_name.label }}<span style="color:red">*</span></label>{{ form.authorized_person_name }}</div>
-           <div class="form-group"><label style="display:inline;">{{ form.iso_certificate.label }}<span style="color:red">*</span></label>{{ form.iso_certificate }}</div>
-           <div class="form-group"><label style="display:inline;">{{ form.export_import_license.label }}<span style="color:red">*</span></label>{{ form.export_import_license }}</div>
+<h4>Business Information</h4>
+
+<div class="form-group">
+    <label>{{ form.business_name.label }} <span style="color:red">*</span></label>
+    {{ form.business_name }}
+    {% for error in form.business_name.errors %}
+        <div class="text-danger">{{ error }}</div>
+    {% endfor %}
+</div>
+
+<div class="form-group">
+    <label>{{ form.company_logo.label }} <span style="color:red">*</span></label>
+    {{ form.company_logo }}
+    {% for error in form.company_logo.errors %}
+        <div class="text-danger">{{ error }}</div>
+    {% endfor %}
+</div>
+
+<div class="form-group">
+    <label>{{ form.registration_number.label }} <span style="color:red">*</span></label>
+    {{ form.registration_number }}
+    {% for error in form.registration_number.errors %}
+        <div class="text-danger small">{{ error }}</div>
+    {% endfor %}
+</div>
+
+<div class="form-group">
+    <label>{{ form.company_commercial_license.label }} <span style="color:red">*</span></label>
+    {{ form.company_commercial_license }}
+    {% for error in form.company_commercial_license.errors %}
+        <div class="text-danger">{{ error }}</div>
+    {% endfor %}
+</div>
+
+<div class="form-group">
+    <label>{{ form.authorized_person_name.label }} <span style="color:red">*</span></label>
+    {{ form.authorized_person_name }}
+    {% for error in form.authorized_person_name.errors %}
+        <div class="text-danger">{{ error }}</div>
+    {% endfor %}
+</div>
+
+<div class="form-group">
+    <label>{{ form.iso_certificate.label }} <span style="color:red">*</span></label>
+    {{ form.iso_certificate }}
+    {% for error in form.iso_certificate.errors %}
+        <div class="text-danger">{{ error }}</div>
+    {% endfor %}
+</div>
+
+<div class="form-group">
+    <label>{{ form.export_import_license.label }} <span style="color:red">*</span></label>
+    {{ form.export_import_license }}
+    {% for error in form.export_import_license.errors %}
+        <div class="text-danger">{{ error }}</div>
+    {% endfor %}
+</div>
+
   
             
-            {% elif step == 3 %}
-                <h4>Bank Details</h4>
-                <div class="form-group">{{ form.account_holder_name.label_tag }} {{ form.account_holder_name }}</div>
-                <div class="form-group">{{ form.account_number.label_tag }} {{ form.account_number }}</div>
-                <div class="form-group">{{ form.iban_code.label_tag }} {{ form.iban_code }}</div>
-                <div class="form-group">{{ form.iban_certificate.label_tag }} {{ form.iban_certificate }}</div>
-                <div class="form-group">{{ form.bank_name.label_tag }} {{ form.bank_name }}</div>
-                <div class="form-group">{{ form.swift_code.label_tag }} {{ form.swift_code }}</div>
+{% elif step == 3 %}
+<h4>Bank Details</h4>
+<div class="form-group">
+    <label>{{ form.account_holder_name.label }} <span style="color:red">*</span></label>
+    {{ form.account_holder_name }}
+    {% for error in form.account_holder_name.errors %}
+        <div class="text-danger small">{{ error }}</div>
+    {% endfor %}
+</div>
+
+<div class="form-group">
+    <label>{{ form.account_number.label }} <span style="color:red">*</span></label>
+    {{ form.account_number }}
+    {% for error in form.account_number.errors %}
+        <div class="text-danger small">{{ error }}</div>
+    {% endfor %}
+</div>
+
+<div class="form-group">
+    <label>{{ form.iban_code.label }} <span style="color:red">*</span></label>
+    {{ form.iban_code }}
+    {% for error in form.iban_code.errors %}
+        <div class="text-danger small">{{ error }}</div>
+    {% endfor %}
+</div>
+
+<div class="form-group">
+    <label>{{ form.iban_certificate.label }} <span style="color:red">*</span></label>
+    {{ form.iban_certificate }}
+    {% if form.instance.iban_certificate %}
+        <div style="margin-top:10px;">
+            <img src="{{ form.instance.iban_certificate.url }}" alt="IBAN Certificate" width="120" height="120" style="border-radius: 5px; border:1px solid #ddd;">
+        </div>
+    {% endif %}
+    {% for error in form.iban_certificate.errors %}
+        <div class="text-danger">{{ error }}</div>
+    {% endfor %}
+</div>
+
+<div class="form-group">
+    <label>{{ form.bank_name.label }} <span style="color:red">*</span></label>
+    {{ form.bank_name }}
+    {% for error in form.bank_name.errors %}
+        <div class="text-danger small">{{ error }}</div>
+    {% endfor %}
+</div>
+
+<div class="form-group">
+    <label>{{ form.swift_code.label }} <span style="color:red">*</span></label>
+    {{ form.swift_code }}
+    {% for error in form.swift_code.errors %}
+        <div class="text-danger small">{{ error }}</div>
+    {% endfor %}
+</div>
+
        
             {% elif step == 4 %}
                 <h4>Selling Categories</h4>
@@ -196,27 +331,174 @@
                 <div class="form-group">{{ form.short_description.label_tag }} {{ form.short_description }}</div>
                 <div class="form-group">{{ form.shipping_and_payment_terms.label_tag }} {{ form.shipping_and_payment_terms }}</div>
                 <div class="form-group">{{ form.return_policy.label_tag }} {{ form.return_policy }}</div>
-                <div class="form-group">{{ form.banner.label_tag }} {{ form.banner }}</div>
+                <div class="form-group">
+                    <label>{{ form.banner.label }} </label>
+                    {{ form.banner }}
+                    {% if form.instance.banner %}
+                        <div style="margin-top:10px;">
+                            <img src="{{ form.instance.banner.url }}" alt="Banner" width="120" height="120" style="border-radius: 5px; border:1px solid #ddd;">
+                        </div>
+                    {% endif %}
+                    {% for error in form.banner.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
 
-            {% elif step == 6 %}
+                {% elif step == 6 %}
                 <h4>Pickup and Shipping</h4>
-                <div class="form-group">{{ form.country.label_tag }} {{ form.country }}</div>
-                <div class="form-group">{{ form.state.label_tag }} {{ form.state }}</div>
-                <div class="form-group">{{ form.city.label_tag }} {{ form.city }}</div>
-                <div class="form-group">{{ form.zip_code.label_tag }} {{ form.zip_code }}</div>
-                <div class="form-group">{{ form.support_pickup }} {{ form.support_pickup.label_tag }}</div>
+                
+                <div class="form-group">
+                    <label style="display:inline;">{{ form.country.label }}<span style="color:red">*</span></label>
+                    {{ form.country }}
+                    {% for error in form.country.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                
+                <div class="form-group">
+                    <label style="display:inline;">{{ form.state.label }}<span style="color:red">*</span></label>
+                    {{ form.state }}
+                    {% for error in form.state.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                
+                <div class="form-group">
+                    <label style="display:inline;">{{ form.city.label }}<span style="color:red">*</span></label>
+                    {{ form.city }}
+                    {% for error in form.city.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                
+                <div class="form-group">
+                    <label style="display:inline;">{{ form.zip_code.label }}<span style="color:red">*</span></label>
+                    {{ form.zip_code }}
+                    {% for error in form.zip_code.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                
+                <div class="form-group form-check">
+                    {{ form.support_pickup }}
+                    <label class="form-check-label" style="display:inline;">
+                        {{ form.support_pickup.label }}<span style="color:red">*</span>
+                    </label>
+                    {% for error in form.support_pickup.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                    {% endfor %}
+                </div>
             
-            {% elif step == 7 %}
+                {% elif step == 7 %}
                 <h4>Supplier Documents</h4>
-                <div class="form-group">{{ form.signature_authority_doc.label_tag }} {{ form.signature_authority_doc }}</div>
-                <div class="form-group">{{ form.memorandum_of_association.label_tag }} {{ form.memorandum_of_association }}</div>
-                <div class="form-group">{{ form.ce_certificate.label_tag }} {{ form.ce_certificate }}</div>
-                <div class="form-group">{{ form.fda_certificate.label_tag }} {{ form.fda_certificate }}</div>
-                <div class="form-group">{{ form.other_certificate_1.label_tag }} {{ form.other_certificate_1 }}</div>
-                <div class="form-group">{{ form.other_certificate_2.label_tag }} {{ form.other_certificate_2 }}</div>
-                <div class="form-group">{{ form.other_supporting_doc_1.label_tag }} {{ form.other_supporting_doc_1 }}</div>
-                <div class="form-group">{{ form.other_supporting_doc_2.label_tag }} {{ form.other_supporting_doc_2 }}</div>
-                <div class="form-group">{{ form.other_supporting_doc_3.label_tag }} {{ form.other_supporting_doc_3 }}</div>
+                <div class="form-group">
+                    <label>{{ form.signature_authority_doc.label }} </label>
+                    {{ form.signature_authority_doc }}
+                    {% if form.instance.signature_authority_doc %}
+                        <div style="margin-top:10px;">
+                            <img src="{{ form.instance.signature_authority_doc.url }}" alt="Signature Authority Document" width="120" height="120" style="border-radius: 5px; border:1px solid #ddd;">
+                        </div>
+                    {% endif %}
+                    {% for error in form.signature_authority_doc.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="form-group">
+                    <label>{{ form.memorandum_of_association.label }} </label>
+                    {{ form.memorandum_of_association }}
+                    {% if form.instance.memorandum_of_association %}
+                        <div style="margin-top:10px;">
+                            <img src="{{ form.instance.memorandum_of_association.url }}" alt="Memorandum of Association" width="120" height="120" style="border-radius: 5px; border:1px solid #ddd;">
+                        </div>
+                    {% endif %}
+                    {% for error in form.memorandum_of_association.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="form-group">
+                    <label>{{ form.ce_certificate.label }} </label>
+                    {{ form.ce_certificate }}
+                    {% if form.instance.ce_certificate %}
+                        <div style="margin-top:10px;">
+                            <img src="{{ form.instance.ce_certificate.url }}" alt="CE Certificate" width="120" height="120" style="border-radius: 5px; border:1px solid #ddd;">
+                        </div>
+                    {% endif %}
+                    {% for error in form.ce_certificate.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="form-group">
+                    <label>{{ form.fda_certificate.label }} </label>
+                    {{ form.fda_certificate }}
+                    {% if form.instance.fda_certificate %}
+                        <div style="margin-top:10px;">
+                            <img src="{{ form.instance.fda_certificate.url }}" alt="FDA Certificate" width="120" height="120" style="border-radius: 5px; border:1px solid #ddd;">
+                        </div>
+                    {% endif %}
+                    {% for error in form.fda_certificate.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="form-group">
+                    <label>{{ form.other_certificate_1.label }} </label>
+                    {{ form.other_certificate_1 }}
+                    {% if form.instance.other_certificate_1 %}
+                        <div style="margin-top:10px;">
+                            <img src="{{ form.instance.other_certificate_1.url }}" alt="Other Certificate 1" width="120" height="120" style="border-radius: 5px; border:1px solid #ddd;">
+                        </div>
+                    {% endif %}
+                    {% for error in form.other_certificate_1.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="form-group">
+                    <label>{{ form.other_certificate_2.label }} </label>
+                    {{ form.other_certificate_2 }}
+                    {% if form.instance.other_certificate_2 %}
+                        <div style="margin-top:10px;">
+                            <img src="{{ form.instance.other_certificate_2.url }}" alt="Other Certificate 2" width="120" height="120" style="border-radius: 5px; border:1px solid #ddd;">
+                        </div>
+                    {% endif %}
+                    {% for error in form.other_certificate_2.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="form-group">
+                    <label>{{ form.other_supporting_doc_1.label }} </label>
+                    {{ form.other_supporting_doc_1 }}
+                    {% if form.instance.other_supporting_doc_1 %}
+                        <div style="margin-top:10px;">
+                            <img src="{{ form.instance.other_supporting_doc_1.url }}" alt="Other Supporting Document 1" width="120" height="120" style="border-radius: 5px; border:1px solid #ddd;">
+                        </div>
+                    {% endif %}
+                    {% for error in form.other_supporting_doc_1.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="form-group">
+                    <label>{{ form.other_supporting_doc_2.label }} </label>
+                    {{ form.other_supporting_doc_2 }}
+                    {% if form.instance.other_supporting_doc_2 %}
+                        <div style="margin-top:10px;">
+                            <img src="{{ form.instance.other_supporting_doc_2.url }}" alt="Other Supporting Document 2" width="120" height="120" style="border-radius: 5px; border:1px solid #ddd;">
+                        </div>
+                    {% endif %}
+                    {% for error in form.other_supporting_doc_2.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="form-group">
+                    <label>{{ form.other_supporting_doc_3.label }} </label>
+                    {{ form.other_supporting_doc_3 }}
+                    {% if form.instance.other_supporting_doc_3 %}
+                        <div style="margin-top:10px;">
+                            <img src="{{ form.instance.other_supporting_doc_3.url }}" alt="Other Supporting Document 3" width="120" height="120" style="border-radius: 5px; border:1px solid #ddd;">
+                        </div>
+                    {% endif %}
+                    {% for error in form.other_supporting_doc_3.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
            
             {% elif step == 8 %}
                 <h4>Status</h4>
@@ -226,6 +508,8 @@
             {% endif %}
 
             <br>
+            <button type="button" class="btn" onclick="window.history.back();">Back</button>
+
             <button type="submit" class="btn">Save & Continue</button>
         </form>
     </div>
@@ -240,6 +524,9 @@
             }
         });
     });
+    //zip code
+     document.getElementById("id_zip_code").classList.add("is-invalid");
 </script>
 
 {% endblock %}
+

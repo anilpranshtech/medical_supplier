@@ -2474,3 +2474,4 @@ class SupplierStatusView(View):
             "progress": 100,
         }
         return render(request, self.template_name, context)
+

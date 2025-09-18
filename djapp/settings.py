@@ -30,7 +30,9 @@ SECRET_KEY = 'django-insecure-n=d%3icc27wzo=lnx^lc8su7z6n12hqok7eke2_4d_eda8&fxh
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'localhost:8000', 'techcrave.site', 'www.techcrave.site']
+# ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'localhost:8000', 'techcrave.site', 'www.techcrave.site']
+ALLOWED_HOSTS = ['*']
+
 
 
 
@@ -379,4 +381,4 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'kahena.pranshtech4@gmail.com'  
 EMAIL_HOST_PASSWORD = 'vwahxpixcidafwfx' 
 DEFAULT_FROM_EMAIL = 'kahena.pranshtech4@gmail.com'
-SITE_URL = 'http://localhost:8000'  
+# SITE_URL = 'http://localhost:8000'  

@@ -13,11 +13,9 @@ def notification_context(request):
     user = request.user
 
     if user.is_superuser:
-        # Superuser → all notifications
         all_notifications = Notification.objects.filter(is_deleted=False)
 
     elif hasattr(user, 'retailprofile'):  
-        # Supplier → his own + all suppliers
         all_notifications = Notification.objects.filter(
             is_deleted=False
         ).filter(
@@ -25,7 +23,6 @@ def notification_context(request):
         )
 
     elif user.is_staff:
-        # Staff → notifications sent to normal users
         normal_users = User.objects.filter(is_staff=False, is_superuser=False)
         all_notifications = Notification.objects.filter(
             recipient__in=normal_users,
@@ -33,7 +30,6 @@ def notification_context(request):
         )
 
     else:
-        # Normal user → only his own
         all_notifications = Notification.objects.filter(
             recipient=user,
             is_deleted=False

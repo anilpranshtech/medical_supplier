@@ -330,7 +330,7 @@ class RequestRoleView(LoginRequiredMixin, View):
 
     
 #-------------------------------------------------------------------------------------------------------------------------------------------------
-
+from django.urls import reverse
 def generate_token():
         return uuid.uuid4().hex
         
@@ -458,7 +458,10 @@ class RegistrationView(View):
                         license_number=data.get('license_number', ''),
                         email_confirmed=False  # must confirm by email
                     )
-                    confirm_link = f"{settings.SITE_URL}/confirm-email/{token}/"
+                    # confirm_link = f"{settings.SITE_URL}/confirm-email/{token}/"
+                    confirm_link = request.build_absolute_uri(
+                        reverse('dashboard:confirm_email', args=[token])
+                    )
                     html_message = render_to_string('dashboard/confirmation_email.html', {
                         'user_name': f"{data['first_name']} {data['last_name']}",
                         'confirm_link': confirm_link
@@ -509,6 +512,24 @@ class RegistrationView(View):
             return JsonResponse({'success': False, 'errors': {'general': f'Error creating account: {str(e)}'}}, status=500)
 
 
+# class ConfirmEmailView(View):
+#     def get(self, request, token):
+#         try:
+#             pending = PendingSignup.objects.get(token=token)
+#             data = json.loads(pending.data)
+#             email = data.get('email')
+
+#             user = User.objects.filter(username=email).first()
+#             if user and hasattr(user, 'supplierprofile'):
+#                 user.supplierprofile.email_confirmed = True
+#                 user.supplierprofile.save()
+
+#             pending.delete()
+#             return redirect('supplier:supplier')
+#         except PendingSignup.DoesNotExist:
+#             return JsonResponse({'message': 'Invalid or expired confirmation link.'}, status=400)
+#         except Exception as e:
+#             return JsonResponse({'message': f'Error confirming email: {str(e)}'}, status=500)
 class ConfirmEmailView(View):
     def get(self, request, token):
         try:
@@ -523,10 +544,15 @@ class ConfirmEmailView(View):
 
             pending.delete()
             return redirect('supplier:supplier')
+
         except PendingSignup.DoesNotExist:
-            return JsonResponse({'message': 'Invalid or expired confirmation link.'}, status=400)
+            return render(request, "dashboard/token_expired.html", status=400)
+
         except Exception as e:
-            return JsonResponse({'message': f'Error confirming email: {str(e)}'}, status=500)
+            return render(request, "dashboard/token_expired.html", {
+                "error": f"Error confirming email: {str(e)}"
+            }, status=500)
+
 
 
 class ResendEmailView(View):
@@ -542,7 +568,10 @@ class ResendEmailView(View):
             if data.get('email') != email:
                 return JsonResponse({'message': 'Invalid email for this token.'}, status=400)
 
-            confirm_link = f"{settings.SITE_URL}/confirm-email/{token}/"
+            # confirm_link = f"{settings.SITE_URL}/confirm-email/{token}/"
+            confirm_link = request.build_absolute_uri(
+                reverse('dashboard:confirm_email', args=[token])
+            )
             html_message = render_to_string('dashboard/confirmation_email.html', {
                 'user_name': f"{data['first_name']} {data['last_name']}",
                 'confirm_link': confirm_link
