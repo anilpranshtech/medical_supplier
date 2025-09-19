@@ -342,7 +342,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 
 class RegistrationView(View):
-    # recaptcha_secret = '6LdTHV8rAAAAAIgLr2wdtdtWExTS6xJpUpD8qEzh'
+    recaptcha_secret = '6LdTHV8rAAAAAIgLr2wdtdtWExTS6xJpUpD8qEzh'
     template_name = 'dashboard/register.html'
 
     def get(self, request):
@@ -367,13 +367,13 @@ class RegistrationView(View):
         errors = {}
 
         # reCAPTCHA validation
-        # recaptcha_response = request.POST.get('g-recaptcha-response')
-        # recaptcha_result = requests.post(
-        #     'https://www.google.com/recaptcha/api/siteverify',
-        #     data={'secret': self.recaptcha_secret, 'response': recaptcha_response}
-        # ).json()
-        # if not recaptcha_result.get('success'):
-        #     errors['recaptcha'] = 'Invalid reCAPTCHA.'
+        recaptcha_response = request.POST.get('g-recaptcha-response')
+        recaptcha_result = requests.post(
+            'https://www.google.com/recaptcha/api/siteverify',
+            data={'secret': self.recaptcha_secret, 'response': recaptcha_response}
+        ).json()
+        if not recaptcha_result.get('success'):
+            errors['recaptcha'] = 'Invalid reCAPTCHA.'
 
         # Collect form data
         first_name = request.POST.get('first_name')
