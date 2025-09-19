@@ -7,7 +7,7 @@
     <link rel="shortcut icon" href="{% static 'metronic/tailwind/dist/assets/media/brand-logos/health_logo.jpg' %}"/>
     <title>User Registration</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <!-- <script src="https://www.google.com/recaptcha/api.js" async defer></script> -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap');
@@ -425,10 +425,13 @@
                         <div class="error-message" id="confirm_password_error">Passwords do not match</div>
                     </div>
 
+                    <!-- reCAPTCHA - COMMENTED OUT FOR TESTING -->
+                    <!-- 
                     <div class="form-group">
                         <div class="g-recaptcha" data-sitekey="6LdTHV8rAAAAAM_YfllvwXXOezA124fFTlQXO3Tb"></div>
                         <div class="error-message" id="recaptcha_error">Please complete the captcha</div>
                     </div>
+                    -->
 
                     <button type="button" id="nextBtn" class="continue-btn">Continue</button>
                 </div>
@@ -594,7 +597,7 @@
     const phoneError = document.getElementById("phone_error");
     const passwordError = document.getElementById("password_error");
     const confirmPasswordError = document.getElementById("confirm_password_error");
-    const recaptchaError = document.getElementById("recaptcha_error");
+    // const recaptchaError = document.getElementById("recaptcha_error"); // COMMENTED OUT
 
     // Step 2 fields
     const currentPositionInput = document.getElementById("current_position");
@@ -659,13 +662,13 @@
         supplierFields.classList.add('hidden');
     }
 
-    // Client-side validation for Step 1
+    // Client-side validation for Step 1 - MODIFIED FOR TESTING (bypassing reCAPTCHA)
     nextBtn.addEventListener("click", () => {
         let isValid = true;
 
         // Reset error states
         [firstNameInput, lastNameInput, emailInput, phoneInput, passwordInput, confirmPasswordInput].forEach(input => input.classList.remove("input-error"));
-        [firstNameError, lastNameError, emailError, phoneError, passwordError, confirmPasswordError, recaptchaError].forEach(error => error.style.display = "none");
+        [firstNameError, lastNameError, emailError, phoneError, passwordError, confirmPasswordError].forEach(error => error.style.display = "none");
 
         if (!firstNameInput.value.trim()) {
             firstNameInput.classList.add("input-error");
@@ -710,11 +713,15 @@
             isValid = false;
         }
 
-        const recaptchaResponse = grecaptcha.getResponse();
-        if (!recaptchaResponse) {
-            recaptchaError.style.display = "block";
-            isValid = false;
-        }
+        // BYPASSING reCAPTCHA FOR TESTING
+        // const recaptchaResponse = grecaptcha.getResponse();
+        // if (!recaptchaResponse) {
+        //     recaptchaError.style.display = "block";
+        //     isValid = false;
+        // }
+
+        // FOR TESTING: Always allow progression to step 2
+        isValid = true; // Force validation to pass for testing
 
         if (isValid) {
             step1.classList.add("hidden");
