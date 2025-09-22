@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'ckeditor',
     'ckeditor_uploader',
+    'corsheaders'
 ]
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
@@ -69,6 +70,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
 ]
 
 ROOT_URLCONF = 'djapp.urls'
@@ -382,3 +385,12 @@ EMAIL_HOST_USER = 'kahena.pranshtech4@gmail.com'
 EMAIL_HOST_PASSWORD = 'vwahxpixcidafwfx' 
 DEFAULT_FROM_EMAIL = 'kahena.pranshtech4@gmail.com'
 # SITE_URL = 'http://localhost:8000'  
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "https://techno.site.com",
+]
+
+CORS_ALLOW_ALL_ORIGINS = True
+
+CORS_ALLOW_CREDENTIALS = True
