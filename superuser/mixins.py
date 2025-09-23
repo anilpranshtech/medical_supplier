@@ -8,6 +8,7 @@ from django.shortcuts import redirect
 def superuser_required(user):
     return user.is_authenticated and user.is_superuser
 
+
 class SuperuserRequiredMixin(UserPassesTestMixin):
     def test_func(self):
         return superuser_required(self.request.user)
@@ -15,6 +16,7 @@ class SuperuserRequiredMixin(UserPassesTestMixin):
 
 def staff_required(user):
     return user.is_authenticated and user.is_staff
+
 
 class StaffAccountRequiredMixin(UserPassesTestMixin):
     def test_func(self):

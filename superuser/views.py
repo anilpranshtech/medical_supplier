@@ -1487,7 +1487,7 @@ class AdminQuotationUpdateView(LoginRequiredMixin, UpdateView):
     model = RFQRequest
     form_class = SuperuserRFQQuotationForm
     template_name = 'superuser/rfq_quotation_form.html'
-    success_url = '/superuser/rfq/'  
+    success_url = reverse_lazy('superuser:rfq_list')  # Adjusted to use reverse_lazy
 
     def form_valid(self, form):
         rfq = form.save(commit=False)
@@ -1509,20 +1509,16 @@ class AdminQuotationUpdateView(LoginRequiredMixin, UpdateView):
             'rfq': rfq,
             'supplier': rfq.quoted_by,
         }
-
         message = render_to_string('superuser/rfq_quotation_sent.html', context)
-
         email = EmailMessage(
             subject=subject,
             body=message,
             from_email=settings.DEFAULT_FROM_EMAIL,
             to=[recipient_email]
         )
-        email.content_subtype = 'html' 
-
+        email.content_subtype = 'html'
         if rfq.quote_attached_file:
             email.attach_file(rfq.quote_attached_file.path)
-
         email.send(fail_silently=False)
 
     def test_func(self):

@@ -890,7 +890,7 @@ class RFQRequest(models.Model):
 
     # --- Request Info ---
     requested_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='rfqs')
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='rfq_requests')
+    product = models.ForeignKey('Product', on_delete=models.CASCADE, related_name='rfq_requests')
     quantity = models.PositiveIntegerField(default=1)
     company_name = models.CharField(max_length=255, blank=True)
     message = models.TextField(blank=True)

@@ -20,77 +20,110 @@
                     </div>
 
                     <div id="kt_rfq_quotation_form" class="collapse show">
-                        <form method="post" enctype="multipart/form-data" class="form" id="quotationForm">
-                            {% csrf_token %}
-                            <div class="card-body border-top p-9">
-
-                                <!-- Quoted Price -->
-                                <div class="row mb-6">
-                                    <label class="col-lg-4 col-form-label required fw-semibold fs-6">
-                                        Quoted Price
-                                    </label>
-                                    <div class="col-lg-8 fv-row">
-                                        {{ form.quoted_price|add_class:"form-control form-control-lg form-control-solid" }}
-                                        <small class="text-muted d-block mt-1">
-                                            Max allowed: ₹{{ object.product.price }}
-                                        </small>
-                                        {{ form.quoted_price.errors }}
+                        <div class="card-body p-9">
+                            <!-- RFQ Details -->
+                            <div class="row mb-6">
+                                <div class="col-md-6">
+                                    <h4>Account Information</h4>
+                                    <div class="mb-3">
+                                        <label class="form-label">Quote Name</label>
+                                        <input type="text" class="form-control" value="{{ object.id }}" readonly>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Created By</label>
+                                        <input type="text" class="form-control" value="{{ object.requested_by.username }}" readonly>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Created</label>
+                                        <input type="text" class="form-control" value="{{ object.created_at|date:'M d, Y, h:i A' }}" readonly>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Status</label>
+                                        <input type="text" class="form-control" value="{{ object.status }}" readonly>
                                     </div>
                                 </div>
-
-                                <!-- Expected Delivery Date -->
-                                <div class="row mb-6">
-                                    <label class="col-lg-4 col-form-label required fw-semibold fs-6">
-                                        Expected Delivery Date
-                                    </label>
-                                    <div class="col-lg-8 fv-row">
-                                        <input type="date"
-                                               name="{{ form.quote_delivery_date.html_name }}"
-                                               id="id_quote_delivery_date"
-                                               class="form-control form-control-lg form-control-solid"
-                                               min="{% now 'Y-m-d' %}"
-                                               value="{{ form.quote_delivery_date.value|date:'Y-m-d' }}"
-                                               required>
-                                        <small class="text-muted d-block mt-1">
-                                            Must be a future date
-                                        </small>
-                                        {{ form.quote_delivery_date.errors }}
+                                <div class="col-md-6">
+                                    <h4>Product Information</h4>
+                                    <div class="mb-3">
+                                        <img src="{{ object.product.get_main_image|default:'https://via.placeholder.com/150' }}" alt="Product Image" class="img-thumbnail" style="max-width: 150px;" onerror="this.src='https://via.placeholder.com/150'; console.log('Image failed to load');">
                                     </div>
-                                </div>
-
-                                <!-- Notes -->
-                                <div class="row mb-6">
-                                    <label class="col-lg-4 col-form-label fw-semibold fs-6">
-                                        Notes
-                                    </label>
-                                    <div class="col-lg-8 fv-row">
-                                        {{ form.supplier_notes|add_class:"form-control form-control-lg form-control-solid" }}
-                                        {{ form.supplier_notes.errors }}
+                                    <div class="mb-3">
+                                        <label class="form-label">Product Name</label>
+                                        <input type="text" class="form-control" value="{{ object.product.name }}" readonly>
                                     </div>
-                                </div>
-
-                                <!-- Attachment -->
-                                <div class="row mb-6">
-                                    <label class="col-lg-4 col-form-label fw-semibold fs-6">
-                                        Attachment (Optional)
-                                    </label>
-                                    <div class="col-lg-8 fv-row">
-                                        {{ form.quote_attached_file|add_class:"form-control form-control-lg form-control-solid" }}
-                                        {{ form.quote_attached_file.errors }}
+                                    <div class="mb-3">
+                                        <label class="form-label">SKU</label>
+                                        <input type="text" class="form-control" value="{{ object.product.supplier_sku }}" readonly>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Actions -->
-                            <div class="card-footer d-flex justify-content-end py-6 px-9">
-                                <a href="{% url 'supplier:rfq_list' %}" class="btn btn-light btn-active-light-primary me-2">
-                                    Cancel
-                                </a>
-                                <button type="submit" class="btn btn-primary">
-                                    Send Quotation
-                                </button>
-                            </div>
-                        </form>
+                            <!-- Quotation Form -->
+                            <form method="post" enctype="multipart/form-data" class="form" id="quotationForm">
+                                {% csrf_token %}
+                                <div class="card-body border-top p-9">
+                                    <!-- Quoted Price -->
+                                    <div class="row mb-6">
+                                        <label class="col-lg-4 col-form-label required fw-semibold fs-6">
+                                            Quoted Price
+                                        </label>
+                                        <div class="col-lg-8 fv-row">
+                                            {{ form.quoted_price }}
+                                            <small class="text-muted d-block mt-1">
+                                                Max allowed: ₹{{ object.product.price|default:'0.00' }}
+                                            </small>
+                                            {{ form.quoted_price.errors }}
+                                        </div>
+                                    </div>
+
+                                    <!-- Expected Delivery Date -->
+                                    <div class="row mb-6">
+                                        <label class="col-lg-4 col-form-label required fw-semibold fs-6">
+                                            Expected Delivery Date
+                                        </label>
+                                        <div class="col-lg-8 fv-row">
+                                            {{ form.quote_delivery_date }}
+                                            <small class="text-muted d-block mt-1">
+                                                Must be a future date
+                                            </small>
+                                            {{ form.quote_delivery_date.errors }}
+                                        </div>
+                                    </div>
+
+                                    <!-- Notes -->
+                                    <div class="row mb-6">
+                                        <label class="col-lg-4 col-form-label fw-semibold fs-6">
+                                            Notes
+                                        </label>
+                                        <div class="col-lg-8 fv-row">
+                                            {{ form.supplier_notes }}
+                                            {{ form.supplier_notes.errors }}
+                                        </div>
+                                    </div>
+
+                                    <!-- Attachment -->
+                                    <div class="row mb-6">
+                                        <label class="col-lg-4 col-form-label fw-semibold fs-6">
+                                            Attachment (Optional)
+                                        </label>
+                                        <div class="col-lg-8 fv-row">
+                                            {{ form.quote_attached_file }}
+                                            {{ form.quote_attached_file.errors }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Actions -->
+                                <div class="card-footer d-flex justify-content-end py-6 px-9">
+                                    <a href="{% url 'supplier:rfq_list' %}" class="btn btn-light btn-active-light-primary me-2">
+                                        Cancel
+                                    </a>
+                                    <button type="submit" class="btn btn-primary">
+                                        Send Quotation
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
 
@@ -103,28 +136,30 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const deliveryDateInput = document.getElementById('id_quote_delivery_date');
     const form = document.getElementById('quotationForm');
-
+    const deliveryDateInput = document.querySelector('[name="quote_delivery_date"]');
     const today = new Date();
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
-
     const minDate = tomorrow.toISOString().split('T')[0];
-    deliveryDateInput.min = minDate;
 
-    if (deliveryDateInput.value && deliveryDateInput.value < minDate) {
-        deliveryDateInput.value = minDate;
+    if (deliveryDateInput) {
+        deliveryDateInput.min = minDate;
+        if (deliveryDateInput.value && deliveryDateInput.value < minDate) {
+            deliveryDateInput.value = minDate;
+        }
     }
 
-    form.addEventListener('submit', function(e) {
-        const selectedDate = new Date(deliveryDateInput.value);
-        if (selectedDate < tomorrow) {
-            e.preventDefault();
-            alert('Please select a future date for delivery');
-            deliveryDateInput.focus();
-        }
-    });
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const selectedDate = new Date(deliveryDateInput.value);
+            if (selectedDate < tomorrow) {
+                e.preventDefault();
+                alert('Please select a future date for delivery');
+                deliveryDateInput.focus();
+            }
+        });
+    }
 });
 </script>
 {% endblock %}

@@ -35,11 +35,13 @@
               Received Quotations
             </button>
           </div>
+          {% comment %}
           <button class="kt-btn kt-btn-outline px-5 py-2.5 text-sm font-semibold transition flex items-center"
                   id="download-pdf-btn">
             <i class="ki-filled ki-exit-down mr-1" aria-hidden="true"></i>
             <span class="whitespace-nowrap">Download PDF</span>
           </button>
+          {% endcomment %}
         </div>
       </div>
     </div>
@@ -67,10 +69,10 @@
                       <th class="min-w-[100px] text-left py-2 px-3">Buyer</th>
                       <th class="min-w-[100px] text-left py-2 px-3">Price</th>
                       <th class="min-w-[100px] text-left py-2 px-3">Delivery Date</th>
-                      <th class="min-w-[120px] text-left py-2 px-3">Notes</th>
+                      {% comment %}<th class="min-w-[120px] text-left py-2 px-3">Notes</th>{% endcomment %}
                       <th class="min-w-[80px] text-left py-2 px-3">File</th>
                       <th class="min-w-[120px] text-left py-2 px-3">Sent At</th>
-                      <th class="w-[100px]"></th>
+                      {% comment %}<th class="w-[100px]">Actions</th>{% endcomment %}
                     </tr>
                   </thead>
                   <tbody>
@@ -88,6 +90,7 @@
                       <td class="text-foreground font-normal py-2 px-3">
                         {{ rfq.supplier_notes|default:"—"|truncatewords:10 }}
                       </td>
+                      {% comment %}
                       <td class="text-foreground font-normal py-2 px-3">
                         {% if rfq.quote_attached_file %}
                           <a href="{{ rfq.quote_attached_file.url }}"
@@ -96,9 +99,11 @@
                              aria-label="Download attached file for RFQ #{{ rfq.id }}">Download</a>
                         {% else %}—{% endif %}
                       </td>
+                      {% endcomment %}
                       <td class="text-foreground font-normal whitespace-nowrap py-2 px-3">
                         {{ rfq.quote_sent_at|date:"Y-m-d H:i" }}
                       </td>
+                      {% comment %}
                       <td class="text-center py-2 px-3">
                         {% if rfq.quote_attached_file %}
                           <a class="kt-link kt-link-underlined kt-link-dashed"
@@ -106,6 +111,7 @@
                              aria-label="View attached file for RFQ #{{ rfq.id }}">View</a>
                         {% else %}—{% endif %}
                       </td>
+                      {% endcomment %}
                     </tr>
                     {% endfor %}
                   </tbody>
@@ -171,7 +177,7 @@
                       <th class="min-w-[120px] text-left py-2 px-3">Notes</th>
                       <th class="min-w-[80px] text-left py-2 px-3">File</th>
                       <th class="min-w-[120px] text-left py-2 px-3">Received At</th>
-                      <th class="w-[100px]"></th>
+                      {% comment %}<th class="w-[100px]">Actions</th>{% endcomment %}
                     </tr>
                   </thead>
                   <tbody>
@@ -202,6 +208,7 @@
                       <td class="text-foreground font-normal whitespace-nowrap py-2 px-3">
                         {{ rfq.quote_sent_at|date:"Y-m-d H:i" }}
                       </td>
+                      {% comment %}
                       <td class="text-center py-2 px-3">
                         {% if rfq.quote_attached_file %}
                           <a class="kt-link kt-link-underlined kt-link-dashed"
@@ -209,6 +216,7 @@
                              aria-label="View attached file for RFQ #{{ rfq.id }}">View</a>
                         {% else %}—{% endif %}
                       </td>
+                      {% endcomment %}
                     </tr>
                     {% endfor %}
                   </tbody>
