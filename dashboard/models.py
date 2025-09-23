@@ -88,6 +88,7 @@ class ProductCategory(models.Model):
     name = models.CharField(max_length=255, unique=True)
     image = models.ImageField(upload_to="categories/", blank=True, null=True) 
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
 
     def __str__(self):
@@ -128,6 +129,7 @@ class City(models.Model):
 
     def __str__(self):
         return f"{self.name}, {self.state.name}"
+
 class SupplierProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     onboarding_complete = models.BooleanField(default=False)
@@ -214,7 +216,9 @@ class SupplierProfile(models.Model):
 class ProductSubCategory(models.Model):
     category = models.ForeignKey(ProductCategory,on_delete=models.CASCADE)
     name = models.CharField(max_length=255, unique=True)
+    image = models.ImageField(upload_to="categories/", blank=True, null=True) 
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.name
@@ -229,6 +233,7 @@ class ProductLastCategory(models.Model):
     name = models.CharField(max_length=255, unique=True)
     image = models.ImageField(upload_to="categories/", blank=True, null=True) 
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.name

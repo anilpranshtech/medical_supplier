@@ -690,121 +690,116 @@
                 </a>
                 <div class="border-e border-border h-6 hidden md:block"></div>
 
-                <div class="kt-menu-item relative group" data-kt-menu-item-toggle="dropdown"
-                     data-kt-menu-item-trigger="hover">
-                    <a class="kt-menu-link flex items-center gap-2 px-3 py-2 text-2sm leading-none relative h-8.5 rounded-full border
-                            border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground"
-                       href="#">
-                        <i class="ki-filled ki-handcart text-base"></i>
-                        <span class="text-sm">Cart & More</span>
-                    </a>
-                    <div class="kt-menu-dropdown absolute w-48 bg-background border border-border rounded-lg shadow-lg z-10 hidden mt-7 py-5 px-3">
-                        <div class="kt-menu-item">
-                            <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
-                                    {% if request.resolver_match.url_name == 'shopping_cart' %}
-                                        bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
-                                    {% else %}
-                                        border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
-                                    {% endif %}"
-                               href="{% url 'dashboard:shopping_cart' %}">
-                                <i class="ki-filled ki-handcart text-base"></i>
-                                <span class="text-sm">Shopping Cart</span>
-                            </a>
-                        </div>
-                        <div class="kt-menu-item mt-3">
-                            <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
-                                    {% if request.resolver_match.url_name == 'wish_list' %}
-                                        bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
-                                    {% else %}
-                                        border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
-                                    {% endif %}"
-                               href="{% url 'dashboard:wish_list' %}">
-                                <i class="ki-filled ki-heart text-base"></i>
-                                <span class="text-sm">Wishlist</span>
-                            </a>
-                        </div>
-                        <div class="kt-menu-item mt-3">
-                            <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
-                                    {% if request.resolver_match.url_name == 'subscription_plans' %}
-                                        bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
-                                    {% else %}
-                                        border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
-                                    {% endif %}"
-                               href="{% url 'dashboard:subscription_plans' %}">
-                                <i class="ki-filled ki-scroll text-base"></i>
-                                <span class="text-sm">Subscription Plan</span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
+              <!-- Cart & More Menu -->
+<div class="kt-menu-item relative group" data-kt-menu-item-toggle="dropdown"
+data-kt-menu-item-trigger="hover">
+<a class="kt-menu-link flex items-center gap-2 px-3 py-2 text-2sm leading-none relative h-8.5 rounded-full border
+       border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground"
+  href="#">
+   <i class="ki-filled ki-handcart text-base"></i>
+   <span class="text-sm">Cart & More</span>
+</a>
+<div class="kt-menu-dropdown absolute w-48 bg-background border border-border rounded-lg shadow-lg z-10 hidden mt-7 py-5 px-3">
+   <div class="kt-menu-item">
+       <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
+               {% if request.resolver_match.url_name == 'shopping_cart' %}
+                   bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
+               {% else %}
+                   border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
+               {% endif %}"
+          href="{% url 'dashboard:shopping_cart' %}">
+           <i class="ki-filled ki-handcart text-base"></i>
+           <span class="text-sm">Shopping Cart</span>
+       </a>
+   </div>
+   <div class="kt-menu-item mt-3">
+       <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
+               {% if request.resolver_match.url_name == 'wish_list' %}
+                   bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
+               {% else %}
+                   border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
+               {% endif %}"
+          href="{% url 'dashboard:wish_list' %}">
+           <i class="ki-filled ki-heart text-base"></i>
+           <span class="text-sm">Wishlist</span>
+       </a>
+   </div>
+   <div class="kt-menu-item mt-3">
+       <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
+               {% if request.resolver_match.url_name == 'subscription_plans' %}
+                   bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
+               {% else %}
+                   border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
+               {% endif %}"
+          href="{% url 'dashboard:subscription_plans' %}">
+           <i class="ki-filled ki-scroll text-base"></i>
+           <span class="text-sm">Subscription Plan</span>
+       </a>
+   </div>
+</div>
+</div>
 
-                <div class="border-e border-border h-6 hidden md:block"></div>
-                <div class="kt-menu-item relative group" data-kt-menu-item-toggle="dropdown"
-                     data-kt-menu-item-trigger="hover">
-                    {% if user.is_authenticated %}
-                    <a class="kt-menu-link flex items-center gap-2 px-3 py-2 text-2sm leading-none relative h-8.5 rounded-full border
-                    border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground"
-                    href="#">
-                    <i class="ki-filled ki-wallet text-base"></i>
-                    <span class="text-sm">Checkout</span>
-                    </a>
-                    {% endif %}
+<!-- Conditional separator + Checkout menu -->
+{% if user.is_authenticated %}
+<div class="border-e border-border h-6 hidden md:block"></div>
 
-                    <div class="kt-menu-dropdown absolute w-40 bg-background border border-border rounded-lg shadow-lg z-10 hidden mt-7 py-5 px-3">
-                        <div class="kt-menu-item">
-                            <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
-                                    {% if request.resolver_match.url_name == 'shipping_info' %}
-                                        bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
-                                    {% else %}
-                                        border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
-                                    {% endif %}"
-                               href="{% url 'dashboard:shipping_info' %}">
-                                <i class="ki-filled ki-delivery text-base"></i>
-                                <span class="text-sm">Shipping Info</span>
-                            </a>
-                        </div>
-                        {% comment %}
-                        <div class="kt-menu-item mt-3">
-                            <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
-                                    {% if request.resolver_match.url_name == 'payment_method' %}
-                                        bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
-                                    {% else %}
-                                        border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
-                                    {% endif %}"
-                               href="{% url 'dashboard:payment_method' %}">
-                                <i class="ki-filled ki-two-credit-cart text-base"></i>
-                                <span class="text-sm">Payment Method</span>
-                            </a>
-                        </div>
-                        {% endcomment %}
-                        <div class="kt-menu-item mt-3">
-                            <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
-                                    {% if request.resolver_match.url_name == 'order_placed' %}
-                                        bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
-                                    {% else %}
-                                        border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
-                                    {% endif %}"
-                               href="{% url 'dashboard:order_placed' %}">
-                                <i class="ki-filled ki-cheque text-base"></i>
-                                <span class="text-sm">Order Placed</span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
+<div class="kt-menu-item relative group" data-kt-menu-item-toggle="dropdown"
+    data-kt-menu-item-trigger="hover">
+   <a class="kt-menu-link flex items-center gap-2 px-3 py-2 text-2sm leading-none relative h-8.5 rounded-full border
+   border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground"
+   href="#">
+       <i class="ki-filled ki-wallet text-base"></i>
+       <span class="text-sm">Checkout</span>
+   </a>
 
-                <div class="border-e border-border h-6 hidden md:block"></div>
-                <div class="kt-menu-item relative">
-                    <a class="kt-menu-link flex items-center gap-2 px-3 py-2 text-2sm leading-none relative h-8.5 rounded-full border
-                            {% if request.resolver_match.url_name == 'my_orders' %}
-                                bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
-                            {% else %}
-                                border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
-                            {% endif %}"
-                       href="{% url 'dashboard:my_orders' %}">
-                        <i class="ki-filled ki-package text-base"></i>
-                        <span class="text-sm">My Orders</span>
-                    </a>
-                </div>
+   <div class="kt-menu-dropdown absolute w-40 bg-background border border-border rounded-lg shadow-lg z-10 hidden mt-7 py-5 px-3">
+       <div class="kt-menu-item">
+           <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
+                   {% if request.resolver_match.url_name == 'shipping_info' %}
+                       bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
+                   {% else %}
+                       border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
+                   {% endif %}"
+              href="{% url 'dashboard:shipping_info' %}">
+               <i class="ki-filled ki-delivery text-base"></i>
+               <span class="text-sm">Shipping Info</span>
+           </a>
+       </div>
+
+       <div class="kt-menu-item mt-3">
+           <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
+                   {% if request.resolver_match.url_name == 'order_placed' %}
+                       bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
+                   {% else %}
+                       border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
+                   {% endif %}"
+              href="{% url 'dashboard:order_placed' %}">
+               <i class="ki-filled ki-cheque text-base"></i>
+               <span class="text-sm">Order Placed</span>
+           </a>
+       </div>
+   </div>
+</div>
+
+{% endif %}
+
+
+<div class="border-e border-border h-6 hidden md:block"></div>
+
+<!-- My Orders -->
+<div class="kt-menu-item relative">
+<a class="kt-menu-link flex items-center gap-2 px-3 py-2 text-2sm leading-none relative h-8.5 rounded-full border
+       {% if request.resolver_match.url_name == 'my_orders' %}
+           bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
+       {% else %}
+           border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
+       {% endif %}"
+  href="{% url 'dashboard:my_orders' %}">
+   <i class="ki-filled ki-package text-base"></i>
+   <span class="text-sm">My Orders</span>
+</a>
+</div>
+
                 <div class="border-e border-border h-6 hidden md:block"></div>
                 <div class="kt-menu-item relative">
                     <!-- Categories Button -->

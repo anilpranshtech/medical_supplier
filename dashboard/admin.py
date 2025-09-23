@@ -44,7 +44,7 @@ class ProductCategoryAdmin(admin.ModelAdmin):
 
 @admin.register(ProductSubCategory)
 class ProductSubCategoryAdmin(admin.ModelAdmin):
-    list_display = ('id', 'category', 'name', 'created_at')
+    list_display = ('id', 'category', 'name','image', 'created_at')
 
 
 @admin.register(Question)

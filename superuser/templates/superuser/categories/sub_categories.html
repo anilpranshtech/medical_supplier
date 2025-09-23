@@ -8,12 +8,14 @@ Product Subcategories
 
 {% block content %}
 {% tag_user_permissions_list request.user as user_permissions_list %}
+
 <div class="app-main flex-column flex-row-fluid" id="kt_app_main">
     <div class="d-flex flex-column flex-column-fluid">
         <div id="kt_app_content" class="app-content flex-column-fluid mx-5">
             <div id="kt_app_content_container" class="app-container container-fluid">
+                
                 <!-- Filter Form -->
-                <form action="{% url 'superuser:subcategory_list' %}" method="GET">
+                <form action="" method="GET">
                     <div class="card mb-7">
                         <div class="card-body">
                             {% include "superuser/pages/filters/filter_sort_by.html" %}
@@ -31,97 +33,68 @@ Product Subcategories
                         </div>
                     </div>
                 </form>
+
+                {% if error %}
+                <div class="alert alert-warning d-flex align-items-center p-5 mb-10">
+                    <i class="fas fa-exclamation-triangle text-warning fs-2 me-4"></i>
+                    <div>
+                        <h5 class="fw-bold mb-2">Category Not Found</h5>
+                        <span>{{ error }}</span>
+                        <div class="mt-3">
+                            <a href="{% url 'superuser:categories' %}" class="btn btn-primary">Go to Categories</a>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
                 <!-- Subcategories Table -->
                 <div class="card card-flush">
-                    {% if "dashboard.add_productsubcategory" in user_permissions_list %}
-                    <div class="card-header flex-wrap align-items-end py-5 gap-4 pb-0">
-                        <div class="card-toolbar d-flex justify-content-end w-100">
-                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSubCategoryModal">
+                    {% if "dashboard.add_productsubcategory" in user_permissions_list or "dashboard.view_productlastcategory" in user_permissions_list %}
+                    <div class="card-header flex-wrap align-items-center py-5 gap-4">
+                        <div class="card-title">
+                            <h3 class="fw-bolder text-gray-900 mb-0">
+                                {% if category %}
+                                    Subcategories > {{ category.name }}
+                                {% else %}
+                                    All Subcategories
+                                {% endif %}
+                            </h3>
+                            
+                        </div>
+                        <div class="card-toolbar d-flex align-items-center gap-2 gap-lg-3">
+                            {% if "dashboard.add_productsubcategory" in user_permissions_list %}
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSubcategoryModal"
+                                    data-category-id="{{ category.id|default:'' }}" data-category-name="{{ category.name|default:'Select Category' }}">
+                                <i class="fas fa-plus fs-5 me-2"></i>
                                 Add Subcategory
                             </button>
+                            {% endif %}
+                            {% if category %}
+                            <a href="{% url 'superuser:categories' %}" class="btn btn-light">
+                                <i class="fas fa-arrow-left fs-5 me-2"></i>
+                                Back to Categories
+                            </a>
+                            {% else %}
+                            <a href="{% url 'superuser:categories' %}" class="btn btn-light">
+                                <i class="fas fa-arrow-left fs-5 me-2"></i>
+                                View Categories
+                            </a>
+                            {% endif %}
                         </div>
                     </div>
                     {% endif %}
-                    <!-- Add Subcategory Modal -->
-                    <div class="modal fade" id="addSubCategoryModal" tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">Add Subcategory</h5>
-                                    <button type="button" class="btn btn-sm btn-icon" data-bs-dismiss="modal">
-                                        <i class="bi bi-x fs-2"></i>
-                                    </button>
-                                </div>
-                                <div class="modal-body">
-                                    <form id="addSubCategoryForm" method="POST" enctype="multipart/form-data">
-                                        {% csrf_token %}
-                                        <div class="mb-3">
-                                            <label for="subCategoryName" class="form-label">Subcategory Name</label>
-                                            <input type="text" class="form-control" id="subCategoryName" name="name" required>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="subCategoryCategory" class="form-label">Category</label>
-                                            <select class="form-control" id="subCategoryCategory" name="category" required>
-                                                <option value="">Select a Category</option>
-                                                {% for category in categories %}
-                                                    <option value="{{ category.id }}">{{ category.name }}</option>
-                                                {% endfor %}
-                                            </select>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                                            <button type="submit" class="btn btn-primary">Add Subcategory</button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Edit Subcategory Modal -->
-                    <div class="modal fade" id="editSubCategoryModal" tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">Edit Subcategory</h5>
-                                    <button type="button" class="btn btn-sm btn-icon" data-bs-dismiss="modal">
-                                        <i class="bi bi-x fs-2"></i>
-                                    </button>
-                                </div>
-                                <div class="modal-body">
-                                    <form id="editSubCategoryForm" method="POST" enctype="multipart/form-data">
-                                        {% csrf_token %}
-                                        <input type="hidden" id="editSubCategoryId" name="id">
-                                        <div class="mb-3">
-                                            <label for="editSubCategoryName" class="form-label">Subcategory Name</label>
-                                            <input type="text" class="form-control" id="editSubCategoryName" name="name" required>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="editSubCategoryCategory" class="form-label">Category</label>
-                                            <select class="form-control" id="editSubCategoryCategory" name="category" required>
-                                                <option value="">Select a Category</option>
-                                                {% for category in categories %}
-                                                    <option value="{{ category.id }}">{{ category.name }}</option>
-                                                {% endfor %}
-                                            </select>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                                            <button type="submit" class="btn btn-primary">Update Subcategory</button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    
+                    {% if subcategories %}
                     <div class="card-body table-responsive">
                         <table id="kt_ecommerce_subcategories_table" class="table align-middle table-row-dashed fs-6 gy-5">
                             <thead>
                                 <tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
-                                    <th class="text-start min-w-150px ps-5">Subcategory</th>
-                                    <th class="text-center min-w-150px">Category</th>
+                                    <th class="text-start min-w-200px ps-5">Subcategory</th>
+                                    <th class="text-start min-w-200px">Main Category</th>
                                     <th class="text-center min-w-100px">Created At</th>
                                     <th class="text-center min-w-100px">Updated At</th>
-                                    {% if "dashboard.change_productsubcategory" in user_permissions_list or "dashboard.delete_productsubcategory" in user_permissions_list %}
+                                    <th class="text-center min-w-125px">Last Categories</th>
+                                    {% if "dashboard.change_productsubcategory" in user_permissions_list or "dashboard.delete_productsubcategory" in user_permissions_list or "dashboard.view_productlastcategory" in user_permissions_list %}
                                     <th class="text-center min-w-100px">Actions</th>
                                     {% endif %}
                                 </tr>
@@ -130,16 +103,30 @@ Product Subcategories
                                 {% for subcategory in subcategories %}
                                 <tr>
                                     <td class="text-start">
-                                        <div class="d-flex">
-                                            <div class="ms-5">
-                                                <div class="text-gray-800 text-hover-primary fs-5 fw-bold">
-                                                    {{ subcategory.name }}
+                                        <div class="d-flex flex-column">
+                                            <!-- Subcategory Image and Name -->
+                                            <div class="d-flex align-items-center">
+                                                <div class="symbol symbol-50px me-3">
+                                                    {% if subcategory.image %}
+                                                        <span class="symbol-label" style="background-image:url('{{ subcategory.image.url }}'); background-size: cover; background-position: center;"></span>
+                                                    {% else %}
+                                                        <span class="symbol-label bg-light-primary text-primary rounded-circle fs-7 fw-bolder">
+                                                            {{ subcategory.name|first|upper }}
+                                                        </span>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="d-flex flex-column">
+                                                    <!-- Subcategory Name -->
+                                                    <div class="text-gray-800 text-hover-primary fs-5 fw-bold">
+                                                        {{ subcategory.name }}
+                                                    </div>
+                                                  
                                                 </div>
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="text-center">
-                                        <div class="badge badge-light fw-bold">
+                                    <td class="text-start">
+                                        <div class="badge badge-light-info fw-bold">
                                             {{ subcategory.category.name }}
                                         </div>
                                     </td>
@@ -153,30 +140,47 @@ Product Subcategories
                                             {{ subcategory.updated_at|date:'F d Y'|default:'---' }}
                                         </div>
                                     </td>
-                                    {% if "dashboard.change_productsubcategory" in user_permissions_list or "dashboard.delete_productsubcategory" in user_permissions_list %}
+                                    <td class="text-center">
+                                        <div class="badge badge-light-success fw-bold">
+                                            {{ subcategory.productlastcategory_set.all|length }}
+                                        </div>
+                                    </td>
+                                    {% if "dashboard.change_productsubcategory" in user_permissions_list or "dashboard.delete_productsubcategory" in user_permissions_list or "dashboard.view_productlastcategory" in user_permissions_list %}
                                     <td class="text-center">
                                         <a href="#" class="btn btn-sm btn-light btn-flex btn-center btn-active-light-primary" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">
                                             Actions <i class="fas fa-angle-down fs-5 ms-1"></i>
                                         </a>
                                         <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-150px py-4" data-kt-menu="true">
+                                            {% if "dashboard.view_productlastcategory" in user_permissions_list %}
+                                            <div class="menu-item px-3">
+                                                <a href="{% url 'superuser:subcategory_lastcategories' subcategory.id %}" class="menu-link px-3">
+                                                    <i class="fas fa-list fs-5 me-2"></i>
+                                                    View Last Categories
+                                                </a>
+                                            </div>
+                                            {% endif %}
                                             {% if "dashboard.change_productsubcategory" in user_permissions_list %}
                                             <div class="menu-item px-3">
                                                 <a href="#" class="menu-link px-3 edit-subcategory-btn"
                                                    data-id="{{ subcategory.id }}"
                                                    data-name="{{ subcategory.name }}"
-                                                   data-category-id="{{ subcategory.category.id }}"
+                                                   data-category="{{ subcategory.category.id }}"
+                                                   data-image="{% if subcategory.image %}{{ subcategory.image.url }}{% else %}''{% endif %}"
                                                    data-bs-toggle="modal"
-                                                   data-bs-target="#editSubCategoryModal">
+                                                   data-bs-target="#editSubcategoryModal">
+                                                    <i class="fas fa-edit fs-5 me-2"></i>
                                                     Edit
                                                 </a>
                                             </div>
                                             {% endif %}
                                             {% if "dashboard.delete_productsubcategory" in user_permissions_list %}
                                             <div class="menu-item px-3">
-                                                <a href="#" class="menu-link px-3 delete-subcategory-btn"
+                                                <a href="#" class="menu-link px-3 text-danger delete-subcategory-btn"
                                                    data-id="{{ subcategory.id }}"
+                                                   data-name="{{ subcategory.name }}"
                                                    data-bs-toggle="modal"
-                                                   data-bs-target="#deleteSubCategoryModal{{ subcategory.id }}">
+                                                   data-bs-target="#deleteSubcategoryModal{{ subcategory.id }}">
+                                                    <i class="fas fa-trash fs-5 me-2"></i>
                                                     Delete
                                                 </a>
                                             </div>
@@ -186,10 +190,10 @@ Product Subcategories
                                     {% endif %}
                                 </tr>
                                 <!-- Delete Subcategory Modal -->
-                                <div class="modal fade" id="deleteSubCategoryModal{{ subcategory.id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal fade" id="deleteSubcategoryModal{{ subcategory.id }}" tabindex="-1" aria-hidden="true">
                                     <div class="modal-dialog modal-dialog-centered">
                                         <div class="modal-content">
-                                            <form id="deleteSubCategoryForm{{ subcategory.id }}" method="POST">
+                                            <form id="deleteSubcategoryForm{{ subcategory.id }}" method="POST">
                                                 {% csrf_token %}
                                                 <input type="hidden" name="id" value="{{ subcategory.id }}">
                                                 <div class="modal-header">
@@ -199,11 +203,21 @@ Product Subcategories
                                                     </button>
                                                 </div>
                                                 <div class="modal-body">
-                                                    Are you sure you want to delete <strong>{{ subcategory.name }}</strong>?
+                                                    <div class="text-center">
+                                                        <i class="fas fa-exclamation-triangle text-warning fs-1 mb-4"></i>
+                                                        <p>Are you sure you want to delete <strong>{{ subcategory.name }}</strong>?</p>
+                                                        <p class="text-muted small">This will also delete all associated last categories.</p>
+                                                        {% if subcategory.image %}
+                                                        <p class="text-muted small">This will also delete the associated image.</p>
+                                                        {% endif %}
+                                                        {% if subcategory.category %}
+                                                        <p class="text-muted small">Parent Category: <strong>{{ subcategory.category.name }}</strong></p>
+                                                        {% endif %}
+                                                    </div>
                                                 </div>
                                                 <div class="modal-footer">
                                                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                                                    <button type="submit" class="btn btn-danger">Delete</button>
+                                                    <button type="submit" class="btn btn-danger">Delete Subcategory</button>
                                                 </div>
                                             </form>
                                         </div>
@@ -213,100 +227,402 @@ Product Subcategories
                             </tbody>
                         </table>
                     </div>
+                    {% else %}
+                    <div class="card-body text-center py-20">
+                        <i class="fas fa-folder-open text-muted fs-1 mb-6"></i>
+                        <h4 class="text-gray-600 mb-2">No Subcategories Found</h4>
+                        {% if category %}
+                        <div class="mb-3">
+                            <div class="d-flex align-items-center justify-content-center mb-3">
+                                <!-- Category Image -->
+                                <div class="symbol symbol-50px me-3">
+                                    {% if category.image %}
+                                        <span class="symbol-label" style="background-image:url('{{ category.image.url }}'); background-size: cover; background-position: center;"></span>
+                                    {% else %}
+                                        <span class="symbol-label bg-light-info text-info rounded-circle fs-6 fw-bolder">
+                                            {{ category.name|first|upper }}
+                                        </span>
+                                    {% endif %}
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-gray-800 fs-5 fw-bold">{{ category.name }}</div>
+                                    <div class="text-muted fw-semibold fs-7">
+                                        {% if category.productsubcategory_set.count > 1 %}
+                                            {{ category.productsubcategory_set.count }} Subcategories
+                                        {% else %}
+                                            {{ category.productsubcategory_set.count }} Subcategory
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="text-muted mb-6">There are no subcategories for <strong>{{ category.name }}</strong>.</p>
+                        </div>
+                        {% else %}
+                        <p class="text-muted mb-6">No subcategories available.</p>
+                        {% endif %}
+                        {% if "dashboard.add_productsubcategory" in user_permissions_list %}
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSubcategoryModal"
+                                data-category-id="{{ category.id|default:'' }}" data-category-name="{{ category.name|default:'Select Category' }}">
+                            <i class="fas fa-plus me-2"></i>
+                            {% if category %}
+                                Add First Subcategory for {{ category.name }}
+                            {% else %}
+                                Add First Subcategory
+                            {% endif %}
+                        </button>
+                        {% endif %}
+                    </div>
+                    {% endif %}
                 </div>
-                {% include "superuser/pages/pagination.html" %}
-                {% include "superuser/pages/filters/filter_created_date_range_picker_js.html" %}
+
+                <!-- Add Subcategory Modal -->
+                <div class="modal fade" id="addSubcategoryModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Add Subcategory</h5>
+                                <button type="button" class="btn btn-sm btn-icon" data-bs-dismiss="modal">
+                                    <i class="bi bi-x fs-2"></i>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="addSubcategoryForm" method="POST" enctype="multipart/form-data">
+                                    {% csrf_token %}
+                                    {% if category %}
+                                    <input type="hidden" name="category" value="{{ category.id }}">
+                                    <div class="mb-3">
+                                        <label class="form-label">Parent Category</label>
+                                        <div class="d-flex align-items-center">
+                                            <div class="symbol symbol-40px me-3">
+                                                {% if category.image %}
+                                                    <span class="symbol-label" style="background-image:url('{{ category.image.url }}'); background-size: cover; background-position: center;"></span>
+                                                {% else %}
+                                                    <span class="symbol-label bg-light-info text-info rounded-circle fs-7 fw-bolder">
+                                                        {{ category.name|first|upper }}
+                                                    </span>
+                                                {% endif %}
+                                            </div>
+                                            <input type="text" class="form-control-plaintext fw-bold" value="{{ category.name }}" readonly style="border: none; background: transparent; padding: 0;">
+                                        </div>
+                                    </div>
+                                    {% else %}
+                                    <div class="mb-3">
+                                        <label for="parentCategorySelect" class="form-label">Parent Category <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="parentCategorySelect" name="category" required>
+                                            <option value="">Select Category</option>
+                                            {% for cat in categories %}
+                                            <option value="{{ cat.id }}" {% if category.id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    {% endif %}
+                                    <div class="mb-3">
+                                        <label for="subcategoryName" class="form-label">Subcategory Name <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="subcategoryName" name="name" required 
+                                               placeholder="Enter subcategory name">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="subcategoryImage" class="form-label">Subcategory Image</label>
+                                        <input type="file" class="form-control" id="subcategoryImage" name="image" accept="image/*">
+                                        <div class="form-text">Optional: Upload an image for this subcategory</div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" class="btn btn-primary">Add Subcategory</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Edit Subcategory Modal -->
+                <div class="modal fade" id="editSubcategoryModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Edit Subcategory</h5>
+                                <button type="button" class="btn btn-sm btn-icon" data-bs-dismiss="modal">
+                                    <i class="bi bi-x fs-2"></i>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="editSubcategoryForm" method="POST" enctype="multipart/form-data">
+                                    {% csrf_token %}
+                                    <input type="hidden" id="editSubcategoryId" name="id">
+                                    <div class="mb-3">
+                                        <label for="editSubcategoryName" class="form-label">Subcategory Name <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="editSubcategoryName" name="name" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="editSubcategoryCategory" class="form-label">Parent Category <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="editSubcategoryCategory" name="category" required>
+                                            <option value="">Select Category</option>
+                                            {% for cat in categories %}
+                                            <option value="{{ cat.id }}">{{ cat.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="editSubcategoryImage" class="form-label">Subcategory Image</label>
+                                        <input type="file" class="form-control" id="editSubcategoryImage" name="image" accept="image/*">
+                                        <div class="mt-2" id="currentImageContainer" style="display: none;">
+                                            <small>Current Image:</small>
+                                            <div id="currentImagePreview" class="mt-1"></div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" class="btn btn-primary">Update Subcategory</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {% include "superuser/pages/pagination.html" with page_obj=subcategories %}
             </div>
         </div>
     </div>
 </div>
 
+{% endblock content %}
+
 {% block page_only_scripts %}
+{% include "superuser/pages/filters/filter_created_date_range_picker_js.html" %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    // Add Subcategory
-    document.getElementById('addSubCategoryForm').addEventListener('submit', function(event) {
-        event.preventDefault();
-        const formData = new FormData(this);
-        fetch("{% url 'superuser:add_subcategory' %}", {
-            method: "POST",
-            body: formData,
-        })
-        .then(response => response.json())
-        .then(data => {
+$(document).ready(function() {
+
+    $('[data-bs-target="#addSubcategoryModal"]').on('click', function() {
+        const categoryId = $(this).data('category-id');
+        const categoryName = $(this).data('category-name');
+        
+        if (categoryId && categoryId !== '') {
+            $('#parentCategorySelect').val(categoryId);
+        } else {
+     
+            $('#parentCategorySelect').val('');
+        }
+        
+        $('#subcategoryName').val('');
+        $('#subcategoryImage').val('');
+        $('#subcategoryName').removeClass('is-invalid is-valid');
+    });
+
+    $('#addSubcategoryForm').on('submit', function(event) {
+    event.preventDefault();
+    const formData = new FormData(this);
+    const submitBtn = $(this).find('button[type="submit"]');
+    const originalText = submitBtn.html();
+
+
+    const name = $('#subcategoryName').val().trim();
+    const category = $('#parentCategorySelect').length ? $('#parentCategorySelect').val() : $('input[name="category"]').val();
+
+    if (!name) {
+        $('#subcategoryName').addClass('is-invalid');
+        return;
+    }
+    if (!category) {
+        alert('Please select a category');
+        return;
+    }
+
+    submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Adding...');
+
+    $.ajax({
+        url: "{% url 'superuser:add_subcategory' %}",
+        method: "POST",
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(data) {
             if (data.status === 'success') {
-                $('#addSubCategoryModal').modal('hide');
+                $('#addSubcategoryModal').modal('hide');
                 location.reload();
             } else {
                 alert('Error: ' + data.message);
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-        });
+        },
+        error: function() {
+            alert('An error occurred. Please try again.');
+        },
+        complete: function() {
+            submitBtn.prop('disabled', false).html(originalText);
+        }
+    });
+});
+
+
+
+    $('.edit-subcategory-btn').on('click', function() {
+        const subcategoryId = $(this).data('id');
+        const subcategoryName = $(this).data('name');
+        const categoryId = $(this).data('category');
+        const subcategoryImage = $(this).data('image');
+        
+        $('#editSubcategoryId').val(subcategoryId);
+        $('#editSubcategoryName').val(subcategoryName);
+        $('#editSubcategoryCategory').val(categoryId);
+        
+  
+        const imagePreview = $('#currentImagePreview');
+        const imageContainer = $('#currentImageContainer');
+        
+        if (subcategoryImage && subcategoryImage !== '' && subcategoryImage !== "''") {
+            imagePreview.html(`<img src="${subcategoryImage}" alt="Current Image" style="max-width: 100px; max-height: 100px; border-radius: 4px;" class="border">`);
+            imageContainer.show();
+        } else {
+            imageContainer.hide();
+        }
+        
+        $('#editSubcategoryImage').val('');
     });
 
-    // Edit Subcategory
-    document.querySelectorAll('.edit-subcategory-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const subcategoryId = this.getAttribute('data-id');
-            const subcategoryName = this.getAttribute('data-name');
-            const categoryId = this.getAttribute('data-category-id');
-
-            document.getElementById('editSubCategoryId').value = subcategoryId;
-            document.getElementById('editSubCategoryName').value = subcategoryName;
-            document.getElementById('editSubCategoryCategory').value = categoryId;
-        });
-    });
-
-    // Edit Subcategory Form Submission
-    document.getElementById('editSubCategoryForm').addEventListener('submit', function(event) {
+    $('#editSubcategoryForm').on('submit', function(event) {
         event.preventDefault();
         const formData = new FormData(this);
-        fetch("{% url 'superuser:edit_subcategory' %}", {
+        const submitBtn = $(this).find('button[type="submit"]');
+        const originalText = submitBtn.html();
+        
+        const name = $('#editSubcategoryName').val().trim();
+        const category = $('#editSubcategoryCategory').val();
+        if (!name || !category) {
+            if (!name) $('#editSubcategoryName').addClass('is-invalid');
+            if (!category) $('#editSubcategoryCategory').addClass('is-invalid');
+            return;
+        }
+        
+        submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Updating...');
+        
+        $.ajax({
+            url: "{% url 'superuser:edit_subcategory' %}",
             method: "POST",
-            body: formData,
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                $('#editSubCategoryModal').modal('hide');
-                location.reload();
-            } else {
-                alert('Error: ' + data.message);
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(data) {
+                if (data.status === 'success') {
+                    $('#editSubcategoryModal').modal('hide');
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            },
+            error: function() {
+                alert('An error occurred. Please try again.');
+            },
+            complete: function() {
+                submitBtn.prop('disabled', false).html(originalText);
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
+        });
+    });
+
+    // Add Last Category Modal 
+    $('[data-bs-target="#addLastCategoryModal"]').on('click', function() {
+        const subcategoryId = $(this).data('subcategory-id');
+        const subcategoryName = $(this).data('subcategory-name');
+        
+        $('#selectedSubcategoryId').val(subcategoryId);
+        $('#parentSubcategoryName').val(subcategoryName);
+        $('#lastCategoryName').val('');
+        $('#lastCategoryImage').val('');
+        $('#lastCategoryName').removeClass('is-invalid is-valid');
+    });
+
+
+    $('#addLastCategoryForm').on('submit', function(event) {
+        event.preventDefault();
+        const formData = new FormData(this);
+        const submitBtn = $(this).find('button[type="submit"]');
+        const originalText = submitBtn.html();
+        
+
+        const name = $('#lastCategoryName').val().trim();
+        if (!name) {
+            $('#lastCategoryName').addClass('is-invalid');
+            return;
+        }
+        
+        submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Adding...');
+        
+        $.ajax({
+            url: "{% url 'superuser:add_lastcategory' %}",
+            method: "POST",
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(data) {
+                if (data.status === 'success') {
+                    $('#addLastCategoryModal').modal('hide');
+                    window.location.href = "{% url 'superuser:subcategory_lastcategories' 0 %}".replace('0', $('#selectedSubcategoryId').val());
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            },
+            error: function() {
+                alert('An error occurred. Please try again.');
+            },
+            complete: function() {
+                submitBtn.prop('disabled', false).html(originalText);
+            }
         });
     });
 
     // Delete Subcategory
-    document.querySelectorAll('.delete-subcategory-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const subcategoryId = this.getAttribute('data-id');
-            const form = document.getElementById(`deleteSubCategoryForm${subcategoryId}`);
-            form.addEventListener('submit', function(event) {
-                event.preventDefault();
-                const formData = new FormData(this);
-                fetch("{% url 'superuser:delete_subcategory' %}", {
-                    method: "POST",
-                    body: formData,
-                })
-                .then(response => response.json())
-                .then(data => {
+    $('.delete-subcategory-btn').on('click', function() {
+        const subcategoryId = $(this).data('id');
+        const form = $(`#deleteSubcategoryForm${subcategoryId}`);
+        
+        form.off('submit').on('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            const submitBtn = $(this).find('button[type="submit"]');
+            const originalText = submitBtn.html();
+            
+            submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Deleting...');
+            
+            $.ajax({
+                url: "{% url 'superuser:delete_subcategory' %}",
+                method: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(data) {
                     if (data.status === 'success') {
-                        $(`#deleteSubCategoryModal${subcategoryId}`).modal('hide');
+                        $(`#deleteSubcategoryModal${subcategoryId}`).modal('hide');
                         location.reload();
                     } else {
                         alert('Error: ' + data.message);
                     }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                });
+                },
+                error: function() {
+                    alert('An error occurred. Please try again.');
+                },
+                complete: function() {
+                    submitBtn.prop('disabled', false).html(originalText);
+                }
             });
         });
     });
+
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Form validation
+    $('#subcategoryName, #editSubcategoryName, #lastCategoryName').on('input', function() {
+        const value = $(this).val().trim();
+        if (value.length > 0 && value.length <= 100) {
+            $(this).removeClass('is-invalid').addClass('is-valid');
+        } else {
+            $(this).removeClass('is-valid').addClass('is-invalid');
+        }
+    });
+});
 </script>
 {% endblock %}
-{% endblock content %}

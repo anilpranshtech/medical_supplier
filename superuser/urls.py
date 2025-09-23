@@ -80,14 +80,27 @@ urlpatterns = [
     path('returns/refund/', AdminProcessRefundView.as_view(), name='process_refund'),
     path('question/', AdminQuestionView.as_view(), name='question_list'),
 
+
     #category
     path("categories/", CategoryListView.as_view(), name="categories"),
     path('add-category/', CategoryCreateView.as_view(), name='add_category'),
     path('edit-category/', CategoryEditView.as_view(), name='edit_category'),
     path('delete-category/', CategoryDeleteView.as_view(), name='delete_category'),
-    #sub category
+
+    # Subcategory URLs
     path('subcategories/', CategorySubListView.as_view(), name='subcategory_list'),
-    path('subcategories/add/', SubCategoryCreateView.as_view(), name='add_subcategory'),
-    path('subcategories/edit/', SubCategoryEditView.as_view(), name='edit_subcategory'),
-    path('subcategories/delete/', SubCategoryDeleteView.as_view(), name='delete_subcategory'),
+    path('subcategories/<int:category_id>/', CategorySubListView.as_view(), name='category_subcategories'),
+    path('add-subcategory/', SubCategoryCreateView.as_view(), name='add_subcategory'),
+    path('edit-subcategory/', SubCategoryEditView.as_view(), name='edit_subcategory'),
+    path('delete-subcategory/', SubCategoryDeleteView.as_view(), name='delete_subcategory'),
+    path('edit-subcategory/<int:subcategory_id>/', SubCategoryEditView.as_view(), name='edit_subcategory_detail'),
+
+    # Last Category URLs
+    path('lastcategories/', SubCategoryLastListView.as_view(), name='lastcategory_list'),
+    path('lastcategories/<int:subcategory_id>/', SubCategoryLastListView.as_view(), name='subcategory_lastcategories'),
+    path('add-lastcategory/', LastCategoryCreateView.as_view(), name='add_lastcategory'),
+    path('edit-lastcategory/', LastCategoryEditView.as_view(), name='edit_lastcategory'),
+    path('delete-lastcategory/', LastCategoryDeleteView.as_view(), name='delete_lastcategory'),
+    path('edit-lastcategory/<int:lastcategory_id>/', LastCategoryEditView.as_view(), name='edit_lastcategory_detail'),
+
 ]

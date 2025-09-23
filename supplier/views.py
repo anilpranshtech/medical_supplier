@@ -2285,9 +2285,9 @@ class UserInformationView(FormView):
 
 
 class BusinessInformationView(FormView):
-    template_name = "supplier/user_information.html"  
+    template_name = "supplier/user_information.html"
     form_class = BusinessInformationForm
-    success_url = reverse_lazy("supplier:bank_details") 
+    success_url = reverse_lazy("supplier:bank_details")
 
     def get_initial(self):
         user = self.request.user
@@ -2299,20 +2299,33 @@ class BusinessInformationView(FormView):
         }
 
     def form_valid(self, form):
+        """
+        Save both text and file fields.
+        File fields only update if a new file is uploaded.
+        """
         user = self.request.user
         profile, created = SupplierProfile.objects.get_or_create(user=user)
 
-        # Save business info
-        for field in form.cleaned_data:
-            setattr(profile, field, form.cleaned_data[field])
-        profile.save()
+        # Update normal fields (text)
+        for field, value in form.cleaned_data.items():
+            if field not in ["company_logo", "company_commercial_license", "iso_certificate", "export_import_license"]:
+                setattr(profile, field, value)
 
+        # Update file fields only if new files are uploaded
+        file_fields = ["company_logo", "company_commercial_license", "iso_certificate", "export_import_license"]
+        for file_field in file_fields:
+            if self.request.FILES.get(file_field):
+                setattr(profile, file_field, self.request.FILES[file_field])
+
+        profile.save()
         return super().form_valid(form)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["step"] = 2
-        context["progress"] = 25  
+        context["progress"] = 25
+        # Pass profile for previewing images
+        context["profile"] = SupplierProfile.objects.get(user=self.request.user)
         return context
 
 class BankDetailsView(TemplateView):

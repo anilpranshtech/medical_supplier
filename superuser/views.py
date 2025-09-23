@@ -2081,13 +2081,118 @@ class AdminQuestionView(StaffAccountRequiredMixin, TemplateView):
 
 
 
+
+# class CategoryListView(View):
+#     def get(self, request):
+#         categories = ProductCategory.objects.exclude(
+#             Q(name__iexact="event") | Q(name__iexact="webinar") | Q(name__iexact="conference")
+#         )
+
+#         search_query = request.GET.get('search_by', '')  
+#         sort_by = request.GET.get('sort_by', 'desc_created')  
+#         date_from = request.GET.get('date_from', '')
+#         date_to = request.GET.get('date_to', '')
+
+#         sort_mapping = {
+#             'asc_created': 'created_at',    
+#             'desc_created': '-created_at', 
+#         }
+#         sort_by = sort_mapping.get(sort_by, '-created_at')  
+        
+#         if search_query:
+#             categories = categories.filter(name__icontains=search_query)
+#         if date_from:
+#             categories = categories.filter(created_at__date__gte=date_from)
+#         if date_to:
+#             categories = categories.filter(created_at__date__lte=date_to)
+
+#         categories = categories.order_by(sort_by)
+#         total_categories = categories.count()
+        
+#         paginator = Paginator(categories, 10) 
+#         page_number = request.GET.get('page')
+        
+#         try:
+#             categories_page = paginator.page(page_number)
+#         except PageNotAnInteger:
+#             categories_page = paginator.page(1)
+#         except EmptyPage:
+#             categories_page = paginator.page(paginator.num_pages)
+        
+#         context = {
+#             'categories': categories_page, 
+#             'total_categories': total_categories,
+#             'search_query': search_query, 
+#             'sort_by': request.GET.get('sort_by', 'desc_created'),
+#             'date_from': date_from,
+#             'date_to': date_to,
+#         }
+        
+#         return render(request, "superuser/categories/categories.html", context)
+    
+#     def post(self, request):
+#         return JsonResponse({'status': 'error', 'message': 'Method not allowed'}, status=405)
+from datetime import datetime
+
 class CategoryListView(View):
     def get(self, request):
         categories = ProductCategory.objects.exclude(
-            Q(name__iexact="event") | Q(name__iexact="webinar") | Q(name__iexact="conference")
+            Q(name__iexact="event") | 
+            Q(name__iexact="webinar") | 
+            Q(name__iexact="conference")
         )
-        return render(request, "superuser/categories/categories.html", {'categories': categories})
-    
+
+        search_query = request.GET.get('search_by', '')  
+        sort_by = request.GET.get('sort_by', 'desc_created')  
+        date_range = request.GET.get('created_date', '')  
+
+        sort_mapping = {
+            'asc_created': 'created_at',    
+            'desc_created': '-created_at', 
+        }
+        sort_by = sort_mapping.get(sort_by, '-created_at')
+        if search_query:
+            categories = categories.filter(name__icontains=search_query)
+        if date_range:
+            try:
+                date_from_str, date_to_str = [d.strip() for d in date_range.split('-')]
+
+                if date_from_str:
+                    date_from = datetime.strptime(date_from_str, "%m/%d/%Y").date()
+                    categories = categories.filter(created_at__date__gte=date_from)
+                if date_to_str:
+                    date_to = datetime.strptime(date_to_str, "%m/%d/%Y").date()
+                    categories = categories.filter(created_at__date__lte=date_to)
+            except ValueError:
+                pass 
+
+        categories = categories.order_by(sort_by)
+        total_categories = categories.count()
+
+      
+        paginator = Paginator(categories, 10)
+        page_number = request.GET.get('page')
+        try:
+            categories_page = paginator.page(page_number)
+        except PageNotAnInteger:
+            categories_page = paginator.page(1)
+        except EmptyPage:
+            categories_page = paginator.page(paginator.num_pages)
+
+        context = {
+            'categories': categories_page,
+            'total_categories': total_categories,
+            'search_query': search_query,
+            'sort_by': request.GET.get('sort_by', 'desc_created'),
+            'created_date': date_range,
+        }
+
+        return render(request, "superuser/categories/categories.html", context)
+
+    def post(self, request):
+        return JsonResponse({'status': 'error', 'message': 'Method not allowed'}, status=405)
+
+
 class CategoryCreateView(View):
     def get(self, request):
         return render(request, 'superuser/categories/add_category_modal.html')
@@ -2096,13 +2201,12 @@ class CategoryCreateView(View):
         name = request.POST.get('name')
         image = request.FILES.get('image')
 
-        # Validate the form data manually
         if not name:
             return JsonResponse({'status': 'error', 'message': 'Category name is required'})
 
         try:
             category = ProductCategory.objects.create(name=name, image=image)
-            return JsonResponse({'status': 'success', 'message': 'Category added successfully'})
+            return JsonResponse({'status': 'success', 'message': 'Category added successfully', 'id': category.id})
         except ValidationError as e:
             return JsonResponse({'status': 'error', 'message': str(e)})
         
@@ -2122,7 +2226,7 @@ class CategoryEditView(View):
             if image:
                 category.image = image
             category.save()
-            return JsonResponse({'status': 'success', 'message': 'Category updated successfully'})
+            return JsonResponse({'status': 'success', 'message': 'Category updated successfully', 'id': category.id})
         except ProductCategory.DoesNotExist:
             return JsonResponse({'status': 'error', 'message': 'Category not found'})
         except ValidationError as e:
@@ -2134,53 +2238,309 @@ class CategoryDeleteView(View):
         category_id = request.POST.get('id')
         try:
             category = ProductCategory.objects.get(id=category_id)
+            category_name = category.name 
             category.delete()
-            return JsonResponse({'status': 'success', 'message': 'Category deleted successfully'})
+            return JsonResponse({'status': 'success', 'message': f'Category "{category_name}" deleted successfully'})
         except ProductCategory.DoesNotExist:
             return JsonResponse({'status': 'error', 'message': 'Category not found'})
 
 
+
+# class CategorySubListView(View):
+#     def get(self, request, category_id=None):
+#         categories = ProductCategory.objects.exclude(
+#             Q(name__iexact="event") | Q(name__iexact="webinar") | Q(name__iexact="conference")
+#         )
+#         search_query = request.GET.get('search_by', '')  
+#         sort_by = request.GET.get('sort_by', 'desc_created')
+#         date_from = request.GET.get('date_from', '')
+#         date_to = request.GET.get('date_to', '')
+        
+#         sort_mapping = {
+#             'asc_created': 'created_at',
+#             'desc_created': '-created_at',
+#         }
+#         django_sort_by = sort_mapping.get(sort_by, '-created_at')
+        
+#         if category_id:
+#             try:
+#                 category = ProductCategory.objects.get(id=category_id)
+#                 subcategories = ProductSubCategory.objects.filter(
+#                     category=category
+#                 ).select_related('category').prefetch_related('productlastcategory_set')
+                
+#                 if search_query:
+#                     subcategories = subcategories.filter(name__icontains=search_query)
+#                 if date_from:
+#                     subcategories = subcategories.filter(created_at__date__gte=date_from)
+#                 if date_to:
+#                     subcategories = subcategories.filter(created_at__date__lte=date_to)
+                
+#                 subcategories = subcategories.order_by(django_sort_by)
+                
+#                 paginator = Paginator(subcategories, 10)
+#                 page_number = request.GET.get('page')
+#                 try:
+#                     subcategories_page = paginator.page(page_number)
+#                 except PageNotAnInteger:
+#                     subcategories_page = paginator.page(1)
+#                 except EmptyPage:
+#                     subcategories_page = paginator.page(paginator.num_pages)
+                
+#                 context = {
+#                     'subcategories': subcategories_page,
+#                     'category': category,
+#                     'category_id': category_id,
+#                     'categories': categories,
+#                     'total_subcategories': subcategories.count(),
+#                     'search_query': search_query,
+#                     'sort_by': sort_by,
+#                     'date_from': date_from,
+#                     'date_to': date_to,
+#                 }
+#             except ProductCategory.DoesNotExist:
+#                 context = {
+#                     'subcategories': [],
+#                     'categories': categories,
+#                     'error': 'Category not found',
+#                     'search_query': search_query,
+#                     'sort_by': sort_by,
+#                     'date_from': date_from,
+#                     'date_to': date_to,
+#                 }
+#         else:
+#             subcategories = ProductSubCategory.objects.all().select_related('category').prefetch_related('productlastcategory_set')
+            
+#             if search_query:
+#                 subcategories = subcategories.filter(name__icontains=search_query)
+#             if date_from:
+#                 subcategories = subcategories.filter(created_at__date__gte=date_from)
+#             if date_to:
+#                 subcategories = subcategories.filter(created_at__date__lte=date_to)
+            
+#             subcategories = subcategories.order_by(django_sort_by)
+            
+#             paginator = Paginator(subcategories, 10)
+#             page_number = request.GET.get('page')
+#             try:
+#                 subcategories_page = paginator.page(page_number)
+#             except PageNotAnInteger:
+#                 subcategories_page = paginator.page(1)
+#             except EmptyPage:
+#                 subcategories_page = paginator.page(paginator.num_pages)
+            
+#             context = {
+#                 'subcategories': subcategories_page,
+#                 'category': None,
+#                 'category_id': None,
+#                 'categories': categories,
+#                 'total_subcategories': subcategories.count(),
+#                 'search_query': search_query,
+#                 'sort_by': sort_by,
+#                 'date_from': date_from,
+#                 'date_to': date_to,
+#             }
+        
+#         return render(request, "superuser/categories/sub_categories.html", context)
+
+from datetime import datetime
+
+
 class CategorySubListView(View):
-    def get(self, request):
-        subcategories = ProductSubCategory.objects.all().select_related('category')
-        return render(request, "superuser/categories/sub_categories.html", {'subcategories': subcategories})
+    def get(self, request, category_id=None):
+        categories = ProductCategory.objects.exclude(
+            Q(name__iexact="event") | Q(name__iexact="webinar") | Q(name__iexact="conference")
+        )
+
+        search_query = request.GET.get('search_by', '')
+        sort_by = request.GET.get('sort_by', 'desc_created')
+        created_date = request.GET.get('created_date', '')
+
+        # Map sort options
+        sort_mapping = {
+            'asc_created': 'created_at',
+            'desc_created': '-created_at',
+        }
+        django_sort_by = sort_mapping.get(sort_by, '-created_at')
+
+        # Parse date range from single input (MM/DD/YYYY format)
+        date_from = None
+        date_to = None
+        if created_date:
+            try:
+                dates = created_date.split(' - ')
+                if len(dates) == 2:
+                    date_from = datetime.strptime(dates[0].strip(), '%m/%d/%Y').date()
+                    date_to = datetime.strptime(dates[1].strip(), '%m/%d/%Y').date()
+                elif len(dates) == 1:
+                    date_from = date_to = datetime.strptime(dates[0].strip(), '%m/%d/%Y').date()
+            except ValueError:
+                date_from = date_to = None
+
+        # Filter by category if category_id provided
+        if category_id:
+            try:
+                category = ProductCategory.objects.get(id=category_id)
+                subcategories = ProductSubCategory.objects.filter(
+                    category=category
+                ).select_related('category').prefetch_related('productlastcategory_set')
+
+                # Apply search and date filters
+                if search_query:
+                    subcategories = subcategories.filter(name__icontains=search_query)
+                if date_from:
+                    subcategories = subcategories.filter(created_at__date__gte=date_from)
+                if date_to:
+                    subcategories = subcategories.filter(created_at__date__lte=date_to)
+
+                subcategories = subcategories.order_by(django_sort_by)
+
+                # Pagination
+                paginator = Paginator(subcategories, 10)
+                page_number = request.GET.get('page')
+                try:
+                    subcategories_page = paginator.page(page_number)
+                except PageNotAnInteger:
+                    subcategories_page = paginator.page(1)
+                except EmptyPage:
+                    subcategories_page = paginator.page(paginator.num_pages)
+
+                context = {
+                    'subcategories': subcategories_page,
+                    'category': category,
+                    'category_id': category_id,
+                    'categories': categories,
+                    'total_subcategories': subcategories.count(),
+                    'search_query': search_query,
+                    'sort_by': sort_by,
+                    'created_date': created_date,
+                }
+
+            except ProductCategory.DoesNotExist:
+                context = {
+                    'subcategories': [],
+                    'categories': categories,
+                    'error': 'Category not found',
+                    'search_query': search_query,
+                    'sort_by': sort_by,
+                    'created_date': created_date,
+                }
+
+        else:
+            # No category filter
+            subcategories = ProductSubCategory.objects.all().select_related('category').prefetch_related('productlastcategory_set')
+
+            if search_query:
+                subcategories = subcategories.filter(name__icontains=search_query)
+            if date_from:
+                subcategories = subcategories.filter(created_at__date__gte=date_from)
+            if date_to:
+                subcategories = subcategories.filter(created_at__date__lte=date_to)
+
+            subcategories = subcategories.order_by(django_sort_by)
+
+            # Pagination
+            paginator = Paginator(subcategories, 10)
+            page_number = request.GET.get('page')
+            try:
+                subcategories_page = paginator.page(page_number)
+            except PageNotAnInteger:
+                subcategories_page = paginator.page(1)
+            except EmptyPage:
+                subcategories_page = paginator.page(paginator.num_pages)
+
+            context = {
+                'subcategories': subcategories_page,
+                'category': None,
+                'category_id': None,
+                'categories': categories,
+                'total_subcategories': subcategories.count(),
+                'search_query': search_query,
+                'sort_by': sort_by,
+                'created_date': created_date,
+            }
+
+        return render(request, "superuser/categories/sub_categories.html", context)
+
 
 class SubCategoryCreateView(View):
     def get(self, request):
-        categories = ProductCategory.objects.all()
+        categories = ProductCategory.objects.exclude(
+            Q(name__iexact="event") | Q(name__iexact="webinar") | Q(name__iexact="conference")
+        )
         return render(request, 'superuser/categories/add_subcategory_modal.html', {'categories': categories})
 
     def post(self, request):
         name = request.POST.get('name')
         category_id = request.POST.get('category')
+        image = request.FILES.get('image') 
 
         if not name or not category_id:
             return JsonResponse({'status': 'error', 'message': 'Subcategory name and category are required'})
 
         try:
             category = ProductCategory.objects.get(id=category_id)
-            subcategory = ProductSubCategory.objects.create(name=name, category=category)
-            return JsonResponse({'status': 'success', 'message': 'Subcategory added successfully'})
+            subcategory = ProductSubCategory.objects.create(
+                name=name, 
+                category=category,
+                image=image 
+            )
+            return JsonResponse({
+                'status': 'success', 
+                'message': 'Subcategory added successfully',
+                'id': subcategory.id,
+                'name': subcategory.name,
+                'category_id': category.id,
+                'image_url': subcategory.image.url if subcategory.image else None
+            })
         except ProductCategory.DoesNotExist:
             return JsonResponse({'status': 'error', 'message': 'Category not found'})
         except ValidationError as e:
             return JsonResponse({'status': 'error', 'message': str(e)})
 
 class SubCategoryEditView(View):
+    def get(self, request, subcategory_id):
+        try:
+            subcategory = ProductSubCategory.objects.get(id=subcategory_id)
+            categories = ProductCategory.objects.exclude(
+                Q(name__iexact="event") | Q(name__iexact="webinar") | Q(name__iexact="conference")
+            )
+            return render(request, 'superuser/categories/edit_subcategory_modal.html', {
+                'subcategory': subcategory,
+                'categories': categories
+            })
+        except ProductSubCategory.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Subcategory not found'})
+
     def post(self, request):
         subcategory_id = request.POST.get('id')
         name = request.POST.get('name')
         category_id = request.POST.get('category')
+        image = request.FILES.get('image')  
 
         if not name or not category_id:
             return JsonResponse({'status': 'error', 'message': 'Subcategory name and category are required'})
 
         try:
             subcategory = ProductSubCategory.objects.get(id=subcategory_id)
+            category = ProductCategory.objects.get(id=category_id)
+            if image and subcategory.image:
+                subcategory.image.delete(save=False)
+            
             subcategory.name = name
-            subcategory.category = ProductCategory.objects.get(id=category_id)
+            subcategory.category = category
+            if image:
+                subcategory.image = image
+            
             subcategory.save()
-            return JsonResponse({'status': 'success', 'message': 'Subcategory updated successfully'})
+            return JsonResponse({
+                'status': 'success', 
+                'message': 'Subcategory updated successfully',
+                'id': subcategory.id,
+                'name': subcategory.name,
+                'category_id': category.id,
+                'image_url': subcategory.image.url if subcategory.image else None
+            })
         except ProductSubCategory.DoesNotExist:
             return JsonResponse({'status': 'error', 'message': 'Subcategory not found'})
         except ProductCategory.DoesNotExist:
@@ -2193,8 +2553,218 @@ class SubCategoryDeleteView(View):
         subcategory_id = request.POST.get('id')
         try:
             subcategory = ProductSubCategory.objects.get(id=subcategory_id)
+            subcategory_name = subcategory.name
+            
+            # Delete image if exists
+            if subcategory.image:
+                subcategory.image.delete(save=False)
+            
             subcategory.delete()
-            return JsonResponse({'status': 'success', 'message': 'Subcategory deleted successfully'})
+            return JsonResponse({'status': 'success', 'message': f'Subcategory "{subcategory_name}" deleted successfully'})
         except ProductSubCategory.DoesNotExist:
             return JsonResponse({'status': 'error', 'message': 'Subcategory not found'})
 
+# class SubCategoryLastListView(View):
+#     def get(self, request, subcategory_id=None):
+#         # Load subcategories for edit modal
+#         subcategories = ProductSubCategory.objects.select_related('category').all()
+        
+#         if subcategory_id:
+#             try:
+#                 subcategory = ProductSubCategory.objects.select_related('category').get(id=subcategory_id)
+#                 last_categories = ProductLastCategory.objects.filter(sub_category=subcategory).select_related('sub_category')
+#                 context = {
+#                     'last_categories': last_categories,
+#                     'subcategory': subcategory,
+#                     'subcategory_id': subcategory_id,
+#                     'subcategories': subcategories
+#                 }
+#             except ProductSubCategory.DoesNotExist:
+#                 return render(request, "superuser/categories/last_categories.html", {
+#                     'last_categories': [],
+#                     'subcategories': subcategories,
+#                     'error': 'Subcategory not found'
+#                 })
+#         else:
+#             last_categories = ProductLastCategory.objects.select_related('sub_category').all()
+#             context = {
+#                 'last_categories': last_categories,
+#                 'subcategory': None,
+#                 'subcategory_id': None,
+#                 'subcategories': subcategories
+#             }
+        
+#         return render(request, "superuser/categories/last_categories.html", context)
+
+class SubCategoryLastListView(View):
+    def get(self, request, subcategory_id=None):
+        # Get all subcategories
+        subcategories = ProductSubCategory.objects.select_related('category').all()
+
+        # Get search, sort, date filters from GET parameters
+        search_query = request.GET.get('search_by', '')  # Match your template input name
+        sort_by = request.GET.get('sort_by', '-created_at')
+        date_from = request.GET.get('date_from', '')
+        date_to = request.GET.get('date_to', '')
+
+        # Map template sort values to actual ORM fields
+        if sort_by == 'desc_created':
+            sort_by = '-created_at'
+        elif sort_by == 'asc_created':
+            sort_by = 'created_at'
+        else:
+            sort_by = '-created_at'  # default
+
+        # Determine which subcategory to show
+        if subcategory_id:
+            try:
+                subcategory = ProductSubCategory.objects.select_related('category').get(id=subcategory_id)
+            except ProductSubCategory.DoesNotExist:
+                return render(request, "superuser/categories/last_categories.html", {
+                    'last_categories': [],
+                    'subcategories': subcategories,
+                    'error': 'Subcategory not found'
+                })
+        else:
+            # Default to first subcategory if none selected
+            subcategory = subcategories.first()
+            if not subcategory:
+                return render(request, "superuser/categories/last_categories.html", {
+                    'last_categories': [],
+                    'subcategories': subcategories,
+                    'error': 'No subcategories found'
+                })
+            subcategory_id = subcategory.id  # ensure template gets correct id
+
+        # Filter last categories only for the selected subcategory
+        last_categories = ProductLastCategory.objects.filter(sub_category=subcategory).select_related('sub_category')
+
+        if search_query:
+            last_categories = last_categories.filter(name__icontains=search_query)
+        if date_from:
+            last_categories = last_categories.filter(created_at__date__gte=date_from)
+        if date_to:
+            last_categories = last_categories.filter(created_at__date__lte=date_to)
+
+        # Apply sorting
+        last_categories = last_categories.order_by(sort_by)
+
+        # Pagination
+        paginator = Paginator(last_categories, 10)
+        page_number = request.GET.get('page')
+        try:
+            last_categories_page = paginator.page(page_number)
+        except PageNotAnInteger:
+            last_categories_page = paginator.page(1)
+        except EmptyPage:
+            last_categories_page = paginator.page(paginator.num_pages)
+
+        context = {
+            'last_categories': last_categories_page,
+            'subcategory': subcategory,
+            'subcategory_id': subcategory_id,
+            'subcategories': subcategories,
+            'total_last_categories': last_categories.count(),
+        }
+
+        return render(request, "superuser/categories/last_categories.html", context)
+
+class LastCategoryCreateView(View):
+    def get(self, request):
+        subcategories = ProductSubCategory.objects.select_related('category').all()
+        return render(request, 'superuser/categories/add_lastcategory_modal.html', {'subcategories': subcategories})
+
+    def post(self, request):
+        name = request.POST.get('name')
+        subcategory_id = request.POST.get('subcategory')
+        image = request.FILES.get('image')
+
+        if not name or not subcategory_id:
+            return JsonResponse({'status': 'error', 'message': 'Last category name and subcategory are required'})
+
+        try:
+            subcategory = ProductSubCategory.objects.get(id=subcategory_id)
+            last_category = ProductLastCategory.objects.create(
+                name=name,
+                sub_category=subcategory,
+                image=image
+            )
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Last category added successfully',
+                'id': last_category.id,
+                'name': last_category.name,
+                'subcategory_id': subcategory.id,
+                'image_url': last_category.image.url if last_category.image else None
+            })
+        except ProductSubCategory.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Subcategory not found'})
+        except ValidationError as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+
+class LastCategoryEditView(View):
+    def get(self, request, lastcategory_id):
+        try:
+            last_category = ProductLastCategory.objects.select_related('sub_category').get(id=lastcategory_id)
+            subcategories = ProductSubCategory.objects.select_related('category').all()
+            return render(request, 'superuser/categories/edit_lastcategory_modal.html', {
+                'last_category': last_category,
+                'subcategories': subcategories
+            })
+        except ProductLastCategory.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Last category not found'})
+
+    def post(self, request):
+        lastcategory_id = request.POST.get('id')
+        name = request.POST.get('name')
+        subcategory_id = request.POST.get('subcategory')
+        image = request.FILES.get('image')
+
+        if not name or not subcategory_id:
+            return JsonResponse({'status': 'error', 'message': 'Last category name and subcategory are required'})
+
+        try:
+            last_category = ProductLastCategory.objects.get(id=lastcategory_id)
+            subcategory = ProductSubCategory.objects.get(id=subcategory_id)
+            if image and last_category.image:
+                last_category.image.delete(save=False)
+            
+            last_category.name = name
+            last_category.sub_category = subcategory
+            if image:
+                last_category.image = image
+            
+            last_category.save()
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Last category updated successfully',
+                'id': last_category.id,
+                'name': last_category.name,
+                'subcategory_id': subcategory.id,
+                'image_url': last_category.image.url if last_category.image else None
+            })
+        except ProductLastCategory.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Last category not found'})
+        except ProductSubCategory.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Subcategory not found'})
+        except ValidationError as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+
+class LastCategoryDeleteView(View):
+    def post(self, request):
+        lastcategory_id = request.POST.get('id')
+        try:
+            last_category = ProductLastCategory.objects.get(id=lastcategory_id)
+            last_category_name = last_category.name
+            
+            # Delete image if exists
+            if last_category.image:
+                last_category.image.delete(save=False)
+            
+            last_category.delete()
+            return JsonResponse({
+                'status': 'success',
+                'message': f'Last category "{last_category_name}" deleted successfully'
+            })
+        except ProductLastCategory.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Last category not found'})

@@ -194,71 +194,97 @@ input.is-invalid, textarea.is-invalid, select.is-invalid {
                 {% endif %}
             </div>
             
-           <div class="form-group"><label style="display:inline;">{{ form.supplier_type.label }}<span style="color:red">*</span> </label>{{ form.supplier_type }}</div>
+            <div class="form-group">
+                <label style="display:inline;">
+                  {{ form.supplier_type.label }} <span style="color:red">*</span>
+                </label>
+                {{ form.supplier_type }}
+              </div>
+              
            <div class="form-group"><label style="display:inline;">{{ form.are_you_buyer_b2b.label }}<span style="color:red">*</span></label> {{ form.are_you_buyer_b2b }} </div>
            <div class="form-group"><label style="display:inline;">{{ form.selling_for.label }}<span style="color:red">*</span></label>{{ form.selling_for }}</div>
            <div class="form-group"><label style="display:inline;">{{ form.meta_description.label }}<span style="color:red">*</span></label>{{ form.meta_description }}</div>
            <div class="form-group"><label style="display:inline;">{{ form.meta_keywords.label }}<span style="color:red">*</span></label>{{ form.meta_keywords }}</div>
     
            {% elif step == 2 %}
-<h4>Business Information</h4>
-
-<div class="form-group">
-    <label>{{ form.business_name.label }} <span style="color:red">*</span></label>
-    {{ form.business_name }}
-    {% for error in form.business_name.errors %}
-        <div class="text-danger">{{ error }}</div>
-    {% endfor %}
-</div>
-
-<div class="form-group">
-    <label>{{ form.company_logo.label }} <span style="color:red">*</span></label>
-    {{ form.company_logo }}
-    {% for error in form.company_logo.errors %}
-        <div class="text-danger">{{ error }}</div>
-    {% endfor %}
-</div>
-
-<div class="form-group">
-    <label>{{ form.registration_number.label }} <span style="color:red">*</span></label>
-    {{ form.registration_number }}
-    {% for error in form.registration_number.errors %}
-        <div class="text-danger small">{{ error }}</div>
-    {% endfor %}
-</div>
-
-<div class="form-group">
-    <label>{{ form.company_commercial_license.label }} <span style="color:red">*</span></label>
-    {{ form.company_commercial_license }}
-    {% for error in form.company_commercial_license.errors %}
-        <div class="text-danger">{{ error }}</div>
-    {% endfor %}
-</div>
-
-<div class="form-group">
-    <label>{{ form.authorized_person_name.label }} <span style="color:red">*</span></label>
-    {{ form.authorized_person_name }}
-    {% for error in form.authorized_person_name.errors %}
-        <div class="text-danger">{{ error }}</div>
-    {% endfor %}
-</div>
-
-<div class="form-group">
-    <label>{{ form.iso_certificate.label }} <span style="color:red">*</span></label>
-    {{ form.iso_certificate }}
-    {% for error in form.iso_certificate.errors %}
-        <div class="text-danger">{{ error }}</div>
-    {% endfor %}
-</div>
-
-<div class="form-group">
-    <label>{{ form.export_import_license.label }} <span style="color:red">*</span></label>
-    {{ form.export_import_license }}
-    {% for error in form.export_import_license.errors %}
-        <div class="text-danger">{{ error }}</div>
-    {% endfor %}
-</div>
-
+           <h4>Business Information</h4>
+           
+           <div class="form-group">
+               <label>{{ form.business_name.label }} <span style="color:red">*</span></label>
+               {{ form.business_name }}
+               {% for error in form.business_name.errors %}
+                   <div class="text-danger">{{ error }}</div>
+               {% endfor %}
+           </div>
+           
+           <div class="form-group">
+               <label>{{ form.company_logo.label }} </label>
+               {% if profile.company_logo %}
+                   <div class="mb-2">
+                       <img src="{{ profile.company_logo.url }}" alt="Company Logo" width="150" class="me-3">
+                   </div>
+               {% endif %}
+               {{ form.company_logo }}
+               {% for error in form.company_logo.errors %}
+                   <div class="text-danger">{{ error }}</div>
+               {% endfor %}
+           </div>
+           
+           <div class="form-group">
+               <label>{{ form.registration_number.label }} <span style="color:red">*</span></label>
+               {{ form.registration_number }}
+               {% for error in form.registration_number.errors %}
+                   <div class="text-danger small">{{ error }}</div>
+               {% endfor %}
+           </div>
+           
+           <div class="form-group">
+               <label>{{ form.company_commercial_license.label }} </label>
+               {% if profile.company_commercial_license %}
+                   <div class="mb-2">
+                       <img src="{{ profile.company_commercial_license.url }}" alt="Commercial License" width="150" class="me-3">
+                   </div>
+               {% endif %}
+               {{ form.company_commercial_license }}
+               {% for error in form.company_commercial_license.errors %}
+                   <div class="text-danger">{{ error }}</div>
+               {% endfor %}
+           </div>
+           
+           <div class="form-group">
+               <label>{{ form.authorized_person_name.label }} <span style="color:red">*</span></label>
+               {{ form.authorized_person_name }}
+               {% for error in form.authorized_person_name.errors %}
+                   <div class="text-danger">{{ error }}</div>
+               {% endfor %}
+           </div>
+           
+           <div class="form-group">
+               <label>{{ form.iso_certificate.label }}</label>
+               {% if profile.iso_certificate %}
+                   <div class="mb-2">
+                       <img src="{{ profile.iso_certificate.url }}" alt="ISO Certificate" width="150" class="me-3">
+                   </div>
+               {% endif %}
+               {{ form.iso_certificate }}
+               {% for error in form.iso_certificate.errors %}
+                   <div class="text-danger">{{ error }}</div>
+               {% endfor %}
+           </div>
+           
+           <div class="form-group">
+               <label>{{ form.export_import_license.label }} </label>
+               {% if profile.export_import_license %}
+                   <div class="mb-2">
+                       <img src="{{ profile.export_import_license.url }}" alt="Export/Import License" width="150" class="me-3">
+                   </div>
+               {% endif %}
+               {{ form.export_import_license }}
+               {% for error in form.export_import_license.errors %}
+                   <div class="text-danger">{{ error }}</div>
+               {% endfor %}
+           </div>
+           
   
             
 {% elif step == 3 %}
@@ -371,24 +397,19 @@ input.is-invalid, textarea.is-invalid, select.is-invalid {
                     {% endfor %}
                 </div>
                 
-                <div class="form-group">
-                    <label style="display:inline;">{{ form.zip_code.label }}<span style="color:red">*</span></label>
-                    {{ form.zip_code }}
-                    {% for error in form.zip_code.errors %}
-                        <div class="text-danger small">{{ error }}</div>
-                    {% endfor %}
-                </div>
+                <div class="form-group">{{ form.zip_code.label_tag }} {{ form.zip_code }}</div>
                 
-                <div class="form-group form-check">
-                    {{ form.support_pickup }}
-                    <label class="form-check-label" style="display:inline;">
-                        {{ form.support_pickup.label }}<span style="color:red">*</span>
-                    </label>
+                <div class="form-group d-flex align-items-center">
+                    <div class="form-check me-3">
+                        {{ form.support_pickup }}
+                        <label class="form-check-label">
+                            {{ form.support_pickup.label }}<span style="color:red">*</span>
+                        </label>
+                    </div>
                     {% for error in form.support_pickup.errors %}
                         <div class="text-danger small">{{ error }}</div>
                     {% endfor %}
                 </div>
-            
                 {% elif step == 7 %}
                 <h4>Supplier Documents</h4>
                 <div class="form-group">
@@ -527,6 +548,17 @@ input.is-invalid, textarea.is-invalid, select.is-invalid {
     //zip code
      document.getElementById("id_zip_code").classList.add("is-invalid");
 </script>
-
+<!-- template mein head section mein -->
+<script>
+    // Browser history modify karein
+    if (window.history && window.history.replaceState) {
+        window.history.replaceState(null, null, window.location.href);
+    }
+    
+    // Back button handle karein
+    window.onbeforeunload = function() {
+        // Kuch bhi return nahi karen to browser default behavior follow karega
+    };
+    </script>
 {% endblock %}
 

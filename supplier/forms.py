@@ -1,5 +1,5 @@
 from django import forms
-from dashboard.models import RFQRequest,SupplierProfile,ProductCategory
+from dashboard.models import RFQRequest,SupplierProfile,ProductCategory,SUPPLIER_TYPE_CHOICES
 from .models import *
 import re
 
@@ -38,7 +38,10 @@ class UserInformationForm(forms.ModelForm):
     )
     phone = forms.CharField(required=True)
     job_title = forms.CharField(required=True)
-    supplier_type = forms.CharField(required=True)
+    supplier_type = forms.ChoiceField(
+        choices=SUPPLIER_TYPE_CHOICES,
+        required=True,
+    )
     are_you_buyer_b2b = forms.ChoiceField(
         choices=[('yes', 'Yes'), ('no', 'No')],
         required=True,
@@ -46,7 +49,7 @@ class UserInformationForm(forms.ModelForm):
     selling_for = forms.CharField(required=True)
     meta_description = forms.CharField(required=True, widget=forms.Textarea)
     meta_keywords = forms.CharField(required=True, widget=forms.Textarea)
-
+ 
     class Meta:
         model = SupplierProfile
         fields = [
@@ -89,11 +92,15 @@ class UserInformationForm(forms.ModelForm):
         return job_title
     def clean_phone(self):
         phone = self.cleaned_data.get("phone")
+
         if not phone.isdigit():
             raise forms.ValidationError("Phone number should only contain digits.")
+
+        if "0" in phone:
+            raise forms.ValidationError("Phone number cannot contain 0.")
+
         return phone
-
-
+    
 
 class BusinessInformationForm(forms.ModelForm):
     class Meta:
@@ -110,18 +117,22 @@ class BusinessInformationForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        for field in self.fields.values():
-            field.required = True
 
-        # Add CSS class for all inputs
         for field_name, field in self.fields.items():
+            # File fields → not required
+            if field_name in [
+                "company_logo",
+                "company_commercial_license",
+                "iso_certificate",
+                "export_import_license",
+            ]:
+                field.required = False
+            else:
+                field.required = True
+
+            # Add CSS class for styling
             field.widget.attrs.update({"class": "form-control"})
-            
-    def clean_registration_number(self):
-        value = self.cleaned_data.get("registration_number")
-        if not value.isdigit():
-            raise forms.ValidationError("Registration number must contain digits only.")
-        return value
+
     def clean_registration_number(self):
         value = self.cleaned_data.get("registration_number")
 
@@ -132,6 +143,7 @@ class BusinessInformationForm(forms.ModelForm):
             raise forms.ValidationError("Registration number cannot contain 0.")
 
         return value
+
             
 class BankDetailsForm(forms.ModelForm):
     class Meta:
@@ -231,20 +243,25 @@ class PickupandShipping(forms.ModelForm):
             "state": forms.Select(attrs={"class": "form-control"}),
             "city": forms.Select(attrs={"class": "form-control"}),
             "zip_code": forms.TextInput(attrs={"class": "form-control"}),
-            "support_pickup": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "support_pickup": forms.CheckboxInput(attrs={
+                "class": "form-check-input",
+                "style": "width: 1.2em; height: 1.2em; margin-top: 0.1em;"
+            }),
         }
+    
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
             field.required = True
+    
     def clean_zip_code(self):
         value = self.cleaned_data.get("zip_code", "").strip()
         if not value.isdigit():
             raise forms.ValidationError("Zip code must contain digits only.")
         if value == "0":
-           raise forms.ValidationError("Zip code cannot be 0.")
+            raise forms.ValidationError("Zip code cannot be 0.")
         return value
-
+        
 class SupplierDocumentsForm(forms.ModelForm):
     class Meta:
         model = SupplierProfile
