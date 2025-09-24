@@ -366,7 +366,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-top: 10px;
+<!--    margin-top: 10px;-->
 }
 
 
@@ -376,26 +376,28 @@
     align-items: center;
     gap: 5px;
     padding: 6px 12px;
-    font-size: 0.875rem; 
+    font-size: 0.875rem;
     font-weight: 600;
-    color: #1f2937; 
-    background-color: #f3f4f6; 
-    border: 1px solid #d1d5db; 
+    color: #000000;
+    background-color: #ffffff;
+    border: 1px solid #d1d5db;
     border-radius: 6px;
     cursor: pointer;
     transition: all 0.2s ease-in-out;
 }
-
+button.kt-btn.kt-btn-outline.kt-btn-xs.flex.items-center.gap-1.open-rfq-modal, button.kt-btn.kt-btn-outline.kt-btn-xs.open-rfq-modal  {
+    color: #000000;
+}
 .add-to-cart-btn i,
 .show-login-modal i {
-    font-size: 0.75rem; 
+    font-size: 0.75rem;
 }
 
 
 .add-to-cart-btn:hover,
 .show-login-modal:hover {
-    background-color: #e5e7eb; 
-    border-color: #9ca3af; 
+    background-color: #e5e7eb;
+    border-color: #9ca3af;
 }
 
 
@@ -569,7 +571,7 @@
                                     data-product-id="{{ product.id }}"
                                     data-product-name="{{ product.name }}"
                                     data-product-price="{{ product.price }}"
-                                    data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
+                                    data-company-name="{{ company_name|default:'' }}"
                                     data-quantity="1">
                                 RFQ <i class="ki-filled ki-directbox-default text-xs"></i>
                             </button>
@@ -636,11 +638,11 @@
 </div>
                                 {% if request.user.is_authenticated %}
                                     {% if product.show_rfq or product.Both %}
-                                    <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 open-rfq-modal"
+                                    <button class="kt-btn kt-btn-outline kt-btn-xs open-rfq-modal"
                                             data-product-id="{{ product.id }}"
                                             data-product-name="{{ product.name }}"
                                             data-product-price="{{ product.discounted_price|floatformat:2 }}"
-                                            data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
+                                            data-company-name="{{ company_name|default:'' }}"
                                             data-quantity="1">
                                         RFQ <i class="ki-filled ki-directbox-default"></i>
                                     </button>
@@ -743,11 +745,11 @@
 </div>
                                 {% if request.user.is_authenticated %}
                                     {% if product.show_rfq or product.Both %}
-                                    <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 open-rfq-modal"
+                                    <button class="kt-btn kt-btn-outline kt-btn-xs open-rfq-modal"
                                             data-product-id="{{ product.id }}"
                                             data-product-name="{{ product.name }}"
                                             data-product-price="{{ product.discounted_price|floatformat:2 }}"
-                                            data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
+                                            data-company-name="{{ company_name|default:'' }}"
                                             data-quantity="1">
                                         RFQ <i class="ki-filled ki-directbox-default"></i>
                                     </button>
@@ -871,11 +873,11 @@
 </div>
                                 {% if request.user.is_authenticated %}
                                     {% if product.show_rfq or product.Both %}
-                                    <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 open-rfq-modal"
+                                    <button class="kt-btn kt-btn-outline kt-btn-xs open-rfq-modal"
                                             data-product-id="{{ product.id }}"
                                             data-product-name="{{ product.name }}"
                                             data-product-price="{{ product.price }}"
-                                            data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
+                                            data-company-name="{{ company_name|default:'' }}"
                                             data-quantity="1">
                                         RFQ <i class="ki-filled ki-directbox-default"></i>
                                     </button>
@@ -905,13 +907,13 @@
 
     <div class="grid grid-cols-4 sm:grid-cols-3 xl:grid-cols-5 gap-6 mb-4">
       {% for category in categories %}
-      <a href="{% url 'dashboard:category_products_list' category.id %}" 
+      <a href="{% url 'dashboard:category_products_list' category.id %}"
          class="block group text-center">
-        
+
         <!-- Image -->
         <div class="w-full h-40 sm:h-48 overflow-hidden rounded-md">
-          <img src="{% if category.image %}{{ category.image.url }}{% else %}{% static 'default.png' %}{% endif %}" 
-               alt="{{ category.name }}" 
+          <img src="{% if category.image %}{{ category.image.url }}{% else %}{% static 'default.png' %}{% endif %}"
+               alt="{{ category.name }}"
                class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
         </div>
 
@@ -1003,31 +1005,31 @@
                                 {% endif %}
                                 <span class="text-sm font-medium text-mono">${{ product.price|floatformat:2 }}</span>
                                 <div class="cart-button-container" data-product-id="{{ product.id }}">
-    {% if request.user.is_authenticated %}
-        {% if product.id in user_cart_ids %}
-            <div class="cart-quantity-controls flex items-center gap-2">
-                <button class="decrease-btn px-2 py-1 bg-gray-200 rounded text-sm">-</button>
-                <span class="quantity font-semibold">{{ user_cart_quantities|get_item:product.id }}</span>
-                <button class="increase-btn px-2 py-1 bg-gray-200 rounded text-sm">+</button>
-            </div>
-        {% else %}
-            <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 add-to-cart-btn">
-                Add <i class="ki-filled ki-handcart text-xs"></i>
-            </button>
-        {% endif %}
-    {% else %}
-        <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 show-login-modal">
-            Add <i class="ki-filled ki-handcart text-xs"></i>
-        </button>
-    {% endif %}
-</div>
+                                    {% if request.user.is_authenticated %}
+                                        {% if product.id in user_cart_ids %}
+                                            <div class="cart-quantity-controls flex items-center gap-2">
+                                                <button class="decrease-btn px-2 py-1 bg-gray-200 rounded text-sm">-</button>
+                                                <span class="quantity font-semibold">{{ user_cart_quantities|get_item:product.id }}</span>
+                                                <button class="increase-btn px-2 py-1 bg-gray-200 rounded text-sm">+</button>
+                                            </div>
+                                        {% else %}
+                                            <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 add-to-cart-btn">
+                                                Add <i class="ki-filled ki-handcart text-xs"></i>
+                                            </button>
+                                        {% endif %}
+                                    {% else %}
+                                        <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 show-login-modal">
+                                            Add <i class="ki-filled ki-handcart text-xs"></i>
+                                        </button>
+                                    {% endif %}
+                                </div>
                                 {% if request.user.is_authenticated %}
                                     {% if product.show_rfq or product.Both %}
-                                    <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 open-rfq-modal"
+                                    <button class="kt-btn kt-btn-outline kt-btn-xs open-rfq-modal"
                                             data-product-id="{{ product.id }}"
                                             data-product-name="{{ product.name }}"
                                             data-product-price="{{ product.price }}"
-                                            data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
+                                            data-company-name="{{ company_name|default:'' }}"
                                             data-quantity="1">
                                         RFQ <i class="ki-filled ki-directbox-default"></i>
                                     </button>
@@ -1268,6 +1270,7 @@
                                class="block text-sm font-medium text-gray-650 dark:text-gray-300 mb-1">Company Name
                             <span class="text-red-500">*</span></label>
                         <input type="text" name="company_name" id="rfqCompanyName"
+                               value="{{ company_name|default_if_none:'' }}"
                                class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                                required aria-required="true">
                         <p class="text-xs text-red-500 mt-1 hidden" id="rfqCompanyNameError">Company name is required.</p>
@@ -1291,10 +1294,10 @@
                 </div>
                 <div class="kt-card-footer px-5 py-4 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700">
                     <button type="button"
-                            class="kt-btn kt-btn-outline kt-btn-sm text-gray-650 hover:bg-gray-900 dark:hover:bg-gray-700"
+                            class="kt-btn kt-btn-outline kt-btn-xs text-gray-650 hover:bg-gray-900 dark:hover:bg-gray-700"
                             onclick="closeRFQModal()"><i class="ki-filled ki-cross"></i>Cancel
                     </button>
-                    <button type="submit" class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center" id="rfqSubmitBtn">
+                    <button type="submit" class="kt-btn kt-btn-sx bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center" id="rfqSubmitBtn">
                         <i class="ki-filled ki-directbox-default"></i>
                         Submit RFQ
                         <span class="loader"></span>
@@ -1336,10 +1339,10 @@
                     </div>
                 </div>
                 <div class="kt-card-footer px-5 py-4 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700">
-                    <button type="button" class="kt-btn kt-btn-outline kt-btn-sm text-gray-650 hover:bg-gray-900 dark:hover:bg-gray-700" onclick="closeEventRegistrationModal()">
+                    <button type="button" class="kt-btn kt-btn-outline kt-btn-xs text-gray-650 hover:bg-gray-900 dark:hover:bg-gray-700" onclick="closeEventRegistrationModal()">
                         <i class="ki-filled ki-cross"></i>Cancel
                     </button>
-                    <button type="submit" class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center" id="eventRegistrationSubmitBtn">
+                    <button type="submit" class="kt-btn kt-btn-xs bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center" id="eventRegistrationSubmitBtn">
                         <i class="ki-filled ki-check-circle"></i>Register
                         <span class="loader"></span>
                     </button>
@@ -1366,7 +1369,7 @@
             </div>
             <div class="kt-card-footer px-5 py-4 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700">
                 <button type="button" class="kt-btn kt-btn-outline kt-btn-sm text-gray-650 hover:bg-gray-900 dark:hover:bg-gray-700" onclick="closeLoginModal()">Cancel</button>
-                <a href="{% url 'dashboard:login' %}" class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center">
+                <a href="{% url 'dashboard:login' %}" class="kt-btn kt-btn-xs bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center">
                     Login
                 </a>
             </div>
@@ -1466,7 +1469,7 @@
                 const productId = container.dataset.productId;
                 updateCart(productId, 1);
             }
-            
+
             // Handle Increase button
             else if (e.target.closest('.increase-btn')) {
                 e.preventDefault();
@@ -1476,7 +1479,7 @@
                 const qty = parseInt(quantityEl.innerText);
                 updateCart(productId, qty + 1);
             }
-            
+
             // Handle Decrease button
             else if (e.target.closest('.decrease-btn')) {
                 e.preventDefault();
@@ -1486,7 +1489,7 @@
                 const qty = parseInt(quantityEl.innerText);
                 updateCart(productId, qty - 1);
             }
-            
+
             // Handle Login modal buttons
             else if (e.target.closest('.show-login-modal')) {
                 e.preventDefault();
@@ -1612,7 +1615,7 @@
     // Show loader
     loader.style.display = 'inline-block';
 
-   
+
 });
 
 

@@ -9,76 +9,194 @@
         overflow: hidden;
         box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .status-pending { background-color: #fef3c7; color: #92400e; }
+    .status-return_completed { background-color: #d1fae5; color: #065f46; }
+    .status-replace_completed { background-color: #dbeafe; color: #1e40af; }
+    .status-cancelled { background-color: #fee2e2; color: #991b1b; }
 </style>
 
 {% block content %}
 <div class="container mx-auto px-4 max-w-7xl" style="max-width: var(--custom-container-width, 95%);">
     <div class="flex flex-col gap-6 mt-6 mb-12">
         <h2 class="text-xl md:text-2xl font-bold">My Returns</h2>
-
         <div class="mb-4">
-            <a href="{% url 'dashboard:my_orders' %}" class="kt-btn kt-btn-primary text-sm">
-                <i class="ki-filled ki-package text-base"></i> Back to My Orders
+            <a href="{% url 'dashboard:my_orders' %}" class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <i class="ki-filled ki-package text-base mr-2"></i> Back to My Orders
             </a>
         </div>
 
+        <!-- Filter Section -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div class="p-4">
+                <form method="get" action="{% url 'dashboard:my_returns' %}" class="flex flex-wrap md:flex-nowrap items-end gap-3">
+                    <!-- Return Status Filter -->
+                    <div class="flex-1 min-w-[150px]">
+                        <label for="status" class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Status</label>
+                        <select name="status" id="status" class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 py-2 px-3 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="all" {% if current_status == 'all' %}selected{% endif %}>
+                                All Returns {% comment %}({{ status_counts.all }}){% endcomment %}
+                            </option>
+                            <option value="pending" {% if current_status == 'pending' %}selected{% endif %}>
+                                Pending {% comment %}({{ status_counts.pending }}){% endcomment %}
+                            </option>
+                            <option value="return_completed" {% if current_status == 'return_completed' %}selected{% endif %}>
+                                Return Completed {% comment %}({{ status_counts.return_completed }}){% endcomment %}
+                            </option>
+                            <option value="replace_completed" {% if current_status == 'replace_completed' %}selected{% endif %}>
+                                Replace Completed {% comment %}({{ status_counts.replace_completed }}){% endcomment %}
+                            </option>
+                            <option value="cancelled" {% if current_status == 'cancelled' %}selected{% endif %}>
+                                Cancelled {% comment %}({{ status_counts.cancelled }}){% endcomment %}
+                            </option>
+                        </select>
+                    </div>
+
+                    <!-- Date Range Filter -->
+                    <div class="flex-1 min-w-[140px]">
+                        <label for="start_date" class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">From</label>
+                        <input type="date" name="start_date" id="start_date"
+                               value="{{ request.GET.start_date }}"
+                               class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 py-2 px-3 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+
+                    <div class="flex-1 min-w-[140px]">
+                        <label for="end_date" class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">To</label>
+                        <input type="date" name="end_date" id="end_date"
+                               value="{{ request.GET.end_date }}"
+                               class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 py-2 px-3 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="flex gap-2 min-w-[180px]">
+                        <button type="submit" class="flex-1 inline-flex items-center justify-center px-3 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                            <i class="bi bi-filter text-base me-1"></i> Apply
+                        </button>
+                        <a href="{% url 'dashboard:my_returns' %}" class="flex-1 inline-flex items-center justify-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                            <i class="bi bi-arrow-clockwise text-base me-1"></i> Reset
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% comment %}
+        <!-- Status Summary Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 text-center cursor-pointer {% if current_status == 'all' %}ring-2 ring-blue-500{% endif %}"
+                 onclick="window.location='{% url 'dashboard:my_returns' %}?status=all'">
+                <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ status_counts.all }}</div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">All Returns</div>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 text-center cursor-pointer {% if current_status == 'pending' %}ring-2 ring-blue-500{% endif %}"
+                 onclick="window.location='{% url 'dashboard:my_returns' %}?status=pending'">
+                <div class="text-2xl font-bold text-yellow-600">{{ status_counts.pending }}</div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">Pending</div>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 text-center cursor-pointer {% if current_status == 'return_completed' %}ring-2 ring-blue-500{% endif %}"
+                 onclick="window.location='{% url 'dashboard:my_returns' %}?status=return_completed'">
+                <div class="text-2xl font-bold text-green-600">{{ status_counts.return_completed }}</div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">Return Completed</div>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 text-center cursor-pointer {% if current_status == 'replace_completed' %}ring-2 ring-blue-500{% endif %}"
+                 onclick="window.location='{% url 'dashboard:my_returns' %}?status=replace_completed'">
+                <div class="text-2xl font-bold text-blue-600">{{ status_counts.replace_completed }}</div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">Replace Completed</div>
+            </div>
+        </div>
+        {% endcomment %}
+
+        <!-- Returns List -->
         {% for return in returns %}
         <div class="border border-gray-200 rounded-lg shadow-sm overflow-hidden">
-        <div class="return-item">
-            <!-- Header Info (flex row like My Orders) -->
-            <div class="flex flex-col lg:flex-row flex-wrap gap-4 bg-gray-100 dark:bg-gray-800 p-4">
-                <div class="flex-1 min-w-[150px]">
-                    <span class="text-xs text-gray-500">Return ID</span>
-                    <div class="text-sm font-bold">{{ return.return_serial }}</div>
-                </div>
-                <div class="flex-1 min-w-[150px]">
-                    <span class="text-xs text-gray-500">Product</span>
-                    <div class="text-sm font-bold">{{ return.order_item.product.name }}</div>
-                </div>
-                <div class="flex-1 min-w-[150px]">
-                    <span class="text-xs text-gray-500">Return Option</span>
-                    <div class="text-sm font-bold">{{ return.get_return_option_display }}</div>
-                </div>
-                <div class="flex-1 min-w-[150px]">
-                    <span class="text-xs text-gray-500">Status</span>
-                    <div class="text-sm font-bold">{{ return.get_return_status_display }}</div>
-                </div>
-                <div class="flex-1 min-w-[150px]">
-                    <span class="text-xs text-gray-500">Request Date</span>
-                    <div class="text-sm font-bold">{{ return.request_date|date:"d M, Y" }}</div>
-                </div>
-            </div>
-
-            <!-- Details Section (like items in My Orders) -->
-            <div class="p-4 sm:p-6">
-                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border p-4 rounded-lg">
-                    <div class="flex items-center gap-4 w-full sm:w-auto">
-                        <div class="w-[80px] h-[70px] bg-gray-200 flex items-center justify-center">
-                            {% with return.order_item.product as product %}
-                                {% if product.get_main_image %}
-                                    <img src="{{ product.get_main_image }}" alt="{{ product.name }}">
-                                {% else %}
-                                    <img src="{% static 'img/no-image.png' %}" alt="No image available">
-                                {% endif %}
-                            {% endwith %}
+            <div class="return-item">
+                <!-- Header Info -->
+                <div class="flex flex-col lg:flex-row flex-wrap gap-4 bg-gray-100 dark:bg-gray-800 p-4">
+                    <div class="flex-1 min-w-[150px]">
+                        <span class="text-xs text-gray-500">Return ID</span>
+                        <div class="text-sm font-bold">{{ return.return_serial }}</div>
+                    </div>
+                    <div class="flex-1 min-w-[150px]">
+                        <span class="text-xs text-gray-500">Product</span>
+                        <div class="text-sm font-bold">{{ return.order_item.product.name }}</div>
+                    </div>
+                    <div class="flex-1 min-w-[150px]">
+                        <span class="text-xs text-gray-500">Return Option</span>
+                        <div class="text-sm font-bold">{{ return.get_return_option_display }}</div>
+                    </div>
+                    <div class="flex-1 min-w-[150px]">
+                        <span class="text-xs text-gray-500">Status</span>
+                        <div class="text-sm font-bold">
+                            <span class="status-badge status-{{ return.return_status }}">
+                                {{ return.get_return_status_display }}
+                            </span>
                         </div>
-                        <div>
-                            <a href="#" class="block text-sm font-medium hover:text-primary">{{ return.order_item.product.name }}</a>
-                            <div class="text-xs text-gray-500">
-                                Order ID: <span class="text-gray-700">{{ return.order_item.order.order_id }}</span>
+                    </div>
+                    <div class="flex-1 min-w-[150px]">
+                        <span class="text-xs text-gray-500">Request Date</span>
+                        <div class="text-sm font-bold">{{ return.request_date|date:"d M, Y" }}</div>
+                    </div>
+                </div>
+
+                <!-- Details Section -->
+                <div class="p-4 sm:p-6">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border p-4 rounded-lg">
+                        <div class="flex items-center gap-4 w-full sm:w-auto">
+                            <div class="w-[80px] h-[70px] bg-gray-200 flex items-center justify-center rounded">
+                                {% with return.order_item.product as product %}
+                                    {% if product.get_main_image %}
+                                        <img src="{{ product.get_main_image }}" alt="{{ product.name }}" class="w-full h-full object-cover">
+                                    {% else %}
+                                        <img src="{% static 'img/no-image.png' %}" alt="No image available" class="w-full h-full object-cover">
+                                    {% endif %}
+                                {% endwith %}
+                            </div>
+                            <div>
+                                <a href="#" class="block text-sm font-medium hover:text-primary">{{ return.order_item.product.name }}</a>
+                                <div class="text-xs text-gray-500">
+                                    Order ID: <span class="text-gray-700">{{ return.order_item.order.order_id }}</span>
+                                </div>
+                                <div class="text-xs text-gray-500 mt-1">
+                                    Reason: <span class="text-gray-700">{{ return.reason|default:"No reason provided" }}</span>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="text-sm font-semibold text-right sm:text-left w-full sm:w-auto">
-                        {{ return.order_item.payment_currency|default:"USD" }} {{ return.price|floatformat:2 }}
+                        <div class="text-sm font-semibold text-right sm:text-left w-full sm:w-auto">
+                            {{ return.order_item.payment_currency|default:"USD" }} {{ return.price|floatformat:2 }}
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-        </div>
         {% empty %}
-        <p class="text-center text-sm text-gray-500">No return requests found.</p>
+        <div class="text-center py-12">
+            <div class="text-gray-400 text-6xl mb-4">📦</div>
+            <p class="text-lg text-gray-600 dark:text-gray-400">No return requests found</p>
+            <p class="text-sm text-gray-500 dark:text-gray-500 mt-2">
+                {% if current_status != 'all' %}
+                    Try changing your filter settings to see more results
+                {% else %}
+                    You haven't made any return requests yet
+                {% endif %}
+            </p>
+        </div>
         {% endfor %}
+        {% include "pages/pagination.html" %}
     </div>
 </div>
+
+<script>
+    // Auto-submit form when status changes
+    document.getElementById('status').addEventListener('change', function() {
+        this.form.submit();
+    });
+</script>
 {% endblock %}

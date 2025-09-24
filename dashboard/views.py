@@ -35,7 +35,7 @@ from .forms import *
 from .models import *
 import razorpay
 import stripe
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 import random
 from django.db.models.functions import Coalesce
 import re
@@ -84,7 +84,6 @@ class HomeView(TemplateView):
             return product_queryset
 
         # ---------------- Categories ---------------- #
-        # Show only categories that actually have products in last_category
         categories = ProductCategory.objects.filter(
             product__last_category__isnull=False,
             product__is_active=True
@@ -150,11 +149,49 @@ class HomeView(TemplateView):
             context['user_registered_event_ids'] = list(
                 EventRegistration.objects.filter(user=self.request.user).values_list('product_id', flat=True)
             )
+
+            # ---------------- Profile and Company Name ---------------- #
+            user = self.request.user
+            context['profile_type'] = None
+            context['company_name'] = None
+            context['profile'] = None
+
+            # Check RetailProfile
+            try:
+                retail_profile = RetailProfile.objects.get(user=user)
+                context['profile_type'] = 'retailer'
+                context['profile'] = retail_profile
+                # For retailers, company_name might not exist; use workplace or a fallback
+                context['company_name'] = retail_profile.workplace or user.get_full_name() or user.username
+            except RetailProfile.DoesNotExist:
+                pass
+
+            # Check WholesaleBuyerProfile
+            try:
+                wholesale_profile = WholesaleBuyerProfile.objects.get(user=user)
+                context['profile_type'] = 'wholesaler'
+                context['profile'] = wholesale_profile
+                context['company_name'] = wholesale_profile.company_name
+            except WholesaleBuyerProfile.DoesNotExist:
+                pass
+
+            # Check SupplierProfile
+            try:
+                supplier_profile = SupplierProfile.objects.get(user=user)
+                context['profile_type'] = 'supplier'
+                context['profile'] = supplier_profile
+                context['company_name'] = supplier_profile.company_name
+            except SupplierProfile.DoesNotExist:
+                pass
+
         else:
             context['user_cart_ids'] = []
             context['user_cart_quantities'] = {}
             context['user_wishlist_ids'] = []
             context['user_registered_event_ids'] = []
+            context['profile_type'] = None
+            context['company_name'] = None
+            context['profile'] = None
 
         # ---------------- Banners ---------------- #
         context['banners'] = Banner.objects.filter(is_active=True)
@@ -2130,7 +2167,7 @@ class MyOrdersView(LoginRequiredMixin, TemplateView):
             to_attr='all_returns'
         )
 
-        # Fetch orders with related data
+        # Base queryset
         orders_qs = (
             Order.objects.filter(user=user)
             .select_related('payment')
@@ -2140,8 +2177,34 @@ class MyOrdersView(LoginRequiredMixin, TemplateView):
                 'items__product',
                 returns_prefetch
             )
-            .order_by('-created_at')
         )
+
+        # Apply filters
+        status = self.request.GET.get('status')
+        start_date = self.request.GET.get('start_date')
+        end_date = self.request.GET.get('end_date')
+
+        if status:
+            orders_qs = orders_qs.filter(status=status.lower())
+
+        if start_date:
+            try:
+                start_date = datetime.strptime(start_date, '%Y-%m-%d')
+                orders_qs = orders_qs.filter(created_at__gte=start_date)
+            except ValueError:
+                pass
+
+        if end_date:
+            try:
+                end_date = datetime.strptime(end_date, '%Y-%m-%d')
+                # Include entire end date
+                end_date = end_date.replace(hour=23, minute=59, second=59)
+                orders_qs = orders_qs.filter(created_at__lte=end_date)
+            except ValueError:
+                pass
+
+        # Order by created_at descending
+        orders_qs = orders_qs.order_by('-created_at')
 
         # Paginate the orders
         paginator = Paginator(orders_qs, 2)
@@ -2157,6 +2220,8 @@ class MyOrdersView(LoginRequiredMixin, TemplateView):
 
         context['orders'] = page_obj.object_list
         context['page_obj'] = page_obj
+        # Add order status choices to context for filter dropdown
+        context['order_status_choices'] = OrderItem.ORDER_STATUS_CHOICES
         return context
 
 
@@ -2175,30 +2240,41 @@ class MyReturnsView(LoginRequiredMixin, TemplateView):
             .order_by('-request_date')
         )
 
-        # Filter by status if requested
+        # Apply filters
         status_filter = self.request.GET.get('status')
+        start_date = self.request.GET.get('start_date')
+        end_date = self.request.GET.get('end_date')
+
         if status_filter and status_filter != 'all':
             returns_qs = returns_qs.filter(return_status=status_filter)
 
-        from django.core.paginator import Paginator
-        paginator = Paginator(returns_qs, 10)
+        if start_date:
+            try:
+                start_date = datetime.strptime(start_date, '%Y-%m-%d')
+                returns_qs = returns_qs.filter(request_date__gte=start_date)
+            except ValueError:
+                pass
+
+        if end_date:
+            try:
+                end_date = datetime.strptime(end_date, '%Y-%m-%d')
+                # Include entire end date
+                end_date = end_date.replace(hour=23, minute=59, second=59)
+                returns_qs = returns_qs.filter(request_date__lte=end_date)
+            except ValueError:
+                pass
+
+        # Paginate the returns
+        paginator = Paginator(returns_qs, 2)
         page_number = self.request.GET.get('page')
         page_obj = paginator.get_page(page_number)
-
-        # Get status counts
-        status_counts = {
-            'all': Return.objects.filter(client=user).count(),
-            'pending': Return.objects.filter(client=user, return_status='pending').count(),
-            'return_completed': Return.objects.filter(client=user, return_status='return_completed').count(),
-            'replace_completed': Return.objects.filter(client=user, return_status='replace_completed').count(),
-            'cancelled': Return.objects.filter(client=user, return_status='cancelled').count(),
-        }
 
         context.update({
             'returns': page_obj.object_list,
             'page_obj': page_obj,
             'current_status': status_filter or 'all',
-            'status_counts': status_counts,
+            'start_date': self.request.GET.get('start_date', ''),
+            'end_date': self.request.GET.get('end_date', ''),
         })
 
         return context

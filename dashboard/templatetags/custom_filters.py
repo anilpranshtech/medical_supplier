@@ -206,3 +206,162 @@ def is_number(value):
 @register.filter
 def get_type(value):
     return str(type(value).__name__)
+
+
+@register.filter
+def multiply(value, arg):
+    """Multiply two numbers and return the result."""
+    try:
+        return float(value) * float(arg)
+    except (ValueError, TypeError):
+        return 0
+
+
+@register.filter
+def add(value, arg):
+    """Add two numbers and return the result."""
+    try:
+        return float(value) + float(arg)
+    except (ValueError, TypeError):
+        return 0
+
+
+@register.filter
+def get_return_status_message(item):
+    """Get user-friendly return status message for an OrderItem."""
+    return item.get_return_status_message()
+
+
+@register.filter
+def can_request_return(item):
+    """Check if an OrderItem can have a new return request."""
+    return item.can_request_return
+
+
+@register.filter
+def days_left_to_return(item):
+    """Get number of days left to return an OrderItem."""
+    return item.days_left_to_return
+
+
+@register.filter
+def return_deadline(item):
+    """Get the return deadline for an OrderItem."""
+    deadline = item.return_deadline
+    return deadline if deadline else None
+
+
+@register.filter
+def has_pending_return(item):
+    """Check if OrderItem has a pending return request."""
+    return item.has_pending_return
+
+
+@register.filter
+def latest_return(item):
+    """Get the latest return request for an OrderItem."""
+    return item.latest_return
+
+
+@register.filter
+def return_history(item):
+    """Get all return requests for an OrderItem."""
+    return item.return_history
+
+
+@register.filter
+def format_currency(value, currency="USD"):
+    """Format a value as currency with given currency code."""
+    try:
+        return f"{currency} {float(value):.2f}"
+    except (ValueError, TypeError):
+        return f"{currency} 0.00"
+
+
+@register.filter
+def order_item_total(item):
+    """Calculate total price for an OrderItem (quantity * price)."""
+    try:
+        return item.quantity * item.price
+    except (ValueError, TypeError):
+        return 0
+
+
+@register.filter
+def order_total(order):
+    """Calculate total price for an Order (sum of item totals + shipping)."""
+    try:
+        subtotal = sum(item.quantity * item.price for item in order.items.all())
+        shipping = order.shipping_fees or 0
+        return subtotal + shipping
+    except (ValueError, TypeError):
+        return 0
+
+
+@register.filter
+def get_order_status_class(status):
+    """Return CSS classes for order status badge based on status."""
+    status_classes = {
+        'pending': 'bg-yellow-200 text-yellow-800',
+        'processing': 'bg-blue-200 text-blue-800',
+        'shipped': 'bg-purple-200 text-purple-800',
+        'delivered': 'bg-green-200 text-green-800',
+        'cancelled': 'bg-red-200 text-red-800',
+        'completed': 'bg-green-200 text-green-800',
+        'delivering': 'bg-blue-200 text-blue-800',
+        'refunded': 'bg-gray-200 text-gray-800',
+        'failed': 'bg-red-200 text-red-800',
+    }
+    return status_classes.get(status.lower(), 'bg-gray-200 text-gray-800')
+
+
+@register.filter
+def get_return_status_badge(return_obj):
+    """Return CSS classes and icon for return status badge."""
+    status = return_obj.return_status
+    badge_info = {
+        'pending': {'class': 'bg-yellow-200 text-yellow-800', 'icon': 'ki-filled ki-time'},
+        'return_completed': {'class': 'bg-green-200 text-green-800', 'icon': 'ki-filled ki-check'},
+        'replace_completed': {'class': 'bg-blue-200 text-blue-800', 'icon': 'ki-filled ki-arrows-loop'},
+        'cancelled': {'class': 'bg-red-200 text-red-800', 'icon': 'ki-filled ki-cross'},
+    }
+    info = badge_info.get(status, {'class': 'bg-gray-200 text-gray-800', 'icon': 'ki-filled ki-information'})
+    return {'class': info['class'], 'icon': info['icon']}
+
+
+@register.filter
+def get_return_status_class(return_obj):
+    """Return CSS class for return status badge."""
+    status = return_obj.return_status
+    badge_info = {
+        'pending': 'bg-yellow-200 text-yellow-800',
+        'return_completed': 'bg-green-200 text-green-800',
+        'replace_completed': 'bg-blue-200 text-blue-800',
+        'cancelled': 'bg-red-200 text-red-800',
+    }
+    return badge_info.get(status, 'bg-gray-200 text-gray-800')
+
+
+@register.filter
+def get_return_status_icon(return_obj):
+    """Return icon class for return status badge."""
+    status = return_obj.return_status
+    badge_info = {
+        'pending': 'ki-filled ki-time',
+        'return_completed': 'ki-filled ki-check',
+        'replace_completed': 'ki-filled ki-arrows-loop',
+        'cancelled': 'ki-filled ki-cross',
+    }
+    return badge_info.get(status, 'ki-filled ki-information')
+
+
+@register.filter
+def is_returnable(item):
+    """Check if the product associated with OrderItem is returnable."""
+    return item.product.is_returnable
+
+
+@register.filter
+def get_delivery_date(item):
+    """Get the delivery date for an OrderItem, falling back to order's delivered_at."""
+    return item.delivery_date or item.order.delivered_at
