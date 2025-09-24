@@ -92,6 +92,7 @@ RFQ Lists
                                 <th class="text-center min-w-70px">Qty</th>
                                 <th class="text-center min-w-100px">Status</th>
                                 <th class="text-center min-w-100px">Created At</th>
+                                <th class="text-center min-w-100px">Updated At</th>
                                 {% if "dashboard.change_rfqrequest" in user_permissions_list or "dashboard.delete_rfqrequest" in user_permissions_list %}
                                 <th class="text-center min-w-100px">Action</th>
                                 {% endif %}
@@ -109,6 +110,7 @@ RFQ Lists
                                     <div class="badge badge-light-primary" data-status="{{ rfq.status }}">{{ rfq.status|title }}</div>
                                 </td>
                                 <td class="text-center">{{ rfq.created_at|date:"Y-m-d H:i" }}</td>
+                                <td class="text-center">{{ rfq.updated_at|date:"Y-m-d H:i" }}</td>
 
                                 {% if "dashboard.change_rfqrequest" in user_permissions_list or "dashboard.delete_rfqrequest" in user_permissions_list %}
                                 <td class="text-center">

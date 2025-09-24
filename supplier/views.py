@@ -12,6 +12,7 @@ from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import logout
 from django.views.generic import *
+from superuser.mixins import SuperuserRequiredMixin
 from supplier.forms import *
 from supplier.models import *
 from dashboard.mixins import SupplierPermissionMixin
@@ -27,7 +28,7 @@ from datetime import timezone, datetime
 from django.db import IntegrityError, transaction
 from django.utils.dateparse import parse_date, parse_datetime
 from django.utils.timezone import localtime
-from django.db.models.functions import Coalesce,TruncDay
+from django.db.models.functions import Coalesce, TruncDay, Concat
 from django.db.models import Sum, F, DecimalField, Prefetch
 from django.utils import timezone
 from datetime import timedelta
@@ -196,6 +197,7 @@ class HomeView(LoginRequiredMixin, SupplierPermissionMixin,OnboardingRequiredMix
         logger.info(f"Supplier {supplier.id} accessed dashboard: {total_orders} orders, {this_month_sales} sales")
         return render(request, 'supplier/home.html', context)
 
+
 class ProductsView(LoginRequiredMixin,OnboardingRequiredMixin, View):
     template_name = 'supplier/products.html'
     paginate_by = 15  
@@ -271,6 +273,7 @@ class ProductsView(LoginRequiredMixin,OnboardingRequiredMixin, View):
             'page_obj': page_obj,     
             'category': categories
         })
+
 
 class AddproductsView(LoginRequiredMixin, SupplierPermissionMixin,OnboardingRequiredMixin, View):
     template = 'supplier/add-product.html'
@@ -828,7 +831,8 @@ class EditproductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
             'subcategories': subcategories,
             'lastcategories': lastcategories,
         })
-    
+
+
 class DeleteProductImageView(LoginRequiredMixin, SupplierPermissionMixin, View):
     def post(self, request, pk):
         image = get_object_or_404(ProductImage, pk=pk)
@@ -946,8 +950,6 @@ class AdminloginView(SupplierPermissionMixin, View):
         return render(request, 'supplier/sign-in.html')
 
 
-
-
 @method_decorator(login_required, name='dispatch')
 class UserListView(SupplierPermissionMixin,OnboardingRequiredMixin, ListView):
     model = User
@@ -999,7 +1001,6 @@ class UserListView(SupplierPermissionMixin,OnboardingRequiredMixin, ListView):
         context['search_query'] = self.request.GET.get('search', '')
 
         return context
-
 
 
 @method_decorator(login_required, name='dispatch')
@@ -1213,7 +1214,6 @@ class UserDeleteView(SupplierPermissionMixin, View):
             return JsonResponse({'success': False, 'error': str(e)}, status=400)
 
 
-
 class OrderListingView(SupplierPermissionMixin, OnboardingRequiredMixin,View):
     def get(self, request):
         status_filter = request.GET.get('status')
@@ -1329,7 +1329,6 @@ class OrderDetailsView(SupplierPermissionMixin, View):
         }
         logger.info(f"Supplier {supplier.id} viewed details for order {order.order_id}")
         return render(request, 'supplier/order-details.html', context)
-
 
 
 class OrderDeleteView(SupplierPermissionMixin, View):
@@ -1568,6 +1567,7 @@ class DeleteCartItemView(LoginRequiredMixin, SupplierPermissionMixin, View):
         except CartProduct.DoesNotExist:
             return JsonResponse({"success": False, "message": "Item not found"}, status=404)
 
+
 class MarkNotificationReadView(SupplierPermissionMixin, View):
     def post(self, request, pk):
         try:
@@ -1599,6 +1599,7 @@ class MarkNotificationReadView(SupplierPermissionMixin, View):
             "created_at": localtime(notif.created_at).strftime('%d %b %Y, %I:%M %p')
         })
 
+
 class DeleteNotificationView(LoginRequiredMixin, View):
     def post(self, request, id):
         # Retrieve the notification, ensuring it belongs to the current user
@@ -1606,30 +1607,28 @@ class DeleteNotificationView(LoginRequiredMixin, View):
         # Delete the notification
         notification.delete()
         return JsonResponse({'status': 'success'})
-    
+
+
 class LogoutView(SupplierPermissionMixin, View):
     def get(self, request):
         logout(request)
         return redirect('supplier:admin_login') 
 
-
-class RFQListView(LoginRequiredMixin, SupplierPermissionMixin, OnboardingRequiredMixin,ListView):
-    template_name = 'supplier/rfq_list.html'
-    context_object_name = 'rfqs'
-
-    def get_queryset(self):
-        user = self.request.user
-        if user.is_superuser:
-            return RFQRequest.objects.all()
-        elif hasattr(user, 'supplierprofile'):
-            return RFQRequest.objects.filter(product__created_by=user)
-        return RFQRequest.objects.none()
-
-
+#
+# class RFQListView(LoginRequiredMixin, SupplierPermissionMixin, OnboardingRequiredMixin,ListView):
+#     template_name = 'supplier/rfq_list.html'
+#     context_object_name = 'rfqs'
+#
+#     def get_queryset(self):
+#         user = self.request.user
+#         if user.is_superuser:
+#             return RFQRequest.objects.all()
+#         elif hasattr(user, 'supplierprofile'):
+#             return RFQRequest.objects.filter(product__created_by=user)
+#         return RFQRequest.objects.none()
 
 
-
-class RFQListView(LoginRequiredMixin, SupplierPermissionMixin,OnboardingRequiredMixin, ListView):
+class RFQListView(LoginRequiredMixin, SupplierPermissionMixin, OnboardingRequiredMixin, ListView):
     template_name = 'supplier/rfq_list.html'
     context_object_name = 'rfqs'
     paginate_by = 15
@@ -1691,13 +1690,11 @@ class RFQListView(LoginRequiredMixin, SupplierPermissionMixin,OnboardingRequired
         return context
 
 
-
-
-class SupplierQuotationUpdateView(LoginRequiredMixin, SupplierPermissionMixin, UpdateView):
+class SupplierQuotationUpdateView(LoginRequiredMixin, SupplierPermissionMixin, SuperuserRequiredMixin, UpdateView):
     model = RFQRequest
     form_class = SupplierRFQQuotationForm
     template_name = 'supplier/rfq_quotation_form.html'
-    success_url = '/rfq/'
+    success_url = reverse_lazy('supplier:rfq_list')  # Adjusted to use reverse_lazy
 
     def form_valid(self, form):
         rfq_instance = form.save(commit=False)
@@ -1705,7 +1702,7 @@ class SupplierQuotationUpdateView(LoginRequiredMixin, SupplierPermissionMixin, U
         quoted_price = form.cleaned_data.get('quoted_price')
         quote_delivery_date = form.cleaned_data.get('quote_delivery_date')
 
-        # ✅ Validate future delivery date
+        # Validate future delivery date
         if quote_delivery_date and quote_delivery_date < timezone.now().date():
             form.add_error(
                 'quote_delivery_date',
@@ -1713,21 +1710,21 @@ class SupplierQuotationUpdateView(LoginRequiredMixin, SupplierPermissionMixin, U
             )
             return self.form_invalid(form)
 
-        # ✅ Validate quoted price
-        if quoted_price > actual_price:
+        # Validate quoted price
+        if quoted_price and quoted_price > actual_price:
             form.add_error(
                 'quoted_price',
                 'Quoted price cannot be greater than actual price'
             )
             return self.form_invalid(form)
 
-        # ✅ Set additional fields
+        # Set additional fields
         rfq_instance.quoted_by = self.request.user
         rfq_instance.quote_sent_at = timezone.now()
         rfq_instance.status = 'quoted'
         rfq_instance.save()
 
-        # ✅ Send quotation email
+        # Send quotation email
         self.send_quotation_email(rfq_instance)
 
         messages.success(
@@ -1760,8 +1757,7 @@ class SupplierQuotationUpdateView(LoginRequiredMixin, SupplierPermissionMixin, U
         email.send(fail_silently=False)
 
     def test_func(self):
-        return self.request.user.is_staff or self.request.user.is_superuser
-
+        return hasattr(self.request.user, 'is_supplier') and self.request.user.is_supplier
 
 
 # from django.core.paginator import Paginator
@@ -1810,7 +1806,6 @@ class SupplierQuotationUpdateView(LoginRequiredMixin, SupplierPermissionMixin, U
 #         return context
 
 
-
 # class BannerCreateView(LoginRequiredMixin, SupplierPermissionMixin, View):
 #     def get(self, request):
 #         form = BannerForm()
@@ -1837,9 +1832,6 @@ class SupplierQuotationUpdateView(LoginRequiredMixin, SupplierPermissionMixin, U
 #             form.save()
 #             return redirect('supplier:banner_list')
 #         return render(request, 'supplier/view_product.html', {'form': form, 'object': banner})
-
-
-
 
 
 class TransactionView(OnboardingRequiredMixin,TemplateView):
@@ -1898,7 +1890,7 @@ class TransactionView(OnboardingRequiredMixin,TemplateView):
         # Default sorting
         payments = payments.order_by('-created_at')
 
-        # ----------------- ✅ Pagination -----------------
+        # ----------------- Pagination -----------------
         paginator = Paginator(payments, self.paginate_by)
         page_number = self.request.GET.get('page')
         page_obj = paginator.get_page(page_number)
@@ -1912,7 +1904,6 @@ class TransactionView(OnboardingRequiredMixin,TemplateView):
         context['payment_method_choices'] = Payment._meta.get_field('payment_method').choices
 
         return context
-
 
 
 class MostViewedProductsView(OnboardingRequiredMixin,View):
@@ -1997,6 +1988,7 @@ class MostViewedProductsView(OnboardingRequiredMixin,View):
 
         return render(request, "supplier/view_product.html", context)
 
+
 class QuestionView(OnboardingRequiredMixin,TemplateView):
     template_name = 'supplier/question.html'
 
@@ -2030,8 +2022,6 @@ class QuestionView(OnboardingRequiredMixin,TemplateView):
             messages.success(request, "Question deleted successfully.")
 
         return redirect('supplier:question_list')
-
-
 
 
 class RatingView(OnboardingRequiredMixin,TemplateView):
@@ -2129,7 +2119,12 @@ class RatingView(OnboardingRequiredMixin,TemplateView):
 
         return context
 
+<<<<<<< HEAD
 class SupplierReturnsView(LoginRequiredMixin, OnboardingRequiredMixin, TemplateView):
+=======
+
+class SupplierReturnsView(LoginRequiredMixin, OnboardingRequiredMixin,TemplateView):
+>>>>>>> b74382485173ba7e357fa378f25ebd2d664f955e
     template_name = 'supplier/returns.html'
     login_url = 'dashboard:login'
     paginate_by = 14  
@@ -2330,6 +2325,7 @@ class BusinessInformationView(FormView):
         context["profile"] = SupplierProfile.objects.get(user=self.request.user)
         return context
 
+
 class BankDetailsView(TemplateView):
     template_name = "supplier/user_information.html"
 
@@ -2338,6 +2334,8 @@ class BankDetailsView(TemplateView):
         context["step"] = 3
         context["progress"] = 38  
         return context
+
+
 class BankDetailsView(TemplateView):
     template_name = "supplier/user_information.html"
 
@@ -2358,6 +2356,7 @@ class BankDetailsView(TemplateView):
         context = self.get_context_data()
         context["form"] = form
         return self.render_to_response(context) 
+
 
 class SellingCategoriesView(TemplateView):
     template_name = "supplier/user_information.html"
@@ -2382,6 +2381,7 @@ class SellingCategoriesView(TemplateView):
             "step": 4,
             "progress": 65,
         })
+
 
 class SupplierDescriptionView(TemplateView):
     template_name = "supplier/user_information.html"

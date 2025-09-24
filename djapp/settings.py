@@ -25,7 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-n=d%3icc27wzo=lnx^lc8su7z6n12hqok7eke2_4d_eda8&fxh'
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -57,12 +57,13 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'ckeditor',
     'ckeditor_uploader',
-    'corsheaders'
+    'corsheaders',
 ]
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -70,7 +71,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
 ]
 
@@ -184,7 +184,7 @@ RAZORPAY_KEY_ID = os.getenv('RAZORPAY_KEY_ID')
 RAZORPAY_KEY_SECRET = os.getenv('RAZORPAY_KEY_SECRET')
 
 #Stripe
-STRIPE_PUBLISHABLE_KEY  =  os.environ.get('STRIPE_PUBLISHABLE_KEY_TEST')
+STRIPE_PUBLISHABLE_KEY = os.environ.get('STRIPE_PUBLISHABLE_KEY_TEST')
 STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY_TEST')
 STRIPE_TEST_PUBLIC_KEY = os.environ.get('STRIPE_PUBLISHABLE_KEY_TEST')
 STRIPE_TEST_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY_TEST')
@@ -376,8 +376,7 @@ CKEDITOR_CONFIGS = {
 
 }
 
-# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend' 
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True

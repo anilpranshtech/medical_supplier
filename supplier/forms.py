@@ -3,6 +3,7 @@ from dashboard.models import RFQRequest,SupplierProfile,ProductCategory,SUPPLIER
 from .models import *
 import re
 
+
 class SupplierRFQQuotationForm(forms.ModelForm):
     class Meta:
         model = RFQRequest
@@ -13,15 +14,19 @@ class SupplierRFQQuotationForm(forms.ModelForm):
             'quote_attached_file',
         ]
         widgets = {
-            'quote_delivery_date': forms.DateInput(attrs={'type': 'date'}),
-            'supplier_notes': forms.Textarea(attrs={'rows': 3}),
+            'quote_delivery_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control form-control-lg form-control-solid'}),
+            'supplier_notes': forms.Textarea(attrs={'rows': 3, 'class': 'form-control form-control-lg form-control-solid'}),
+            'quote_attached_file': forms.ClearableFileInput(attrs={'class': 'form-control form-control-lg form-control-solid'}),
+            'quoted_price': forms.NumberInput(attrs={'class': 'form-control form-control-lg form-control-solid', 'step': '0.01'}),
         }
         labels = {
             'quoted_price': 'Quoted Price',
             'quote_delivery_date': 'Expected Delivery Date',
             'supplier_notes': 'Additional Notes',
-            'quote_attached_file': 'Attach Quotation File', 
+            'quote_attached_file': 'Attach Quotation File',
         }
+
+
 class BannerForm(forms.ModelForm):
     class Meta:
         model = Banner

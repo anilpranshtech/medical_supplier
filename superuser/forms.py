@@ -22,6 +22,7 @@ class BannerForm(forms.ModelForm):
             raise forms.ValidationError(f"A banner with order {order} already exists. Please choose a different order.")
         return order
 
+
 class SuperuserRFQQuotationForm(forms.ModelForm):
     class Meta:
         model = RFQRequest
@@ -32,14 +33,16 @@ class SuperuserRFQQuotationForm(forms.ModelForm):
             'quote_attached_file',
         ]
         widgets = {
-            'quote_delivery_date': forms.DateInput(attrs={'type': 'date'}),
-            'supplier_notes': forms.Textarea(attrs={'rows': 3}),
+            'quote_delivery_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control form-control-lg form-control-solid'}),
+            'supplier_notes': forms.Textarea(attrs={'rows': 3, 'class': 'form-control form-control-lg form-control-solid'}),
+            'quote_attached_file': forms.ClearableFileInput(attrs={'class': 'form-control form-control-lg form-control-solid'}),
+            'quoted_price': forms.NumberInput(attrs={'class': 'form-control form-control-lg form-control-solid', 'step': '0.01'}),
         }
         labels = {
             'quoted_price': 'Quoted Price',
             'quote_delivery_date': 'Expected Delivery Date',
-            'supplier_notes': 'Additional Notes',
-            'quote_attached_file': 'Attach Quotation File',
+            'supplier_notes': 'Notes',
+            'quote_attached_file': 'Attachment (Optional)',
         }
 
     def clean_quote_delivery_date(self):
