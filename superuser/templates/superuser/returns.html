@@ -44,6 +44,44 @@
             padding-top: 0.5rem;
             padding-bottom: 0.5rem;
         }
+        /* New styles for the view modal */
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .details-table th {
+            text-align: left;
+            padding: 8px 12px;
+            font-weight: 600;
+            width: 30%;
+            vertical-align: top;
+        }
+        .details-table td {
+            padding: 8px 12px;
+            vertical-align: top;
+        }
+        .section-title {
+            font-weight: bold;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .request-items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 0.5rem;
+        }
+        .request-items-table th,
+        .request-items-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .request-items-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
     </style>
 {% endblock extra_css_start %}
 
@@ -166,6 +204,13 @@
                         </a>
                       </div>
                       {% endif %}
+                      <!-- VIEW -->
+                      <div class="menu-item px-3">
+                        <a href="#" class="menu-link px-3"
+                           data-bs-toggle="modal" data-bs-target="#viewReturnModal{{ return.id }}">
+                          View 
+                        </a>
+                      </div>
                       <!-- Delete Action -->
                       <div class="menu-item px-3">
                         <a href="#" class="menu-link px-3"
@@ -201,6 +246,127 @@
                               <button type="submit" class="btn btn-primary">Update</button>
                             </div>
                           </form>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- View Return Details Modal -->
+                    <div class="modal fade" id="viewReturnModal{{ return.id }}" tabindex="-1" aria-labelledby="viewReturnModalLabel{{ return.id }}" aria-hidden="true">
+                      <div class="modal-dialog modal-dialog-centered modal-lg">
+                        <div class="modal-content">
+                          <div class="modal-header">
+                            <h5 class="modal-title" id="viewReturnModalLabel{{ return.id }}">Return Request #{{ return.return_serial }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                          </div>
+                          <div class="modal-body text-start">
+                            <!-- Back Section -->
+                            <div class="section-title">Back</div>
+                            <div class="section-subtitle">Return Reason</div>
+                            <table class="details-table">
+                              <tr>
+                                <th>Type</th>
+                                <td>{{ return.get_return_option_display }}</td>
+                              </tr>
+                              <tr>
+                                <th>Request Status</th>
+                                <td>
+                                  {% if return.return_status == "approved" %}
+                                    <span class="badge badge-light-success">Refund Completed</span>
+                                  {% elif return.return_status == "pending" %}
+                                    <span class="badge badge-light-warning">Pending</span>
+                                  {% else %}
+                                    <span class="badge badge-light-danger">Rejected</span>
+                                  {% endif %}
+                                </td>
+                              </tr>
+                              <tr>
+                                <th>Request Date</th>
+                                <td>{{ return.request_date|date:"M d, Y, g:i:s A" }}</td>
+                              </tr>
+                              <tr>
+                                <th>Last Update</th>
+                                <td>{{ return.updated_date|date:"M d, Y, g:i:s A" }}</td>
+                              </tr>
+                              <tr>
+                                <th>Reshipping Fee</th>
+                                <td>0.00 USD</td>
+                              </tr>
+                              <tr>
+                                <th>Refund Option</th>
+                                <td>{{ return.refund_option|default:"Wallet" }}</td>
+                              </tr>
+                            </table>
+                            
+                            <hr class="my-4">
+                            
+                            <!-- Account Section -->
+                            <div class="section-title">Account</div>
+                            <table class="details-table">
+                              <tr>
+                                <th>Customer Name</th>
+                                <td>{{ return.client.username }}</td>
+                              </tr>
+                              <tr>
+                                <th>Phone</th>
+                                <td>{{ return.client.phone|default:"N/A" }}</td>
+                              </tr>
+                              <tr>
+                                <th>Email</th>
+                                <td>{{ return.client.email|default:"N/A" }}</td>
+                              </tr>
+                              <tr>
+                                <th>Company</th>
+                                <td>{{ return.client.company|default:"N/A" }}</td>
+                              </tr>
+                            </table>
+                            
+                            <hr class="my-4">
+                            
+                            <!-- Order Section -->
+                            <div class="section-title">Order</div>
+                            <table class="details-table">
+                              <tr>
+                                <th>Date</th>
+                                <td>{{ return.order_item.order.order_date|date:"M d, Y, g:i:s A" }}</td>
+                              </tr>
+                              <tr>
+                                <th>Payment Type</th>
+                                <td>{{ return.order_item.order.payment.payment_type|default:"Cash On Delivery" }}</td>
+                              </tr>
+                              <tr>
+                                <th>Shipping Type</th>
+                                <td>Shipping</td>
+                              </tr>
+                            </table>
+                            
+                            <hr class="my-4">
+                            
+                            <!-- Request Items Section -->
+                            <div class="section-title">REQUEST ITEM</div>
+                            <table class="request-items-table">
+                              <thead>
+                                <tr>
+                                  <th>Product</th>
+                                  <th>Price</th>
+                                  <th>Quantity</th>
+                                  <th>Buyer Total</th>
+                                  <th>Supplier Total</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <tr>
+                                  <td>{{ return.order_item.product.name }}</td>
+                                  <td>{{ return.order_item.payment_currency|default:"USD" }} {{ return.price|floatformat:2 }}</td>
+                                  <td>{{ return.order_item.quantity }}</td>
+                                  <td>{{ return.order_item.payment_currency|default:"USD" }} {{ return.price|floatformat:2 }}</td>
+                                  <td>{{ return.order_item.payment_currency|default:"USD" }} {{ return.price|floatformat:2 }}</td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
+                          <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                          </div>
                         </div>
                       </div>
                     </div>

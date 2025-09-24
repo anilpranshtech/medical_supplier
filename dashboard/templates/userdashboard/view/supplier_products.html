@@ -1,0 +1,585 @@
+{% extends "pages/base.html" %}
+{% load static %}
+{% load custom_filters %}
+
+{% block content %}
+<style>
+    .grid-cols-custom {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1.5rem;
+    }
+
+    @media (min-width: 1536px) {
+        .grid-cols-custom {
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 1024px) {
+        .grid-cols-custom {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 768px) {
+        .grid-cols-custom {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 480px) {
+        .grid-cols-custom {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .product-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+
+    .section-container .product-card img {
+        filter: grayscale(100%);
+        transition: filter 0.3s ease;
+    }
+
+    .section-container .product-card:hover img {
+        filter: grayscale(0%);
+    }
+
+    .discount-ribbon {
+        position: absolute;
+        top: 10px;
+        left: -25px;
+        transform: rotate(-45deg);
+        background-color: #dc2626;
+        color: white;
+        padding: 5px 30px;
+        font-size: 12px;
+        font-weight: bold;
+        text-transform: uppercase;
+        z-index: 1;
+        clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 10% 50%);
+    }
+
+    .discount-ribbon:after {
+        content: '';
+        position: absolute;
+        right: -20px;
+        bottom: 0;
+        width: 0;
+        height: 0;
+        border-left: 20px solid #dc2626;
+        border-top: 10px solid transparent;
+        border-bottom: 10px solid transparent;
+    }
+
+    .kt-wishlist-icon {
+        cursor: pointer;
+        transition: color 0.2s ease-in-out;
+    }
+
+    .kt-wishlist-icon:hover i {
+        color: #ff0000;
+    }
+
+    .kt-wishlist-icon i {
+        color: #6b7280;
+    }
+
+    .kt-wishlist-icon i.text-red-500 {
+        color: #ff0000;
+    }
+
+    .cart-button-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .add-to-cart-btn,
+    .show-login-modal {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        padding: 6px 12px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #1f2937;
+        background-color: #f3f4f6;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+    }
+
+    .add-to-cart-btn:hover,
+    .show-login-modal:hover {
+        background-color: #e5e7eb;
+        border-color: #9ca3af;
+    }
+
+    .cart-quantity-controls {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .cart-quantity-controls button {
+        width: 28px;
+        height: 28px;
+        background-color: #f3f4f6;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: bold;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease-in-out;
+    }
+
+    .cart-quantity-controls button:hover {
+        background-color: #e5e7eb;
+        border-color: #9ca3af;
+    }
+
+    .cart-quantity-controls .quantity {
+        min-width: 20px;
+        text-align: center;
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+
+    @media (max-width: 640px) {
+        .add-to-cart-btn,
+        .show-login-modal {
+            padding: 4px 10px;
+            font-size: 0.75rem;
+        }
+        .cart-quantity-controls button {
+            width: 24px;
+            height: 24px;
+            font-size: 0.75rem;
+        }
+        .cart-quantity-controls .quantity {
+            font-size: 0.75rem;
+            min-width: 18px;
+        }
+    }
+</style>
+<br>
+<div class="container mx-auto p-6 section-container">
+    {% if supplier %}
+        <h2 class="text-xl font-bold mb-4">Products by {{ supplier.company_name }}</h2>
+    {% else %}
+        <h2 class="text-xl font-bold mb-4">Supplier Not Found</h2>
+    {% endif %}
+<br>
+    <div id="products-grid" class="grid grid-cols-custom mb-4">
+        {% for product in products %}
+        <div class="kt-card product-card">
+            <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4 h-full">
+                <div class="mb-2.5">
+                    <div class="kt-card flex items-center justify-center relative bg-accent/50 w-full h-[180px] sm:h-[250px] mb-4 shadow-none">
+                        <a href="{% url 'dashboard:product_detail' product.id %}" class="block">
+                            <img alt="{{ product.name|default:'Unnamed Product' }}"
+                                 class="h-[150px] sm:h-[180px] shrink-0 cursor-pointer product-thumbnail"
+                                 src="{% if product.get_main_image %}{{ product.get_main_image }}{% else %}{% static 'default.png' %}{% endif %}"
+                                 data-product-name="{{ product.name|default:'Unnamed Product' }}"
+                                 data-product-description="{{ product.description|default:'No description available' }}"
+                                 data-product-image="{% if product.get_main_image %}{{ product.get_main_image }}{% else %}{% static 'default.png' %}{% endif %}"
+                                 data-product-sku="{{ product.supplier_sku|default:'N/A' }}"
+                                 data-product-category="{{ product.category.name|default:'Uncategorized' }}"
+                                 data-product-rating="{{ product.rating|default:'0.0' }}"
+                                 data-product-more-info="{{ product.description|default:'No additional info' }}"
+                                 data-product-price="{{ product.discounted_price|floatformat:2 }}"
+                                 data-product-original-price="{% if product.offer_active and product.offer_percentage %}{{ product.price|floatformat:2 }}{% endif %}"
+                                 data-product-discount="{% if product.offer_active and product.offer_percentage %}save {{ product.offer_percentage|floatformat:0 }}%{% endif %}"/>
+                        </a>
+                        {% if product.offer_active and product.offer_percentage %}
+                        <div class="discount-ribbon">save {{ product.offer_percentage|floatformat:0 }}%</div>
+                        {% endif %}
+                        {% if request.user.is_authenticated %}
+                        <span class="kt-wishlist-icon absolute top-2 end-2 cursor-pointer"
+                              data-kt-wishlist-toggle="true"
+                              data-product-id="{{ product.id }}"
+                              title="{% if product.id in user_wishlist_ids %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}">
+                            <i class="ki-solid ki-heart {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
+                        </span>
+                        {% else %}
+                        <span class="kt-wishlist-icon absolute top-2 end-2 cursor-pointer show-login-modal"
+                              title="Login to Add to Wishlist">
+                            <i class="ki-solid ki-heart"></i>
+                        </span>
+                        {% endif %}
+                    </div>
+                    <h3 class="text-md sm:text-lg font-bold text-gray-650 leading-snug truncate hover:text-primary transition">
+                        {{ product.name }}
+                    </h3>
+                    <p class="text-xs sm:text-sm text-gray-650 mt-1 truncate">
+                        {{ product.description|default:"No description available"|truncatechars:120 }}
+                    </p>
+                    {% if product.delivery_time %}
+                    <p class="text-xs text-green-600 mt-1">
+                        Delivery by: <strong>{{ product.delivery_time }} days</strong>
+                    </p>
+                    {% endif %}
+                </div>
+                <div class="flex items-center flex-wrap justify-between gap-3 px-2.5 pb-1">
+                    <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1">
+                        <i class="ki-solid ki-star text-white -mt-0.5"></i>
+                        {{ product.rating|default:"0.0" }}
+                    </span>
+                    {% if product.total_reviews > 0 %}
+                    <span>
+                        <span class="text-[11px] text-white/80 ml-1">
+                            (<i class="ki-solid ki-eye text-gray-600 -mt-0.5"></i> {{ product.total_reviews }})</span>
+                    </span>
+                    {% endif %}
+                    <div class="flex items-center flex-wrap gap-1.5">
+                        {% if product.offer_active and product.offer_percentage %}
+                        <span class="text-xs font-normal text-secondary-foreground line-through pt-[1px]">
+                            ${{ product.price|floatformat:2 }}
+                        </span>
+                        <span class="text-sm font-medium text-mono">${{ product.discounted_price|floatformat:2 }}</span>
+                        {% else %}
+                        <span class="text-sm font-medium text-mono">${{ product.price|floatformat:2 }}</span>
+                        {% endif %}
+                        <div class="cart-button-container" data-product-id="{{ product.id }}">
+                            {% if request.user.is_authenticated %}
+                                {% if product.id in user_cart_ids %}
+                                <div class="cart-quantity-controls flex items-center gap-2">
+                                    <button class="decrease-btn px-2 py-1 bg-gray-200 rounded text-sm">-</button>
+                                    <span class="quantity font-semibold">{{ user_cart_quantities|get_item:product.id }}</span>
+                                    <button class="increase-btn px-2 py-1 bg-gray-200 rounded text-sm">+</button>
+                                </div>
+                                {% else %}
+                                <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 add-to-cart-btn">
+                                    Add <i class="ki-filled ki-handcart text-xs"></i>
+                                </button>
+                                {% endif %}
+                            {% else %}
+                            <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 show-login-modal">
+                                Add <i class="ki-filled ki-handcart text-xs"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                        {% if request.user.is_authenticated %}
+                            {% if product.show_rfq or product.Both %}
+                            <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 open-rfq-modal"
+                                    data-product-id="{{ product.id }}"
+                                    data-product-name="{{ product.name }}"
+                                    data-product-price="{{ product.discounted_price|floatformat:2 }}"
+                                    data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
+                                    data-quantity="1">
+                                RFQ <i class="ki-filled ki-directbox-default"></i>
+                            </button>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-span-full text-center py-10 text-gray-400">
+            No products found for this supplier.
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Include modals from homepage -->
+<!-- RFQ Modal -->
+<div id="rfqModal"
+     class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+     data-kt-modal="true" role="dialog" aria-labelledby="rfqModalTitle" aria-modal="true">
+    <div class="kt-card w-full max-w-[600px] rounded-xl border border-border bg-background shadow-2xl transition-transform duration-300 ease-in-out transform scale-95">
+        <div class="kt-card-header px-5 py-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
+            <h2 id="rfqModalTitle" class="text-xl font-bold text-mono">Request for Quotation</h2>
+            <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" onclick="closeRFQModal()"
+                    aria-label="Close modal">
+                <i class="ki-filled ki-cross text-base text-gray-500 hover:text-red-500"></i>
+            </button>
+        </div>
+        <form method="POST" action="{% url 'dashboard:rfq_submit' %}" id="rfqForm">
+            {% csrf_token %}
+            <div class="kt-card-content flex flex-col space-y-4 p-5">
+                <input type="hidden" name="product_id" id="rfqProductId">
+                <div>
+                    <label for="rfqProductName"
+                           class="block text-sm font-medium text-gray-650 dark:text-gray-300 mb-1">Product</label>
+                    <input type="text" id="rfqProductName"
+                           class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 bg-gray-100 dark:bg-gray-800 text-gray-650 dark:text-gray-300 cursor-not-allowed"
+                           disabled>
+                </div>
+                <div>
+                    <label for="rfqCompanyName"
+                           class="block text-sm font-medium text-gray-650 dark:text-gray-300 mb-1">Company Name
+                        <span class="text-red-500">*</span></label>
+                    <input type="text" name="company_name" id="rfqCompanyName"
+                           class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                           required aria-required="true">
+                    <p class="text-xs text-red-500 mt-1 hidden" id="rfqCompanyNameError">Company name is required.</p>
+                </div>
+                <div>
+                    <label for="rfqQuantity"
+                           class="block text-sm font-medium text-gray-650 dark:text-gray-300 mb-1">Quantity
+                        <span class="text-red-500">*</span></label>
+                    <input type="number" name="quantity" id="rfqQuantity"
+                           class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                           min="1" required aria-required="true">
+                    <p class="text-xs text-red-500 mt-1 hidden" id="rfqQuantityError">Quantity must be at least 1.</p>
+                </div>
+                <div>
+                    <label for="rfqMessage"
+                           class="block text-sm font-medium text-gray-650 dark:text-gray-300 mb-1">Message</label>
+                    <textarea name="message" id="rfqMessage"
+                              class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                              rows="4" placeholder="Add any additional details..."></textarea>
+                </div>
+            </div>
+            <div class="kt-card-footer px-5 py-4 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700">
+                <button type="button"
+                        class="kt-btn kt-btn-outline kt-btn-sm text-gray-650 hover:bg-gray-900 dark:hover:bg-gray-700"
+                        onclick="closeRFQModal()"><i class="ki-filled ki-cross"></i>Cancel
+                </button>
+                <button type="submit" class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center" id="rfqSubmitBtn">
+                    <i class="ki-filled ki-directbox-default"></i>
+                    Submit RFQ
+                    <span class="loader"></span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Login Required Modal -->
+<div id="loginRequiredModal"
+     class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
+     data-kt-modal="true" role="dialog" aria-labelledby="loginRequiredTitle" aria-modal="true">
+    <div class="kt-card w-full max-w-[500px] rounded-xl border border-border bg-background shadow-2xl transition-transform duration-300 ease-in-out transform scale-95">
+        <div class="kt-card-header px-5 py-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
+            <h2 id="loginRequiredTitle" class="text-xl font-bold text-gray-100">Login Required</h2>
+            <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" onclick="closeLoginModal()" aria-label="Close modal">
+                <i class="ki-filled ki-cross text-base text-gray-500 hover:text-red-500"></i>
+            </button>
+        </div>
+        <div class="kt-card-content p-5 text-center space-y-4">
+            <p class="text-gray-650 dark:text-gray-300 text-sm">
+                You must be logged in to perform this action.
+            </p>
+        </div>
+        <div class="kt-card-footer px-5 py-4 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700">
+            <button type="button" class="kt-btn kt-btn-outline kt-btn-sm text-gray-650 hover:bg-gray-900 dark:hover:bg-gray-700" onclick="closeLoginModal()">Cancel</button>
+            <a href="{% url 'dashboard:login' %}" class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center">
+                Login
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+    // CSRF Token Helper (from homepage)
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    const csrftoken = getCookie('csrftoken');
+
+    // Wishlist Toggle (from homepage)
+    document.addEventListener('DOMContentLoaded', () => {
+        const toggleWishlistIcons = (productId, isAdded) => {
+            document.querySelectorAll(`.kt-wishlist-icon[data-product-id="${productId}"] i`)
+                .forEach(icon => {
+                    icon.classList.toggle('text-red-500', isAdded);
+                });
+        };
+
+        document.querySelectorAll('.kt-wishlist-icon').forEach(button => {
+            button.addEventListener('click', () => {
+                const productId = button.dataset.productId || '0';
+                fetch('/wishlist/toggle/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrftoken,
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `product_id=${productId}`
+                })
+                .then(response => {
+                    if (response.status === 403) {
+                        openLoginModal();
+                        return;
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data) {
+                        toggleWishlistIcons(productId, data.status === 'added');
+                    }
+                })
+                .catch(error => console.error('Wishlist toggle error:', error));
+            });
+        });
+    });
+
+    // Add to Cart with Event Delegation (from homepage)
+    document.addEventListener("DOMContentLoaded", () => {
+        // Update UI for a specific product
+        const updateProductUI = (productId, quantity) => {
+            const containers = document.querySelectorAll(`.cart-button-container[data-product-id="${productId}"]`);
+            containers.forEach(container => {
+                if (!container) return;
+
+                if (quantity > 0) {
+                    container.innerHTML = `
+                        <div class="cart-quantity-controls flex items-center gap-2">
+                            <button class="decrease-btn px-2 py-1 bg-gray-200 rounded text-sm">-</button>
+                            <span class="quantity font-semibold">${quantity}</span>
+                            <button class="increase-btn px-2 py-1 bg-gray-200 rounded text-sm">+</button>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = `
+                        <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 add-to-cart-btn">
+                            Add <i class="ki-filled ki-handcart text-xs"></i>
+                        </button>
+                    `;
+                }
+            });
+        };
+
+        // Event delegation for cart buttons
+        document.addEventListener('click', (e) => {
+            // Handle Add to Cart button
+            if (e.target.closest('.add-to-cart-btn')) {
+                e.preventDefault();
+                const container = e.target.closest('.cart-button-container');
+                const productId = container.dataset.productId;
+                updateCart(productId, 1);
+            }
+            
+            // Handle Increase button
+            else if (e.target.closest('.increase-btn')) {
+                e.preventDefault();
+                const container = e.target.closest('.cart-button-container');
+                const productId = container.dataset.productId;
+                const quantityEl = container.querySelector('.quantity');
+                const qty = parseInt(quantityEl.innerText);
+                updateCart(productId, qty + 1);
+            }
+            
+            // Handle Decrease button
+            else if (e.target.closest('.decrease-btn')) {
+                e.preventDefault();
+                const container = e.target.closest('.cart-button-container');
+                const productId = container.dataset.productId;
+                const quantityEl = container.querySelector('.quantity');
+                const qty = parseInt(quantityEl.innerText);
+                updateCart(productId, qty - 1);
+            }
+            
+            // Handle Login modal buttons
+            else if (e.target.closest('.show-login-modal')) {
+                e.preventDefault();
+                openLoginModal();
+            }
+        });
+
+        // Update cart via AJAX
+        const updateCart = (productId, quantity) => {
+            fetch("{% url 'dashboard:update_cart_item' %}", {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": csrftoken,
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+                body: new URLSearchParams({
+                    product_id: productId,
+                    quantity: quantity,
+                }),
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "success") {
+                    updateProductUI(productId, data.quantity);
+                } else if (data.status === "removed") {
+                    updateProductUI(productId, 0);
+                } else if (data.status === "error" && data.message === "Authentication required") {
+                    openLoginModal();
+                } else {
+                    console.error('Cart update failed:', data.message);
+                }
+            })
+            .catch(err => console.error("Cart update error:", err));
+        };
+    });
+
+    // RFQ Modal Handlers
+    function closeRFQModal() {
+        const modal = document.getElementById('rfqModal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        document.body.style.overflow = '';
+    }
+
+    document.querySelectorAll('.open-rfq-modal').forEach(button => {
+        button.addEventListener('click', () => {
+            const productId = button.getAttribute('data-product-id');
+            const productName = button.getAttribute('data-product-name');
+            const companyName = button.getAttribute('data-company-name');
+            const quantity = button.getAttribute('data-quantity');
+
+            document.getElementById('rfqProductId').value = productId;
+            document.getElementById('rfqProductName').value = productName;
+            document.getElementById('rfqCompanyName').value = companyName;
+            document.getElementById('rfqQuantity').value = quantity;
+
+            const modal = document.getElementById('rfqModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        });
+    });
+
+    // Loader for RFQ Submit
+    document.getElementById('rfqSubmitBtn').addEventListener('click', function(e) {
+        const btn = e.currentTarget;
+        const loader = btn.querySelector('.loader');
+        loader.style.display = 'inline-block';
+    });
+
+    // Login Required Modal
+    function openLoginModal() {
+        const modal = document.getElementById('loginRequiredModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeLoginModal() {
+        const modal = document.getElementById('loginRequiredModal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        document.body.style.overflow = '';
+    }
+</script>
+{% endblock content %}

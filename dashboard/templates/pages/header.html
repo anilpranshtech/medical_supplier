@@ -494,6 +494,11 @@
                 display: none !important;
             }
         }
+          /* Optional: Add hover effect to the image container */
+    .w-24.h-24:hover {
+        transform: scale(1.05);
+        transition: transform 0.3s ease;
+    }
     </style>
 
 </head>
@@ -700,42 +705,48 @@ data-kt-menu-item-trigger="hover">
    <span class="text-sm">Cart & More</span>
 </a>
 <div class="kt-menu-dropdown absolute w-48 bg-background border border-border rounded-lg shadow-lg z-10 hidden mt-7 py-5 px-3">
-   <div class="kt-menu-item">
-       <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
-               {% if request.resolver_match.url_name == 'shopping_cart' %}
-                   bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
-               {% else %}
-                   border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
-               {% endif %}"
-          href="{% url 'dashboard:shopping_cart' %}">
-           <i class="ki-filled ki-handcart text-base"></i>
-           <span class="text-sm">Shopping Cart</span>
-       </a>
-   </div>
-   <div class="kt-menu-item mt-3">
-       <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
-               {% if request.resolver_match.url_name == 'wish_list' %}
-                   bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
-               {% else %}
-                   border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
-               {% endif %}"
-          href="{% url 'dashboard:wish_list' %}">
-           <i class="ki-filled ki-heart text-base"></i>
-           <span class="text-sm">Wishlist</span>
-       </a>
-   </div>
-   <div class="kt-menu-item mt-3">
-       <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
-               {% if request.resolver_match.url_name == 'subscription_plans' %}
-                   bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
-               {% else %}
-                   border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
-               {% endif %}"
-          href="{% url 'dashboard:subscription_plans' %}">
-           <i class="ki-filled ki-scroll text-base"></i>
-           <span class="text-sm">Subscription Plan</span>
-       </a>
-   </div>
+    <div class="kt-menu-item">
+        <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
+                   {% if request.resolver_match.url_name == 'shopping_cart' %}
+                       bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
+                   {% else %}
+                       border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
+                   {% endif %}"
+           href="{% url 'dashboard:shopping_cart' %}"
+           data-logged-in="{% if request.user.is_authenticated %}true{% else %}false{% endif %}"
+           id="shopping-cart-link">
+            <i class="ki-filled ki-handcart text-base"></i>
+            <span class="text-sm">Shopping Cart</span>
+        </a>
+    </div>
+    <div class="kt-menu-item mt-3">
+        <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
+                   {% if request.resolver_match.url_name == 'wish_list' %}
+                       bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
+                   {% else %}
+                       border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
+                   {% endif %}"
+           href="{% url 'dashboard:wish_list' %}"
+           data-logged-in="{% if request.user.is_authenticated %}true{% else %}false{% endif %}"
+           id="wishlist-link">
+            <i class="ki-filled ki-heart text-base"></i>
+            <span class="text-sm">Wishlist</span>
+        </a>
+    </div>
+    <div class="kt-menu-item mt-3">
+        <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
+                   {% if request.resolver_match.url_name == 'subscription_plans' %}
+                       bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
+                   {% else %}
+                       border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
+                   {% endif %}"
+           href="{% url 'dashboard:subscription_plans' %}"
+           data-logged-in="{% if request.user.is_authenticated %}true{% else %}false{% endif %}"
+           id="subscription-plan-link">
+            <i class="ki-filled ki-scroll text-base"></i>
+            <span class="text-sm">Subscription Plan</span>
+        </a>
+    </div>
 </div>
 </div>
 
@@ -788,16 +799,18 @@ data-kt-menu-item-trigger="hover">
 
 <!-- My Orders -->
 <div class="kt-menu-item relative">
-<a class="kt-menu-link flex items-center gap-2 px-3 py-2 text-2sm leading-none relative h-8.5 rounded-full border
-       {% if request.resolver_match.url_name == 'my_orders' %}
-           bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
-       {% else %}
-           border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
-       {% endif %}"
-  href="{% url 'dashboard:my_orders' %}">
-   <i class="ki-filled ki-package text-base"></i>
-   <span class="text-sm">My Orders</span>
-</a>
+    <a class="kt-menu-link flex items-center gap-2 px-3 py-2 text-2sm leading-none relative h-8.5 rounded-full border
+               {% if request.resolver_match.url_name == 'my_orders' %}
+                   bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
+               {% else %}
+                   border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
+               {% endif %}"
+       href="{% url 'dashboard:my_orders' %}"
+       data-logged-in="{% if request.user.is_authenticated %}true{% else %}false{% endif %}"
+       id="my-orders-link">
+        <i class="ki-filled ki-package text-base"></i>
+        <span class="text-sm">My Orders</span>
+    </a>
 </div>
 
                 <div class="border-e border-border h-6 hidden md:block"></div>
@@ -820,24 +833,28 @@ data-kt-menu-item-trigger="hover">
                         <!-- Scrollable inner content -->
                         <div class="grid grid-cols-4 gap-8 overflow-y-auto max-h-[420px] pr-2">
                             {% for category in categories %}
-    <div class="flex flex-col items-center text-center">
-        <a href="{% url 'dashboard:category_products_list' category.id %}">
-            <div class="w-24 h-24 flex items-center justify-center rounded-full bg-gray-100 overflow-hidden border border-gray-200">
-                {% if category.image %}
-                    <img src="{{ category.image.url }}" alt="{{ category.name }}" 
-                         class="w-full h-full object-cover rounded-full">
-                {% else %}
-                    <span class="text-lg font-bold">{{ category.name|first }}</span>
-                {% endif %}
-            </div>
-            <p class="text-sm mt-2 truncate w-24">{{ category.name }}</p>
-        </a>
-    </div>
-{% endfor %}
-
+                            <div class="flex flex-col items-center text-center">
+                                <a href="{% url 'dashboard:category_products_list' category.id %}">
+                                    <div class="w-24 h-24 flex items-center justify-center rounded-full bg-gray-100 overflow-hidden border-2 border-black">
+                                        {% if category.image %}
+                                            <img src="{{ category.image.url }}" alt="{{ category.name }}"
+                                                 class="w-full h-full object-cover rounded-full">
+                                        {% else %}
+                                            <span class="text-lg font-bold">{{ category.name|first }}</span>
+                                        {% endif %}
+                                    </div>
+                                    <p class="text-sm mt-2 truncate w-24">{{ category.name }}</p>
+                                </a>
+                            </div>
+                            {% empty %}
+                            <div class="col-span-4 text-center py-10 text-gray-400">
+                                No categories available at the moment.
+                            </div>
+                            {% endfor %}
                         </div>
                     </div>
                 </div>
+                
                 
 
             </div>
@@ -1003,7 +1020,30 @@ data-kt-menu-item-trigger="hover">
         </div>
     </div>
 </div>
-
+<!-- Login Required Modal -->
+<div id="loginRequiredModal"
+     class="kt-modal hidden fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
+     data-kt-modal="true" role="dialog" aria-labelledby="loginRequiredTitle" aria-modal="true">
+    <div class="kt-card w-full max-w-[500px] rounded-xl border border-border bg-background shadow-2xl transition-transform duration-300 ease-in-out transform scale-95">
+        <div class="kt-card-header px-5 py-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
+            <h2 id="loginRequiredTitle" class="text-xl font-bold text-gray-100">Login Required</h2>
+            <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" onclick="closeLoginModal()" aria-label="Close modal">
+                <i class="ki-filled ki-cross text-base text-gray-500 hover:text-red-500"></i>
+            </button>
+        </div>
+        <div class="kt-card-content p-5 text-center space-y-4">
+            <p class="text-gray-650 dark:text-gray-300 text-sm">
+                You must be logged in to perform this action.
+            </p>
+        </div>
+        <div class="kt-card-footer px-5 py-4 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700">
+            <button type="button" class="kt-btn kt-btn-outline kt-btn-sm text-gray-650 hover:bg-gray-900 dark:hover:bg-gray-700" onclick="closeLoginModal()">Cancel</button>
+            <a href="{% url 'dashboard:login' %}" class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center">
+                Login
+            </a>
+        </div>
+    </div>
+</div>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     // Mobile Menu Toggle
@@ -1584,13 +1624,63 @@ handleOrientationChange();
         e.preventDefault();
         popup.classList.toggle("hidden");
     });
-
-    // Close if clicked outside
     document.addEventListener("click", (e) => {
         if (!popup.contains(e.target) && !btn.contains(e.target)) {
             popup.classList.add("hidden");
         }
     });
+    
+//login requied 
+document.addEventListener('DOMContentLoaded', function () {
+    const links = [
+        { id: 'shopping-cart-link', url: '{% url 'dashboard:shopping_cart' %}' },
+        { id: 'wishlist-link', url: '{% url 'dashboard:wish_list' %}' },
+        { id: 'subscription-plan-link', url: '{% url 'dashboard:subscription_plans' %}' },
+        { id: 'my-orders-link', url: '{% url 'dashboard:my_orders' %}' }
+    ];
+
+    links.forEach(link => {
+        const element = document.getElementById(link.id);
+        if (element) {
+            element.addEventListener('click', function (event) {
+                const isLoggedIn = this.getAttribute('data-logged-in') === 'true';
+                console.log(`${link.id} clicked, isLoggedIn:`, isLoggedIn); 
+                
+                if (!isLoggedIn) {
+                    event.preventDefault(); 
+                    event.stopPropagation(); 
+                    openLoginModal(); 
+                }
+             
+            });
+        } else {
+            console.error(`${link.id} not found`); 
+        }
+    });
+
+    function openLoginModal() {
+        const modal = document.getElementById('loginRequiredModal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+            modal.querySelector('button[aria-label="Close modal"]').focus();
+        } else {
+            console.error('Login modal not found');
+        }
+    }
+
+    function closeLoginModal() {
+        const modal = document.getElementById('loginRequiredModal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.body.style.overflow = '';
+            const activeLink = document.querySelector('#shopping-cart-link, #wishlist-link, #subscription-plan-link, #my-orders-link');
+            if (activeLink) activeLink.focus(); 
+        }
+    }
+}); 
 </script>
 </body>
 </html>
