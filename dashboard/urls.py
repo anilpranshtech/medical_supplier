@@ -11,7 +11,6 @@ urlpatterns = [
   
     path('login/', CustomLoginView.as_view(), name='login'),
     path('', HomeView.as_view(), name='home'),
-    # path('category/<int:pk>/', CategoryProductsView.as_view(), name='category_products'),
     path('register/', RegistrationView.as_view(), name='register'),
     path('resend-email/', views.ResendEmailView.as_view(), name='resend_email'),
     path('confirm-email/<str:token>/', views.ConfirmEmailView.as_view(), name='confirm_email'),
@@ -111,6 +110,8 @@ urlpatterns = [
     path('delete-notification/<int:id>/', DeleteNotificationView.as_view(), name='delete_notification'),
 
     path("category/<int:category_id>/", views.CategoryProductListView.as_view(), name="category_products_list"),
+    path("suppliers/", views.SupplierListView.as_view(), name="supplier_list"),
+    path("suppliers/<int:user_id>/products/", views.SupplierProductsView.as_view(), name="supplier_products"),
     path("about/", AboutView.as_view(), name="about"),
     path('privacy-policy/', PrivacyPolicyView.as_view(), name="privacy_policy"),
     path('terms-conditions/', TermsConditionsView.as_view(), name="terms_conditions"),

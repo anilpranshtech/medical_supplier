@@ -2119,8 +2119,12 @@ class RatingView(OnboardingRequiredMixin,TemplateView):
 
         return context
 
+<<<<<<< HEAD
+class SupplierReturnsView(LoginRequiredMixin, OnboardingRequiredMixin, TemplateView):
+=======
 
 class SupplierReturnsView(LoginRequiredMixin, OnboardingRequiredMixin,TemplateView):
+>>>>>>> b74382485173ba7e357fa378f25ebd2d664f955e
     template_name = 'supplier/returns.html'
     login_url = 'dashboard:login'
     paginate_by = 14  
@@ -2135,9 +2139,9 @@ class SupplierReturnsView(LoginRequiredMixin, OnboardingRequiredMixin,TemplateVi
 
         # Base queryset for returns
         if user.is_superuser:
-            qs = Return.objects.all()
+            returns_qs = Return.objects.all()
         else:
-            qs = Return.objects.filter(
+            returns_qs = Return.objects.filter(
                 order_item__product__brand__supplier=user
             )
 
@@ -2167,12 +2171,12 @@ class SupplierReturnsView(LoginRequiredMixin, OnboardingRequiredMixin,TemplateVi
         if return_status_filter != 'all':
             returns_qs = returns_qs.filter(return_status=return_status_filter)
 
-        # Optimize queryset with select_related and order by request_date
+        # Optimize queryset
         returns_qs = returns_qs.select_related(
             'order_item__product', 'client'
         ).order_by('-request_date')
 
-       
+        # Paginate
         paginator = Paginator(returns_qs, self.paginate_by)
         page_number = self.request.GET.get('page')
         page_obj = paginator.get_page(page_number)
@@ -2180,13 +2184,13 @@ class SupplierReturnsView(LoginRequiredMixin, OnboardingRequiredMixin,TemplateVi
         context['returns'] = page_obj
         context['page_obj'] = page_obj
 
-     
+        # Product filter options
         if user.is_superuser:
             context['products'] = Product.objects.all()
         else:
             context['products'] = Product.objects.filter(brand__supplier=user)
 
-      
+        # Return choices
         context['return_option_choices'] = Return.RETURN_OPTION_CHOICES
         context['return_status_choices'] = Return.RETURN_STATUS_CHOICES
 
@@ -2216,6 +2220,7 @@ class SupplierReturnsView(LoginRequiredMixin, OnboardingRequiredMixin,TemplateVi
             messages.error(request, "Invalid status selected.")
 
         return redirect('supplier:supplier_returns')
+
 
 
 class UserInformationView(FormView):
@@ -2484,3 +2489,110 @@ class SupplierStatusView(View):
             "progress": 100,
         }
         return render(request, self.template_name, context)
+
+
+class AdminReturnUpdateStatusView(LoginRequiredMixin, View):
+    permission_required = 'is_staff'
+
+    def post(self, request, return_serial, *args, **kwargs):
+        return_instance = get_object_or_404(Return, return_serial=return_serial)
+        new_status = request.POST.get('return_status')
+
+        if new_status in dict(return_instance.RETURN_STATUS_CHOICES):
+            return_instance.return_status = new_status
+            return_instance.save()
+            messages.success(request, f"Return {return_serial} status updated to {new_status}.")
+        else:
+            messages.error(request, "Invalid status selected.")
+
+        return redirect('supplier:admin_returns')
+
+
+class AdminProcessRefundView(View):
+    def post(self, request, *args, **kwargs):
+        return_serial = request.POST.get("hidden_transaction_id")
+        refund_amount = float(request.POST.get("final_refund_amount") or request.POST.get("hidden_transaction_amount", 0))
+        admin_note = request.POST.get("hidden_admin_note")
+        user_note = request.POST.get("hidden_user_note")
+
+        return_instance = get_object_or_404(Return, return_serial=return_serial, return_status="approved")
+        payment = return_instance.order_item.order.payment
+
+        if not payment:
+            messages.error(request, "Payment record not found.")
+            return redirect("supplier:admin_returns")
+
+        success, msg, refund_id = process_refund(payment, return_serial, refund_amount, admin_note, user_note)
+
+        if success:
+            return_instance.return_status = "return_completed"
+            return_instance.is_refunded = True
+            return_instance.refund_id = refund_id
+            return_instance.updated_at = timezone.now()
+            return_instance.save()
+
+            messages.success(request, f"Refund successful: {msg}")
+        else:
+            messages.error(request, f"Refund failed: {msg}")
+
+        return redirect("supplier:admin_returns")
+
+class ReturnDeleteView(LoginRequiredMixin, View):
+    permission_required = 'is_staff'
+
+    def post(self, request, return_serial, *args, **kwargs):
+        try:
+            return_instance = get_object_or_404(Return, return_serial=return_serial)
+            user_email = return_instance.client.email
+            username = return_instance.client.username
+            order_id = return_instance.order_item.order.order_id
+
+            return_instance.delete()
+
+            subject = f"Return {return_serial} Deleted"
+            message = (
+                f"Hello {username},\n\n"
+                f"Your return request for order {order_id} (Return ID: {return_serial}) "
+                f"has been deleted by admin.\n\n"
+                f"If you believe this is an error, please contact support.\n\n"
+                f"Thank you."
+            )
+            send_refund_notification(user_email, subject, message)
+
+            messages.success(request, f"Return {return_serial} deleted successfully.")
+            return redirect('supplier:admin_returns')
+
+        except Exception as e:
+            messages.error(request, f"Error deleting return: {str(e)}")
+        return redirect('supplier:admin_returns')
+
+
+class AdminReturnsView(LoginRequiredMixin, TemplateView):
+    template_name = 'supplier/returns.html'
+    login_url = 'dashboard:login'
+    permission_required = 'is_staff'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        qs = Return.objects.select_related(
+            'order_item__product__brand',
+            'order_item__order__payment',
+            'client'
+        ).order_by('-request_date')
+
+        # ---- Pagination Setup ----
+        paginator = Paginator(qs, 13) 
+        page_number = self.request.GET.get("page")
+        page_obj = paginator.get_page(page_number)
+
+        # Add to context
+        context['page_obj'] = page_obj
+        context['returns'] = page_obj.object_list 
+        context['count_all'] = qs.count()
+        context['count_approved'] = qs.filter(return_status='approved').count()
+        context['count_pending'] = qs.filter(return_status='pending').count()
+        context['count_rejected'] = qs.filter(return_status='rejected').count()
+        context['user_permissions_list'] = self.request.user.get_all_permissions()
+
+        return context

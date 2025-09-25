@@ -1,0 +1,71 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+    .grid-cols-custom {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1.5rem;
+    }
+
+    @media (min-width: 1536px) {
+        .grid-cols-custom {
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 1024px) {
+        .grid-cols-custom {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 768px) {
+        .grid-cols-custom {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 480px) {
+        .grid-cols-custom {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .supplier-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .supplier-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+</style>
+<br>
+<div class="container mx-auto p-6 section-container">
+    <h2 class="text-xl font-bold mb-4">All Manufacturers / Distributors</h2>
+<br>
+    <div id="suppliers-grid" class="grid grid-cols-custom mb-4">
+        {% for supplier in suppliers %}
+            <a href="{% url 'dashboard:supplier_products' supplier.user.id %}" 
+               class="supplier-card block group text-center">
+                <div class="w-full h-40 sm:h-48 overflow-hidden rounded-md">
+                    <img src="{% if supplier.company_logo %}{{ supplier.company_logo.url }}{% else %}{% static 'default.png' %}{% endif %}" 
+                         alt="{{ supplier.company_name }}" 
+                         class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
+                </div>
+                <h3 class="mt-2 text-sm sm:text-base font-semibold text-gray-800 group-hover:text-blue-600">
+                    {{ supplier.company_name }}
+                </h3>
+            </a>
+        {% empty %}
+            <div class="col-span-full text-center py-10 text-gray-400">
+                No manufacturers/distributors found.
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock content %}

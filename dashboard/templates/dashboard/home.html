@@ -452,7 +452,91 @@ button.kt-btn.kt-btn-outline.kt-btn-xs.flex.items-center.gap-1.open-rfq-modal, b
         min-width: 18px;
     }
 }
+.kt-dots {
+    text-align: center;
+    margin-top: 10px;
+    position: absolute;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+}
 
+.kt-dot {
+    height: 12px;
+    width: 12px;
+    background-color: #333;
+    border-radius: 50%;
+    display: inline-block;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.kt-dot.active {
+    background-color: #bbb;
+}
+.tab-button {
+        padding: 8px 16px;
+        font-size: 1.125rem;
+        font-weight: 500;
+        color: #1f2937;
+        background: none;
+        border: none;
+        cursor: pointer;
+        transition: color 0.2s ease-in-out;
+    }
+
+    .tab-button.active {
+        color: #2563eb;
+        border-bottom: 2px solid #2563eb;
+    }
+
+    .tab-button:hover {
+        color: #1d4ed8;
+    }
+
+    /* Grid styles */
+    .grid-cols-custom {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1.5rem;
+    }
+
+    @media (min-width: 1536px) {
+        .grid-cols-custom {
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 1024px) {
+        .grid-cols-custom {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 768px) {
+        .grid-cols-custom {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 480px) {
+        .grid-cols-custom {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
 </style>
 
 <!-- Begin Medical Banner Slider -->
@@ -464,6 +548,15 @@ button.kt-btn.kt-btn-outline.kt-btn-xs.flex.items-center.gap-1.open-rfq-modal, b
             </a>
         {% endfor %}
     </div>
+
+    <!-- Pagination Dots -->
+    <div class="kt-dots" id="ktDots">
+        {% for banner in banners %}
+            <span class="kt-dot" onclick="goToSlide({{ forloop.counter0 }})"></span>
+        {% endfor %}
+    </div>
+
+    <!-- Navigation Buttons -->
     <button class="kt-nav-btn kt-nav-btn-left" onclick="prevSlide()" aria-label="Previous Slide">‹</button>
     <button class="kt-nav-btn kt-nav-btn-right" onclick="nextSlide()" aria-label="Next Slide">›</button>
 </div>
@@ -898,38 +991,6 @@ button.kt-btn.kt-btn-outline.kt-btn-xs.flex.items-center.gap-1.open-rfq-modal, b
     {% endif %}
 
 
-    <!-- Popular Medical Supplies -->
-     <div class="section-container">
-     <div class="space-y-4">
-    <div class="flex items-center justify-between gap-4">
-      <span class="text-lg font-medium text-gray-900">Categories</span>
-    </div>
-
-    <div class="grid grid-cols-4 sm:grid-cols-3 xl:grid-cols-5 gap-6 mb-4">
-      {% for category in categories %}
-      <a href="{% url 'dashboard:category_products_list' category.id %}"
-         class="block group text-center">
-
-        <!-- Image -->
-        <div class="w-full h-40 sm:h-48 overflow-hidden rounded-md">
-          <img src="{% if category.image %}{{ category.image.url }}{% else %}{% static 'default.png' %}{% endif %}"
-               alt="{{ category.name }}"
-               class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
-        </div>
-
-        <!-- Title -->
-        <h3 class="mt-2 text-sm sm:text-base font-semibold text-gray-800 group-hover:text-blue-600">
-          {{ category.name }}
-        </h3>
-      </a>
-      {% empty %}
-      <div class="col-span-full text-center py-10 text-gray-400">
-        No categories available at the moment.
-      </div>
-      {% endfor %}
-    </div>
-  </div>
-</div>
 
     <!-- Limited-Time Deals -->
     {% if limited_products %}
@@ -1153,7 +1214,68 @@ button.kt-btn.kt-btn-outline.kt-btn-xs.flex.items-center.gap-1.open-rfq-modal, b
         </div>
     </div>
     {% endif %}
+    
+<!-- category -->
+<div class="container mx-auto p-6 section-container">
+    <!-- Tabs -->
+    <div class="flex items-center justify-between gap-4 mb-4">
+        <div class="flex gap-4">
+            <button class="tab-button active" data-tab="categories">Categories</button>
+            <button class="tab-button" data-tab="suppliers">Manufacturers / Distributors</button>
+        </div>
+        <div id="view-all" class="hidden">
+            {% if has_more_suppliers %}
+                <a href="{% url 'dashboard:supplier_list' %}" class="text-blue-600 hover:underline font-medium">View All</a>
+            {% endif %}
+        </div>
+    </div>
 
+    <!-- Categories Tab Content -->
+    <div id="categories" class="tab-content">
+        <div class="grid grid-cols-custom mb-4">
+            {% for category in categories %}
+            <a href="{% url 'dashboard:category_products_list' category.id %}" 
+               class="card block group text-center">
+                <div class="w-full h-40 sm:h-48 overflow-hidden rounded-md">
+                    <img src="{% if category.image %}{{ category.image.url }}{% else %}{% static 'default.png' %}{% endif %}" 
+                         alt="{{ category.name }}" 
+                         class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
+                </div>
+                <h3 class="mt-2 text-sm sm:text-base font-semibold text-gray-800 group-hover:text-blue-600">
+                    {{ category.name }}
+                </h3>
+            </a>
+            {% empty %}
+            <div class="col-span-full text-center py-10 text-gray-400">
+                No categories available at the moment.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Suppliers Tab Content -->
+    <div id="suppliers" class="tab-content hidden">
+        <div class="grid grid-cols-custom mb-4">
+            {% for supplier in suppliers %}
+            <a href="{% url 'dashboard:supplier_products' supplier.user.id %}" 
+               class="card block group text-center">
+                <div class="w-full h-40 sm:h-48 overflow-hidden rounded-md">
+                    <img src="{% if supplier.company_logo %}{{ supplier.company_logo.url }}{% else %}{% static 'default.png' %}{% endif %}" 
+                         alt="{{ supplier.company_name }}" 
+                         class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
+                </div>
+                <h3 class="mt-2 text-sm sm:text-base font-semibold text-gray-800 group-hover:text-blue-600">
+                    {{ supplier.company_name }}
+                </h3>
+            </a>
+            {% empty %}
+            <div class="col-span-full text-center py-10 text-gray-400">
+                No manufacturers/distributors available at the moment.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
     <!-- Benefits -->
     {% comment %}
     <div class="section-container">
@@ -1658,5 +1780,78 @@ button.kt-btn.kt-btn-outline.kt-btn-xs.flex.items-center.gap-1.open-rfq-modal, b
 
 });
 
+</script>
+<script>
+    let currentIndex = 0;
+    const slides = document.querySelectorAll(".kt-slide");
+    const dots = document.querySelectorAll(".kt-dot");
+    let autoSlideInterval;
+
+    function showSlide(index) {
+        if (index >= slides.length) index = 0;
+        if (index < 0) index = slides.length - 1;
+
+        slides.forEach((slide, i) => {
+            slide.style.display = i === index ? "block" : "none";
+        });
+
+        dots.forEach(dot => dot.classList.remove("active"));
+        dots[index].classList.add("active");
+
+        currentIndex = index;
+    }
+
+    function nextSlide() {
+        showSlide(currentIndex + 1);
+    }
+
+    function prevSlide() {
+        showSlide(currentIndex - 1);
+    }
+
+    function goToSlide(index) {
+        showSlide(index);
+        resetAutoSlide(); 
+    }
+
+    function startAutoSlide() {
+        autoSlideInterval = setInterval(nextSlide, 5000); 
+    }
+
+    function resetAutoSlide() {
+        clearInterval(autoSlideInterval);
+        startAutoSlide();
+    }
+    document.addEventListener("DOMContentLoaded", () => {
+        showSlide(0);
+        startAutoSlide();
+        const sliderContainer = document.querySelector(".kt-slider-container");
+        sliderContainer.addEventListener("mouseenter", () => clearInterval(autoSlideInterval));
+        sliderContainer.addEventListener("mouseleave", startAutoSlide);
+    });
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const tabs = document.querySelectorAll(".tab-button");
+        const contents = document.querySelectorAll(".tab-content");
+        const viewAll = document.getElementById("view-all");
+
+        tabs.forEach(tab => {
+            tab.addEventListener("click", () => {
+                // Update active tab
+                tabs.forEach(t => t.classList.remove("active"));
+                tab.classList.add("active");
+
+                // Show/hide content
+                const tabId = tab.getAttribute("data-tab");
+                contents.forEach(content => {
+                    content.classList.toggle("hidden", content.id !== tabId);
+                });
+
+                // Show/hide View All button
+                viewAll.classList.toggle("hidden", tabId !== "suppliers");
+            });
+        });
+    });
 </script>
 {% endblock %}

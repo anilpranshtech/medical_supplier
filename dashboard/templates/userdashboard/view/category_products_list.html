@@ -229,8 +229,22 @@
 <div class="container mx-auto p-6 section-container">
     <!-- Title -->
   
-    <br><br><h2 class="text-xl font-bold mb-4">Products in {{ category.name }}</h2>
-
+    <br><br><!-- Category Banner -->
+    <div class="relative w-full h-56 md:h-72 lg:h-80 mb-6">
+        <img src="{% static 'images/banner.jpg' %}" 
+             alt="{{ category.name }}" 
+             class="w-full h-full object-cover">
+    
+        <!-- Overlay with Dynamic Category Name -->
+        <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
+            <h2 class="text-3xl md:text-4xl lg:text-5xl font-bold text-white uppercase tracking-wide">
+                {{ category.name }}
+            </h2>
+        </div>
+    </div>
+    
+    
+    
     <!-- Last Category Filter Buttons -->
     <div class="flex flex-wrap gap-6 mb-6 justify-center">
         <!-- All Button -->

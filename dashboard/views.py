@@ -83,12 +83,13 @@ class HomeView(TemplateView):
                 product.total_reviews = total_reviews
             return product_queryset
 
-        # ---------------- Categories ---------------- #
+     
         categories = ProductCategory.objects.filter(
             product__last_category__isnull=False,
             product__is_active=True
         ).distinct().order_by('-created_at')
-        context['categories'] = categories
+        context['categories'] = categories[:10] 
+        context['has_more_categories'] = categories.count() > 10 
 
         # ---------------- Special Offers ---------------- #
         special_offers = Product.objects.filter(
@@ -193,6 +194,11 @@ class HomeView(TemplateView):
             context['company_name'] = None
             context['profile'] = None
 
+        # ---------------- Suppliers (Manufacturers / Distributors) ---------------- #
+        active_suppliers = SupplierProfile.objects.filter(current_status='active').order_by('-id')  
+        context['suppliers'] = active_suppliers[:10]
+        context['has_more_suppliers'] = active_suppliers.count() > 10
+
         # ---------------- Banners ---------------- #
         context['banners'] = Banner.objects.filter(is_active=True)
 
@@ -268,7 +274,28 @@ class CategoryProductsView(TemplateView):
         context.update({'category': category, 'products': products})
         return context
     
+class SupplierListView(TemplateView):
+    template_name = "userdashboard/view/supplier_list.html"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['suppliers'] = SupplierProfile.objects.filter(current_status='active').order_by('-id')
+        return context
+
+class SupplierProductsView(TemplateView):
+    template_name = "userdashboard/view/supplier_products.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        supplier_user_id = self.kwargs['user_id']
+        try:
+            supplier = SupplierProfile.objects.get(user__id=supplier_user_id, current_status='active')
+            context['supplier'] = supplier
+            context['products'] = Product.objects.filter(created_by__id=supplier_user_id, is_active=True).order_by('-created_at')
+        except SupplierProfile.DoesNotExist:
+            context['supplier'] = None
+            context['products'] = []
+        return context
 class CustomLoginView(FormView):
     form_class = EmailOnlyLoginForm
     template_name = 'dashboard/login.html'
@@ -3662,7 +3689,6 @@ class DeleteNotificationView(LoginRequiredMixin, View):
         )
         notification.delete()  # Calls soft delete
         return JsonResponse({'status': 'success'})
-
 
 
 

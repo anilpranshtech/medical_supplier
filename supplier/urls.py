@@ -72,7 +72,7 @@ urlpatterns = [
     path('supplier/returns/', SupplierReturnsView.as_view(), name='supplier_returns'),
     path('supplier/returns/<str:return_serial>/', SupplierReturnsView.as_view(), name='supplier_returns'),
     
-
+    #my profile
     path("user-info/", UserInformationView.as_view(), name="user_information"),
     path("business-info/", BusinessInformationView.as_view(), name="business_information"),
     path("bank-details/", BankDetailsView.as_view(), name="bank_details"),
@@ -81,6 +81,11 @@ urlpatterns = [
     path("pickup-shipping/", PickupShippingView.as_view(), name="pickup_shipping"),
     path('supplier/documents/', SupplierDocumentsView.as_view(), name='supplier_documents'),
     path('supplier/status/', SupplierStatusView.as_view(), name='supplier_status'),  
+    #return 
+    path('returns/update/<str:return_serial>/', AdminReturnUpdateStatusView.as_view(), name='admin_returns_update_status'),
+    path('returns/delete/<str:return_serial>/', ReturnDeleteView.as_view(), name='admin_returns_delete'),
+    path('returns/refund/', AdminProcessRefundView.as_view(), name='process_refund'),
+    path('returns/', AdminReturnsView.as_view(), name='admin_returns'),
 ]
 
     
