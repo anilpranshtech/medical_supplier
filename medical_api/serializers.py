@@ -488,20 +488,29 @@ class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'price', 'main_image']
+        fields = ['id', 'name', 'description', 'price', 'main_image']
 
     def get_main_image(self, obj):
-        main_img = obj.productimage_set.filter(is_main=True).first()
-        if main_img and main_img.image:
-            return self.context['request'].build_absolute_uri(main_img.image.url)
+        # Thanks to `to_attr='main_image'`, this avoids extra queries
+        if hasattr(obj, 'main_image') and obj.main_image:
+            return obj.main_image[0].image.url  # first main image
         return None
+
 
 class OrderItemSerializer(serializers.ModelSerializer):
     product = ProductSerializer()
+    product_main_image = serializers.SerializerMethodField()
 
     class Meta:
         model = OrderItem
-        fields = ['id', 'product', 'price', 'quantity']
+        fields = ['id', 'product', 'price', 'quantity', 'product_main_image']
+
+    def get_product_main_image(self, obj):
+        product = obj.product
+        if hasattr(product, 'main_image') and product.main_image:
+            return product.main_image[0].image.url
+        return None
+
 
 class PaymentSerializer(serializers.ModelSerializer):
     class Meta:

@@ -13,6 +13,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import logout
 from django.views.generic import *
 from superuser.mixins import SuperuserRequiredMixin
+from superuser.refunds import process_refund
+from superuser.utils import send_refund_notification
 from supplier.forms import *
 from supplier.models import *
 from dashboard.mixins import SupplierPermissionMixin
@@ -2119,12 +2121,8 @@ class RatingView(OnboardingRequiredMixin,TemplateView):
 
         return context
 
-<<<<<<< HEAD
 class SupplierReturnsView(LoginRequiredMixin, OnboardingRequiredMixin, TemplateView):
-=======
 
-class SupplierReturnsView(LoginRequiredMixin, OnboardingRequiredMixin,TemplateView):
->>>>>>> b74382485173ba7e357fa378f25ebd2d664f955e
     template_name = 'supplier/returns.html'
     login_url = 'dashboard:login'
     paginate_by = 14  
