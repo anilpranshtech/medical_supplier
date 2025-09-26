@@ -942,7 +942,7 @@ class OrderPlacedAPIViewSet(viewsets.ViewSet):
         logger.info(f"Found order for payment {payment.id} and user {user.id}")
 
         main_image_prefetch = Prefetch(
-            'items__product__productimage_set',
+            'items__product__images',
             queryset=ProductImage.objects.filter(is_main=True),
             to_attr='main_image'
         )
@@ -1041,7 +1041,7 @@ class MyOrdersAPIViewSet(viewsets.ViewSet):
         user = request.user
 
         main_image_prefetch = Prefetch(
-            'items__product__productimage_set',
+            'items__product__image',
             queryset=ProductImage.objects.filter(is_main=True),
             to_attr='main_image'
         )
