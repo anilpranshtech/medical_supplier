@@ -71,7 +71,7 @@ class BrandAdmin(admin.ModelAdmin):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ('id', 'order_id', 'status', 'user', 'payment', 'phone_number')
+    list_display = ('id', 'order_id', 'status', 'user', 'payment', 'phone_number', 'order_type' )
     list_filter = ('status',)
 
 @admin.register(OrderItem)
@@ -295,3 +295,4 @@ admin.site.register(AdminUserProfile)
 admin.site.register(Country)
 admin.site.register(State)
 admin.site.register(City)
+admin.site.register(ShippingMethod)

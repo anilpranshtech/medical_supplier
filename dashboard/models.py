@@ -386,13 +386,19 @@ class EventRegistration(models.Model):
     registered_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.full_name} - {self.product.name}"
+        return f"{self.full_name} - {self.product.name}"    
 
 
 class Order(models.Model):
+    order_type = models.CharField(
+    max_length=10,
+    choices=[('order', 'Order'), ('return', 'Return')],
+    default='order'
+)
+
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders')
     payment = models.ForeignKey('Payment', on_delete=models.SET_NULL, null=True, blank=True, related_name='order')
-    order_id = models.CharField(max_length=50, unique=True)  # e.g., X319330-S24
+    order_id = models.CharField(max_length=50, unique=True)  
     phone_number = models.CharField(max_length=20, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -1227,3 +1233,25 @@ class Contact(models.Model):
 
     def __str__(self):
         return f"{self.full_name} - {self.subject}"
+
+
+PERIOD_TYPE_CHOICES = [
+    ('days', 'Days'),
+    ('weeks', 'Weeks'),
+    ('months', 'Months'),
+]
+
+class ShippingMethod(models.Model):
+    country = models.CharField(max_length=100)
+    state = models.CharField(max_length=100)
+    city = models.CharField(max_length=100)
+    
+    order_subtotal_from = models.DecimalField(max_digits=10, decimal_places=2)
+    order_subtotal_to = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    period = models.PositiveIntegerField()  
+    period_type = models.CharField(max_length=10, choices=PERIOD_TYPE_CHOICES)
+
+    def __str__(self):
+        return f"{self.country} - {self.state} - {self.city} : {self.price}"

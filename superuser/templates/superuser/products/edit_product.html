@@ -160,7 +160,7 @@
                                         </div>
                                         <div class="mb-10 mt-4 fv-row" id="hide_field_product_quantity">
                                             <label class="form-label required">Quantity</label>
-                                            <input type="number" name="product_quantity" class="form-control mb-2" placeholder="Enter available quantity" value="{{ product_quantity }}" min="0" required />
+                                            <input type="number" name="product_quantity" class="form-control mb-2" placeholder="Enter available quantity" value="{{ product_quantity }}" min="1" required />
                                             <div class="text-muted fs-7">Specify how many items are available in stock.</div>
                                         </div>
                                         <div class="mb-10 mt-4 fv-row">
@@ -195,9 +195,16 @@
                                             </select>
                                             <div class="text-muted fs-7">Set the product condition.</div>
                                         </div>
+                                        <div class="mb-10 mt-4 fv-row" id="hide_field_is_returnable">
+                                            <label class="form-label">Is Returnable?</label>
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="is_returnable" name="is_returnable" {% if is_returnable %}checked{% endif %}>
+                                                <label class="form-check-label" for="is_returnable">Enable product return</label>
+                                            </div>
+                                        </div>
                                         <div class="mb-10 mt-4 fv-row" id="hide_field_return_time_limit">
                                             <label class="form-label required">Return Time Limit (Days)</label>
-                                            <input type="number" name="return_time_limit" class="form-control mb-2" placeholder="Enter return time limit in days" value="{{ return_time_limit }}" min="0" required />
+                                            <input type="number" name="return_time_limit" class="form-control mb-2" placeholder="Enter return time limit in days" value="{{ return_time_limit|default:7 }}" min="0"/>
                                             <div class="text-muted fs-7">Number of days for product return.</div>
                                         </div>
                                         <div class="mb-10 mt-4 fv-row" id="hide_field_manufacture_date">
@@ -213,78 +220,86 @@
                                     </div>
                                 </div>
 
-                                <!-- Pricing Card -->
-                                <div class="card card-flush py-4 mt-7" id="hide_field_price">
-                                    <div class="card-header">
-                                        <div class="card-title">
-                                            <h2>Pricing</h2>
-                                        </div>
-                                    </div>
-                                    <div class="card-body pt-0">
-                                        <div class="mb-10 fv-row">
-                                            <label class="required form-label">Base Price</label>
-                                            <input type="text" name="price" class="form-control mb-2" placeholder="Product price" value="{{ price|default:'' }}" required />
-                                            <div class="text-muted fs-7">Set the product price.</div>
-                                        </div>
-                                        <div class="fv-row mb-10">
-                                            <label class="fs-6 fw-semibold mb-2 required">
-                                                Discount Type
-                                                <span class="ms-1" data-bs-toggle="tooltip" title="Select a discount type that will be applied to this product">
-                                                    <i class="fas fa-info-circle text-gray-500 fs-6"></i>
-                                                </span>
-                                            </label>
-                                            <div class="row row-cols-1 row-cols-md-3 row-cols-lg-1 row-cols-xl-3 g-9" data-kt-buttons="true" data-kt-buttons-target="[data-kt-button='true']">
-                                                <div class="col">
-                                                    <label class="btn btn-outline btn-outline-dashed btn-active-light-primary d-flex text-start p-6" data-kt-button="true">
-                                                        <span class="form-check form-check-custom form-check-solid form-check-sm align-items-start mt-1">
-                                                            <input class="form-check-input" type="radio" name="discount_option" value="1" {% if discount_option == '1' %}checked{% endif %} />
-                                                        </span>
-                                                        <span class="ms-5">
-                                                            <span class="fs-4 fw-bold text-gray-800 d-block">No Discount</span>
-                                                        </span>
-                                                    </label>
-                                                </div>
-                                                <div class="col">
-                                                    <label class="btn btn-outline btn-outline-dashed btn-active-light-primary d-flex text-start p-6" data-kt-button="true">
-                                                        <span class="form-check form-check-custom form-check-solid form-check-sm align-items-start mt-1">
-                                                            <input class="form-check-input" type="radio" name="discount_option" value="2" {% if discount_option == '2' %}checked{% endif %} />
-                                                        </span>
-                                                        <span class="ms-5">
-                                                            <span class="fs-4 fw-bold text-gray-800 d-block">Percentage %</span>
-                                                        </span>
-                                                    </label>
-                                                </div>
-                                                <div class="col">
-                                                    <label class="btn btn-outline btn-outline-dashed btn-active-light-primary d-flex text-start p-6" data-kt-button="true">
-                                                        <span class="form-check form-check-custom form-check-solid form-check-sm align-items-start mt-1">
-                                                            <input class="form-check-input" type="radio" name="discount_option" value="3" {% if discount_option == '3' %}checked{% endif %} />
-                                                        </span>
-                                                        <span class="ms-5">
-                                                            <span class="fs-4 fw-bold text-gray-800 d-block">Fixed Price</span>
-                                                        </span>
-                                                    </label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="mb-10 fv-row" id="kt_ecommerce_add_product_discount_percentage">
-                                            <label class="form-label">Set Discount Percentage</label>
-                                            <div class="d-flex flex-column text-center mb-5">
-                                                <div class="d-flex align-items-start justify-content-center mb-7">
-                                                    <span class="fw-bold fs-3x" id="kt_ecommerce_add_product_discount_label">{{ offer_percentage|default:'0' }}</span>
-                                                    <span class="fw-bold fs-4 mt-1 ms-2">%</span>
-                                                </div>
-                                                <div id="kt_ecommerce_add_product_discount_slider" class="noUi-sm"></div>
-                                            </div>
-                                            <div class="text-muted fs-7">Set a percentage discount to be applied on this product.</div>
-                                            <input type="hidden" name="discount_percentage" id="discount_percentage" value="{{ offer_percentage|default:'0' }}" />
-                                        </div>
-                                        <div class="mb-10 fv-row" id="kt_ecommerce_add_product_discount_fixed" {% if discount_option != '3' %}class="d-none"{% endif %}>
-                                            <label class="form-label">Fixed Discounted Price</label>
-                                            <input type="text" name="discounted_price" class="form-control mb-2" placeholder="Discounted price" value="{{ discounted_price|default:'' }}" />
-                                            <div class="text-muted fs-7">Set the discounted product price. The product will be reduced at the determined fixed price</div>
-                                        </div>
-                                    </div>
-                                </div>
+                               <!-- Pricing Card -->
+<div class="card card-flush py-4 mt-7" id="hide_field_price">
+    <div class="card-header">
+        <div class="card-title">
+            <h2>Pricing</h2>
+        </div>
+    </div>
+    <div class="card-body pt-0">
+        <div class="mb-10 fv-row">
+            <label class="required form-label">Base Price</label>
+            <input type="text" id="base_price" name="base_price" class="form-control mb-2"
+                   placeholder="Product price" value="{{ price|default:'' }}" required />
+            <div class="text-muted fs-7">Enter a valid product price (1 - 999999, up to 2 decimals).</div>
+        </div>
+        <div class="mb-10 fv-row d-none" id="discount_price_container">
+            <label class="required form-label">Discount Price</label>
+            <input type="text" id="discount_price" name="discount_price" class="form-control mb-2"
+                   placeholder="Discounted price" value="{{ discount_price|default:'' }}" readonly />
+            <div class="text-muted fs-7">The discounted price will be calculated based on the discount percentage.</div>
+        </div>
+        <div class="fv-row mb-10">
+            <label class="fs-6 fw-semibold mb-2 required">
+                Discount Type
+                <span class="ms-1" data-bs-toggle="tooltip" title="Select a discount type that will be applied to this product">
+                    <i class="fas fa-info-circle text-gray-500 fs-6"></i>
+                </span>
+            </label>
+            <div class="row row-cols-1 row-cols-md-3 row-cols-lg-1 row-cols-xl-3 g-9" data-kt-buttons="true" data-kt-buttons-target="[data-kt-button='true']">
+                <div class="col">
+                    <label class="btn btn-outline btn-outline-dashed btn-active-light-primary d-flex text-start p-6" data-kt-button="true">
+                        <span class="form-check form-check-custom form-check-solid form-check-sm align-items-start mt-1">
+                            <input class="form-check-input" type="radio" name="discount_option" value="1" {% if discount_option == '1' %}checked{% endif %} />
+                        </span>
+                        <span class="ms-5">
+                            <span class="fs-4 fw-bold text-gray-800 d-block">No Discount</span>
+                        </span>
+                    </label>
+                </div>
+                <div class="col">
+                    <label class="btn btn-outline btn-outline-dashed btn-active-light-primary d-flex text-start p-6" data-kt-button="true">
+                        <span class="form-check form-check-custom form-check-solid form-check-sm align-items-start mt-1">
+                            <input class="form-check-input" type="radio" name="discount_option" value="2" {% if discount_option == '2' %}checked{% endif %} />
+                        </span>
+                        <span class="ms-5">
+                            <span class="fs-4 fw-bold text-gray-800 d-block">Percentage %</span>
+                        </span>
+                    </label>
+                </div>
+                <div class="col">
+                    <label class="btn btn-outline btn-outline-dashed btn-active-light-primary d-flex text-start p-6" data-kt-button="true">
+                        <span class="form-check form-check-custom form-check-solid form-check-sm align-items-start mt-1">
+                            <input class="form-check-input" type="radio" name="discount_option" value="3" {% if discount_option == '3' %}checked{% endif %} />
+                        </span>
+                        <span class="ms-5">
+                            <span class="fs-4 fw-bold text-gray-800 d-block">Fixed Price</span>
+                        </span>
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="mb-10 fv-row" id="kt_ecommerce_add_product_discount_percentage">
+            <label class="form-label">Set Discount Percentage</label>
+            <div class="d-flex flex-column text-center mb-5">
+                <div class="d-flex align-items-start justify-content-center mb-7">
+                    <span class="fw-bold fs-3x" id="kt_ecommerce_add_product_discount_label">{{ offer_percentage|default:1 }}</span>
+                    <span class="fw-bold fs-4 mt-1 ms-2">%</span>
+                </div>
+                <div id="kt_ecommerce_add_product_discount_slider" class="noUi-sm"></div>
+            </div>
+            <div class="text-muted fs-7">Set a percentage discount (1% to 100%) to be applied on this product.</div>
+            <input type="hidden" id="offer_percentage" name="offer_percentage" value="{{ offer_percentage|default:1 }}" />
+        </div>
+        <div class="d-none mb-10 fv-row" id="kt_ecommerce_add_product_discount_fixed">
+            <label class="form-label">Fixed Discounted Price</label>
+            <input type="text" id="fixed_discounted_price" name="discounted_price" class="form-control mb-2"
+                   placeholder="Discounted price" value="{{ discounted_price|default:'' }}" />
+            <div class="text-muted fs-7">Set the discounted product price. The product will be reduced at the determined fixed price.</div>
+        </div>
+    </div>
+</div>
                             </div>
 
                             <!-- Right Column in Right Container -->
@@ -308,12 +323,12 @@
                                         </div>
                                         <div class="mb-10 mt-4 fv-row" id="hide_field_weight">
                                             <label class="form-label required">Weight</label>
-                                            <input type="number" name="weight" class="form-control mb-2" placeholder="Enter product weight" value="{{ weight }}" min="0" step="0.01" required />
+                                            <input type="number" name="weight" class="form-control mb-2" placeholder="Enter product weight" value="{{ weight }}" min="1" step="0.01" required />
                                             <div class="text-muted fs-7">Product weight.</div>
                                         </div>
                                         <div class="mb-10 mt-4 fv-row" id="hide_field_delivery_time">
                                             <label class="form-label required">Delivery Time (Days)</label>
-                                            <input type="number" name="delivery_time" class="form-control mb-2" placeholder="Enter estimated delivery time in days" value="{{ delivery_time }}" min="0" required />
+                                            <input type="number" name="delivery_time" class="form-control mb-2" placeholder="Enter estimated delivery time in days" value="{{ delivery_time }}" min="1" required />
                                             <div class="text-muted fs-7">Estimated delivery time in days.</div>
                                         </div>
                                         <div class="mb-10 mt-4 fv-row" id="hide_field_keywords">
@@ -323,7 +338,7 @@
                                         </div>
                                         <div class="mb-10 mt-4 fv-row" id="hide_field_commission_percentage">
                                             <label class="form-label required">Commission Percentage</label>
-                                            <input type="number" name="commission_percentage" class="form-control mb-2" placeholder="Enter commission percentage" value="{{ commission_percentage }}" min="0" max="100" step="0.01" required />
+                                            <input type="number" name="commission_percentage" class="form-control mb-2" placeholder="Enter commission percentage" value="{{ commission_percentage }}" min="1" max="100" step="0.01" required />
                                             <div class="text-muted fs-7">Commission percentage for the product.</div>
                                         </div>
                                         <div class="mb-10 mt-4 fv-row" id="hide_field_barcode">
@@ -358,12 +373,12 @@
                                         </div>
                                         <div class="mb-10 mt-4 fv-row" id="hide_field_low_stock_alert">
                                             <label class="form-label required">Low Stock Alert</label>
-                                            <input type="number" name="low_stock_alert" class="form-control mb-2" placeholder="Enter low stock alert level" value="{{ low_stock_alert }}" min="0" required />
+                                            <input type="number" name="low_stock_alert" class="form-control mb-2" placeholder="Enter low stock alert level" value="{{ low_stock_alert }}" min="1" required />
                                             <div class="text-muted fs-7">Alert when stock falls below this level.</div>
                                         </div>
                                         <div class="mb-10 mt-4 fv-row" id="hide_field_expiration_days">
                                             <label class="form-label required">Expiration Days</label>
-                                            <input type="number" name="expiration_days" class="form-control mb-2" placeholder="Enter expiration days" value="{{ expiration_days }}" min="0" required />
+                                            <input type="number" name="expiration_days" class="form-control mb-2" placeholder="Enter expiration days" value="{{ expiration_days }}" min="1" required />
                                             <div class="text-muted fs-7">Number of days until product expires.</div>
                                         </div>
                                         <div class="mb-10 mt-4 fv-row" id="hide_field_tag">
@@ -376,11 +391,11 @@
                                             </select>
                                             <div class="text-muted fs-7">Assign a tag to the product.</div>
                                         </div>
-                                        <div class="mb-10 mt-4 fv-row" id="hide_field_offer_percentage">
+                                        <!-- <div class="mb-10 mt-4 fv-row" id="hide_field_offer_percentage">
                                             <label class="form-label">Offer Percentage</label>
-                                            <input type="number" name="offer_percentage" class="form-control mb-2" placeholder="Enter offer percentage" value="{{ offer_percentage }}" min="0" max="100" step="0.01" />
+                                            <input type="number" name="offer_percentage" class="form-control mb-2" placeholder="Enter offer percentage" value="{{ offer_percentage }}" min="1" max="100" step="0.01" />
                                             <div class="text-muted fs-7">Percentage discount for the product.</div>
-                                        </div>
+                                        </div> -->
                                         <div class="mb-10 mt-4 fv-row" id="hide_field_offer_start">
                                             <label class="form-label">Offer Start</label>
                                             <input type="date" name="offer_start" class="form-control mb-2" placeholder="Select offer start date" value="{{ offer_start }}" />
@@ -553,13 +568,16 @@
 <script src="https://cdn.jsdelivr.net/npm/nouislider@15.7.0/dist/nouislider.min.js"></script>
 <script>
 $(document).ready(function () {
+    // Form submit loader
     $('form').on('submit', function(e) {
         $('.indicator-label').hide();
         $('.indicator-progress').show();
+        const formData = new FormData(this);
+        console.log('Form data on submit:', Object.fromEntries(formData));
         return true;
     });
 
-    // Subcategory
+    // Subcategory AJAX
     $('select[name="category"]').on('change', function () {
         let categoryId = $(this).val();
         if (categoryId) {
@@ -571,7 +589,7 @@ $(document).ready(function () {
                 success: function (data) {
                     let options = '<option value="">Select a Sub-Category</option>';
                     data.forEach(function (item) {
-                        options += `<option value="${item.id}">${item.name}</option>`;
+                        options += `<option value="${item.id}" ${item.id == '{{ selected_sub_category }}' ? 'selected' : ''}>${item.name}</option>`;
                     });
                     $('#subcategory_select').html(options).trigger('change');
                     $('#lastcategory_select').html('<option value="">Select a Last Category</option>').trigger('change');
@@ -581,9 +599,10 @@ $(document).ready(function () {
             $('#subcategory_select').html('<option value="">Select a Sub-Category</option>').trigger('change');
             $('#lastcategory_select').html('<option value="">Select a Last Category</option>').trigger('change');
         }
+        toggleFormFields();
     });
 
-    // Lastcategory
+    // Lastcategory AJAX
     $('#subcategory_select').on('change', function () {
         let subCatId = $(this).val();
         if (subCatId) {
@@ -595,7 +614,7 @@ $(document).ready(function () {
                 success: function (data) {
                     let options = '<option value="">Select a Last Category</option>';
                     data.forEach(function (item) {
-                        options += `<option value="${item.id}">${item.name}</option>`;
+                        options += `<option value="${item.id}" ${item.id == '{{ selected_last_category }}' ? 'selected' : ''}>${item.name}</option>`;
                     });
                     $('#lastcategory_select').html(options).trigger('change');
                 }
@@ -605,65 +624,162 @@ $(document).ready(function () {
         }
     });
 
-    // Discount percentage slider
+    // Discount option toggle and calculations
     const radios = document.querySelectorAll('input[name="discount_option"]');
     const percentageSection = document.getElementById('kt_ecommerce_add_product_discount_percentage');
     const fixedSection = document.getElementById('kt_ecommerce_add_product_discount_fixed');
+    const basePriceInput = document.getElementById('base_price');
+    const discountPriceInput = document.getElementById('discount_price');
+    const discountPriceContainer = document.getElementById('discount_price_container');
+    const fixedPriceInput = document.getElementById('fixed_discounted_price');
+    const offerPercentageInput = document.getElementById('offer_percentage');
+    const discountLabel = document.getElementById('kt_ecommerce_add_product_discount_label');
 
-    if (percentageSection && fixedSection) {
-        const discountLabel = document.getElementById('kt_ecommerce_add_product_discount_label');
+    if (percentageSection && fixedSection && basePriceInput && discountPriceInput && discountPriceContainer && offerPercentageInput && discountLabel) {
         const sliderElement = document.getElementById('kt_ecommerce_add_product_discount_slider');
-        const discountInput = document.getElementById('discount_percentage');
 
+        // Initialize noUiSlider
         if (sliderElement) {
+            const initialPercentage = Math.max(parseInt(offerPercentageInput.value) || 1, 1);
             noUiSlider.create(sliderElement, {
-                start: parseInt(discountLabel.textContent) || 0,
+                start: initialPercentage,
                 step: 1,
                 connect: [true, false],
                 range: {
-                    'min': 0,
+                    'min': 1,
                     'max': 100
+                },
+                format: {
+                    to: function (value) {
+                        return Math.round(value);
+                    },
+                    from: function (value) {
+                        return Number(value);
+                    }
                 }
             });
 
+            // Update discount label and hidden input on slider change
             sliderElement.noUiSlider.on('update', function (values, handle) {
-                discountLabel.textContent = Math.round(values[handle]);
-                discountInput.value = Math.round(values[handle]);
+                const percentage = values[handle];
+                discountLabel.textContent = percentage;
+                offerPercentageInput.value = percentage;
+                updateDiscountPrice();
             });
         }
 
+        // Function to calculate and update discount price
+        function updateDiscountPrice() {
+            const basePrice = parseFloat(basePriceInput.value) || 0;
+            const selectedOption = document.querySelector('input[name="discount_option"]:checked')?.value;
+
+            if (!selectedOption) {
+                console.error('No discount option selected');
+                return;
+            }
+
+            // Clear any previous validation states
+            basePriceInput.classList.remove('is-invalid');
+            if (fixedPriceInput) {
+                fixedPriceInput.classList.remove('is-invalid');
+            }
+            const errorMessages = document.querySelectorAll('.text-danger');
+            errorMessages.forEach(el => el.textContent = '');
+
+            if (selectedOption === '1') {
+                discountPriceInput.value = basePrice.toFixed(2);
+                discountPriceContainer.classList.add('d-none');
+                offerPercentageInput.value = 0;
+            } else if (selectedOption === '2') {
+                const percentage = Math.max(parseFloat(offerPercentageInput.value) || 1, 1);
+                offerPercentageInput.value = percentage;
+                discountLabel.textContent = percentage;
+                const discountAmount = basePrice * (percentage / 100);
+                discountPriceInput.value = (basePrice - discountAmount).toFixed(2);
+                discountPriceContainer.classList.remove('d-none');
+            } else if (selectedOption === '3') {
+                const fixedPrice = parseFloat(fixedPriceInput.value) || basePrice;
+                discountPriceInput.value = fixedPrice.toFixed(2);
+                discountPriceContainer.classList.add('d-none');
+                offerPercentageInput.value = 0;
+            }
+            console.log('updateDiscountPrice - base_price:', basePriceInput.value, 'offer_percentage:', offerPercentageInput.value, 'discount_price:', discountPriceInput.value);
+        }
+
+        // Update on base price input
+        basePriceInput.addEventListener('input', function () {
+            updateDiscountPrice();
+        });
+
+        // Update on fixed price input
+        if (fixedPriceInput) {
+            fixedPriceInput.addEventListener('input', function () {
+                updateDiscountPrice();
+            });
+        }
+
+        // Handle discount option radio button changes
         radios.forEach(function (radio) {
             radio.addEventListener('change', function () {
+                // Clear validation states
+                basePriceInput.classList.remove('is-invalid');
+                if (fixedPriceInput) {
+                    fixedPriceInput.classList.remove('is-invalid');
+                }
+                const errorMessages = document.querySelectorAll('.text-danger');
+                errorMessages.forEach(el => el.textContent = '');
+
                 if (this.value === '1') {
                     percentageSection.classList.add('d-none');
                     fixedSection.classList.add('d-none');
+                    discountPriceContainer.classList.add('d-none');
+                    offerPercentageInput.value = 0;
                 } else if (this.value === '2') {
                     percentageSection.classList.remove('d-none');
                     fixedSection.classList.add('d-none');
+                    discountPriceContainer.classList.remove('d-none');
+                    if (sliderElement && sliderElement.noUiSlider) {
+                        const currentPercentage = Math.max(parseInt(sliderElement.noUiSlider.get()) || 1, 1);
+                        sliderElement.noUiSlider.set(currentPercentage);
+                        offerPercentageInput.value = currentPercentage;
+                        discountLabel.textContent = currentPercentage;
+                    }
                 } else if (this.value === '3') {
                     percentageSection.classList.add('d-none');
                     fixedSection.classList.remove('d-none');
+                    discountPriceContainer.classList.add('d-none');
+                    offerPercentageInput.value = 0;
                 }
+                updateDiscountPrice();
             });
         });
 
+        // Initialize form based on selected radio
         const checkedRadio = document.querySelector('input[name="discount_option"]:checked');
         if (checkedRadio) {
             checkedRadio.dispatchEvent(new Event('change'));
+        } else {
+            console.warn('No discount option selected on load, defaulting to No Discount');
+            document.querySelector('input[name="discount_option"][value="1"]').checked = true;
+            document.querySelector('input[name="discount_option"][value="1"]').dispatchEvent(new Event('change'));
         }
+    } else {
+        console.error('Required pricing elements not found');
     }
 
     // Conditional logic for Webinar, Event, Conference
     const categorySelect = document.querySelector('select[name="category"]');
     const webinarFields = document.getElementById('webinar_fields');
-
     const webinarCategories = ["Webinar", "Conference", "Event"];
+    const isReturnableToggle = document.getElementById("is_returnable");
+    const returnTimeLimitField = document.getElementById("hide_field_return_time_limit");
 
     const fieldsToHide = [
         "hide_field_product_quantity", "hide_field_warranty", "hide_field_condition",
-        "hide_field_return_time_limit", "hide_field_manufacture_date", "hide_field_expiry_date",
-        "hide_field_barcode", "hide_field_price", "hide_field_weight_unit", "hide_field_weight",
-        "hide_field_delivery_time", "hide_field_commission_percentage", "hide_field_supplier_sku",
+        "hide_field_return_time_limit", "hide_field_is_returnable", "hide_field_manufacture_date",
+        "hide_field_expiry_date", "hide_field_barcode", "hide_field_price",
+        "hide_field_weight_unit", "hide_field_weight", "hide_field_delivery_time",
+        "hide_field_commission_percentage", "hide_field_supplier_sku",
         "hide_field_pcs_per_unit", "hide_field_min_order_qty", "hide_field_low_stock_alert",
         "hide_field_expiration_days", "hide_field_tag", "hide_field_offer_percentage",
         "hide_field_offer_start", "hide_field_offer_end", "hide_field_keywords",
@@ -713,9 +829,29 @@ $(document).ready(function () {
                 }
             });
         }
+
+        // Toggle return time limit field
+        if (isReturnableToggle && returnTimeLimitField) {
+            returnTimeLimitField.style.display = isReturnableToggle.checked && !isWebinar ? "" : "none";
+            returnTimeLimitField.querySelectorAll("input").forEach(el => {
+                if (isReturnableToggle.checked && !isWebinar) {
+                    el.setAttribute("required", "required");
+                } else {
+                    el.removeAttribute("required");
+                }
+            });
+        }
+
+        // Disable is_returnable toggle for webinars
+        if (isReturnableToggle) {
+            isReturnableToggle.disabled = isWebinar;
+            if (isWebinar) {
+                isReturnableToggle.checked = false;
+            }
+        }
     }
 
-    // Store original required state for fields
+    // Store original required state
     fieldsToHide.concat(["hide_field_supplier"]).forEach(id => {
         const field = document.getElementById(id);
         if (field) {
@@ -730,6 +866,9 @@ $(document).ready(function () {
     // Attach listeners
     if (categorySelect) {
         categorySelect.addEventListener("change", toggleFormFields);
+    }
+    if (isReturnableToggle) {
+        isReturnableToggle.addEventListener("change", toggleFormFields);
     }
 
     // Run on page load

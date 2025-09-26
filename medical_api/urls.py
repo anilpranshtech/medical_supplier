@@ -69,7 +69,7 @@ urlpatterns = [
     path('cart/remove/', CartRemoveAPIView.as_view(), name='cart-remove'),
 
  # ------------------- wishlist --------------------
-     path('wishlist/toggle/', WishlistToggleAPIView.as_view(), name='wishlist-toggle'),
+    path('wishlist/toggle/', WishlistToggleAPIView.as_view(), name='wishlist-toggle'),
     path('wishlist/remove/', WishlistRemoveAPIView.as_view(), name='wishlist-remove'),
     path('wishlist/list/', WishlistListAPIView.as_view(), name='wishlist-list'),
 
@@ -87,5 +87,11 @@ urlpatterns = [
     path('api/register/supplier/', SupplierRegisterAPIView.as_view(), name='supplier-register'),
     path('profile/wholesaler/', WholesaleBuyerProfileAPIView.as_view(), name='wholesaler-profile'),
     path('api/supplier/profile/', SupplierProfileAPIView.as_view(), name='supplier-profile'),
+
+    path("api/user/profile/", UserProfileAPIView.as_view(), name="user-profile"),
+ 
+
+
+
     
 ]

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Print Bill</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            color: #333;
+            background: #fff;
+        }
+
+        .bill-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 30px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .bill-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .bill-header h1 {
+            font-size: 28px;
+            color: #444;
+        }
+
+        .bill-details {
+            margin-bottom: 20px;
+        }
+
+        .bill-details p {
+            line-height: 1.6;
+            font-size: 16px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        table th {
+            background-color: #f0f0f0;
+        }
+
+        .bill-footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        @media print {
+            body {
+                margin: 0;
+            }
+            .bill-container {
+                box-shadow: none;
+                border: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bill-container">
+        <div class="bill-header">
+            <h1>Bill for Order #{{ order.id }}</h1>
+        </div>
+
+        <div class="bill-details">
+            <p><strong>Transaction ID:</strong> {% if payment.order.exists %}{{ payment.order.first.order_id }}{% else %}N/A{% endif %}</p>
+            <p><strong>Order Type:</strong> {{ order.order_type }}</p>
+            <p><strong>User:</strong> {% if payment.user %}{{ payment.user.get_full_name|default:payment.user.username }}{% else %}{{ payment.name }}{% endif %}</p>
+            <p><strong>Amount:</strong> ${{ payment.amount|floatformat:2 }}</p>
+            <p><strong>Payment Method:</strong> {{ payment.get_payment_method_display }}</p>
+            <p><strong>Status:</strong> {% if payment.paid %}Paid{% else %}Unpaid{% endif %}</p>
+            <p><strong>Date:</strong> {{ payment.created_at|date:"d M Y" }}</p>
+        </div>
+
+   
+        <!--
+        <table>
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Qty</th>
+                    <th>Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in order.items.all %}
+                <tr>
+                    <td>{{ item.name }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>${{ item.price|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        -->
+
+        <div class="bill-footer">
+            <p>Thank you for your purchase!</p>
+        </div>
+    </div>
+</body>
+</html>

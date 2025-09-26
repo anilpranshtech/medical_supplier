@@ -869,6 +869,15 @@ class AddproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
             **data.dict()
         })
 
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.utils.dateparse import parse_date
+from decimal import Decimal
+from datetime import datetime, timedelta
+from .mixins import StaffAccountRequiredMixin
+
+
 class EditproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
     template = 'superuser/products/edit_product.html'
 
@@ -878,10 +887,14 @@ class EditproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
         main_image = product_images.filter(is_main=True).first()
         gallery_images = product_images.filter(is_main=False)
         categories = ProductCategory.objects.all()
-        subcategories = ProductSubCategory.objects.filter(category=product.category) if product.category else ProductSubCategory.objects.none()
-        lastcategories = ProductLastCategory.objects.filter(sub_category=product.sub_category) if product.sub_category else ProductLastCategory.objects.none()
-        selling_countries = product.selling_countries if product.selling_countries else ''
-        brochure_url = product.brochure.url if product.brochure else None
+
+        # Determine discount_option
+        if product.discount_price is None and (product.offer_percentage is None or product.offer_percentage == 0):
+            discount_option = '1'
+        elif product.offer_percentage and product.offer_percentage > 0:
+            discount_option = '2'
+        else:
+            discount_option = '3'
 
         # Fetch event details
         event = product.event
@@ -891,7 +904,7 @@ class EditproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
         webinar_duration = str(event.duration) if event and event.duration else ''
         webinar_venue = event.venue if event else ''
 
-        is_returnable = product.return_time_limit > 0 if product.return_time_limit else False
+        is_returnable = product.return_time_limit > 0
 
         return {
             'pk': pk,
@@ -899,12 +912,17 @@ class EditproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
             'product_name': product.name,
             'product_description': product.description,
             'price': product.price,
+            'base_price': product.price,
+            'discount_price': product.discount_price or '',
+            'discount_option': discount_option,
+            'offer_percentage': product.offer_percentage or 0,
+            'discounted_price': product.discount_price or '',
             'product_quantity': product.stock_quantity,
             'product_from': product.product_from,
-            'selling_countries': selling_countries,
+            'selling_countries': product.selling_countries or '',
             'warranty': product.warranty,
             'condition': product.condition,
-            'is_returnable': is_returnable,  
+            'is_returnable': is_returnable,
             'return_time_limit': product.return_time_limit,
             'manufacture_date': product.manufacture_date.strftime('%Y-%m-%d') if product.manufacture_date else '',
             'expiry_date': product.expiry_date.strftime('%Y-%m-%d') if product.expiry_date else '',
@@ -923,7 +941,7 @@ class EditproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
             'offer_percentage': product.offer_percentage,
             'offer_start': product.offer_start.strftime('%Y-%m-%d') if product.offer_start else '',
             'offer_end': product.offer_end.strftime('%Y-%m-%d') if product.offer_end else '',
-            'offer_active': product.offer_active, 
+            'offer_active': product.offer_active,
             'brand': product.brand.name if product.brand else '',
             'categories': categories,
             'category_id': product.category.id if product.category else None,
@@ -933,9 +951,9 @@ class EditproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
             'selected_last_category_name': product.last_category.name if product.last_category else '',
             'main_image_url': main_image.image.url if main_image else None,
             'gallery_images': gallery_images,
-            'brochure_url': brochure_url,
-            'subcategories': subcategories,
-            'lastcategories': lastcategories,
+            'brochure_url': product.brochure.url if product.brochure else None,
+            'subcategories': ProductSubCategory.objects.filter(category=product.category) if product.category else ProductSubCategory.objects.none(),
+            'lastcategories': ProductLastCategory.objects.filter(sub_category=product.sub_category) if product.sub_category else ProductLastCategory.objects.none(),
             'suppliers': SupplierProfile.objects.all(),
             'sup_selected': product.created_by.email,
             'sup_selected_id': product.created_by.id,
@@ -953,110 +971,288 @@ class EditproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
     def post(self, request, pk):
         try:
             product = get_object_or_404(Product, pk=pk)
+            data = request.POST
+            files = request.FILES
 
-            product.name = request.POST.get('product_name', '')
+            # Debug: Log all form data
+            print("Form POST data:", dict(data))
+
+            # Check if product is in a webinar category
+            category_id = data.get('category')
+            is_webinar = False
+            if category_id:
+                category = ProductCategory.objects.filter(pk=category_id).first()
+                is_webinar = category and category.name in ['Webinar', 'Conference', 'Event']
+
+            # Basic info
+            product.name = data.get('product_name', '')
             if not product.name:
                 raise ValueError("Product name is required")
+            product.description = data.get('product_description', '')
+            base_price = self._parse_decimal(data.get('base_price'), min_value=Decimal('0.00') if is_webinar else Decimal('1.00'), max_value=Decimal('999999.00'))
+            product.stock_quantity = self._parse_int(data.get('product_quantity'), min_value=0)
+            product.product_from = data.get('product_from', '')
+            product.selling_countries = data.get('selling_countries', '')
+            product.warranty = data.get('warranty', 'none')
+            product.condition = data.get('condition', 'new')
+            product.weight = self._parse_decimal(data.get('weight'), min_value=0)
+            product.weight_unit = data.get('weight_unit', 'gm')
+            product.delivery_time = self._parse_int(data.get('delivery_time'), min_value=0)
+            product.commission_percentage = self._parse_decimal(data.get('commission_percentage'), min_value=0, max_value=100)
+            product.barcode = data.get('barcode', '')
+            product.keywords = data.get('keywords', '')
+            product.supplier_sku = data.get('supplier_sku', '')
+            product.pcs_per_unit = self._parse_int(data.get('pcs_per_unit'), min_value=1)
+            product.min_order_qty = self._parse_int(data.get('min_order_qty'), min_value=1)
+            product.low_stock_alert = self._parse_int(data.get('low_stock_alert'), min_value=0)
+            product.expiration_days = self._parse_int(data.get('expiration_days'), min_value=0)
+            product.tag = data.get('tag', 'none')
+            product.is_active = data.get('is_active') == 'True'
 
-            product.description = request.POST.get('product_description', '')
-            product.price = request.POST.get('price', '0') or '0'
-            product.stock_quantity = request.POST.get('product_quantity', '0') or '0'
-            product.product_from = request.POST.get('product_from', '')
-            product.selling_countries = request.POST.get('selling_countries', '')
-            product.warranty = request.POST.get('warranty', 'none')
-            product.condition = request.POST.get('condition', 'new')
-            is_returnable = request.POST.get('is_returnable') == 'on'
-            product.return_time_limit = request.POST.get('return_time_limit', '0') if is_returnable else '0'
-            product.manufacture_date = request.POST.get('manufacture_date') or None
-            product.expiry_date = request.POST.get('expiry_date') or None
-            product.weight = request.POST.get('weight') or None
-            product.weight_unit = request.POST.get('weight_unit', 'gm')
-            product.delivery_time = request.POST.get('delivery_time') or None
-            product.commission_percentage = request.POST.get('commission_percentage', '0') or '0'
-            product.barcode = request.POST.get('barcode', '')
-            product.keywords = request.POST.get('keywords', '')
-            product.supplier_sku = request.POST.get('supplier_sku', '')
-            product.pcs_per_unit = request.POST.get('pcs_per_unit', '1') or '1'
-            product.min_order_qty = request.POST.get('min_order_qty', '0') or '0'
-            product.low_stock_alert = request.POST.get('low_stock_alert', '0') or '0'
-            product.expiration_days = request.POST.get('expiration_days') or None
-            product.tag = request.POST.get('tag', 'none')
-            product.offer_percentage = request.POST.get('offer_percentage') or None
-            product.offer_start = request.POST.get('offer_start') or None
-            product.offer_end = request.POST.get('offer_end') or None
-            product.is_active = request.POST.get('is_active') == 'True'
-            category_id = request.POST.get('category')
-            product.category = ProductCategory.objects.get(pk=category_id) if category_id else None
-            sub_category_id = request.POST.get('sub_category')
-            product.sub_category = ProductSubCategory.objects.get(pk=sub_category_id) if sub_category_id else None
-            last_category_id = request.POST.get('last_category')
-            product.last_category = ProductLastCategory.objects.get(pk=last_category_id) if last_category_id else None
+            # Returnable toggle
+            product.is_returnable = data.get('is_returnable') == 'on'
+            product.return_time_limit = self._parse_int(data.get('return_time_limit'), min_value=0) if product.is_returnable else 0
 
-            if 'main_image' in request.FILES:
-                ProductImage.objects.filter(product=product, is_main=True).delete()
-                ProductImage.objects.create(product=product, image=request.FILES['main_image'], is_main=True)
+            # Dates
+            product.manufacture_date = self._parse_date(data.get('manufacture_date'))
+            product.expiry_date = self._parse_date(data.get('expiry_date'))
+            product.offer_start = self._parse_date(data.get('offer_start')) if data.get('offer_start') else None
+            product.offer_end = self._parse_date(data.get('offer_end')) if data.get('offer_end') else None
 
-            if 'gallery_images' in request.FILES:
-                for image in request.FILES.getlist('gallery_images'):
-                    ProductImage.objects.create(product=product, image=image, is_main=False)
+            # Offer status
+            product.offer_active = data.get('offer_active') == 'on'
 
-            brand_name = request.POST.get('brand')
+            # Discount handling
+            discount_option = data.get('discount_option')
+            offer_percentage = self._parse_decimal(data.get('offer_percentage'), min_value=Decimal('0.00'), max_value=Decimal('100.00'))
+            discounted_price = self._parse_decimal(data.get('discounted_price'), min_value=Decimal('0.00'))
+            discount_price = self._parse_decimal(data.get('discount_price'), min_value=Decimal('0.00'))
+
+            # Debug: Log pricing inputs
+            print(f"base_price: {base_price}, discount_option: {discount_option}, offer_percentage: {offer_percentage}, discounted_price: {discounted_price}, discount_price: {discount_price}")
+
+            # Validate required fields
+            if not is_webinar and not base_price:
+                messages.error(request, "Base price is required and must be between 1 and 999999 for non-webinar products.")
+                return self._render_form_with_context(request, data, product)
+
+            if discount_option == '2' and (offer_percentage is None or offer_percentage <= 0):
+                messages.error(request, "Please select a discount percentage greater than 0 for percentage discounts.")
+                return self._render_form_with_context(request, data, product)
+
+            if discount_option == '3' and (discounted_price is None or discounted_price <= 0):
+                messages.error(request, "Please enter a valid fixed discounted price (greater than 0).")
+                return self._render_form_with_context(request, data, product)
+
+            # Handle discount logic
+            if is_webinar:
+                product.price = base_price if base_price is not None else Decimal('0.00')
+                product.offer_percentage = 0
+                product.discount_price = None
+            else:
+                if discount_option == '1':
+                    product.price = base_price
+                    product.offer_percentage = 0
+                    product.discount_price = None
+                elif discount_option == '2':
+                    product.price = base_price
+                    product.offer_percentage = offer_percentage or 0
+                    product.discount_price = discount_price or (base_price * (1 - product.offer_percentage / 100))
+                elif discount_option == '3':
+                    product.price = base_price
+                    product.offer_percentage = 0
+                    product.discount_price = discounted_price
+
+            # Debug: Log values before saving
+            print(f"Before save - product.price: {product.price}, product.offer_percentage: {product.offer_percentage}, product.discount_price: {product.discount_price}")
+
+            # Category
+            category_id = data.get('category')
+            if category_id:
+                product.category = ProductCategory.objects.filter(pk=category_id).first()
+            sub_category_id = data.get('sub_category')
+            if sub_category_id:
+                product.sub_category = ProductSubCategory.objects.filter(pk=sub_category_id).first()
+            last_category_id = data.get('last_category')
+            if last_category_id:
+                product.last_category = ProductLastCategory.objects.filter(pk=last_category_id).first()
+
+            # Brand
+            brand_name = data.get('brand')
             if brand_name:
                 brand_obj, _ = Brand.objects.get_or_create(name=brand_name)
                 product.brand = brand_obj
             else:
                 product.brand = None
 
-            if 'brochure' in request.FILES:
-                product.brochure = request.FILES['brochure']
+            # Images
+            if 'main_image' in files:
+                ProductImage.objects.filter(product=product, is_main=True).delete()
+                ProductImage.objects.create(product=product, image=files['main_image'], is_main=True)
 
-            if category_id:
-                category = ProductCategory.objects.get(pk=category_id)
-                if category.name in ["Webinar", "Conference", "Event"]:
-                    registration_link = request.POST.get('registration_link')
-                    speaker_name = request.POST.get('webinar_name')
-                    conference_at_str = request.POST.get('webinar_date')
-                    duration_str = request.POST.get('webinar_duration')
-                    venue = request.POST.get('webinar_venue')
+            if 'gallery_images' in files:
+                for image in files.getlist('gallery_images'):
+                    ProductImage.objects.create(product=product, image=image, is_main=False)
 
-                    if not all([registration_link, speaker_name, conference_at_str, duration_str, venue]):
-                        raise ValueError("All event fields are required for Webinar/Conference/Event")
+            # Brochure
+            if 'brochure' in files:
+                product.brochure = files['brochure']
 
-                    event = product.event if product.event else Event()
-                    event.conference_link = registration_link
-                    event.speaker_name = speaker_name
-                    event.conference_at = datetime.strptime(conference_at_str, '%Y-%m-%dT%H:%M')
+            # Event details
+            if is_webinar:
+                registration_link = data.get('registration_link')
+                speaker_name = data.get('webinar_name')
+                conference_at_str = data.get('webinar_date')
+                duration_str = data.get('webinar_duration')
+                venue = data.get('webinar_venue')
 
-                    try:
-                        parts = duration_str.split(':')
-                        if len(parts) == 3:
-                            h, m, s = map(int, parts)
-                        elif len(parts) == 2:
-                            h, m = map(int, parts)
-                            s = 0
-                        elif len(parts) == 1:
-                            h, m, s = 0, int(parts[0]), 0
-                        else:
-                            raise ValueError
-                        event.duration = timedelta(hours=h, minutes=m, seconds=s)
-                    except ValueError:
-                        raise ValueError("Invalid duration format. Use HH:MM[:SS] or just MM")
+                if not all([registration_link, speaker_name, conference_at_str, duration_str, venue]):
+                    raise ValueError("All event fields are required for Webinar/Conference/Event")
 
-                    event.venue = venue
-                    event.save()
-                    product.event = event
-                else:
-                    product.event = None
+                event = product.event if product.event else Event()
+                event.conference_link = registration_link
+                event.speaker_name = speaker_name
+                event.conference_at = datetime.strptime(conference_at_str, '%Y-%m-%dT%H:%M')
+
+                try:
+                    parts = duration_str.split(':')
+                    if len(parts) == 3:
+                        h, m, s = map(int, parts)
+                    elif len(parts) == 2:
+                        h, m = map(int, parts)
+                        s = 0
+                    elif len(parts) == 1:
+                        h, m, s = 0, int(parts[0]), 0
+                    else:
+                        raise ValueError
+                    event.duration = timedelta(hours=h, minutes=m, seconds=s)
+                except ValueError:
+                    raise ValueError("Invalid duration format. Use HH:MM[:SS] or just MM")
+
+                event.venue = venue
+                event.save()
+                product.event = event
+            else:
+                product.event = None
 
             product.save()
+
+            # Debug: Verify saved values
+            saved_product = Product.objects.get(pk=pk)
+            print(f"After save - product.price: {saved_product.price}, product.offer_percentage: {saved_product.offer_percentage}, product.discount_price: {saved_product.discount_price}")
+
             messages.success(request, 'Product updated successfully!')
             return redirect('superuser:products_list')
 
         except Exception as e:
             print(f'Exception in edit product: {str(e)}')
             messages.error(request, f'Issue in Product update: {str(e)}')
-            context = self.get_context_data(pk)
-            return render(request, self.template, context)
+            return self._render_form_with_context(request, data, product)
+
+    def _parse_decimal(self, val, min_value=None, max_value=None):
+        if not val:
+            return None
+        try:
+            d = Decimal(str(val))
+            if (min_value is not None and d < min_value) or (max_value is not None and d > max_value):
+                return None
+            return d
+        except:
+            return None
+
+    def _parse_int(self, val, min_value=None):
+        if not val:
+            return None
+        try:
+            i = int(val)
+            if min_value is not None and i < min_value:
+                return None
+            return i
+        except:
+            return None
+
+    def _parse_date(self, val):
+        if not val:
+            return None
+        try:
+            return parse_date(val)
+        except:
+            return None
+
+    def _render_form_with_context(self, request, data, product):
+        categories = ProductCategory.objects.all()
+        subcategories = ProductSubCategory.objects.filter(category=product.category) if product.category else ProductSubCategory.objects.none()
+        lastcategories = ProductLastCategory.objects.filter(sub_category=product.sub_category) if product.sub_category else ProductLastCategory.objects.none()
+        product_images = ProductImage.objects.filter(product=product)
+        main_image = product_images.filter(is_main=True).first()
+        gallery_images = product_images.filter(is_main=False)
+        brochure_url = product.brochure.url if product.brochure else None
+
+        # Determine discount_option
+        discount_option = data.get('discount_option', '1')
+        if discount_option not in ['1', '2', '3']:
+            if product.discount_price is None and (product.offer_percentage is None or product.offer_percentage == 0):
+                discount_option = '1'
+            elif product.offer_percentage and product.offer_percentage > 0:
+                discount_option = '2'
+            else:
+                discount_option = '3'
+
+        return render(request, self.template, {
+            'pk': product.id,
+            'product': product,
+            'product_name': data.get('product_name', product.name),
+            'product_description': data.get('product_description', product.description),
+            'base_price': data.get('base_price', product.price),
+            'discount_price': data.get('discount_price', product.discount_price or ''),
+            'discount_option': discount_option,
+            'offer_percentage': data.get('offer_percentage', product.offer_percentage or 0),
+            'discounted_price': data.get('discounted_price', product.discount_price or ''),
+            'product_quantity': data.get('product_quantity', product.stock_quantity),
+            'product_from': data.get('product_from', product.product_from),
+            'selling_countries': data.get('selling_countries', product.selling_countries or ''),
+            'warranty': data.get('warranty', product.warranty),
+            'condition': data.get('condition', product.condition),
+            'is_returnable': data.get('is_returnable') == 'on',
+            'return_time_limit': data.get('return_time_limit', product.return_time_limit),
+            'manufacture_date': data.get('manufacture_date', product.manufacture_date.strftime('%Y-%m-%d') if product.manufacture_date else ''),
+            'expiry_date': data.get('expiry_date', product.expiry_date.strftime('%Y-%m-%d') if product.expiry_date else ''),
+            'weight': data.get('weight', product.weight),
+            'weight_unit': data.get('weight_unit', product.weight_unit),
+            'delivery_time': data.get('delivery_time', product.delivery_time),
+            'commission_percentage': data.get('commission_percentage', product.commission_percentage),
+            'barcode': data.get('barcode', product.barcode),
+            'keywords': data.get('keywords', product.keywords),
+            'supplier_sku': data.get('supplier_sku', product.supplier_sku),
+            'pcs_per_unit': data.get('pcs_per_unit', product.pcs_per_unit),
+            'min_order_qty': data.get('min_order_qty', product.min_order_qty),
+            'low_stock_alert': data.get('low_stock_alert', product.low_stock_alert),
+            'expiration_days': data.get('expiration_days', product.expiration_days),
+            'tag': data.get('tag', product.tag),
+            'offer_start': data.get('offer_start', product.offer_start.strftime('%Y-%m-%d') if product.offer_start else ''),
+            'offer_end': data.get('offer_end', product.offer_end.strftime('%Y-%m-%d') if product.offer_end else ''),
+            'offer_active': data.get('offer_active') == 'on',
+            'brand': data.get('brand', product.brand.name if product.brand else ''),
+            'categories': categories,
+            'category_id': data.get('category', product.category.id if product.category else None),
+            'selected_sub_category': data.get('sub_category', product.sub_category.id if product.sub_category else None),
+            'selected_sub_category_name': product.sub_category.name if product.sub_category else '',
+            'selected_last_category': data.get('last_category', product.last_category.id if product.last_category else None),
+            'selected_last_category_name': product.last_category.name if product.last_category else '',
+            'main_image_url': main_image.image.url if main_image else None,
+            'gallery_images': gallery_images,
+            'brochure_url': brochure_url,
+            'subcategories': subcategories,
+            'lastcategories': lastcategories,
+            'suppliers': SupplierProfile.objects.all(),
+            'sup_selected': data.get('supplier', product.created_by.email),
+            'sup_selected_id': data.get('supplier', product.created_by.id),
+            'registration_link': data.get('registration_link', ''),
+            'webinar_name': data.get('webinar_name', ''),
+            'webinar_date': data.get('webinar_date', ''),
+            'webinar_duration': data.get('webinar_duration', ''),
+            'webinar_venue': data.get('webinar_venue', ''),
+        })
     
 
 

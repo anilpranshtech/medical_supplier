@@ -263,6 +263,13 @@ class="menu-item py-2 {% if request.resolver_match.url_name == 'user_list' or re
                       </span>
                       <span class="menu-title">Transaction</span>
                     </a>
+                    <a class="menu-link {% if request.resolver_match.url_name == 'shipping_list' %} active {% endif %}"
+                    href="{% url 'supplier:shipping_list' %}">
+                   <span class="menu-bullet">
+                     <span class="bullet bullet-dot"></span>
+                   </span>
+                   <span class="menu-title">Shipping Method</span>
+                 </a>
                   </div>
                 </div>
               </div>

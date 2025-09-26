@@ -93,7 +93,7 @@
                                 <div class="row g-8 mb-8">
                                     <div class="col-xxl-12">
                                         <div class="row g-8">
-                                            <!-- Created At Filter (uncommented for completeness) -->
+                                            <!-- Created At Filter -->
                                             <div class="col-md-6 col-lg-6 col-xl-4 col-xxl-4">
                                                 <label class="fs-6 form-label fw-bold text-gray-900">Created At</label>
                                                 <select class="form-select form-select-solid" data-control="select2" data-hide-search="true" name="date_filter">
@@ -132,26 +132,48 @@
 
                 <!-- Transactions Table -->
                 <div class="card card-flush mb-3">
-                    <div class="card-header align-items-center py-5 gap-2 gap-md-5">
-                        
-                    </div>
+                    <div class="card-header align-items-center py-5 gap-2 gap-md-5"></div>
 
                     <div class="card-body table-responsive p-0">
                         <table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_ecommerce_sales_table" style="margin:0;">
                             <thead>
                                 <tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
                                     <th class="text-center">Transaction ID</th>
+                                    <th class="text-center">Order Type</th>
                                     <th class="text-center">User</th>
                                     <th class="text-center">Amount</th>
                                     <th class="text-center">Payment Method</th>
                                     <th class="text-center">Status</th>
                                     <th class="text-center">Created At</th>
+                                    <th class="text-center">Action</th>
                                 </tr>
                             </thead>
                             <tbody class="fw-semibold text-gray-600">
                                 {% for payment in orders %}
                                 <tr>
-                                    <td class="text-center">{{ payment.id }}</td>
+                                    <!-- Transaction ID -->
+                                    <td class="text-center">
+                                        {% if payment.order.exists %}
+                                            {{ payment.order.first.order_id }}
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </td>
+
+                                    <!-- Order Type -->
+                                    <td class="text-center">
+                                        {% if payment.order.exists %}
+                                            {% if payment.order.first.order_type == "order" %}
+                                                <div class="badge badge-light-primary">Order</div>
+                                            {% else %}
+                                                <div class="badge badge-light-warning">Return</div>
+                                            {% endif %}
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </td>
+
+                                    <!-- User -->
                                     <td class="text-center">
                                         {% if payment.user %}
                                             {{ payment.user.get_full_name|default:payment.user.username }}
@@ -159,8 +181,14 @@
                                             {{ payment.name }}
                                         {% endif %}
                                     </td>
+
+                                    <!-- Amount -->
                                     <td class="text-center">${{ payment.amount|floatformat:2 }}</td>
+
+                                    <!-- Payment Method -->
                                     <td class="text-center">{{ payment.get_payment_method_display }}</td>
+
+                                    <!-- Status -->
                                     <td class="text-center">
                                         {% if payment.paid %}
                                             <div class="badge badge-light-success">Paid</div>
@@ -168,18 +196,33 @@
                                             <div class="badge badge-light-danger">Unpaid</div>
                                         {% endif %}
                                     </td>
+
+                                    <!-- Created At -->
                                     <td class="text-center">{{ payment.created_at|date:"d M Y" }}</td>
+
+                                    <!-- Action -->
+                                    <td class="text-center">
+                                        {% if payment.order.exists %}
+                                        <a href="{% url 'supplier:print_bill' payment.order.first.id %}" class="btn btn-sm btn-light-primary">
+                                            <i class="bi bi-printer"></i> Print Bill
+                                        </a>
+                                        
+                                        
+                                        {% else %}
+                                            <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </td>
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="6" class="text-center text-muted">No transactions available.</td>
+                                    <td colspan="8" class="text-center text-muted">No transactions available.</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
                     </div>
                 </div>
-                   {% include "supplier/pagination.html" %}
+                {% include "supplier/pagination.html" %}
             </div>
         </div>
     </div>

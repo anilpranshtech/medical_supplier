@@ -3572,6 +3572,12 @@ class RequestReturnView(LoginRequiredMixin, View):
                 return_status='pending',
                 reason=reason
             )
+
+            # ===== New: Update the order_type to 'return' =====
+            order_item.order.order_type = 'return'
+            order_item.order.save(update_fields=['order_type'])
+            # ================================================
+
             option_text = "refund" if return_option == "return" else "replacement"
             messages.success(
                 request,
@@ -3637,7 +3643,7 @@ class RequestReturnView(LoginRequiredMixin, View):
                     message=f"Return request {return_obj.return_serial} for {return_obj.order_item.product.name} by {return_obj.client.get_full_name() or return_obj.client.username}"
                 )
         except Exception:
-            pass  
+            pass
 
 
 

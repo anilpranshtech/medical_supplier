@@ -39,6 +39,11 @@ from .mixins import OnboardingRequiredMixin
 from .forms import SupplierRFQQuotationForm
 from django.core.paginator import Paginator
 from decimal import Decimal 
+from django.shortcuts import get_object_or_404
+from django.http import HttpResponse
+from django.template.loader import render_to_string
+from xhtml2pdf import pisa
+
 
 logger = logging.getLogger(__name__)
 
@@ -1887,7 +1892,6 @@ class TransactionView(OnboardingRequiredMixin,TemplateView):
             elif date_filter == 'last_30_days':
                 payments = payments.filter(created_at__date__gte=today - timedelta(days=30))
 
-        # Default sorting
         payments = payments.order_by('-created_at')
 
         # ----------------- Pagination -----------------
@@ -1905,6 +1909,17 @@ class TransactionView(OnboardingRequiredMixin,TemplateView):
 
         return context
 
+def PrintBillView(request, pk):
+    order = get_object_or_404(Order, pk=pk)
+    payment = getattr(order, 'payment', None) 
+    html_content = render_to_string('supplier/print_bill.html', {'order': order, 'payment': payment})
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="Bill_Order_{order.id}.pdf"'
+    pisa_status = pisa.CreatePDF(html_content, dest=response)
+    if pisa_status.err:
+        return HttpResponse('We had some errors <pre>' + html_content + '</pre>')
+    
+    return response
 
 class MostViewedProductsView(OnboardingRequiredMixin,View):
     paginate_by = 12  
@@ -2119,12 +2134,8 @@ class RatingView(OnboardingRequiredMixin,TemplateView):
 
         return context
 
-<<<<<<< HEAD
 class SupplierReturnsView(LoginRequiredMixin, OnboardingRequiredMixin, TemplateView):
-=======
 
-class SupplierReturnsView(LoginRequiredMixin, OnboardingRequiredMixin,TemplateView):
->>>>>>> b74382485173ba7e357fa378f25ebd2d664f955e
     template_name = 'supplier/returns.html'
     login_url = 'dashboard:login'
     paginate_by = 14  
@@ -2221,8 +2232,6 @@ class SupplierReturnsView(LoginRequiredMixin, OnboardingRequiredMixin,TemplateVi
 
         return redirect('supplier:supplier_returns')
 
-
-
 class UserInformationView(FormView):
     template_name = "supplier/user_information.html"
     form_class = UserInformationForm
@@ -2279,7 +2288,6 @@ class UserInformationView(FormView):
         context["step"] = 1
         context["progress"] = 12  
         return context
-
 
 class BusinessInformationView(FormView):
     template_name = "supplier/user_information.html"
@@ -2596,3 +2604,69 @@ class AdminReturnsView(LoginRequiredMixin, TemplateView):
         context['user_permissions_list'] = self.request.user.get_all_permissions()
 
         return context
+
+
+
+class ShippingListView(TemplateView):
+    template_name = 'supplier/shippingmethod.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['shipping_methods'] = ShippingMethod.objects.all()
+        return context
+
+class ShippingCreateView(View):
+    def post(self, request):
+        country = request.POST.get('country')
+        state = request.POST.get('state')
+        city = request.POST.get('city')
+        order_subtotal_from = request.POST.get('order_subtotal_from')
+        order_subtotal_to = request.POST.get('order_subtotal_to')
+        price = request.POST.get('price')
+        period = request.POST.get('period')
+        period_type = request.POST.get('period_type')
+
+        # Validation
+        if float(order_subtotal_from) > float(order_subtotal_to):
+            return JsonResponse({'status':'error','message':'Subtotal To must be >= Subtotal From'})
+
+        shipping = ShippingMethod.objects.create(
+            country=country, state=state, city=city,
+            order_subtotal_from=order_subtotal_from,
+            order_subtotal_to=order_subtotal_to,
+            price=price, period=period, period_type=period_type
+        )
+        return JsonResponse({'status':'success','message':'Shipping created','id':shipping.id})
+
+class ShippingUpdateView(View):
+    def post(self, request, pk):
+        shipping = get_object_or_404(ShippingMethod, pk=pk)
+        country = request.POST.get('country')
+        state = request.POST.get('state')
+        city = request.POST.get('city')
+        order_subtotal_from = request.POST.get('order_subtotal_from')
+        order_subtotal_to = request.POST.get('order_subtotal_to')
+        price = request.POST.get('price')
+        period = request.POST.get('period')
+        period_type = request.POST.get('period_type')
+
+        # Validation
+        if float(order_subtotal_from) > float(order_subtotal_to):
+            return JsonResponse({'status':'error','message':'Subtotal To must be >= Subtotal From'})
+
+        shipping.country = country
+        shipping.state = state
+        shipping.city = city
+        shipping.order_subtotal_from = order_subtotal_from
+        shipping.order_subtotal_to = order_subtotal_to
+        shipping.price = price
+        shipping.period = period
+        shipping.period_type = period_type
+        shipping.save()
+        return JsonResponse({'status':'success','message':'Shipping updated'})
+
+class ShippingDeleteView(View):
+    def post(self, request, pk):
+        shipping = get_object_or_404(ShippingMethod, pk=pk)
+        shipping.delete()
+        return JsonResponse({'status':'success','message':'Shipping deleted'})

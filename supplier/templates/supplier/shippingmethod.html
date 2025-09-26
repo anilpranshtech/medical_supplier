@@ -1,0 +1,357 @@
+{% extends "supplier/base.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 30px;
+        background: #fff;
+    }
+    .dashboard-container {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+    }
+    .card {
+        flex: 1;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+    .card-title {
+        font-weight: bold;
+        color: #000;
+        margin-bottom: 10px;
+    }
+    .card-count {
+        font-size: 32px;
+    }
+    @media (max-width: 768px) {
+        .dashboard-container {
+            flex-direction: column;
+        }
+    }
+</style>
+
+<div class="app-main flex-column flex-row-fluid" id="kt_app_main">
+    <div class="d-flex flex-column flex-column-fluid">
+        <div id="kt_app_content" class="app-content flex-column-fluid pt-0">
+            <div id="kt_app_content_container" class="app-container container-fluid">
+
+                <!-- Shipping Methods Table -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="card-title">Shipping Methods</h3>
+                    <!-- Create Button -->
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createShippingModal">
+                        <i class="bi bi-plus-circle"></i> Create Shipping Method
+                    </button>
+                </div>
+                
+                <!-- Shipping Methods Table -->
+                <div class="card card-flush mb-3">
+                    <div class="card-body table-responsive p-0">
+                        <table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_shipping_methods_table">
+                            <thead>
+                                <tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
+                                    <th class="text-center">#</th>
+                                    <th class="text-center">Country</th>
+                                    <th class="text-center">State</th>
+                                    <th class="text-center">City</th>
+                                    <th class="text-center">Subtotal From</th>
+                                    <th class="text-center">Subtotal To</th>
+                                    <th class="text-center">Price</th>
+                                    <th class="text-center">Period</th>
+                                    <th class="text-center">Period Type</th>
+                                    <th class="text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="fw-semibold text-gray-600">
+                                {% for shipping in shipping_methods %}
+                                <tr>
+                                    <td class="text-center">{{ forloop.counter }}</td>
+                                    <td class="text-center">{{ shipping.country }}</td>
+                                    <td class="text-center">{{ shipping.state }}</td>
+                                    <td class="text-center">{{ shipping.city }}</td>
+                                    <td class="text-center">${{ shipping.order_subtotal_from|floatformat:2 }}</td>
+                                    <td class="text-center">${{ shipping.order_subtotal_to|floatformat:2 }}</td>
+                                    <td class="text-center">${{ shipping.price|floatformat:2 }}</td>
+                                    <td class="text-center">{{ shipping.period }}</td>
+                                    <td class="text-center">{{ shipping.get_period_type_display }}</td>
+                                    <td class="text-center">
+                                        <button type="button" class="btn btn-sm btn-light-primary edit-shipping" 
+                                                data-id="{{ shipping.id }}">
+                                            <i class="bi bi-pencil-square"></i> Edit
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-light-danger delete-shipping" 
+                                                data-id="{{ shipping.id }}">
+                                            <i class="bi bi-trash"></i> Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="10" class="text-center text-muted">No shipping methods available.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Create / Edit Modal -->
+                <div class="modal fade" id="createShippingModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="modalTitle">Create Shipping Method</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Country</label>
+                                    <select class="form-select" id="country">
+                                        <option value="">Select Country</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">State</label>
+                                    <select class="form-select" id="state">
+                                        <option value="">Select State</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">City</label>
+                                    <select class="form-select" id="city">
+                                        <option value="">Select City</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Order Subtotal From</label>
+                                    <input type="number" step="0.01" class="form-control" id="order_subtotal_from">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Order Subtotal To</label>
+                                    <input type="number" step="0.01" class="form-control" id="order_subtotal_to">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Price</label>
+                                    <input type="number" step="0.01" class="form-control" id="price">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Period</label>
+                                    <input type="number" class="form-control" id="period">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Period Type</label>
+                                    <select class="form-select" id="period_type">
+                                        <option value="days">Days</option>
+                                        <option value="weeks">Weeks</option>
+                                        <option value="months">Months</option>
+                                    </select>
+                                </div>
+                                <div id="formMessage" class="mb-3"></div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" id="saveShipping" class="btn btn-primary">Save</button>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Delete Confirmation Modal -->
+                <div class="modal fade" id="deleteShippingModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Delete Shipping Method</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                Are you sure you want to delete this shipping method?
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" id="confirmDelete" class="btn btn-danger">Delete</button>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block page_only_scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    let editingId = null;
+    let deleteId = null;
+
+    const modal = new bootstrap.Modal(document.getElementById('createShippingModal'));
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteShippingModal'));
+    const messageDiv = document.getElementById('formMessage');
+
+    const countrySelect = document.getElementById('country');
+    const stateSelect = document.getElementById('state');
+    const citySelect = document.getElementById('city');
+
+    function showMessage(text, type='success'){
+        messageDiv.innerHTML = `<div class="alert alert-${type}">${text}</div>`;
+    }
+
+    async function fetchCountries() {
+        countrySelect.innerHTML = `<option value="">Loading...</option>`;
+        const res = await fetch("https://countriesnow.space/api/v0.1/countries");
+        const data = await res.json();
+        countrySelect.innerHTML = `<option value="">Select Country</option>`;
+        data.data.forEach(item => {
+            countrySelect.innerHTML += `<option value="${item.country}">${item.country}</option>`;
+        });
+    }
+
+    async function fetchStates(country) {
+        stateSelect.innerHTML = `<option value="">Loading...</option>`;
+        const res = await fetch("https://countriesnow.space/api/v0.1/countries/states", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ country })
+        });
+        const data = await res.json();
+        stateSelect.innerHTML = `<option value="">Select State</option>`;
+        (data.data.states || []).forEach(item => {
+            stateSelect.innerHTML += `<option value="${item.name}">${item.name}</option>`;
+        });
+    }
+
+    async function fetchCities(country, state) {
+        citySelect.innerHTML = `<option value="">Loading...</option>`;
+        const res = await fetch("https://countriesnow.space/api/v0.1/countries/state/cities", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ country, state })
+        });
+        const data = await res.json();
+        citySelect.innerHTML = `<option value="">Select City</option>`;
+        (data.data || []).forEach(city => {
+            citySelect.innerHTML += `<option value="${city}">${city}</option>`;
+        });
+    }
+
+    // Open Create Modal
+    document.querySelector('.btn[data-bs-target="#createShippingModal"]').addEventListener('click', async function(){
+        editingId = null;
+        document.getElementById('modalTitle').textContent = 'Create Shipping Method';
+        messageDiv.innerHTML = '';
+        ['order_subtotal_from','order_subtotal_to','price','period','period_type'].forEach(id => {
+            document.getElementById(id).value = '';
+        });
+        stateSelect.innerHTML = `<option value="">Select State</option>`;
+        citySelect.innerHTML = `<option value="">Select City</option>`;
+        await fetchCountries();
+    });
+
+    countrySelect.addEventListener('change', async function(){
+        const country = this.value;
+        if(country) await fetchStates(country);
+        else { stateSelect.innerHTML=`<option value="">Select State</option>`; citySelect.innerHTML=`<option value="">Select City</option>`; }
+    });
+
+    stateSelect.addEventListener('change', async function(){
+        const state = this.value;
+        const country = countrySelect.value;
+        if(country && state) await fetchCities(country, state);
+        else citySelect.innerHTML=`<option value="">Select City</option>`;
+    });
+
+    // Save Add/Edit
+    const saveBtn = document.getElementById('saveShipping');
+    saveBtn.replaceWith(saveBtn.cloneNode(true));
+    document.getElementById('saveShipping').addEventListener('click', function(){
+        const data = {
+            country: countrySelect.value,
+            state: stateSelect.value,
+            city: citySelect.value,
+            order_subtotal_from: document.getElementById('order_subtotal_from').value,
+            order_subtotal_to: document.getElementById('order_subtotal_to').value,
+            price: document.getElementById('price').value,
+            period: document.getElementById('period').value,
+            period_type: document.getElementById('period_type').value,
+        };
+        const url = editingId ? `/shipping-update/${editingId}/` : `/shipping-create/`;
+        fetch(url, {
+            method: 'POST',
+            headers: {'X-CSRFToken': csrftoken},
+            body: new URLSearchParams(data)
+        })
+        .then(res => res.json())
+        .then(res => {
+            if(res.status === 'success'){
+                showMessage(res.message, 'success');
+                setTimeout(()=>location.reload(), 800);
+            } else showMessage(res.message, 'danger');
+        });
+    });
+
+    // Edit Button
+    document.querySelectorAll('.edit-shipping').forEach(btn => {
+        btn.addEventListener('click', function(){
+            const row = this.closest('tr');
+            openEditModal(row);
+        });
+    });
+
+    async function openEditModal(row){
+        editingId = row.querySelector('.edit-shipping').dataset.id;
+        document.getElementById('modalTitle').textContent = 'Edit Shipping Method';
+        messageDiv.innerHTML = '';
+
+        document.getElementById('order_subtotal_from').value = row.children[4].textContent.replace('$','');
+        document.getElementById('order_subtotal_to').value = row.children[5].textContent.replace('$','');
+        document.getElementById('price').value = row.children[6].textContent.replace('$','');
+        document.getElementById('period').value = row.children[7].textContent;
+        document.getElementById('period_type').value = row.children[8].textContent.toLowerCase();
+
+        const country = row.children[1].textContent.trim();
+        const state = row.children[2].textContent.trim();
+        const city = row.children[3].textContent.trim();
+
+        await fetchCountries();
+        countrySelect.value = country;
+        await fetchStates(country);
+        stateSelect.value = state;
+        await fetchCities(country, state);
+        citySelect.value = city;
+
+        modal.show();
+    }
+
+    // Delete Button
+    document.querySelectorAll('.delete-shipping').forEach(btn => {
+        btn.addEventListener('click', function(){
+            deleteId = this.dataset.id;
+            deleteModal.show();
+        });
+    });
+
+    document.getElementById('confirmDelete').addEventListener('click', function(){
+        if(!deleteId) return;
+        fetch(`/shipping-delete/${deleteId}/`,{
+            method:'POST',
+            headers:{'X-CSRFToken': csrftoken}
+        })
+        .then(res=>res.json())
+        .then(res=>{
+            if(res.status === 'success') location.reload();
+        });
+    });
+
+});
+</script>
+{% endblock %}
+
+{% endblock %}

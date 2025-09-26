@@ -2437,3 +2437,87 @@ class SupplierProfileAPIView(APIView):
                 "errors": serializer.errors
             }
         }, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+
+
+class UserProfileAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+
+         # Case 0: Superuser / Staff
+        if user.is_superuser or user.is_staff:
+            serializer = SuperUserSerializer(user)
+            return Response({
+                "code": 200,
+                "message": "Success",
+                "role": "admin",
+                "items": {"data": serializer.data}
+            }, status=status.HTTP_200_OK)
+
+        # Case 1: Doctor Profile
+        if hasattr(user, "doctor_profile"):
+            profile = user.doctor_profile
+            serializer = DoctorProfileSerializer(profile)
+            return Response({
+                "code": 200,
+                "message": "Success",
+                "role": "doctor",
+                "items": {
+                    "data": serializer.data
+                }
+            }, status=status.HTTP_200_OK)
+
+        # Case 2: Supplier Profile
+        if hasattr(user, "supplierprofile"):
+            profile = user.supplierprofile
+            serializer = SupplierProfileSerializer(profile)
+            combined_data = {
+                "username": user.username,
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                **serializer.data
+            }
+            return Response({
+                "code": 200,
+                "message": "Success",
+                "role": "supplier",
+                "items": {
+                    "data": combined_data
+                }
+            }, status=status.HTTP_200_OK)
+
+        # Case 3: Wholesale Buyer Profile
+        if hasattr(user, "wholesalebuyerprofile"):
+            profile = user.wholesalebuyerprofile
+            serializer = WholesaleBuyerProfileSerializer(profile)
+            combined_data = {
+                "username": user.username,
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                **serializer.data
+            }
+            return Response({
+                "code": 200,
+                "message": "Success",
+                "role": "wholesale_buyer",
+                "items": {
+                    "data": combined_data
+                }
+            }, status=status.HTTP_200_OK)
+
+        # If no profile found
+        return Response({
+            "code": 404,
+            "message": "Profile not found",
+            "items": {
+                "data": None
+            }
+        }, status=status.HTTP_404_NOT_FOUND)
+

@@ -64,11 +64,17 @@ urlpatterns = [
     # path('banner-edit/<int:pk>/', BannerUpdateView.as_view(), name='banner_edit'),
 
     path('transaction/', TransactionView.as_view(), name='transaction_list'),
+    path('print-bill/<int:pk>/', PrintBillView, name='print_bill'),
     path('question/', QuestionView.as_view(), name='question_list'),
     path('rating/', RatingView.as_view(), name='rating_list'),
     
     path('most-viewed-products/', MostViewedProductsView.as_view(), name='view_product'),
-
+    #shipping method
+    path('shipping-list/', ShippingListView.as_view(), name='shipping_list'),
+    path('shipping-create/', ShippingCreateView.as_view(), name='shipping_create'),
+    path('shipping-update/<int:pk>/', ShippingUpdateView.as_view(), name='shipping_update'),
+    path('shipping-delete/<int:pk>/', ShippingDeleteView.as_view(), name='shipping_delete'),
+    #return
     path('supplier/returns/', SupplierReturnsView.as_view(), name='supplier_returns'),
     path('supplier/returns/<str:return_serial>/', SupplierReturnsView.as_view(), name='supplier_returns'),
     
