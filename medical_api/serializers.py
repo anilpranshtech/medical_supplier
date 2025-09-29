@@ -1,6 +1,8 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers, mixins, viewsets
 from django.contrib.auth.models import User
+from rest_framework.reverse import reverse
+
 from supplier.models import *
 from superuser.models import *
 from dashboard.models import *
@@ -292,6 +294,7 @@ class EventSerializer(serializers.ModelSerializer):
         model = Event
         fields = '__all__'
 
+
 class ProductSerializer(serializers.ModelSerializer):
     event = EventSerializer(read_only=True)
     event_id = serializers.PrimaryKeyRelatedField(queryset=Event.objects.all(), source='event', write_only=True, required=False)
@@ -482,9 +485,8 @@ class BannerSerializer(serializers.ModelSerializer):
         fields = ['id', 'title', 'image', 'link', 'is_active', 'order']
 
 
-
 class ProductSerializer(serializers.ModelSerializer):
-    main_image = serializers.SerializerMethodField()
+    main_image = serializers.ImageField()
 
     class Meta:
         model = Product
@@ -517,6 +519,7 @@ class PaymentSerializer(serializers.ModelSerializer):
         model = Payment
         fields = ['id', 'payment_method', 'created_at', 'amount', 'name']
 
+
 class StripePaymentSerializer(serializers.ModelSerializer):
     card_last4 = serializers.CharField(read_only=True, allow_null=True)
 
@@ -524,10 +527,12 @@ class StripePaymentSerializer(serializers.ModelSerializer):
         model = StripePayment
         fields = ['id', 'stripe_charge_id', 'amount', 'created_at', 'name', 'stripe_customer_id', 'stripe_signature', 'card_last4']
 
+
 class RazorpayPaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = RazorpayPayment
         fields = ['id', 'razorpay_payment_id', 'amount', 'created_at', 'name', 'razorpay_order_id', 'razorpay_signature']
+
 
 class CODPaymentSerializer(serializers.ModelSerializer):
     delivery_partner = serializers.StringRelatedField()  # Returns the string representation of DeliveryPartner
@@ -535,6 +540,7 @@ class CODPaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = CODPayment
         fields = ['id', 'amount', 'created_at', 'name', 'cod_tracking_id', 'delivery_partner']
+
 
 class BankTransferPaymentSerializer(serializers.ModelSerializer):
     proof_image = serializers.ImageField(use_url=True, allow_null=True)
@@ -547,7 +553,9 @@ class BankTransferPaymentSerializer(serializers.ModelSerializer):
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = ['id', 'name', 'price'] 
+
+        fields = ['id', 'name', 'price']
+
 
 class CartProductSerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(source='product.name', read_only=True)
@@ -560,15 +568,17 @@ class CartProductSerializer(serializers.ModelSerializer):
         fields = ['id', 'product', 'product_name', 'product_price', 'quantity', 'product_image', 'created_at']
 
     def get_product_image(self, obj):
-        if obj.product.productimage_set.exists():
-            return obj.product.productimage_set.first().image.url
-        return ''
-# class CartProductSerializer(serializers.ModelSerializer):
-#     product = ProductSerializer()
+        try:
+            request = self.context.get('request')
+            if obj.product.images.exists():
+                image_url = obj.product.images.first().image.url
+                if request is not None:
+                    return request.build_absolute_uri(image_url)
+                return image_url  # fallback to relative URL
+            return None
+        except AttributeError:
+            return None
 
-#     class Meta:
-#         model = CartProduct
-#         fields = ['id', 'product', 'quantity', 'created_at']
 
 class WishlistProductSerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(source='product.name')
@@ -594,15 +604,33 @@ class CustomerBillingAddressSerializer(serializers.ModelSerializer):
         fields = ['id','address_title','customer_address1','customer_address2','phone','customer_city','customer_state','customer_country','customer_postal_code',]
         read_only_fields = ['user', 'is_deleted']
 
+
 class OrderSerializer(serializers.ModelSerializer):
     payment = PaymentSerializer()
+    main_image = serializers.SerializerMethodField()
+    user_reviews = serializers.SerializerMethodField()
 
     class Meta:
         model = Order
-        fields = ['id', 'order_id', 'payment', 'shipping_fees', 'created_at', 'status']
+        fields = ['id', 'order_id', 'payment', 'shipping_fees', 'created_at', 'status', 'main_image', 'user_reviews']
 
+    def get_main_image(self, obj):
+        # Access prefetched main_image
+        request = self.context.get('request')  # Get request from serializer context
+        for item in obj.items.all():
+            if hasattr(item.product, 'main_image') and item.product.main_image:
+                image_url = item.product.main_image[0].image.url
+                # Build full URL using request.build_absolute_uri
+                return request.build_absolute_uri(image_url) if request else image_url
+        return None
 
-
+    def get_user_reviews(self, obj):
+        # Access prefetched user_reviews
+        reviews = []
+        for item in obj.items.all():
+            if hasattr(item.product, 'user_reviews'):
+                reviews.extend(RatingReviewSerializer(item.product.user_reviews, many=True, context=self.context).data)
+        return reviews
 
 
 class RFQRequestSerializer(serializers.ModelSerializer):
@@ -677,6 +705,7 @@ class RoleRequestSerializer(serializers.ModelSerializer):
         fields = ['id','address_title','customer_address1','customer_address2','phone','customer_city','customer_state','customer_country','customer_postal_code',]
         read_only_fields = ['user', 'is_deleted']
 
+
 class ShippingInfoSerializer(serializers.Serializer):
   
     addresses = CustomerBillingAddressSerializer(many=True)
@@ -684,16 +713,34 @@ class ShippingInfoSerializer(serializers.Serializer):
     cart_items = CartProductSerializer(many=True)
     order_summary = serializers.DictField()
 
-class ProductSerializer(serializers.ModelSerializer):
+
+class ProductListSerializer(serializers.ModelSerializer):
     discounted_price = serializers.SerializerMethodField()
+    image = serializers.SerializerMethodField()
+    link = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'price', 'discounted_price', 'category', 'sub_category', 'last_category', 'is_active', 'created_at']
+        fields = [
+            'id', 'name', 'price', 'discounted_price',
+            'category', 'sub_category', 'last_category',
+            'is_active', 'created_at', 'image', 'link'
+        ]
 
     def get_discounted_price(self, obj):
         return obj.discounted_price()
-    
+
+    def get_image(self, obj):
+        request = self.context.get('request')
+        image_url = obj.get_main_image()
+        if image_url and request:
+            return request.build_absolute_uri(image_url)
+        return image_url or '/static/default_product.png'
+
+    def get_link(self, obj):
+        request = self.context.get('request')
+        return reverse('medical_api:product-detail', kwargs={'id': obj.id}, request=request)
+
 
 class WholesaleRegistrationSerializer(serializers.ModelSerializer):
     email = serializers.EmailField()
@@ -768,7 +815,8 @@ class WholesaleRegistrationSerializer(serializers.ModelSerializer):
         except WholesaleBuyerProfile.DoesNotExist:
             data["wholesale_profile"] = None
         return data
-    
+
+
 class SupplierRegistrationSerializer(serializers.Serializer):
     first_name = serializers.CharField()
     last_name = serializers.CharField()
@@ -806,11 +854,13 @@ class SupplierRegistrationSerializer(serializers.Serializer):
         )
         return supplier
 
+
 class WholesaleBuyerProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = WholesaleBuyerProfile
         fields = '__all__'
         read_only_fields = ['user']
+
 
 class SupplierProfileSerializer(serializers.ModelSerializer):
     class Meta:
@@ -824,6 +874,7 @@ class SupplierProfileSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['is_verified']
 
+
 class SuperUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -831,3 +882,57 @@ class SuperUserSerializer(serializers.ModelSerializer):
             "username", "email", "first_name", "last_name",
             "is_superuser", "is_staff", "date_joined", "last_login"
         ]
+
+
+################################### NO LOGIN REQUIRED API's #################################
+
+class LoginEventSerializer(serializers.ModelSerializer):
+    duration = serializers.CharField(source='duration', read_only=True, allow_null=True)
+    class Meta:
+        model = Event
+        fields = ['conference_at', 'speaker_name', 'venue', 'duration', 'conference_link']
+
+
+class LoginProductSerializer(serializers.ModelSerializer):
+    main_image = serializers.URLField(read_only=True)
+    delivery_date = serializers.CharField(read_only=True)
+    rating = serializers.FloatField(read_only=True)
+    total_reviews = serializers.IntegerField(read_only=True)
+    discounted_price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    event_details = serializers.DictField(read_only=True)
+    category_name = serializers.CharField(read_only=True)
+    sub_category_name = serializers.CharField(read_only=True)
+    last_category_name = serializers.CharField(read_only=True)
+    brand_name = serializers.CharField(read_only=True)
+    supplier_sku = serializers.CharField(read_only=True)  # Added to match Product model
+
+    class Meta:
+        model = Product
+        fields = [
+            'id', 'name', 'description', 'main_image', 'price',  # Removed 'original_price'
+            'offer_percentage', 'offer_active', 'delivery_date', 'rating', 'total_reviews',
+            'supplier_sku', 'category', 'sub_category', 'last_category', 'category_name',
+            'sub_category_name', 'last_category_name', 'brand_name', 'discounted_price',
+            'event_details', 'show_rfq', 'show_add_to_cart', 'Both'
+        ]
+
+
+class LoginBannerSerializer(serializers.ModelSerializer):
+    image = serializers.ImageField(use_url=True)
+    class Meta:
+        model = Banner
+        fields = ['id', 'title', 'image', 'link']
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    image = serializers.ImageField(use_url=True, allow_null=True)
+    class Meta:
+        model = ProductCategory
+        fields = ['id', 'name', 'image']
+
+
+class SupplierSerializer(serializers.ModelSerializer):
+    company_logo = serializers.ImageField(use_url=True, allow_null=True)
+    class Meta:
+        model = SupplierProfile
+        fields = ['id', 'company_name', 'company_logo']

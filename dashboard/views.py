@@ -948,8 +948,9 @@ class SearchResultsGridView(TemplateView):
         logger.debug(f"Final context: {context.keys()}")
         return context
 
-#--------------------------------------------------------------------------------------------------------------------------------------------
-    
+#-------------------------------------------------------------------------------------------------------------------------------------------
+
+
 class SearchResultsListView(TemplateView):
     template_name = 'userdashboard/view/search_results_list.html'
 
@@ -1164,6 +1165,7 @@ class SearchResultsListView(TemplateView):
             context['user_registered_event_ids'] = []
 
         return context
+
 
 class ProductDetailsView(TemplateView):
     template_name = 'userdashboard/view/product_details.html'

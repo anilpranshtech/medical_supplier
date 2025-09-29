@@ -12,6 +12,9 @@ router.register(r'supplier-list', SupplierList, basename='supplier_list')
 router.register(r'order-placed', OrderPlacedAPIViewSet, basename='order-placed')
 router.register(r'my-orders', MyOrdersAPIViewSet, basename='my-orders')
 
+##### Login Required API's #####
+router.register(r'login-home', LoginHomeAPIViewSet, basename='login-home')
+
 urlpatterns = [
 
     path('', include(router.urls)),
@@ -24,7 +27,7 @@ urlpatterns = [
     path('logout/', LogoutView.as_view(), name='user_logout'),
 
     path('forgot-password/', ForgotPasswordAPIView.as_view(), name='forgot-password'),
-    path('reset-password/<uidb64>/<token>/', ResetPasswordAPIView.as_view(), name='reset-password'),
+    path('reset-password/', ResetPasswordAPIView.as_view(), name='reset-password'),
 
     # --------------------- User Profile APIs ---------------------
     path('user-profile/', DoctorProfileAPIView.as_view(), name='user_profile'),
