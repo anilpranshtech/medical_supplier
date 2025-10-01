@@ -1,5 +1,7 @@
 from decimal import Decimal
 from io import BytesIO
+
+from django.db import transaction
 from django.db.models import Q, F, DecimalField, ExpressionWrapper, Case, When
 from django.http import HttpResponse
 from django.utils.html import strip_tags
@@ -650,7 +652,7 @@ class SpecialityListView(ListAPIView):
     serializer_class = SpecialitySerializer
 
     def get_queryset(self):
-        return Speciality.objects.all()
+        return Speciality.objects.all().order_by("name")
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -664,7 +666,7 @@ class ResidencyListView(ListAPIView):
     serializer_class = ResidencySerializer
 
     def get_queryset(self):
-        return Residency.objects.all()
+        return Residency.objects.all().order_by("country")
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -678,7 +680,7 @@ class NationalityListView(ListAPIView):
     serializer_class = NationalitySerializer
 
     def get_queryset(self):
-        return Nationality.objects.all()
+        return Nationality.objects.all().order_by("country")
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -692,7 +694,7 @@ class CountryCodeListView(ListAPIView):
     serializer_class = CountryCodeSerializer
 
     def get_queryset(self):
-        return CountryCode.objects.all()
+        return CountryCode.objects.all().order_by("code")
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -700,6 +702,7 @@ class CountryCodeListView(ListAPIView):
             return format_response(data=[], message="No country codes found")
         serializer = self.get_serializer(queryset, many=True)
         return format_response(data=serializer.data, message="Country codes fetched successfully")
+
 
 
 class SubscriptionPlanListCreateAPIView(generics.ListCreateAPIView):
@@ -1981,6 +1984,7 @@ class RequestRoleAPIView(views.APIView):
             "selected_role": selected_role
         }, status=status.HTTP_200_OK)
 
+
 class ManageRequestsAPIView(views.APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
 
@@ -1990,6 +1994,7 @@ class ManageRequestsAPIView(views.APIView):
         data = RoleRequestSerializer(role_requests, many=True, context=serializer_context).data
         logger.info(f"Role requests loaded for admin user {request.user.id}")
         return Response({"requests": data}, status=status.HTTP_200_OK)
+
 
 class ApproveRoleRequestAPIView(views.APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
@@ -2133,6 +2138,7 @@ class ApproveRoleRequestAPIView(views.APIView):
 
         return Response(data)
 
+
 class AddAddressAPIView(generics.CreateAPIView):
     serializer_class = CustomerBillingAddressSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -2143,6 +2149,7 @@ class AddAddressAPIView(generics.CreateAPIView):
         if is_default:
             CustomerBillingAddress.objects.filter(user=user, is_default=True).update(is_default=False)
         serializer.save(user=user)
+
 
 class RemoveAddressAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -2156,6 +2163,7 @@ class RemoveAddressAPIView(APIView):
         except CustomerBillingAddress.DoesNotExist:
             return Response({'error': 'Address not found'}, status=status.HTTP_404_NOT_FOUND)
 
+
 class EditAddressAPIView(generics.UpdateAPIView):
     serializer_class = CustomerBillingAddressSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -2167,6 +2175,7 @@ class EditAddressAPIView(generics.UpdateAPIView):
         address = serializer.save()
         if address.is_default:
             CustomerBillingAddress.objects.filter(user=self.request.user, is_default=True).exclude(id=address.id).update(is_default=False)
+
 
 class ProductSearchAPIView(APIView):
     permission_classes = [AllowAny]
@@ -2221,7 +2230,8 @@ class ProductSearchAPIView(APIView):
         serializer = ProductSerializer(result_page, many=True)
 
         return paginator.get_paginated_response(serializer.data)
-    
+
+
 class WholesaleRegisterAPIView(APIView):
     permission_classes = []
     authentication_classes = []
@@ -2340,7 +2350,6 @@ class WholesaleBuyerProfileAPIView(APIView):
             }, status=status.HTTP_404_NOT_FOUND)
 
 
-
 class SupplierProfileAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -2425,87 +2434,223 @@ class SupplierProfileAPIView(APIView):
         }, status=status.HTTP_400_BAD_REQUEST)
 
 
-
-
-
-
 class UserProfileAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
+    # --------------------------
+    # Utilities
+    # --------------------------
+    def get_profile_and_role(self, user):
+        if user.is_superuser or user.is_staff:
+            return user, "admin"
+        if hasattr(user, "doctor_profile"):
+            return user.doctor_profile, "doctor"
+        if hasattr(user, "supplierprofile"):
+            return user.supplierprofile, "supplier"
+        if hasattr(user, "wholesalebuyerprofile"):
+            return user.wholesalebuyerprofile, "wholesaler"
+        return None, None
+
+    def get_serializer_for_role(self, profile, role):
+        if role == "admin":
+            return SuperUserSerializer(profile)
+        elif role == "doctor":
+            return DoctorProfileSerializer(profile)
+        elif role == "supplier":
+            return SupplierProfileSerializer(profile)
+        elif role == "wholesaler":
+            return WholesaleBuyerProfileSerializer(profile)
+        return None
+
+    def get_avatar_url(self, request, profile):
+        """
+        Build absolute URL for profile picture if it exists.
+        """
+        if getattr(profile, "profile_picture", None):
+            try:
+                return request.build_absolute_uri(profile.profile_picture.url)
+            except Exception:
+                return None
+        if hasattr(profile, "user") and getattr(profile.user, "profile_picture", None):
+            try:
+                return request.build_absolute_uri(profile.user.profile_picture.url)
+            except Exception:
+                return None
+        return None
+
+    # --------------------------
+    # GET Method
+    # --------------------------
     def get(self, request):
         user = request.user
+        profile, role = self.get_profile_and_role(user)
 
-         # Case 0: Superuser / Staff
-        if user.is_superuser or user.is_staff:
-            serializer = SuperUserSerializer(user)
-            return Response({
-                "code": 200,
-                "message": "Success",
-                "role": "admin",
-                "items": {"data": serializer.data}
-            }, status=status.HTTP_200_OK)
+        if not profile:
+            return Response(
+                {"code": 404, "message": "Profile not found", "items": {"data": None}},
+                status=404,
+            )
 
-        # Case 1: Doctor Profile
-        if hasattr(user, "doctor_profile"):
-            profile = user.doctor_profile
-            serializer = DoctorProfileSerializer(profile)
-            return Response({
-                "code": 200,
-                "message": "Success",
-                "role": "doctor",
-                "items": {
-                    "data": serializer.data
-                }
-            }, status=status.HTTP_200_OK)
+        serializer = self.get_serializer_for_role(profile, role)
 
-        # Case 2: Supplier Profile
-        if hasattr(user, "supplierprofile"):
-            profile = user.supplierprofile
-            serializer = SupplierProfileSerializer(profile)
-            combined_data = {
-                "username": user.username,
-                "email": user.email,
-                "first_name": user.first_name,
-                "last_name": user.last_name,
-                **serializer.data
+        combined_data = {
+            "username": user.username,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "avatar": self.get_avatar_url(request, profile) or "None",
+        }
+
+        if serializer:
+            combined_data.update(serializer.data)
+
+        # --------------------------
+        # Billing addresses
+        # --------------------------
+        default_address = CustomerBillingAddress.objects.filter(
+            user=user, is_default=True, is_deleted=False
+        ).first()
+        addresses = CustomerBillingAddress.objects.filter(user=user, is_deleted=False)
+
+        if default_address and default_address.phone:
+            combined_data["phone"] = default_address.phone
+        else:
+            combined_data["phone"] = getattr(profile, "phone", None) or "Not set"
+
+        combined_data["default_address"] = {
+            "id": default_address.id,
+            "title": default_address.address_title,
+            "customer_name": default_address.customer_name,
+            "address1": default_address.customer_address1,
+            "address2": default_address.customer_address2,
+            "city": default_address.customer_city,
+            "state": default_address.customer_state,
+            "postal_code": default_address.customer_postal_code,
+            "country": default_address.customer_country,
+            "country_code": default_address.customer_country_code,
+            "phone": default_address.phone,
+        } if default_address else None
+
+        combined_data["addresses"] = [
+            {
+                "id": addr.id,
+                "title": addr.address_title,
+                "customer_name": addr.customer_name,
+                "address1": addr.customer_address1,
+                "address2": addr.customer_address2,
+                "city": addr.customer_city,
+                "state": addr.customer_state,
+                "postal_code": addr.customer_postal_code,
+                "country": addr.customer_country,
+                "country_code": addr.customer_country_code,
+                "phone": addr.phone,
             }
-            return Response({
+            for addr in addresses
+        ]
+
+        # --------------------------
+        # Orders summary
+        # --------------------------
+        orders = Order.objects.filter(user=user)
+        combined_data["orders_summary"] = {
+            "total_orders": orders.count(),
+            "pending_orders": orders.filter(status="pending").count(),
+            "delivered_orders": orders.filter(status="delivered").count(),
+            "cancelled_orders": orders.filter(status="cancelled").count(),
+            "return_orders": Return.objects.filter(client=user).count(),
+        }
+
+        # --------------------------
+        # Wishlist count
+        # --------------------------
+        combined_data["wishlist_count"] = WishlistProduct.objects.filter(user=user).count()
+
+        # --------------------------
+        # Latest payment
+        # --------------------------
+        stripe_payment = StripePayment.objects.filter(user=user, paid=True).order_by(
+            "-created_at"
+        ).first()
+        razorpay_payment = RazorpayPayment.objects.filter(user=user, paid=True).order_by(
+            "-created_at"
+        ).first()
+        cod_payment = CODPayment.objects.filter(user=user, paid=True).order_by(
+            "-created_at"
+        ).first()
+
+        latest_payment = None
+        for payment, payment_type in [
+            (stripe_payment, "Stripe"),
+            (razorpay_payment, "Razorpay"),
+            (cod_payment, "COD"),
+        ]:
+            if payment:
+                if not latest_payment or payment.created_at > latest_payment["created_at"]:
+                    if payment_type == "COD":
+                        details = f"COD - {payment.name}"
+                    elif payment_type == "Stripe":
+                        details = f"{payment.name} ending in {payment.stripe_customer_id[-4:]}"
+                    else:
+                        details = f"{payment.name} ending in {payment.razorpay_payment_id[-4:]}"
+                    latest_payment = {
+                        "type": payment_type,
+                        "details": details,
+                        "created_at": payment.created_at,
+                    }
+
+        combined_data["latest_payment"] = latest_payment
+
+        return Response(
+            {
                 "code": 200,
                 "message": "Success",
-                "role": "supplier",
-                "items": {
-                    "data": combined_data
-                }
-            }, status=status.HTTP_200_OK)
+                "role": role,
+                "items": {"data": combined_data},
+            },
+            status=200,
+        )
 
-        # Case 3: Wholesale Buyer Profile
-        if hasattr(user, "wholesalebuyerprofile"):
-            profile = user.wholesalebuyerprofile
-            serializer = WholesaleBuyerProfileSerializer(profile)
-            combined_data = {
-                "username": user.username,
-                "email": user.email,
-                "first_name": user.first_name,
-                "last_name": user.last_name,
-                **serializer.data
-            }
-            return Response({
-                "code": 200,
-                "message": "Success",
-                "role": "wholesale_buyer",
-                "items": {
-                    "data": combined_data
-                }
-            }, status=status.HTTP_200_OK)
+    # --------------------------
+    # POST Method
+    # --------------------------
+    def post(self, request):
+        user = request.user
+        profile, role = self.get_profile_and_role(user)
 
-        # If no profile found
-        return Response({
-            "code": 404,
-            "message": "Profile not found",
-            "items": {
-                "data": None
-            }
-        }, status=status.HTTP_404_NOT_FOUND)
+        if not profile:
+            return Response({"status": "error", "message": "Profile not found."}, status=404)
+
+        data = request.data.copy()
+
+        try:
+            with transaction.atomic():
+                # Update nested user fields
+                if "first_name" in data:
+                    user.first_name = data.pop("first_name")
+                if "last_name" in data:
+                    user.last_name = data.pop("last_name")
+                user.save()
+
+                # Update profile fields
+                if role == "doctor":
+                    serializer = DoctorProfileSerializer(profile, data=data, partial=True)
+                    serializer.is_valid(raise_exception=True)
+                    serializer.save()
+                elif role in ["supplier", "wholesaler"]:
+                    for attr in ["company_name", "phone"]:
+                        if attr in data and hasattr(profile, attr):
+                            setattr(profile, attr, data[attr])
+                    # Avatar upload/remove
+                    if "avatar" in request.FILES:
+                        profile.profile_picture = request.FILES["avatar"]
+                    elif data.get("avatar_remove"):
+                        if profile.profile_picture:
+                            profile.profile_picture.delete(save=True)
+                    profile.save()
+
+            return Response({"status": "success", "message": "Profile updated successfully."})
+        except Exception as e:
+            return Response({"status": "error", "message": str(e)}, status=500)
 
 
 ######################### WITHOUT LOGIN API's #########################

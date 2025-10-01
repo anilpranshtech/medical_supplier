@@ -405,6 +405,7 @@ from django.utils.html import strip_tags
 from django.conf import settings
 from django.contrib.auth import get_user_model
 
+
 class RegistrationView(View):
     recaptcha_secret = '6LdTHV8rAAAAAIgLr2wdtdtWExTS6xJpUpD8qEzh'
     template_name = 'dashboard/register.html'
@@ -617,7 +618,6 @@ class ConfirmEmailView(View):
             return render(request, "dashboard/token_expired.html", {
                 "error": f"Error confirming email: {str(e)}"
             }, status=500)
-
 
 
 class ResendEmailView(View):

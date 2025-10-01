@@ -21,6 +21,7 @@ admin.site.register(SupplierProfile)
 class ProductProfileAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'description', 'price')
 
+
 @admin.register(Contact)
 class ContactAdmin(admin.ModelAdmin):
     list_display = ('id', 'full_name', 'email', 'phone','subject','message','created_at','display_phone','display_email','display_address')
@@ -208,25 +209,35 @@ class EventAdmin(admin.ModelAdmin):
 @admin.register(Nationality)
 class NationalityAdmin(admin.ModelAdmin):
     list_display = ('id', 'country', 'created_at')
-    list_filter = ('country', 'created_at')
+    search_fields = ('country',)
+    list_filter = ('created_at',)
 
 
 @admin.register(Residency)
 class ResidencyAdmin(admin.ModelAdmin):
     list_display = ('id', 'country', 'created_at')
-    list_filter = ('country', 'created_at')
+    search_fields = ('country',)
+    list_filter = ('created_at',)
 
 
 @admin.register(CountryCode)
 class CountryCodeAdmin(admin.ModelAdmin):
-    list_display = ('id', 'code', 'country', 'created_at')
-    list_filter = ('country', 'created_at')
+    list_display = ('id', 'code', 'get_countries', 'created_at')
+    search_fields = ('code', 'countries__country')
+    list_filter = ('created_at',)
+    filter_horizontal = ('countries',)
+
+    def get_countries(self, obj):
+        return ", ".join([c.country for c in obj.countries.all()])
+    get_countries.short_description = "Countries"
 
 
 @admin.register(Speciality)
 class SpecialityAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'created_at')
-    list_filter = ('name', 'created_at')
+    search_fields = ('name',)
+    list_filter = ('created_at',)
+
 
 
 @admin.register(SubscriptionPlan)

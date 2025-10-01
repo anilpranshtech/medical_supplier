@@ -219,59 +219,6 @@ class ChangePasswordSerializer(serializers.Serializer):
 #
 #         return instance
 
-class DoctorProfileSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(source='user.username', read_only=True)
-    email = serializers.EmailField(source='user.email', read_only=True)
-    nationality_name = serializers.CharField(source='nationality.name', read_only=True)
-    residency_name = serializers.CharField(source='residency.name', read_only=True)
-    country_code_name = serializers.CharField(source='country_code.code', read_only=True)
-    country__name = serializers.CharField(source='country_code.country', read_only=True)
-    specialty_name = serializers.CharField(source='specialty.name', read_only=True)
-
-
-    # Editable user fields
-    first_name = serializers.CharField(source='user.first_name', required=False)
-    last_name = serializers.CharField(source='user.last_name', required=False)
-
-    # ForeignKey fields (accept ID on input, show string on output)
-    nationality = serializers.PrimaryKeyRelatedField(
-        queryset=Nationality.objects.all(), required=False
-    )
-    residency = serializers.PrimaryKeyRelatedField(
-        queryset=Residency.objects.all(), required=False
-    )
-    country_code = serializers.PrimaryKeyRelatedField(
-        queryset=CountryCode.objects.all(), required=False
-    )
-    specialty = serializers.PrimaryKeyRelatedField(
-        queryset=Speciality.objects.all(), required=False
-    )
-
-    class Meta:
-        model = DoctorProfile
-        fields = [
-            'username', 'email',
-            'first_name', 'last_name',
-            'current_position', 'workplace',
-            'nationality', 'residency', 'country_code', 'phone_number', 'specialty',
-            'nationality_name', 'residency_name', 'country_code_name', 'country__name','specialty_name'
-        ]
-
-    def update(self, instance, validated_data):
-        # Update user fields
-        user_data = validated_data.pop('user', {})
-        user = instance.user
-        for attr in ['first_name', 'last_name']:
-            if attr in user_data:
-                setattr(user, attr, user_data[attr])
-        user.save()
-
-        # Update profile fields
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-        instance.save()
-
-        return instance
 
 class ProductCategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -853,6 +800,61 @@ class SupplierRegistrationSerializer(serializers.Serializer):
             license_number=validated_data['license_number']
         )
         return supplier
+
+
+class DoctorProfileSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='user.username', read_only=True)
+    email = serializers.EmailField(source='user.email', read_only=True)
+    nationality_name = serializers.CharField(source='nationality.name', read_only=True)
+    residency_name = serializers.CharField(source='residency.name', read_only=True)
+    country_code_name = serializers.CharField(source='country_code.code', read_only=True)
+    country__name = serializers.CharField(source='country_code.country', read_only=True)
+    specialty_name = serializers.CharField(source='specialty.name', read_only=True)
+
+
+    # Editable user fields
+    first_name = serializers.CharField(source='user.first_name', required=False)
+    last_name = serializers.CharField(source='user.last_name', required=False)
+
+    # ForeignKey fields (accept ID on input, show string on output)
+    nationality = serializers.PrimaryKeyRelatedField(
+        queryset=Nationality.objects.all(), required=False
+    )
+    residency = serializers.PrimaryKeyRelatedField(
+        queryset=Residency.objects.all(), required=False
+    )
+    country_code = serializers.PrimaryKeyRelatedField(
+        queryset=CountryCode.objects.all(), required=False
+    )
+    specialty = serializers.PrimaryKeyRelatedField(
+        queryset=Speciality.objects.all(), required=False
+    )
+
+    class Meta:
+        model = DoctorProfile
+        fields = [
+            'username', 'email',
+            'first_name', 'last_name',
+            'current_position', 'workplace',
+            'nationality', 'residency', 'country_code', 'phone_number', 'specialty',
+            'nationality_name', 'residency_name', 'country_code_name', 'country__name','specialty_name'
+        ]
+
+    def update(self, instance, validated_data):
+        # Update user fields
+        user_data = validated_data.pop('user', {})
+        user = instance.user
+        for attr in ['first_name', 'last_name']:
+            if attr in user_data:
+                setattr(user, attr, user_data[attr])
+        user.save()
+
+        # Update profile fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        return instance
 
 
 class WholesaleBuyerProfileSerializer(serializers.ModelSerializer):

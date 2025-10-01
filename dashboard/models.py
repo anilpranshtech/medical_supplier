@@ -9,6 +9,37 @@ from datetime import timedelta
 from django.conf import settings
 
 
+# -------------------- Country, State, City --------------------
+class Country(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
+class State(models.Model):
+    country = models.ForeignKey(Country, on_delete=models.CASCADE, related_name="states")
+    name = models.CharField(max_length=100)
+
+    class Meta:
+        unique_together = ("country", "name")
+
+    def __str__(self):
+        return f"{self.name}, {self.country.name}"
+
+
+class City(models.Model):
+    state = models.ForeignKey(State, on_delete=models.CASCADE, related_name="cities")
+    name = models.CharField(max_length=100)
+
+    class Meta:
+        unique_together = ("state", "name")
+
+    def __str__(self):
+        return f"{self.name}, {self.state.name}"
+
+
+# -------------------- Specialities --------------------
 class Speciality(models.Model):
     name = models.CharField(max_length=100, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -17,6 +48,19 @@ class Speciality(models.Model):
         return self.name
 
 
+class SubSpeciality(models.Model):
+    speciality = models.ForeignKey(Speciality, related_name="sub_specialities", on_delete=models.CASCADE)
+    name = models.CharField(max_length=200)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("speciality", "name")
+
+    def __str__(self):
+        return f"{self.name} ({self.speciality.name})"
+
+
+# -------------------- Residency --------------------
 class Residency(models.Model):
     country = models.CharField(max_length=100, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -25,6 +69,7 @@ class Residency(models.Model):
         return self.country
 
 
+# -------------------- Nationality --------------------
 class Nationality(models.Model):
     country = models.CharField(max_length=100, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -33,13 +78,16 @@ class Nationality(models.Model):
         return self.country
 
 
+# -------------------- CountryCode --------------------
 class CountryCode(models.Model):
     code = models.CharField(max_length=10, unique=True)
-    country = models.CharField(max_length=100)
+    countries = models.ManyToManyField(Nationality, related_name="phone_codes")
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.country} ({self.code})"
+        # Returns codes like "+1 → United States, Canada"
+        country_names = ", ".join(self.countries.values_list("country", flat=True))
+        return f"{self.code} → {country_names if country_names else 'No countries'}"
 
 
 class AdminUserProfile(models.Model):
@@ -110,25 +158,7 @@ B2B_CHOICES = [
     ('yes', 'Yes'),
     ('no', 'No'),
 ]
-class Country(models.Model):
-    name = models.CharField(max_length=100, unique=True)
 
-    def __str__(self):
-        return self.name
-
-class State(models.Model):
-    country = models.ForeignKey(Country, on_delete=models.CASCADE, related_name="states")
-    name = models.CharField(max_length=100)
-
-    def __str__(self):
-        return f"{self.name}, {self.country.name}"
-
-class City(models.Model):
-    state = models.ForeignKey(State, on_delete=models.CASCADE, related_name="cities")
-    name = models.CharField(max_length=100)
-
-    def __str__(self):
-        return f"{self.name}, {self.state.name}"
 
 class SupplierProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
