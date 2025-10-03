@@ -24,6 +24,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import viewsets, status, response, permissions, mixins, generics, views
 from django.utils.timezone import now
 
+from djapp.settings import TEXTDRIP_OTP_TOKEN
 from medical_api.models import PasswordResetOTP
 from medical_api.serializers import *
 from django.contrib.auth import get_user_model, login, authenticate, logout
@@ -41,6 +42,8 @@ from medical_api.serializers import UserLoginSerializer, DoctorRegistrationSeria
 from django.contrib.auth import get_user_model, login, authenticate, logout
 from rest_framework.response import Response
 from decimal import Decimal
+
+from utils.handle_textdrip_otp import verify_mobile_otp, VERIFY_URL, send_phone_otp
 
 UserModel = get_user_model()
 from dashboard.models import *
@@ -2651,6 +2654,89 @@ class UserProfileAPIView(APIView):
             return Response({"status": "success", "message": "Profile updated successfully."})
         except Exception as e:
             return Response({"status": "error", "message": str(e)}, status=500)
+
+
+class VerifyOTPAPI(APIView):
+    """
+    API to verify OTP and create user if OTP is correct
+    """
+    def post(self, request):
+        otp = request.data.get('otp')
+        signup_data = request.session.get('signup_data')
+
+        if not signup_data:
+            return Response(
+                {'success': False, 'message': 'Session expired. Please sign up again.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        phone = signup_data['phone']
+        result = verify_mobile_otp(VERIFY_URL, TEXTDRIP_OTP_TOKEN, phone, otp)
+
+        # Debug print
+        print("OTP VERIFICATION RESULT:", result)
+
+        if result.get("success") or result.get("status") is True:
+            if User.objects.filter(username=signup_data['email']).exists():
+                request.session.pop('signup_data', None)
+                return Response(
+                    {'success': False, 'message': 'An account with this email already exists.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            try:
+                User.objects.create_user(
+                    username=signup_data['email'],
+                    email=signup_data['email'],
+                    password=signup_data['password']
+                )
+                request.session.pop('signup_data', None)
+                return Response(
+                    {'success': True, 'message': 'Account created successfully.'},
+                    status=status.HTTP_201_CREATED
+                )
+            except Exception as e:
+                return Response(
+                    {'success': False, 'message': f'Error creating account: {str(e)}'},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+        else:
+            return Response(
+                {'success': False, 'message': result.get("message", "OTP verification failed.")},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+class ResendOTPAPI(APIView):
+    """
+    API to resend OTP
+    """
+    def post(self, request):
+        signup_data = request.session.get('signup_data')
+
+        if not signup_data:
+            return Response(
+                {'success': False, 'message': 'Session expired. Please sign up again.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        phone = signup_data.get('phone')
+        otp_response = send_phone_otp(phone, TEXTDRIP_OTP_TOKEN)
+
+        if "error" in otp_response:
+            return Response(
+                {'success': False, 'message': otp_response["error"]},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Include the OTP in the response for testing/debug
+        return Response(
+            {
+                'success': True,
+                'message': 'OTP resent successfully.',
+                'otp': otp_response.get('otp')  # assuming send_phone_otp returns otp in response
+            },
+            status=status.HTTP_200_OK
+        )
 
 
 ######################### WITHOUT LOGIN API's #########################

@@ -86,7 +86,7 @@ class Command(BaseCommand):
                         continue
                     cities_data = city_res.json().get("data", [])
                     for city_name in cities_data:
-                        if city_name:
+                        if city_name:          
                             City.objects.get_or_create(name=city_name, state=state_obj)
 
         except Exception as e:

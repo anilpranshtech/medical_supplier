@@ -90,6 +90,8 @@ urlpatterns = [
     path('api/register/supplier/', SupplierRegisterAPIView.as_view(), name='supplier-register'),
     path('profile/wholesaler/', WholesaleBuyerProfileAPIView.as_view(), name='wholesaler-profile'),
     path('api/supplier/profile/', SupplierProfileAPIView.as_view(), name='supplier-profile'),
+    path('api/verify-otp/', VerifyOTPAPI.as_view(), name='verify_otp_api'),
+    path('api/resend-otp/', ResendOTPAPI.as_view(), name='resend_otp_api'),
 
     path("api/user/profile/", UserProfileAPIView.as_view(), name="user-profile"),
 
