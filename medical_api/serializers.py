@@ -662,27 +662,44 @@ class ShippingInfoSerializer(serializers.Serializer):
 
 
 class ProductListSerializer(serializers.ModelSerializer):
-    discounted_price = serializers.SerializerMethodField()
-    image = serializers.SerializerMethodField()
-    link = serializers.SerializerMethodField()
+    main_image = serializers.SerializerMethodField()
+    delivery_date = serializers.CharField(read_only=True)
+    rating = serializers.FloatField(read_only=True)
+    total_reviews = serializers.IntegerField(read_only=True)
+    discounted_price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    event_details = serializers.DictField(read_only=True)
+    category_name = serializers.CharField(read_only=True)
+    sub_category_name = serializers.CharField(read_only=True)
+    last_category_name = serializers.CharField(read_only=True)
+    brand_name = serializers.CharField(read_only=True)
+    supplier_sku = serializers.CharField(read_only=True)
 
     class Meta:
         model = Product
+        # fields = [
+        #     'id', 'name', 'price', 'discounted_price',
+        #     'category', 'sub_category', 'last_category',
+        #     'is_active', 'created_at', 'image', 'link'
+        # ]
+
         fields = [
-            'id', 'name', 'price', 'discounted_price',
-            'category', 'sub_category', 'last_category',
-            'is_active', 'created_at', 'image', 'link'
+            'id', 'name', 'description', 'main_image', 'price',
+            'offer_percentage', 'offer_active', 'delivery_date', 'rating', 'total_reviews',
+            'supplier_sku', 'category', 'sub_category', 'last_category', 'category_name',
+            'sub_category_name', 'last_category_name', 'brand_name', 'discounted_price',
+            'event_details', 'show_rfq', 'show_add_to_cart', 'Both'
         ]
 
     def get_discounted_price(self, obj):
         return obj.discounted_price()
 
-    def get_image(self, obj):
+    def get_main_image(self, obj):
         request = self.context.get('request')
-        image_url = obj.get_main_image()
-        if image_url and request:
-            return request.build_absolute_uri(image_url)
-        return image_url or '/static/default_product.png'
+        if obj.main_image:
+            if str(obj.main_image).startswith("http"):
+                return obj.main_image
+            return request.build_absolute_uri(obj.main_image) if request else obj.main_image
+        return None
 
     def get_link(self, obj):
         request = self.context.get('request')
@@ -890,13 +907,14 @@ class SuperUserSerializer(serializers.ModelSerializer):
 
 class LoginEventSerializer(serializers.ModelSerializer):
     duration = serializers.CharField(source='duration', read_only=True, allow_null=True)
+
     class Meta:
         model = Event
         fields = ['conference_at', 'speaker_name', 'venue', 'duration', 'conference_link']
 
 
 class LoginProductSerializer(serializers.ModelSerializer):
-    main_image = serializers.URLField(read_only=True)
+    main_image = serializers.SerializerMethodField()
     delivery_date = serializers.CharField(read_only=True)
     rating = serializers.FloatField(read_only=True)
     total_reviews = serializers.IntegerField(read_only=True)
@@ -906,21 +924,30 @@ class LoginProductSerializer(serializers.ModelSerializer):
     sub_category_name = serializers.CharField(read_only=True)
     last_category_name = serializers.CharField(read_only=True)
     brand_name = serializers.CharField(read_only=True)
-    supplier_sku = serializers.CharField(read_only=True)  # Added to match Product model
+    supplier_sku = serializers.CharField(read_only=True)
 
     class Meta:
         model = Product
         fields = [
-            'id', 'name', 'description', 'main_image', 'price',  # Removed 'original_price'
+            'id', 'name', 'description', 'main_image', 'price',
             'offer_percentage', 'offer_active', 'delivery_date', 'rating', 'total_reviews',
             'supplier_sku', 'category', 'sub_category', 'last_category', 'category_name',
             'sub_category_name', 'last_category_name', 'brand_name', 'discounted_price',
             'event_details', 'show_rfq', 'show_add_to_cart', 'Both'
         ]
 
+    def get_main_image(self, obj):
+        request = self.context.get('request')
+        if obj.main_image:
+            if str(obj.main_image).startswith("http"):
+                return obj.main_image
+            return request.build_absolute_uri(obj.main_image) if request else obj.main_image
+        return None
+
 
 class LoginBannerSerializer(serializers.ModelSerializer):
     image = serializers.ImageField(use_url=True)
+
     class Meta:
         model = Banner
         fields = ['id', 'title', 'image', 'link']
@@ -928,6 +955,7 @@ class LoginBannerSerializer(serializers.ModelSerializer):
 
 class CategorySerializer(serializers.ModelSerializer):
     image = serializers.ImageField(use_url=True, allow_null=True)
+
     class Meta:
         model = ProductCategory
         fields = ['id', 'name', 'image']
@@ -935,6 +963,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class SupplierSerializer(serializers.ModelSerializer):
     company_logo = serializers.ImageField(use_url=True, allow_null=True)
+
     class Meta:
         model = SupplierProfile
         fields = ['id', 'company_name', 'company_logo']
