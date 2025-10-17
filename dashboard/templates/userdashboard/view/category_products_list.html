@@ -68,7 +68,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-<!--        margin-top: 10px;-->
+
     }
 
     .add-to-cart-btn,
@@ -79,7 +79,7 @@
         padding: 6px 12px;
         font-size: 0.875rem;
         font-weight: 600;
-        color: #00000;
+        color: 00000;
         background-color: #ffffff;
         border: 1px solid #d1d5db;
         border-radius: 6px;
@@ -235,13 +235,14 @@
              alt="{{ category.name }}" 
              class="w-full h-full object-cover">
     
-        <!-- Overlay with Dynamic Category Name -->
-        <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
-            <h2 class="text-3xl md:text-4xl lg:text-5xl font-bold text-white uppercase tracking-wide">
+        <!-- Overlay with Category Name on Right Side -->
+        <div class="absolute inset-0 bg-black/40 flex items-center justify-end pr-10">
+            <h2 class="text-3xl md:text-4xl lg:text-5xl font-bold text-white uppercase tracking-wide text-right">
                 {{ category.name }}
             </h2>
         </div>
     </div>
+        
     
     
     

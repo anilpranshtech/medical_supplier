@@ -562,7 +562,6 @@
 </div>
 
 {% endblock %}
-
 {% block page_only_scripts %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/nouislider@15.7.0/dist/nouislider.min.js"></script>
@@ -683,8 +682,12 @@ $(document).ready(function () {
             if (fixedPriceInput) {
                 fixedPriceInput.classList.remove('is-invalid');
             }
-            const errorMessages = document.querySelectorAll('.text-danger');
-            errorMessages.forEach(el => el.textContent = '');
+            const errorMessages = document.querySelectorAll('.text-muted.fs-7');
+            errorMessages.forEach(el => {
+                el.classList.remove('text-danger');
+                el.classList.add('text-muted');
+                el.textContent = el.getAttribute('data-original-text') || el.textContent;
+            });
 
             if (selectedOption === '1') {
                 discountPriceInput.value = basePrice.toFixed(2);
@@ -708,12 +711,38 @@ $(document).ready(function () {
 
         // Update on base price input
         basePriceInput.addEventListener('input', function () {
+            const value = parseFloat(this.value);
+            const helpText = this.nextElementSibling;
+            if (isNaN(value) || value < 1 || value > 999999) {
+                this.classList.add('is-invalid');
+                helpText.classList.remove('text-muted');
+                helpText.classList.add('text-danger');
+                helpText.textContent = 'Please enter a valid price (1 - 999999, up to 2 decimals).';
+            } else {
+                this.classList.remove('is-invalid');
+                helpText.classList.remove('text-danger');
+                helpText.classList.add('text-muted');
+                helpText.textContent = helpText.getAttribute('data-original-text') || 'Enter a valid product price (1 - 999999, up to 2 decimals).';
+            }
             updateDiscountPrice();
         });
 
         // Update on fixed price input
         if (fixedPriceInput) {
             fixedPriceInput.addEventListener('input', function () {
+                const value = parseFloat(this.value);
+                const helpText = this.nextElementSibling;
+                if (isNaN(value) || value < 0 || value > 999999) {
+                    this.classList.add('is-invalid');
+                    helpText.classList.remove('text-muted');
+                    helpText.classList.add('text-danger');
+                    helpText.textContent = 'Please enter a valid discounted price (0 - 999999, up to 2 decimals).';
+                } else {
+                    this.classList.remove('is-invalid');
+                    helpText.classList.remove('text-danger');
+                    helpText.classList.add('text-muted');
+                    helpText.textContent = helpText.getAttribute('data-original-text') || 'Set the discounted product price.';
+                }
                 updateDiscountPrice();
             });
         }
@@ -726,8 +755,12 @@ $(document).ready(function () {
                 if (fixedPriceInput) {
                     fixedPriceInput.classList.remove('is-invalid');
                 }
-                const errorMessages = document.querySelectorAll('.text-danger');
-                errorMessages.forEach(el => el.textContent = '');
+                const errorMessages = document.querySelectorAll('.text-muted.fs-7');
+                errorMessages.forEach(el => {
+                    el.classList.remove('text-danger');
+                    el.classList.add('text-muted');
+                    el.textContent = el.getAttribute('data-original-text') || el.textContent;
+                });
 
                 if (this.value === '1') {
                     percentageSection.classList.add('d-none');
@@ -863,6 +896,11 @@ $(document).ready(function () {
         }
     });
 
+    // Store original help text for reset
+    document.querySelectorAll('.text-muted.fs-7').forEach(el => {
+        el.setAttribute('data-original-text', el.textContent);
+    });
+
     // Attach listeners
     if (categorySelect) {
         categorySelect.addEventListener("change", toggleFormFields);
@@ -873,6 +911,213 @@ $(document).ready(function () {
 
     // Run on page load
     toggleFormFields();
+});
+
+// Input validations from Add Product with red error text
+document.addEventListener("DOMContentLoaded", function () {
+    const manufactureDate = document.getElementById("hide_field_manufacture_date").querySelector("input");
+    const expiryDate = document.getElementById("hide_field_expiry_date").querySelector("input");
+    const offerStart = document.getElementById("hide_field_offer_start").querySelector("input");
+    const offerEnd = document.getElementById("hide_field_offer_end").querySelector("input");
+    const keywords = document.getElementById("hide_field_keywords").querySelector("input");
+    const productName = document.querySelector('input[name="product_name"]');
+    const productFrom = document.querySelector('input[name="product_from"]');
+    const sellingCountries = document.querySelector('input[name="selling_countries"]');
+
+    const today = new Date().toISOString().split("T")[0];
+
+    // Manufacture Date Validation
+    manufactureDate?.addEventListener("input", function () {
+        const helpText = this.nextElementSibling;
+        if (manufactureDate.value > today) {
+            manufactureDate.setCustomValidity("Manufacture Date cannot be in the future.");
+            manufactureDate.classList.add('is-invalid');
+            helpText.classList.remove('text-muted');
+            helpText.classList.add('text-danger');
+            helpText.textContent = 'Manufacture Date cannot be in the future.';
+        } else {
+            manufactureDate.setCustomValidity("");
+            manufactureDate.classList.remove('is-invalid');
+            helpText.classList.remove('text-danger');
+            helpText.classList.add('text-muted');
+            helpText.textContent = helpText.getAttribute('data-original-text') || 'Date of manufacture.';
+        }
+        // Trigger expiry date validation
+        if (expiryDate.value) {
+            expiryDate.dispatchEvent(new Event('input'));
+        }
+    });
+
+    // Expiry Date Validation
+    expiryDate?.addEventListener("input", function () {
+        const helpText = this.nextElementSibling;
+        if (manufactureDate.value && expiryDate.value <= manufactureDate.value) {
+            expiryDate.setCustomValidity("Expiry Date must be later than Manufacture Date.");
+            expiryDate.classList.add('is-invalid');
+            helpText.classList.remove('text-muted');
+            helpText.classList.add('text-danger');
+            helpText.textContent = 'Expiry Date must be later than Manufacture Date.';
+        } else {
+            expiryDate.setCustomValidity("");
+            expiryDate.classList.remove('is-invalid');
+            helpText.classList.remove('text-danger');
+            helpText.classList.add('text-muted');
+            helpText.textContent = helpText.getAttribute('data-original-text') || 'Date of expiry.';
+        }
+    });
+
+    // Offer Start Validation
+    offerStart?.addEventListener("input", function () {
+        const helpText = this.nextElementSibling;
+        if (offerStart.value < today) {
+            offerStart.setCustomValidity("Offer Start Date cannot be in the past.");
+            offerStart.classList.add('is-invalid');
+            helpText.classList.remove('text-muted');
+            helpText.classList.add('text-danger');
+            helpText.textContent = 'Offer Start Date cannot be in the past.';
+        } else if (offerEnd.value && offerStart.value >= offerEnd.value) {
+            offerStart.setCustomValidity("Offer Start Date must be earlier than Offer End Date.");
+            offerStart.classList.add('is-invalid');
+            helpText.classList.remove('text-muted');
+            helpText.classList.add('text-danger');
+            helpText.textContent = 'Offer Start Date must be earlier than Offer End Date.';
+        } else {
+            offerStart.setCustomValidity("");
+            offerStart.classList.remove('is-invalid');
+            helpText.classList.remove('text-danger');
+            helpText.classList.add('text-muted');
+            helpText.textContent = helpText.getAttribute('data-original-text') || 'Date when the offer starts.';
+        }
+        // Trigger offer end validation
+        if (offerEnd.value) {
+            offerEnd.dispatchEvent(new Event('input'));
+        }
+    });
+
+    // Offer End Validation
+    offerEnd?.addEventListener("input", function () {
+        const helpText = this.nextElementSibling;
+        if (offerStart.value && offerEnd.value <= offerStart.value) {
+            offerEnd.setCustomValidity("Offer End Date must be later than Offer Start Date.");
+            offerEnd.classList.add('is-invalid');
+            helpText.classList.remove('text-muted');
+            helpText.classList.add('text-danger');
+            helpText.textContent = 'Offer End Date must be later than Offer Start Date.';
+        } else {
+            offerEnd.setCustomValidity("");
+            offerEnd.classList.remove('is-invalid');
+            helpText.classList.remove('text-danger');
+            helpText.classList.add('text-muted');
+            helpText.textContent = helpText.getAttribute('data-original-text') || 'Date when the offer ends.';
+        }
+    });
+
+    // Keywords Validation
+    keywords?.addEventListener("input", function () {
+        const regex = /^[a-zA-Z\s]+(,[a-zA-Z\s]+)*$/;
+        const helpText = this.nextElementSibling;
+        if (keywords.value.trim() === "") {
+            keywords.setCustomValidity("Keywords field cannot be empty.");
+            keywords.classList.add('is-invalid');
+            helpText.classList.remove('text-muted');
+            helpText.classList.add('text-danger');
+            helpText.textContent = 'Keywords field cannot be empty.';
+        } else if (!regex.test(keywords.value)) {
+            keywords.setCustomValidity("Only text and commas are allowed. Numbers or special characters are not allowed.");
+            keywords.classList.add('is-invalid');
+            helpText.classList.remove('text-muted');
+            helpText.classList.add('text-danger');
+            helpText.textContent = 'Only text and commas are allowed. Numbers or special characters are not allowed.';
+        } else {
+            keywords.setCustomValidity("");
+            keywords.classList.remove('is-invalid');
+            helpText.classList.remove('text-danger');
+            helpText.classList.add('text-muted');
+            helpText.textContent = helpText.getAttribute('data-original-text') || 'Comma-separated keywords for product search.';
+        }
+    });
+
+    // Product Name Validation
+    productName?.addEventListener("input", function () {
+        const regex = /^[a-zA-Z0-9\s\-_]+$/;
+        const helpText = this.nextElementSibling;
+        if (productName.value.trim() === "") {
+            productName.setCustomValidity("Product Name cannot be empty.");
+            productName.classList.add('is-invalid');
+            helpText.classList.remove('text-muted');
+            helpText.classList.add('text-danger');
+            helpText.textContent = 'Product Name cannot be empty.';
+        } else if (!regex.test(productName.value)) {
+            productName.setCustomValidity("Product Name can only contain letters, numbers, spaces, hyphen (-), and underscore (_).");
+            productName.classList.add('is-invalid');
+            helpText.classList.remove('text-muted');
+            helpText.classList.add('text-danger');
+            helpText.textContent = 'Product Name can only contain letters, numbers, spaces, hyphen (-), and underscore (_).';
+        } else {
+            productName.setCustomValidity("");
+            productName.classList.remove('is-invalid');
+            helpText.classList.remove('text-danger');
+            helpText.classList.add('text-muted');
+            helpText.textContent = helpText.getAttribute('data-original-text') || 'A product name is required and recommended to be unique.';
+        }
+    });
+
+    // Product From Validation
+    productFrom?.addEventListener("input", function () {
+        const regex = /^[a-zA-Z\s]+$/;
+        const helpText = this.nextElementSibling;
+        if (productFrom.value.trim() === "") {
+            productFrom.setCustomValidity("Product From cannot be empty.");
+            productFrom.classList.add('is-invalid');
+            helpText.classList.remove('text-muted');
+            helpText.classList.add('text-danger');
+            helpText.textContent = 'Product From cannot be empty.';
+        } else if (!regex.test(productFrom.value)) {
+            productFrom.setCustomValidity("Product From can only contain letters and spaces.");
+            productFrom.classList.add('is-invalid');
+            helpText.classList.remove('text-muted');
+            helpText.classList.add('text-danger');
+            helpText.textContent = 'Product From can only contain letters and spaces.';
+        } else {
+            productFrom.setCustomValidity("");
+            productFrom.classList.remove('is-invalid');
+            helpText.classList.remove('text-danger');
+            helpText.classList.add('text-muted');
+            helpText.textContent = helpText.getAttribute('data-original-text') || 'Country of origin.';
+        }
+    });
+
+    // Selling Countries Validation
+    sellingCountries?.addEventListener("input", function () {
+        const regex = /^[a-zA-Z\s]+(,[a-zA-Z\s]+)*$/;
+        const helpText = this.nextElementSibling;
+        if (sellingCountries.value.trim() === "") {
+            sellingCountries.setCustomValidity("Selling Countries cannot be empty.");
+            sellingCountries.classList.add('is-invalid');
+            helpText.classList.remove('text-muted');
+            helpText.classList.add('text-danger');
+            helpText.textContent = 'Selling Countries cannot be empty.';
+        } else if (!regex.test(sellingCountries.value)) {
+            sellingCountries.setCustomValidity("Only country names separated by commas are allowed (letters and spaces only).");
+            sellingCountries.classList.add('is-invalid');
+            helpText.classList.remove('text-muted');
+            helpText.classList.add('text-danger');
+            helpText.textContent = 'Only country names separated by commas are allowed (letters and spaces only).';
+        } else {
+            sellingCountries.setCustomValidity("");
+            sellingCountries.classList.remove('is-invalid');
+            helpText.classList.remove('text-danger');
+            helpText.classList.add('text-muted');
+            helpText.textContent = helpText.getAttribute('data-original-text') || 'Comma-separated country names (e.g., India, USA, UK).';
+        }
+    });
+
+    // Trigger initial validations for pre-filled fields
+    [productName, productFrom, sellingCountries, keywords, manufactureDate, expiryDate, offerStart, offerEnd, basePriceInput, fixedPriceInput].forEach(input => {
+        if (input && input.value) {
+            input.dispatchEvent(new Event('input'));
+        }
+    });
 });
 </script>
 {% endblock page_only_scripts %}

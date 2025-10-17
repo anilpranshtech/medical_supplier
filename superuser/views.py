@@ -680,10 +680,12 @@ class AddproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
         name = data.get('product_name')
         description = data.get('product_description')
         selling_countries = data.get('selling_countries')
-        price = self._parse_float(data.get('price'))
+        base_price = self._parse_float(data.get('base_price'), min_value=1, max_value=999999)
+        discount_option = data.get('discount_option')
+        offer_percentage = self._parse_float(data.get('offer_percentage'), min_value=0, max_value=100)
+        fixed_discounted_price = self._parse_float(data.get('discount_price'))  # Changed to match form field name
         stock_quantity = self._parse_int(data.get('product_quantity'), min_value=0)
-        commission = self._parse_float(data.get('commission_percentage'), 0, 100)
-        offer_percentage = self._parse_float(data.get('offer_percentage'), 0, 100)
+        commission = self._parse_float(data.get('commission_percentage'), min_value=0, max_value=100)
         pcs_per_unit = self._parse_int(data.get('pcs_per_unit'), min_value=1)
         min_order_qty = self._parse_int(data.get('min_order_qty'), min_value=1)
         low_stock_alert = self._parse_int(data.get('low_stock_alert'), min_value=0)
@@ -701,32 +703,30 @@ class AddproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
         both_selected = button_type == 'both'
         supplier = data.get('supplier')
 
+        # Calculate discount_price
+        discount_price = None
+        if discount_option == '2' and base_price and offer_percentage:
+            discount_price = base_price * (1 - offer_percentage / 100)
+        elif discount_option == '3' and fixed_discounted_price:
+            discount_price = fixed_discounted_price
+        elif discount_option == '1':
+            discount_price = base_price
+
+        # Validate supplier
         try:
             sup_user = SupplierProfile.objects.get(id=supplier)
         except SupplierProfile.DoesNotExist:
             messages.error(request, "Selected supplier does not exist.")
             return self._render_form_with_context(request, data)
 
-        def _is_event_category(self, category):
-            event_keywords = ['conference', 'event', 'webinar']
-            if category and category.name:
-                return category.name.lower() in event_keywords
-            return False
-
+        # Validate offer dates
         if offer_start and offer_end and offer_end < offer_start:
             messages.warning(request, "Offer end date cannot be before start date.")
+            return self._render_form_with_context(request, data)
 
         # Set offer active based on user role
-        if request.user.is_superuser:
-            offer_active = data.get('offer_active') == 'on'
-        else:
-            offer_active = False
-
+        offer_active = data.get('offer_active') == 'on' if request.user.is_superuser else False
         ask_admin_to_publish = data.get('ask_admin_to_publish') == 'on'
-
-        print("----------------------------------------------",data.get('registration_link') ,
-                    data.get('webinar_name') ,data.get('webinar_date'),data.get('webinar_duration'),
-                    data.get('webinar_venue'))
 
         # Handle brand creation
         brand_name = data.get('brand')
@@ -737,11 +737,17 @@ class AddproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
                 defaults={'supplier': sup_user.user}
             )
 
+        # Validate required fields
+        if not base_price:
+            messages.error(request, "Base price is required and must be between 1 and 999999.")
+            return self._render_form_with_context(request, data)
+
         try:
             product = Product.objects.create(
                 name=name or '',
                 description=description or '',
-                price=price or 0,
+                price=base_price or 0,
+                discount_price=discount_price,
                 stock_quantity=stock_quantity or 0,
                 brand=brand,
                 category=self._get_object(ProductCategory, data.get('category')),
@@ -779,8 +785,9 @@ class AddproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
                 created_by=sup_user.user
             )
 
+            # Handle event for event categories
             category_obj = self._get_object(ProductCategory, data.get('category'))
-            if _is_event_category(self, category_obj):
+            if self._is_event_category(category_obj):
                 event = Event.objects.create(
                     conference_link=data.get('registration_link') or None,
                     speaker_name=data.get('webinar_name') or None,
@@ -791,6 +798,7 @@ class AddproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
                 product.event = event
                 product.save()
 
+            # Handle images
             main_image = files.get('main_image')
             if main_image:
                 ProductImage.objects.create(product=product, image=main_image, is_main=True)
@@ -808,6 +816,12 @@ class AddproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
             messages.error(request, f"Error: {e}")
 
         return self._render_form_with_context(request, data)
+
+    def _is_event_category(self, category):
+        event_keywords = ['conference', 'event', 'webinar']
+        if category and category.name:
+            return category.name.lower() in event_keywords
+        return False
 
     def _parse_float(self, val, min_value=None, max_value=None):
         if not val:
@@ -868,7 +882,6 @@ class AddproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
             'suppliers': SupplierProfile.objects.all(),
             **data.dict()
         })
-
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages

@@ -290,10 +290,16 @@ document.addEventListener("DOMContentLoaded", function () {
         })
         .then(res => res.json())
         .then(res => {
-            if(res.status === 'success'){
-                showMessage(res.message, 'success');
-                setTimeout(()=>location.reload(), 800);
-            } else showMessage(res.message, 'danger');
+            if (res.status === 'success') {
+    showMessage(res.message, 'success');
+    modal.hide();  // Close the modal properly
+
+    // Remove any lingering backdrop manually (safety)
+    document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+
+    setTimeout(() => location.reload(), 800);
+}
+ else showMessage(res.message, 'danger');
         });
     });
 

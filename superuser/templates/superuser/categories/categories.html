@@ -127,7 +127,12 @@ Product Categories
                                         <div class="d-flex">
                                             <!-- Category Image -->
                                             <div class="symbol symbol-50px">
-                                                <span class="symbol-label" style="background-image:url('{{ category.image.url|default:'/static/images/default_category.png' }}'); background-size: cover; background-position: center;"></span>
+                                                {% if category.image %}
+                                                <span class="symbol-label" style="background-image:url('{{ category.image.url }}'); background-size: cover; background-position: center;"></span>
+                                            {% else %}
+                                                <span class="symbol-label" style="background-image:url('{% static 'images/default_category.png' %}'); background-size: cover; background-position: center;"></span>
+                                            {% endif %}
+                                            
                                             </div>
                                             <div class="ms-5">
                                                 <!-- Category Name -->
@@ -180,7 +185,8 @@ Product Categories
                                                 <a href="#" class="menu-link px-3 edit-category-btn"
                                                    data-id="{{ category.id }}"
                                                    data-name="{{ category.name }}"
-                                                   data-image="{{ category.image.url|default:'' }}"
+                                                   data-image="{% if category.image %}{{ category.image.url }}{% else %}{% static 'images/default_category.png' %}{% endif %}"
+
                                                    data-bs-toggle="modal"
                                                    data-bs-target="#editCategoryModal">
                                                     <i class="fas fa-edit fs-5 me-2"></i>

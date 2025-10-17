@@ -153,7 +153,7 @@
                                         </div>
                                         <div class="mb-10 mt-4 fv-row" id="hide_field_product_quantity">
                                             <label class="form-label required">Quantity</label>
-                                            <input type="number" name="product_quantity" class="form-control mb-2" placeholder="Enter available quantity" value="{{ product_quantity }}" min="0" required />
+                                            <input type="number" name="product_quantity" class="form-control mb-2" placeholder="Enter available quantity" value="{{ product_quantity }}" min="1" required />
                                             <div class="text-muted fs-7">Specify how many items are available in stock.</div>
                                         </div>
                                         <div class="mb-10 mt-4 fv-row">
@@ -197,7 +197,7 @@
                                         </div>
                                         <div class="mb-10 mt-4 fv-row" id="hide_field_return_time_limit">
                                             <label class="form-label required">Return Time Limit (Days)</label>
-                                            <input type="number" name="return_time_limit" class="form-control mb-2" placeholder="Enter return time limit in days" value="{{ product.return_time_limit|default:7 }}" min="0"/>
+                                            <input type="number" name="return_time_limit" class="form-control mb-2" placeholder="Enter return time limit in days" value="{{ product.return_time_limit|default:7 }}" min="1"/>
                                             <div class="text-muted fs-7">Number of days for product return.</div>
                                         </div>
                                         <div class="mb-10 mt-4 fv-row" id="hide_field_manufacture_date">
@@ -314,12 +314,12 @@
                                         </div>
                                         <div class="mb-10 mt-4 fv-row" id="hide_field_weight">
                                             <label class="form-label required">Weight</label>
-                                            <input type="number" name="weight" class="form-control mb-2" placeholder="Enter product weight" value="{{ weight }}" min="0" step="0.01" required/>
+                                            <input type="number" name="weight" class="form-control mb-2" placeholder="Enter product weight" value="{{ weight }}" min="1" step="0.01" required/>
                                             <div class="text-muted fs-7">Product weight.</div>
                                         </div>
                                         <div class="mb-10 mt-4 fv-row" id="hide_field_delivery_time">
                                             <label class="form-label required">Delivery Time (Days)</label>
-                                            <input type="number" name="delivery_time" class="form-control mb-2" placeholder="Enter estimated delivery time in days" value="{{ delivery_time }}" min="0" required/>
+                                            <input type="number" name="delivery_time" class="form-control mb-2" placeholder="Enter estimated delivery time in days" value="{{ delivery_time }}" min="1" required/>
                                             <div class="text-muted fs-7">Estimated delivery time in days.</div>
                                         </div>
                                         <div class="mb-10 mt-4 fv-row" id="hide_field_keywords">
@@ -329,7 +329,7 @@
                                         </div>
                                         <div class="mb-10 mt-4 fv-row" id="hide_field_commission_percentage">
                                             <label class="form-label required">Commission Percentage</label>
-                                            <input type="number" name="commission_percentage" class="form-control mb-2" placeholder="Enter commission percentage" value="{{ commission_percentage }}" min="0" max="100" step="0.01" required/>
+                                            <input type="number" name="commission_percentage" class="form-control mb-2" placeholder="Enter commission percentage" value="{{ commission_percentage }}" min="1" max="100" step="0.01" required/>
                                             <div class="text-muted fs-7">Commission percentage for the product.</div>
                                         </div>
                                         <div class="mb-10 mt-4 fv-row" id="hide_field_barcode">
@@ -366,12 +366,12 @@
                                         </div>
                                         <div class="mb-10 mt-4 fv-row" id="hide_field_low_stock_alert">
                                             <label class="form-label required">Low Stock Alert</label>
-                                            <input type="number" name="low_stock_alert" class="form-control mb-2" placeholder="Enter low stock alert level" value="{{ low_stock_alert }}" min="0" required/>
+                                            <input type="number" name="low_stock_alert" class="form-control mb-2" placeholder="Enter low stock alert level" value="{{ low_stock_alert }}" min="1" required/>
                                             <div class="text-muted fs-7">Alert when stock falls below this level.</div>
                                         </div>
                                         <div class="mb-10 mt-4 fv-row" id="hide_field_expiration_days">
                                             <label class="form-label required">Expiration Days</label>
-                                            <input type="number" name="expiration_days" class="form-control mb-2" placeholder="Enter expiration days" value="{{ expiration_days }}" min="0" required/>
+                                            <input type="number" name="expiration_days" class="form-control mb-2" placeholder="Enter expiration days" value="{{ expiration_days }}" min="1" required/>
                                             <div class="text-muted fs-7">Number of days until product expires.</div>
                                         </div>
                                         <div class="mb-10 mt-4 fv-row" id="hide_field_tag">
@@ -585,7 +585,9 @@ $(document).ready(function () {
         if (categoryId) {
             $.ajax({
                 url: "{% url 'supplier:get_subcategories' %}",
-                data: {'category_id': categoryId},
+                data: {
+                    'category_id': categoryId
+                },
                 success: function (data) {
                     let options = '<option value="">Select a Sub-Category</option>';
                     data.forEach(function (item) {
@@ -608,7 +610,9 @@ $(document).ready(function () {
         if (subCatId) {
             $.ajax({
                 url: "{% url 'supplier:get_lastcategories' %}",
-                data: {'sub_id': subCatId},
+                data: {
+                    'sub_id': subCatId
+                },
                 success: function (data) {
                     let options = '<option value="">Select a Last Category</option>';
                     data.forEach(function (item) {
@@ -636,7 +640,7 @@ $(document).ready(function () {
     if (percentageSection && fixedSection && basePriceInput && discountPriceInput && discountPriceContainer && offerPercentageInput && discountLabel) {
         const sliderElement = document.getElementById('kt_ecommerce_add_product_discount_slider');
 
-        // Initialize noUiSlider with minimum 1% for percentage discounts
+        // Initialize noUiSlider
         if (sliderElement) {
             const initialPercentage = Math.max(parseInt(offerPercentageInput.value) || 1, 1);
             noUiSlider.create(sliderElement, {
@@ -657,13 +661,12 @@ $(document).ready(function () {
                 }
             });
 
-            // Update discount label, hidden input, and discount price on slider change
+            // Update discount label and hidden input on slider change
             sliderElement.noUiSlider.on('update', function (values, handle) {
                 const percentage = values[handle];
                 discountLabel.textContent = percentage;
                 offerPercentageInput.value = percentage;
                 updateDiscountPrice();
-                console.log('Slider updated, offer_percentage:', percentage, 'base_price:', basePriceInput.value);
             });
         }
 
@@ -676,6 +679,18 @@ $(document).ready(function () {
                 console.error('No discount option selected');
                 return;
             }
+
+            // Clear any previous validation states
+            basePriceInput.classList.remove('is-invalid');
+            if (fixedPriceInput) {
+                fixedPriceInput.classList.remove('is-invalid');
+            }
+            const errorMessages = document.querySelectorAll('.text-muted.fs-7');
+            errorMessages.forEach(el => {
+                el.classList.remove('text-danger');
+                el.classList.add('text-muted');
+                el.textContent = el.getAttribute('data-original-text') || el.textContent;
+            });
 
             if (selectedOption === '1') {
                 discountPriceInput.value = basePrice.toFixed(2);
@@ -697,29 +712,39 @@ $(document).ready(function () {
             console.log('updateDiscountPrice - base_price:', basePriceInput.value, 'offer_percentage:', offerPercentageInput.value, 'discount_price:', discountPriceInput.value);
         }
 
-        // Update discount price on base price change
+        // Update on base price input
         basePriceInput.addEventListener('input', function () {
             const value = parseFloat(this.value);
+            const helpText = this.nextElementSibling;
             if (isNaN(value) || value < 1 || value > 999999) {
                 this.classList.add('is-invalid');
-                this.nextElementSibling.textContent = 'Please enter a valid price (1 - 999999, up to 2 decimals).';
+                helpText.classList.remove('text-muted');
+                helpText.classList.add('text-danger');
+                helpText.textContent = 'Please enter a valid price (1 - 999999, up to 2 decimals).';
             } else {
                 this.classList.remove('is-invalid');
-                this.nextElementSibling.textContent = 'Enter a valid product price (1 - 999999, up to 2 decimals).';
+                helpText.classList.remove('text-danger');
+                helpText.classList.add('text-muted');
+                helpText.textContent = helpText.getAttribute('data-original-text') || 'Enter a valid product price (1 - 999999, up to 2 decimals).';
             }
             updateDiscountPrice();
         });
 
-        // Update discount price on fixed price change
+        // Update on fixed price input
         if (fixedPriceInput) {
             fixedPriceInput.addEventListener('input', function () {
                 const value = parseFloat(this.value);
+                const helpText = this.nextElementSibling;
                 if (isNaN(value) || value < 0 || value > 999999) {
                     this.classList.add('is-invalid');
-                    this.nextElementSibling.textContent = 'Please enter a valid discounted price (0 - 999999, up to 2 decimals).';
+                    helpText.classList.remove('text-muted');
+                    helpText.classList.add('text-danger');
+                    helpText.textContent = 'Please enter a valid discounted price (0 - 999999, up to 2 decimals).';
                 } else {
                     this.classList.remove('is-invalid');
-                    this.nextElementSibling.textContent = 'Set the discounted product price.';
+                    helpText.classList.remove('text-danger');
+                    helpText.classList.add('text-muted');
+                    helpText.textContent = helpText.getAttribute('data-original-text') || 'Set the discounted product price.';
                 }
                 updateDiscountPrice();
             });
@@ -728,6 +753,18 @@ $(document).ready(function () {
         // Handle discount option radio button changes
         radios.forEach(function (radio) {
             radio.addEventListener('change', function () {
+                // Clear validation states
+                basePriceInput.classList.remove('is-invalid');
+                if (fixedPriceInput) {
+                    fixedPriceInput.classList.remove('is-invalid');
+                }
+                const errorMessages = document.querySelectorAll('.text-muted.fs-7');
+                errorMessages.forEach(el => {
+                    el.classList.remove('text-danger');
+                    el.classList.add('text-muted');
+                    el.textContent = el.getAttribute('data-original-text') || el.textContent;
+                });
+
                 if (this.value === '1') {
                     percentageSection.classList.add('d-none');
                     fixedSection.classList.add('d-none');
@@ -750,63 +787,46 @@ $(document).ready(function () {
                     offerPercentageInput.value = 0;
                 }
                 updateDiscountPrice();
-                console.log('Discount option changed, base_price:', basePriceInput.value, 'offer_percentage:', offerPercentageInput.value, 'discount_price:', discountPriceInput.value);
             });
         });
 
-        // Trigger initial update based on selected radio
+        // Initialize form based on selected radio
         const checkedRadio = document.querySelector('input[name="discount_option"]:checked');
         if (checkedRadio) {
             checkedRadio.dispatchEvent(new Event('change'));
         } else {
-            console.error('No discount option radio button is checked on page load');
-        }
-
-        // Prevent form submission if offer_percentage is 0 for percentage discount
-        const form = document.querySelector('form');
-        if (form) {
-            form.addEventListener('submit', function (event) {
-                const selectedOption = document.querySelector('input[name="discount_option"]:checked')?.value;
-                if (selectedOption === '2' && (parseFloat(offerPercentageInput.value) <= 0)) {
-                    event.preventDefault();
-                    alert('Please select a discount percentage greater than 0.');
-                    percentageSection.classList.remove('d-none');
-                    discountPriceContainer.classList.remove('d-none');
-                    if (sliderElement && sliderElement.noUiSlider) {
-                        sliderElement.noUiSlider.set(1);
-                        offerPercentageInput.value = 1;
-                        discountLabel.textContent = 1;
-                        updateDiscountPrice();
-                    }
-                }
-            });
+            console.warn('No discount option selected on load, defaulting to No Discount');
+            document.querySelector('input[name="discount_option"][value="1"]').checked = true;
+            document.querySelector('input[name="discount_option"][value="1"]').dispatchEvent(new Event('change'));
         }
     } else {
-        console.error('Required elements not found');
+        console.error('Required pricing elements not found');
     }
 
-    // Webinar fields toggle
+    // Conditional logic for Webinar, Event, Conference
+    const categorySelect = document.querySelector('select[name="category"]');
+    const webinarFields = document.getElementById('webinar_fields');
     const webinarCategories = ["Webinar", "Conference", "Event"];
+    const isReturnableToggle = document.getElementById("is_returnable");
+    const returnTimeLimitField = document.getElementById("hide_field_return_time_limit");
+
     const fieldsToHide = [
         "hide_field_product_quantity", "hide_field_warranty", "hide_field_condition",
-        "hide_field_return_time_limit", "hide_field_manufacture_date", "hide_field_expiry_date",
-        "hide_field_barcode", "hide_field_price", "hide_field_weight_unit", "hide_field_weight",
-        "hide_field_delivery_time", "hide_field_commission_percentage", "hide_field_supplier_sku",
+        "hide_field_return_time_limit", "hide_field_is_returnable", "hide_field_manufacture_date",
+        "hide_field_expiry_date", "hide_field_barcode", "hide_field_price",
+        "hide_field_weight_unit", "hide_field_weight", "hide_field_delivery_time",
+        "hide_field_commission_percentage", "hide_field_supplier_sku",
         "hide_field_pcs_per_unit", "hide_field_min_order_qty", "hide_field_low_stock_alert",
         "hide_field_expiration_days", "hide_field_tag", "hide_field_offer_percentage",
         "hide_field_offer_start", "hide_field_offer_end", "hide_field_keywords",
         "hide_field_brochure"
     ];
 
-    const webinarFields = document.getElementById("webinar_fields");
-    const categorySelect = document.querySelector('select[name="category"]');
-    const isReturnableToggle = document.getElementById("is_returnable");
-    const returnTimeLimitField = document.getElementById("hide_field_return_time_limit");
-
     function toggleFormFields() {
         const selectedText = categorySelect.options[categorySelect.selectedIndex]?.text.trim() || "";
         const isWebinar = webinarCategories.includes(selectedText);
 
+        // Toggle visibility and required status for fields in fieldsToHide
         fieldsToHide.forEach(id => {
             const field = document.getElementById(id);
             if (field) {
@@ -823,6 +843,18 @@ $(document).ready(function () {
             }
         });
 
+        // Ensure supplier field is always visible and required
+        const supplierField = document.getElementById("hide_field_supplier");
+        if (supplierField) {
+            supplierField.style.display = "";
+            supplierField.querySelectorAll("select").forEach(el => {
+                if (el.hasAttribute("data-originally-required")) {
+                    el.setAttribute("required", "required");
+                }
+            });
+        }
+
+        // Toggle webinar fields
         if (webinarFields) {
             webinarFields.classList.toggle("d-none", !isWebinar);
             webinarFields.querySelectorAll("input").forEach(el => {
@@ -834,6 +866,7 @@ $(document).ready(function () {
             });
         }
 
+        // Toggle return time limit field
         if (isReturnableToggle && returnTimeLimitField) {
             returnTimeLimitField.style.display = isReturnableToggle.checked && !isWebinar ? "" : "none";
             returnTimeLimitField.querySelectorAll("input").forEach(el => {
@@ -845,6 +878,7 @@ $(document).ready(function () {
             });
         }
 
+        // Disable is_returnable toggle for webinars
         if (isReturnableToggle) {
             isReturnableToggle.disabled = isWebinar;
             if (isWebinar) {
@@ -853,7 +887,8 @@ $(document).ready(function () {
         }
     }
 
-    fieldsToHide.forEach(id => {
+    // Store original required state
+    fieldsToHide.concat(["hide_field_supplier"]).forEach(id => {
         const field = document.getElementById(id);
         if (field) {
             field.querySelectorAll("input, select, textarea").forEach(el => {
@@ -864,6 +899,12 @@ $(document).ready(function () {
         }
     });
 
+    // Store original help text for reset
+    document.querySelectorAll('.text-muted.fs-7').forEach(el => {
+        el.setAttribute('data-original-text', el.textContent);
+    });
+
+    // Attach listeners
     if (categorySelect) {
         categorySelect.addEventListener("change", toggleFormFields);
     }
@@ -871,7 +912,215 @@ $(document).ready(function () {
         isReturnableToggle.addEventListener("change", toggleFormFields);
     }
 
+    // Run on page load
     toggleFormFields();
+});
+
+// Input validations from Add Product with red error text
+document.addEventListener("DOMContentLoaded", function () {
+    const manufactureDate = document.getElementById("hide_field_manufacture_date").querySelector("input");
+    const expiryDate = document.getElementById("hide_field_expiry_date").querySelector("input");
+    const offerStart = document.getElementById("hide_field_offer_start").querySelector("input");
+    const offerEnd = document.getElementById("hide_field_offer_end").querySelector("input");
+    const keywords = document.getElementById("hide_field_keywords").querySelector("input");
+    const productName = document.querySelector('input[name="product_name"]');
+    const productFrom = document.querySelector('input[name="product_from"]');
+    const sellingCountries = document.querySelector('input[name="selling_countries"]');
+
+    const today = new Date().toISOString().split("T")[0];
+
+    // Manufacture Date Validation
+    manufactureDate?.addEventListener("input", function () {
+        const helpText = this.nextElementSibling;
+        if (manufactureDate.value > today) {
+            manufactureDate.setCustomValidity("Manufacture Date cannot be in the future.");
+            manufactureDate.classList.add('is-invalid');
+            helpText.classList.remove('text-muted');
+            helpText.classList.add('text-danger');
+            helpText.textContent = 'Manufacture Date cannot be in the future.';
+        } else {
+            manufactureDate.setCustomValidity("");
+            manufactureDate.classList.remove('is-invalid');
+            helpText.classList.remove('text-danger');
+            helpText.classList.add('text-muted');
+            helpText.textContent = helpText.getAttribute('data-original-text') || 'Date of manufacture.';
+        }
+        // Trigger expiry date validation
+        if (expiryDate.value) {
+            expiryDate.dispatchEvent(new Event('input'));
+        }
+    });
+
+    // Expiry Date Validation
+    expiryDate?.addEventListener("input", function () {
+        const helpText = this.nextElementSibling;
+        if (manufactureDate.value && expiryDate.value <= manufactureDate.value) {
+            expiryDate.setCustomValidity("Expiry Date must be later than Manufacture Date.");
+            expiryDate.classList.add('is-invalid');
+            helpText.classList.remove('text-muted');
+            helpText.classList.add('text-danger');
+            helpText.textContent = 'Expiry Date must be later than Manufacture Date.';
+        } else {
+            expiryDate.setCustomValidity("");
+            expiryDate.classList.remove('is-invalid');
+            helpText.classList.remove('text-danger');
+            helpText.classList.add('text-muted');
+            helpText.textContent = helpText.getAttribute('data-original-text') || 'Date of expiry.';
+        }
+    });
+
+    // Offer Start Validation
+    offerStart?.addEventListener("input", function () {
+        const helpText = this.nextElementSibling;
+        if (offerStart.value < today) {
+            offerStart.setCustomValidity("Offer Start Date cannot be in the past.");
+            offerStart.classList.add('is-invalid');
+            helpText.classList.remove('text-muted');
+            helpText.classList.add('text-danger');
+            helpText.textContent = 'Offer Start Date cannot be in the past.';
+        } else if (offerEnd.value && offerStart.value >= offerEnd.value) {
+            offerStart.setCustomValidity("Offer Start Date must be earlier than Offer End Date.");
+            offerStart.classList.add('is-invalid');
+            helpText.classList.remove('text-muted');
+            helpText.classList.add('text-danger');
+            helpText.textContent = 'Offer Start Date must be earlier than Offer End Date.';
+        } else {
+            offerStart.setCustomValidity("");
+            offerStart.classList.remove('is-invalid');
+            helpText.classList.remove('text-danger');
+            helpText.classList.add('text-muted');
+            helpText.textContent = helpText.getAttribute('data-original-text') || 'Date when the offer starts.';
+        }
+        // Trigger offer end validation
+        if (offerEnd.value) {
+            offerEnd.dispatchEvent(new Event('input'));
+        }
+    });
+
+    // Offer End Validation
+    offerEnd?.addEventListener("input", function () {
+        const helpText = this.nextElementSibling;
+        if (offerStart.value && offerEnd.value <= offerStart.value) {
+            offerEnd.setCustomValidity("Offer End Date must be later than Offer Start Date.");
+            offerEnd.classList.add('is-invalid');
+            helpText.classList.remove('text-muted');
+            helpText.classList.add('text-danger');
+            helpText.textContent = 'Offer End Date must be later than Offer Start Date.';
+        } else {
+            offerEnd.setCustomValidity("");
+            offerEnd.classList.remove('is-invalid');
+            helpText.classList.remove('text-danger');
+            helpText.classList.add('text-muted');
+            helpText.textContent = helpText.getAttribute('data-original-text') || 'Date when the offer ends.';
+        }
+    });
+
+    // Keywords Validation
+    keywords?.addEventListener("input", function () {
+        const regex = /^[a-zA-Z\s]+(,[a-zA-Z\s]+)*$/;
+        const helpText = this.nextElementSibling;
+        if (keywords.value.trim() === "") {
+            keywords.setCustomValidity("Keywords field cannot be empty.");
+            keywords.classList.add('is-invalid');
+            helpText.classList.remove('text-muted');
+            helpText.classList.add('text-danger');
+            helpText.textContent = 'Keywords field cannot be empty.';
+        } else if (!regex.test(keywords.value)) {
+            keywords.setCustomValidity("Only text and commas are allowed. Numbers or special characters are not allowed.");
+            keywords.classList.add('is-invalid');
+            helpText.classList.remove('text-muted');
+            helpText.classList.add('text-danger');
+            helpText.textContent = 'Only text and commas are allowed. Numbers or special characters are not allowed.';
+        } else {
+            keywords.setCustomValidity("");
+            keywords.classList.remove('is-invalid');
+            helpText.classList.remove('text-danger');
+            helpText.classList.add('text-muted');
+            helpText.textContent = helpText.getAttribute('data-original-text') || 'Comma-separated keywords for product search.';
+        }
+    });
+
+    // Product Name Validation
+    productName?.addEventListener("input", function () {
+        const regex = /^[a-zA-Z0-9\s\-_]+$/;
+        const helpText = this.nextElementSibling;
+        if (productName.value.trim() === "") {
+            productName.setCustomValidity("Product Name cannot be empty.");
+            productName.classList.add('is-invalid');
+            helpText.classList.remove('text-muted');
+            helpText.classList.add('text-danger');
+            helpText.textContent = 'Product Name cannot be empty.';
+        } else if (!regex.test(productName.value)) {
+            productName.setCustomValidity("Product Name can only contain letters, numbers, spaces, hyphen (-), and underscore (_).");
+            productName.classList.add('is-invalid');
+            helpText.classList.remove('text-muted');
+            helpText.classList.add('text-danger');
+            helpText.textContent = 'Product Name can only contain letters, numbers, spaces, hyphen (-), and underscore (_).';
+        } else {
+            productName.setCustomValidity("");
+            productName.classList.remove('is-invalid');
+            helpText.classList.remove('text-danger');
+            helpText.classList.add('text-muted');
+            helpText.textContent = helpText.getAttribute('data-original-text') || 'A product name is required and recommended to be unique.';
+        }
+    });
+
+    // Product From Validation
+    productFrom?.addEventListener("input", function () {
+        const regex = /^[a-zA-Z\s]+$/;
+        const helpText = this.nextElementSibling;
+        if (productFrom.value.trim() === "") {
+            productFrom.setCustomValidity("Product From cannot be empty.");
+            productFrom.classList.add('is-invalid');
+            helpText.classList.remove('text-muted');
+            helpText.classList.add('text-danger');
+            helpText.textContent = 'Product From cannot be empty.';
+        } else if (!regex.test(productFrom.value)) {
+            productFrom.setCustomValidity("Product From can only contain letters and spaces.");
+            productFrom.classList.add('is-invalid');
+            helpText.classList.remove('text-muted');
+            helpText.classList.add('text-danger');
+            helpText.textContent = 'Product From can only contain letters and spaces.';
+        } else {
+            productFrom.setCustomValidity("");
+            productFrom.classList.remove('is-invalid');
+            helpText.classList.remove('text-danger');
+            helpText.classList.add('text-muted');
+            helpText.textContent = helpText.getAttribute('data-original-text') || 'Country of origin.';
+        }
+    });
+
+    // Selling Countries Validation
+    sellingCountries?.addEventListener("input", function () {
+        const regex = /^[a-zA-Z\s]+(,[a-zA-Z\s]+)*$/;
+        const helpText = this.nextElementSibling;
+        if (sellingCountries.value.trim() === "") {
+            sellingCountries.setCustomValidity("Selling Countries cannot be empty.");
+            sellingCountries.classList.add('is-invalid');
+            helpText.classList.remove('text-muted');
+            helpText.classList.add('text-danger');
+            helpText.textContent = 'Selling Countries cannot be empty.';
+        } else if (!regex.test(sellingCountries.value)) {
+            sellingCountries.setCustomValidity("Only country names separated by commas are allowed (letters and spaces only).");
+            sellingCountries.classList.add('is-invalid');
+            helpText.classList.remove('text-muted');
+            helpText.classList.add('text-danger');
+            helpText.textContent = 'Only country names separated by commas are allowed (letters and spaces only).';
+        } else {
+            sellingCountries.setCustomValidity("");
+            sellingCountries.classList.remove('is-invalid');
+            helpText.classList.remove('text-danger');
+            helpText.classList.add('text-muted');
+            helpText.textContent = helpText.getAttribute('data-original-text') || 'Comma-separated country names (e.g., India, USA, UK).';
+        }
+    });
+
+    // Trigger initial validations for pre-filled fields
+    [productName, productFrom, sellingCountries, keywords, manufactureDate, expiryDate, offerStart, offerEnd, basePriceInput, fixedPriceInput].forEach(input => {
+        if (input && input.value) {
+            input.dispatchEvent(new Event('input'));
+        }
+    });
 });
 </script>
 {% endblock page_only_scripts %}
