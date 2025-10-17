@@ -2806,43 +2806,36 @@ class SubCategoryLastListView(View):
         # Get all subcategories
         subcategories = ProductSubCategory.objects.select_related('category').all()
 
-        # Get search, sort, date filters from GET parameters
-        search_query = request.GET.get('search_by', '')  # Match your template input name
+        # Get filters from GET request
+        search_query = request.GET.get('search_by', '')
         sort_by = request.GET.get('sort_by', '-created_at')
         date_from = request.GET.get('date_from', '')
         date_to = request.GET.get('date_to', '')
 
-        # Map template sort values to actual ORM fields
-        if sort_by == 'desc_created':
-            sort_by = '-created_at'
-        elif sort_by == 'asc_created':
-            sort_by = 'created_at'
-        else:
-            sort_by = '-created_at'  # default
+        # Read subcategory_id from GET if available
+        subcategory_id = request.GET.get('subcategory_id', subcategory_id)
 
-        # Determine which subcategory to show
+        # Try to get selected subcategory
+        subcategory = None
         if subcategory_id:
             try:
-                subcategory = ProductSubCategory.objects.select_related('category').get(id=subcategory_id)
+                subcategory = ProductSubCategory.objects.get(id=subcategory_id)
             except ProductSubCategory.DoesNotExist:
-                return render(request, "superuser/categories/last_categories.html", {
-                    'last_categories': [],
-                    'subcategories': subcategories,
-                    'error': 'Subcategory not found'
-                })
-        else:
-            # Default to first subcategory if none selected
+                subcategory = None
+
+        # Fallback to first subcategory if not found
+        if not subcategory:
             subcategory = subcategories.first()
             if not subcategory:
                 return render(request, "superuser/categories/last_categories.html", {
                     'last_categories': [],
-                    'subcategories': subcategories,
-                    'error': 'No subcategories found'
+                    'subcategories': [],
+                    'error': 'No subcategories found',
                 })
-            subcategory_id = subcategory.id  # ensure template gets correct id
+            subcategory_id = subcategory.id
 
-        # Filter last categories only for the selected subcategory
-        last_categories = ProductLastCategory.objects.filter(sub_category=subcategory).select_related('sub_category')
+        # Filter last categories for that subcategory
+        last_categories = ProductLastCategory.objects.filter(sub_category=subcategory)
 
         if search_query:
             last_categories = last_categories.filter(name__icontains=search_query)
@@ -2851,18 +2844,17 @@ class SubCategoryLastListView(View):
         if date_to:
             last_categories = last_categories.filter(created_at__date__lte=date_to)
 
-        # Apply sorting
+        # Sorting logic
+        if sort_by == 'desc_created':
+            sort_by = '-created_at'
+        elif sort_by == 'asc_created':
+            sort_by = 'created_at'
         last_categories = last_categories.order_by(sort_by)
 
         # Pagination
         paginator = Paginator(last_categories, 10)
         page_number = request.GET.get('page')
-        try:
-            last_categories_page = paginator.page(page_number)
-        except PageNotAnInteger:
-            last_categories_page = paginator.page(1)
-        except EmptyPage:
-            last_categories_page = paginator.page(paginator.num_pages)
+        last_categories_page = paginator.get_page(page_number)
 
         context = {
             'last_categories': last_categories_page,

@@ -96,7 +96,8 @@ urlpatterns = [
     path('edit-subcategory/<int:subcategory_id>/', SubCategoryEditView.as_view(), name='edit_subcategory_detail'),
 
     # Last Category URLs
-    path('lastcategories/', SubCategoryLastListView.as_view(), name='lastcategory_list'),
+   path('last-categories/<int:subcategory_id>/', SubCategoryLastListView.as_view(), name='lastcategory_list'),
+
     path('lastcategories/<int:subcategory_id>/', SubCategoryLastListView.as_view(), name='subcategory_lastcategories'),
     path('add-lastcategory/', LastCategoryCreateView.as_view(), name='add_lastcategory'),
     path('edit-lastcategory/', LastCategoryEditView.as_view(), name='edit_lastcategory'),
