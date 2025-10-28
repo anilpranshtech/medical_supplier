@@ -170,17 +170,20 @@
 
                                         <div class="mb-10 mt-4 fv-row">
                                             <label class="form-label required">Product From</label>
-                                            <input type="text" id="product_from" name="product_from" class="form-control mb-2" 
-                                                   placeholder="e.g., India, China" value="{{ product_from }}" required />
-                                            <div class="text-muted fs-7">Country of origin (only letters allowed).</div>
+                                            <select id="product_from" name="product_from" class="form-select mb-2" required>
+                                                <option value="">Select Country</option>
+                                            </select>
+                                            <div class="text-muted fs-7">Country of origin.</div>
                                         </div>
                                         
                                         <div class="mb-10 mt-4 fv-row">
-                                            <label class="form-label required">Selling Countries</label>
-                                            <input type="text" id="selling_countries" name="selling_countries" class="form-control mb-2" 
-                                                   placeholder="e.g., India, USA, UK" value="{{ selling_countries|default:'' }}" required />
-                                            <div class="text-muted fs-7">Comma-separated country names (e.g., India, USA, UK).</div>
+                                            <label class="form-label required">Selling Country</label>
+                                            <select id="selling_countries" name="selling_countries" class="form-select mb-2"  required>
+                                                <option value="">Select Selling Country</option>
+                                            </select>
+                                            <div class="text-muted fs-7">Select countries for selling .</div>
                                         </div>
+                                        
 
                                         <div class="mb-10 mt-4 fv-row" id="hide_field_warranty">
                                             <label class="form-label">Warranty</label>
@@ -1575,4 +1578,38 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 </script>
+<script>
+    document.addEventListener("DOMContentLoaded", async function () {
+        const countryApiUrl = "https://countriesnow.space/api/v0.1/countries";
+        const productFromSelect = document.getElementById("product_from");
+        const sellingCountriesSelect = document.getElementById("selling_countries");
+    
+        async function fetchCountries() {
+            try {
+                productFromSelect.innerHTML = '<option value="">Loading...</option>';
+                sellingCountriesSelect.innerHTML = '<option value="">Loading...</option>';
+    
+                const response = await fetch(countryApiUrl);
+                const data = await response.json();
+    
+                if (data && data.data) {
+                    productFromSelect.innerHTML = '<option value="">Select Country</option>';
+                    sellingCountriesSelect.innerHTML = '<option value="">Select Selling Country</option>';
+
+    
+                    data.data.forEach(item => {
+                        const countryName = item.country;
+                        productFromSelect.innerHTML += `<option value="${countryName}">${countryName}</option>`;
+                        sellingCountriesSelect.innerHTML += `<option value="${countryName}">${countryName}</option>`;
+                    });
+                }
+            } catch (error) {
+                console.error("Error fetching countries:", error);
+                productFromSelect.innerHTML = '<option value="">Error loading countries</option>';
+            }
+        }
+    
+        await fetchCountries();
+    });
+    </script>
 {% endblock page_only_scripts %}66

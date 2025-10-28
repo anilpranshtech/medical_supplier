@@ -1285,3 +1285,136 @@ class ShippingMethod(models.Model):
 
     def __str__(self):
         return f"{self.country} - {self.state} - {self.city} : {self.price}"
+
+from decimal import Decimal
+class Coupon(models.Model):
+    COUPON_TYPE_CHOICES = [
+        ('both', 'Both'),
+        ('b2b', 'B2B Buyer Product'),
+        ('retail', 'Retail Buyer Product'),
+    ]
+
+    DISCOUNT_TYPE_CHOICES = [
+        ('amount', 'Amount'),
+        ('percent', 'Percent'),
+    ]
+    coupon_type = models.CharField(
+        max_length=20,
+        choices=COUPON_TYPE_CHOICES,
+        verbose_name="Coupon Type"
+    )
+
+    filter_by_orders_count = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Filter By Orders Count"
+    )
+    filter_by_orders_amount = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        verbose_name="Filter By Orders Amount"
+    )
+    client = models.ManyToManyField(
+        User,
+        related_name="applied_coupons",
+        verbose_name="Client",
+        blank=True
+    )
+
+    products = models.ManyToManyField(
+        'Product',
+        related_name="coupons",
+        verbose_name="Search Product",
+        blank=True
+    )
+    code = models.CharField(
+        max_length=50,
+        unique=True,
+        verbose_name="Coupon Code"
+    )
+
+    discount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        verbose_name="Discount"
+    )
+
+    discount_type = models.CharField(
+        max_length=10,
+        choices=DISCOUNT_TYPE_CHOICES,
+        verbose_name="Discount Type"
+    )
+
+    max_discount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        verbose_name="Max Discount"
+    )
+
+    minimum_purchase_amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        verbose_name="Minimum Purchase Amount"
+    )
+
+    count_of_use = models.PositiveIntegerField(
+        default=1,
+        verbose_name="Count Of Use"
+    )
+    start_date = models.DateField(
+        verbose_name="Start Date"
+    )
+    start_time = models.TimeField(
+        verbose_name="Start Time"
+    )
+    end_date = models.DateField(
+        verbose_name="End Date"
+    )
+    end_time = models.TimeField(
+        verbose_name="End Time"
+    )
+    can_be_used_with_promotions = models.BooleanField(
+        default=False,
+        verbose_name="Can be used with promotions"
+    )
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="created_coupons"
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    def is_valid_now(self):
+        """Check if coupon is currently active"""
+        now = timezone.now()
+        start_dt = timezone.make_aware(
+            timezone.datetime.combine(self.start_date, self.start_time)
+        )
+        end_dt = timezone.make_aware(
+            timezone.datetime.combine(self.end_date, self.end_time)
+        )
+        return start_dt <= now <= end_dt
+
+    def calculate_discount(self, order_total):
+        """Return discount amount based on type."""
+        if self.discount_type == 'percent':
+            discount_value = order_total * (self.discount / Decimal('100'))
+        else:
+            discount_value = self.discount
+
+        if discount_value > self.max_discount and self.max_discount > 0:
+            discount_value = self.max_discount
+        return discount_value
+
+    def __str__(self):
+        return f"{self.code} ({self.get_discount_type_display()})"
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Coupon"
+        verbose_name_plural = "Coupons"

@@ -92,6 +92,17 @@ urlpatterns = [
     path('returns/delete/<str:return_serial>/', ReturnDeleteView.as_view(), name='admin_returns_delete'),
     path('returns/refund/', AdminProcessRefundView.as_view(), name='process_refund'),
     path('returns/', AdminReturnsView.as_view(), name='admin_returns'),
+    
+    #coupons
+    path('coupons/', CouponView.as_view(), name='coupons'),
+    path('edit-coupon/', edit_coupon, name='edit_coupon'),
+    path('delete-coupon/',delete_coupon, name='delete_coupon'),
+    path('coupon/<int:coupon_id>/details/', coupon_details, name='coupon_details'),
+    
+
+
+    
+    
 ]
 
     

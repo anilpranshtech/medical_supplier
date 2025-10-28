@@ -170,14 +170,20 @@
                                         </div>
                                         <div class="mb-10 mt-4 fv-row">
                                             <label class="form-label required">Product From</label>
-                                            <input type="text" name="product_from" class="form-control mb-2" placeholder="e.g., India, China" value="{{ product_from }}" required />
+                                            <select id="product_from" name="product_from" class="form-control mb-2" required>
+                                                <option value="">Loading...</option>
+                                            </select>
                                             <div class="text-muted fs-7">Country of origin.</div>
                                         </div>
+                                        
                                         <div class="mb-10 mt-4 fv-row">
                                             <label class="form-label required">Selling Countries</label>
-                                            <input type="text" name="selling_countries" class="form-control mb-2" placeholder="e.g., India, USA, UK" value="{{ selling_countries|default:'' }}" required />
-                                            <div class="text-muted fs-7">Comma-separated country names (e.g., India, USA, UK).</div>
+                                            <select id="selling_countries" name="selling_countries" class="form-control mb-2" required>
+                                                <option value="">Loading...</option>
+                                            </select>
+                                            <div class="text-muted fs-7">Select one or more selling countries.</div>
                                         </div>
+                                        
                                         <div class="mb-10 mt-4 fv-row" id="hide_field_warranty">
                                             <label class="form-label">Warranty</label>
                                             <select class="form-select mb-2" name="warranty" data-control="select2" data-hide-search="true" data-placeholder="Select a warranty option">
@@ -1112,7 +1118,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // Trigger initial validations for pre-filled fields
     [productName, productFrom, sellingCountries, keywords, manufactureDate, expiryDate, offerStart, offerEnd, basePriceInput, fixedPriceInput].forEach(input => {
         if (input && input.value) {
             input.dispatchEvent(new Event('input'));
@@ -1120,4 +1125,48 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 </script>
+<script>
+    document.addEventListener("DOMContentLoaded", async function () {
+        const countryApiUrl = "https://countriesnow.space/api/v0.1/countries";
+        const productFromSelect = document.getElementById("product_from");
+        const sellingCountriesSelect = document.getElementById("selling_countries");
+        const selectedProductFrom = "{{ product.product_from|default:'' }}";
+        const selectedSellingCountries = "{{ product.selling_countries|default:'' }}".split(",").map(c => c.trim());
+    
+        async function fetchCountries() {
+            try {
+                productFromSelect.innerHTML = '<option value="">Loading...</option>';
+                sellingCountriesSelect.innerHTML = '<option value="">Loading...</option>';
+    
+                const response = await fetch(countryApiUrl);
+                const data = await response.json();
+    
+                if (data && data.data) {
+                    productFromSelect.innerHTML = '<option value="">Select Country</option>';
+                    sellingCountriesSelect.innerHTML = '';
+    
+                    data.data.forEach(item => {
+                        const countryName = item.country; 
+                        const option1 = document.createElement("option");
+                        option1.value = countryName;
+                        option1.textContent = countryName;
+                        if (countryName === selectedProductFrom) option1.selected = true;
+                        productFromSelect.appendChild(option1);
+                        const option2 = document.createElement("option");
+                        option2.value = countryName;
+                        option2.textContent = countryName;
+                        if (selectedSellingCountries.includes(countryName)) option2.selected = true;
+                        sellingCountriesSelect.appendChild(option2);
+                    });
+                }
+            } catch (error) {
+                console.error("Error fetching countries:", error);
+                productFromSelect.innerHTML = '<option value="">Error loading countries</option>';
+            }
+        }
+    
+        await fetchCountries();
+    });
+    </script>
+    
 {% endblock page_only_scripts %}

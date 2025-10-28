@@ -1,0 +1,504 @@
+{% extends "supplier/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="app-main flex-column flex-row-fluid" id="kt_app_main">
+    <div class="d-flex flex-column flex-column-fluid">
+        <div id="kt_app_content" class="app-content flex-column-fluid pt-0">
+            <div id="kt_app_content_container" class="app-container container-fluid">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="card-title">Coupons</h3>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createCouponModal">
+                        <i class="bi bi-plus-circle"></i> Create Coupon
+                    </button>
+                </div>
+
+                <!-- Coupons Table -->
+                <div class="card card-flush mb-3">
+                    <div class="card-body table-responsive p-0">
+                        <table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_coupons_table">
+                            <thead>
+                                <tr class="text-center text-gray-500 fw-bold fs-7 text-uppercase gs-0">
+                                    <th>#</th><th>Code</th><th>Count of User</th><th>Discount</th>
+                                    <th>Discount Type</th><th>Min Purchase</th><th>Max Disc</th>
+                                    <th>Created By</th><th>Start Date</th><th>End Date</th>
+                                    <th>Updated At</th><th>Status</th><th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="fw-semibold text-gray-600">
+                                {% for coupon in coupons %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ coupon.code }}</td>
+                                    <td>{{ coupon.count_of_use }}</td>
+                                    <td>{{ coupon.discount }}{% if coupon.discount_type == 'percent' %}%{% else %}${% endif %}</td>
+                                    <td>{{ coupon.get_discount_type_display }}</td>
+                                    <td>${{ coupon.minimum_purchase_amount|floatformat:2 }}</td>
+                                    <td>${{ coupon.max_discount|floatformat:2 }}</td>
+                                    <td>{{ coupon.created_by }}</td>
+                                    <td>{{ coupon.start_date }} {{ coupon.start_time }}</td>
+                                    <td>{{ coupon.end_date }} {{ coupon.end_time }}</td>
+                                    <td>{{ coupon.updated_at|date:"Y-m-d H:i" }}</td>
+                                    <td>
+                                        {% if coupon.is_valid_now %}
+                                            <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <button 
+                                            class="btn btn-sm btn-light-primary editCouponBtn"
+                                            data-id="{{ coupon.id }}"
+                                            data-code="{{ coupon.code }}"
+                                            data-type="{{ coupon.coupon_type }}"
+                                            data-discount-type="{{ coupon.discount_type }}"
+                                            data-discount="{{ coupon.discount }}"
+                                            data-min="{{ coupon.minimum_purchase_amount }}"
+                                            data-max="{{ coupon.max_discount }}"
+                                            data-count="{{ coupon.count_of_use }}"
+                                            data-orders-count="{{ coupon.filter_by_orders_count }}"
+                                            data-orders-amount="{{ coupon.filter_by_orders_amount }}"
+                                            data-start-date="{{ coupon.start_date|date:'Y-m-d' }}"
+                                            data-end-date="{{ coupon.end_date|date:'Y-m-d' }}"
+                                            data-start-time="{{ coupon.start_time|time:'H:i' }}"
+                                            data-end-time="{{ coupon.end_time|time:'H:i' }}"
+                                            data-promotion="{{ coupon.can_be_used_with_promotions|yesno:'True,False' }}"
+                                        >
+                                            <i class="bi bi-pencil-square"></i>
+                                        </button>
+                                        <button 
+                                            class="btn btn-sm btn-light-danger deleteCouponBtn"
+                                            data-id="{{ coupon.id }}"
+                                            data-code="{{ coupon.code }}"
+                                        >
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="13" class="text-center text-muted">No coupons available.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Create Coupon Modal -->
+                <div class="modal fade" id="createCouponModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Create Coupon</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="couponForm">
+                                    {% csrf_token %}
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Coupon Code</label>
+                                            <input type="text" class="form-control" name="code" required>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Coupon Type</label>
+                                            <select name="coupon_type" class="form-select" required>
+                                                <option value="both">Both</option>
+                                                <option value="b2b">B2B Buyer Product</option>
+                                                <option value="retail">Retail Buyer Product</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Discount Type</label>
+                                            <select name="discount_type" class="form-select" required>
+                                                <option value="amount">Amount</option>
+                                                <option value="percent">Percent</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Discount</label>
+                                            <input type="number" step="0.01" class="form-control" name="discount" required>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Min Purchase</label>
+                                            <input type="number" step="0.01" class="form-control" name="minimum_purchase_amount">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Max Discount</label>
+                                            <input type="number" step="0.01" class="form-control" name="max_discount">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Count of Use</label>
+                                            <input type="number" class="form-control" name="count_of_use" value="1">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Filter Orders Count</label>
+                                            <input type="number" class="form-control" name="filter_by_orders_count" value="0">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Filter Orders Amount</label>
+                                            <input type="number" step="0.01" class="form-control" name="filter_by_orders_amount" value="0.00">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Start Date</label>
+                                            <input type="date" class="form-control" name="start_date" required>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">End Date</label>
+                                            <input type="date" class="form-control" name="end_date" required>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Start Time</label>
+                                            <input type="time" class="form-control" name="start_time" required>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">End Time</label>
+                                            <input type="time" class="form-control" name="end_time" required>
+                                        </div>
+                                        <div class="col-md-6 mb-3 form-check mt-4">
+                                            <input type="checkbox" class="form-check-input" name="can_be_used_with_promotions" value="true">
+                                            <label class="form-check-label">Can be used with promotions</label>
+                                        </div>
+                        
+                                        <div class="col-md-12 mb-3">
+                                            <label class="form-label">Select Products</label>
+                                            <select name="product_ids[]" class="form-select select2" multiple id="productSelect">
+                                                {% for p in products %}
+                                                    <option value="{{ p.id }}">{{ p.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="col-md-12 mb-3">
+                                            <label class="form-label">Select Clients</label>
+                                            <select name="client_ids[]" class="form-select select2" multiple id="clientSelect">
+                                                {% for u in clients %}
+                                                    <option value="{{ u.id }}">{{ u.username }} ({{ u.email }})</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </form>
+                                <div id="couponMessage"></div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" id="saveCoupon" class="btn btn-primary">Save</button>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Edit Coupon Modal -->
+                <div class="modal fade" id="editCouponModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Edit Coupon</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="editCouponForm">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="coupon_id" id="edit_coupon_id">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Coupon Code</label>
+                                            <input type="text" class="form-control" name="code" id="edit_code" required>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Coupon Type</label>
+                                            <select name="coupon_type" class="form-select" id="edit_coupon_type" required>
+                                                <option value="both">Both</option>
+                                                <option value="b2b">B2B Buyer Product</option>
+                                                <option value="retail">Retail Buyer Product</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Discount Type</label>
+                                            <select name="discount_type" class="form-select" id="edit_discount_type" required>
+                                                <option value="amount">Amount</option>
+                                                <option value="percent">Percent</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Discount</label>
+                                            <input type="number" step="0.01" class="form-control" name="discount" id="edit_discount" required>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Min Purchase</label>
+                                            <input type="number" step="0.01" class="form-control" name="minimum_purchase_amount" id="edit_minimum_purchase">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Max Discount</label>
+                                            <input type="number" step="0.01" class="form-control" name="max_discount" id="edit_max_discount">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Count of Use</label>
+                                            <input type="number" class="form-control" name="count_of_use" id="edit_count_of_use">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Filter Orders Count</label>
+                                            <input type="number" class="form-control" name="filter_by_orders_count" id="edit_filter_orders_count">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Filter Orders Amount</label>
+                                            <input type="number" step="0.01" class="form-control" name="filter_by_orders_amount" id="edit_filter_orders_amount">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Start Date</label>
+                                            <input type="date" class="form-control" name="start_date" id="edit_start_date" required>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">End Date</label>
+                                            <input type="date" class="form-control" name="end_date" id="edit_end_date" required>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Start Time</label>
+                                            <input type="time" class="form-control" name="start_time" id="edit_start_time" required>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">End Time</label>
+                                            <input type="time" class="form-control" name="end_time" id="edit_end_time" required>
+                                        </div>
+                                        <div class="col-md-6 mb-3 form-check mt-4">
+                                            <input type="checkbox" class="form-check-input" name="can_be_used_with_promotions" id="edit_can_be_used_with_promotions">
+                                            <label class="form-check-label">Can be used with promotions</label>
+                                        </div>
+                                        <div class="col-md-12 mb-3">
+                                            <label class="form-label">Select Products</label>
+                                            <select name="product_ids[]" class="form-select select2" multiple id="edit_productSelect">
+                                                {% for p in products %}
+                                                    <option value="{{ p.id }}">{{ p.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="col-md-12 mb-3">
+                                            <label class="form-label">Select Clients</label>
+                                            <select name="client_ids[]" class="form-select select2" multiple id="edit_clientSelect">
+                                                {% for u in clients %}
+                                                    <option value="{{ u.id }}">{{ u.username }} ({{ u.email }})</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </form>
+                                <div id="editCouponMessage"></div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" id="updateCoupon" class="btn btn-primary">Update</button>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Delete Coupon Modal -->
+                <div class="modal fade" id="deleteCouponModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header bg-danger text-white">
+                                <h5 class="modal-title">Delete Coupon</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body text-center">
+                                <input type="hidden" id="delete_coupon_id">
+                                <p class="fs-6">Are you sure you want to delete <strong id="delete_coupon_name"></strong>?</p>
+                                <div id="deleteCouponMessage"></div>
+                            </div>
+                            <div class="modal-footer justify-content-center">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="button" id="confirmDeleteCoupon" class="btn btn-danger">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block page_only_scripts %}
+<!-- Select2 -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+    // Initialize Select2
+    $('.select2').select2({width: '100%', placeholder: "Search and select", allowClear: true});
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const msg = document.getElementById('couponMessage');
+
+    function alertMsg(t, type='success') {
+        msg.innerHTML = `<div class="alert alert-${type}">${t}</div>`;
+    }
+
+    // Create Coupon
+    document.getElementById('saveCoupon').addEventListener('click', function(){
+        const form = document.getElementById('couponForm');
+        const data = new FormData(form);
+
+        fetch("{% url 'supplier:coupons' %}", {
+            method: 'POST',
+            headers: {'X-CSRFToken': csrftoken},
+            body: data
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.status === 'success') {
+                alertMsg(data.message);
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                alertMsg('Error: ' + data.message, 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Create error:', error.message);
+            alertMsg('Error submitting form: ' + error.message, 'danger');
+        });
+    });
+
+    // Edit Coupon
+    document.querySelectorAll('.editCouponBtn').forEach(btn => {
+        btn.addEventListener('click', function(){
+            const couponId = this.dataset.id;
+            const modal = new bootstrap.Modal(document.getElementById('editCouponModal'));
+
+            // Populate basic fields
+            document.getElementById('edit_coupon_id').value = couponId;
+            document.getElementById('edit_code').value = this.dataset.code;
+            document.getElementById('edit_coupon_type').value = this.dataset.type;
+            document.getElementById('edit_discount_type').value = this.dataset.discountType;
+            document.getElementById('edit_discount').value = this.dataset.discount;
+            document.getElementById('edit_minimum_purchase').value = this.dataset.min;
+            document.getElementById('edit_max_discount').value = this.dataset.max;
+            document.getElementById('edit_count_of_use').value = this.dataset.count;
+            document.getElementById('edit_filter_orders_count').value = this.dataset.ordersCount;
+            document.getElementById('edit_filter_orders_amount').value = this.dataset.ordersAmount;
+            document.getElementById('edit_start_date').value = this.dataset.startDate;
+            document.getElementById('edit_end_date').value = this.dataset.endDate;
+            document.getElementById('edit_start_time').value = this.dataset.startTime;
+            document.getElementById('edit_end_time').value = this.dataset.endTime;
+            document.getElementById('edit_can_be_used_with_promotions').checked = (this.dataset.promotion === 'True');
+
+            // Clear previous selections and messages
+            $('#edit_productSelect').val(null).trigger('change');
+            $('#edit_clientSelect').val(null).trigger('change');
+            document.getElementById('editCouponMessage').innerHTML = '';
+
+            // Fetch coupon's products and clients
+            fetch("{% url 'supplier:coupon_details' coupon_id=0 %}".replace('0', couponId), {
+                method: 'GET',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === 'success') {
+                    $('#edit_productSelect').val(data.products).trigger('change');
+                    $('#edit_clientSelect').val(data.clients).trigger('change');
+                } else {
+                    console.error('Server error:', data.message);
+                    document.getElementById('editCouponMessage').innerHTML = `<div class="alert alert-danger">Error: ${data.message}</div>`;
+                }
+            })
+            .catch(error => {
+                console.error('Fetch error:', error.message);
+                document.getElementById('editCouponMessage').innerHTML = `<div class="alert alert-danger">Error fetching coupon details: ${error.message}</div>`;
+            });
+
+            modal.show();
+        });
+    });
+
+    // Update Coupon
+    document.getElementById('updateCoupon').addEventListener('click', function(){
+        const form = document.getElementById('editCouponForm');
+        const data = new FormData(form);
+        const msg = document.getElementById('editCouponMessage');
+
+        fetch("{% url 'supplier:edit_coupon' %}", {
+            method: 'POST',
+            headers: {'X-CSRFToken': csrftoken},
+            body: data
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.status === 'success') {
+                msg.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                console.error('Update error:', data.message);
+                msg.innerHTML = `<div class="alert alert-danger">Error: ${data.message}</div>`;
+            }
+        })
+        .catch(error => {
+            console.error('Update fetch error:', error.message);
+            msg.innerHTML = `<div class="alert alert-danger">Error updating coupon: ${error.message}</div>`;
+        });
+    });
+
+    // Delete Coupon
+    document.querySelectorAll('.deleteCouponBtn').forEach(btn => {
+        btn.addEventListener('click', function(){
+            const modal = new bootstrap.Modal(document.getElementById('deleteCouponModal'));
+            document.getElementById('delete_coupon_id').value = this.dataset.id;
+            document.getElementById('delete_coupon_name').innerText = this.dataset.code;
+            document.getElementById('deleteCouponMessage').innerHTML = '';
+            modal.show();
+        });
+    });
+
+    document.getElementById('confirmDeleteCoupon').addEventListener('click', function(){
+        const couponId = document.getElementById('delete_coupon_id').value;
+        const msgBox = document.getElementById('deleteCouponMessage');
+
+        fetch("{% url 'supplier:delete_coupon' %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Accept': 'application/json'
+            },
+            body: new URLSearchParams({ 'coupon_id': couponId })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.status === 'success') {
+                msgBox.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                console.error('Delete error:', data.message);
+                msgBox.innerHTML = `<div class="alert alert-danger">Error: ${data.message}</div>`;
+            }
+        })
+        .catch(error => {
+            console.error('Delete fetch error:', error.message);
+            msgBox.innerHTML = `<div class="alert alert-danger">Error deleting coupon: ${error.message}</div>`;
+        });
+    });
+});
+</script>
+{% endblock %}
