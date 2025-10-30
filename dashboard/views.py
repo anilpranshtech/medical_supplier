@@ -3207,6 +3207,52 @@ class UserQuotationView(LoginRequiredMixin, TemplateView):
         return context
 
 
+class AddRFQCommentView(LoginRequiredMixin, View):
+    def post(self, request, rfq_id):
+        rfq = get_object_or_404(RFQRequest, id=rfq_id)
+        comment_text = request.POST.get('comment', '').strip()
+        total_price = request.POST.get('total_price')
+        total_commission = request.POST.get('total_commission')
+
+        if not comment_text:
+            messages.error(request, "Comment cannot be empty.")
+            return redirect('dashboard:view_user_quotations')
+
+        RFQComment.objects.create(
+            rfq=rfq,
+            comment=comment_text,
+            total_price=total_price or None,
+            total_commission=total_commission or None,
+            commented_by=request.user,
+            admin_reply=None 
+        )
+        messages.success(request, "Comment added successfully.")
+        return redirect('dashboard:view_user_quotations')
+
+class RFQCommentsAPIView(LoginRequiredMixin, View):
+    def get(self, request, rfq_id):
+        rfq = get_object_or_404(RFQRequest, id=rfq_id)
+        comments = rfq.comments.all().values(
+            'id', 'comment', 'total_price', 'total_commission',
+            'commented_by__username', 'commented_by__first_name', 'commented_by__last_name',
+            'created_at', 'admin_reply', 'replied_at'
+        )
+        data = []
+        for c in comments:
+            fullname = f"{c['commented_by__first_name']} {c['commented_by__last_name']}".strip()
+            if not fullname:
+                fullname = c['commented_by__username']
+            data.append({
+                'comment': c['comment'],
+                'total_price': c['total_price'],
+                'total_commission': c['total_commission'],
+                'commented_by': c['commented_by__username'],
+                'commented_by_fullname': fullname,
+                'created_at': c['created_at'],
+                'admin_reply': c['admin_reply'],
+                'replied_at': c['replied_at'],
+            })
+        return JsonResponse(data, safe=False)
 class RFQActionBaseView(LoginRequiredMixin, View):
     action = None  # 'accepted' or 'rejected'
     success_message = ""

@@ -302,9 +302,18 @@ class ReturnAdmin(admin.ModelAdmin):
     list_filter = ('return_option', 'return_status')
     search_fields = ('return_serial', 'order_item', 'client', 'return_option', 'return_status')
 
+@admin.register(SupplierCommission)
+class SupplierCommissionAdmin(admin.ModelAdmin):
+    list_display = ('supplier', 'commission_b2b', 'type_b2b', 'commission_b2c', 'type_b2c', 'created_at')
+    search_fields = ('supplier__username',)
+    list_filter = ('type_b2b', 'type_b2c')
+
 admin.site.register(AdminUserProfile)
 admin.site.register(Country)
 admin.site.register(State)
 admin.site.register(City)
 admin.site.register(ShippingMethod)
 admin.site.register(Coupon)
+admin.site.register(VacationRequest)
+admin.site.register(RFQComment)
+

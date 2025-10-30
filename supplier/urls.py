@@ -98,6 +98,9 @@ urlpatterns = [
     path('edit-coupon/', edit_coupon, name='edit_coupon'),
     path('delete-coupon/',delete_coupon, name='delete_coupon'),
     path('coupon/<int:coupon_id>/details/', coupon_details, name='coupon_details'),
+
+    #vacationmode
+    path('vacation-request/', VacationRequestView.as_view(), name='vacation_request'),
     
 
 

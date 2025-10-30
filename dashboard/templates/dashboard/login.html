@@ -196,7 +196,7 @@
             <a href="{% url 'dashboard:password_reset' %}" class="forgot-password" style="text-decoration: underline;">Forgot Password?</a>
         </div>
 
-        <button type="submit" class="login-btn">Continue</button>
+        <button type="submit" class="login-btn  btn-with-loader">Continue</button>
     </form>
 
     <div class="signup-link">
@@ -206,12 +206,13 @@
     </div>
 
 </div>
+<script src="{% static 'js/buttonLoader.js' %}"></script>
 
-<script>
+<script>    
     // Password visibility toggle
     document.querySelectorAll('.toggle-password').forEach(button => {
         button.addEventListener('click', () => {
-            const input = button.parentElement.querySelector('input');
+             const input = button.parentElement.querySelector('input');
             const type = input.type === 'password' ? 'text' : 'password';
             input.type = type;
             const svg = button.querySelector('svg');

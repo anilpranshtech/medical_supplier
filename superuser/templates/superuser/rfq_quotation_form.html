@@ -5,16 +5,12 @@
 {% block content %}
 <!--begin::Main-->
 <div class="app-main flex-column flex-row-fluid" id="kt_app_main">
-    <!--begin::Content wrapper-->
     <div class="d-flex flex-column flex-column-fluid">
-        <!--begin::Content-->
         <div id="kt_app_content" class="app-content flex-column-fluid">
-            <!--begin::Content container-->
             <div id="kt_app_content_container" class="app-container container-fluid">
 
                 <!--begin::Quotation Card-->
                 <div class="card mb-5 mb-xl-10">
-                    <!--begin::Card header-->
                     <div class="card-header border-0 cursor-pointer" role="button" data-bs-toggle="collapse"
                          data-bs-target="#kt_rfq_quotation_form" aria-expanded="true"
                          aria-controls="kt_rfq_quotation_form">
@@ -22,11 +18,10 @@
                             <h3 class="fw-bold m-0">Submit Quotation for RFQ #{{ object.id }}</h3>
                         </div>
                     </div>
-                    <!--end::Card header-->
 
-                    <!--begin::Content-->
                     <div id="kt_rfq_quotation_form" class="collapse show">
                         <div class="card-body p-9">
+
                             <!-- RFQ Details -->
                             <div class="row mb-12">
                                 <div class="col-md-4">
@@ -52,10 +47,9 @@
                                     <h4 class="text-center">Product Information</h4>
                                     <div class="mb-3 text-center">
                                         <img src="{{ object.product.get_main_image|default:'https://via.placeholder.com/150' }}"
-                                             alt="Product Image"
-                                             class="img-thumbnail"
+                                             alt="Product Image" class="img-thumbnail"
                                              style="max-width: 350px;"
-                                             onerror="this.src='https://via.placeholder.com/150'; console.log('Image failed to load');">
+                                             onerror="this.src='https://via.placeholder.com/150';">
                                     </div>
                                 </div>
                                 <div class="col-md-4">
@@ -75,47 +69,34 @@
                             </div>
 
                             <!-- Quotation Form -->
-                            <form method="post" enctype="multipart/form-data" class="form">
+                            <form method="post" enctype="multipart/form-data" class="form" id="quotation-form">
                                 {% csrf_token %}
+
+                                <!-- Quotation Fields -->
                                 <div class="card-body border-top p-9">
-                                    <!-- Quoted Price -->
                                     <div class="row mb-6">
-                                        <label class="col-lg-4 col-form-label required fw-semibold fs-6">
-                                            Quoted Price
-                                        </label>
+                                        <label class="col-lg-4 col-form-label required fw-semibold fs-6">Quoted Price</label>
                                         <div class="col-lg-8 fv-row">
                                             {{ form.quoted_price }}
                                             {{ form.quoted_price.errors }}
                                         </div>
                                     </div>
-
-                                    <!-- Expected Delivery Date -->
                                     <div class="row mb-6">
-                                        <label class="col-lg-4 col-form-label required fw-semibold fs-6">
-                                            Expected Delivery Date
-                                        </label>
+                                        <label class="col-lg-4 col-form-label required fw-semibold fs-6">Expected Delivery Date</label>
                                         <div class="col-lg-8 fv-row">
                                             {{ form.quote_delivery_date }}
                                             {{ form.quote_delivery_date.errors }}
                                         </div>
                                     </div>
-
-                                    <!-- Notes -->
                                     <div class="row mb-6">
-                                        <label class="col-lg-4 col-form-label fw-semibold fs-6">
-                                            Notes
-                                        </label>
+                                        <label class="col-lg-4 col-form-label fw-semibold fs-6">Notes</label>
                                         <div class="col-lg-8 fv-row">
                                             {{ form.supplier_notes }}
                                             {{ form.supplier_notes.errors }}
                                         </div>
                                     </div>
-
-                                    <!-- Attachment -->
                                     <div class="row mb-6">
-                                        <label class="col-lg-4 col-form-label fw-semibold fs-6">
-                                            Attachment (Optional)
-                                        </label>
+                                        <label class="col-lg-4 col-form-label fw-semibold fs-6">Attachment (Optional)</label>
                                         <div class="col-lg-8 fv-row">
                                             {{ form.quote_attached_file }}
                                             {{ form.quote_attached_file.errors }}
@@ -123,41 +104,109 @@
                                     </div>
                                 </div>
 
+                                <!-- ====== COMMENTS SECTION ====== -->
+                                <div class="card-body border-top p-9">
+                                    <h4 class="mb-5">Comments</h4>
+
+                                   
+
+                                    <!-- Comments Table -->
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered align-middle">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Serial</th>
+                                                    <th>Comment</th>
+                                                    <th>Total Price</th>
+                                                    <th>Total Commission</th>
+                                                    <th>Commented By</th>
+                                                    <th>Created At</th>
+                                                    <th>Admin Reply</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for comment in comments %}
+                                                <tr>
+                                                    <td>{{ forloop.counter }}</td>
+                                                    <td>{{ comment.comment }}</td>
+                                                    <td>{{ comment.total_price|default:"-" }}</td>
+                                                    <td>{{ comment.total_commission|default:"-" }}</td>
+                                                    <td>{{ comment.commented_by.get_full_name|default:comment.commented_by.username }}</td>
+                                                    <td>{{ comment.created_at|date:"M d, Y, h:i A" }}</td>
+                                                    <td>
+                                                        {% if comment.admin_reply %}
+                                                            <div class="text-success">
+                                                                <strong>Reply:</strong> {{ comment.admin_reply }}
+                                                                <small class="text-muted d-block">
+                                                                    {{ comment.replied_at|date:"M d, Y, h:i A" }}
+                                                                </small>
+                                                            </div>
+                                                        {% else %}
+                                                            <!-- Inline Reply Form -->
+                                                            <form method="post" class="d-inline">
+                                                                {% csrf_token %}
+                                                                <input type="hidden" name="reply_to" value="{{ comment.id }}">
+                                                                <div class="input-group input-group-sm">
+                                                                    <input type="text" name="admin_reply"
+                                                                           class="form-control form-control-sm"
+                                                                           placeholder="Reply..." required>
+                                                                    <button type="submit" name="add_reply"
+                                                                            class="btn btn-outline-success btn-sm">Send</button>
+                                                                </div>
+                                                            </form>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                                {% empty %}
+                                                <tr>
+                                                    <td colspan="7" class="text-center text-muted">No comments yet.</td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <!-- ====== END COMMENTS SECTION ====== -->
+
                                 <!-- Actions -->
                                 <div class="card-footer d-flex justify-content-end py-6 px-9">
                                     <a href="{% url 'superuser:rfq_list' %}" class="btn btn-light btn-active-light-primary me-2">
                                         Cancel
                                     </a>
-                                    <button type="submit" class="btn btn-primary">
+                                    <button type="submit" name="send_quotation" class="btn btn-primary btn-with-loader">
                                         Send Quotation
                                     </button>
                                 </div>
                             </form>
                         </div>
                     </div>
-                    <!--end::Content-->
                 </div>
-                <!--end::Quotation Card-->
 
             </div>
-            <!--end::Content container-->
         </div>
-        <!--end::Content-->
     </div>
-    <!--end::Content wrapper-->
 </div>
-<!--end::Main-->
 {% endblock %}
 
 {% block extra_scripts %}
+<script src="{% static 'js/buttonLoader.js' %}"></script>
 <script type="text/javascript" defer>
     document.addEventListener('DOMContentLoaded', function() {
-        const form = document.querySelector('#kt_rfq_quotation_form form');
-        if (form) {
-            form.addEventListener('submit', function(e) {
-                console.log('Form submitted');
-            });
-        }
+        const form = document.querySelector('#quotation-form');
+        if (!form) return;
+
+        form.addEventListener('submit', function(e) {
+            const submitter = e.submitter;
+            if (!submitter) return;
+
+            if (submitter.name === 'add_comment') {
+                // normal
+            } else if (submitter.name === 'add_reply') {
+                // normal
+            } else if (submitter.name === 'send_quotation') {
+                console.log('Sending quotation...');
+            }
+        });
     });
 </script>
 {% endblock %}

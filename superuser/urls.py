@@ -96,12 +96,22 @@ urlpatterns = [
     path('edit-subcategory/<int:subcategory_id>/', SubCategoryEditView.as_view(), name='edit_subcategory_detail'),
 
     # Last Category URLs
-   path('last-categories/<int:subcategory_id>/', SubCategoryLastListView.as_view(), name='lastcategory_list'),
-
+    path('last-categories/<int:subcategory_id>/', SubCategoryLastListView.as_view(), name='lastcategory_list'),
     path('lastcategories/<int:subcategory_id>/', SubCategoryLastListView.as_view(), name='subcategory_lastcategories'),
     path('add-lastcategory/', LastCategoryCreateView.as_view(), name='add_lastcategory'),
     path('edit-lastcategory/', LastCategoryEditView.as_view(), name='edit_lastcategory'),
     path('delete-lastcategory/', LastCategoryDeleteView.as_view(), name='delete_lastcategory'),
     path('edit-lastcategory/<int:lastcategory_id>/', LastCategoryEditView.as_view(), name='edit_lastcategory_detail'),
+
+    #Supplier Commission
+    path('supplier-commission/', SupplierCommissionListView.as_view(), name='supplier_commission'),
+    path('supplier-commission/edit/', SupplierCommissionEditView.as_view(), name='supplier_commission_edit'),
+    path('supplier-commission/delete/', SupplierCommissionDeleteView.as_view(), name='supplier_commission_delete'),
+
+    #vacationmode
+    path('vacation-mode/', AdminVacationModeView.as_view(), name='admin_vacation_mode'),
+
+
+     
 
 ]

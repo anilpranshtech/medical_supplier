@@ -526,7 +526,7 @@
 
                     <div class="flex gap-4">
                         <button type="button" id="backBtn" class="back-btn">Back</button>
-                        <button type="submit" class="create-btn">Create Account</button>
+                        <button type="submit" class="create-btn  btn-with-loader">Create Account</button>
                     </div>
                 </div>
 
@@ -559,11 +559,12 @@
                     <input type="hidden" name="otp" id="otp">
                 </div>
                 <div class="resend-link" id="resend-otp">Resend OTP</div>
-                <button type="submit" class="verify-btn">Verify</button>
+                <button type="submit" class="verify-btn ">Verify</button>
             </form>
         </div>
     </div>
 </div>
+<script src="{% static 'js/buttonLoader.js' %}"></script>
 
 <script>
     // Form elements

@@ -2797,3 +2797,33 @@ def coupon_details(request, coupon_id):
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=400)
+
+class VacationRequestView(LoginRequiredMixin, View):
+    template_name = 'supplier/vacationrequest.html'
+
+    def get(self, request):
+        # show only this supplier’s vacation requests
+        requests = VacationRequest.objects.filter(supplier=request.user).order_by('-created_at')
+        return render(request, self.template_name, {'requests': requests})
+
+    def post(self, request):
+        # Get data from form submission
+        reason = request.POST.get('reason')
+        from_date = request.POST.get('from_date')
+        to_date = request.POST.get('to_date')
+
+        # Validate
+        if not from_date or not to_date:
+            messages.error(request, "Please select both From and To dates.")
+            return redirect('vacation_request')
+
+        # Create vacation request
+        VacationRequest.objects.create(
+            supplier=request.user,
+            reason=reason,
+            from_date=from_date,
+            to_date=to_date,
+        )
+
+        messages.success(request, "Vacation request submitted successfully!")
+        return redirect('supplier:vacation_request')

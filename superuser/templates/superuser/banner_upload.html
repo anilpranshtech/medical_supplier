@@ -104,7 +104,7 @@
                                 <a href="{% url 'superuser:banner_list' %}" class="btn btn-light btn-active-light-primary me-2">
                                     Cancel
                                 </a>
-                                <button type="submit" class="btn btn-primary">
+                                <button type="submit" class="btn btn-primary btn-with-loader">
                                     {% if object %}
                                         <i class="ki-duotone ki-pencil fs-2 me-1"></i> Update Banner
                                     {% else %}
@@ -122,4 +122,5 @@
     </div>
 </div>
 <!--end::Main-->
+<script src="{% static 'js/buttonLoader.js' %}"></script>
 {% endblock %}

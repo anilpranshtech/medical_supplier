@@ -78,7 +78,7 @@
                         </div>
                        {% if "dashboard.add_notification" in user_permissions_list %}
                         <div class="card-toolbar">
-                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addNotificationModal">
+                            <button type="button" class="btn btn-primary " data-bs-toggle="modal" data-bs-target="#addNotificationModal">
                                 + Add Notification
                             </button>
                         </div>
@@ -283,7 +283,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">Send</button>
+                    <button type="submit" class="btn btn-primary btn-with-loader">Send</button>
                 </div>
             </form>
         </div>
@@ -311,7 +311,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">Update</button>
+                    <button type="submit" class="btn btn-primary btn-with-loader">Update</button>
                 </div>
             </form>
         </div>
@@ -333,13 +333,13 @@
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <form id="deleteNotificationForm" method="post" action="">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-primary">Delete</button>
+                    <button type="submit" class="btn btn-primary btn-with-loader">Delete</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
-
+<script src="{% static 'js/buttonLoader.js' %}"></script>
 <!-- Include Moment.js and DateRangePicker -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-daterangepicker/3.0.5/daterangepicker.min.js"></script>

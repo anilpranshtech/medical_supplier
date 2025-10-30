@@ -91,6 +91,8 @@ urlpatterns = [
     path('my-quotations/', UserQuotationView.as_view(), name='view_user_quotations'),
     path('rfq/<int:pk>/accept/', RFQAcceptView.as_view(), name='accept_rfq'),
     path('rfq/<int:pk>/reject/', RFQRejectView.as_view(), name='reject_rfq'),
+    path('quotations/<int:rfq_id>/add-comment/', AddRFQCommentView.as_view(), name='add_rfq_comment'),
+    path('quotations/<int:rfq_id>/comments/', RFQCommentsAPIView.as_view(), name='rfq_comments_api'),
 
     # Subscription Plan
     path('subscriptions-plans/', SubscriptionPlanView.as_view(), name='subscription_plans'),

@@ -1,0 +1,118 @@
+{% extends 'superuser/superuser_base.html' %}
+{% load static %}
+
+{% block content %}
+
+    
+<div class="app-main flex-column flex-row-fluid" id="kt_app_main">
+  <div class="d-flex flex-column flex-column-fluid">
+    <div id="kt_app_content" class="app-content flex-column-fluid mx-5">
+      <div id="kt_app_content_container" class="app-container container-fluid">
+
+        <div class="card card-flush">
+          <div class="card-header">
+            <h3 class="card-title">Client Vacation Requests</h3>
+          </div>
+
+          <div class="card-body pt-0 table-responsive">
+            {% if vacation_requests %}
+            <table class="table align-middle border-0 table-row-dashed fs-6 gy-5">
+
+              <thead>
+                <tr class="text-gray-600 fw-bold text-uppercase fs-7">
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Type</th>
+                  <th>Reason</th>
+                  <th>From</th>
+                  <th>To</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for req in vacation_requests %}
+                <tr id="row-{{ req.id }}">
+                  <td>{{ req.supplier.username }}</td>
+                  <td>{{ req.supplier.email }}</td>
+                  <td>{{ req.type }}</td>
+                  <td>{{ req.reason|default:"-" }}</td>
+                  <td>{{ req.from_date }}</td>
+                  <td>{{ req.to_date }}</td>
+                  <td>
+                    <span class="badge 
+                      {% if req.status == 'Approved' %} badge-success 
+                      {% elif req.status == 'Rejected' %} badge-danger 
+                      {% else %} badge-warning {% endif %}" 
+                      id="status-{{ req.id }}">
+                      {{ req.status }}
+                    </span>
+                  </td>
+                  <td>
+                    <button type="button" class="btn btn-success btn-sm action-btn"
+                      data-id="{{ req.id }}" data-action="approve">Approve</button>
+                    <button type="button" class="btn btn-danger btn-sm action-btn"
+                      data-id="{{ req.id }}" data-action="reject">Reject</button>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            {% else %}
+            <p class="text-gray-500">No vacation requests found.</p>
+            {% endif %}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block page_only_scripts %}
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const buttons = document.querySelectorAll(".action-btn");
+
+  buttons.forEach((btn) => {
+    btn.addEventListener("click", function () {
+      const requestId = this.dataset.id;
+      const action = this.dataset.action;
+
+      fetch("", {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": "{{ csrf_token }}",
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          request_id: requestId,
+          action: action,
+        }),
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Update status instantly in table
+          const statusBadge = document.querySelector(`#status-${requestId}`);
+          statusBadge.textContent = action.charAt(0).toUpperCase() + action.slice(1);
+          statusBadge.className = `badge badge-${action === 'approve' ? 'success' : 'danger'}`;
+
+          // Show success popup
+          Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: 'Your Submission has been sent.',
+            confirmButtonColor: '#4f46e5',
+          });
+        }
+      });
+    });
+  });
+});
+</script>
+{% endblock %}

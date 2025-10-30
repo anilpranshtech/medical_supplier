@@ -1,0 +1,190 @@
+{% extends 'superuser/superuser_base.html' %}
+{% load static %}
+
+{% block title %}Supplier Commission List{% endblock %}
+
+{% block content %}
+<div class="app-main flex-column flex-row-fluid" id="kt_app_main">
+  <div class="d-flex flex-column flex-column-fluid">
+    <div id="kt_app_content" class="app-content flex-column-fluid pt-0">
+      <div id="kt_app_content_container" class="app-container container-fluid">
+
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-5">
+          <h2 class="fw-bold">Commission List</h2>
+          <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCommissionModal">
+            + Add Commission
+          </button>
+        </div>
+
+        <!-- Table -->
+        <div class="card card-flush shadow-sm">
+          <div class="card-body table-responsive">
+            <table class="table align-middle table-row-dashed fs-6 gy-5">
+              <thead>
+                <tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
+                  <th>Name</th>
+                  <th>Commission B2B</th>
+                  <th>Type B2B</th>
+                  <th>Commission B2C</th>
+                  <th>Type B2C</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody class="fw-semibold text-gray-600">
+                {% for commission in commissions %}
+                <tr>
+                  <td>{{ commission.supplier.username }}</td>
+                  <td>{{ commission.commission_b2b }}</td>
+                  <td>{{ commission.type_b2b }}</td>
+                  <td>{{ commission.commission_b2c }}</td>
+                  <td>{{ commission.type_b2c }}</td>
+                  <td>
+                    <!-- Edit -->
+                    <button 
+                      class="btn btn-sm btn-light-primary edit-btn"
+                      data-id="{{ commission.id }}"
+                      data-supplier="{{ commission.supplier.id }}"
+                      data-b2b="{{ commission.commission_b2b }}"
+                      data-typeb2b="{{ commission.type_b2b }}"
+                      data-b2c="{{ commission.commission_b2c }}"
+                      data-typeb2c="{{ commission.type_b2c }}"
+                      data-bs-toggle="modal"
+                      data-bs-target="#editCommissionModal">
+                      <i class="bi bi-pencil"></i>
+                    </button>
+
+                    <!-- Delete -->
+                    <button 
+                      class="btn btn-sm btn-light-danger delete-btn"
+                      data-id="{{ commission.id }}"
+                      data-bs-toggle="modal"
+                      data-bs-target="#deleteCommissionModal">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="6" class="text-center text-muted">No commissions found.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <div class="d-flex justify-content-end mt-3">
+              {% if page_obj.has_previous %}
+              <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-light me-2">Previous</a>
+              {% endif %}
+              <span class="align-self-center">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+              {% if page_obj.has_next %}
+              <a href="?page={{ page_obj.next_page_number }}" class="btn btn-light ms-2">Next</a>
+              {% endif %}
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Add Commission Modal -->
+        <div class="modal fade" id="addCommissionModal" tabindex="-1" aria-labelledby="addCommissionModalLabel" aria-hidden="true">
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="addCommissionModalLabel">Add Supplier Commission</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <form method="post" action="{% url 'superuser:supplier_commission' %}">
+                  {% csrf_token %}
+                  {{ form.as_p }}
+                  <div class="text-end">
+                    <button type="submit" class="btn btn-primary mt-3">Save Commission</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Edit Commission Modal -->
+        <div class="modal fade" id="editCommissionModal" tabindex="-1" aria-labelledby="editCommissionModalLabel" aria-hidden="true">
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="editCommissionModalLabel">Edit Supplier Commission</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <form method="post" action="{% url 'superuser:supplier_commission_edit' %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="id" id="editCommissionId">
+                  <div class="mb-3">
+                    <label class="form-label">Supplier</label>
+                    <select name="supplier" id="editSupplier" class="form-select">
+                      {% for supplier in suppliers %}
+                      <option value="{{ supplier.id }}">{{ supplier.username }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+        
+                  <div class="text-end">
+                    <button type="submit" class="btn btn-primary mt-3">Update Commission</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Delete Confirmation Modal -->
+        <div class="modal fade" id="deleteCommissionModal" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title fw-bold">Delete Commission</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <p>Are you sure you want to delete this commission?</p>
+                <form method="post" action="{% url 'superuser:supplier_commission_delete' %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="id" id="deleteCommissionId">
+                  <div class="text-end">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- JS for filling edit/delete modals -->
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll(".edit-btn").forEach(button => {
+      button.addEventListener("click", function() {
+        document.getElementById("editCommissionId").value = this.dataset.id;
+        document.getElementById("editSupplier").value = this.dataset.supplier;
+        document.getElementById("editB2B").value = this.dataset.b2b;
+        document.getElementById("editTypeB2B").value = this.dataset.typeb2b;
+        document.getElementById("editB2C").value = this.dataset.b2c;
+        document.getElementById("editTypeB2C").value = this.dataset.typeb2c;
+      });
+    });
+
+    document.querySelectorAll(".delete-btn").forEach(button => {
+      button.addEventListener("click", function() {
+        document.getElementById("deleteCommissionId").value = this.dataset.id;
+      });
+    });
+  });
+</script>
+{% endblock %}

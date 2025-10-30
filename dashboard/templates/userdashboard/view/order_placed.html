@@ -126,7 +126,7 @@
                                     View All Orders
                                 </a>
                                 <a class="kt-btn kt-btn-primary" href="{% url 'dashboard:home' %}">
-                                    <i class="ki-filled ki-handcart text-base"></i>
+                                    <i class="ki-filled ki-handcart text-base btn-with-loader"></i>
                                     Continue Shopping
                                 </a>
                             </div>
@@ -217,4 +217,5 @@
         </main>
     </div>
 </div>
+<script src="{% static 'js/buttonLoader.js' %}"></script>
 {% endblock content %}

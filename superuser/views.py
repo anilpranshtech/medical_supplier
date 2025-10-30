@@ -1696,7 +1696,61 @@ class AdminQuotationUpdateView(LoginRequiredMixin, UpdateView):
     model = RFQRequest
     form_class = SuperuserRFQQuotationForm
     template_name = 'superuser/rfq_quotation_form.html'
-    success_url = reverse_lazy('superuser:rfq_list')  # Adjusted to use reverse_lazy
+    success_url = reverse_lazy('superuser:rfq_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['comments'] = self.object.comments.all()
+        return context
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+
+        # === 1. ADD COMMENT ===
+        if 'add_comment' in request.POST:
+            comment_text = request.POST.get('comment', '').strip()
+            if comment_text:
+                RFQComment.objects.create(
+                    rfq=self.object,
+                    comment=comment_text,
+                    commented_by=request.user,
+                )
+                messages.success(request, "Comment added.")
+            else:
+                messages.error(request, "Comment cannot be empty.")
+            return redirect('superuser:rfq_quote', pk=self.object.pk)
+
+        # === 2. ADD ADMIN REPLY ===
+        if 'add_reply' in request.POST:
+            reply_to_id = request.POST.get('reply_to')
+            reply_text = request.POST.get('admin_reply', '').strip()
+
+            if not reply_to_id or not reply_text:
+                messages.error(request, "Invalid reply.")
+                return redirect('superuser:rfq_quote', pk=self.object.pk)
+
+            try:
+                comment = RFQComment.objects.get(id=reply_to_id, rfq=self.object)
+                if comment.admin_reply:
+                    messages.error(request, "Reply already exists.")
+                else:
+                    comment.admin_reply = reply_text
+                    comment.replied_at = timezone.now()
+                    comment.save()
+                    messages.success(request, "Reply saved.")
+            except RFQComment.DoesNotExist:
+                messages.error(request, "Comment not found.")
+            return redirect('superuser:rfq_quote', pk=self.object.pk)
+
+        # === 3. SEND QUOTATION ===
+        if 'send_quotation' in request.POST:
+            form = self.get_form()
+            if form.is_valid():
+                return self.form_valid(form)
+            else:
+                return self.form_invalid(form)
+
+        return redirect('superuser:rfq_quote', pk=self.object.pk)
 
     def form_valid(self, form):
         rfq = form.save(commit=False)
@@ -1705,10 +1759,8 @@ class AdminQuotationUpdateView(LoginRequiredMixin, UpdateView):
         rfq.status = 'quoted'
         rfq.save()
 
-        # Send quotation email to requester
         self.send_quotation_email(rfq)
-
-        messages.success(self.request, "Quotation sent and email delivered to the user.")
+        messages.success(self.request, "Quotation sent and email delivered.")
         return super().form_valid(form)
 
     def send_quotation_email(self, rfq):
@@ -1717,6 +1769,7 @@ class AdminQuotationUpdateView(LoginRequiredMixin, UpdateView):
         context = {
             'rfq': rfq,
             'supplier': rfq.quoted_by,
+            'comments': rfq.comments.all(),
         }
         message = render_to_string('superuser/rfq_quotation_sent.html', context)
         email = EmailMessage(
@@ -2954,7 +3007,6 @@ class LastCategoryDeleteView(View):
             last_category = ProductLastCategory.objects.get(id=lastcategory_id)
             last_category_name = last_category.name
             
-            # Delete image if exists
             if last_category.image:
                 last_category.image.delete(save=False)
             
@@ -2965,3 +3017,67 @@ class LastCategoryDeleteView(View):
             })
         except ProductLastCategory.DoesNotExist:
             return JsonResponse({'status': 'error', 'message': 'Last category not found'})
+        
+
+class SupplierCommissionListView(ListView):
+    model = SupplierCommission
+    template_name = 'superuser/suppliercommission.html'
+    context_object_name = 'commissions'
+    paginate_by = 20
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        from django.forms import modelform_factory
+        CommissionForm = modelform_factory(SupplierCommission, fields=['supplier'])
+        form = CommissionForm()
+        form.fields['supplier'].help_text = ''
+        context['form'] = form
+        return context
+
+    def post(self, request, *args, **kwargs):
+        from django.forms import modelform_factory
+        CommissionForm = modelform_factory(SupplierCommission, fields=['supplier'])
+        form = CommissionForm(request.POST)
+        form.fields['supplier'].help_text = '' 
+        if form.is_valid():
+            form.save()
+            return redirect('superuser:supplier_commission')
+        context = self.get_context_data()
+        context['form'] = form
+        return self.render_to_response(context)
+class SupplierCommissionEditView(View):
+    def post(self, request, *args, **kwargs):
+        commission = get_object_or_404(SupplierCommission, id=request.POST.get('id'))
+        commission.supplier_id = request.POST.get('supplier')
+        commission.save()
+        return redirect('superuser:supplier_commission')
+
+
+class SupplierCommissionDeleteView(View):
+    def post(self, request, *args, **kwargs):
+        commission = get_object_or_404(SupplierCommission, id=request.POST.get('id'))
+        commission.delete()
+        return redirect('superuser:supplier_commission')
+
+class AdminVacationModeView(View):
+    template_name = 'superuser/vacationmode.html'
+
+    def get(self, request):
+        vacation_requests = VacationRequest.objects.all().order_by('-created_at')
+        return render(request, self.template_name, {'vacation_requests': vacation_requests})
+
+    def post(self, request):
+        request_id = request.POST.get('request_id')
+        action = request.POST.get('action')
+        vacation_request = get_object_or_404(VacationRequest, id=request_id)
+
+        if action == 'approve':
+            vacation_request.status = 'Approved'
+        elif action == 'reject':
+            vacation_request.status = 'Rejected'
+        vacation_request.save()
+
+        return JsonResponse({
+            'success': True,
+            'message': f"Vacation request has been {vacation_request.status.lower()}!"
+        })

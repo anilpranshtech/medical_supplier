@@ -386,6 +386,14 @@ class Product(models.Model):
         if not delivered_at or not self.is_returnable:
             return None
         return delivered_at + timedelta(days=self.return_time_limit)
+    
+  
+    def get_final_commission(self):
+        """Return product-specific commission or supplier default."""
+        if self.commission_percentage > 0:
+            return self.commission_percentage
+        supplier_commission = SupplierCommission.objects.filter(supplier=self.created_by).first()
+        return supplier_commission.commission_b2c if supplier_commission else 0
 
     def __str__(self):
         return self.name
@@ -952,6 +960,24 @@ class RFQRequest(models.Model):
     class Meta:
         ordering = ["-created_at"]
         verbose_name = verbose_name_plural = "RFQ Request"
+class RFQComment(models.Model):
+    rfq = models.ForeignKey(RFQRequest, on_delete=models.CASCADE, related_name='comments')
+    comment = models.TextField()
+    admin_reply = models.TextField(blank=True, null=True)
+    total_price = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    total_commission = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    commented_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    replied_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"Comment by {self.commented_by.username} on RFQ #{self.rfq.id}"
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "RFQ Comment"
+        verbose_name_plural = "RFQ Comments"
+
 
 
 class PasswordUpdateTracker(models.Model):
@@ -1418,3 +1444,64 @@ class Coupon(models.Model):
         ordering = ['-created_at']
         verbose_name = "Coupon"
         verbose_name_plural = "Coupons"
+
+class SupplierCommission(models.Model):
+    supplier = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="supplier_commissions",
+        help_text="Select the supplier to whom this commission applies."
+    )
+    commission_b2b = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=0.00,
+        help_text="Commission percentage for B2B sales."
+    )
+    commission_b2c = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=0.00,
+        help_text="Commission percentage for B2C sales."
+    )
+
+    type_b2b = models.CharField(
+        max_length=10,
+        choices=[("include", "Include"), ("exclude", "Exclude")],
+        default="exclude",
+        help_text="Include or exclude commission for B2B sales."
+    )
+    type_b2c = models.CharField(
+        max_length=10,
+        choices=[("include", "Include"), ("exclude", "Exclude")],
+        default="exclude",
+        help_text="Include or exclude commission for B2C sales."
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.supplier.username} - B2B: {self.commission_b2b}%, B2C: {self.commission_b2c}%"
+
+    class Meta:
+        verbose_name = "Supplier Commission"
+        verbose_name_plural = "Supplier Commissions"
+        ordering = ['-created_at']
+
+class VacationRequest(models.Model):
+    STATUS_CHOICES = [
+        ('Pending', 'Pending'),
+        ('Approved', 'Approved'),
+        ('Rejected', 'Rejected'),
+    ]
+
+    supplier = models.ForeignKey(User, on_delete=models.CASCADE, related_name='vacation_requests')
+    type = models.CharField(max_length=50, default='vacation')  # In case you add more types later
+    reason = models.TextField(blank=True, null=True)
+    from_date = models.DateField()
+    to_date = models.DateField()
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.supplier.username} - {self.type} ({self.status})"

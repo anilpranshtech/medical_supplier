@@ -1,0 +1,103 @@
+{% extends "supplier/base.html" %}
+{% load static %}
+{% block content %}
+
+<style>
+    .required-star {
+        color: red;
+        margin-left: 3px;
+        font-weight: bold;
+    }
+</style>
+
+<div class="app-main flex-column flex-row-fluid" id="kt_app_main">
+    <div class="d-flex flex-column flex-column-fluid">
+        <div id="kt_app_content" class="app-content flex-column-fluid pt-0">
+            <div id="kt_app_content_container" class="app-container container-fluid">
+                <div class="card mb-5">
+                    <div class="card-header">
+                        <h3 class="card-title">Request Vacation Mode</h3>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST">
+                            {% csrf_token %}
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">
+                                        From Date <span class="required-star">*</span>
+                                    </label>
+                                    <input type="date" name="from_date" class="form-control" required>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label">
+                                        To Date <span class="required-star">*</span>
+                                    </label>
+                                    <input type="date" name="to_date" class="form-control" required>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label">
+                                        Reason <span class="required-star">*</span>
+                                    </label>
+                                    <textarea name="reason" class="form-control" rows="2" placeholder="Reason for vacation" required></textarea>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">Submit Request</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Vacation Requests Table -->
+                <div class="card card-flush mb-3">
+                    <div class="card-header">
+                        <h3 class="card-title">My Vacation Requests</h3>
+                    </div>
+
+                    <div class="card-body table-responsive p-0">
+                        <table class="table align-middle table-row-dashed fs-6 gy-5" id="vacation_table">
+                            <thead>
+                                <tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
+                                    <th class="text-center">Type</th>
+                                    <th class="text-center">Reason</th>
+                                    <th class="text-center">From</th>
+                                    <th class="text-center">To</th>
+                                    <th class="text-center">Status</th>
+                                    <th class="text-center">Created At</th>
+                                </tr>
+                            </thead>
+                            <tbody class="fw-semibold text-gray-600">
+                                {% for req in requests %}
+                                <tr>
+                                    <td class="text-center">{{ req.type }}</td>
+                                    <td class="text-center">{{ req.reason }}</td>
+                                    <td class="text-center">{{ req.from_date }}</td>
+                                    <td class="text-center">{{ req.to_date }}</td>
+                                    <td class="text-center">
+                                        {% if req.status == "Approved" %}
+                                            <div class="badge badge-light-success">Approved</div>
+                                        {% elif req.status == "Rejected" %}
+                                            <div class="badge badge-light-danger">Rejected</div>
+                                        {% else %}
+                                            <div class="badge badge-light-warning">Pending</div>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">{{ req.created_at|date:"d M Y" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted">No vacation requests yet.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

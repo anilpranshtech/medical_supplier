@@ -2,6 +2,7 @@
 {% load static %}
 
 {% block content %}
+
 <title>RFQ Quotations</title>
 
 <div class="flex flex-col grow kt-scrollable-y-auto lg:[--kt-scrollbar-width:auto] pt-5" id="scrollable_content" style="max-width: var(--custom-container-width, 100%);">
@@ -102,6 +103,16 @@
                       {% endcomment %}
                       <td class="text-foreground font-normal whitespace-nowrap py-2 px-3">
                         {{ rfq.quote_sent_at|date:"Y-m-d H:i" }}
+                      </td>
+                      <td class="text-center py-2 px-3">
+                        <button
+                          type="button"
+                          class="kt-btn kt-btn-outline text-sm"
+                          data-rfq-id="{{ rfq.id }}"
+                          onclick="openCommentModal(this)"
+                        >
+                          Add Comment
+                        </button>
                       </td>
                       {% comment %}
                       <td class="text-center py-2 px-3">
@@ -273,6 +284,58 @@
     <!-- End of Container -->
   </main>
 </div>
+<!-- Add Comment Modal -->
+<div id="commentModal" class="hidden fixed inset-0 flex justify-center items-center z-50 bg-black/40 backdrop-blur-md">
+  <div class="bg-white rounded-2xl shadow-2xl w-11/12 md:w-4/5 lg:w-3/5 xl:w-1/2 p-10 transform transition-transform duration-300 scale-100 max-h-[90vh] overflow-y-auto">
+    
+    <h3 class="text-2xl font-semibold mb-6 text-gray-800">
+      Comments for RFQ #<span id="rfq-id-label" class="text-blue-600"></span>
+    </h3>
+
+    <div id="existing-comments" class="mb-6 space-y-3 max-h-64 overflow-y-auto"></div>
+
+    <form id="commentForm" method="post">
+      {% csrf_token %}
+
+      <div class="mb-5">
+        <label class="block text-sm font-medium text-gray-700 mb-1">
+          Comment <span class="text-red-600 ">*</span>
+        </label>
+        <textarea name="comment" rows="3"
+          class="w-full border border-gray-300 rounded-md p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          placeholder="Write your comment here..." required></textarea>
+      </div>
+
+      <div class="mb-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Total Price</label>
+          <input type="number" step="0.01" name="total_price"
+            class="w-full border border-gray-300 rounded-md p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Enter price (optional)">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Total Commission</label>
+          <input type="number" step="0.01" name="total_commission"
+            class="w-full border border-gray-300 rounded-md p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Enter commission (optional)">
+        </div>
+      </div>
+
+      <!-- Button Section -->
+      <div class="flex justify-end gap-6 mt-8">
+        <button type="button" onclick="closeCommentModal()"
+          class="px-8 py-3 text-lg font-medium rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition duration-200">
+          Cancel
+        </button>
+        <button type="submit"
+          class="px-8 py-3 text-lg font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition duration-200">
+          Send Comment
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
 
 <!-- External scripts -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -389,4 +452,68 @@
     });
   });
 </script>
-{% endblock %}
+<script>
+  let currentRFQId = null;
+
+  function openCommentModal(button) {
+    currentRFQId = button.getAttribute('data-rfq-id');
+    document.getElementById('rfq-id-label').innerText = currentRFQId;
+
+    const form = document.getElementById('commentForm');
+    form.action = `/quotations/${currentRFQId}/add-comment/`;
+
+    // Fetch existing comments
+    fetch(`/quotations/${currentRFQId}/comments/`)
+      .then(res => res.json())
+      .then(comments => {
+        const container = document.getElementById('existing-comments');
+        container.innerHTML = '';
+
+        if (comments.length === 0) {
+          container.innerHTML = '<p class="text-sm text-gray-500">No comments yet.</p>';
+          return;
+        }
+
+        comments.forEach(c => {
+          const div = document.createElement('div');
+          div.className = 'border-l-4 border-blue-500 pl-3 py-2 bg-gray-50 rounded';
+          
+          const by = c.commented_by_fullname || c.commented_by;
+          const time = new Date(c.created_at).toLocaleString();
+          
+          div.innerHTML = `
+            <p class="text-sm font-medium">${by}</p>
+            <p class="text-sm mt-1">${c.comment}</p>
+            ${c.total_price ? `<p class="text-xs text-green-600 mt-1">Price: $${c.total_price}</p>` : ''}
+            ${c.total_commission ? `<p class="text-xs text-purple-600 mt-1">Commission: $${c.total_commission}</p>` : ''}
+            <p class="text-xs text-gray-500 mt-1">${time}</p>
+            ${c.admin_reply ? `
+              <div class="mt-2 p-2 bg-green-50 border-l-4 border-green-500">
+                <p class="text-xs font-medium text-green-700">Admin Reply:</p>
+                <p class="text-xs">${c.admin_reply}</p>
+                <p class="text-xs text-gray-500">${new Date(c.replied_at).toLocaleString()}</p>
+              </div>
+            ` : ''}
+          `;
+          container.appendChild(div);
+        });
+      })
+      .catch(() => {
+        document.getElementById('existing-comments').innerHTML = '<p class="text-sm text-red-500">Failed to load comments.</p>';
+      });
+
+    document.getElementById('commentModal').classList.remove('hidden');
+  }
+
+  function closeCommentModal() {
+    document.getElementById('commentModal').classList.add('hidden');
+  }
+
+  // Close on outside click
+  document.getElementById('commentModal').addEventListener('click', function(e) {
+    if (e.target === this) closeCommentModal();
+  });
+</script>
+
+
+{% endblock %}                                  

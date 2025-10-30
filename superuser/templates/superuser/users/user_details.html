@@ -855,7 +855,7 @@ function deleteUserAccount(userId, button) {
                 url: `/superuser/users/${userId}/delete/`,
                 type: 'POST',
                 data: {
-                    csrfmiddlewaretoken: csrfToken
+                    csrfmiddlewaretoken: csrfToken  
                 },
                 success: function(response) {
                     Swal.fire({

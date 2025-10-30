@@ -129,15 +129,15 @@
                                         </div>
                                         <div class="col-md-6 mb-3">
                                             <label class="form-label">Count of Use</label>
-                                            <input type="number" class="form-control" name="count_of_use" value="1">
+                                            <input type="number" class="form-control" name="count_of_use" min="1">
                                         </div>
                                         <div class="col-md-6 mb-3">
                                             <label class="form-label">Filter Orders Count</label>
-                                            <input type="number" class="form-control" name="filter_by_orders_count" value="0">
+                                            <input type="number" class="form-control" name="filter_by_orders_count" min="1">
                                         </div>
                                         <div class="col-md-6 mb-3">
                                             <label class="form-label">Filter Orders Amount</label>
-                                            <input type="number" step="0.01" class="form-control" name="filter_by_orders_amount" value="0.00">
+                                            <input type="number" step="0.01" class="form-control" name="filter_by_orders_amount" min="1">
                                         </div>
                                         <div class="col-md-6 mb-3">
                                             <label class="form-label">Start Date</label>
@@ -181,7 +181,7 @@
                                 <div id="couponMessage"></div>
                             </div>
                             <div class="modal-footer">
-                                <button type="button" id="saveCoupon" class="btn btn-primary">Save</button>
+                                <button type="button" id="saveCoupon" class="btn btn-primary  btn-with-loader">Save</button>
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                             </div>
                         </div>
@@ -285,7 +285,7 @@
                                 <div id="editCouponMessage"></div>
                             </div>
                             <div class="modal-footer">
-                                <button type="button" id="updateCoupon" class="btn btn-primary">Update</button>
+                                <button type="button" id="updateCoupon" class="btn btn-primary btn-with-loader">Update</button>
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                             </div>
                         </div>
@@ -307,7 +307,7 @@
                             </div>
                             <div class="modal-footer justify-content-center">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                <button type="button" id="confirmDeleteCoupon" class="btn btn-danger">Delete</button>
+                                <button type="button" id="confirmDeleteCoupon" class="btn btn-danger btn-with-loader">Delete</button>
                             </div>
                         </div>
                     </div>
@@ -319,6 +319,7 @@
 {% endblock %}
 
 {% block page_only_scripts %}
+<script src="{% static 'js/buttonLoader.js' %}"></script>
 <!-- Select2 -->
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
