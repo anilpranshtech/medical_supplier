@@ -322,65 +322,13 @@
                             </a>
                       </div>
                   </div>
- <!--   Reviews & Q&A   -->
-          {% if "dashboard.view_ratingreview" in user_permissions_list %}
-          <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="right-start"
-               class="menu-item py-2 {% if request.resolver_match.url_name == 'rating_list' or request.resolver_match.url_name == 'question_list'  %} here show {% endif %}">
-              <span class="menu-link menu-center">
-                  <span class="menu-icon me-0">
-                      <i class="bi bi-star-fill fs-1"></i>
-                  </span>
-              </span>
+</div>
+</div>
+{% endif %}
 
-             <div class="menu-sub menu-sub-dropdown px-2 py-4 w-250px mh-75 overflow-auto">
-                   <div class="menu-item  {% if request.resolver_match.url_name == 'rating_list' %} active {% endif %}">
-                      <div class="menu-content">
-                          <span class="menu-section fs-5 fw-bolder ps-1 py-1">
-                              Reviews & Q&A
-                          </span>
-                      </div>
-                  </div>
-
-                 {% if "dashboard.view_ratingreview" in user_permissions_list  %}
-                 <div class="menu-sub menu-sub-accordion">
-                       <div class="menu-item {% if request.resolver_match.url_name == 'rating_list'%} here show {% endif %}">
-                           <a class="menu-link" href="{% url 'superuser:rating_list' %}">
-                              <span class="menu-bullet">
-                                  <span class="bullet bullet-dot"></span>
-                              </span>
-                               <span class="menu-title">Ratings & review </span>
-                          </a>
-                      </div>
-                  </div>
-                 {% endif %}
-
-
-                  <div class="menu-sub menu-sub-accordion">
-                       <div class="menu-item {% if request.resolver_match.url_name == 'question_list' %} here show {% endif %}">
-                           <a class="menu-link" href="{% url 'superuser:question_list' %}">
-                                <span class="menu-bullet">
-                                    <span class="bullet bullet-dot"></span>
-                                    </span>
-                                <span class="menu-title">Question</span>
-                            </a>
-                      </div>
-                  </div>
-
-
-
-
-              </div>
-          </div>
-          {% endif %}
-
-
-
-
-              </div>
-          </div>
-          {% endif %}
-
-        </div>
+        
+        
+</div>
       </div>
 
       <div class="d-flex flex-column flex-center pb-4 pb-lg-8" id="kt_app_sidebar_footer">
