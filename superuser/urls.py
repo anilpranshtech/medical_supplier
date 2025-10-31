@@ -111,7 +111,16 @@ urlpatterns = [
     #vacationmode
     path('vacation-mode/', AdminVacationModeView.as_view(), name='admin_vacation_mode'),
 
+    #Top supplier
+     path('add-to-supplier/', AddTopSupplierView.as_view(), name='add_to_supplier'),
+     path('top-supplier-list/', TopSupplierListView.as_view(), name='topsupplierlist'),
+     path('edit-top-supplier/', EditTopSupplierView.as_view(), name='edit_top_supplier'),
+     path('delete-top-supplier/', DeleteTopSupplierView.as_view(), name='delete_top_supplier'),
+     
+]
+
+
 
      
 
-]
+

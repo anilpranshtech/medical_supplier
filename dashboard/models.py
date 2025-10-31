@@ -1505,3 +1505,16 @@ class VacationRequest(models.Model):
 
     def __str__(self):
         return f"{self.supplier.username} - {self.type} ({self.status})"
+    
+class TopSupplier(models.Model):
+    supplier = models.ForeignKey(SupplierProfile, on_delete=models.CASCADE, related_name='to_suppliers')
+    order = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Top Supplier"
+        verbose_name_plural = "Top Suppliers"
+
+    def __str__(self):
+        return f"{self.supplier.company_name} - {self.order}"
+

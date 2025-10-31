@@ -2856,19 +2856,12 @@ class SubCategoryDeleteView(View):
 
 class SubCategoryLastListView(View):
     def get(self, request, subcategory_id=None):
-        # Get all subcategories
         subcategories = ProductSubCategory.objects.select_related('category').all()
-
-        # Get filters from GET request
         search_query = request.GET.get('search_by', '')
         sort_by = request.GET.get('sort_by', '-created_at')
         date_from = request.GET.get('date_from', '')
         date_to = request.GET.get('date_to', '')
-
-        # Read subcategory_id from GET if available
         subcategory_id = request.GET.get('subcategory_id', subcategory_id)
-
-        # Try to get selected subcategory
         subcategory = None
         if subcategory_id:
             try:
@@ -2876,7 +2869,6 @@ class SubCategoryLastListView(View):
             except ProductSubCategory.DoesNotExist:
                 subcategory = None
 
-        # Fallback to first subcategory if not found
         if not subcategory:
             subcategory = subcategories.first()
             if not subcategory:
@@ -2886,8 +2878,6 @@ class SubCategoryLastListView(View):
                     'error': 'No subcategories found',
                 })
             subcategory_id = subcategory.id
-
-        # Filter last categories for that subcategory
         last_categories = ProductLastCategory.objects.filter(sub_category=subcategory)
 
         if search_query:
@@ -2897,14 +2887,11 @@ class SubCategoryLastListView(View):
         if date_to:
             last_categories = last_categories.filter(created_at__date__lte=date_to)
 
-        # Sorting logic
         if sort_by == 'desc_created':
             sort_by = '-created_at'
         elif sort_by == 'asc_created':
             sort_by = 'created_at'
         last_categories = last_categories.order_by(sort_by)
-
-        # Pagination
         paginator = Paginator(last_categories, 10)
         page_number = request.GET.get('page')
         last_categories_page = paginator.get_page(page_number)
@@ -3081,3 +3068,76 @@ class AdminVacationModeView(View):
             'success': True,
             'message': f"Vacation request has been {vacation_request.status.lower()}!"
         })
+
+
+
+class AddTopSupplierView(View):
+    template_name = 'superuser/addtopsupplier.html'
+
+    def get(self, request):
+        suppliers = SupplierProfile.objects.all()
+        return render(request, self.template_name, {'suppliers': suppliers})
+
+    def post(self, request):
+        supplier_id = request.POST.get('supplier')
+        order = request.POST.get('order')
+
+        if not supplier_id or not order:
+            messages.error(request, "All fields are required.")
+            suppliers = SupplierProfile.objects.all()
+            return render(request, self.template_name, {'suppliers': suppliers})
+
+        try:
+            supplier = SupplierProfile.objects.get(id=supplier_id)
+            TopSupplier.objects.create(supplier=supplier, order=order)
+            messages.success(request, "Supplier added successfully!")
+            return redirect('superuser:add_to_supplier')
+        except SupplierProfile.DoesNotExist:
+            messages.error(request, "Invalid supplier selected.")
+            return redirect('superuser:add_to_supplier')
+
+
+
+class TopSupplierListView(View):
+    def get(self, request):
+        top_suppliers = TopSupplier.objects.all().select_related('supplier__user')
+        all_suppliers = SupplierProfile.objects.all()
+        return render(request, 'superuser/topsupplierlist.html', {
+            'top_suppliers': top_suppliers,
+            'all_suppliers': all_suppliers
+        })
+
+
+class EditTopSupplierView(View):
+    def post(self, request):
+        id = request.POST.get('id')
+        supplier_id = request.POST.get('supplier')
+        order = request.POST.get('order')
+
+        try:
+            top_supplier = TopSupplier.objects.get(id=id)
+            supplier = SupplierProfile.objects.get(id=supplier_id)
+
+            top_supplier.supplier = supplier
+            top_supplier.order = order
+            top_supplier.save()
+
+            return JsonResponse({'success': True})
+        except TopSupplier.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Top Supplier not found'})
+        except SupplierProfile.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Supplier not found'})
+
+
+class DeleteTopSupplierView(View):
+    def post(self, request):
+        import json
+        data = json.loads(request.body)
+        id = data.get('id')
+
+        try:
+            supplier = TopSupplier.objects.get(id=id)
+            supplier.delete()
+            return JsonResponse({'success': True})
+        except TopSupplier.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Supplier not found'})

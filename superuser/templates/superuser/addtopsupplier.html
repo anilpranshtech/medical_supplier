@@ -1,0 +1,58 @@
+{% extends 'superuser/superuser_base.html' %}
+{% load static %}
+
+{% block title %}Add to Supplier{% endblock %}
+
+{% block content %}
+<div class="app-main flex-column flex-row-fluid" id="kt_app_main">
+  <div class="d-flex flex-column flex-column-fluid">
+    <div id="kt_app_content" class="app-content flex-column-fluid">
+      <div id="kt_app_content_container" class="app-container container-fluid d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+        
+        <div class="card card-flush shadow-lg rounded-3" style="width: 100%; max-width: 600px;">
+          <div class="card-header py-4 px-6 bg-light">
+            <h2 class="text-xl font-semibold text-gray-700 text-center">Add Top Supplier</h2>
+          </div>
+
+          <div class="card-body p-6">
+           
+
+            <form method="POST" class="space-y-4">
+              {% csrf_token %}
+
+              <div class="mb-4">
+                <label class="form-label fw-semibold text-gray-700 mb-2">
+                  Supplier <span class="text-danger">*</span>
+                </label>
+                <select name="supplier" required
+                  class="form-select form-select-lg border border-gray-300 rounded-md p-3 w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                  <option value="">-- Select Supplier --</option>
+                  {% for s in suppliers %}
+                  <option value="{{ s.id }}">{{ s.company_name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="mb-4">
+                <label class="form-label fw-semibold text-gray-700 mb-2">
+                  Order <span class="text-danger">*</span>
+                </label>
+                <input type="text" name="order" placeholder="Enter Order"
+                  class="form-control form-control-lg border border-gray-300 rounded-md p-3 w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  required />
+              </div>
+
+              <div class="pt-2 flex justify-content-center">
+                <button type="submit"
+                  class="btn btn-primary px-5 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-all w-100">
+                  Add Supplier
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+</div>
+    </div>
+  </div>
+</div>
+{% endblock %}

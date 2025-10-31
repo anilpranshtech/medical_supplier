@@ -316,4 +316,5 @@ admin.site.register(ShippingMethod)
 admin.site.register(Coupon)
 admin.site.register(VacationRequest)
 admin.site.register(RFQComment)
+admin.site.register(TopSupplier)
 
