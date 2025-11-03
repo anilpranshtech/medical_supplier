@@ -186,7 +186,17 @@
                                         </span>
                                     </div>
 
-                                    
+                                    {% if order_summary.coupon_code %}
+<div class="flex justify-between items-center px-5">
+    <span class="text-sm font-normal text-secondary-foreground">
+        Coupon ({{ order_summary.coupon_code }})
+    </span>
+    <span class="text-sm font-medium text-mono text-green-600">
+        -${{ order_summary.discount_amount|floatformat:2 }}
+    </span>
+</div>
+{% endif %}
+
 
                                 </div>
                                 <div class="kt-card-footer flex justify-between items-center px-5">

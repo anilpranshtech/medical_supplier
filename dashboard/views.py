@@ -1612,6 +1612,8 @@ def remove_from_cart(request):
         
 
 
+
+
 class ShippingInfoView(LoginRequiredMixin, TemplateView):
     template_name = 'userdashboard/view/shipping_info.html'
     login_url = 'dashboard:login'
@@ -1621,62 +1623,77 @@ class ShippingInfoView(LoginRequiredMixin, TemplateView):
         user = self.request.user
         context['user'] = user
 
-        # Get phone number
-        # phone = None
         profile_type = None
         try:
             profile = RetailProfile.objects.get(user=user)
             phone = profile.phone
             profile_type = 'retailer'
-            print('Profle Retailer ---', phone)
         except RetailProfile.DoesNotExist:
             try:
                 profile = WholesaleBuyerProfile.objects.get(user=user)
                 phone = profile.phone
                 profile_type = 'wholesaler'
-                print('Profle wholesaler ---', phone)
             except WholesaleBuyerProfile.DoesNotExist:
                 try:
                     profile = SupplierProfile.objects.get(user=user)
                     phone = profile.phone
                     profile_type = 'supplier'
-                    print('Profle SupplierProfile ---', phone)
                 except SupplierProfile.DoesNotExist:
                     phone = None
-                    pass
 
         context['phone'] = phone
-        print("Phone", phone)
         context['profile_type'] = profile_type
-
-        # Get all non-deleted addresses
         addresses = CustomerBillingAddress.objects.filter(user=user, is_deleted=False)
-        default_address = CustomerBillingAddress.objects.filter(user=user, is_default=True, is_deleted=False).first()
-
+        default_address = CustomerBillingAddress.objects.filter(
+            user=user, is_default=True, is_deleted=False
+        ).first()
         context['addresses'] = addresses
         context['default_address'] = default_address
+        context['display_payment_button'] = bool(addresses and default_address)
 
-        if len(addresses) > 0 and default_address:
-            display_payment_button = True
-        else:
-            display_payment_button = False
-        context['display_payment_button'] = display_payment_button
-
-        # Order summary based on CartProduct
         cart_items = CartProduct.objects.filter(user=user).select_related('product')
         subtotal = sum(item.get_total_price() for item in cart_items) or Decimal('0.00')
         shipping = Decimal('0.00')
         vat = Decimal('0.00')
         total = subtotal + shipping + vat
-        
+
         context['cart_items'] = cart_items
         context['order_summary'] = {
             'subtotal': subtotal,
             'shipping': shipping,
             'vat': vat,
-            'total': total
+            'total': total,
+            'discount_amount': Decimal('0.00'),
+            'coupon_code': None,
         }
- 
+        applied_coupon = self.request.session.get('applied_coupon')
+
+        if not applied_coupon or not cart_items.exists():
+            self.request.session.pop('applied_coupon', None)
+            return context
+
+        try:
+            coupon = Coupon.objects.get(code__iexact=applied_coupon.get('code'))
+        except Coupon.DoesNotExist:
+
+            self.request.session.pop('applied_coupon', None)
+            return context
+        previous_discount_total = Decimal(applied_coupon.get('new_total', '0.00'))
+        current_subtotal = subtotal
+
+
+        if not coupon.is_valid_now() or current_subtotal + shipping + vat != previous_discount_total + Decimal(applied_coupon.get('discount_amount', '0.00')):
+
+            self.request.session.pop('applied_coupon', None)
+            return context
+
+        discount_amount = Decimal(applied_coupon.get('discount_amount', '0.00'))
+        new_total = total - discount_amount
+
+        context['order_summary']['discount_amount'] = discount_amount
+        context['order_summary']['total'] = new_total
+        context['order_summary']['coupon_code'] = coupon.code
+
         return context
 
 
@@ -1889,8 +1906,18 @@ class PaymentMethodView(LoginRequiredMixin, View):
         subtotal = sum(item.get_total_price() for item in cart_items) or Decimal('0.00')
         shipping = Decimal('00.00')
         vat = Decimal('0.00')
-        total = subtotal + shipping + vat
-        billing = CustomerBillingAddress.objects.filter(user=request.user, is_default=True, is_deleted=False).first()
+        coupon_discount = Decimal('0.00')
+        if 'applied_coupon' in request.session:
+            coupon_data = request.session.get('applied_coupon', {})
+            if coupon_data and 'discount_amount' in coupon_data:
+                coupon_discount = Decimal(str(coupon_data['discount_amount']))
+
+  
+        total = subtotal - coupon_discount + shipping + vat
+
+        billing = CustomerBillingAddress.objects.filter(
+            user=request.user, is_default=True, is_deleted=False
+        ).first()
 
         return {
             'cart_items': cart_items,
@@ -1898,11 +1925,13 @@ class PaymentMethodView(LoginRequiredMixin, View):
                 'subtotal': subtotal,
                 'shipping': shipping,
                 'vat': vat,
+                'coupon_discount': coupon_discount,
                 'total': total
             },
             'billing': billing,
             'currency_symbol': 'USD'
         }
+
 
     def get(self, request):
         public_key, _ = self.get_stripe_key(request)
@@ -2141,11 +2170,13 @@ class OrderPlacedView(LoginRequiredMixin, TemplateView):
         order_exists = Order.objects.filter(payment=payment, user=request.user).exists()
         if not order_exists:
             logger.error(
-                f"No order found for payment {payment.id} (method: {payment.payment_method}, created: {payment.created_at}) and user {request.user.id}")
+                f"No order found for payment {payment.id} (method: {payment.payment_method}, created: {payment.created_at}) and user {request.user.id}"
+            )
             recent_order = Order.objects.filter(user=request.user).order_by('-created_at').first()
             if recent_order:
                 logger.warning(
-                    f"Fallback: Found recent order {recent_order.order_id} for user {request.user.id}, but not linked to payment {payment.id}")
+                    f"Fallback: Found recent order {recent_order.order_id} for user {request.user.id}, but not linked to payment {payment.id}"
+                )
             all_orders = Order.objects.filter(user=request.user).values('id', 'order_id', 'payment_id', 'created_at')
             all_payments = Payment.objects.filter(user=request.user).values('id', 'payment_method', 'created_at')
             logger.debug(f"All orders for user {request.user.id}: {list(all_orders)}")
@@ -2160,21 +2191,18 @@ class OrderPlacedView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         user = self.request.user
 
-        # Get the most recent payment
         payment = Payment.objects.filter(user=user).order_by('-created_at').first()
         if not payment:
             logger.error(f"No payment found for user {user.id} in get_context_data")
             context['error'] = "No payment found."
             return context
 
-        # Prefetch main product images
         main_image_prefetch = Prefetch(
             'items__product__images',
             queryset=ProductImage.objects.filter(is_main=True),
             to_attr='main_image'
         )
 
-        # Get the most recent order
         order = Order.objects.filter(
             user=user,
             payment=payment
@@ -2184,7 +2212,6 @@ class OrderPlacedView(LoginRequiredMixin, TemplateView):
 
         if not order:
             logger.error(f"No order found for payment {payment.id} and user {user.id} in get_context_data")
-            # Fallback: Try recent order for user
             order = Order.objects.filter(user=user).order_by('-created_at').first()
             if order:
                 logger.warning(f"Fallback: Using recent order {order.order_id} for user {user.id}, not linked to payment {payment.id}")
@@ -2192,15 +2219,22 @@ class OrderPlacedView(LoginRequiredMixin, TemplateView):
                 context['error'] = "No order found for this payment."
                 return context
 
-        # Order summary calculations
+        # 🧾 Order summary calculations
         subtotal = sum(item.price * item.quantity for item in order.items.all()) or Decimal('0.00')
         shipping = order.shipping_fees or Decimal('00.00')
         vat = Decimal('0.00')
-        total = subtotal + shipping + vat
 
-        # Estimated delivery date
-        # max_delivery_days = max((item.product.delivery_time or 5) for item in order.items.all())
-        # estimated_delivery = timezone.now().date() + timedelta(days=max_delivery_days)
+        # ✅ Apply coupon only if user actually applied one
+        coupon_discount = Decimal('0.00')
+        if 'applied_coupon' in self.request.session:
+            coupon_data = self.request.session.get('applied_coupon', {})
+            if coupon_data and 'discount_amount' in coupon_data:
+                coupon_discount = Decimal(str(coupon_data['discount_amount']))
+
+        # ✅ Calculate total safely
+        total = subtotal - coupon_discount + shipping + vat
+
+        # Estimated delivery
         max_delivery_days = max(((item.product.delivery_time or 5) for item in order.items.all()), default=5)
         estimated_delivery = timezone.now().date() + timedelta(days=max_delivery_days)
 
@@ -2230,14 +2264,13 @@ class OrderPlacedView(LoginRequiredMixin, TemplateView):
                 created_at__range=(payment.created_at, payment.created_at + timedelta(minutes=5))
             ).order_by('-created_at').first()
 
-        # Billing address
         billing = CustomerBillingAddress.objects.filter(
             user=user,
             is_default=True,
             is_deleted=False
         ).first()
 
-        # Context update
+        # ✅ Update context
         context.update({
             'payment': payment,
             'order': order,
@@ -2246,6 +2279,7 @@ class OrderPlacedView(LoginRequiredMixin, TemplateView):
                 'subtotal': subtotal,
                 'shipping': shipping,
                 'vat': vat,
+                'coupon_discount': coupon_discount,  # 👈 Added
                 'total': total
             },
             'order_id': order.order_id,
@@ -2259,6 +2293,7 @@ class OrderPlacedView(LoginRequiredMixin, TemplateView):
 
         logger.info(f"Loaded order {order.order_id} for user {user.id} with payment {payment.id}, items: {order.items.count()}")
         return context
+
 
 
 class MyOrdersView(LoginRequiredMixin, TemplateView):
