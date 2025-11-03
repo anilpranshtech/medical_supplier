@@ -64,7 +64,7 @@ class HomeView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
         total_order_price = OrderItem.objects.aggregate(
             total=Sum(F('price') * F('quantity'))
         )['total'] or 0
-        
+                        
         total_products = Product.objects.count()
         total_payments = Payment.objects.count()
         successful_payments = Payment.objects.filter(paid=True).count()

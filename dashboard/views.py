@@ -744,6 +744,17 @@ class SearchResultsGridView(TemplateView):
             html = render_to_string(self.template_name, context, request=request)
             return HttpResponse(html)
         return super().get(request, *args, **kwargs)
+    def _add_delivery_dates(self, page_obj):
+        if page_obj is None:
+            return
+        today = date.today()
+        for product in page_obj:
+            if getattr(product, "delivery_time", None):
+                delivery = today + timedelta(days=product.delivery_time)
+                product.delivery_date = delivery.strftime("%a, %d %b")
+            else:
+                product.delivery_date = "N/A"
+        
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -829,6 +840,8 @@ class SearchResultsGridView(TemplateView):
                 output_field=DecimalField(max_digits=10, decimal_places=2)
             )
         ).prefetch_related('images')
+   
+        today = date.today()
 
         # Handle search query
         if search_query:
@@ -848,6 +861,8 @@ class SearchResultsGridView(TemplateView):
 
             paginator = Paginator(products, 16)
             page_obj = paginator.get_page(page)
+            self._add_delivery_dates(page_obj)
+            
 
             context.update({
                 'products': page_obj,
@@ -877,6 +892,7 @@ class SearchResultsGridView(TemplateView):
 
                 paginator = Paginator(products, 16)
                 page_obj = paginator.get_page(page)
+                self._add_delivery_dates(page_obj)
 
                 context.update({
                     'products': page_obj,
@@ -915,6 +931,7 @@ class SearchResultsGridView(TemplateView):
 
                     paginator = Paginator(products, 16)
                     page_obj = paginator.get_page(page)
+                    self._add_delivery_dates(page_obj)
 
                     context.update({
                         'products': page_obj,
@@ -961,6 +978,17 @@ class SearchResultsListView(TemplateView):
             html = render_to_string(self.template_name, context, request=request)
             return HttpResponse(html)
         return super().get(request, *args, **kwargs)
+    
+    def _add_delivery_dates(self, page_obj):
+        if page_obj is None:
+            return
+        today = date.today()
+        for product in page_obj:
+            if getattr(product, "delivery_time", None) is not None:
+                delivery = today + timedelta(days=product.delivery_time)
+                product.delivery_date = delivery.strftime("%a, %d %b")
+            else:
+                product.delivery_date = "N/A"
         
 
     def get_context_data(self, **kwargs):
@@ -1071,6 +1099,7 @@ class SearchResultsListView(TemplateView):
 
             paginator = Paginator(products_qs, 10)
             page_obj = paginator.get_page(page_number)
+            self._add_delivery_dates(page_obj)
             context.update({
                 'products': page_obj,
                 'page_obj': page_obj,
@@ -1092,6 +1121,7 @@ class SearchResultsListView(TemplateView):
 
                 paginator = Paginator(products_qs, 10)
                 page_obj = paginator.get_page(page_number)
+                self._add_delivery_dates(page_obj)
 
                 context.update({
                     'products': page_obj,
@@ -1459,6 +1489,68 @@ class ShoppingCartView(LoginRequiredMixin, TemplateView):
 
 
 @require_POST
+def apply_coupon(request):
+    code = request.POST.get('coupon_code', '').strip()
+    user = request.user
+    cart_items = CartProduct.objects.filter(user=user)
+    if not cart_items.exists():
+        return JsonResponse({'status': 'error', 'message': 'Your cart is empty.'})
+
+    total = sum(item.get_total_price() for item in cart_items)
+    try:
+        coupon = Coupon.objects.get(code__iexact=code)
+    except Coupon.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Invalid coupon code.'})
+    if not coupon.is_valid_now():
+        return JsonResponse({'status': 'error', 'message': 'This coupon has expired.'})
+
+    if coupon.client.exists() and user not in coupon.client.all():
+        return JsonResponse({'status': 'error', 'message': 'You are not eligible for this coupon.'})
+
+    eligible_product_ids = coupon.products.values_list('id', flat=True)
+
+    if eligible_product_ids.exists():
+        eligible_cart_items = cart_items.filter(product_id__in=eligible_product_ids)
+        if not eligible_cart_items.exists():
+            return JsonResponse({'status': 'error', 'message': 'This coupon does not apply to selected products in your cart.'})
+    else:
+        eligible_cart_items = cart_items 
+
+    eligible_total = sum(item.get_total_price() for item in eligible_cart_items)
+
+    if eligible_total < coupon.minimum_purchase_amount:
+        return JsonResponse({
+            'status': 'error',
+            'message': f'Minimum purchase of ${coupon.minimum_purchase_amount:.2f} required to use this coupon.'
+        })
+
+    used_count = user.applied_coupons.filter(id=coupon.id).count()
+    if used_count >= coupon.count_of_use:
+        return JsonResponse({'status': 'error', 'message': 'You have reached the coupon usage limit.'})
+
+    if coupon.filter_by_orders_amount and total < coupon.filter_by_orders_amount:
+        return JsonResponse({'status': 'error', 'message': 'Your order does not meet the minimum required amount.'})
+    discount_amount = coupon.calculate_discount(Decimal(eligible_total))
+    new_total = total - discount_amount
+
+    request.session['applied_coupon'] = {
+        'code': coupon.code,
+        'discount_amount': str(discount_amount),
+        'new_total': str(new_total),
+    }
+    coupon.client.add(user)
+
+    return JsonResponse({
+        'status': 'success',
+        'message': f'Coupon applied successfully! You saved ${discount_amount:.2f}.',
+        'discount_amount': f'{discount_amount:.2f}',
+        'new_total': f'{new_total:.2f}',
+        'coupon_code': coupon.code,
+    })
+
+
+
+@require_POST
 def add_to_cart(request):
     product_id = request.POST.get('product_id')
     quantity_change = int(request.POST.get('quantity', 1))
@@ -1517,6 +1609,7 @@ def remove_from_cart(request):
         return JsonResponse({'status': 'success'})
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+        
 
 
 class ShippingInfoView(LoginRequiredMixin, TemplateView):
@@ -1575,6 +1668,7 @@ class ShippingInfoView(LoginRequiredMixin, TemplateView):
         shipping = Decimal('0.00')
         vat = Decimal('0.00')
         total = subtotal + shipping + vat
+        
         context['cart_items'] = cart_items
         context['order_summary'] = {
             'subtotal': subtotal,
@@ -1582,7 +1676,7 @@ class ShippingInfoView(LoginRequiredMixin, TemplateView):
             'vat': vat,
             'total': total
         }
-
+ 
         return context
 
 
@@ -3750,6 +3844,14 @@ class DeleteNotificationView(LoginRequiredMixin, View):
 
 class CategoryProductListView(TemplateView):
     template_name = "userdashboard/view/category_products_list.html"
+    def _add_delivery_dates(self, products):
+        today = date.today()
+        for product in products:
+            if getattr(product, "delivery_time", None) is not None:
+                delivery = today + timedelta(days=product.delivery_time)
+                product.delivery_date = delivery.strftime("%a, %d %b")
+            else:
+                product.delivery_date = "N/A"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -3759,6 +3861,8 @@ class CategoryProductListView(TemplateView):
         last_categories = ProductLastCategory.objects.filter(sub_category__category=category)
 
         products = Product.objects.filter(category=category, is_active=True)
+
+        self._add_delivery_dates(products)
 
         user_cart_ids = []
         user_cart_quantities = {}

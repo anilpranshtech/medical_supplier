@@ -540,10 +540,27 @@
                                     <div class="discount-ribbon">save {{ product.offer_percentage|floatformat:0 }}%</div>
                                     {% endif %}
                                 </div>
-                                <a class="hover:text-primary text-sm font-medium text-mono px-2.5 leading-5.5 block"
-                                   href="{% url 'dashboard:product_detail' product.id %}">
-                                    {{ product.name|escape }}
-                                </a>
+                                <div class="space-y-0.5">
+                                    <!-- Product Name -->
+                                    <a class="hover:text-primary text-sm font-bold text-black leading-5.5 block"
+                                       href="{% url 'dashboard:product_detail' product.id %}">
+                                        {{ product.name|escape }}
+                                    </a>
+                                
+                                    <!-- Product Description -->
+                                    <p class="text-xs sm:text-sm text-gray-650 truncate">
+                                        {{ product.description|default:"No description available"|truncatechars:120 }}
+                                    </p>
+                                
+                                    <!-- Delivery Date -->
+                                    {% if product.delivery_date and product.delivery_date != 'N/A' %}
+                                    <p class="text-xs text-green-600">
+                                        Delivery by: <strong>{{ product.delivery_date }}</strong>
+                                    </p>
+                                    {% endif %}
+                                </div>
+                                
+
                                 {% if product.category.name in 'Conference,Webinar,Event' %}
                                     {% if product.event and product.event.conference_at %}
                                     <p class="text-xs text-green-600 mt-1">

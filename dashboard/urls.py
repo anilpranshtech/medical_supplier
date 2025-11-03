@@ -37,12 +37,14 @@ urlpatterns = [
     path('wishlist/clear/',views.WishlistClearView.as_view(), name='clear_wishlist'),
     path('wishlist/products/', WishlistProductListView.as_view(), name='wishlist_product_list'),
     path('shopping-cart/', views.ShoppingCartView.as_view(), name='shopping_cart'),
+    path('apply-coupon/', views.apply_coupon, name='apply_coupon'),
     path('update-cart-item/', views.update_cart_item, name='update_cart_item'),
     path('add-to-cart/', add_to_cart, name='add_to_cart'),
     path('remove-from-cart/', remove_from_cart, name='remove_from_cart'),
     path('shipping-info/', views.ShippingInfoView.as_view(), name='shipping_info'),
     path('profile/add-address/', views.AddAddressView.as_view(), name='add_address'),
     path('manage/add-address/', views.ManageAddressView.as_view(), name='manage_add_address'),
+
 
     path('profile/edit-address/<int:pk>/', views.EditAddressView.as_view(), name='edit_address'),
     path('profile/remove-address/<int:address_id>/', views.RemoveAddressView.as_view(), name='remove_address'),

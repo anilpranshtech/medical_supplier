@@ -665,9 +665,17 @@
                                 {{ product.name|escape }}
                             </a>
                         </h3>
-                        <p class="text-sm text-gray-200 mb-2">
-                            {{ product.description|default:"No description available"|truncatechars:200 }}
+                         <!-- Product Description -->
+                         <p class="text-xs sm:text-sm text-gray-650 truncate">
+                            {{ product.description|default:"No description available"|truncatechars:120 }}
                         </p>
+                    
+                        <!-- Delivery Date -->
+                        {% if product.delivery_date and product.delivery_date != 'N/A' %}
+                        <p class="text-xs text-green-600">
+                            Delivery by: <strong>{{ product.delivery_date }}</strong>
+                        </p>
+                        {% endif %}
                         <div class="flex items-center gap-4">
                             {% if product.average_rating %}
                             <span class="kt-badge
