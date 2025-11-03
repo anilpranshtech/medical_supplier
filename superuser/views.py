@@ -1865,7 +1865,7 @@ class RatingView(TemplateView, StaffAccountRequiredMixin, PermissionRequiredMixi
         page_obj = paginator.get_page(page_number)
 
         context["page_obj"] = page_obj
-        context["products"] = page_obj.object_list  # current page items
+        context["products"] = page_obj.object_list  
         return context
 
 
@@ -2097,15 +2097,14 @@ class NotificationListView(PermissionRequiredMixin, StaffAccountRequiredMixin, L
     paginate_by = 14
     required_permissions = ('dashboard.view_notification',)
 
-
     def get_queryset(self):
         queryset = super().get_queryset()
-        # filters
-        search_by = self.request.GET.get('search_by', '')
-        created_date = self.request.GET.get('created_date', '')
+        search_by = self.request.GET.get('search_by', '').strip()
+        created_date = self.request.GET.get('created_date', '').strip()
         sort_filter = self.request.GET.get('filterSort', '')
         checked_filter = self.request.GET.get('filterChecked', '')
 
+        # 🔍 Search
         if search_by:
             queryset = queryset.filter(
                 Q(recipient__email__icontains=search_by) |
@@ -2113,8 +2112,8 @@ class NotificationListView(PermissionRequiredMixin, StaffAccountRequiredMixin, L
                 Q(message__icontains=search_by)
             )
 
+        # 📅 Date Range
         if created_date:
-          
             match = re.match(r'(\d{2}/\d{2}/\d{4}) - (\d{2}/\d{2}/\d{4})', created_date)
             if match:
                 start_date_str, end_date_str = match.groups()
@@ -2123,10 +2122,13 @@ class NotificationListView(PermissionRequiredMixin, StaffAccountRequiredMixin, L
                     end_date = datetime.strptime(end_date_str, '%m/%d/%Y').replace(hour=23, minute=59, second=59)
                     queryset = queryset.filter(created_at__range=[start_date, end_date])
                 except ValueError:
-                    pass 
+                    pass
 
+        # ✅ Read/Unread Filter
         if checked_filter:
             queryset = queryset.filter(is_read=(checked_filter == 'true'))
+
+        # 🔽 Sort
         if sort_filter:
             queryset = queryset.order_by('created_at' if sort_filter == 'asc' else '-created_at')
 
@@ -2139,6 +2141,7 @@ class NotificationListView(PermissionRequiredMixin, StaffAccountRequiredMixin, L
         context["search_help_text"] = "Search notifications by user email, title, or message content."
         context["show_advance_search_link"] = True
         return context
+from itertools import chain
 
 class NotificationCreateView(CreateView):
     model = Notification
@@ -2148,62 +2151,67 @@ class NotificationCreateView(CreateView):
 
     def post(self, request, *args, **kwargs):
         send_to = request.POST.get("send_to")
-        title = request.POST.get("title")
-        message = request.POST.get("message")
+        title = request.POST.get("title", "").strip()
+        message = request.POST.get("message", "").strip()
+        user_ids = request.POST.getlist("recipients")
 
-        if send_to == "single":
-            # Specific user(s)
-            user_ids = request.POST.getlist("recipients")
-            for uid in user_ids:
-                user = User.objects.get(id=uid)
-                Notification.objects.create(
+        notifications_to_create = []
+
+        # 1️⃣ Specific User(s)
+        if send_to == "single" and user_ids:
+            users = User.objects.filter(id__in=user_ids)
+            for user in users:
+                notifications_to_create.append(Notification(
                     recipient=user,
                     send_to="single",
                     title=title,
                     message=message,
-                )
+                ))
 
+        # 2️⃣ All Buyers (Retail + Wholesale)
         elif send_to == "buyer":
-            # Retail + Wholesale Buyers
             retail_users = User.objects.filter(retailprofile__isnull=False)
             wholesale_users = User.objects.filter(wholesalebuyerprofile__isnull=False)
-            all_buyers = retail_users.union(wholesale_users)
-            for user in all_buyers:
-                Notification.objects.create(
+            all_buyers = list(chain(retail_users, wholesale_users))  # ✅ use chain, not union
+            for user in set(all_buyers):  # remove duplicates
+                notifications_to_create.append(Notification(
                     recipient=user,
                     send_to="buyer",
                     title=title,
                     message=message,
-                )
+                ))
 
+        # 3️⃣ All Suppliers
         elif send_to == "supplier":
-            # All Suppliers
             supplier_users = User.objects.filter(supplierprofile__isnull=False)
             for user in supplier_users:
-                Notification.objects.create(
+                notifications_to_create.append(Notification(
                     recipient=user,
                     send_to="supplier",
                     title=title,
                     message=message,
-                )
+                ))
 
+        # 4️⃣ All Users (Buyers + Suppliers)
         elif send_to == "all":
-            # All Buyers + Suppliers
             retail_users = User.objects.filter(retailprofile__isnull=False)
             wholesale_users = User.objects.filter(wholesalebuyerprofile__isnull=False)
             supplier_users = User.objects.filter(supplierprofile__isnull=False)
-
-            all_users = retail_users.union(wholesale_users).union(supplier_users)
-            for user in all_users:
-                Notification.objects.create(
+            all_users = list(chain(retail_users, wholesale_users, supplier_users))  # ✅ safe combine
+            for user in set(all_users):
+                notifications_to_create.append(Notification(
                     recipient=user,
                     send_to="all",
                     title=title,
                     message=message,
-                )
+                ))
 
-        messages.success(request, "Notification sent successfully!")
-        return redirect("superuser:notifications_list")
+        # ✅ Bulk create
+        if notifications_to_create:
+            Notification.objects.bulk_create(notifications_to_create)
+
+        messages.success(request, "Notification(s) sent successfully!")
+        return redirect(self.success_url)
 
 
 class EditNotificationView(UpdateView):

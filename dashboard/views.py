@@ -3835,7 +3835,7 @@ class DeleteNotificationView(LoginRequiredMixin, View):
         notification = get_object_or_404(
             Notification, id=id, recipient=request.user, is_deleted=False
         )
-        notification.delete()  # Calls soft delete
+        notification.delete() 
         return JsonResponse({'status': 'success'})
 
 

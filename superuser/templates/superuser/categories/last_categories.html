@@ -261,8 +261,8 @@ Product Last Categories
                                                placeholder="Enter last category name">
                                     </div>
                                     <div class="mb-3">
-                                        <label for="lastCategoryImage" class="form-label">Last Category Image</label>
-                                        <input type="file" class="form-control" id="lastCategoryImage" name="image" accept="image/*">
+                                        <label for="lastCategoryImage" class="form-label">Last Category Image <span class="text-danger">*</span></label>
+                                        <input type="file" class="form-control" id="lastCategoryImage" name="image" required accept="image/*">
                                         <div class="form-text">Optional: Upload an image for this last category</div>
                                     </div>
                                     <div class="modal-footer">
@@ -327,11 +327,25 @@ Product Last Categories
     </div>
 </div>
 
+<div id="successAlert" class="alert alert-success alert-dismissible fade show position-fixed top-0 end-0 m-3"
+     role="alert" style="z-index: 9999; display: none; min-width: 300px;">
+    <span id="successMessage"></span>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
 {% endblock content %}
 
 {% block page_only_scripts %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
+    function showSuccessMessage(message) {
+    const alertBox = $('#successAlert');
+    $('#successMessage').text(message);
+    alertBox.fadeIn();
+
+    setTimeout(() => {
+        alertBox.fadeOut();
+    }, 3000); 
+}
 $(document).ready(function() {
     // Add Last Category Modal
     $('[data-bs-target="#addLastCategoryModal"]').on('click', function() {
@@ -367,13 +381,14 @@ $(document).ready(function() {
             processData: false,
             contentType: false,
             success: function(data) {
-                if (data.status === 'success') {
-                    $('#addLastCategoryModal').modal('hide');
-                    location.reload();
-                } else {
-                    alert('Error: ' + data.message);
-                }
-            },
+    if (data.status === 'success') {
+        $('#addCategoryModal').modal('hide');
+        showSuccessMessage('Category added successfully!');
+        setTimeout(() => location.reload(), 1500);
+    } else {
+        alert('Error: ' + data.message);
+    }
+},
             error: function() {
                 alert('An error occurred. Please try again.');
             },
@@ -432,13 +447,14 @@ $(document).ready(function() {
             processData: false,
             contentType: false,
             success: function(data) {
-                if (data.status === 'success') {
-                    $('#editLastCategoryModal').modal('hide');
-                    location.reload();
-                } else {
-                    alert('Error: ' + data.message);
-                }
-            },
+    if (data.status === 'success') {
+        $('#editCategoryModal').modal('hide');
+        showSuccessMessage('Category updated successfully!');
+        setTimeout(() => location.reload(), 1500);
+    } else {
+        alert('Error: ' + data.message);
+    }
+},
             error: function() {
                 alert('An error occurred. Please try again.');
             },

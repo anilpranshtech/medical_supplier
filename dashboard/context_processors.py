@@ -23,38 +23,11 @@ def header_avatar(request):
 
 def notification_context(request):
     if not request.user.is_authenticated:
-        return {
-            'all_notifications': [],
-            'read_notifications': [],
-            'unread_notifications': [],
-        }
+        return {'all_notifications': [], 'read_notifications': [], 'unread_notifications': []}
 
-    user = request.user
-    base_query = Notification.objects.filter(is_deleted=False)
-
-    if user.is_superuser or user.is_staff:
-        all_notifications = base_query.filter(
-            Q(recipient=user, send_to="single") |
-            Q(send_to="all") |
-            Q(send_to="buyer") |
-            Q(send_to="supplier")
-        )
-    elif hasattr(user, 'supplierprofile'):
-        all_notifications = base_query.filter(
-            Q(recipient=user, send_to="single") |
-            Q(send_to="supplier") |
-            Q(send_to="all")
-        )
-    else:
-        all_notifications = base_query.filter(
-            Q(recipient=user, send_to="single") |
-            Q(send_to="buyer") |
-            Q(send_to="all")
-        )
-
+    all_notifications = Notification.objects.filter(recipient=request.user, is_deleted=False)
     return {
-        'all_notifications': all_notifications.order_by('-created_at'),
-        'read_notifications': all_notifications.filter(is_read=True).order_by('-created_at'),
-        'unread_notifications': all_notifications.filter(is_read=False).order_by('-created_at'),
+        'all_notifications': all_notifications,
+        'read_notifications': all_notifications.filter(is_read=True),
+        'unread_notifications': all_notifications.filter(is_read=False),
     }
-

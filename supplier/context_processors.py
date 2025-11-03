@@ -35,7 +35,7 @@ def notification_context(request):
             is_deleted=False
         )
 
-    return {
+    return {    
         'all_notifications': all_notifications,
         'read_notifications': all_notifications.filter(is_read=True),
         'unread_notifications': all_notifications.filter(is_read=False),

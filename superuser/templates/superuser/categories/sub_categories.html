@@ -275,111 +275,111 @@ Product Subcategories
                     {% endif %}
                 </div>
 
-                <!-- Add Subcategory Modal -->
-                <div class="modal fade" id="addSubcategoryModal" tabindex="-1" aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Add Subcategory</h5>
-                                <button type="button" class="btn btn-sm btn-icon" data-bs-dismiss="modal">
-                                    <i class="bi bi-x fs-2"></i>
-                                </button>
+              <!-- Add Subcategory Modal -->
+<div class="modal fade" id="addSubcategoryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Subcategory</h5>
+                <button type="button" class="btn btn-sm btn-icon" data-bs-dismiss="modal">
+                    <i class="bi bi-x fs-2"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addSubcategoryForm" method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {% if category %}
+                    <input type="hidden" name="category" value="{{ category.id }}">
+                    <div class="mb-3">
+                        <label class="form-label">Parent Category</label>
+                        <div class="d-flex align-items-center">
+                            <div class="symbol symbol-40px me-3">
+                                {% if category.image %}
+                                    <span class="symbol-label" style="background-image:url('{{ category.image.url }}'); background-size: cover; background-position: center;"></span>
+                                {% else %}
+                                    <span class="symbol-label bg-light-info text-info rounded-circle fs-7 fw-bolder">
+                                        {{ category.name|first|upper }}
+                                    </span>
+                                {% endif %}
                             </div>
-                            <div class="modal-body">
-                                <form id="addSubcategoryForm" method="POST" enctype="multipart/form-data">
-                                    {% csrf_token %}
-                                    {% if category %}
-                                    <input type="hidden" name="category" value="{{ category.id }}">
-                                    <div class="mb-3">
-                                        <label class="form-label">Parent Category</label>
-                                        <div class="d-flex align-items-center">
-                                            <div class="symbol symbol-40px me-3">
-                                                {% if category.image %}
-                                                    <span class="symbol-label" style="background-image:url('{{ category.image.url }}'); background-size: cover; background-position: center;"></span>
-                                                {% else %}
-                                                    <span class="symbol-label bg-light-info text-info rounded-circle fs-7 fw-bolder">
-                                                        {{ category.name|first|upper }}
-                                                    </span>
-                                                {% endif %}
-                                            </div>
-                                            <input type="text" class="form-control-plaintext fw-bold" value="{{ category.name }}" readonly style="border: none; background: transparent; padding: 0;">
-                                        </div>
-                                    </div>
-                                    {% else %}
-                                    <div class="mb-3">
-                                        <label for="parentCategorySelect" class="form-label">Parent Category <span class="text-danger">*</span></label>
-                                        <select class="form-select" id="parentCategorySelect" name="category" required>
-                                            <option value="">Select Category</option>
-                                            {% for cat in categories %}
-                                            <option value="{{ cat.id }}" {% if category.id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-                                    {% endif %}
-                                    <div class="mb-3">
-                                        <label for="subcategoryName" class="form-label">Subcategory Name <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="subcategoryName" name="name" required 
-                                               placeholder="Enter subcategory name">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="subcategoryImage" class="form-label">Subcategory Image</label>
-                                        <input type="file" class="form-control" id="subcategoryImage" name="image" accept="image/*">
-                                        <div class="form-text">Optional: Upload an image for this subcategory</div>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                                        <button type="submit" class="btn btn-primary">Add Subcategory</button>
-                                    </div>
-                                </form>
-                            </div>
+                            <input type="text" class="form-control-plaintext fw-bold" value="{{ category.name }}" readonly style="border: none; background: transparent; padding: 0;">
                         </div>
                     </div>
-                </div>
+                    {% else %}
+                    <div class="mb-3">
+                        <label for="parentCategorySelect" class="form-label">Parent Category <span class="text-danger">*</span></label>
+                        <select class="form-select" id="parentCategorySelect" name="category" required>
+                            <option value="">Select Category</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat.id }}" {% if category.id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% endif %}
+                    <div class="mb-3">
+                        <label for="subcategoryName" class="form-label">Subcategory Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="subcategoryName" name="name" required 
+                               placeholder="Enter subcategory name">
+                    </div>
+                    <div class="mb-3">
+                        <label for="subcategoryImage" class="form-label">Subcategory Image  <span class="text-danger">*</span></label>
+                        <input type="file" class="form-control" id="subcategoryImage" name="image" required accept="image/*">
+                        <div class="form-text">Optional: Upload an image for this subcategory</div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add Subcategory</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 
-                <!-- Edit Subcategory Modal -->
-                <div class="modal fade" id="editSubcategoryModal" tabindex="-1" aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Edit Subcategory</h5>
-                                <button type="button" class="btn btn-sm btn-icon" data-bs-dismiss="modal">
-                                    <i class="bi bi-x fs-2"></i>
-                                </button>
-                            </div>
-                            <div class="modal-body">
-                                <form id="editSubcategoryForm" method="POST" enctype="multipart/form-data">
-                                    {% csrf_token %}
-                                    <input type="hidden" id="editSubcategoryId" name="id">
-                                    <div class="mb-3">
-                                        <label for="editSubcategoryName" class="form-label">Subcategory Name <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="editSubcategoryName" name="name" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="editSubcategoryCategory" class="form-label">Parent Category <span class="text-danger">*</span></label>
-                                        <select class="form-select" id="editSubcategoryCategory" name="category" required>
-                                            <option value="">Select Category</option>
-                                            {% for cat in categories %}
-                                            <option value="{{ cat.id }}">{{ cat.name }}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="editSubcategoryImage" class="form-label">Subcategory Image</label>
-                                        <input type="file" class="form-control" id="editSubcategoryImage" name="image" accept="image/*">
-                                        <div class="mt-2" id="currentImageContainer" style="display: none;">
-                                            <small>Current Image:</small>
-                                            <div id="currentImagePreview" class="mt-1"></div>
-                                        </div>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                                        <button type="submit" class="btn btn-primary">Update Subcategory</button>
-                                    </div>
-                                </form>
-                            </div>
+<!-- Edit Subcategory Modal -->
+<div class="modal fade" id="editSubcategoryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Subcategory</h5>
+                <button type="button" class="btn btn-sm btn-icon" data-bs-dismiss="modal">
+                    <i class="bi bi-x fs-2"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editSubcategoryForm" method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="hidden" id="editSubcategoryId" name="id">
+                    <div class="mb-3">
+                        <label for="editSubcategoryName" class="form-label">Subcategory Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="editSubcategoryName" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editSubcategoryCategory" class="form-label">Parent Category </label>
+                        <select class="form-select" id="editSubcategoryCategory" name="category" required>
+                            <option value="">Select Category</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat.id }}">{{ cat.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editSubcategoryImage" class="form-label">Subcategory Image <span class="text-danger">*</span></label>
+                        <input type="file" class="form-control" id="editSubcategoryImage" name="image" accept="image/*">
+                        <div class="mt-2" id="currentImageContainer" style="display: none;">
+                            <small>Current Image:</small>
+                            <div id="currentImagePreview" class="mt-1"></div>
                         </div>
                     </div>
-                </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Update Subcategory</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 
                 {% include "superuser/pages/pagination.html" with page_obj=subcategories %}
             </div>
@@ -387,12 +387,27 @@ Product Subcategories
     </div>
 </div>
 
+<div id="successAlert" class="alert alert-success alert-dismissible fade show position-fixed top-0 end-0 m-3"
+     role="alert" style="z-index: 9999; display: none; min-width: 300px;">
+    <span id="successMessage"></span>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
 {% endblock content %}
 
 {% block page_only_scripts %}
 {% include "superuser/pages/filters/filter_created_date_range_picker_js.html" %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
+        function showSuccessMessage(message) {
+    const alertBox = $('#successAlert');
+    $('#successMessage').text(message);
+    alertBox.fadeIn();
+
+    setTimeout(() => {
+        alertBox.fadeOut();
+    }, 3000); 
+}
+
 $(document).ready(function() {
 
     $('[data-bs-target="#addSubcategoryModal"]').on('click', function() {
@@ -439,13 +454,14 @@ $(document).ready(function() {
         processData: false,
         contentType: false,
         success: function(data) {
-            if (data.status === 'success') {
-                $('#addSubcategoryModal').modal('hide');
-                location.reload();
-            } else {
-                alert('Error: ' + data.message);
-            }
-        },
+    if (data.status === 'success') {
+        $('#addCategoryModal').modal('hide');
+        showSuccessMessage('Category added successfully!');
+        setTimeout(() => location.reload(), 1500);
+    } else {
+        alert('Error: ' + data.message);
+    }
+},
         error: function() {
             alert('An error occurred. Please try again.');
         },
@@ -504,13 +520,14 @@ $(document).ready(function() {
             processData: false,
             contentType: false,
             success: function(data) {
-                if (data.status === 'success') {
-                    $('#editSubcategoryModal').modal('hide');
-                    location.reload();
-                } else {
-                    alert('Error: ' + data.message);
-                }
-            },
+    if (data.status === 'success') {
+        $('#editCategoryModal').modal('hide');
+        showSuccessMessage('Category updated successfully!');
+        setTimeout(() => location.reload(), 1500);
+    } else {
+        alert('Error: ' + data.message);
+    }
+},
             error: function() {
                 alert('An error occurred. Please try again.');
             },
@@ -591,13 +608,14 @@ $(document).ready(function() {
                 processData: false,
                 contentType: false,
                 success: function(data) {
-                    if (data.status === 'success') {
-                        $(`#deleteSubcategoryModal${subcategoryId}`).modal('hide');
-                        location.reload();
-                    } else {
-                        alert('Error: ' + data.message);
-                    }
-                },
+    if (data.status === 'success') {
+        $('#editCategoryModal').modal('hide');
+        showSuccessMessage('Category updated successfully!');
+        setTimeout(() => location.reload(), 1500);
+    } else {
+        alert('Error: ' + data.message);
+    }
+},
                 error: function() {
                     alert('An error occurred. Please try again.');
                 },
