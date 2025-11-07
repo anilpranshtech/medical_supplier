@@ -1,0 +1,244 @@
+{% extends 'superuser/superuser_base.html' %}
+{% load static %}
+{% load superuser_tags %}
+
+{% block title %}Regions{% endblock %}
+
+{% block content %}
+{% tag_user_permissions_list request.user as user_permissions_list %}
+
+<div id="successMessage" class="alert alert-success d-none" style="font-size:16px;">
+  <strong id="successText"></strong>
+</div>
+
+<div class="app-main flex-column flex-row-fluid" id="kt_app_main">
+  <div class="d-flex flex-column flex-column-fluid">
+    <div id="kt_app_content" class="app-content flex-column-fluid mx-5">
+      <div id="kt_app_content_container" class="app-container container-fluid">
+
+        <div class="card card-flush">
+          <div class="card-header flex-wrap align-items-center py-5 gap-4">
+            <div class="card-title">Regions</div>
+            <div class="card-toolbar">
+              <button class="btn btn-primary" id="addBtn">
+                <i class="fas fa-plus me-2"></i>Add Region
+              </button>
+            </div>
+          </div>
+
+          <div class="card-body table-responsive">
+            <table class="table table-row-dashed align-middle fs-6 gy-5">
+              <thead>
+                <tr class="text-gray-500 fw-bold fs-7 text-uppercase">
+                  <th>Region Name</th>
+                  <th>Country</th>
+                  <th class="text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="fw-semibold text-gray-600">
+                {% for r in regions %}
+                <tr>
+                  <td>{{ r.name_en }}</td>
+                  <td>{{ r.country }}</td>
+                  <td class="text-center">
+                    <button class="btn btn-sm btn-light-primary editBtn"
+                            data-id="{{ r.id }}"
+                            data-name="{{ r.name_en }}"
+                            data-country="{{ r.country }}">
+                      Edit
+                    </button>
+                    <button class="btn btn-sm btn-light-danger deleteBtn" data-id="{{ r.id }}">Delete</button>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="3" class="text-center text-muted">No regions added yet.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="regionModal">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-3">
+      <div class="modal-header  text-white">
+        <h5 class="modal-title" id="modalTitle"></h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+
+        <form id="regionForm">
+          {% csrf_token %}
+          <input type="hidden" id="rid" name="rid">
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Region Name  <span style="color: red;">*</span></label>
+            <input type="text" name="name" id="nameField" class="form-control" required>
+            <div class="text-danger mt-1" id="nameError" style="display:none;"></div>
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Country  <span style="color: red;">*</span></label>
+            <select name="country" id="countryField" class="form-control" required>
+              <option value="">Select Country</option>
+              {% for c in countries %}
+              <option value="{{ c }}">{{ c }}</option>
+              {% endfor %}
+            </select>
+            <div class="text-danger mt-1" id="countryError" style="display:none;"></div>
+          </div>
+          
+
+        </form>
+
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" id="saveBtn">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block page_only_scripts %}
+<script>
+   document.addEventListener("DOMContentLoaded", function () {
+
+const modal = new bootstrap.Modal(document.getElementById('regionModal'));
+
+const idField = document.getElementById('rid');
+const nameFld = document.getElementById('nameField');
+const countryFld = document.getElementById('countryField');
+
+const nameError = document.getElementById('nameError');
+const countryError = document.getElementById('countryError');
+
+function showSuccess(msg) {
+  const box = document.getElementById("successMessage");
+  const text = document.getElementById("successText");
+
+  text.innerText = msg;
+  box.classList.remove("d-none");
+
+  setTimeout(() => {
+    box.classList.add("d-none");
+  }, 1500);
+}
+
+function resetForm() {
+  idField.value = "";
+  nameFld.value = "";
+  countryFld.value = "";
+  nameFld.classList.remove("is-invalid");
+  countryFld.classList.remove("is-invalid");
+  nameError.style.display = "none";
+  countryError.style.display = "none";
+}
+
+document.getElementById('addBtn').addEventListener('click', function () {
+  document.getElementById('modalTitle').textContent = "Add Region";
+  resetForm();
+  modal.show();
+});
+
+document.querySelectorAll('.editBtn').forEach(btn => {
+  btn.addEventListener('click', function () {
+    document.getElementById('modalTitle').textContent = "Edit Region";
+    idField.value = this.dataset.id;
+    nameFld.value = this.dataset.name;
+    countryFld.value = this.dataset.country;
+    nameError.style.display = "none";
+    countryError.style.display = "none";
+    modal.show();
+  });
+});
+
+function validateForm() {
+  let valid = true;
+
+  if (!nameFld.value.trim()) {
+    nameFld.classList.add("is-invalid");
+    nameError.innerText = "Region Name is required.";
+    nameError.style.display = "block";
+    valid = false;
+  } else {
+    nameFld.classList.remove("is-invalid");
+    nameError.style.display = "none";
+  }
+
+  if (!countryFld.value.trim()) {
+    countryFld.classList.add("is-invalid");
+    countryError.innerText = "Country is required.";
+    countryError.style.display = "block";
+    valid = false;
+  } else {
+    countryFld.classList.remove("is-invalid");
+    countryError.style.display = "none";
+  }
+
+  return valid;
+}
+
+document.getElementById('saveBtn').addEventListener('click', function () {
+  if (!validateForm()) return;
+
+  let rid = idField.value;
+  let url = rid ? `/superuser/region/edit/${rid}/` : `/superuser/region/add/`;
+
+  fetch(url, {
+    method: "POST",
+    headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value },
+    body: new FormData(document.getElementById('regionForm'))
+  })
+  .then(r => r.json())
+  .then(res => {
+    if (res.success) {
+      modal.hide();
+
+      showSuccess(rid ? " Region updated successfully!" : "Region added successfully!");
+
+      setTimeout(() => location.reload(), 900);
+    } else {
+      alert(res.msg || "Something went wrong!");
+    }
+  });
+});
+
+document.querySelectorAll('.deleteBtn').forEach(btn => {
+  btn.addEventListener('click', function () {
+    if (!confirm("Delete this region?")) return;
+
+    fetch(`/superuser/region/delete/${this.dataset.id}/`, {
+      method: "POST",
+      headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value }
+    })
+    .then(r => r.json())
+    .then(res => {
+      if (res.success) {
+
+        showSuccess("Region deleted successfully!");
+
+        setTimeout(() => location.reload(), 900);
+      } else {
+        alert(res.msg);
+      }
+    });
+  });
+});
+
+});
+
+    </script>
+    
+{% endblock %}

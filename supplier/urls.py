@@ -94,13 +94,29 @@ urlpatterns = [
     path('returns/', AdminReturnsView.as_view(), name='admin_returns'),
     
     #coupons
-    path('coupons/', CouponView.as_view(), name='coupons'),
-    path('edit-coupon/', edit_coupon, name='edit_coupon'),
-    path('delete-coupon/',delete_coupon, name='delete_coupon'),
-    path('coupon/<int:coupon_id>/details/', coupon_details, name='coupon_details'),
+    path('suppliercoupons/', supplierCouponView.as_view(), name='coupons'),
+    path('supplieredit-coupon/', supplier_edit_coupon, name='edit_coupon'),
+    path('supplierdelete-coupon/',supplier_delete_coupon, name='delete_coupon'),
+    path('suppliercoupon/<int:coupon_id>/details/', supplier_coupon_details, name='coupon_details'),
 
     #vacationmode
     path('vacation-request/', VacationRequestView.as_view(), name='vacation_request'),
+
+    #Marketing tools
+     path('supplierbuyxgety/', SupplierBuyXGetYPromotionView.as_view(), name='buyxgety_promotion'),
+     path('supplierbuyxgety/add/', SupplierAddPromotionView.as_view(), name='add_promotion'),
+     path('supplierbuyxgety/edit/<int:pk>/', SupplierEditPromotionView.as_view(), name='edit_promotion'),
+     path('supplierbuyxgety/delete/<int:pk>/', supplier_delete_promotion, name='delete_promotion'),
+     
+     path('supplierbuyxgifty/',supplierBuyXGiftYPromotionView.as_view(),name='buyxgift_promotion'),
+     path('supplierbuyxgifty/add/', supplierAddGiftPromotionView.as_view(), name='add_gift_promotion'),
+     path('supplierbuyxgifty/edit/<int:pk>/', supplierEditGiftPromotionView.as_view(), name='edit_gift_promotion'),
+     path('supplierbuyxgifty/delete/<int:pk>/', supplier_delete_gift_promotion, name='delete_gift_promotion'),
+
+     path('supplierbasketpromotion/', supplierBasketPromotionView.as_view(), name='basket_promotion'),
+     path('supplierbasketpromotion/add/', supplierAddBasketPromotionView.as_view(),name='add_basket_promotion'),
+     path('supplierbasketpromotion/edit/<int:pk>/', supplierEditBasketPromotionView.as_view(), name='edit_basket_promotion'),
+     path('supplierbasketpromotion/delete/<int:pk>/', supplier_delete_basket_promotion,name='delete_basket_promotion'),
     
 
 

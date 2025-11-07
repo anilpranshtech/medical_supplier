@@ -1,5 +1,6 @@
-{% extends "supplier/base.html" %}
+{% extends 'superuser/superuser_base.html' %}
 {% load static %}
+{% load superuser_tags %}
 
 {% block content %}
 <div class="app-main flex-column flex-row-fluid" id="kt_app_main">
@@ -12,8 +13,6 @@
                         <i class="bi bi-plus-circle"></i> Create Coupon
                     </button>
                 </div>
-
-                <!-- Coupons Table -->
                 <div class="card card-flush mb-3">
                     <div class="card-body table-responsive p-0">
                         <table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_coupons_table">
@@ -83,8 +82,6 @@
                         </table>
                     </div>
                 </div>
-
-                <!-- Create Coupon Modal -->
                 <div class="modal fade" id="createCouponModal" tabindex="-1" aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered modal-lg">
                         <div class="modal-content">
@@ -188,7 +185,6 @@
                     </div>
                 </div>
 
-                <!-- Edit Coupon Modal -->
                 <div class="modal fade" id="editCouponModal" tabindex="-1" aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered modal-lg">
                         <div class="modal-content">
@@ -291,8 +287,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Delete Coupon Modal -->
                 <div class="modal fade" id="deleteCouponModal" tabindex="-1" aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content">
@@ -320,13 +314,11 @@
 
 {% block page_only_scripts %}
 <script src="{% static 'js/buttonLoader.js' %}"></script>
-<!-- Select2 -->
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script>
 document.addEventListener("DOMContentLoaded", function(){
-    // Initialize Select2
     $('.select2').select2({width: '100%', placeholder: "Search and select", allowClear: true});
     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
     const msg = document.getElementById('couponMessage');
@@ -334,13 +326,11 @@ document.addEventListener("DOMContentLoaded", function(){
     function alertMsg(t, type='success') {
         msg.innerHTML = `<div class="alert alert-${type}">${t}</div>`;
     }
-
-    // Create Coupon
     document.getElementById('saveCoupon').addEventListener('click', function(){
         const form = document.getElementById('couponForm');
         const data = new FormData(form);
 
-        fetch("{% url 'supplier:coupons' %}", {
+        fetch("{% url 'superuser:coupons' %}", {
             method: 'POST',
             headers: {'X-CSRFToken': csrftoken},
             body: data
@@ -364,14 +354,10 @@ document.addEventListener("DOMContentLoaded", function(){
             alertMsg('Error submitting form: ' + error.message, 'danger');
         });
     });
-
-    // Edit Coupon
     document.querySelectorAll('.editCouponBtn').forEach(btn => {
         btn.addEventListener('click', function(){
             const couponId = this.dataset.id;
             const modal = new bootstrap.Modal(document.getElementById('editCouponModal'));
-
-            // Populate basic fields
             document.getElementById('edit_coupon_id').value = couponId;
             document.getElementById('edit_code').value = this.dataset.code;
             document.getElementById('edit_coupon_type').value = this.dataset.type;
@@ -388,13 +374,12 @@ document.addEventListener("DOMContentLoaded", function(){
             document.getElementById('edit_end_time').value = this.dataset.endTime;
             document.getElementById('edit_can_be_used_with_promotions').checked = (this.dataset.promotion === 'True');
 
-            // Clear previous selections and messages
+        
             $('#edit_productSelect').val(null).trigger('change');
             $('#edit_clientSelect').val(null).trigger('change');
             document.getElementById('editCouponMessage').innerHTML = '';
 
-            // Fetch coupon's products and clients
-            fetch("{% url 'supplier:coupon_details' coupon_id=0 %}".replace('0', couponId), {
+            fetch("{% url 'superuser:coupon_details' coupon_id=0 %}".replace('0', couponId), {
                 method: 'GET',
                 headers: {
                     'X-CSRFToken': csrftoken,
@@ -431,7 +416,7 @@ document.addEventListener("DOMContentLoaded", function(){
         const data = new FormData(form);
         const msg = document.getElementById('editCouponMessage');
 
-        fetch("{% url 'supplier:edit_coupon' %}", {
+        fetch("{% url 'superuser:edit_coupon' %}", {
             method: 'POST',
             headers: {'X-CSRFToken': csrftoken},
             body: data
@@ -472,7 +457,7 @@ document.addEventListener("DOMContentLoaded", function(){
         const couponId = document.getElementById('delete_coupon_id').value;
         const msgBox = document.getElementById('deleteCouponMessage');
 
-        fetch("{% url 'supplier:delete_coupon' %}", {
+        fetch("{% url 'superuser:delete_coupon' %}", {
             method: 'POST',
             headers: {
                 'X-CSRFToken': csrftoken,

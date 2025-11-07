@@ -1,0 +1,216 @@
+{% extends 'superuser/superuser_base.html' %}
+{% load static %}
+{% load superuser_tags %}
+
+{% block title %}Return Reason{% endblock %}
+
+{% block content %}
+{% tag_user_permissions_list request.user as user_permissions_list %}
+
+<div id="successMessage" class="alert alert-success d-none" style="font-size:16px;">
+    <strong id="successText"></strong>
+</div>
+
+<div class="app-main flex-column flex-row-fluid" id="kt_app_main">
+  <div class="d-flex flex-column flex-column-fluid">
+    <div id="kt_app_content" class="app-content flex-column-fluid mx-5">
+      <div id="kt_app_content_container" class="app-container container-fluid">
+
+        <div class="card card-flush">
+          <div class="card-header flex-wrap align-items-center py-5 gap-4">
+            <div class="card-title">Return Reason</div>
+            <div class="card-toolbar">
+              <button class="btn btn-primary" id="addBtn">
+                <i class="fas fa-plus me-2"></i>Add Reason
+              </button>
+            </div>
+          </div>
+
+          <div class="card-body table-responsive">
+            <table class="table table-row-dashed align-middle fs-6 gy-5">
+              <thead>
+                <tr class="text-gray-500 fw-bold fs-7 text-uppercase">
+                  <th>Reason En</th>
+                  <th class="text-center">Actions</th>
+                </tr>
+              </thead>
+
+              <tbody class="fw-semibold text-gray-600">
+                {% for r in reasons %}
+                <tr>
+                  <td>{{ r.reason_en }}</td>
+
+                  <td class="text-center">
+                    <button class="btn btn-sm btn-light-primary editBtn"
+                      data-id="{{ r.id }}"
+                      data-reason="{{ r.reason_en }}">
+                      Edit
+                    </button>
+
+                    <button class="btn btn-sm btn-light-danger deleteBtn"
+                      data-id="{{ r.id }}">
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+
+                {% empty %}
+                <tr>
+                  <td colspan="2" class="text-center text-muted">No return reasons added yet.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal fade" id="reasonModal">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-3">
+      <div class="modal-header text-white">
+        <h5 class="modal-title" id="modalTitle"></h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <form id="reasonForm">
+            {% csrf_token %}
+            <input type="hidden" id="rid" name="rid">
+            
+            <label class="form-label fw-semibold">Reason En  <span style="color: red;">*</span></label>
+            <input type="text" name="reason_en" id="reasonField" class="form-control" required>
+            <div class="text-danger mt-1" id="reasonError" style="display:none;"></div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" id="saveBtn">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block page_only_scripts %}
+<script>
+    function showSuccess(msg){
+    const box = document.getElementById('successMessage');
+    const txt = document.getElementById('successText');
+
+    txt.textContent = msg;
+    box.classList.remove('d-none');
+
+    setTimeout(() => {
+        box.classList.add('d-none');
+    }, 3000);
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+
+  const modal   = new bootstrap.Modal(document.getElementById('reasonModal'));
+  const title   = document.getElementById('modalTitle');
+  const idField = document.getElementById('rid');
+  const reasonFld = document.getElementById('reasonField');
+  const reasonError = document.getElementById('reasonError');
+
+  function resetForm() {
+    idField.value = "";
+    reasonFld.value = "";
+    reasonFld.classList.remove("is-invalid");
+    reasonError.style.display = "none";
+  }
+
+  document.getElementById('addBtn').addEventListener('click', function () {
+    title.textContent = "Add Return Reason";
+    resetForm();
+    modal.show();
+  });
+
+  document.querySelectorAll('.editBtn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      title.textContent = "Edit Return Reason";
+      idField.value = this.dataset.id;
+      reasonFld.value = this.dataset.reason;
+      reasonFld.classList.remove("is-invalid");
+      reasonError.style.display = "none";
+      modal.show();
+    });
+  });
+
+  function validate() {
+    let valid = true;
+
+    if (!reasonFld.value.trim()) {
+      reasonFld.classList.add("is-invalid");
+      reasonError.innerText = "Reason is required.";
+      reasonError.style.display = "block";
+      valid = false;
+    } else {
+      reasonFld.classList.remove("is-invalid");
+      reasonError.style.display = "none";
+    }
+
+    return valid;
+  }
+
+  document.getElementById('saveBtn').addEventListener('click', function () {
+    if (!validate()) return;
+
+    let rid = idField.value;
+
+    let url = rid 
+      ? `/superuser/return-reason/edit/${rid}/`
+      : `/superuser/return-reason/add/`;
+
+    fetch(url, {
+      method: "POST",
+      headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value },
+      body: new FormData(document.getElementById('reasonForm'))
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+    modal.hide();
+    showSuccess("Reason saved successfully!");
+    setTimeout(() => location.reload(), 800);
+}
+else {
+        reasonFld.classList.add("is-invalid");
+        reasonError.innerText = data.msg || "Something went wrong!";
+        reasonError.style.display = "block";
+      }
+    });
+  });
+
+  document.querySelectorAll('.deleteBtn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      if (!confirm("Delete this reason?")) return;
+
+      fetch(`/superuser/return-reason/delete/${this.dataset.id}/`, {
+        method: "POST",
+        headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value }
+      })
+      .then(r => r.json())
+      .then(res => {
+        if (res.success) {
+    showSuccess("Reason deleted successfully!");
+    setTimeout(() => location.reload(), 800);
+}
+
+        else alert(res.msg);
+      });
+    });
+  });
+
+});
+</script>
+{% endblock %}

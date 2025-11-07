@@ -1,0 +1,229 @@
+{% extends 'superuser/superuser_base.html' %}
+{% load static %}
+{% load superuser_tags %}
+
+{% block title %}Cities{% endblock %}
+
+{% block content %}
+{% tag_user_permissions_list request.user as user_permissions_list %}
+
+<div id="successMessage" class="alert alert-success d-none" style="font-size:16px;">
+  <strong id="successText"></strong>
+</div>
+
+<div class="app-main flex-column flex-row-fluid" id="kt_app_main">
+  <div class="d-flex flex-column flex-column-fluid">
+    <div id="kt_app_content" class="app-content flex-column-fluid mx-5">
+      <div id="kt_app_content_container" class="app-container container-fluid">
+
+        <div class="card card-flush">
+          <div class="card-header flex-wrap py-5 gap-4">
+            <div class="card-title">Cities</div>
+            <div class="card-toolbar">
+              <button class="btn btn-primary" id="addBtn">
+                <i class="fas fa-plus me-2"></i>Add City
+              </button>
+            </div>
+          </div>
+
+          <div class="card-body table-responsive">
+            <table class="table table-row-dashed align-middle fs-6 gy-5">
+              <thead>
+                <tr class="text-gray-500 fw-bold fs-7 text-uppercase">
+                  <th>Name</th>
+                  <th>Region</th>
+                  <th class="text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for city in cities %}
+                <tr>
+                    <td>{{ city.name }}</td>
+                    <td>
+                        {% if city.region %}
+                            {{ city.region.name }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-light-primary editBtn"
+                            data-id="{{ city.id }}"
+                            data-name="{{ city.name }}"
+                            data-region-id="{% if city.region %}{{ city.region.id }}{% endif %}">
+                            Edit
+                        </button>
+                        <button class="btn btn-sm btn-light-danger deleteBtn"
+                            data-id="{{ city.id }}">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="3" class="text-center">No cities found</td></tr>
+                {% endfor %}
+                </tbody>
+                
+            </table>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal fade" id="cityModal">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-3">
+      <div class="modal-header text-white">
+        <h5 class="modal-title" id="modalTitle"></h5>
+        <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <form id="cityForm">
+          {% csrf_token %}
+          <input type="hidden" id="cid">
+
+          <label class="fw-semibold">City Name  <span style="color: red;">*</span></label>
+          <input type="text" id="cityName" name="name" class="form-control mb-1" required>
+          <div class="text-danger mb-2" id="cityNameError" style="display:none;"></div>
+          
+          <label class="fw-semibold">Region  <span style="color: red;">*</span></label>
+          <select id="regionField" name="region" class="form-control mb-1" required>
+            <option value="">Select Region</option>
+            {% for r in regions %}
+              <option value="{{ r.id }}">{{ r.name }}</option>
+            {% endfor %}
+          </select>
+          <div class="text-danger" id="regionError" style="display:none;"></div>
+          
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" id="saveBtn">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block page_only_scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+const modal = new bootstrap.Modal(document.getElementById('cityModal'));
+const idFld = document.getElementById('cid');
+const nameFld = document.getElementById('cityName');
+const regionFld = document.getElementById('regionField');
+const nameError = document.getElementById('cityNameError');
+const regionError = document.getElementById('regionError');
+
+function showSuccess(msg) {
+  const box = document.getElementById("successMessage");
+  const text = document.getElementById("successText");
+  text.innerText = msg;
+  box.classList.remove("d-none");
+  setTimeout(() => box.classList.add("d-none"), 1500);
+}
+
+function resetForm() {
+  idFld.value = "";
+  nameFld.value = "";
+  regionFld.value = "";
+  nameFld.classList.remove("is-invalid");
+  regionFld.classList.remove("is-invalid");
+  nameError.style.display = "none";
+  regionError.style.display = "none";
+}
+
+document.getElementById("addBtn").addEventListener("click", () => {
+  resetForm();
+  document.getElementById("modalTitle").innerText = "Add City";
+  modal.show();
+});
+
+document.querySelectorAll(".editBtn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    resetForm(); // Reset first
+
+    idFld.value = btn.dataset.id;
+    nameFld.value = btn.dataset.name;
+
+    // Correctly select the region option
+    const regionId = btn.dataset.regionId;
+    if (regionId) {
+      regionFld.value = regionId;
+    } else {
+      regionFld.value = "";
+    }
+
+    document.getElementById("modalTitle").innerText = "Edit City";
+    modal.show();
+  });
+});
+
+function validateForm() {
+  let valid = true;
+  if (!nameFld.value.trim()) {
+    nameFld.classList.add("is-invalid");
+    nameError.innerText = "City Name is required.";
+    nameError.style.display = "block";
+    valid = false;
+  }
+  if (!regionFld.value.trim()) {
+    regionFld.classList.add("is-invalid");
+    regionError.innerText = "Region is required.";
+    regionError.style.display = "block";
+    valid = false;
+  }
+  return valid;
+}
+
+document.getElementById("saveBtn").addEventListener("click", () => {
+  if (!validateForm()) return;
+
+  const id = idFld.value;
+  const url = id ? `/superuser/cities/edit/${id}/` : `/superuser/cities/add/`;
+
+  fetch(url, {
+    method: "POST",
+    headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value },
+    body: new FormData(document.getElementById("cityForm"))
+  })
+  .then(r => r.json())
+  .then(res => {
+    if (res.success) {
+      modal.hide();
+      showSuccess(id ? "City updated successfully!" : "City added successfully!");
+      setTimeout(() => location.reload(), 900);
+    } else {
+      alert(res.msg || "Error saving city");
+    }
+  });
+});
+
+document.querySelectorAll(".deleteBtn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    if (!confirm("Delete this city?")) return;
+    fetch(`/superuser/cities/delete/${btn.dataset.id}/`, {
+      method: "POST",
+      headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value }
+    })
+    .then(r => r.json())
+    .then(res => {
+      if (res.success) {
+        showSuccess("City deleted successfully!");
+        setTimeout(() => location.reload(), 900);
+      } else {
+        alert(res.msg || "Delete failed!");
+      }
+    });
+  });
+});
+});
+</script>
+{% endblock %}

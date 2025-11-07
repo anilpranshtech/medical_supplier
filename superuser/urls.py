@@ -116,8 +116,93 @@ urlpatterns = [
      path('top-supplier-list/', TopSupplierListView.as_view(), name='topsupplierlist'),
      path('edit-top-supplier/', EditTopSupplierView.as_view(), name='edit_top_supplier'),
      path('delete-top-supplier/', DeleteTopSupplierView.as_view(), name='delete_top_supplier'),
-     
+
+     #Marketing tools
+
+     #coupons
+    path('coupons/', CouponView.as_view(), name='coupons'),
+    path('edit-coupon/', edit_coupon, name='edit_coupon'),
+    path('delete-coupon/',delete_coupon, name='delete_coupon'),
+    path('coupon/<int:coupon_id>/details/', coupon_details, name='coupon_details'),
+     path('buyxgety/', BuyXGetYPromotionView.as_view(), name='buyxgety_promotion'),
+     path('buyxgety/add/', AddPromotionView.as_view(), name='add_promotion'),
+     path('buyxgety/edit/<int:pk>/', EditPromotionView.as_view(), name='edit_promotion'),
+     path('buyxgety/delete/<int:pk>/', delete_promotion, name='delete_promotion'),
+
+     path('buyxgifty/',BuyXGiftYPromotionView.as_view(),name='buyxgift_promotion'),
+     path('buyxgifty/add/', AddGiftPromotionView.as_view(), name='add_gift_promotion'),
+     path('buyxgifty/edit/<int:pk>/', EditGiftPromotionView.as_view(), name='edit_gift_promotion'),
+     path('buyxgifty/delete/<int:pk>/', delete_gift_promotion, name='delete_gift_promotion'),
+
+     path('basketpromotion/', BasketPromotionView.as_view(), name='basket_promotion'),
+     path('basketpromotion/add/', AddBasketPromotionView.as_view(),name='add_basket_promotion'),
+     path('basketpromotion/edit/<int:pk>/', EditBasketPromotionView.as_view(), name='edit_basket_promotion'),
+     path('basketpromotion/delete/<int:pk>/', delete_basket_promotion,name='delete_basket_promotion'),
+
+     #settings
+   
+    #bank
+     path("banks/", BankView.as_view(), name="banks"),
+     path("banks/add/", AddBankView.as_view(), name="bank_add"),
+     path("banks/get/<int:pk>/", GetBankView.as_view(), name="bank_get"),
+     path("banks/edit/<int:pk>/", EditBankView.as_view(), name="bank_edit"),
+     path("banks/delete/<int:pk>/", DeleteBankView.as_view(), name="bank_delete"),
+    #origincountry
+     path("origin-country/", OriginCountryView.as_view(), name="origin_country"),
+     path("origin-country/add/", add_origin_country, name="add_origin_country"),
+     path("origin-country/edit/<int:pk>/", edit_origin_country, name="edit_origin_country"),
+     path("origin-country/delete/<int:pk>/", delete_origin_country, name="delete_origin_country"),
+    #country
+     path("country/", CountryView.as_view(), name="countrys"),
+     path("country/add/", CountryAddView.as_view(), name="origin_country_add"),
+     path("country/edit/<int:cid>/", CountryEditView.as_view(), name="origin_country_edit"),
+     path("country/delete/<int:cid>/", CountryDeleteView.as_view(), name="origin_country_delete"),
+    #region
+     path('region/', RegionView.as_view(), name='region'),
+     path('region/add/', RegionAddView.as_view(), name='region_add'),
+     path('region/edit/<int:pk>/', RegionEditView.as_view(), name='region_edit'),
+     path('region/delete/<int:pk>/', RegionDeleteView.as_view(), name='region_delete'),
+     #cities
+     path("cities/", CityListView.as_view(), name="cities_list"),
+     path("cities/add/", CityCreateView.as_view(), name="add_city"),
+     path("cities/edit/<int:pk>/", CityUpdateView.as_view(), name="edit_city"),
+     path("cities/delete/<int:pk>/", CityDeleteView.as_view(), name="delete_city"),
+     #currency
+     path("currency/", CurrencyView.as_view(), name="currency"),
+     path("currency/add/", add_currency, name="add_currency"),
+     path("currency/edit/<int:cid>/", add_currency, name="edit_currency"),
+     path("currency/delete/<int:pk>/", delete_currency, name="delete_currency"),
+     #returnreson
+     path("return-reason/", ReturnReasonView.as_view(), name="return_reason"),
+     path("return-reason/add/", add_return_reason, name="add_return_reason"),
+     path("return-reason/edit/<int:pk>/", edit_return_reason, name="edit_return_reason"),
+     path("return-reason/delete/<int:pk>/", delete_return_reason, name="delete_return_reason"),
+     #department
+     path("department/", DepartmentView.as_view(), name="department"),
+     path("department/add/", add_department, name="add_department"),
+     path("department/edit/<int:pk>/", edit_department, name="edit_department"),
+     path("department/delete/<int:pk>/", delete_department, name="delete_department"),
+     #suppliertype
+     path("suppliertype/", SupplierTypeView.as_view(), name="suppliertype"),
+     path("suppliertype/add/", add_supplier_type, name="add_supplier_type"),
+     path("suppliertype/edit/<int:pk>/", edit_supplier_type, name="edit_supplier_type"),
+     path("suppliertype/delete/<int:pk>/", delete_supplier_type, name="delete_supplier_type"),
+     #addresstype
+     path("addresstype/", AddressTypeView.as_view(), name="addresstype"),
+     path("addresstype/add/", add_address_type, name="add_address_type"),
+     path("addresstype/edit/<int:pk>/", edit_address_type, name="edit_address_type"),
+     path("addresstype/delete/<int:pk>/", delete_address_type, name="delete_address_type"),
 ]
+
+
+  
+
+
+
+
+ 
+     
+
 
 
 

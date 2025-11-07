@@ -1,0 +1,332 @@
+{% extends 'superuser/superuser_base.html' %}
+{% load static %}
+{% load superuser_tags %}
+
+{% block title %}Origin Country{% endblock %}
+
+{% block content %}
+{% tag_user_permissions_list request.user as user_permissions_list %}
+
+<div id="successMessage" class="alert alert-success d-none" style="font-size:16px;">
+  <strong id="successText"></strong>
+</div>
+
+<div class="app-main flex-column flex-row-fluid" id="kt_app_main">
+  <div class="d-flex flex-column flex-column-fluid">
+    <div id="kt_app_content" class="app-content flex-column-fluid mx-5">
+      <div id="kt_app_content_container" class="app-container container-fluid">
+
+        <div class="card card-flush">
+          <div class="card-header flex-wrap align-items-center py-5 gap-4">
+            <div class="card-title">Country</div>
+            <div class="card-toolbar">
+              <button class="btn btn-primary" id="addBtn">
+                <i class="fas fa-plus me-2"></i>Add Country
+              </button>
+            </div>
+          </div>
+
+          <div class="card-body table-responsive">
+            <table class="table table-row-dashed align-middle fs-6 gy-5">
+              <thead>
+                <tr class="text-gray-500 fw-bold fs-7 text-uppercase">
+                  <th>Name</th>
+                  <th>ISO</th>
+                  <th>Phone Prefix</th>
+                  <th>Order</th>
+                  <th>Currency</th>
+                
+                  <th class="text-center">Actions</th>
+                </tr>
+              </thead>
+            
+              <tbody class="fw-semibold text-gray-600">
+                {% for c in countries %}
+                <tr>
+                  <td>{{ c.name_en }}</td>
+                  <td>{{ c.iso }}</td>
+                  <td>{{ c.phone_prefix }}</td>
+                  <td>{{ c.order }}</td>
+                  <td>{{ c.currency }}</td>
+               
+            
+                  <td class="text-center">
+                    <button
+                      class="btn btn-sm btn-light-primary editBtn"
+                      data-id="{{ c.id }}"
+                      data-name="{{ c.name_en }}"
+                      data-iso="{{ c.iso }}"
+                      data-phone="{{ c.phone_prefix }}"
+                      data-order="{{ c.order }}"
+                      data-currency="{{ c.currency }}"
+                      data-default="{{ c.is_default }}">
+                      Edit
+                    </button>
+            
+                    <button class="btn btn-sm btn-light-danger deleteBtn" data-id="{{ c.id }}">
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+            
+                {% empty %}
+                <tr>
+                  <td colspan="7" class="text-center text-muted">No countries added yet.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Modal -->
+<div class="modal fade" id="countryModal">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-3">
+      <div class="modal-header  text-white">
+        <h5 class="modal-title" id="modalTitle"></h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <form id="countryForm">
+          {% csrf_token %}
+          <input type="hidden" id="cid" name="cid">
+
+          <label class="form-label fw-semibold">Name En  <span style="color: red;">*</span></label>
+          <input type="text" name="name_en" id="name_en" class="form-control" required>
+
+          <label class="form-label fw-semibold mt-3">ISO  <span style="color: red;">*</span></label>
+          <input type="text" name="iso" id="iso" class="form-control" required>
+
+          <label class="form-label fw-semibold mt-3">Phone Prefix  <span style="color: red;">*</span> </label>
+          <input type="text" name="phone_prefix" id="phone_prefix" class="form-control" required>
+
+          <label class="form-label fw-semibold mt-3">Order  <span style="color: red;">*</span></label>
+          <input type="number" name="order" id="order" class="form-control" required>
+
+          <label class="form-label fw-semibold mt-3">Currency  <span style="color: red;">*</span></label>
+          <select name="currency" id="currency" class="form-select">
+            {% for curr in currency_list %}
+              <option value="{{ curr }}">{{ curr }}</option>
+            {% endfor %}
+          </select>
+
+          <div class="form-check mt-3">
+            <input class="form-check-input" type="checkbox" id="is_default" name="is_default">
+            <label class="form-check-label">Set as Default</label>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" id="saveBtn">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block page_only_scripts %}
+<script>
+function showSuccess(msg) {
+    const box = document.getElementById("successMessage");
+    const text = document.getElementById("successText");
+
+    text.innerText = msg;
+    box.classList.remove("d-none");
+
+    setTimeout(() => {
+        box.classList.add("d-none");
+    }, 2000);
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+
+  const modal = new bootstrap.Modal(document.getElementById('countryModal'));
+
+  const form = document.getElementById('countryForm');
+  const cidField = document.getElementById('cid');
+
+  const fields = {
+    name_en: document.getElementById('name_en'),
+    iso: document.getElementById('iso'),
+    phone_prefix: document.getElementById('phone_prefix'),
+    order: document.getElementById('order'),
+    currency: document.getElementById('currency')
+  };
+
+ 
+  for (const key in fields) {
+    if (!document.getElementById(key + 'Error')) {
+      const errDiv = document.createElement('div');
+      errDiv.id = key + 'Error';
+      errDiv.classList.add('text-danger', 'mt-1');
+      errDiv.style.display = 'none';
+      fields[key].insertAdjacentElement('afterend', errDiv);
+    }
+  }
+
+  const isDefault = document.getElementById('is_default');
+
+
+  function resetForm() {
+    form.reset();
+    cidField.value = "";
+    for (const key in fields) {
+      fields[key].classList.remove('is-invalid');
+      document.getElementById(key + 'Error').style.display = 'none';
+    }
+  }
+
+
+  document.getElementById('addBtn').addEventListener('click', function () {
+    document.getElementById('modalTitle').textContent = "Add Country";
+    resetForm();
+    modal.show();
+  });
+
+  document.querySelectorAll('.editBtn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      document.getElementById('modalTitle').textContent = "Edit Country";
+      cidField.value = this.dataset.id;
+      fields.name_en.value = this.dataset.name;
+      fields.iso.value = this.dataset.iso;
+      fields.phone_prefix.value = this.dataset.phone;
+      fields.order.value = this.dataset.order;
+      fields.currency.value = this.dataset.currency;
+      isDefault.checked = this.dataset.default === "true";
+
+      for (const key in fields) {
+        fields[key].classList.remove('is-invalid');
+        document.getElementById(key + 'Error').style.display = 'none';
+      }
+
+      modal.show();
+    });
+  });
+
+
+  function validateForm() {
+    let valid = true;
+
+    if (!fields.name_en.value.trim()) {
+      fields.name_en.classList.add('is-invalid');
+      document.getElementById('name_enError').innerText = "Name is required.";
+      document.getElementById('name_enError').style.display = 'block';
+      valid = false;
+    } else {
+      fields.name_en.classList.remove('is-invalid');
+      document.getElementById('name_enError').style.display = 'none';
+    }
+    if (!fields.iso.value.trim()) {
+      fields.iso.classList.add('is-invalid');
+      document.getElementById('isoError').innerText = "ISO is required.";
+      document.getElementById('isoError').style.display = 'block';
+      valid = false;
+    } else {
+      fields.iso.classList.remove('is-invalid');
+      document.getElementById('isoError').style.display = 'none';
+    }
+    if (!fields.phone_prefix.value.trim()) {
+      fields.phone_prefix.classList.add('is-invalid');
+      document.getElementById('phone_prefixError').innerText = "Phone Prefix is required.";
+      document.getElementById('phone_prefixError').style.display = 'block';
+      valid = false;
+    } else if (!/^\d+$/.test(fields.phone_prefix.value.trim())) {
+      fields.phone_prefix.classList.add('is-invalid');
+      document.getElementById('phone_prefixError').innerText = "Phone Prefix must contain only digits.";
+      document.getElementById('phone_prefixError').style.display = 'block';
+      valid = false;
+    } else {
+      fields.phone_prefix.classList.remove('is-invalid');
+      document.getElementById('phone_prefixError').style.display = 'none';
+    }
+    const orderVal = Number(fields.order.value);
+    if (!fields.order.value.trim()) {
+      fields.order.classList.add('is-invalid');
+      document.getElementById('orderError').innerText = "Order is required.";
+      document.getElementById('orderError').style.display = 'block';
+      valid = false;
+    } else if (orderVal <= 0) {
+      fields.order.classList.add('is-invalid');
+      document.getElementById('orderError').innerText = "Order must be greater than 0.";
+      document.getElementById('orderError').style.display = 'block';
+      valid = false;
+    } else {
+      fields.order.classList.remove('is-invalid');
+      document.getElementById('orderError').style.display = 'none';
+    }
+
+    return valid;
+  }
+
+
+  document.getElementById('saveBtn').addEventListener('click', function () {
+    if (!validateForm()) return;
+
+    let cid = cidField.value;
+    let url = cid ? `/superuser/country/edit/${cid}/` : `/superuser/country/add/`;
+
+    fetch(url, {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value
+      },
+      body: new FormData(form)
+    })
+    .then(r => r.json())
+    .then(res => {
+      if (res.success) {
+    modal.hide();
+    showSuccess(cid ? " Country updated successfully!" : "Country added successfully!");
+
+    setTimeout(() => {
+        location.reload();
+    }, 1000);
+}
+ else {
+        alert(res.msg || "Something went wrong!");
+      }
+    });
+  });
+
+  document.querySelectorAll('.deleteBtn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      if (!confirm("Delete this country?")) return;
+
+      fetch(`/superuser/country/delete/${this.dataset.id}/`, {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+      })
+      .then(r => r.json())
+      .then(res => {
+        if (res.success) {
+    showSuccess(" Country deleted successfully!");
+
+    setTimeout(() => {
+        location.reload();
+    }, 1000);
+}
+ else {
+          alert(res.msg);
+        }
+      });
+    });
+  });
+
+});
+</script>
+{% endblock %}

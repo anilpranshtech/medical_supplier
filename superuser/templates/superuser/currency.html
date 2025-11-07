@@ -1,0 +1,286 @@
+{% extends 'superuser/superuser_base.html' %}
+{% load static %}
+{% load superuser_tags %}
+
+{% block title %}Currency Management{% endblock %}
+
+{% block content %}
+{% tag_user_permissions_list request.user as user_permissions_list %}
+
+<div id="successMessage" class="alert alert-success d-none" style="font-size:16px;">
+  <strong id="successText"></strong>
+</div>
+
+<div class="app-main flex-column flex-row-fluid" id="kt_app_main">
+  <div class="d-flex flex-column flex-column-fluid">
+    <div id="kt_app_content" class="app-content flex-column-fluid mx-5">
+      <div id="kt_app_content_container" class="app-container container-fluid">
+
+        <div class="card card-flush">
+          <div class="card-header flex-wrap align-items-center py-5 gap-4">
+            <div class="card-title">Currencies</div>
+            <div class="card-toolbar">
+              <button class="btn btn-primary" id="addBtn">
+                <i class="fas fa-plus me-2"></i>Add Currency
+              </button>
+            </div>
+          </div>
+
+          <div class="card-body table-responsive">
+            <table class="table table-row-dashed align-middle fs-6 gy-5">
+              <thead>
+                <tr class="text-gray-500 fw-bold fs-7 text-uppercase">
+                  <th>Name</th>
+                  <th>Code</th>
+                  <th>Rate</th>
+                  <th>Country</th>
+                  <th>Status</th>
+                 
+                  <th class="text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="fw-semibold text-gray-600">
+                {% for c in currencies %}
+                <tr>
+                  <td>{{ c.name_en }}</td>
+                  <td>{{ c.code_en }}</td>
+                  <td>{{ c.rate }}</td>
+                  <td>{{ c.country }}</td>
+                  <td>{{ c.status }}</td>
+               
+                  <td class="text-center">
+                    <button class="btn btn-sm btn-light-primary editBtn"
+                      data-id="{{ c.id }}"
+                      data-name="{{ c.name_en }}"
+                      data-code="{{ c.code_en }}"
+                      data-rate="{{ c.rate }}"
+                      data-country="{{ c.country }}"
+                      data-status="{{ c.status }}"
+                      data-default="{{ c.set_as_default }}">
+                      Edit
+                    </button>
+                    <button class="btn btn-sm btn-light-danger deleteBtn" data-id="{{ c.id }}">
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="7" class="text-center text-muted">No currencies added yet.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal fade" id="currencyModal">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content rounded-3">
+        <div class="modal-header text-white">
+          <h5 class="modal-title" id="modalTitle"></h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="currencyForm">
+            {% csrf_token %}
+            <input type="hidden" id="cid" name="cid">
+  
+            <label class="form-label fw-semibold mt-2">Currency Name  <span style="color: red;">*</span></label>
+            <input type="text" name="name" id="nameField" class="form-control">
+            <span class="text-danger small" id="nameError"></span>
+  
+            <label class="form-label fw-semibold mt-2">Code  <span style="color: red;">*</span></label>
+            <input type="text" name="code" id="codeField" class="form-control">
+            <span class="text-danger small" id="codeError"></span>
+  
+            <label class="form-label fw-semibold mt-2">Rate  <span style="color: red;">*</span></label>
+            <input type="number" name="rate" id="rateField" step="0.0001" class="form-control">
+            <span class="text-danger small" id="rateError"></span>
+  
+            <label class="form-label fw-semibold mt-2">Country  <span style="color: red;">*</span></label>
+            <select name="country" id="countryField" class="form-select">
+              <option value="">Select Country</option>
+            </select>
+            <span class="text-danger small" id="countryError"></span>
+  
+            <label class="form-label fw-semibold mt-2">Status  <span style="color: red;">*</span></label>
+            <select name="status" id="statusField" class="form-select">
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+            </select>
+            <span class="text-danger small" id="statusError"></span>
+  
+            <div class="form-check mt-2">
+              <input type="checkbox" name="set_as_default" id="defaultField" class="form-check-input">
+              <label class="form-check-label">Set as Default</label>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+          <button class="btn btn-primary" id="saveBtn">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block page_only_scripts %}
+
+<script>
+  function showSuccess(msg){
+    const box = document.getElementById('successMessage');
+    const txt = document.getElementById('successText');
+
+    txt.textContent = msg;
+    box.classList.remove('d-none');
+
+    setTimeout(() => {
+        box.classList.add('d-none');
+    }, 3000);
+}
+
+    document.addEventListener("DOMContentLoaded", function () {
+    
+      const modal   = new bootstrap.Modal(document.getElementById('currencyModal'));
+      const title   = document.getElementById('modalTitle');
+      const cid     = document.getElementById('cid');
+      const nameFld = document.getElementById('nameField');
+      const codeFld = document.getElementById('codeField');
+      const rateFld = document.getElementById('rateField');
+      const countryFld = document.getElementById('countryField');
+      const statusFld  = document.getElementById('statusField');
+      const defaultFld = document.getElementById('defaultField');
+    
+      const nameError = document.getElementById('nameError');
+      const codeError = document.getElementById('codeError');
+      const rateError = document.getElementById('rateError');
+      const countryError = document.getElementById('countryError');
+      const statusError = document.getElementById('statusError');
+    
+      function loadCountries() {
+        fetch("https://countriesnow.space/api/v0.1/countries")
+          .then(response => response.json())
+          .then(data => {
+            countryFld.innerHTML = '<option value="">Select Country</option>';
+            data.data.forEach(c => {
+              const opt = document.createElement('option');
+              opt.value = c.country;
+              opt.textContent = c.country;
+              countryFld.appendChild(opt);
+            });
+          });
+      }
+      loadCountries();
+    
+      document.getElementById('addBtn').addEventListener('click', function () {
+        title.textContent = "Add Currency";
+        cid.value = nameFld.value = codeFld.value = rateFld.value = countryFld.value = '';
+        statusFld.value = 'Active';
+        defaultFld.checked = false;
+        clearErrors();
+        modal.show();
+      });
+    
+      document.querySelectorAll('.editBtn').forEach(btn => {
+        btn.addEventListener('click', function () {
+          title.textContent = "Edit Currency";
+          cid.value = this.dataset.id;
+          nameFld.value = this.dataset.name;
+          codeFld.value = this.dataset.code;
+          rateFld.value = this.dataset.rate;
+          countryFld.value = this.dataset.country;
+          statusFld.value = this.dataset.status;
+          defaultFld.checked = this.dataset.default === 'true';
+          clearErrors();
+          modal.show();
+        });
+      });
+      function clearErrors() {
+        [nameError, codeError, rateError, countryError, statusError].forEach(e => e.textContent = '');
+      }
+      function validateForm() {
+        let valid = true;
+        clearErrors();
+    
+        if(!nameFld.value.trim()){
+          nameError.textContent = "Currency Name is required";
+          valid = false;
+        }
+    
+        if(!codeFld.value.trim()){
+          codeError.textContent = "Code is required";
+          valid = false;
+        }
+    
+        const rateVal = parseFloat(rateFld.value);
+        if(!rateFld.value){
+          rateError.textContent = "Rate is required";
+          valid = false;
+        } else if(isNaN(rateVal) || rateVal <= 0){
+          rateError.textContent = "Rate must be greater than 0";
+          valid = false;
+        }
+    
+        if(!countryFld.value){
+          countryError.textContent = "Country is required";
+          valid = false;
+        }
+    
+        if(!statusFld.value){
+          statusError.textContent = "Status is required";
+          valid = false;
+        }
+    
+        return valid;
+      }
+    
+      document.getElementById('saveBtn').addEventListener('click', function () {
+        if(!validateForm()) return;
+    
+        fetch(`/superuser/currency/add/`, {
+          method: "POST",
+          headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value },
+          body: new FormData(document.getElementById('currencyForm'))
+        })
+        .then(r => r.json())
+        .then(res => {
+          if(res.success){
+    modal.hide();
+    showSuccess("Currency Updated successfully!");
+    setTimeout(() => location.reload(), 800);
+}
+ else alert(res.msg);
+        });
+      });
+  
+      document.querySelectorAll('.deleteBtn').forEach(btn => {
+        btn.addEventListener('click', function () {
+          if(!confirm("Delete this currency?")) return;
+          fetch(`/superuser/currency/delete/${this.dataset.id}/`, {
+            method: "POST",
+            headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value }
+          })
+          .then(r => r.json())
+          .then(res => {
+            if(res.success){
+    showSuccess("Currency deleted successfully!");
+    setTimeout(() => location.reload(), 800);
+}
+
+            else alert(res.msg);
+          });
+        });
+      });
+    
+    });
+    </script>
+{% endblock %}

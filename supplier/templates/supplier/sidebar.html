@@ -270,13 +270,7 @@ class="menu-item py-2 {% if request.resolver_match.url_name == 'user_list' or re
                    </span>
                    <span class="menu-title">Shipping Method</span>
                  </a>
-                 <a class="menu-link {% if request.resolver_match.url_name == 'coupons' %} active {% endif %}"
-                 href="{% url 'supplier:coupons' %}">
-                <span class="menu-bullet">
-                  <span class="bullet bullet-dot"></span>
-                </span>
-                <span class="menu-title">Coupons</span>
-              </a>
+               
               <a class="menu-link {% if request.resolver_match.url_name == 'vacation_request' %} active {% endif %}"
               href="{% url 'supplier:vacation_request' %}">
              <span class="menu-bullet">
@@ -289,6 +283,72 @@ class="menu-item py-2 {% if request.resolver_match.url_name == 'user_list' or re
                 </div>
               </div>
             </div>
+
+                <!-- Marketing Tools  -->
+                <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}"
+                data-kt-menu-placement="right-start"
+                class="menu-item py-2 {% if request.resolver_match.url_name == 'coupons' or request.resolver_match.url_name == 'buyxgety_promotion' or request.resolver_match.url_name == 'buyxgift_promotion' or request.resolver_match.url_name == 'basket_promotion' or request.resolver_match.url_name == 'question_list' or request.resolver_match.url_name == 'transaction_list' %} here show {% endif %}">
+             <span class="menu-link menu-center">
+               <span class="menu-icon me-0">
+                <svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 448 512"
+     role="img"
+     aria-labelledby="rssTitle"
+     class="icon icon-rss"
+     width="20" height="20" fill="currentColor">
+  <title id="rssTitle">Marketing feed</title>
+  <path d="M128.081 415.959c0 35.369-28.672 64.041-64.041 64.041S0 451.328 0 415.959s28.672-64.041 64.041-64.041 64.04 28.673 64.04 64.041zm175.66 47.25c-8.354-154.6-132.185-278.587-286.95-286.95C7.656 175.765 0 183.105 0 192.253v48.069c0 8.415 6.49 15.472 14.887 16.018 111.832 7.284 201.473 96.702 208.772 208.772.547 8.397 7.604 14.887 16.018 14.887h48.069c9.149.001 16.489-7.655 15.995-16.79zm144.249.288C439.596 229.677 251.465 40.445 16.503 32.01 7.473 31.686 0 38.981 0 48.016v48.068c0 8.625 6.835 15.645 15.453 15.999 191.179 7.839 344.627 161.316 352.465 352.465.353 8.618 7.373 15.453 15.999 15.453h48.068c9.034-.001 16.329-7.474 16.005-16.504z"/>
+</svg>
+               </span>
+             </span>
+
+             <div class="menu-sub menu-sub-dropdown menu-sub-indention px-2 py-4 w-250px mh-75 overflow-auto">
+               <div class="menu-item">
+                 <div class="menu-content">
+                   <span class="menu-section fs-5 fw-bolder ps-1 py-1">Marketing Tools </span>
+                 </div>
+               </div>
+
+               <div class="menu-sub menu-sub-accordion">
+                 <div class="menu-item">
+                    <a class="menu-link {% if request.resolver_match.url_name == 'coupons' %} active {% endif %}"
+                    href="{% url 'supplier:coupons' %}">
+                   <span class="menu-bullet">
+                     <span class="bullet bullet-dot"></span>
+                   </span>
+                   <span class="menu-title">Coupons</span>
+                 </a>
+                   <a class="menu-link {% if request.resolver_match.url_name == 'buyxgety_promotion' %} active {% endif %}"
+                      href="{% url 'supplier:buyxgety_promotion' %}">
+                     <span class="menu-bullet">
+                       <span class="bullet bullet-dot"></span>
+                     </span>
+                     <span class="menu-title">Buy X Get Y Promotions
+                    </span>
+                   </a>
+
+                   <a class="menu-link {% if request.resolver_match.url_name == 'buyxgift_promotion' %} active {% endif %}"
+                   href="{% url 'supplier:buyxgift_promotion' %}">
+                   <span class="menu-bullet">
+                   <span class="bullet bullet-dot"></span>
+                   </span>
+                   <span class="menu-title">Buy X Gift Y Promotions
+                </span>
+                   </a>
+                   <a class="menu-link {% if request.resolver_match.url_name == 'basket_promotion' %} active {% endif %}"
+                   href="{% url 'supplier:basket_promotion' %}">
+                   <span class="menu-bullet">
+                   <span class="bullet bullet-dot"></span>
+                   </span>
+                   <span class="menu-title">Basket Promotions
+                </span>
+                   </a>
+                  
+                    
+                 </div>
+               </div>
+             </div>
+           </div>
 </div>
    </div>
 

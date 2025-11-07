@@ -16,13 +16,14 @@ from django.views.generic import ListView, CreateView, UpdateView, View
 from django.urls import reverse_lazy
 from datetime import datetime
 import re
-
+from django.views.decorators.csrf import csrf_exempt
 import supplier
 from superuser.filters import QS_filter_user, QS_Products_filter, QS_orders_filters
 from superuser.mixins import StaffAccountRequiredMixin, PermissionRequiredMixin
 from django.contrib.auth.models import User, Group, Permission
 from django.contrib.contenttypes.models import ContentType
 
+import requests
 from .refunds import process_refund
 from .utils import *
 from dashboard.models import *
@@ -3149,3 +3150,931 @@ class DeleteTopSupplierView(View):
             return JsonResponse({'success': True})
         except TopSupplier.DoesNotExist:
             return JsonResponse({'success': False, 'error': 'Supplier not found'})
+        
+
+class BuyXGetYPromotionView(TemplateView):
+    template_name = 'superuser/Buyxgetypromotion.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['page_title'] = 'Buy X Get Y Promotion'
+        context['promotions'] = BuyXGetYPromotion.objects.all()
+        context['suppliers'] = SupplierProfile.objects.all()
+        context['products'] = Product.objects.all()
+        return context
+
+class AddPromotionView(TemplateView):
+    def post(self, request):
+        product_type = request.POST.get('product_type')
+        supplier_ids = request.POST.getlist('supplier')
+        product_ids = request.POST.getlist('product')
+        buy = request.POST.get('buy')
+        get = request.POST.get('get')
+        promotion_period = request.POST.get('promotion_period')
+        promo = BuyXGetYPromotion.objects.create(
+            product_type=product_type,
+            buy=buy,
+            get=get,
+            promotion_period=promotion_period
+        )
+
+        promo.supplier.set(supplier_ids)
+        promo.product.set(product_ids)
+        promo.save()
+
+        return JsonResponse({'success': True})
+class EditPromotionView(TemplateView):
+    def get(self, request, pk):
+        try:
+            promo = BuyXGetYPromotion.objects.get(pk=pk)
+            start_str, _, end_str = promo.promotion_period.partition(' - ')
+            start_str = start_str.strip()
+            end_str = end_str.strip()
+
+            def format_datetime(dt_str):
+                from datetime import datetime
+                try:
+                    dt = datetime.strptime(dt_str, "%d %b %Y")
+                    return dt.strftime("%Y-%m-%dT00:00")
+                except:
+                    return ""
+
+            data = {
+                'product_type': promo.product_type,
+                'supplier': list(promo.supplier.values_list('id', flat=True)),
+                'product': list(promo.product.values_list('id', flat=True)),
+                'buy': promo.buy,
+                'get': promo.get,
+                'start_datetime': format_datetime(start_str),
+                'end_datetime': format_datetime(end_str),
+            }
+            return JsonResponse({'success': True, 'data': data})
+        except BuyXGetYPromotion.DoesNotExist:
+            return JsonResponse({'success': False, 'msg': 'Promotion not found'})
+
+    def post(self, request, pk):
+        try:
+            promo = BuyXGetYPromotion.objects.get(pk=pk)
+
+            product_type = request.POST.get('product_type')
+            supplier_ids = request.POST.getlist('supplier')
+            product_ids = request.POST.getlist('product')
+            buy = request.POST.get('buy')
+            get = request.POST.get('get')
+            start = request.POST.get('start_datetime')
+            end = request.POST.get('end_datetime')
+            from datetime import datetime
+            start_dt = datetime.strptime(start, "%Y-%m-%dT%H:%M")
+            end_dt = datetime.strptime(end, "%Y-%m-%dT%H:%M")
+            promotion_period = f"{start_dt.strftime('%d %b %Y')} - {end_dt.strftime('%d %b %Y')}"
+
+            promo.product_type = product_type
+            promo.buy = buy
+            promo.get = get
+            promo.promotion_period = promotion_period
+            promo.save()
+
+            promo.supplier.set(supplier_ids)
+            promo.product.set(product_ids)
+
+            return JsonResponse({'success': True})
+        except Exception as e:
+            return JsonResponse({'success': False, 'msg': str(e)})
+
+
+def delete_promotion(request, pk):
+    try:
+        BuyXGetYPromotion.objects.get(pk=pk).delete()
+        return JsonResponse({'success': True})
+    except:
+        return JsonResponse({'success': False})
+
+
+class BuyXGiftYPromotionView(TemplateView):
+    template_name = 'superuser/Buyxgiftypromotion.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['page_title'] = 'Buy X Gift Y Promotion'
+        ctx['promotions'] = BuyXGiftYPromotion.objects.all()
+        ctx['suppliers']  = SupplierProfile.objects.all()
+        ctx['products']   = Product.objects.all()
+        return ctx
+class AddGiftPromotionView(TemplateView):
+    def post(self, request):
+        try:
+            product_type   = request.POST.get('product_type')
+            supplier_ids   = request.POST.getlist('supplier')
+            product_ids    = request.POST.getlist('product')
+            giftproduct_ids= request.POST.getlist('giftproduct')
+            buy            = request.POST.get('buy')
+            gift           = request.POST.get('gift')
+            promotion_period = request.POST.get('promotion_period')
+
+            promo = BuyXGiftYPromotion.objects.create(
+                product_type=product_type,
+                buy=buy,
+                gift=gift,
+                promotion_period=promotion_period
+            )
+            promo.supplier.set(supplier_ids)
+            promo.product.set(product_ids)
+            promo.giftproduct.set(giftproduct_ids)
+            promo.save()               
+
+            return JsonResponse({'success': True})
+        except Exception as e:
+            return JsonResponse({'success': False, 'msg': str(e)})
+class EditGiftPromotionView(TemplateView):
+    def get(self, request, pk):
+        try:
+            promo = BuyXGiftYPromotion.objects.get(pk=pk)
+            start_str, _, end_str = promo.promotion_period.partition(' - ')
+            start_str = start_str.strip()
+            end_str   = end_str.strip()
+
+            def fmt(dt_str):
+                try:
+                    dt = datetime.strptime(dt_str, "%d %b %Y")
+                    return dt.strftime("%Y-%m-%dT00:00")
+                except:
+                    return ""
+
+            data = {
+                'product_type': promo.product_type,
+                'supplier'    : list(promo.supplier.values_list('id', flat=True)),
+                'product'     : list(promo.product.values_list('id', flat=True)),
+                'giftproduct' : list(promo.giftproduct.values_list('id', flat=True)),
+                'buy'         : promo.buy,
+                'gift'        : promo.gift,
+                'start_datetime': fmt(start_str),
+                'end_datetime'  : fmt(end_str),
+            }
+            return JsonResponse({'success': True, 'data': data})
+        except BuyXGiftYPromotion.DoesNotExist:
+            return JsonResponse({'success': False, 'msg': 'Promotion not found'})
+
+    def post(self, request, pk):
+        try:
+            promo = BuyXGiftYPromotion.objects.get(pk=pk)
+
+            promo.product_type = request.POST.get('product_type')
+            promo.buy          = request.POST.get('buy')
+            promo.gift         = request.POST.get('gift')
+            promo.supplier.set(request.POST.getlist('supplier'))
+            promo.product.set(request.POST.getlist('product'))
+            promo.giftproduct.set(request.POST.getlist('giftproduct'))
+            start = request.POST.get('start_datetime')
+            end   = request.POST.get('end_datetime')
+            start_dt = datetime.strptime(start, "%Y-%m-%dT%H:%M")
+            end_dt   = datetime.strptime(end,   "%Y-%m-%dT%H:%M")
+            promo.promotion_period = f"{start_dt.strftime('%d %b %Y')} - {end_dt.strftime('%d %b %Y')}"
+
+            promo.save()                 
+            return JsonResponse({'success': True})
+        except Exception as e:
+            return JsonResponse({'success': False, 'msg': str(e)})
+
+def delete_gift_promotion(request, pk):
+    try:
+        BuyXGiftYPromotion.objects.get(pk=pk).delete()
+        return JsonResponse({'success': True})
+    except Exception:
+        return JsonResponse({'success': False})
+class BasketPromotionView(TemplateView):
+    template_name = 'superuser/Basketpromotion.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['page_title'] = 'Basket Promotions'
+        ctx['promotions'] = BasketPromotion.objects.all().order_by('-created_at')
+        ctx['suppliers']  = SupplierProfile.objects.all()
+        ctx['products']   = Product.objects.all()
+        return ctx
+class AddBasketPromotionView(TemplateView):
+    def post(self, request):
+        try:
+            product_type   = request.POST.get('product_type')
+            supplier_ids   = request.POST.getlist('supplier')
+            product_ids    = request.POST.getlist('product')
+            promotion_period = request.POST.get('promotion_period')
+            time_limit     = request.POST.get('time_limit')
+            title_en       = request.POST.get('title_en')
+            description_en = request.POST.get('description_en')
+            main_image     = request.FILES.get('main_image')
+
+            promo = BasketPromotion.objects.create(
+                product_type=product_type,
+                promotion_period=promotion_period,
+                time_limit=time_limit,
+                title_en=title_en,
+                description_en=description_en,
+                main_image=main_image
+            )
+            promo.supplier.set(supplier_ids)
+            promo.product.set(product_ids)
+            promo.save()  
+
+            return JsonResponse({'success': True})
+        except Exception as e:
+            return JsonResponse({'success': False, 'msg': str(e)})
+class EditBasketPromotionView(TemplateView):
+    def get(self, request, pk):
+        try:
+            promo = BasketPromotion.objects.get(pk=pk)
+            start_str, _, end_str = promo.promotion_period.partition(' - ')
+            start_str = start_str.strip()
+            end_str   = end_str.strip()
+
+            def fmt(dt_str):
+                try:
+                    dt = datetime.strptime(dt_str, "%d %b %Y")
+                    return dt.strftime("%Y-%m-%dT00:00")
+                except:
+                    return ""
+
+            data = {
+                'product_type'    : promo.product_type,
+                'supplier'        : list(promo.supplier.values_list('id', flat=True)),
+                'product'         : list(promo.product.values_list('id', flat=True)),
+                'time_limit'      : promo.time_limit or "",
+                'title_en'        : promo.title_en or "",
+                'description_en'  : promo.description_en or "",
+                'main_image_url'  : promo.main_image.url if promo.main_image else "",
+                'start_datetime'  : fmt(start_str),
+                'end_datetime'    : fmt(end_str),
+            }
+            return JsonResponse({'success': True, 'data': data})
+        except BasketPromotion.DoesNotExist:
+            return JsonResponse({'success': False, 'msg': 'Promotion not found'})
+
+    def post(self, request, pk):
+        try:
+            promo = BasketPromotion.objects.get(pk=pk)
+
+            promo.product_type     = request.POST.get('product_type')
+            promo.time_limit       = request.POST.get('time_limit')
+            promo.title_en         = request.POST.get('title_en')
+            promo.description_en   = request.POST.get('description_en')
+            promo.supplier.set(request.POST.getlist('supplier'))
+            promo.product.set(request.POST.getlist('product'))
+            if 'main_image' in request.FILES:
+                promo.main_image = request.FILES['main_image']
+
+            start = request.POST.get('start_datetime')
+            end   = request.POST.get('end_datetime')
+            start_dt = datetime.strptime(start, "%Y-%m-%dT%H:%M")
+            end_dt   = datetime.strptime(end,   "%Y-%m-%dT%H:%M")
+            promo.promotion_period = f"{start_dt.strftime('%d %b %Y')} - {end_dt.strftime('%d %b %Y')}"
+
+            promo.save()
+            return JsonResponse({'success': True})
+        except Exception as e:
+            return JsonResponse({'success': False, 'msg': str(e)})
+def delete_basket_promotion(request, pk):
+    try:
+        promo = BasketPromotion.objects.get(pk=pk)
+        if promo.main_image:
+            promo.main_image.delete(save=False)
+        promo.delete()
+        return JsonResponse({'success': True})
+    except Exception:
+        return JsonResponse({'success': False})
+class CouponView(TemplateView):
+    template_name = "superuser/coupons.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["coupons"] = Coupon.objects.all().select_related("created_by")
+        context["clients"] = User.objects.all() 
+        context["products"] = Product.objects.all()
+        return context
+
+    def post(self, request, *args, **kwargs):
+        try:
+            code = request.POST.get("code")
+            coupon_type = request.POST.get("coupon_type")
+            discount_type = request.POST.get("discount_type")
+            discount = Decimal(request.POST.get("discount", "0"))
+            max_discount = Decimal(request.POST.get("max_discount", "0"))
+            min_purchase = Decimal(request.POST.get("minimum_purchase_amount", "0"))
+            count_of_use = int(request.POST.get("count_of_use", "1"))
+            start_date = request.POST.get("start_date")
+            end_date = request.POST.get("end_date")
+            filter_orders_count = int(request.POST.get("filter_by_orders_count", "0"))
+            filter_orders_amount = Decimal(request.POST.get("filter_by_orders_amount", "0"))
+            can_be_used_with_promotions = request.POST.get("can_be_used_with_promotions") == "true"
+            start_time = request.POST.get("start_time") or timezone.now().time()
+            end_time = request.POST.get("end_time") or timezone.now().time()
+
+            coupon = Coupon.objects.create(
+                code=code,
+                coupon_type=coupon_type,
+                discount_type=discount_type,
+                discount=discount,
+                max_discount=max_discount,
+                minimum_purchase_amount=min_purchase,
+                count_of_use=count_of_use,
+                start_date=start_date,
+                end_date=end_date,
+                start_time=start_time,
+                end_time=end_time,
+                filter_by_orders_count=filter_orders_count,
+                filter_by_orders_amount=filter_orders_amount,
+                can_be_used_with_promotions=can_be_used_with_promotions,
+                created_by=request.user if request.user.is_authenticated else None,
+            )
+            client_ids = request.POST.getlist("client_ids[]", [])
+            product_ids = request.POST.getlist("product_ids[]", [])
+
+            if client_ids:
+                coupon.client.set(User.objects.filter(id__in=client_ids))
+            if product_ids:
+                coupon.products.set(Product.objects.filter(id__in=product_ids))
+
+            return JsonResponse({"status": "success", "message": "Coupon created successfully!"})
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+def edit_coupon(request):
+    if request.method == 'POST':
+        coupon_id = request.POST.get('coupon_id')
+        coupon = get_object_or_404(Coupon, id=coupon_id)
+
+        try:
+            coupon.code = request.POST.get('code')
+            coupon.coupon_type = request.POST.get('coupon_type')
+            coupon.discount_type = request.POST.get('discount_type')
+            coupon.discount = Decimal(request.POST.get('discount', '0'))
+            coupon.minimum_purchase_amount = Decimal(request.POST.get('minimum_purchase_amount', '0'))
+            coupon.max_discount = Decimal(request.POST.get('max_discount', '0'))
+            coupon.count_of_use = int(request.POST.get('count_of_use', '1'))
+            coupon.filter_by_orders_count = int(request.POST.get('filter_by_orders_count', '0'))
+            coupon.filter_by_orders_amount = Decimal(request.POST.get('filter_by_orders_amount', '0'))
+            coupon.start_date = request.POST.get('start_date')
+            coupon.end_date = request.POST.get('end_date')
+            coupon.start_time = request.POST.get('start_time') or coupon.start_time
+            coupon.end_time = request.POST.get('end_time') or coupon.end_time
+            coupon.can_be_used_with_promotions = request.POST.get('can_be_used_with_promotions') == 'true'
+
+            coupon.save()
+
+            product_ids = request.POST.getlist('product_ids[]', [])
+            client_ids = request.POST.getlist('client_ids[]', [])
+
+            if product_ids:
+                coupon.products.set(Product.objects.filter(id__in=product_ids))
+            else:
+                coupon.products.clear()
+
+            if client_ids:
+                coupon.client.set(User.objects.filter(id__in=client_ids))
+            else:
+                coupon.client.clear()
+
+            return JsonResponse({'status': 'success', 'message': 'Coupon updated successfully!'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
+
+def delete_coupon(request):
+    if request.method == 'POST':
+        coupon_id = request.POST.get('coupon_id')
+        try:
+            coupon = get_object_or_404(Coupon, id=coupon_id)
+            coupon.delete()
+            return JsonResponse({'status': 'success', 'message': 'Coupon deleted successfully!'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
+
+def coupon_details(request, coupon_id):
+    if request.method == 'GET':
+        try:
+            coupon = get_object_or_404(Coupon, id=coupon_id)
+            product_ids = list(coupon.products.values_list('id', flat=True))
+            client_ids = list(coupon.client.values_list('id', flat=True))
+            return JsonResponse({
+                'status': 'success',
+                'products': product_ids,
+                'clients': client_ids
+            })
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=400)
+
+
+
+
+class BankView(TemplateView):
+    template_name = "superuser/bank.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["banks"] = Bank.objects.all()
+        return context
+
+
+class AddBankView(View):
+    def post(self, request):
+        name = request.POST.get("name")
+        
+        if Bank.objects.filter(name__iexact=name).exists():
+            return JsonResponse({"success": False, "msg": "Bank name already exists."})
+        
+        Bank.objects.create(name=name)
+        return JsonResponse({"success": True})
+
+
+class GetBankView(View):
+    def get(self, request, pk):
+        bank = get_object_or_404(Bank, pk=pk)
+        return JsonResponse({
+            "success": True,
+            "data": {
+                "id": bank.id,
+                "name": bank.name
+            }
+        })
+class EditBankView(View):
+    def post(self, request, pk):
+        bank = get_object_or_404(Bank, pk=pk)
+        name = request.POST.get("name")
+        
+        if Bank.objects.filter(name__iexact=name).exclude(pk=pk).exists():
+            return JsonResponse({"success": False, "msg": "Bank name already exists."})
+        
+        bank.name = name
+        bank.save()
+        return JsonResponse({"success": True})
+class DeleteBankView(View):
+    def post(self, request, pk):
+        bank = get_object_or_404(Bank, pk=pk)
+        bank.delete()
+        return JsonResponse({"success": True})
+    
+class OriginCountryView(TemplateView):
+    template_name = "superuser/origincountry.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["countries"] = Country.objects.all().order_by("name")
+        return context
+
+def add_origin_country(request):
+    if request.method == "POST":
+        name = request.POST.get("name")
+
+        if Country.objects.filter(name__iexact=name).exists():
+            return JsonResponse({"success": False, "msg": "Country already exists"})
+
+        Country.objects.create(name=name)
+        return JsonResponse({"success": True, "msg": "Country added successfully"})
+def edit_origin_country(request, pk):
+    try:
+        country = Country.objects.get(pk=pk)
+    except Country.DoesNotExist:
+        return JsonResponse({"success": False, "msg": "Country not found"})
+
+    if request.method == "POST":
+        name = request.POST.get("name")
+
+        if Country.objects.filter(name__iexact=name).exclude(id=pk).exists():
+            return JsonResponse({"success": False, "msg": "Country already exists"})
+
+        country.name = name
+        country.save()
+        return JsonResponse({"success": True, "msg": "Updated successfully"})
+
+    return JsonResponse({"success": True, "data": {"name": country.name}})
+def delete_origin_country(request, pk):
+    try:
+        country = Country.objects.get(pk=pk)
+    except Country.DoesNotExist:
+        return JsonResponse({"success": False, "msg": "Country not found"})
+
+    country.delete()
+    return JsonResponse({"success": True, "msg": "Deleted successfully"})
+
+class CountryView(ListView):
+    model = OriginCountry
+    template_name = "superuser/country.html"
+    context_object_name = "countries"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        try:
+            url = "https://open.er-api.com/v6/latest/USD"
+            data = requests.get(url, timeout=5).json()
+            context["currency_list"] = list(data["rates"].keys())
+        except:
+            context["currency_list"] = ["USD", "EUR", "INR"]
+
+        return context
+class CountryAddView(View):
+    def post(self, request):
+        name_en = request.POST.get("name_en")
+        iso = request.POST.get("iso")
+        phone_prefix = request.POST.get("phone_prefix")
+        order = request.POST.get("order")
+        currency = request.POST.get("currency")
+        is_default = request.POST.get("is_default") == "on"
+
+        if OriginCountry.objects.filter(name_en=name_en).exists():
+            return JsonResponse({"success": False, "msg": "Country already exists!"})
+
+        OriginCountry.objects.create(
+            name_en=name_en,
+            iso=iso,
+            phone_prefix=phone_prefix,
+            order=order,
+            currency=currency,
+            is_default=is_default
+        )
+
+        return JsonResponse({"success": True, "msg": "Country added successfully!"})
+class CountryEditView(View):
+    def post(self, request, cid):
+        try:
+            country = OriginCountry.objects.get(id=cid)
+        except OriginCountry.DoesNotExist:
+            return JsonResponse({"success": False, "msg": "Country not found!"})
+
+        country.name_en = request.POST.get("name_en")
+        country.iso = request.POST.get("iso")
+        country.phone_prefix = request.POST.get("phone_prefix")
+        country.order = request.POST.get("order")
+        country.currency = request.POST.get("currency")
+        country.is_default = request.POST.get("is_default") == "on"
+
+        country.save()
+        return JsonResponse({"success": True, "msg": "Country updated!"})
+
+class CountryDeleteView(View):
+    def post(self, request, cid):
+        try:
+            OriginCountry.objects.get(id=cid).delete()
+            return JsonResponse({"success": True, "msg": "Country deleted!"})
+        except OriginCountry.DoesNotExist:
+            return JsonResponse({"success": False, "msg": "Country not found!"})
+
+def get_country_list():
+    try:
+        url = "https://countriesnow.space/api/v0.1/countries"
+        response = requests.get(url, timeout=5).json()
+        country_list = [item["country"] for item in response["data"]]
+        return sorted(country_list)
+    except Exception as e:
+        print("COUNTRY API ERROR:", e)
+        return []  
+
+class RegionView(TemplateView):
+    template_name = "superuser/region.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["regions"] = Region.objects.all()
+        context["countries"] = get_country_list()
+        return context
+class RegionAddView(View):
+    def post(self, request):
+        name = request.POST.get("name")
+        country = request.POST.get("country")
+
+        if Region.objects.filter(name_en=name).exists():
+            return JsonResponse({"success": False, "msg": "Region already exists!"})
+
+        Region.objects.create(name_en=name, country=country)
+
+        return JsonResponse({"success": True, "msg": "Region added"})
+class RegionEditView(View):
+    def post(self, request, pk):
+        region = get_object_or_404(Region, pk=pk)
+
+        name = request.POST.get("name")
+        country = request.POST.get("country")
+        if Region.objects.exclude(id=pk).filter(name_en=name).exists():
+            return JsonResponse({"success": False, "msg": "Region name already exists!"})
+
+        region.name_en = name
+        region.country = country
+        region.save()
+
+        return JsonResponse({"success": True, "msg": "Region updated"})
+class RegionDeleteView(View):
+    def post(self, request, pk):
+        region = get_object_or_404(Region, pk=pk)
+        region.delete()
+        return JsonResponse({"success": True, "msg": "Region deleted"})
+
+class CityListView(ListView):
+    model = City
+    template_name = "superuser/cities.html"
+    context_object_name = "cities"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["regions"] = Regioncities.objects.all()  
+        return ctx
+
+
+class CityCreateView(View):
+    def post(self, request):
+        name = request.POST.get("name")
+        region_id = request.POST.get("region")
+
+        if not name or not region_id:
+            return JsonResponse({"success": False, "msg": "Name and region are required"})
+
+        region = Regioncities.objects.get(id=region_id)
+        City.objects.create(name=name, region=region)
+        return JsonResponse({"success": True})
+
+
+class CityUpdateView(View):
+    def post(self, request, pk):
+        try:
+            city = City.objects.get(id=pk)
+        except City.DoesNotExist:
+            return JsonResponse({"success": False, "msg": "City not found"})
+
+        name = request.POST.get("name")
+        region_id = request.POST.get("region")
+
+        if not name or not region_id:
+            return JsonResponse({"success": False, "msg": "Name and region are required"})
+
+        city.name = name
+        city.region = Regioncities.objects.get(id=region_id)
+        city.save()
+        return JsonResponse({"success": True})
+
+
+class CityDeleteView(View):
+    def post(self, request, pk):
+        try:
+            City.objects.get(id=pk).delete()
+            return JsonResponse({"success": True})
+        except:
+            return JsonResponse({"success": False, "msg": "Delete failed"})
+
+
+class CurrencyView(TemplateView):
+    template_name = "superuser/currency.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['currencies'] = Currency.objects.all()
+        return ctx
+
+@csrf_exempt
+def add_currency(request):
+    if request.method == 'POST':
+        cid = request.POST.get('cid')
+        name = request.POST.get('name')
+        code = request.POST.get('code')
+        rate = request.POST.get('rate')
+        country = request.POST.get('country')
+        status = request.POST.get('status') or 'Active'
+        default = request.POST.get('set_as_default') == 'on'
+
+        if cid:
+            currency = get_object_or_404(Currency, id=cid)
+            currency.name_en = name
+            currency.code_en = code
+            currency.rate = rate
+            currency.country = country
+            currency.status = status
+            currency.set_as_default = default
+            currency.save()
+        else:
+            Currency.objects.create(
+                name_en=name,
+                code_en=code,
+                rate=rate,
+                country=country,
+                status=status,
+                set_as_default=default
+            )
+
+        return JsonResponse({"success": True})
+
+    return JsonResponse({"success": False, "msg": "Invalid request"})
+
+@csrf_exempt
+def delete_currency(request, pk):
+    if request.method == 'POST':
+        currency = get_object_or_404(Currency, id=pk)
+        currency.delete()
+        return JsonResponse({"success": True})
+    return JsonResponse({"success": False, "msg": "Invalid request"})
+class ReturnReasonView(TemplateView):
+    template_name = "superuser/returnresponse.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["reasons"] = ReturnReason.objects.all()
+        return ctx
+@csrf_exempt
+def add_return_reason(request):
+    if request.method == "POST":
+        reason_en = request.POST.get("reason_en", "").strip()
+
+        if reason_en == "":
+            return JsonResponse({"success": False, "msg": "Reason is required."})
+
+        ReturnReason.objects.create(reason_en=reason_en)
+        return JsonResponse({"success": True})
+
+    return JsonResponse({"success": False, "msg": "Invalid request."})
+@csrf_exempt
+def edit_return_reason(request, pk):
+    reason = get_object_or_404(ReturnReason, pk=pk)
+
+    if request.method == "POST":
+        reason_en = request.POST.get("reason_en", "").strip()
+
+        if reason_en == "":
+            return JsonResponse({"success": False, "msg": "Reason is required."})
+
+        reason.reason_en = reason_en
+        reason.save()
+        return JsonResponse({"success": True})
+
+    return JsonResponse({"success": False, "msg": "Invalid request."})
+
+@csrf_exempt
+def delete_return_reason(request, pk):
+    reason = get_object_or_404(ReturnReason, pk=pk)
+
+    if request.method == "POST":
+        reason.delete()
+        return JsonResponse({"success": True})
+
+    return JsonResponse({"success": False, "msg": "Invalid request."})
+class DepartmentView(TemplateView):
+    template_name = "superuser/department.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["departments"] = Department.objects.all()
+        return ctx
+@csrf_exempt
+def add_department(request):
+    if request.method == "POST":
+        name = request.POST.get("name")
+
+        if not name or name.strip() == "":
+            return JsonResponse({"success": False, "msg": "Department Name is required."})
+
+        if Department.objects.filter(name_en=name).exists():
+            return JsonResponse({"success": False, "msg": "Department already exists."})
+
+        Department.objects.create(name_en=name)
+        return JsonResponse({"success": True})
+
+    return JsonResponse({"success": False, "msg": "Invalid request!"})
+@csrf_exempt
+def edit_department(request, pk):
+    if request.method == "POST":
+        name = request.POST.get("name")
+
+        if not name or name.strip() == "":
+            return JsonResponse({"success": False, "msg": "Department Name is required."})
+        if Department.objects.filter(name_en=name).exclude(id=pk).exists():
+            return JsonResponse({"success": False, "msg": "Department already exists."})
+
+        try:
+            dep = Department.objects.get(id=pk)
+            dep.name_en = name
+            dep.save()
+            return JsonResponse({"success": True})
+        except Department.DoesNotExist:
+            return JsonResponse({"success": False, "msg": "Department not found!"})
+
+    return JsonResponse({"success": False, "msg": "Invalid request!"})
+@csrf_exempt
+def delete_department(request, pk):
+    if request.method == "POST":
+        try:
+            dep = Department.objects.get(id=pk)
+            dep.delete()
+            return JsonResponse({"success": True})
+        except Department.DoesNotExist:
+            return JsonResponse({"success": False, "msg": "Department not found!"})
+
+    return JsonResponse({"success": False, "msg": "Invalid request!"})
+class AddressTypeView(TemplateView):
+    template_name = "superuser/addresstype.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["address_types"] = AddressType.objects.all()
+        return ctx
+@csrf_exempt
+def add_address_type(request):
+    if request.method == "POST":
+        name = request.POST.get("name_en", "").strip()
+        client_type = request.POST.get("client_type")
+
+        if not name:
+            return JsonResponse({"success": False, "msg": "Name is required."})
+
+        if AddressType.objects.filter(name_en__iexact=name).exists():
+            return JsonResponse({"success": False, "msg": "This Address Type already exists."})
+
+        AddressType.objects.create(name_en=name, client_type=client_type)
+        return JsonResponse({"success": True})
+
+    return JsonResponse({"success": False, "msg": "Invalid request"})
+@csrf_exempt
+def edit_address_type(request, pk):
+    if request.method == "POST":
+        try:
+            obj = AddressType.objects.get(id=pk)
+        except AddressType.DoesNotExist:
+            return JsonResponse({"success": False, "msg": "Address Type not found."})
+
+        name = request.POST.get("name_en", "").strip()
+        client_type = request.POST.get("client_type")
+        if not name:
+            return JsonResponse({"success": False, "msg": "Name is required."})
+
+        if AddressType.objects.filter(name_en__iexact=name).exclude(id=pk).exists():
+            return JsonResponse({"success": False, "msg": "This name already exists."})
+
+        obj.name_en = name
+        obj.client_type = client_type 
+        obj.save()
+        return JsonResponse({"success": True})
+
+    return JsonResponse({"success": False, "msg": "Invalid request"})
+@csrf_exempt
+def delete_address_type(request, pk):
+    if request.method == "POST":
+        try:
+            obj = AddressType.objects.get(id=pk)
+            obj.delete()
+            return JsonResponse({"success": True})
+        except AddressType.DoesNotExist:
+            return JsonResponse({"success": False, "msg": "Address Type not found."})
+
+    return JsonResponse({"success": False, "msg": "Invalid request"})
+class SupplierTypeView(TemplateView):
+    template_name = "superuser/suppliertype.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["supplier_types"] = SupplierType.objects.all()
+        return ctx
+@csrf_exempt
+def add_supplier_type(request):
+    if request.method == "POST":
+        name = request.POST.get("name_en", "").strip()
+        status = request.POST.get("status")
+        if not name:
+            return JsonResponse({"success": False, "msg": "Name is required."})
+
+        if SupplierType.objects.filter(name_en__iexact=name).exists():
+            return JsonResponse({"success": False, "msg": "This Supplier Type already exists."})
+
+        SupplierType.objects.create(name_en=name, status=status)
+        return JsonResponse({"success": True})
+
+    return JsonResponse({"success": False, "msg": "Invalid request"})
+@csrf_exempt
+def edit_supplier_type(request, pk):
+    if request.method == "POST":
+        try:
+            obj = SupplierType.objects.get(id=pk)
+        except SupplierType.DoesNotExist:
+            return JsonResponse({"success": False, "msg": "Supplier Type not found."})
+
+        name = request.POST.get("name_en", "").strip()
+        status = request.POST.get("status")
+
+        if not name:
+            return JsonResponse({"success": False, "msg": "Name is required."})
+
+        if SupplierType.objects.filter(name_en__iexact=name).exclude(id=pk).exists():
+            return JsonResponse({"success": False, "msg": "This name already exists."})
+
+        obj.name_en = name
+        obj.status = status
+        obj.save()
+        return JsonResponse({"success": True})
+
+    return JsonResponse({"success": False, "msg": "Invalid request"})
+
+@csrf_exempt
+def delete_supplier_type(request, pk):
+    if request.method == "POST":
+        try:
+            obj = SupplierType.objects.get(id=pk)
+            obj.delete()
+            return JsonResponse({"success": True})
+        except SupplierType.DoesNotExist:
+            return JsonResponse({"success": False, "msg": "Supplier Type not found."})
+
+    return JsonResponse({"success": False, "msg": "Invalid request"})

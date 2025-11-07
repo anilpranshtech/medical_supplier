@@ -1,0 +1,225 @@
+{% extends 'superuser/superuser_base.html' %}
+{% load static %}
+{% load superuser_tags %}
+
+{% block title %}Supplier Type{% endblock %}
+
+{% block content %}
+{% tag_user_permissions_list request.user as user_permissions_list %}
+
+<div id="successMessage" class="alert alert-success d-none" style="font-size:16px;">
+    <strong id="successText"></strong>
+  </div>
+  
+<div class="app-main flex-column flex-row-fluid" id="kt_app_main">
+  <div class="d-flex flex-column flex-column-fluid">
+    <div id="kt_app_content" class="app-content flex-column-fluid mx-5">
+      <div id="kt_app_content_container" class="app-container container-fluid">
+
+        <div class="card card-flush">
+          <div class="card-header flex-wrap align-items-center py-5 gap-4">
+            <div class="card-title">Address Types</div>
+            <div class="card-toolbar">
+              <button class="btn btn-primary" id="addBtn">
+                <i class="fas fa-plus me-2"></i>Add Address Type
+              </button>
+            </div>
+          </div>
+
+          <div class="card-body table-responsive">
+            <table class="table table-row-dashed align-middle fs-6 gy-5">
+              <thead>
+                <tr class="text-gray-500 fw-bold fs-7 text-uppercase">
+                  <th>Name</th>
+                  <th>Client Type</th>
+                  <th class="text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="fw-semibold text-gray-600">
+                
+                {% for s in address_types %}
+                <tr>
+                  <td>{{ s.name_en }}</td>
+                  <td>{{ s.client_type|title }}</td>
+                  <td class="text-center">
+                    <button class="btn btn-sm btn-light-primary editBtn"
+                      data-id="{{ s.id }}"
+                      data-name="{{ s.name_en }}"
+                      data-client_type="{{ s.client_type }}">
+                      Edit
+                    </button>
+
+                    <button class="btn btn-sm btn-light-danger deleteBtn" data-id="{{ s.id }}">
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="3" class="text-center text-muted">No Address Types added yet.</td>
+                </tr>
+                {% endfor %}
+
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="supplierModal">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-3">
+      <div class="modal-header text-white">
+        <h5 class="modal-title" id="modalTitle"></h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <form id="supplierForm">
+          {% csrf_token %}
+          <input type="hidden" id="sid" name="sid">
+
+          <label class="form-label fw-semibold">Name En  <span style="color: red;">*</span></label>
+          <input type="text" name="name_en" id="nameField" class="form-control" required>
+          <div class="text-danger mt-1" id="nameError" style="display:none;"></div>
+
+          <label class="form-label fw-semibold mt-3">Client Type  <span style="color: red;">*</span></label>
+          <select name="client_type" id="statusField" class="form-select">
+            <option value="b2b">B2b</option>
+            <option value="b2c">B2c</option>
+          </select>
+
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" id="saveBtn">Save</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block page_only_scripts %}
+<script>
+    function showSuccess(msg){
+  const box = document.getElementById("successMessage");
+  const text = document.getElementById("successText");
+
+  text.textContent = msg;
+  box.classList.remove("d-none");
+
+  setTimeout(() => {
+    box.classList.add("d-none");
+  }, 3000);
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+
+  const modal = new bootstrap.Modal(document.getElementById('supplierModal'));
+  const title = document.getElementById('modalTitle');
+  const idField = document.getElementById('sid');
+  const nameFld = document.getElementById('nameField');
+  const statusFld = document.getElementById('statusField');
+  const nameError = document.getElementById('nameError');
+
+  function resetForm() {
+    idField.value = "";
+    nameFld.value = "";
+    statusFld.value = "active";
+    nameFld.classList.remove("is-invalid");
+    nameError.style.display = "none";
+  }
+
+  // Add
+  document.getElementById('addBtn').addEventListener('click', function () {
+    title.textContent = "Add Address Type";
+    resetForm();
+    modal.show();
+  });
+
+  // Edit
+  document.querySelectorAll('.editBtn').forEach(btn => {
+    btn.addEventListener('click', function () {
+  title.textContent = "Edit Address Type";
+  idField.value = this.dataset.id;
+  nameFld.value = this.dataset.name;
+  statusFld.value = this.dataset.client_type; 
+  modal.show();
+});
+
+  });
+
+  // Validation
+  function validForm() {
+    if (!nameFld.value.trim()) {
+      nameFld.classList.add("is-invalid");
+      nameError.innerText = "Name is required";
+      nameError.style.display = "block";
+      return false;
+    }
+    nameFld.classList.remove("is-invalid");
+    nameError.style.display = "none";
+    return true;
+  }
+
+  // Save Add/Edit
+  document.getElementById('saveBtn').addEventListener('click', function () {
+    if (!validForm()) return;
+
+    let id = idField.value;
+let url = id ? `/superuser/addresstype/edit/${id}/` : `/superuser/addresstype/add/`;
+
+fetch(url, {
+      method: "POST",
+      headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value },
+      body: new FormData(document.getElementById('supplierForm'))
+    })
+      .then(r => r.json())
+      .then(res => {
+        if (res.success) {
+    modal.hide();
+    showSuccess("Department saved successfully!");
+    setTimeout(() => location.reload(), 800);
+}
+else {
+          nameFld.classList.add("is-invalid");
+          nameError.innerText = res.msg;
+          nameError.style.display = "block";
+        }
+      });
+  });
+
+  // Delete
+  document.querySelectorAll('.deleteBtn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      if (!confirm("Delete this Supplier Type?")) return;
+
+      fetch(`/superuser/addresstype/delete/${this.dataset.id}/`, {
+        method: "POST",
+        headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value }
+      })
+        .then(r => r.json())
+        .then(res => {
+            if (res.success) {
+    showSuccess("Department deleted successfully!");
+    setTimeout(() => location.reload(), 800);
+}
+
+          else alert(res.msg);
+        });
+    });
+  });
+
+});
+</script>
+{% endblock %}

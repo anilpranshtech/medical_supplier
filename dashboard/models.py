@@ -10,6 +10,13 @@ from django.conf import settings
 
 
 # -------------------- Country, State, City --------------------
+
+class Regioncities(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.name
+
 class Country(models.Model):
     name = models.CharField(max_length=100, unique=True)
 
@@ -29,10 +36,12 @@ class State(models.Model):
 
 
 class City(models.Model):
-    state = models.ForeignKey(State, on_delete=models.CASCADE, related_name="cities")
+    state = models.ForeignKey(State, on_delete=models.CASCADE, null=True,blank=True, related_name="cities")
+    region = models.ForeignKey(Regioncities, on_delete=models.SET_NULL, null=True, blank=True, related_name="cities")
+  
     name = models.CharField(max_length=100)
 
-    class Meta:
+    class Meta: 
         unique_together = ("state", "name")
 
     def __str__(self):
@@ -1445,6 +1454,124 @@ class Coupon(models.Model):
         verbose_name = "Coupon"
         verbose_name_plural = "Coupons"
 
+PRODUCT_TYPE_CHOICES = [
+    ('b2b', 'B2B'),
+    ('b2c', 'B2C'),
+]
+
+class BuyXGetYPromotion(models.Model):
+    product_type = models.CharField(max_length=10,choices=PRODUCT_TYPE_CHOICES)
+    supplier = models.ManyToManyField('SupplierProfile', related_name='buyxgety_promotions')
+    product = models.ManyToManyField('Product', related_name='buyxgety_products')
+    
+    buy = models.IntegerField()
+    get = models.IntegerField()
+
+    promotion_period = models.CharField( max_length=100, help_text="Promotion period (e.g., 01 Nov 2025 - 30 Nov 2025)")
+    created_at = models.DateTimeField(auto_now_add=True) 
+    status = models.CharField(
+        max_length=10,
+        choices=[('Active', 'Active'), ('Inactive', 'Inactive')],
+        default='Inactive'
+    )
+    
+
+    def __str__(self):
+        suppliers = ", ".join(s.user.username for s in self.supplier.all())
+        products = ", ".join(p.name for p in self.product.all())
+        return f"{self.product_type.upper()} | Suppliers: {suppliers} | Products: {products} | Buy {self.buy} Get {self.get}"
+    def save(self, *args, **kwargs):
+        try:
+         
+            period = self.promotion_period.split(" - ")
+            if len(period) == 2:
+                start_date = timezone.datetime.strptime(period[0], "%d %b %Y").date()
+                end_date = timezone.datetime.strptime(period[1], "%d %b %Y").date()
+                now = timezone.now().date()
+
+                if start_date <= now <= end_date:
+                    self.status = 'Active'
+                else:
+                    self.status = 'Inactive'
+        except Exception as e:
+
+            self.status = 'Inactive'
+
+        super().save(*args, **kwargs)
+class BuyXGiftYPromotion(models.Model):
+    product_type = models.CharField(max_length=10, choices=PRODUCT_TYPE_CHOICES)
+    supplier = models.ManyToManyField('SupplierProfile', related_name='buyxgift_promotions')
+    product = models.ManyToManyField('Product', related_name='buyxgift_products')
+    giftproduct = models.ManyToManyField('Product', related_name='buyxgift_giftproducts')
+
+    buy = models.IntegerField()
+    gift = models.IntegerField()
+
+    promotion_period = models.CharField(
+        max_length=100,
+        help_text="Promotion period (e.g., 01 Nov 2025 - 30 Nov 2025)"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(
+        max_length=10,
+        choices=[('Active', 'Active'), ('Inactive', 'Inactive')],
+        default='Inactive'
+    )
+
+    def __str__(self):
+        suppliers = ", ".join(s.user.username for s in self.supplier.all())
+        products = ", ".join(p.name for p in self.product.all())
+        return f"{self.product_type.upper()} | Suppliers: {suppliers} | Products: {products} | Buy {self.buy} Gift {self.gift}"
+
+    def save(self, *args, **kwargs):
+        try:
+            period = self.promotion_period.split(" - ")
+            if len(period) == 2:
+                start_date = timezone.datetime.strptime(period[0], "%d %b %Y").date()
+                end_date = timezone.datetime.strptime(period[1], "%d %b %Y").date()
+                now = timezone.now().date()
+
+                if start_date <= now <= end_date:
+                    self.status = 'Active'
+                else:
+                    self.status = 'Inactive'
+        except Exception:
+            self.status = 'Inactive'
+
+        super().save(*args, **kwargs)
+
+class BasketPromotion(models.Model):
+    product_type = models.CharField(max_length=10, choices=PRODUCT_TYPE_CHOICES)
+    supplier = models.ManyToManyField('SupplierProfile', related_name='basket_promotions')
+    product = models.ManyToManyField('Product', related_name='basket_products')
+    promotion_period = models.CharField(max_length=100, help_text="Promotion period (e.g., 01 Nov 2025 - 30 Nov 2025)")
+    created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(
+        max_length=10,
+        choices=[('Active', 'Active'), ('Inactive', 'Inactive')],
+        default='Inactive'
+    )
+
+    time_limit = models.CharField(max_length=50, blank=True, null=True)
+    title_en = models.CharField(max_length=255, blank=True, null=True)
+    description_en = models.TextField(blank=True, null=True)
+    main_image = models.ImageField(upload_to='promotions/main_images/', blank=True, null=True)
+
+    def __str__(self):
+        return self.title_en or "Untitled Basket Promotion"
+
+    def save(self, *args, **kwargs):
+        try:
+            period = self.promotion_period.split(" - ")
+            if len(period) == 2:
+                start = timezone.datetime.strptime(period[0].strip(), "%d %b %Y").date()
+                end = timezone.datetime.strptime(period[1].strip(), "%d %b %Y").date()
+                today = timezone.now().date()
+                self.status = 'Active' if start <= today <= end else 'Inactive'
+        except:
+            self.status = 'Inactive'
+        super().save(*args, **kwargs)
+
 class SupplierCommission(models.Model):
     supplier = models.ForeignKey(
         User,
@@ -1518,3 +1645,75 @@ class TopSupplier(models.Model):
     def __str__(self):
         return f"{self.supplier.company_name} - {self.order}"
 
+class Bank(models.Model):
+    name = models.CharField(max_length=150, unique=True)
+
+    def __str__(self):
+        return self.name
+class OriginCountry(models.Model):
+    name_en = models.CharField(max_length=100, unique=True)
+    iso = models.CharField(max_length=10, unique=True)      
+    phone_prefix = models.CharField(max_length=10)         
+    order = models.PositiveIntegerField(default=0)          
+    currency = models.CharField(max_length=20, blank=True, null=True)  
+    is_default = models.BooleanField(default=False)      
+
+    class Meta:
+        ordering = ['order', 'name_en']
+
+    def __str__(self):
+        return self.name_en
+class Region(models.Model):
+    name_en = models.CharField(max_length=150)
+    country = models.CharField(max_length=150)  
+
+    def __str__(self):
+        return f"{self.name_en} ({self.country})"
+
+class Currency(models.Model):
+    name_en = models.CharField(max_length=100)
+    code_en = models.CharField(max_length=10)
+    rate = models.DecimalField(max_digits=10, decimal_places=4)
+    country = models.CharField(max_length=100)  
+
+    status = models.CharField(
+        max_length=10,
+        choices=[('Active', 'Active'), ('Inactive', 'Inactive')],
+        default='Active'
+    )
+
+    set_as_default = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.name_en
+class ReturnReason(models.Model):
+    reason_en = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.reason_en
+class Department(models.Model):
+    name_en = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name_en
+class SupplierType(models.Model):
+    STATUS_CHOICES = (
+        ('active', 'Active'),
+        ('inactive', 'Inactive'),
+    )
+
+    name_en = models.CharField(max_length=255)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='active')
+
+    def __str__(self):
+        return self.name_en
+class AddressType(models.Model):
+    CLIENT_TYPE = (
+        ('b2b','B2b'),
+        ('b2c','B2c'),
+    )
+    name_en = models.CharField(max_length=255)
+    client_type = models.CharField(max_length=10,choices=CLIENT_TYPE,default='b2b')
+
+    def __str__(self):
+        return self.name_en
