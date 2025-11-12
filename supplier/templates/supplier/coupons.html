@@ -12,79 +12,83 @@
                         <i class="bi bi-plus-circle"></i> Create Coupon
                     </button>
                 </div>
-
-                <!-- Coupons Table -->
                 <div class="card card-flush mb-3">
-                    <div class="card-body table-responsive p-0">
-                        <table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_coupons_table">
-                            <thead>
-                                <tr class="text-center text-gray-500 fw-bold fs-7 text-uppercase gs-0">
-                                    <th>#</th><th>Code</th><th>Count of User</th><th>Discount</th>
-                                    <th>Discount Type</th><th>Min Purchase</th><th>Max Disc</th>
-                                    <th>Created By</th><th>Start Date</th><th>End Date</th>
-                                    <th>Updated At</th><th>Status</th><th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody class="fw-semibold text-gray-600">
-                                {% for coupon in coupons %}
-                                <tr>
-                                    <td>{{ forloop.counter }}</td>
-                                    <td>{{ coupon.code }}</td>
-                                    <td>{{ coupon.count_of_use }}</td>
-                                    <td>{{ coupon.discount }}{% if coupon.discount_type == 'percent' %}%{% else %}${% endif %}</td>
-                                    <td>{{ coupon.get_discount_type_display }}</td>
-                                    <td>${{ coupon.minimum_purchase_amount|floatformat:2 }}</td>
-                                    <td>${{ coupon.max_discount|floatformat:2 }}</td>
-                                    <td>{{ coupon.created_by }}</td>
-                                    <td>{{ coupon.start_date }} {{ coupon.start_time }}</td>
-                                    <td>{{ coupon.end_date }} {{ coupon.end_time }}</td>
-                                    <td>{{ coupon.updated_at|date:"Y-m-d H:i" }}</td>
-                                    <td>
-                                        {% if coupon.is_valid_now %}
-                                            <span class="badge bg-success">Active</span>
-                                        {% else %}
-                                            <span class="badge bg-danger">Inactive</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <button 
-                                            class="btn btn-sm btn-light-primary editCouponBtn"
-                                            data-id="{{ coupon.id }}"
-                                            data-code="{{ coupon.code }}"
-                                            data-type="{{ coupon.coupon_type }}"
-                                            data-discount-type="{{ coupon.discount_type }}"
-                                            data-discount="{{ coupon.discount }}"
-                                            data-min="{{ coupon.minimum_purchase_amount }}"
-                                            data-max="{{ coupon.max_discount }}"
-                                            data-count="{{ coupon.count_of_use }}"
-                                            data-orders-count="{{ coupon.filter_by_orders_count }}"
-                                            data-orders-amount="{{ coupon.filter_by_orders_amount }}"
-                                            data-start-date="{{ coupon.start_date|date:'Y-m-d' }}"
-                                            data-end-date="{{ coupon.end_date|date:'Y-m-d' }}"
-                                            data-start-time="{{ coupon.start_time|time:'H:i' }}"
-                                            data-end-time="{{ coupon.end_time|time:'H:i' }}"
-                                            data-promotion="{{ coupon.can_be_used_with_promotions|yesno:'True,False' }}"
-                                        >
-                                            <i class="bi bi-pencil-square"></i>
-                                        </button>
-                                        <button 
-                                            class="btn btn-sm btn-light-danger deleteCouponBtn"
-                                            data-id="{{ coupon.id }}"
-                                            data-code="{{ coupon.code }}"
-                                        >
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr><td colspan="13" class="text-center text-muted">No coupons available.</td></tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                    <div class="card-body table-responsive">
+                      <table class="table table-row-dashed align-middle fs-6 gy-5" id="kt_coupons_table">
+                        <thead>
+                          <tr class="text-gray-500 fw-bold fs-7 text-uppercase text-center">
+                            <th>#</th>
+                            <th>Code</th>
+                            <th>Count of User</th>
+                            <th>Discount</th>   
+                            <th>Discount Type</th>
+                            <th>Min Purchase</th>
+                            <th>Max Disc</th>
+                            <th>Created By</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Updated At</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                          </tr>
+                        </thead>
+                        <tbody class="fw-semibold text-gray-600 text-center">
+                          {% for coupon in coupons %}
+                          <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ coupon.code }}</td>
+                            <td>{{ coupon.count_of_use }}</td>
+                            <td>{{ coupon.discount }}{% if coupon.discount_type == 'percent' %}%{% else %}${% endif %}</td>
+                            <td>{{ coupon.get_discount_type_display }}</td>
+                            <td>${{ coupon.minimum_purchase_amount|floatformat:2 }}</td>
+                            <td>${{ coupon.max_discount|floatformat:2 }}</td>
+                            <td>{{ coupon.created_by }}</td>
+                            <td>{{ coupon.start_date }} {{ coupon.start_time }}</td>
+                            <td>{{ coupon.end_date }} {{ coupon.end_time }}</td>
+                            <td>{{ coupon.updated_at|date:"Y-m-d H:i" }}</td>
+                            <td>
+                              {% if coupon.is_valid_now %}
+                                <span class="badge bg-success">Active</span>
+                              {% else %}
+                                <span class="badge bg-danger">Inactive</span>
+                              {% endif %}
+                            </td>
+                            <td>
+                              <button class="btn btn-sm btn-light-primary editCouponBtn"
+                                      data-id="{{ coupon.id }}"
+                                      data-code="{{ coupon.code }}"
+                                      data-type="{{ coupon.coupon_type }}"
+                                      data-discount-type="{{ coupon.discount_type }}"
+                                      data-discount="{{ coupon.discount }}"
+                                      data-min="{{ coupon.minimum_purchase_amount }}"
+                                      data-max="{{ coupon.max_discount }}"
+                                      data-count="{{ coupon.count_of_use }}"
+                                      data-orders-count="{{ coupon.filter_by_orders_count }}"
+                                      data-orders-amount="{{ coupon.filter_by_orders_amount }}"
+                                      data-start-date="{{ coupon.start_date|date:'Y-m-d' }}"
+                                      data-end-date="{{ coupon.end_date|date:'Y-m-d' }}"
+                                      data-start-time="{{ coupon.start_time|time:'H:i' }}"
+                                      data-end-time="{{ coupon.end_time|time:'H:i' }}"
+                                      data-promotion="{{ coupon.can_be_used_with_promotions|yesno:'True,False' }}">
+                                <i class="bi bi-pencil-square"></i>
+                              </button>
+                              <button class="btn btn-sm btn-light-danger deleteCouponBtn"
+                                      data-id="{{ coupon.id }}"
+                                      data-code="{{ coupon.code }}">
+                                <i class="bi bi-trash"></i>
+                              </button>
+                            </td>
+                          </tr>
+                          {% empty %}
+                          <tr>
+                            <td colspan="13" class="text-center text-muted">No coupons available.</td>
+                          </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
                     </div>
-                </div>
-
-                <!-- Create Coupon Modal -->
+                  </div>
+                  
                 <div class="modal fade" id="createCouponModal" tabindex="-1" aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered modal-lg">
                         <div class="modal-content">
@@ -188,7 +192,6 @@
                     </div>
                 </div>
 
-                <!-- Edit Coupon Modal -->
                 <div class="modal fade" id="editCouponModal" tabindex="-1" aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered modal-lg">
                         <div class="modal-content">
@@ -285,14 +288,12 @@
                                 <div id="editCouponMessage"></div>
                             </div>
                             <div class="modal-footer">
-                                <button type="button" id="updateCoupon" class="btn btn-primary btn-with-loader">Update</button>
+                                <button type="button" id="updateCoupon" class="btn btn-primary ">Update</button>
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                             </div>
                         </div>
                     </div>
                 </div>
-
-                <!-- Delete Coupon Modal -->
                 <div class="modal fade" id="deleteCouponModal" tabindex="-1" aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content">
@@ -319,187 +320,212 @@
 {% endblock %}
 
 {% block page_only_scripts %}
-<script src="{% static 'js/buttonLoader.js' %}"></script>
-<!-- Select2 -->
+
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script>
-document.addEventListener("DOMContentLoaded", function(){
-    // Initialize Select2
-    $('.select2').select2({width: '100%', placeholder: "Search and select", allowClear: true});
-    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    const msg = document.getElementById('couponMessage');
-
-    function alertMsg(t, type='success') {
-        msg.innerHTML = `<div class="alert alert-${type}">${t}</div>`;
-    }
-
-    // Create Coupon
-    document.getElementById('saveCoupon').addEventListener('click', function(){
-        const form = document.getElementById('couponForm');
-        const data = new FormData(form);
-
-        fetch("{% url 'supplier:coupons' %}", {
-            method: 'POST',
-            headers: {'X-CSRFToken': csrftoken},
-            body: data
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.status === 'success') {
-                alertMsg(data.message);
-                setTimeout(() => location.reload(), 1000);
-            } else {
-                alertMsg('Error: ' + data.message, 'danger');
-            }
-        })
-        .catch(error => {
-            console.error('Create error:', error.message);
-            alertMsg('Error submitting form: ' + error.message, 'danger');
-        });
-    });
-
-    // Edit Coupon
-    document.querySelectorAll('.editCouponBtn').forEach(btn => {
-        btn.addEventListener('click', function(){
-            const couponId = this.dataset.id;
-            const modal = new bootstrap.Modal(document.getElementById('editCouponModal'));
-
-            // Populate basic fields
-            document.getElementById('edit_coupon_id').value = couponId;
-            document.getElementById('edit_code').value = this.dataset.code;
-            document.getElementById('edit_coupon_type').value = this.dataset.type;
-            document.getElementById('edit_discount_type').value = this.dataset.discountType;
-            document.getElementById('edit_discount').value = this.dataset.discount;
-            document.getElementById('edit_minimum_purchase').value = this.dataset.min;
-            document.getElementById('edit_max_discount').value = this.dataset.max;
-            document.getElementById('edit_count_of_use').value = this.dataset.count;
-            document.getElementById('edit_filter_orders_count').value = this.dataset.ordersCount;
-            document.getElementById('edit_filter_orders_amount').value = this.dataset.ordersAmount;
-            document.getElementById('edit_start_date').value = this.dataset.startDate;
-            document.getElementById('edit_end_date').value = this.dataset.endDate;
-            document.getElementById('edit_start_time').value = this.dataset.startTime;
-            document.getElementById('edit_end_time').value = this.dataset.endTime;
-            document.getElementById('edit_can_be_used_with_promotions').checked = (this.dataset.promotion === 'True');
-
-            // Clear previous selections and messages
-            $('#edit_productSelect').val(null).trigger('change');
-            $('#edit_clientSelect').val(null).trigger('change');
-            document.getElementById('editCouponMessage').innerHTML = '';
-
-            // Fetch coupon's products and clients
-            fetch("{% url 'supplier:coupon_details' coupon_id=0 %}".replace('0', couponId), {
-                method: 'GET',
-                headers: {
-                    'X-CSRFToken': csrftoken,
-                    'Accept': 'application/json'
+    document.addEventListener("DOMContentLoaded", function(){
+        $('.select2').select2({width: '100%', placeholder: "Search and select", allowClear: false});
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        function alertMsg(message, type='success', targetMsg=null) {
+            const target = targetMsg || document.getElementById('couponMessage');
+            target.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+        }
+        function clearErrors(form) {
+            form.querySelectorAll('.invalid-feedback').forEach(e => e.remove());
+            form.querySelectorAll('.is-invalid').forEach(e => e.classList.remove('is-invalid'));
+        }
+        function showError(input, message) {
+            input.classList.add('is-invalid');
+            const div = document.createElement('div');
+            div.className = 'invalid-feedback';
+            div.innerText = message;
+            input.parentNode.appendChild(div);
+        }
+        function validateCouponForm(form) {
+            clearErrors(form);
+            let errorFound = false;
+    
+            const fields = [
+                'code','coupon_type','discount_type','discount',
+                'minimum_purchase_amount','max_discount','count_of_use',
+                'filter_by_orders_count','filter_by_orders_amount',
+                'start_date','end_date','start_time','end_time'
+            ];
+    
+            for (let name of fields) {
+                const el = form.querySelector(`[name="${name}"]`);
+                if (!el.value.trim()) {
+                    showError(el, `${el.previousElementSibling.innerText} is required.`);
+                    errorFound = true;
                 }
+            }
+    
+            // Numeric validations
+            const discount = parseFloat(form.querySelector('[name="discount"]').value || 0);
+            const minPurchase = parseFloat(form.querySelector('[name="minimum_purchase_amount"]').value || 0);
+            const maxDiscount = parseFloat(form.querySelector('[name="max_discount"]').value || 0);
+            const countOfUse = parseInt(form.querySelector('[name="count_of_use"]').value || 0);
+            const ordersCount = parseInt(form.querySelector('[name="filter_by_orders_count"]').value || 0);
+            const ordersAmount = parseFloat(form.querySelector('[name="filter_by_orders_amount"]').value || 0);
+    
+            if (discount <= 0) { showError(form.querySelector('[name="discount"]'), "Discount must be greater than 0."); errorFound = true; }
+            if (minPurchase < 0) { showError(form.querySelector('[name="minimum_purchase_amount"]'), "Min Purchase cannot be negative."); errorFound = true; }
+            if (maxDiscount < 0) { showError(form.querySelector('[name="max_discount"]'), "Max Discount cannot be negative."); errorFound = true; }
+            if (countOfUse <= 0) { showError(form.querySelector('[name="count_of_use"]'), "Count of Use must be greater than 0."); errorFound = true; }
+            if (ordersCount <= 0) { showError(form.querySelector('[name="filter_by_orders_count"]'), "Filter Orders Count must be greater than 0."); errorFound = true; }
+            if (ordersAmount <= 0) { showError(form.querySelector('[name="filter_by_orders_amount"]'), "Filter Orders Amount must be greater than 0."); errorFound = true; }
+    
+            // Date and Time validation
+            const startDate = form.querySelector('[name="start_date"]').value;
+            const endDate = form.querySelector('[name="end_date"]').value;
+            const startTime = form.querySelector('[name="start_time"]').value;
+            const endTime = form.querySelector('[name="end_time"]').value;
+    
+            if (startDate && endDate && startDate > endDate) { 
+                showError(form.querySelector('[name="end_date"]'), "End Date must be after Start Date."); 
+                errorFound = true; 
+            }
+            if (startDate && endDate && startDate === endDate && startTime && endTime && startTime >= endTime) { 
+                showError(form.querySelector('[name="end_time"]'), "End Time must be after Start Time."); 
+                errorFound = true; 
+            }
+    
+            // Select2 validation
+            const productSelect = form.querySelector('[name="product_ids[]"]');
+            const clientSelect = form.querySelector('[name="client_ids[]"]');
+            const products = productSelect.selectedOptions;
+            const clients = clientSelect.selectedOptions;
+    
+            if (!products.length) { showError($(productSelect).next()[0], "Select at least one product."); errorFound = true; }
+            if (!clients.length) { showError($(clientSelect).next()[0], "Select at least one client."); errorFound = true; }
+    
+            return !errorFound;
+        }
+    
+        // Generic form submit handler
+        function handleSubmit(formId, url, targetMsgId=null) {
+            const form = document.getElementById(formId);
+            const targetMsg = targetMsgId ? document.getElementById(targetMsgId) : null;
+            if (!validateCouponForm(form)) return;
+    
+            const data = new FormData(form);
+            fetch(url, {
+                method: 'POST',
+                headers: {'X-CSRFToken': csrftoken},
+                body: data
             })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
-                return response.json();
-            })
+            .then(response => response.json())
             .then(data => {
                 if (data.status === 'success') {
-                    $('#edit_productSelect').val(data.products).trigger('change');
-                    $('#edit_clientSelect').val(data.clients).trigger('change');
+                    if (targetMsg) targetMsg.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                    setTimeout(() => location.reload(), 1000);
                 } else {
-                    console.error('Server error:', data.message);
-                    document.getElementById('editCouponMessage').innerHTML = `<div class="alert alert-danger">Error: ${data.message}</div>`;
+                    if (targetMsg) targetMsg.innerHTML = `<div class="alert alert-danger">Error: ${data.message}</div>`;
                 }
             })
             .catch(error => {
-                console.error('Fetch error:', error.message);
-                document.getElementById('editCouponMessage').innerHTML = `<div class="alert alert-danger">Error fetching coupon details: ${error.message}</div>`;
+                if (targetMsg) targetMsg.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
             });
-
-            modal.show();
+        }
+    
+       // Create Coupon
+        document.getElementById('saveCoupon').addEventListener('click', function(){
+            handleSubmit('couponForm', "{% url 'supplier:coupons' %}");
+        });
+    
+        // Edit Coupon button click
+        document.querySelectorAll('.editCouponBtn').forEach(btn => {
+            btn.addEventListener('click', function(){
+                const couponId = this.dataset.id;
+                const modal = new bootstrap.Modal(document.getElementById('editCouponModal'));
+                document.getElementById('edit_coupon_id').value = couponId;
+                document.getElementById('edit_code').value = this.dataset.code;
+                document.getElementById('edit_coupon_type').value = this.dataset.type;
+                document.getElementById('edit_discount_type').value = this.dataset.discountType;
+                document.getElementById('edit_discount').value = this.dataset.discount;
+                document.getElementById('edit_minimum_purchase').value = this.dataset.min;
+                document.getElementById('edit_max_discount').value = this.dataset.max;
+                document.getElementById('edit_count_of_use').value = this.dataset.count;
+                document.getElementById('edit_filter_orders_count').value = this.dataset.ordersCount;
+                document.getElementById('edit_filter_orders_amount').value = this.dataset.ordersAmount;
+                document.getElementById('edit_start_date').value = this.dataset.startDate;
+                document.getElementById('edit_end_date').value = this.dataset.endDate;
+                document.getElementById('edit_start_time').value = this.dataset.startTime;
+                document.getElementById('edit_end_time').value = this.dataset.endTime;
+                document.getElementById('edit_can_be_used_with_promotions').checked = (this.dataset.promotion === 'True');
+    
+                $('#edit_productSelect').val(null).trigger('change');
+                $('#edit_clientSelect').val(null).trigger('change');
+                document.getElementById('editCouponMessage').innerHTML = '';
+    
+                fetch("{% url 'supplier:coupon_details' coupon_id=0 %}".replace('0', couponId), {
+                    method: 'GET',
+                    headers: {
+                        'X-CSRFToken': csrftoken,
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        $('#edit_productSelect').val(data.products).trigger('change');
+                        $('#edit_clientSelect').val(data.clients).trigger('change');
+                    } else {
+                        document.getElementById('editCouponMessage').innerHTML = `<div class="alert alert-danger">Error: ${data.message}</div>`;
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('editCouponMessage').innerHTML = `<div class="alert alert-danger">Error fetching coupon details: ${error.message}</div>`;
+                });
+    
+                modal.show();
+            });
+        });
+    
+        // Update Coupon
+        document.getElementById('updateCoupon').addEventListener('click', function(){
+            handleSubmit('editCouponForm', "{% url 'supplier:edit_coupon' %}", 'editCouponMessage');
+        });
+    
+        // Delete Coupon
+        document.querySelectorAll('.deleteCouponBtn').forEach(btn => {
+            btn.addEventListener('click', function(){
+                const modal = new bootstrap.Modal(document.getElementById('deleteCouponModal'));
+                document.getElementById('delete_coupon_id').value = this.dataset.id;
+                document.getElementById('delete_coupon_name').innerText = this.dataset.code;
+                document.getElementById('deleteCouponMessage').innerHTML = '';
+                modal.show();
+            });
+        });
+    
+        document.getElementById('confirmDeleteCoupon').addEventListener('click', function(){
+            const couponId = document.getElementById('delete_coupon_id').value;
+            const msgBox = document.getElementById('deleteCouponMessage');
+    
+            fetch("{% url 'superuser:delete_coupon' %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'Accept': 'application/json'
+                },
+                body: new URLSearchParams({ 'coupon_id': couponId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    msgBox.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    msgBox.innerHTML = `<div class="alert alert-danger">Error: ${data.message}</div>`;
+                }
+            })
+            .catch(error => {
+                msgBox.innerHTML = `<div class="alert alert-danger">Error deleting coupon: ${error.message}</div>`;
+            });
         });
     });
-
-    // Update Coupon
-    document.getElementById('updateCoupon').addEventListener('click', function(){
-        const form = document.getElementById('editCouponForm');
-        const data = new FormData(form);
-        const msg = document.getElementById('editCouponMessage');
-
-        fetch("{% url 'supplier:edit_coupon' %}", {
-            method: 'POST',
-            headers: {'X-CSRFToken': csrftoken},
-            body: data
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.status === 'success') {
-                msg.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
-                setTimeout(() => location.reload(), 1000);
-            } else {
-                console.error('Update error:', data.message);
-                msg.innerHTML = `<div class="alert alert-danger">Error: ${data.message}</div>`;
-            }
-        })
-        .catch(error => {
-            console.error('Update fetch error:', error.message);
-            msg.innerHTML = `<div class="alert alert-danger">Error updating coupon: ${error.message}</div>`;
-        });
-    });
-
-    // Delete Coupon
-    document.querySelectorAll('.deleteCouponBtn').forEach(btn => {
-        btn.addEventListener('click', function(){
-            const modal = new bootstrap.Modal(document.getElementById('deleteCouponModal'));
-            document.getElementById('delete_coupon_id').value = this.dataset.id;
-            document.getElementById('delete_coupon_name').innerText = this.dataset.code;
-            document.getElementById('deleteCouponMessage').innerHTML = '';
-            modal.show();
-        });
-    });
-
-    document.getElementById('confirmDeleteCoupon').addEventListener('click', function(){
-        const couponId = document.getElementById('delete_coupon_id').value;
-        const msgBox = document.getElementById('deleteCouponMessage');
-
-        fetch("{% url 'supplier:delete_coupon' %}", {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': csrftoken,
-                'Accept': 'application/json'
-            },
-            body: new URLSearchParams({ 'coupon_id': couponId })
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.status === 'success') {
-                msgBox.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
-                setTimeout(() => location.reload(), 1000);
-            } else {
-                console.error('Delete error:', data.message);
-                msgBox.innerHTML = `<div class="alert alert-danger">Error: ${data.message}</div>`;
-            }
-        })
-        .catch(error => {
-            console.error('Delete fetch error:', error.message);
-            msgBox.innerHTML = `<div class="alert alert-danger">Error deleting coupon: ${error.message}</div>`;
-        });
-    });
-});
-</script>
+    </script>
+    
 {% endblock %}
