@@ -27,46 +27,50 @@
           </div>
 
           <div class="card-body table-responsive">
-            <table class="table table-row-dashed align-middle fs-6 gy-5">
+            <table class="table table-row-dashed align-middle fs-6 gy-5" style="width: 100%; border-collapse: collapse;">
               <thead>
-                <tr class="text-gray-500 fw-bold fs-7 text-uppercase">
-                  <th>Name</th>
-                  <th>Region</th>
-                  <th class="text-center">Actions</th>
+                <tr class="text-gray-500 fw-bold fs-7 text-uppercase" style="text-align: center;">
+                  <th style="padding: 12px;">Name</th>
+                  <th style="padding: 12px;">Region</th>
+                  <th style="padding: 12px;">Actions</th>
                 </tr>
               </thead>
-              <tbody>
+          
+              <tbody class="fw-semibold text-gray-600" style="text-align: center;">
                 {% for city in cities %}
                 <tr>
-                    <td>{{ city.name }}</td>
-                    <td>
-                        {% if city.region %}
-                            {{ city.region.name }}
-                        {% else %}
-                            -
-                        {% endif %}
-                    </td>
-                    <td class="text-center">
-                        <button class="btn btn-sm btn-light-primary editBtn"
+                  <td style="padding: 12px; vertical-align: middle;">{{ city.name }}</td>
+                  <td style="padding: 12px; vertical-align: middle;">
+                    {% if city.region %}
+                      {{ city.region.name }}
+                    {% else %}
+                      -
+                    {% endif %}
+                  </td>
+                  <td style="padding: 12px; vertical-align: middle;">
+                    <button class="btn btn-sm btn-light-primary editBtn"
                             data-id="{{ city.id }}"
                             data-name="{{ city.name }}"
-                            data-region-id="{% if city.region %}{{ city.region.id }}{% endif %}">
-                            Edit
-                        </button>
-                        <button class="btn btn-sm btn-light-danger deleteBtn"
-                            data-id="{{ city.id }}">
-                            Delete
-                        </button>
-                    </td>
+                            data-region-id="{% if city.region %}{{ city.region.id }}{% endif %}"
+                            style="margin: 0 4px; padding: 5px 12px; font-size: 13px;">
+                      Edit
+                    </button>
+                    <button class="btn btn-sm btn-light-danger deleteBtn"
+                            data-id="{{ city.id }}"
+                            style="margin: 0 4px; padding: 5px 12px; font-size: 13px;">
+                      Delete
+                    </button>
+                  </td>
                 </tr>
                 {% empty %}
-                <tr><td colspan="3" class="text-center">No cities found</td></tr>
+                <tr>
+                  <td colspan="3" style="padding: 12px; color: #888;">No cities found</td>
+                </tr>
                 {% endfor %}
-                </tbody>
-                
+              </tbody>
             </table>
           </div>
-
+          
         </div>
       </div>
     </div>
@@ -148,12 +152,10 @@ document.getElementById("addBtn").addEventListener("click", () => {
 
 document.querySelectorAll(".editBtn").forEach(btn => {
   btn.addEventListener("click", () => {
-    resetForm(); // Reset first
+    resetForm(); 
 
     idFld.value = btn.dataset.id;
     nameFld.value = btn.dataset.name;
-
-    // Correctly select the region option
     const regionId = btn.dataset.regionId;
     if (regionId) {
       regionFld.value = regionId;

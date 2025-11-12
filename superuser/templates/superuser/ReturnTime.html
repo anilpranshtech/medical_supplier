@@ -2,25 +2,27 @@
 {% load static %}
 {% load superuser_tags %}
 
-{% block title %}Origin Country{% endblock %}
+{% block title %}Return Time{% endblock %}
 
 {% block content %}
 {% tag_user_permissions_list request.user as user_permissions_list %}
 
+  
 <div class="app-main flex-column flex-row-fluid" id="kt_app_main">
   <div class="d-flex flex-column flex-column-fluid">
     <div id="kt_app_content" class="app-content flex-column-fluid mx-5">
       <div id="kt_app_content_container" class="app-container container-fluid">
+
         <div id="successMessage" class="alert alert-success d-none" style="font-size:16px;">
           <strong id="successText"></strong>
         </div>
 
         <div class="card card-flush">
           <div class="card-header flex-wrap align-items-center py-5 gap-4">
-            <div class="card-title">Origin Country</div>
+            <div class="card-title">Return Time</div>
             <div class="card-toolbar">
               <button class="btn btn-primary" id="addBtn">
-                <i class="fas fa-plus me-2"></i>Add Country
+                <i class="fas fa-plus me-2"></i>Add Return Time
               </button>
             </div>
           </div>
@@ -29,24 +31,30 @@
             <table class="table table-row-dashed align-middle fs-6 gy-5" style="width: 100%; border-collapse: collapse;">
               <thead>
                 <tr class="text-gray-500 fw-bold fs-7 text-uppercase" style="text-align: center;">
-                  <th style="width: 50%; padding: 12px;">Name</th>
-                  <th style="width: 50%; padding: 12px;">Actions</th>
+                  <th style="width: 25%; padding: 12px;">Name</th>
+                  <th style="width: 25%; padding: 12px;">Value</th>
+                  <th style="width: 25%; padding: 12px;">Status</th>
+                  <th style="width: 25%; padding: 12px;">Actions</th>
                 </tr>
               </thead>
           
               <tbody class="fw-semibold text-gray-600" style="text-align: center;">
-                {% for c in countries %}
+                {% for r in return_times %}
                 <tr>
-                  <td style="padding: 12px; vertical-align: middle;">{{ c.name }}</td>
+                  <td style="padding: 12px; vertical-align: middle;">{{ r.name }}</td>
+                  <td style="padding: 12px; vertical-align: middle;">{{ r.value }}</td>
+                  <td style="padding: 12px; vertical-align: middle;">{{ r.status }}</td>
                   <td style="padding: 12px; vertical-align: middle;">
                     <button class="btn btn-sm btn-light-primary editBtn"
-                            data-id="{{ c.id }}"
-                            data-name="{{ c.name }}"
+                            data-id="{{ r.id }}"
+                            data-name="{{ r.name }}"
+                            data-value="{{ r.value }}"
+                            data-status="{{ r.status }}"
                             style="margin: 0 4px; padding: 5px 12px; font-size: 13px;">
                       Edit
                     </button>
                     <button class="btn btn-sm btn-light-danger deleteBtn"
-                            data-id="{{ c.id }}"
+                            data-id="{{ r.id }}"
                             style="margin: 0 4px; padding: 5px 12px; font-size: 13px;">
                       Delete
                     </button>
@@ -54,38 +62,48 @@
                 </tr>
                 {% empty %}
                 <tr>
-                  <td colspan="2" style="padding: 12px; color: #888;">No countries added yet.</td>
+                  <td colspan="4" style="padding: 12px; color: #888;">No return times added yet.</td>
                 </tr>
                 {% endfor %}
               </tbody>
             </table>
           </div>
           
-
         </div>
-
-      </div>
+     </div>
     </div>
   </div>
 </div>
 
-<div class="modal fade" id="countryModal">
+<!-- Modal -->
+<div class="modal fade" id="returnModal">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content rounded-3">
-      <div class="modal-header  text-white">
+      <div class="modal-header text-white">
         <h5 class="modal-title" id="modalTitle"></h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <form id="countryForm">
+        <form id="returnForm">
             {% csrf_token %}
-            <input type="hidden" id="cid" name="cid">
+            <input type="hidden" id="rid" name="rid">
             
-            <label class="form-label fw-semibold">Country Name  <span style="color: red;">*</span></label>
+            <label class="form-label fw-semibold">Name (En) <span style="color:red;">*</span></label>
             <input type="text" name="name" id="nameField" class="form-control" required>
             <div class="text-danger mt-1" id="nameError" style="display:none;"></div>
-          </form>
-          
+
+            <label class="form-label fw-semibold mt-3">Value <span style="color:red;">*</span></label>
+            <input type="text" name="value" id="valueField" class="form-control" required>
+            <div class="text-danger mt-1" id="valueError" style="display:none;"></div>
+
+            <label class="form-label fw-semibold mt-3">Status <span style="color:red;">*</span></label>
+            <select name="status" id="statusField" class="form-select" required>
+              <option value="">--Select--</option>
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+            </select>
+            <div class="text-danger mt-1" id="statusError" style="display:none;"></div>
+        </form>
       </div>
       <div class="modal-footer">
         <button class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
@@ -94,89 +112,97 @@
     </div>
   </div>
 </div>
-
 {% endblock %}
 
 {% block page_only_scripts %}
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
-  const modal   = new bootstrap.Modal(document.getElementById('countryModal'));
-  const title   = document.getElementById('modalTitle');
-  const idField = document.getElementById('cid');
+  const modal = new bootstrap.Modal(document.getElementById('returnModal'));
+  const title = document.getElementById('modalTitle');
+  const idField = document.getElementById('rid');
   const nameFld = document.getElementById('nameField');
+  const valueFld = document.getElementById('valueField');
+  const statusFld = document.getElementById('statusField');
   const nameError = document.getElementById('nameError');
+  const valueError = document.getElementById('valueError');
+  const statusError = document.getElementById('statusError');
 
   function showSuccess(msg) {
     const box = document.getElementById("successMessage");
     const text = document.getElementById("successText");
-
     text.innerText = msg;
     box.classList.remove("d-none");
-
-    setTimeout(() => {
-      box.classList.add("d-none");
-    }, 2000);
+    setTimeout(() => box.classList.add("d-none"), 2000);
   }
 
   function resetForm() {
     idField.value = "";
     nameFld.value = "";
-    nameFld.classList.remove("is-invalid");
+    valueFld.value = "";
+    statusFld.value = "";
     nameError.style.display = "none";
+    valueError.style.display = "none";
+    statusError.style.display = "none";
   }
 
-  document.getElementById('addBtn').addEventListener('click', function () {
-    title.textContent = "Add Country";
+  document.getElementById('addBtn').addEventListener('click', () => {
+    title.textContent = "Add Return Time";
     resetForm();
     modal.show();
   });
 
   document.querySelectorAll('.editBtn').forEach(btn => {
     btn.addEventListener('click', function () {
-      title.textContent = "Edit Country";
+      title.textContent = "Edit Return Time";
       idField.value = this.dataset.id;
       nameFld.value = this.dataset.name;
+      valueFld.value = this.dataset.value;
+      statusFld.value = this.dataset.status;
       modal.show();
     });
   });
 
   function validateForm() {
     let valid = true;
-
     if (!nameFld.value.trim()) {
-      nameFld.classList.add("is-invalid");
-      nameError.innerText = "Country Name is required.";
+      nameError.innerText = "Name is required.";
       nameError.style.display = "block";
       valid = false;
-    } else {
-      nameFld.classList.remove("is-invalid");
-      nameError.style.display = "none";
-    }
+    } else nameError.style.display = "none";
 
+    if (!valueFld.value.trim()) {
+      valueError.innerText = "Value is required.";
+      valueError.style.display = "block";
+      valid = false;
+    } else valueError.style.display = "none";
+
+    if (!statusFld.value.trim()) {
+      statusError.innerText = "Status is required.";
+      statusError.style.display = "block";
+      valid = false;
+    } else statusError.style.display = "none";
     return valid;
   }
 
   document.getElementById('saveBtn').addEventListener('click', function () {
     if (!validateForm()) return;
 
-    let cid = idField.value;
-    let url = cid ? `/superuser/origin-country/edit/${cid}/` : `/superuser/origin-country/add/`;
+    let rid = idField.value;
+    let url = rid ? `/superuser/returntime/edit/${rid}/` : `/superuser/returntime/add/`;
 
     fetch(url, {
       method: "POST",
       headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value },
-      body: new FormData(document.getElementById('countryForm'))
+      body: new FormData(document.getElementById('returnForm'))
     })
     .then(r => r.json())
     .then(res => {
       if (res.success) {
         modal.hide();
-        showSuccess(cid ? "Country updated successfully!" : "Country added successfully!");
-
+        showSuccess(rid ? "Return Time updated successfully!" : "Return Time added successfully!");
         setTimeout(() => location.reload(), 1000);
       } else {
-        nameFld.classList.add("is-invalid");
         nameError.innerText = res.msg || "Something went wrong!";
         nameError.style.display = "block";
       }
@@ -185,17 +211,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
   document.querySelectorAll('.deleteBtn').forEach(btn => {
     btn.addEventListener('click', function () {
-
-      if (!confirm("Delete this country?")) return;
-
-      fetch(`/superuser/origin-country/delete/${this.dataset.id}/`, {
+      if (!confirm("Delete this Return Time?")) return;
+      fetch(`/superuser/returntime/delete/${this.dataset.id}/`, {
         method: "POST",
         headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value }
       })
       .then(r => r.json())
       .then(res => {
         if (res.success) {
-          showSuccess("Country deleted successfully!");
+          showSuccess("Return Time deleted successfully!");
           setTimeout(() => location.reload(), 1000);
         } else {
           alert(res.msg);

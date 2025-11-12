@@ -1717,3 +1717,82 @@ class AddressType(models.Model):
 
     def __str__(self):
         return self.name_en
+
+class Unit(models.Model):
+    STATUS_CHOICES = (
+        ('Active', 'Active'),
+        ('Inactive', 'Inactive'),
+    )
+
+    name = models.CharField(max_length=100, verbose_name="Name (En)")
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Active')
+
+    def __str__(self):
+        return self.name
+class DeliveryTime(models.Model):
+    STATUS_CHOICES = (
+        ('Active', 'Active'),
+        ('Inactive', 'Inactive'),
+    )
+
+    name = models.CharField(max_length=100, verbose_name="Name (En)")
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Active')
+
+    def __str__(self):
+        return self.name
+class ReturnTime(models.Model):
+    STATUS_CHOICES = (
+        ('Active', 'Active'),
+        ('Inactive', 'Inactive'),
+    )
+
+    name = models.CharField(max_length=100, verbose_name="Name (En)")
+    value = models.CharField(max_length=100, verbose_name="Value")
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Active')
+
+    def __str__(self):
+        return f"{self.name} ({self.value})"
+class StandingTime(models.Model):
+    STATUS_CHOICES = (
+        ('Active','Active'),
+        ('Inactive','Inactive'),
+    )
+    name = models.CharField(max_length=100, verbose_name="Name (En)")
+    value = models.CharField(max_length=100,verbose_name="Value")
+    status = models.CharField(max_length=10,choices=STATUS_CHOICES , default='Active')
+
+    def __str__(self):
+        return f"{self.name} ({self.value})"
+          
+class Warranty(models.Model):
+        STATUS_CHOICES = (
+            ('Active','Active'),
+            ('Inactive','Inactive'),
+        )
+
+        name = models.CharField(max_length=100,verbose_name="Name(En)")
+        status = models.CharField(max_length=10,choices=STATUS_CHOICES,default='Active')
+
+        def __str__(self):
+            return self.name
+class SplashScreen(models.Model):
+    LANGUAGE_CHOICES = [
+        ('gu', 'Gujarati'),
+        ('hi', 'Hindi'),
+        ('en', 'English'),
+    ]
+
+    screen_image = models.ImageField(upload_to='splash_screens/', verbose_name="Upload Screen Image")
+    screen_text = models.TextField(verbose_name="Upload Screen Text", blank=True, null=True)
+    screen_title = models.CharField(max_length=200, verbose_name="Screen Title")
+    screen_body = models.TextField(verbose_name="Screen Body")
+    screen_order = models.PositiveIntegerField(verbose_name="Screen Order")
+    screen_language = models.CharField(max_length=10, choices=LANGUAGE_CHOICES, verbose_name="Screen Language")
+
+    class Meta:
+        ordering = ['screen_order']
+        verbose_name = "Splash Screen"
+        verbose_name_plural = "Splash Screens"
+
+    def __str__(self):
+        return f"{self.screen_title} ({self.get_screen_language_display()})"

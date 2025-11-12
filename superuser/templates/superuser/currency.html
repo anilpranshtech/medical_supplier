@@ -25,53 +25,55 @@
               </button>
             </div>
           </div>
-
           <div class="card-body table-responsive">
-            <table class="table table-row-dashed align-middle fs-6 gy-5">
+            <table class="table table-row-dashed align-middle fs-6 gy-5" style="width: 100%; border-collapse: collapse;">
               <thead>
-                <tr class="text-gray-500 fw-bold fs-7 text-uppercase">
-                  <th>Name</th>
-                  <th>Code</th>
-                  <th>Rate</th>
-                  <th>Country</th>
-                  <th>Status</th>
-                 
-                  <th class="text-center">Actions</th>
+                <tr class="text-gray-500 fw-bold fs-7 text-uppercase" style="text-align: center;">
+                  <th style="padding: 12px;">Name</th>
+                  <th style="padding: 12px;">Code</th>
+                  <th style="padding: 12px;">Rate</th>
+                  <th style="padding: 12px;">Country</th>
+                  <th style="padding: 12px;">Status</th>
+                  <th style="padding: 12px;">Actions</th>
                 </tr>
               </thead>
-              <tbody class="fw-semibold text-gray-600">
+          
+              <tbody class="fw-semibold text-gray-600" style="text-align: center;">
                 {% for c in currencies %}
                 <tr>
-                  <td>{{ c.name_en }}</td>
-                  <td>{{ c.code_en }}</td>
-                  <td>{{ c.rate }}</td>
-                  <td>{{ c.country }}</td>
-                  <td>{{ c.status }}</td>
-               
-                  <td class="text-center">
+                  <td style="padding: 12px; vertical-align: middle;">{{ c.name_en }}</td>
+                  <td style="padding: 12px; vertical-align: middle;">{{ c.code_en }}</td>
+                  <td style="padding: 12px; vertical-align: middle;">{{ c.rate }}</td>
+                  <td style="padding: 12px; vertical-align: middle;">{{ c.country }}</td>
+                  <td style="padding: 12px; vertical-align: middle;">{{ c.status }}</td>
+                  <td style="padding: 12px; vertical-align: middle;">
                     <button class="btn btn-sm btn-light-primary editBtn"
-                      data-id="{{ c.id }}"
-                      data-name="{{ c.name_en }}"
-                      data-code="{{ c.code_en }}"
-                      data-rate="{{ c.rate }}"
-                      data-country="{{ c.country }}"
-                      data-status="{{ c.status }}"
-                      data-default="{{ c.set_as_default }}">
+                            data-id="{{ c.id }}"
+                            data-name="{{ c.name_en }}"
+                            data-code="{{ c.code_en }}"
+                            data-rate="{{ c.rate }}"
+                            data-country="{{ c.country }}"
+                            data-status="{{ c.status }}"
+                            data-default="{{ c.set_as_default }}"
+                            style="margin: 0 4px; padding: 5px 12px; font-size: 13px;">
                       Edit
                     </button>
-                    <button class="btn btn-sm btn-light-danger deleteBtn" data-id="{{ c.id }}">
+                    <button class="btn btn-sm btn-light-danger deleteBtn"
+                            data-id="{{ c.id }}"
+                            style="margin: 0 4px; padding: 5px 12px; font-size: 13px;">
                       Delete
                     </button>
                   </td>
                 </tr>
                 {% empty %}
                 <tr>
-                  <td colspan="7" class="text-center text-muted">No currencies added yet.</td>
+                  <td colspan="6" style="padding: 12px; color: #888;">No currencies added yet.</td>
                 </tr>
                 {% endfor %}
               </tbody>
             </table>
           </div>
+          
 
         </div>
 

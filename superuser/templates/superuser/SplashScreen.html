@@ -1,0 +1,225 @@
+{% extends 'superuser/superuser_base.html' %}
+{% load static %}
+{% load superuser_tags %}
+
+{% block title %}Splash Screen{% endblock %}
+
+{% block content %}
+{% tag_user_permissions_list request.user as user_permissions_list %}
+
+  
+<div class="app-main flex-column flex-row-fluid" id="kt_app_main">
+  <div class="d-flex flex-column flex-column-fluid">
+    <div id="kt_app_content" class="app-content flex-column-fluid mx-5">
+      <div id="kt_app_content_container" class="app-container container-fluid">
+
+        <div id="successMessage" class="alert alert-success d-none" style="font-size:16px;">
+          <strong id="successText"></strong>
+        </div>
+
+        <div class="card card-flush">
+          <div class="card-header flex-wrap align-items-center py-5 gap-4">
+            <div class="card-title">Splash Screens</div>
+            <div class="card-toolbar">
+              <button class="btn btn-primary" id="addBtn">
+                <i class="fas fa-plus me-2"></i>Add Splash Screen
+              </button>
+            </div>
+          </div>
+
+          <div class="card-body table-responsive">
+            <table class="table table-row-dashed align-middle fs-6 gy-5" style="border-collapse: collapse; width: 100%;">
+              <thead>
+                <tr class="text-gray-500 fw-bold fs-7 text-uppercase">
+                  <th style="width: 20%; padding: 10px 12px; text-align: center; vertical-align: middle; white-space: nowrap;">Image</th>
+                  <th style="width: 20%; padding: 10px 12px; text-align: center; vertical-align: middle; white-space: nowrap;">Title</th>
+                  <th style="width: 20%; padding: 10px 12px; text-align: center; vertical-align: middle; white-space: nowrap;">Order</th>
+                  <th style="width: 20%; padding: 10px 12px; text-align: center; vertical-align: middle; white-space: nowrap;">Language</th>
+                  <th style="width: 20%; padding: 10px 12px; text-align: center; vertical-align: middle; white-space: nowrap;">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="fw-semibold text-gray-600">
+                {% for s in screens %}
+                <tr>
+                  <td style="width: 20%; padding: 10px 12px; text-align: center; vertical-align: middle; white-space: nowrap;">
+                    {% if s.screen_image %}
+                      <img src="{{ s.screen_image.url }}" width="60" height="60" class="rounded">
+                    {% endif %}
+                  </td>
+                  <td style="width: 20%; padding: 10px 12px; text-align: center; vertical-align: middle; white-space: nowrap;">{{ s.screen_title }}</td>
+                  <td style="width: 20%; padding: 10px 12px; text-align: center; vertical-align: middle; white-space: nowrap;">{{ s.screen_order }}</td>
+                  <td style="width: 20%; padding: 10px 12px; text-align: center; vertical-align: middle; white-space: nowrap;">{{ s.get_screen_language_display }}</td>
+                  <td style="width: 20%; padding: 10px 12px; text-align: center; vertical-align: middle; white-space: nowrap;">
+                    <button class="btn btn-sm btn-light-primary editBtn"
+                            data-id="{{ s.id }}"
+                            data-title="{{ s.screen_title }}"
+                            data-body="{{ s.screen_body }}"
+                            data-text="{{ s.screen_text }}"
+                            data-order="{{ s.screen_order }}"
+                            data-language="{{ s.screen_language }}"
+                            style="margin: 0 4px; padding: 4px 10px; font-size: 13px;">
+                      Edit
+                    </button>
+                    <button class="btn btn-sm btn-light-danger deleteBtn" data-id="{{ s.id }}"
+                            style="margin: 0 4px; padding: 4px 10px; font-size: 13px;">
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="5" class="text-center text-muted" style="padding: 10px 12px;">No splash screens added yet.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="splashModal">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content rounded-3">
+      <div class="modal-header text-white">
+        <h5 class="modal-title" id="modalTitle"></h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="splashForm" enctype="multipart/form-data">
+          {% csrf_token %}
+          <input type="hidden" id="sid" name="sid">
+
+          <label class="form-label fw-semibold">Upload Screen Image *</label>
+          <input type="file" name="screen_image" id="screen_image" class="form-control">
+          <div class="text-danger mt-1" id="imageError" style="display:none;"></div>
+
+          <label class="form-label fw-semibold mt-3">Upload Screen Text</label>
+          <textarea name="screen_text" id="screen_text" class="form-control"></textarea>
+
+          <label class="form-label fw-semibold mt-3">Screen Title *</label>
+          <input type="text" name="screen_title" id="screen_title" class="form-control">
+          <div class="text-danger mt-1" id="titleError" style="display:none;"></div>
+
+          <label class="form-label fw-semibold mt-3">Screen Body *</label>
+          <textarea name="screen_body" id="screen_body" class="form-control"></textarea>
+          <div class="text-danger mt-1" id="bodyError" style="display:none;"></div>
+
+          <label class="form-label fw-semibold mt-3">Screen Order *</label>
+          <input type="number" name="screen_order" id="screen_order" class="form-control">
+          <div class="text-danger mt-1" id="orderError" style="display:none;"></div>
+
+          <label class="form-label fw-semibold mt-3">Screen Language *</label>
+          <select name="screen_language" id="screen_language" class="form-select">
+            <option value="">--Select--</option>
+            <option value="gu">Gujarati</option>
+            <option value="hi">Hindi</option>
+            <option value="en">English</option>
+          </select>
+          <div class="text-danger mt-1" id="languageError" style="display:none;"></div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" id="saveBtn">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block page_only_scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const modal = new bootstrap.Modal(document.getElementById('splashModal'));
+  const idField = document.getElementById('sid');
+
+  const showError = (field, msg) => {
+    document.getElementById(field + 'Error').innerText = msg;
+    document.getElementById(field + 'Error').style.display = "block";
+  };
+  const clearErrors = () => {
+    ['title', 'body', 'order', 'language', 'image'].forEach(f => {
+      document.getElementById(f + 'Error').style.display = "none";
+    });
+  };
+
+  function showSuccess(msg) {
+    const box = document.getElementById("successMessage");
+    const text = document.getElementById("successText");
+    text.innerText = msg;
+    box.classList.remove("d-none");
+    setTimeout(() => box.classList.add("d-none"), 2000);
+  }
+
+  document.getElementById('addBtn').addEventListener('click', () => {
+    idField.value = "";
+    document.getElementById("splashForm").reset();
+    clearErrors();
+    document.getElementById('modalTitle').textContent = "Add Splash Screen";
+    modal.show();
+  });
+
+  document.querySelectorAll('.editBtn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      clearErrors();
+      idField.value = this.dataset.id;
+      document.getElementById('screen_title').value = this.dataset.title;
+      document.getElementById('screen_body').value = this.dataset.body;
+      document.getElementById('screen_text').value = this.dataset.text;
+      document.getElementById('screen_order').value = this.dataset.order;
+      document.getElementById('screen_language').value = this.dataset.language;
+      document.getElementById('modalTitle').textContent = "Edit Splash Screen";
+      modal.show();
+    });
+  });
+
+  document.getElementById('saveBtn').addEventListener('click', function () {
+    clearErrors();
+    let formData = new FormData(document.getElementById('splashForm'));
+    let sid = idField.value;
+    let url = sid ? `/superuser/splash/edit/${sid}/` : `/superuser/splash/add/`;
+
+    fetch(url, {
+      method: "POST",
+      headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value },
+      body: formData
+    })
+    .then(r => r.json())
+    .then(res => {
+      if (res.success) {
+        modal.hide();
+        showSuccess(sid ? "Splash Screen updated!" : "Splash Screen added!");
+        setTimeout(() => location.reload(), 1000);
+      } else if (res.field) {
+        showError(res.field, res.msg);
+      } else {
+        alert(res.msg);
+      }
+    });
+  });
+
+  document.querySelectorAll('.deleteBtn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      if (!confirm("Delete this Splash Screen?")) return;
+      fetch(`/superuser/splash/delete/${this.dataset.id}/`, {
+        method: "POST",
+        headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value }
+      })
+      .then(r => r.json())
+      .then(res => {
+        if (res.success) {
+          showSuccess("Splash Screen deleted!");
+          setTimeout(() => location.reload(), 1000);
+        } else alert(res.msg);
+      });
+    });
+  });
+});
+</script>
+{% endblock %}

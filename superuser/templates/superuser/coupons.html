@@ -14,74 +14,82 @@
                     </button>
                 </div>
                 <div class="card card-flush mb-3">
-                    <div class="card-body table-responsive p-0">
-                        <table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_coupons_table">
-                            <thead>
-                                <tr class="text-center text-gray-500 fw-bold fs-7 text-uppercase gs-0">
-                                    <th>#</th><th>Code</th><th>Count of User</th><th>Discount</th>
-                                    <th>Discount Type</th><th>Min Purchase</th><th>Max Disc</th>
-                                    <th>Created By</th><th>Start Date</th><th>End Date</th>
-                                    <th>Updated At</th><th>Status</th><th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody class="fw-semibold text-gray-600">
-                                {% for coupon in coupons %}
-                                <tr>
-                                    <td>{{ forloop.counter }}</td>
-                                    <td>{{ coupon.code }}</td>
-                                    <td>{{ coupon.count_of_use }}</td>
-                                    <td>{{ coupon.discount }}{% if coupon.discount_type == 'percent' %}%{% else %}${% endif %}</td>
-                                    <td>{{ coupon.get_discount_type_display }}</td>
-                                    <td>${{ coupon.minimum_purchase_amount|floatformat:2 }}</td>
-                                    <td>${{ coupon.max_discount|floatformat:2 }}</td>
-                                    <td>{{ coupon.created_by }}</td>
-                                    <td>{{ coupon.start_date }} {{ coupon.start_time }}</td>
-                                    <td>{{ coupon.end_date }} {{ coupon.end_time }}</td>
-                                    <td>{{ coupon.updated_at|date:"Y-m-d H:i" }}</td>
-                                    <td>
-                                        {% if coupon.is_valid_now %}
-                                            <span class="badge bg-success">Active</span>
-                                        {% else %}
-                                            <span class="badge bg-danger">Inactive</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <button 
-                                            class="btn btn-sm btn-light-primary editCouponBtn"
-                                            data-id="{{ coupon.id }}"
-                                            data-code="{{ coupon.code }}"
-                                            data-type="{{ coupon.coupon_type }}"
-                                            data-discount-type="{{ coupon.discount_type }}"
-                                            data-discount="{{ coupon.discount }}"
-                                            data-min="{{ coupon.minimum_purchase_amount }}"
-                                            data-max="{{ coupon.max_discount }}"
-                                            data-count="{{ coupon.count_of_use }}"
-                                            data-orders-count="{{ coupon.filter_by_orders_count }}"
-                                            data-orders-amount="{{ coupon.filter_by_orders_amount }}"
-                                            data-start-date="{{ coupon.start_date|date:'Y-m-d' }}"
-                                            data-end-date="{{ coupon.end_date|date:'Y-m-d' }}"
-                                            data-start-time="{{ coupon.start_time|time:'H:i' }}"
-                                            data-end-time="{{ coupon.end_time|time:'H:i' }}"
-                                            data-promotion="{{ coupon.can_be_used_with_promotions|yesno:'True,False' }}"
-                                        >
-                                            <i class="bi bi-pencil-square"></i>
-                                        </button>
-                                        <button 
-                                            class="btn btn-sm btn-light-danger deleteCouponBtn"
-                                            data-id="{{ coupon.id }}"
-                                            data-code="{{ coupon.code }}"
-                                        >
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr><td colspan="13" class="text-center text-muted">No coupons available.</td></tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                    <div class="card-body table-responsive">
+                      <table class="table table-row-dashed align-middle fs-6 gy-5" id="kt_coupons_table">
+                        <thead>
+                          <tr class="text-gray-500 fw-bold fs-7 text-uppercase text-center">
+                            <th>#</th>
+                            <th>Code</th>
+                            <th>Count of User</th>
+                            <th>Discount</th>
+                            <th>Discount Type</th>
+                            <th>Min Purchase</th>
+                            <th>Max Disc</th>
+                            <th>Created By</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Updated At</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                          </tr>
+                        </thead>
+                        <tbody class="fw-semibold text-gray-600 text-center">
+                          {% for coupon in coupons %}
+                          <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ coupon.code }}</td>
+                            <td>{{ coupon.count_of_use }}</td>
+                            <td>{{ coupon.discount }}{% if coupon.discount_type == 'percent' %}%{% else %}${% endif %}</td>
+                            <td>{{ coupon.get_discount_type_display }}</td>
+                            <td>${{ coupon.minimum_purchase_amount|floatformat:2 }}</td>
+                            <td>${{ coupon.max_discount|floatformat:2 }}</td>
+                            <td>{{ coupon.created_by }}</td>
+                            <td>{{ coupon.start_date }} {{ coupon.start_time }}</td>
+                            <td>{{ coupon.end_date }} {{ coupon.end_time }}</td>
+                            <td>{{ coupon.updated_at|date:"Y-m-d H:i" }}</td>
+                            <td>
+                              {% if coupon.is_valid_now %}
+                                <span class="badge bg-success">Active</span>
+                              {% else %}
+                                <span class="badge bg-danger">Inactive</span>
+                              {% endif %}
+                            </td>
+                            <td>
+                              <button class="btn btn-sm btn-light-primary editCouponBtn"
+                                      data-id="{{ coupon.id }}"
+                                      data-code="{{ coupon.code }}"
+                                      data-type="{{ coupon.coupon_type }}"
+                                      data-discount-type="{{ coupon.discount_type }}"
+                                      data-discount="{{ coupon.discount }}"
+                                      data-min="{{ coupon.minimum_purchase_amount }}"
+                                      data-max="{{ coupon.max_discount }}"
+                                      data-count="{{ coupon.count_of_use }}"
+                                      data-orders-count="{{ coupon.filter_by_orders_count }}"
+                                      data-orders-amount="{{ coupon.filter_by_orders_amount }}"
+                                      data-start-date="{{ coupon.start_date|date:'Y-m-d' }}"
+                                      data-end-date="{{ coupon.end_date|date:'Y-m-d' }}"
+                                      data-start-time="{{ coupon.start_time|time:'H:i' }}"
+                                      data-end-time="{{ coupon.end_time|time:'H:i' }}"
+                                      data-promotion="{{ coupon.can_be_used_with_promotions|yesno:'True,False' }}">
+                                <i class="bi bi-pencil-square"></i>
+                              </button>
+                              <button class="btn btn-sm btn-light-danger deleteCouponBtn"
+                                      data-id="{{ coupon.id }}"
+                                      data-code="{{ coupon.code }}">
+                                <i class="bi bi-trash"></i>
+                              </button>
+                            </td>
+                          </tr>
+                          {% empty %}
+                          <tr>
+                            <td colspan="13" class="text-center text-muted">No coupons available.</td>
+                          </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
                     </div>
-                </div>
+                  </div>
+                  
                 <div class="modal fade" id="createCouponModal" tabindex="-1" aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered modal-lg">
                         <div class="modal-content">

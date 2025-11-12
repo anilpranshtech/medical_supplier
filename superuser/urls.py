@@ -192,7 +192,38 @@ urlpatterns = [
      path("addresstype/add/", add_address_type, name="add_address_type"),
      path("addresstype/edit/<int:pk>/", edit_address_type, name="edit_address_type"),
      path("addresstype/delete/<int:pk>/", delete_address_type, name="delete_address_type"),
+     #unit
+     path('unit/', UnitView.as_view(), name='unit'),
+     path('unit/add/', AddUnitView.as_view(), name='add_unit'),
+     path('unit/edit/<int:id>/', EditUnitView.as_view(), name='edit_unit'),
+     path('unit/delete/<int:id>/', DeleteUnitView.as_view(), name='delete_unit'),
+     #deliverytime
+     path('deliverytime/', DeliveryTimeView.as_view(), name='deliverytime'),
+     path('deliverytime/add/', DeliveryTimeAddView.as_view(), name='deliverytime_add'),
+     path('deliverytime/edit/<int:pk>/', DeliveryTimeEditView.as_view(), name='deliverytime_edit'),
+     path('deliverytime/delete/<int:pk>/', DeliveryTimeDeleteView.as_view(), name='deliverytime_delete'),
+     #returntime
+     path('returntime/', ReturnTimeView.as_view(), name='returntime'),
+     path('returntime/add/', ReturnTimeAddView.as_view(), name='returntime_add'),
+     path('returntime/edit/<int:pk>/', ReturnTimeEditView.as_view(), name='returntime_edit'),
+     path('returntime/delete/<int:pk>/', ReturnTimeDeleteView.as_view(), name='returntime_delete'),
+     #standingtime
+     path('standingtime/', StandingTimeView.as_view(), name='standingtime'),
+     path('standingtime/add/', StandigTimeAddView.as_view(), name='standingtime_add'),
+     path('standingtime/edit/<int:pk>/', StandingTimeEditView.as_view(), name='standingtime_edit'),
+     path('standingtime/delete/<int:pk>/', StandingTimeDeleteView.as_view(), name='standingtime_delete'),
+     #warrantry
+     path('warranty/', WarrantyView.as_view(), name='warranty'),
+     path('warranty/add/', AddWarrantyView.as_view(), name='warranty_add'),
+     path('warranty/edit/<int:pk>/', EditWarrantyView.as_view(), name='warranty_edit'),
+     path('warranty/delete/<int:pk>/', DeleteWarrantyView.as_view(), name='warranty_delete'),
+     # Splash Screen List
+     path('splash/', SplashScreenView.as_view(), name='splash_screen'),
+     path('splash/add/', SplashScreenAddView.as_view(), name='add_splash_screen'),
+     path('splash/edit/<int:pk>/', SplashScreenEditView.as_view(), name='edit_splash_screen'),
+     path('splash/delete/<int:pk>/', SplashScreenDeleteView.as_view(), name='delete_splash_screen'),
 ]
+
 
 
   

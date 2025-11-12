@@ -42,7 +42,7 @@
          <!-- Admin settings -->
 {% if "supplier.view_banner" in user_permissions_list or "dashboard.view_ratingreview" in user_permissions_list or "dashboard.view_notification" in user_permissions_list %}
 <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="right-start"
-     class="menu-item py-2">
+     class="menu-item py-2 {% if request.resolver_match.url_name == 'banks' or request.resolver_match.url_name == 'countrys' or request.resolver_match.url_name == 'region' or request.resolver_match.url_name == 'cities_list' or request.resolver_match.url_name == 'currency' or request.resolver_match.url_name == 'return_reason' or request.resolver_match.url_name == 'department' or request.resolver_match.url_name == 'suppliertype' or request.resolver_match.url_name == 'addresstype' or request.resolver_match.url_name == 'unit' or request.resolver_match.url_name == 'deliverytime' or request.resolver_match.url_name == 'returntime' or request.resolver_match.url_name == 'standingtime' or request.resolver_match.url_name == 'warranty'  or request.resolver_match.url_name == 'origin_country'  %} here show {% endif %}">
     
     <span class="menu-link menu-center">
         <span class="menu-icon me-0">
@@ -62,7 +62,7 @@
         </div>
 
         <!-- General Settings -->
-        <div data-kt-menu-trigger="click" class="menu-item menu-accordion">
+        <div data-kt-menu-trigger="click" class="menu-item menu-accordion {% if request.resolver_match.url_name == 'banks' or request.resolver_match.url_name == 'countrys' or request.resolver_match.url_name == 'region' or request.resolver_match.url_name == 'cities_list' or request.resolver_match.url_name == 'currency' or request.resolver_match.url_name == 'return_reason' or request.resolver_match.url_name == 'department' or request.resolver_match.url_name == 'suppliertype' or request.resolver_match.url_name == 'addresstype' or request.resolver_match.url_name == 'origin_country'  %} here show {% endif %}">
             <span class="menu-link">
                 <span class="menu-bullet"><i class="fa-solid fa-cogs"></i></span>
                 <span class="menu-title">General Settings</span>
@@ -72,7 +72,7 @@
 
                 <!-- Banks -->
                 <div class="menu-item">
-                    <a class="menu-link {% if request.resolver_match.url_name == 'superuser:banks' %} active {% endif %}"
+                    <a class="menu-link {% if request.resolver_match.url_name == 'banks' %} active {% endif %}"
                        href="{% url 'superuser:banks' %}">
                         <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
                         <span class="menu-title">Banks</span>
@@ -81,7 +81,7 @@
 
                 <!-- Origin Countries -->
                 <div class="menu-item">
-                    <a class="menu-link {% if request.resolver_match.url_name == 'superuser:origin_country' %} active {% endif %}"
+                    <a class="menu-link {% if request.resolver_match.url_name == 'origin_country' %} active {% endif %}"
                        href="{% url 'superuser:origin_country' %}">
                         <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
                         <span class="menu-title">Origin Countries</span>
@@ -90,7 +90,7 @@
 
                 <!-- Countries -->
                 <div class="menu-item">
-                    <a class="menu-link {% if request.resolver_match.url_name == 'superuser:countrys' %} active {% endif %}"
+                    <a class="menu-link {% if request.resolver_match.url_name == 'countrys' %} active {% endif %}"
                        href="{% url 'superuser:countrys' %}">
                         <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
                         <span class="menu-title">Countries</span>
@@ -99,7 +99,7 @@
 
                 <!-- Region -->
                 <div class="menu-item">
-                    <a class="menu-link {% if request.resolver_match.url_name == 'superuser:region' %} active {% endif %}"
+                    <a class="menu-link {% if request.resolver_match.url_name == 'region' %} active {% endif %}"
                        href="{% url 'superuser:region' %}">
                         <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
                         <span class="menu-title">Region</span>
@@ -108,7 +108,7 @@
 
                 <!-- Cities -->
                 <div class="menu-item">
-                    <a class="menu-link {% if request.resolver_match.url_name == 'superuser:cities_list' %} active {% endif %}"
+                    <a class="menu-link {% if request.resolver_match.url_name == 'cities_list' %} active {% endif %}"
                        href="{% url 'superuser:cities_list' %}">
                         <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
                         <span class="menu-title">Cities</span>
@@ -117,7 +117,7 @@
 
                 <!-- Currency -->
                 <div class="menu-item">
-                    <a class="menu-link {% if request.resolver_match.url_name == 'superuser:currency' %} active {% endif %}"
+                    <a class="menu-link {% if request.resolver_match.url_name == 'currency' %} active {% endif %}"
                        href="{% url 'superuser:currency' %}">
                         <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
                         <span class="menu-title">Currency</span>
@@ -126,7 +126,7 @@
 
                 <!-- Return Reasons -->
                 <div class="menu-item">
-                    <a class="menu-link {% if request.resolver_match.url_name == 'superuser:return_reason' %} active {% endif %}"
+                    <a class="menu-link {% if request.resolver_match.url_name == 'return_reason' %} active {% endif %}"
                        href="{% url 'superuser:return_reason' %}">
                         <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
                         <span class="menu-title">Return Reasons</span>
@@ -135,7 +135,7 @@
 
                 <!-- Departments -->
                 <div class="menu-item">
-                    <a class="menu-link {% if request.resolver_match.url_name == 'superuser:department' %} active {% endif %}"
+                    <a class="menu-link {% if request.resolver_match.url_name == 'department' %} active {% endif %}"
                        href="{% url 'superuser:department' %}">
                         <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
                         <span class="menu-title">Departments</span>
@@ -144,7 +144,7 @@
 
                 <!-- Supplier Types -->
                 <div class="menu-item">
-                    <a class="menu-link {% if request.resolver_match.url_name == 'superuser:suppliertype' %} active {% endif %}"
+                    <a class="menu-link {% if request.resolver_match.url_name == 'suppliertype' %} active {% endif %}"
                        href="{% url 'superuser:suppliertype' %}">
                         <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
                         <span class="menu-title">Supplier Types</span>
@@ -153,7 +153,7 @@
 
                 <!-- Address Types -->
                 <div class="menu-item">
-                    <a class="menu-link {% if request.resolver_match.url_name == 'superuser:addresstype' %} active {% endif %}"
+                    <a class="menu-link {% if request.resolver_match.url_name == 'addresstype' %} active {% endif %}"
                        href="{% url 'superuser:addresstype' %}">
                         <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
                         <span class="menu-title">Address Types</span>
@@ -162,7 +162,7 @@
             </div>
            </div>
                 <!-- Product Settings -->
-                <!-- <div data-kt-menu-trigger="click" class="menu-item menu-accordion">
+                <div data-kt-menu-trigger="click" class="menu-item menu-accordion {% if request.resolver_match.url_name == 'unit' or request.resolver_match.url_name == 'deliverytime' or request.resolver_match.url_name == 'returntime' or request.resolver_match.url_name == 'standingtime' or request.resolver_match.url_name == 'warranty' %} here show {% endif %}">
                     <span class="menu-link">
                         <span class="menu-bullet"><i class="svg-icon">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="20" height="20">
@@ -173,18 +173,83 @@
                         <span class="menu-title">Product Settings</span>
                         <span class="menu-arrow"></span>
                     </span>
-                    <div class="menu-sub menu-sub-accordion"> -->
+                    <div class="menu-sub menu-sub-accordion">
         
-                        <!-- Banks -->
-                        <!-- <div class="menu-item">
-                            <a class="menu-link {% if request.resolver_match.url_name == 'superuser:banks' %} active {% endif %}"
-                               href="{% url 'superuser:banks' %}">
+                        <!-- Units -->
+                        <div class="menu-item">
+                            <a class="menu-link {% if request.resolver_match.url_name == 'unit' %} active {% endif %}"
+                               href="{% url 'superuser:unit' %}">
                                 <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
                                 <span class="menu-title">Units</span>
                             </a>
                         </div>
+                        <!-- delivery time-->
+                        <div class="menu-item">
+                            <a class="menu-link {% if request.resolver_match.url_name == 'deliverytime' %} active {% endif %}"
+                               href="{% url 'superuser:deliverytime' %}">
+                                <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                                <span class="menu-title">
+                                    Delivery Time</span>
+                            </a>
+                        </div>
+                            <!-- Return Time-->
+                            <div class="menu-item">
+                                <a class="menu-link {% if request.resolver_match.url_name == 'returntime' %} active {% endif %}"
+                                   href="{% url 'superuser:returntime' %}">
+                                    <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                                    <span class="menu-title">
+                                        Return Time</span>
+                                </a>
+                            </div>
+                             <!-- Standing Time-->
+                             <div class="menu-item">
+                                <a class="menu-link {% if request.resolver_match.url_name == 'standingtime' %} active {% endif %}"
+                                   href="{% url 'superuser:standingtime' %}">
+                                    <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                                    <span class="menu-title">
+                                        Standing Time</span>
+                                </a>
+                            </div>
+                                <!-- Warranty -->
+                                <div class="menu-item">
+                                    <a class="menu-link {% if request.resolver_match.url_name == 'warranty' %} active {% endif %}"
+                                       href="{% url 'superuser:warranty' %}">
+                                        <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                                        <span class="menu-title">
+                                            Warranty</span>
+                                    </a>
+                                </div>
          </div>
-         </div> -->
+         </div>
+                  <!-- Mobile Settings -->
+                  <div data-kt-menu-trigger="click" class="menu-item menu-accordion {% if request.resolver_match.url_name == 'splash_screen'%} here show {% endif %}">
+                    <span class="menu-link">
+                        <span class="menu-bullet">
+                            <i class="svg-icon">
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="20" height="20">
+                                <rect x="128" y="32" width="192" height="448" rx="24" ry="24" fill="none" stroke="currentColor" stroke-width="32"/>
+                                <circle cx="224" cy="432" r="16" fill="currentColor"/>
+                                <path fill="currentColor" d="M466.1 286.7l-28.3-16.4c2.6-13.9 2.6-28.1 0-42l28.3-16.4a12.07 12.07 0 0 0 4.6-16.4l-27.1-47a12.07 12.07 0 0 0-16.4-4.6l-28.3 16.4a136.62 136.62 0 0 0-36.4-21.1v-32.8A12 12 0 0 0 320 56h-54a12 12 0 0 0-12 12v32.8a136.62 136.62 0 0 0-36.4 21.1l-28.3-16.4a12.07 12.07 0 0 0-16.4 4.6l-27.1 47a12.07 12.07 0 0 0 4.6 16.4l28.3 16.4a139.79 139.79 0 0 0 0 42l-28.3 16.4a12.07 12.07 0 0 0-4.6 16.4l27.1 47a12.07 12.07 0 0 0 16.4 4.6l28.3-16.4a136.62 136.62 0 0 0 36.4 21.1V440a12 12 0 0 0 12 12h54a12 12 0 0 0 12-12v-32.8a136.62 136.62 0 0 0 36.4-21.1l28.3 16.4a12.07 12.07 0 0 0 16.4-4.6l27.1-47a12.07 12.07 0 0 0-4.6-16.4zM293 320a67 67 0 1 1 67-67 67.08 67.08 0 0 1-67 67z"/>
+                              </svg>
+                            </i>
+                          </span>
+                          
+                        <span class="menu-title">Mobile Settings</span>
+                        <span class="menu-arrow"></span>
+                    </span>
+                    <div class="menu-sub menu-sub-accordion">
+        
+                        <!-- Splash Screen List -->
+                        <div class="menu-item">
+                            <a class="menu-link {% if request.resolver_match.url_name == 'splash_screen' %} active {% endif %}"
+                               href="{% url 'superuser:splash_screen' %}">
+                                <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                                <span class="menu-title">Splash Screen List</span>
+                            </a>
+                        </div>
+                      
+         </div>
+         </div>
     </div>
 </div>
 {% endif %}

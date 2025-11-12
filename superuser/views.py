@@ -3828,7 +3828,7 @@ class CurrencyView(TemplateView):
         ctx['currencies'] = Currency.objects.all()
         return ctx
 
-@csrf_exempt
+
 def add_currency(request):
     if request.method == 'POST':
         cid = request.POST.get('cid')
@@ -3862,7 +3862,7 @@ def add_currency(request):
 
     return JsonResponse({"success": False, "msg": "Invalid request"})
 
-@csrf_exempt
+
 def delete_currency(request, pk):
     if request.method == 'POST':
         currency = get_object_or_404(Currency, id=pk)
@@ -3876,7 +3876,7 @@ class ReturnReasonView(TemplateView):
         ctx = super().get_context_data(**kwargs)
         ctx["reasons"] = ReturnReason.objects.all()
         return ctx
-@csrf_exempt
+
 def add_return_reason(request):
     if request.method == "POST":
         reason_en = request.POST.get("reason_en", "").strip()
@@ -3888,7 +3888,7 @@ def add_return_reason(request):
         return JsonResponse({"success": True})
 
     return JsonResponse({"success": False, "msg": "Invalid request."})
-@csrf_exempt
+
 def edit_return_reason(request, pk):
     reason = get_object_or_404(ReturnReason, pk=pk)
 
@@ -3904,7 +3904,7 @@ def edit_return_reason(request, pk):
 
     return JsonResponse({"success": False, "msg": "Invalid request."})
 
-@csrf_exempt
+
 def delete_return_reason(request, pk):
     reason = get_object_or_404(ReturnReason, pk=pk)
 
@@ -3920,7 +3920,7 @@ class DepartmentView(TemplateView):
         ctx = super().get_context_data(**kwargs)
         ctx["departments"] = Department.objects.all()
         return ctx
-@csrf_exempt
+
 def add_department(request):
     if request.method == "POST":
         name = request.POST.get("name")
@@ -3935,7 +3935,7 @@ def add_department(request):
         return JsonResponse({"success": True})
 
     return JsonResponse({"success": False, "msg": "Invalid request!"})
-@csrf_exempt
+
 def edit_department(request, pk):
     if request.method == "POST":
         name = request.POST.get("name")
@@ -3954,7 +3954,7 @@ def edit_department(request, pk):
             return JsonResponse({"success": False, "msg": "Department not found!"})
 
     return JsonResponse({"success": False, "msg": "Invalid request!"})
-@csrf_exempt
+
 def delete_department(request, pk):
     if request.method == "POST":
         try:
@@ -3972,7 +3972,7 @@ class AddressTypeView(TemplateView):
         ctx = super().get_context_data(**kwargs)
         ctx["address_types"] = AddressType.objects.all()
         return ctx
-@csrf_exempt
+
 def add_address_type(request):
     if request.method == "POST":
         name = request.POST.get("name_en", "").strip()
@@ -3988,7 +3988,7 @@ def add_address_type(request):
         return JsonResponse({"success": True})
 
     return JsonResponse({"success": False, "msg": "Invalid request"})
-@csrf_exempt
+
 def edit_address_type(request, pk):
     if request.method == "POST":
         try:
@@ -4010,7 +4010,7 @@ def edit_address_type(request, pk):
         return JsonResponse({"success": True})
 
     return JsonResponse({"success": False, "msg": "Invalid request"})
-@csrf_exempt
+
 def delete_address_type(request, pk):
     if request.method == "POST":
         try:
@@ -4028,7 +4028,7 @@ class SupplierTypeView(TemplateView):
         ctx = super().get_context_data(**kwargs)
         ctx["supplier_types"] = SupplierType.objects.all()
         return ctx
-@csrf_exempt
+
 def add_supplier_type(request):
     if request.method == "POST":
         name = request.POST.get("name_en", "").strip()
@@ -4043,7 +4043,7 @@ def add_supplier_type(request):
         return JsonResponse({"success": True})
 
     return JsonResponse({"success": False, "msg": "Invalid request"})
-@csrf_exempt
+
 def edit_supplier_type(request, pk):
     if request.method == "POST":
         try:
@@ -4067,7 +4067,7 @@ def edit_supplier_type(request, pk):
 
     return JsonResponse({"success": False, "msg": "Invalid request"})
 
-@csrf_exempt
+
 def delete_supplier_type(request, pk):
     if request.method == "POST":
         try:
@@ -4078,3 +4078,276 @@ def delete_supplier_type(request, pk):
             return JsonResponse({"success": False, "msg": "Supplier Type not found."})
 
     return JsonResponse({"success": False, "msg": "Invalid request"})
+
+
+class UnitView(View):
+    def get(self, request):
+        units = Unit.objects.all()
+        return render(request, 'superuser/unit.html', {'units': units})
+
+
+class AddUnitView(View):
+    def post(self, request):
+        name = request.POST.get('name')
+        status = request.POST.get('status')
+
+        if not name:
+            return JsonResponse({'success': False, 'msg': 'Name is required.'})
+        if not status:
+            return JsonResponse({'success': False, 'msg': 'Status is required.'})
+        if Unit.objects.filter(name__iexact=name).exists():
+            return JsonResponse({'success': False, 'msg': 'Unit with this name already exists.'})
+
+        Unit.objects.create(name=name, status=status)
+        return JsonResponse({'success': True})
+
+
+class EditUnitView(View):
+    def post(self, request, id):
+        unit = get_object_or_404(Unit, id=id)
+        name = request.POST.get('name')
+        status = request.POST.get('status')
+
+        if not name:
+            return JsonResponse({'success': False, 'msg': 'Name is required.'})
+        if not status:
+            return JsonResponse({'success': False, 'msg': 'Status is required.'})
+        if Unit.objects.filter(name__iexact=name).exclude(id=id).exists():
+            return JsonResponse({'success': False, 'msg': 'Another unit with this name already exists.'})
+
+        unit.name = name
+        unit.status = status
+        unit.save()
+        return JsonResponse({'success': True})
+
+
+class DeleteUnitView(View):
+    def post(self, request, id):
+        unit = get_object_or_404(Unit, id=id)
+        unit.delete()
+        return JsonResponse({'success': True})
+
+class DeliveryTimeView(View):
+    def get(self, request):
+        delivery_times = DeliveryTime.objects.all()
+        return render(request, 'superuser/deliverytime.html', {'delivery_times': delivery_times})
+
+class DeliveryTimeAddView(View):
+    def post(self, request):
+        name = request.POST.get('name')
+        status = request.POST.get('status')
+
+        if not name:
+            return JsonResponse({'success': False, 'msg': 'Name is required.'})
+        if not status:
+            return JsonResponse({'success': False, 'msg': 'Status is required.'})
+
+        DeliveryTime.objects.create(name=name, status=status)
+        return JsonResponse({'success': True})
+class DeliveryTimeEditView(View):
+    def post(self, request, pk):
+        delivery = get_object_or_404(DeliveryTime, pk=pk)
+        name = request.POST.get('name')
+        status = request.POST.get('status')
+
+        if not name:
+            return JsonResponse({'success': False, 'msg': 'Name is required.'})
+        if not status:
+            return JsonResponse({'success': False, 'msg': 'Status is required.'})
+
+        delivery.name = name
+        delivery.status = status
+        delivery.save()
+        return JsonResponse({'success': True})
+
+class DeliveryTimeDeleteView(View):
+    def post(self, request, pk):
+        delivery = get_object_or_404(DeliveryTime, pk=pk)
+        delivery.delete()
+        return JsonResponse({'success': True})
+
+
+class ReturnTimeView(View):
+    def get(self, request):
+        return_times = ReturnTime.objects.all()
+        return render(request, 'superuser/ReturnTime.html', {'return_times': return_times})
+
+class ReturnTimeAddView(View):
+    def post(self, request):
+        name = request.POST.get('name')
+        value = request.POST.get('value')
+        status = request.POST.get('status')
+        if not name or not value or not status:
+            return JsonResponse({'success': False, 'msg': 'All fields are required.'})
+        ReturnTime.objects.create(name=name, value=value, status=status)
+        return JsonResponse({'success': True})
+
+class ReturnTimeEditView(View):
+    def post(self, request, pk):
+        return_time = get_object_or_404(ReturnTime, pk=pk)
+        name = request.POST.get('name')
+        value = request.POST.get('value')
+        status = request.POST.get('status')
+        if not name or not value or not status:
+            return JsonResponse({'success': False, 'msg': 'All fields are required.'})
+        return_time.name = name
+        return_time.value = value
+        return_time.status = status
+        return_time.save()
+        return JsonResponse({'success': True})
+
+class ReturnTimeDeleteView(View):
+    def post(self, request, pk):
+        return_time = get_object_or_404(ReturnTime, pk=pk)
+        return_time.delete()
+        return JsonResponse({'success': True})
+
+
+class StandingTimeView(View):
+    def get(self, request):
+        return_times = StandingTime.objects.all()
+        return render(request, 'superuser/StandingTime.html', {'return_times': return_times})
+
+class StandigTimeAddView(View):
+    def post(self, request):
+        name = request.POST.get('name')
+        value = request.POST.get('value')
+        status = request.POST.get('status')
+        if not name or not value or not status:
+            return JsonResponse({'success': False, 'msg': 'All fields are required.'})
+        StandingTime.objects.create(name=name, value=value, status=status)
+        return JsonResponse({'success': True})
+
+class StandingTimeEditView(View):
+    def post(self, request, pk):
+        return_time = get_object_or_404(StandingTime, pk=pk)
+        name = request.POST.get('name')
+        value = request.POST.get('value')
+        status = request.POST.get('status')
+        if not name or not value or not status:
+            return JsonResponse({'success': False, 'msg': 'All fields are required.'})
+        return_time.name = name
+        return_time.value = value
+        return_time.status = status
+        return_time.save()
+        return JsonResponse({'success': True})
+
+class StandingTimeDeleteView(View):
+    def post(self, request, pk):
+        return_time = get_object_or_404(StandingTime, pk=pk)
+        return_time.delete()
+        return JsonResponse({'success': True})
+
+class WarrantyView(View):
+    def get(self, request):
+        warranties = Warranty.objects.all()
+        return render(request, 'superuser/warranty.html', {'warranties': warranties})
+class AddWarrantyView(View):
+    def post(self, request):
+        name = request.POST.get('name')
+        status = request.POST.get('status')
+
+        if not name:
+            return JsonResponse({'success': False, 'msg': 'Name is required.'})
+        if not status:
+            return JsonResponse({'success': False, 'msg': 'Status is required.'})
+        if Warranty.objects.filter(name__iexact=name).exists():
+            return JsonResponse({'success': False, 'msg': 'Warranty with this name already exists.'})
+
+        Warranty.objects.create(name=name, status=status)
+        return JsonResponse({'success': True})
+
+class EditWarrantyView(View):
+    def post(self, request, pk):
+        warranty = get_object_or_404(Warranty, pk=pk)
+        name = request.POST.get('name')
+        status = request.POST.get('status')
+
+        if not name:
+            return JsonResponse({'success': False, 'msg': 'Name is required.'})
+        if not status:
+            return JsonResponse({'success': False, 'msg': 'Status is required.'})
+        if Warranty.objects.filter(name__iexact=name).exclude(pk=pk).exists():
+            return JsonResponse({'success': False, 'msg': 'Another warranty with this name already exists.'})
+
+        warranty.name = name
+        warranty.status = status
+        warranty.save()
+        return JsonResponse({'success': True})
+
+class DeleteWarrantyView(View):
+    def post(self, request, pk):
+        warranty = get_object_or_404(Warranty, pk=pk)
+        warranty.delete()
+        return JsonResponse({'success': True})
+
+
+class SplashScreenView(TemplateView):
+    template_name = 'superuser/SplashScreen.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['screens'] = SplashScreen.objects.all().order_by('screen_order')
+        return context
+class SplashScreenAddView(View):
+    def post(self, request):
+        screen_image = request.FILES.get('screen_image')
+        screen_text = request.POST.get('screen_text')
+        screen_title = request.POST.get('screen_title', '').strip()
+        screen_body = request.POST.get('screen_body', '').strip()
+        screen_order = request.POST.get('screen_order', '').strip()
+        screen_language = request.POST.get('screen_language', '').strip()
+
+        if not screen_title:
+            return JsonResponse({'success': False, 'field': 'title', 'msg': 'Screen Title is required.'})
+        if not screen_body:
+            return JsonResponse({'success': False, 'field': 'body', 'msg': 'Screen Body is required.'})
+        if not screen_order:
+            return JsonResponse({'success': False, 'field': 'order', 'msg': 'Screen Order is required.'})
+        if not screen_language:
+            return JsonResponse({'success': False, 'field': 'language', 'msg': 'Screen Language is required.'})
+        if not screen_image:
+            return JsonResponse({'success': False, 'field': 'image', 'msg': 'Screen Image is required.'})
+
+        SplashScreen.objects.create(
+            screen_image=screen_image,
+            screen_text=screen_text,
+            screen_title=screen_title,
+            screen_body=screen_body,
+            screen_order=screen_order,
+            screen_language=screen_language
+        )
+        return JsonResponse({'success': True})
+class SplashScreenEditView(View):
+    def post(self, request, pk):
+        screen = get_object_or_404(SplashScreen, pk=pk)
+        screen_text = request.POST.get('screen_text')
+        screen_title = request.POST.get('screen_title', '').strip()
+        screen_body = request.POST.get('screen_body', '').strip()
+        screen_order = request.POST.get('screen_order', '').strip()
+        screen_language = request.POST.get('screen_language', '').strip()
+
+        if not screen_title:
+            return JsonResponse({'success': False, 'field': 'title', 'msg': 'Screen Title is required.'})
+        if not screen_body:
+            return JsonResponse({'success': False, 'field': 'body', 'msg': 'Screen Body is required.'})
+        if not screen_order:
+            return JsonResponse({'success': False, 'field': 'order', 'msg': 'Screen Order is required.'})
+        if not screen_language:
+            return JsonResponse({'success': False, 'field': 'language', 'msg': 'Screen Language is required.'})
+
+        screen.screen_text = screen_text
+        screen.screen_title = screen_title
+        screen.screen_body = screen_body
+        screen.screen_order = screen_order
+        screen.screen_language = screen_language
+        if request.FILES.get('screen_image'):
+            screen.screen_image = request.FILES.get('screen_image')
+        screen.save()
+        return JsonResponse({'success': True})
+
+class SplashScreenDeleteView(View):
+    def post(self, request, pk):
+        screen = get_object_or_404(SplashScreen, pk=pk)
+        screen.delete()
+        return JsonResponse({'success': True})

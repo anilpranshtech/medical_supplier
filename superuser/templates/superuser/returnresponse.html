@@ -27,41 +27,41 @@
           </div>
 
           <div class="card-body table-responsive">
-            <table class="table table-row-dashed align-middle fs-6 gy-5">
+            <table class="table table-row-dashed align-middle fs-6 gy-5" style="width: 100%; border-collapse: collapse;">
               <thead>
-                <tr class="text-gray-500 fw-bold fs-7 text-uppercase">
-                  <th>Reason En</th>
-                  <th class="text-center">Actions</th>
+                <tr class="text-gray-500 fw-bold fs-7 text-uppercase" style="text-align: center;">
+                  <th style="padding: 12px;">Reason En</th>
+                  <th style="padding: 12px;">Actions</th>
                 </tr>
               </thead>
-
-              <tbody class="fw-semibold text-gray-600">
+          
+              <tbody class="fw-semibold text-gray-600" style="text-align: center;">
                 {% for r in reasons %}
                 <tr>
-                  <td>{{ r.reason_en }}</td>
-
-                  <td class="text-center">
+                  <td style="padding: 12px; vertical-align: middle;">{{ r.reason_en }}</td>
+                  <td style="padding: 12px; vertical-align: middle;">
                     <button class="btn btn-sm btn-light-primary editBtn"
-                      data-id="{{ r.id }}"
-                      data-reason="{{ r.reason_en }}">
+                            data-id="{{ r.id }}"
+                            data-reason="{{ r.reason_en }}"
+                            style="margin: 0 4px; padding: 5px 12px; font-size: 13px;">
                       Edit
                     </button>
-
                     <button class="btn btn-sm btn-light-danger deleteBtn"
-                      data-id="{{ r.id }}">
+                            data-id="{{ r.id }}"
+                            style="margin: 0 4px; padding: 5px 12px; font-size: 13px;">
                       Delete
                     </button>
                   </td>
                 </tr>
-
                 {% empty %}
                 <tr>
-                  <td colspan="2" class="text-center text-muted">No return reasons added yet.</td>
+                  <td colspan="2" style="padding: 12px; color: #888;">No return reasons added yet.</td>
                 </tr>
                 {% endfor %}
               </tbody>
             </table>
           </div>
+          
 
         </div>
 
