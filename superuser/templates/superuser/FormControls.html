@@ -1,0 +1,102 @@
+{% extends 'superuser/superuser_base.html' %}
+{% load static %}
+
+{% block title %}Form Controls{% endblock %}
+
+{% block content %}
+<div class="app-main flex-column flex-row-fluid" id="kt_app_main">
+  <div class="d-flex flex-column flex-column-fluid">
+    <div id="kt_app_content" class="app-content flex-column-fluid mx-5">
+      <div id="kt_app_content_container" class="app-container container-fluid">
+
+        <div class="card card-flush">
+          <div class="card-header flex-wrap align-items-center py-5 gap-4">
+            <div class="card-title">Form Controls</div>
+          </div>
+
+          <div class="card-body table-responsive">
+            <table class="table table-row-dashed align-middle fs-6 gy-5" style="width: 100%;">
+              <thead>
+                <tr class="text-gray-500 fw-bold fs-7 text-uppercase" style="text-align: center;">
+                  <th>Form</th>
+                  <th>Name</th>
+                  <th>Required</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody class="fw-semibold text-gray-600" style="text-align: center;">
+                {% for c in controls %}
+                <tr>
+                  <td>{{ c.form }}</td>
+                  <td>{{ c.name }}</td>
+
+                  <!-- Required Toggle -->
+                  <td>
+                    <div class="form-check form-switch d-flex justify-content-center">
+                      <input class="form-check-input required-toggle" type="checkbox"
+                             data-id="{{ c.id }}" {% if c.required %}checked{% endif %}>
+                    </div>
+                  </td>
+
+                  <!-- Status Toggle -->
+                  <td>
+                    <div class="form-check form-switch d-flex justify-content-center">
+                      <input class="form-check-input status-toggle" type="checkbox"
+                             data-id="{{ c.id }}" {% if c.status %}checked{% endif %}>
+                    </div>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4">No Form Controls available.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block page_only_scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+  function updateToggle(id, field, value) {
+    fetch(`/superuser/form-controls/toggle/${id}/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ field: field, value: value })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (!data.success) alert('Failed to update!');
+    });
+  }
+
+  // Required toggle
+  document.querySelectorAll('.required-toggle').forEach(function(el){
+    el.addEventListener('change', function(){
+      const id = this.dataset.id;
+      const value = this.checked;
+      updateToggle(id, 'required', value);
+    });
+  });
+
+  // Status toggle
+  document.querySelectorAll('.status-toggle').forEach(function(el){
+    el.addEventListener('change', function(){
+      const id = this.dataset.id;
+      const value = this.checked;
+      updateToggle(id, 'status', value);
+    });
+  });
+
+});
+</script>
+{% endblock %}

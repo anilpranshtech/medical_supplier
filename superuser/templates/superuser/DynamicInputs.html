@@ -1,0 +1,249 @@
+{% extends 'superuser/superuser_base.html' %}
+{% load static %}
+
+{% block title %}Dynamic Inputs{% endblock %}
+
+{% block content %}
+<div class="app-main flex-column flex-row-fluid" id="kt_app_main">
+  <div class="d-flex flex-column flex-column-fluid">
+    <div id="kt_app_content" class="app-content flex-column-fluid mx-5">
+      <div id="kt_app_content_container" class="app-container container-fluid">
+
+        <!-- Success Message -->
+        <div id="successMessage" class="alert alert-success d-none" style="font-size:16px;">
+          <strong id="successText"></strong>
+        </div>
+
+        <!-- Card -->
+        <div class="card card-flush">
+          <div class="card-header flex-wrap align-items-center py-5 gap-4">
+            <div class="card-title">Dynamic Inputs</div>
+            <div class="card-toolbar">
+              <button class="btn btn-primary" id="addBtn">
+                <i class="fas fa-plus me-2"></i>Add Input
+              </button>
+            </div>
+          </div>
+
+          <div class="card-body table-responsive">
+            <table class="table table-row-dashed align-middle fs-6 gy-5" style="width: 100%;">
+              <thead>
+                <tr class="text-gray-500 fw-bold fs-7 text-uppercase" style="text-align: center;">
+                  <th>Form Name</th>
+                  <th>Field Type</th>
+                  <th>Title EN</th>
+                  <th>Required</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody class="fw-semibold text-gray-600" style="text-align: center;">
+                {% for input in inputs %}
+                <tr>
+                  <td>{{ input.form_name }}</td>
+                  <td>{{ input.field_type }}</td>
+                  <td>{{ input.title_en }}</td>
+                  <td>{{ input.required|yesno:"Yes,No" }}</td>
+                  <td>{{ input.status|yesno:"Active,Inactive" }}</td>
+                  <td>
+                    <button class="btn btn-sm btn-light-primary editBtn"
+                            data-id="{{ input.id }}"
+                            data-form_name="{{ input.form_name }}"
+                            data-field_type="{{ input.field_type }}"
+                            data-title_en="{{ input.title_en }}"
+                            data-required="{{ input.required }}"
+                            data-status="{{ input.status }}">
+                      Edit
+                    </button>
+                    <button class="btn btn-sm btn-light-danger deleteBtn"
+                            data-id="{{ input.id }}">
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6">No records found.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal for Add/Edit Dynamic Input -->
+<div class="modal fade" id="dynamicModal">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-3">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="modalTitle"></h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="dynamicForm">
+          {% csrf_token %}
+          <input type="hidden" id="did" name="did">
+          <label class="form-label">Form Name <span style="color:red;">*</span></label>
+          <select name="form_name" id="formName" class="form-control" required>
+              <option value="">Select Form</option>
+              {% for fname in form_names %}
+              <option value="{{ fname }}">{{ fname }}</option>
+              {% endfor %}
+          </select>
+          <div class="text-danger mt-1" id="formNameError" style="display:none;"></div>
+          <label class="form-label mt-3">Field Type <span style="color:red;">*</span></label>
+          <select name="field_type" id="fieldType" class="form-control" required>
+            <option value="">Select Type</option>
+            <option value="text">Text</option>
+            <option value="checkbox">Checkbox</option>
+            <option value="select">Select</option>
+          </select>
+          <div class="text-danger mt-1" id="fieldTypeError" style="display:none;"></div>
+
+          <label class="form-label mt-3">Title EN <span style="color:red;">*</span></label>
+          <input type="text" name="title_en" id="titleEn" class="form-control" required>
+          <div class="text-danger mt-1" id="titleEnError" style="display:none;"></div>
+
+          <div class="form-check mt-3">
+            <input class="form-check-input" type="checkbox" id="requiredField" name="required">
+            <label class="form-check-label">Required</label>
+          </div>
+
+          <div class="form-check mt-2">
+            <input class="form-check-input" type="checkbox" id="statusField" name="status" checked>
+            <label class="form-check-label">Status</label>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" id="saveBtn">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block page_only_scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const modal = new bootstrap.Modal(document.getElementById('dynamicModal'));
+  const idField = document.getElementById('did');
+  const formName = document.getElementById('formName');
+  const fieldType = document.getElementById('fieldType');
+  const titleEn = document.getElementById('titleEn');
+  const requiredField = document.getElementById('requiredField');
+  const statusField = document.getElementById('statusField');
+  const modalTitle = document.getElementById('modalTitle');
+
+  const formNameError = document.getElementById('formNameError');
+  const fieldTypeError = document.getElementById('fieldTypeError');
+  const titleEnError = document.getElementById('titleEnError');
+
+  function resetForm() {
+    idField.value = "";
+    formName.value = "";
+    fieldType.value = "";
+    titleEn.value = "";
+    requiredField.checked = false;
+    statusField.checked = true;
+
+    formNameError.style.display = "none";
+    fieldTypeError.style.display = "none";
+    titleEnError.style.display = "none";
+  }
+
+  function showSuccess(msg) {
+    const box = document.getElementById("successMessage");
+    const text = document.getElementById("successText");
+    text.innerText = msg;
+    box.classList.remove("d-none");
+    setTimeout(() => box.classList.add("d-none"), 2000);
+  }
+
+  function validateForm() {
+    let valid = true;
+
+    if (!formName.value.trim()) {
+      formNameError.innerText = "Form Name is required.";
+      formNameError.style.display = "block";
+      valid = false;
+    } else formNameError.style.display = "none";
+
+    if (!fieldType.value.trim()) {
+      fieldTypeError.innerText = "Field Type is required.";
+      fieldTypeError.style.display = "block";
+      valid = false;
+    } else fieldTypeError.style.display = "none";
+
+    if (!titleEn.value.trim()) {
+      titleEnError.innerText = "Title EN is required.";
+      titleEnError.style.display = "block";
+      valid = false;
+    } else titleEnError.style.display = "none";
+
+    return valid;
+  }
+
+  document.getElementById('addBtn').addEventListener('click', () => {
+    modalTitle.textContent = "Add Dynamic Input";
+    resetForm();
+    modal.show();
+  });
+
+  document.querySelectorAll('.editBtn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      modalTitle.textContent = "Edit Dynamic Input";
+      idField.value = this.dataset.id;
+      formName.value = this.dataset.form_name;
+      fieldType.value = this.dataset.field_type;
+      titleEn.value = this.dataset.title_en;
+      requiredField.checked = this.dataset.required === 'True';
+      statusField.checked = this.dataset.status === 'True';
+      formNameError.style.display = fieldTypeError.style.display = titleEnError.style.display = "none";
+      modal.show();
+    });
+  });
+
+  document.getElementById('saveBtn').addEventListener('click', function () {
+    if (!validateForm()) return;
+
+    const did = idField.value;
+    const url = did ? `/superuser/dynamic-inputs/edit/${did}/` : `/superuser/dynamic-inputs/add/`;
+    fetch(url, {
+      method: "POST",
+      headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value },
+      body: new FormData(document.getElementById('dynamicForm'))
+    })
+    .then(r => r.json())
+    .then(res => {
+      if (res.success) {
+        modal.hide();
+        showSuccess(did ? "Dynamic Input updated!" : "Dynamic Input added!");
+        setTimeout(() => location.reload(), 1000);
+      } else {
+        alert(res.msg || "Something went wrong!");
+      }
+    });
+  });
+
+  document.querySelectorAll('.deleteBtn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      if (!confirm("Delete this record?")) return;
+      fetch(`/superuser/dynamic-inputs/delete/${this.dataset.id}/`, {
+        method: "POST",
+        headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value }
+      })
+      .then(r => r.json())
+      .then(res => {
+        if (res.success) location.reload();
+        else alert(res.msg);
+      });
+    });
+  });
+});
+</script>
+{% endblock %}

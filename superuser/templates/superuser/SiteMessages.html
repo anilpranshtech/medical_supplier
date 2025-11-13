@@ -1,0 +1,166 @@
+{% extends 'superuser/superuser_base.html' %}
+{% load static %}
+
+{% block title %}Site Messages{% endblock %}
+
+{% block content %}
+
+<div class="app-main flex-column flex-row-fluid" id="kt_app_main">
+  <div class="d-flex flex-column flex-column-fluid">
+    <div id="kt_app_content" class="app-content flex-column-fluid mx-5">
+      <div id="kt_app_content_container" class="app-container container-fluid">
+
+        <!-- Success Message -->
+        <div id="successMessage" class="alert alert-success d-none" style="font-size:16px;">
+          <strong id="successText"></strong>
+        </div>
+
+        <div class="card card-flush">
+          <div class="card-header flex-wrap align-items-center py-5 gap-4">
+            <div class="card-title">Site Messages</div>
+          </div>
+
+          <div class="card-body table-responsive">
+            <table class="table table-row-dashed align-middle fs-6 gy-5" style="width: 100%;">
+                <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+
+              <thead>
+                <tr class="text-gray-500 fw-bold fs-7 text-uppercase" style="text-align: center;">
+                  <th>Full Name</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>Subject</th>
+                  <th>Message</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody class="fw-semibold text-gray-600" style="text-align: center;">
+                {% for c in contacts %}
+                <tr>
+                  <td>{{ c.full_name }}</td>
+                  <td>{{ c.email }}</td>
+                  <td>{{ c.phone }}</td>
+                  <td>{{ c.subject }}</td>
+                  <td style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    {{ c.message }}
+                  </td>
+                  
+                  <td>
+                    <button class="btn btn-sm btn-light-primary viewBtn"
+                            data-id="{{ c.id }}"
+                            data-full_name="{{ c.full_name }}"
+                            data-email="{{ c.email }}"
+                            data-phone="{{ c.phone }}"
+                            data-subject="{{ c.subject }}"
+                            data-message="{{ c.message }}">
+                      View
+                    </button>
+                    <button class="btn btn-sm btn-light-danger deleteBtn"
+                            data-id="{{ c.id }}">
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6">No records found.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- View Modal -->
+<div class="modal fade" id="contactModal">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content rounded-3">
+        <div class="modal-header text-white bg-primary">
+          <h5 class="modal-title">Contact Details</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" style="max-height: 400px; overflow-y: auto;">
+          <p><strong>Full Name:</strong> <span id="viewFullName"></span></p>
+          <p><strong>Email:</strong> <span id="viewEmail"></span></p>
+          <p><strong>Phone:</strong> <span id="viewPhone"></span></p>
+          <p><strong>Subject:</strong> <span id="viewSubject"></span></p>
+          <p><strong>Message:</strong></p>
+          <p id="viewMessage" style="white-space: pre-wrap;"></p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-light" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+{% endblock %}
+
+{% block page_only_scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const modal = new bootstrap.Modal(document.getElementById('contactModal'));
+  const fullNameFld = document.getElementById('viewFullName');
+  const emailFld = document.getElementById('viewEmail');
+  const phoneFld = document.getElementById('viewPhone');
+  const subjectFld = document.getElementById('viewSubject');
+  const messageFld = document.getElementById('viewMessage');
+
+  const successBox = document.getElementById("successMessage");
+  const successText = document.getElementById("successText");
+
+  function showSuccess(msg) {
+    successText.innerText = msg;
+    successBox.classList.remove("d-none");
+    setTimeout(() => successBox.classList.add("d-none"), 2000);
+  }
+
+  // View button click
+  document.querySelectorAll('.viewBtn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      fullNameFld.innerText = this.dataset.full_name;
+      emailFld.innerText = this.dataset.email;
+      phoneFld.innerText = this.dataset.phone;
+      subjectFld.innerText = this.dataset.subject;
+      messageFld.innerText = this.dataset.message;
+      modal.show();
+    });
+  });
+
+  document.querySelectorAll('.deleteBtn').forEach(btn => {
+  btn.addEventListener('click', function (e) {
+    e.preventDefault();
+    const contactId = this.dataset.id;
+    if (!contactId) return alert("Contact ID missing!");
+
+    if (!confirm("Delete this record?")) return;
+
+    fetch(`/superuser/site-messages/delete/${contactId}/`, {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value,
+        "Content-Type": "application/json"
+      }
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        showSuccess("Deleted successfully!");
+        setTimeout(() => location.reload(), 1000);
+      } else {
+        alert("Failed to delete.");
+      }
+    })
+    .catch(err => {
+      console.error("Delete error:", err);
+      alert("Something went wrong!");
+    });
+  });
+});
+
+});
+</script>
+{% endblock %}

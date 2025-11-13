@@ -1,0 +1,199 @@
+{% extends 'superuser/superuser_base.html' %}
+{% load static %}
+{% block title %}FAQ Management{% endblock %}
+
+{% block content %}
+<div class="app-main flex-column flex-row-fluid" id="kt_app_main">
+  <div class="d-flex flex-column flex-column-fluid">
+    <div id="kt_app_content" class="app-content flex-column-fluid mx-5">
+      <div id="kt_app_content_container" class="app-container container-fluid">
+
+        <div id="successMessage" class="alert alert-success d-none" style="font-size:16px;">
+          <strong id="successText"></strong>
+        </div>
+
+        <div class="card card-flush">
+          <div class="card-header flex-wrap align-items-center py-5 gap-4">
+            <div class="card-title">FAQ List</div>
+            <div class="card-toolbar">
+              <button class="btn btn-primary" id="addBtn">
+                <i class="fas fa-plus me-2"></i> Add FAQ
+              </button>
+            </div>
+          </div>
+
+          <div class="card-body table-responsive">
+            <table class="table table-row-dashed align-middle fs-6 gy-5" style="width: 100%;">
+              <thead>
+                <tr class="text-gray-500 fw-bold fs-7 text-uppercase text-center">
+                  <th>Title (EN)</th>
+                  <th>Description (EN)</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody class="fw-semibold text-gray-600 text-center">
+                {% for f in faqs %}
+                <tr>
+                  <td>{{ f.title_en }}</td>
+                  <td>{{ f.description_en|truncatewords:10 }}</td>
+                  <td>
+                    <button class="btn btn-sm btn-light-primary editBtn"
+                            data-id="{{ f.id }}"
+                            data-title="{{ f.title_en }}"
+                            data-description="{{ f.description_en }}">
+                      Edit
+                    </button>
+                    <button class="btn btn-sm btn-light-danger deleteBtn"
+                            data-id="{{ f.id }}">
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="3">No FAQs found.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="faqModal">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-3">
+      <div class="modal-header text-white bg-primary">
+        <h5 class="modal-title" id="modalTitle"></h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="faqForm">
+          {% csrf_token %}
+          <input type="hidden" id="fid" name="fid">
+
+          <label class="form-label fw-semibold">Title (En) <span style="color:red;">*</span></label>
+          <input type="text" name="title_en" id="titleField" class="form-control" required>
+          <div class="text-danger mt-1" id="titleError" style="display:none;"></div>
+
+          <label class="form-label fw-semibold mt-3">Description (En) <span style="color:red;">*</span></label>
+          <textarea name="description_en" id="descField" class="form-control" rows="3" required></textarea>
+          <div class="text-danger mt-1" id="descError" style="display:none;"></div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" id="saveBtn">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block page_only_scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const modal = new bootstrap.Modal(document.getElementById('faqModal'));
+  const title = document.getElementById('modalTitle');
+  const idField = document.getElementById('fid');
+  const titleFld = document.getElementById('titleField');
+  const descFld = document.getElementById('descField');
+  const titleError = document.getElementById('titleError');
+  const descError = document.getElementById('descError');
+
+  function showSuccess(msg) {
+    const box = document.getElementById("successMessage");
+    const text = document.getElementById("successText");
+    text.innerText = msg;
+    box.classList.remove("d-none");
+    setTimeout(() => box.classList.add("d-none"), 2000);
+  }
+
+  function resetForm() {
+    idField.value = "";
+    titleFld.value = "";
+    descFld.value = "";
+    titleError.style.display = "none";
+    descError.style.display = "none";
+  }
+
+  document.getElementById('addBtn').addEventListener('click', () => {
+    title.textContent = "Add FAQ";
+    resetForm();
+    modal.show();
+  });
+
+  document.querySelectorAll('.editBtn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      title.textContent = "Edit FAQ";
+      idField.value = this.dataset.id;
+      titleFld.value = this.dataset.title;
+      descFld.value = this.dataset.description;
+      modal.show();
+    });
+  });
+
+  function validateForm() {
+    let valid = true;
+    if (!titleFld.value.trim()) {
+      titleError.innerText = "Title En is required.";
+      titleError.style.display = "block";
+      valid = false;
+    } else titleError.style.display = "none";
+
+    if (!descFld.value.trim()) {
+      descError.innerText = "Description En is required.";
+      descError.style.display = "block";
+      valid = false;
+    } else descError.style.display = "none";
+    return valid;
+  }
+
+  document.getElementById('saveBtn').addEventListener('click', function () {
+    if (!validateForm()) return;
+
+    const fid = idField.value;
+    const url = fid ? `/superuser/faq/edit/${fid}/` : `/superuser/faq/add/`;
+
+    fetch(url, {
+      method: "POST",
+      headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value },
+      body: new FormData(document.getElementById('faqForm'))
+    })
+    .then(r => r.json())
+    .then(res => {
+      if (res.success) {
+        modal.hide();
+        showSuccess(res.msg);
+        setTimeout(() => location.reload(), 1000);
+      } else {
+        titleError.innerText = res.msg;
+        titleError.style.display = "block";
+      }
+    });
+  });
+
+  document.querySelectorAll('.deleteBtn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      if (!confirm("Delete this FAQ?")) return;
+      fetch(`/superuser/faq/delete/${this.dataset.id}/`, {
+        method: "POST",
+        headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value }
+      })
+      .then(r => r.json())
+      .then(res => {
+        if (res.success) {
+          showSuccess(res.msg);
+          setTimeout(() => location.reload(), 1000);
+        } else {
+          alert(res.msg);
+        }
+      });
+    });
+  });
+});
+</script>
+{% endblock %}

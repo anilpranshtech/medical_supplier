@@ -22,7 +22,7 @@ from superuser.filters import QS_filter_user, QS_Products_filter, QS_orders_filt
 from superuser.mixins import StaffAccountRequiredMixin, PermissionRequiredMixin
 from django.contrib.auth.models import User, Group, Permission
 from django.contrib.contenttypes.models import ContentType
-
+from django.contrib.auth.hashers import make_password
 import requests
 from .refunds import process_refund
 from .utils import *
@@ -4351,3 +4351,306 @@ class SplashScreenDeleteView(View):
         screen = get_object_or_404(SplashScreen, pk=pk)
         screen.delete()
         return JsonResponse({'success': True})
+
+class StaticcontentsView(TemplateView):
+    template_name = "superuser/Staticcontents.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["contents"] = Staticcontents.objects.all().order_by("-id")
+        return context
+
+class AddStaticcontentView(View):
+    def post(self, request):
+        name_en = request.POST.get("name_en", "").strip()
+        description_en = request.POST.get("description_en", "").strip()
+
+        if not name_en:
+            return JsonResponse({"success": False, "msg": "Name En is required."})
+        if not description_en:
+            return JsonResponse({"success": False, "msg": "Description EN is required."})
+
+        Staticcontents.objects.create(
+            name_en=name_en,
+            description_en=description_en
+        )
+        return JsonResponse({"success": True})
+
+class EditStaticcontentView(View):
+    def post(self, request, pk):
+        name_en = request.POST.get("name_en", "").strip()
+        description_en = request.POST.get("description_en", "").strip()
+
+        if not name_en:
+            return JsonResponse({"success": False, "msg": "Name En is required."})
+        if not description_en:
+            return JsonResponse({"success": False, "msg": "Description EN is required."})
+
+        content = get_object_or_404(Staticcontents, pk=pk)
+        content.name_en = name_en
+        content.description_en = description_en
+        content.save()
+        return JsonResponse({"success": True})
+
+class DeleteStaticcontentView(View):
+    def post(self, request, pk):
+        content = get_object_or_404(Staticcontents, pk=pk)
+        content.delete()
+        return JsonResponse({"success": True})
+
+class SocialLinksView(TemplateView):
+    template_name = "superuser/sociallink.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["links"] = SocialLinks.objects.all()
+        return context
+
+
+class AddSocialLinkView(View):
+    def post(self, request):
+        title = request.POST.get("title", "").strip()
+        link = request.POST.get("link", "").strip()
+
+        if not title:
+            return JsonResponse({"success": False, "msg": "Title is required."})
+        if not link:
+            return JsonResponse({"success": False, "msg": "Link is required."})
+
+        SocialLinks.objects.create(title=title, link=link)
+        return JsonResponse({"success": True})
+
+
+class EditSocialLinkView(View):
+    def post(self, request, pk):
+        title = request.POST.get("title", "").strip()
+        link = request.POST.get("link", "").strip()
+
+        if not title:
+            return JsonResponse({"success": False, "msg": "Title is required."})
+        if not link:
+            return JsonResponse({"success": False, "msg": "Link is required."})
+
+        try:
+            link_obj = SocialLinks.objects.get(pk=pk)
+            link_obj.title = title
+            link_obj.link = link
+            link_obj.save()
+            return JsonResponse({"success": True})
+        except SocialLinks.DoesNotExist:
+            return JsonResponse({"success": False, "msg": "Record not found."})
+
+
+class DeleteSocialLinkView(View):
+    def post(self, request, pk):
+        try:
+            link_obj = SocialLinks.objects.get(pk=pk)
+            link_obj.delete()
+            return JsonResponse({"success": True})
+        except SocialLinks.DoesNotExist:
+            return JsonResponse({"success": False, "msg": "Record not found."})
+class FaqView(TemplateView):
+    template_name = "superuser/faq.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['faqs'] = FaqForm.objects.all()
+        return context
+
+
+class AddFaqView(View):
+    def post(self, request):
+        title = request.POST.get('title_en')
+        desc = request.POST.get('description_en')
+
+        if not title or not desc:
+            return JsonResponse({'success': False, 'msg': 'All fields are required.'})
+
+        faq = FaqForm.objects.create(title_en=title, description_en=desc)
+        return JsonResponse({'success': True, 'msg': 'FAQ added successfully!', 'id': faq.id})
+
+
+class EditFaqView(View):
+    def post(self, request, pk):
+        faq = get_object_or_404(FaqForm, pk=pk)
+        title = request.POST.get('title_en')
+        desc = request.POST.get('description_en')
+
+        if not title or not desc:
+            return JsonResponse({'success': False, 'msg': 'All fields are required.'})
+
+        faq.title_en = title
+        faq.description_en = desc
+        faq.save()
+        return JsonResponse({'success': True, 'msg': 'FAQ updated successfully!'})
+
+
+class DeleteFaqView(View):
+    def post(self, request, pk):
+        faq = get_object_or_404(FaqForm, pk=pk)
+        faq.delete()
+        return JsonResponse({'success': True, 'msg': 'FAQ deleted successfully!'})
+class AdminListView(TemplateView):
+    template_name = "superuser/adminlist.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['links'] = AdminUser.objects.select_related('user').all()
+        return context
+
+class AddAdminView(View):
+    def post(self, request):
+        name = request.POST.get('name')
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        confirm_password = request.POST.get('confirm_password')
+        role = request.POST.get('role')
+
+        if password != confirm_password:
+            return JsonResponse({'success': False, 'msg': 'Passwords do not match!'})
+
+        if User.objects.filter(username=username).exists():
+            return JsonResponse({'success': False, 'msg': 'Username already exists!'})
+
+        user = User.objects.create(
+            first_name=name,
+            username=username,
+            email=email,
+            password=make_password(password)
+        )
+        AdminUser.objects.create(user=user, role=role)
+        return JsonResponse({'success': True})
+class EditAdminView(View):
+    def post(self, request, pk):
+        admin_user = get_object_or_404(AdminUser, pk=pk)
+        user = admin_user.user
+
+        name = request.POST.get('name')
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        role = request.POST.get('role')
+        password = request.POST.get('password')
+        confirm_password = request.POST.get('confirm_password')
+        if username and username != user.username:
+            if User.objects.filter(username=username).exclude(pk=user.pk).exists():
+                return JsonResponse({'success': False, 'msg': 'Username is already taken.'})
+        if email and email != user.email:
+            if User.objects.filter(email=email).exclude(pk=user.pk).exists():
+                return JsonResponse({'success': False, 'msg': 'Email is already taken.'})
+
+        if password or confirm_password:
+            if password != confirm_password:
+                return JsonResponse({'success': False, 'msg': 'Passwords do not match.'})
+            user.set_password(password)
+
+        user.first_name = name
+        user.username = username
+        user.email = email
+        user.save()
+
+        admin_user.role = role
+        admin_user.save()
+
+        return JsonResponse({'success': True})
+class DeleteAdminView(View):
+    def post(self, request, pk):
+        admin_user = get_object_or_404(AdminUser, pk=pk)
+        admin_user.user.delete()
+        admin_user.delete()
+        return JsonResponse({'success': True})
+
+class SiteMessagesView(TemplateView):
+    template_name = "superuser/SiteMessages.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['contacts'] = Contact.objects.all().order_by('-created_at')
+        return context
+
+class ContactDeleteView(View):
+    def post(self, request, pk):
+        contact = get_object_or_404(Contact, pk=pk)
+        contact.delete()
+        return JsonResponse({'success': True})
+
+from dashboard.forms import RetailProfileForm, WholesaleBuyerProfileForm, SupplierProfileForm
+
+class DynamicInputListView(View):
+    """Render the page with all dynamic inputs and form names"""
+    def get(self, request):
+        inputs = DynamicInput.objects.all()
+
+        # Get form names dynamically
+        form_classes = [RetailProfileForm, WholesaleBuyerProfileForm, SupplierProfileForm]
+        form_names = [form_class.__name__ for form_class in form_classes] 
+
+        return render(
+            request, 
+            'superuser/DynamicInputs.html', 
+            {'inputs': inputs, 'form_names': form_names}
+        )
+
+class DynamicInputAddView(View):
+    def post(self, request):
+        try:
+            form_name = request.POST.get('form_name')
+            field_type = request.POST.get('field_type')
+            title_en = request.POST.get('title_en')
+            required = request.POST.get('required') == 'on'
+            status = request.POST.get('status') == 'on'
+
+            DynamicInput.objects.create(
+                form_name=form_name,
+                field_type=field_type,
+                title_en=title_en,
+                required=required,
+                status=status
+            )
+            return JsonResponse({'success': True})
+        except Exception as e:
+            return JsonResponse({'success': False, 'msg': str(e)})
+
+class DynamicInputEditView(View):
+    def post(self, request, pk):
+        try:
+            obj = get_object_or_404(DynamicInput, pk=pk)
+            obj.form_name = request.POST.get('form_name')
+            obj.field_type = request.POST.get('field_type')
+            obj.title_en = request.POST.get('title_en')
+            obj.required = request.POST.get('required') == 'on'
+            obj.status = request.POST.get('status') == 'on'
+            obj.save()
+            return JsonResponse({'success': True})
+        except Exception as e:
+            return JsonResponse({'success': False, 'msg': str(e)})
+
+class DynamicInputDeleteView(View):
+    def post(self, request, pk):
+        try:
+            obj = get_object_or_404(DynamicInput, pk=pk)
+            obj.delete()
+            return JsonResponse({'success': True})
+        except Exception as e:
+            return JsonResponse({'success': False, 'msg': str(e)})
+class FormControlsView(TemplateView):
+    template_name = "superuser/FormControls.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['controls'] = FormControl.objects.all()
+        return context
+
+
+class FormControlToggleView(View):
+    def post(self, request, pk):
+        form_control = get_object_or_404(FormControl, pk=pk)
+        data = json.loads(request.body)
+        field = data.get('field')
+        value = data.get('value')
+
+        if field in ['required', 'status']:
+            setattr(form_control, field, value)
+            form_control.save()
+            return JsonResponse({'success': True})
+        return JsonResponse({'success': False})

@@ -1,0 +1,199 @@
+{% extends 'superuser/superuser_base.html' %}
+{% load static %}
+
+{% block title %}Social Links{% endblock %}
+
+{% block content %}
+<div class="app-main flex-column flex-row-fluid" id="kt_app_main">
+  <div class="d-flex flex-column flex-column-fluid">
+    <div id="kt_app_content" class="app-content flex-column-fluid mx-5">
+      <div id="kt_app_content_container" class="app-container container-fluid">
+
+        <div id="successMessage" class="alert alert-success d-none" style="font-size:16px;">
+          <strong id="successText"></strong>
+        </div>
+
+        <div class="card card-flush">
+          <div class="card-header flex-wrap align-items-center py-5 gap-4">
+            <div class="card-title">Social Links</div>
+            <div class="card-toolbar">
+              <button class="btn btn-primary" id="addBtn">
+                <i class="fas fa-plus me-2"></i>Add Social Link
+              </button>
+            </div>
+          </div>
+
+          <div class="card-body table-responsive">
+            <table class="table table-row-dashed align-middle fs-6 gy-5" style="width: 100%;">
+              <thead>
+                <tr class="text-gray-500 fw-bold fs-7 text-uppercase" style="text-align: center;">
+                  <th>Title</th>
+                  <th>Link</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody class="fw-semibold text-gray-600" style="text-align: center;">
+                {% for l in links %}
+                <tr>
+                  <td>{{ l.title }}</td>
+                  <td><a href="{{ l.link }}" target="_blank">{{ l.link }}</a></td>
+                  <td>
+                    <button class="btn btn-sm btn-light-primary editBtn"
+                            data-id="{{ l.id }}"
+                            data-title="{{ l.title }}"
+                            data-link="{{ l.link }}">
+                      Edit
+                    </button>
+                    <button class="btn btn-sm btn-light-danger deleteBtn"
+                            data-id="{{ l.id }}">
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="3">No records found.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="socialModal">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-3">
+      <div class="modal-header text-white">
+        <h5 class="modal-title" id="modalTitle"></h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="socialForm">
+          {% csrf_token %}
+          <input type="hidden" id="sid" name="sid">
+          
+          <label class="form-label fw-semibold">Title <span style="color:red;">*</span></label>
+          <input type="text" name="title" id="titleField" class="form-control" required>
+          <div class="text-danger mt-1" id="titleError" style="display:none;"></div>
+
+          <label class="form-label fw-semibold mt-3">Link <span style="color:red;">*</span></label>
+          <input type="url" name="link" id="linkField" class="form-control" required>
+          <div class="text-danger mt-1" id="linkError" style="display:none;"></div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" id="saveBtn">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block page_only_scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const modal = new bootstrap.Modal(document.getElementById('socialModal'));
+  const idField = document.getElementById('sid');
+  const titleFld = document.getElementById('titleField');
+  const linkFld = document.getElementById('linkField');
+  const titleError = document.getElementById('titleError');
+  const linkError = document.getElementById('linkError');
+  const modalTitle = document.getElementById('modalTitle');
+
+  function showSuccess(msg) {
+    const box = document.getElementById("successMessage");
+    const text = document.getElementById("successText");
+    text.innerText = msg;
+    box.classList.remove("d-none");
+    setTimeout(() => box.classList.add("d-none"), 2000);
+  }
+
+  function resetForm() {
+    idField.value = "";
+    titleFld.value = "";
+    linkFld.value = "";
+    titleError.style.display = "none";
+    linkError.style.display = "none";
+  }
+
+  document.getElementById('addBtn').addEventListener('click', () => {
+    modalTitle.textContent = "Add Social Link";
+    resetForm();
+    modal.show();
+  });
+
+  document.querySelectorAll('.editBtn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      modalTitle.textContent = "Edit Social Link";
+      idField.value = this.dataset.id;
+      titleFld.value = this.dataset.title;
+      linkFld.value = this.dataset.link;
+      modal.show();
+    });
+  });
+
+  function validateForm() {
+    let valid = true;
+    if (!titleFld.value.trim()) {
+      titleError.innerText = "Title is required.";
+      titleError.style.display = "block";
+      valid = false;
+    } else titleError.style.display = "none";
+
+    if (!linkFld.value.trim()) {
+      linkError.innerText = "Link is required.";
+      linkError.style.display = "block";
+      valid = false;
+    } else linkError.style.display = "none";
+    return valid;
+  }
+
+  document.getElementById('saveBtn').addEventListener('click', function () {
+    if (!validateForm()) return;
+    const sid = idField.value;
+    const url = sid ? `/superuser/social-links/edit/${sid}/` : `/superuser/social-links/add/`;
+
+    fetch(url, {
+      method: "POST",
+      headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value },
+      body: new FormData(document.getElementById('socialForm'))
+    })
+    .then(r => r.json())
+    .then(res => {
+      if (res.success) {
+        modal.hide();
+        showSuccess(sid ? "Social Link updated successfully!" : "Social Link added successfully!");
+        setTimeout(() => location.reload(), 1000);
+      } else {
+        titleError.innerText = res.msg || "Something went wrong!";
+        titleError.style.display = "block";
+      }
+    });
+  });
+
+  document.querySelectorAll('.deleteBtn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      if (!confirm("Delete this record?")) return;
+      fetch(`/superuser/social-links/delete/${this.dataset.id}/`, {
+        method: "POST",
+        headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value }
+      })
+      .then(r => r.json())
+      .then(res => {
+        if (res.success) {
+          showSuccess("Deleted successfully!");
+          setTimeout(() => location.reload(), 1000);
+        } else {
+          alert(res.msg);
+        }
+      });
+    });
+  });
+});
+</script>
+{% endblock %}

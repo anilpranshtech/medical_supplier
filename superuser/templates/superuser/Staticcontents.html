@@ -1,0 +1,199 @@
+{% extends 'superuser/superuser_base.html' %}
+{% load static %}
+{% block title %}Website Metadata{% endblock %}
+
+{% block content %}
+<div class="app-main flex-column flex-row-fluid" id="kt_app_main">
+  <div class="d-flex flex-column flex-column-fluid">
+    <div id="kt_app_content" class="app-content flex-column-fluid mx-5">
+      <div id="kt_app_content_container" class="app-container container-fluid">
+
+        <div id="successMessage" class="alert alert-success d-none" style="font-size:16px;">
+          <strong id="successText"></strong>
+        </div>
+
+        <div class="card card-flush">
+          <div class="card-header flex-wrap align-items-center py-5 gap-4">
+            <div class="card-title">Static contents</div>
+            <div class="card-toolbar">
+              <button class="btn btn-primary" id="addBtn">
+                <i class="fas fa-plus me-2"></i>Add Static 
+              </button>
+            </div>
+          </div>
+
+          <div class="card-body table-responsive">
+            <table class="table table-row-dashed align-middle fs-6 gy-5" style="width: 100%;">
+              <thead>
+                <tr class="text-gray-500 fw-bold fs-7 text-uppercase" style="text-align: center;">
+                  <th>Name (EN)</th>
+                  <th>Description (EN)</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody class="fw-semibold text-gray-600" style="text-align: center;">
+                {% for c in contents %}
+                <tr>
+                  <td>{{ c.name_en }}</td>
+                  <td>{{ c.description_en|truncatewords:10 }}</td>
+                  <td>
+                    <button class="btn btn-sm btn-light-primary editBtn"
+                            data-id="{{ c.id }}"
+                            data-name="{{ c.name_en }}"
+                            data-description="{{ c.description_en }}">
+                      Edit
+                    </button>
+                    <button class="btn btn-sm btn-light-danger deleteBtn"
+                            data-id="{{ c.id }}">
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="3">No records found.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="contentModal">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-3">
+      <div class="modal-header text-white">
+        <h5 class="modal-title" id="modalTitle"></h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="contentForm">
+          {% csrf_token %}
+          <input type="hidden" id="cid" name="cid">
+          
+          <label class="form-label fw-semibold">Name (En) <span style="color:red;">*</span></label>
+          <input type="text" name="name_en" id="nameField" class="form-control" required>
+          <div class="text-danger mt-1" id="nameError" style="display:none;"></div>
+
+          <label class="form-label fw-semibold mt-3">Description (En) <span style="color:red;">*</span></label>
+          <textarea name="description_en" id="descriptionField" class="form-control" rows="3" required></textarea>
+          <div class="text-danger mt-1" id="descError" style="display:none;"></div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" id="saveBtn">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block page_only_scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const modal = new bootstrap.Modal(document.getElementById('contentModal'));
+  const title = document.getElementById('modalTitle');
+  const idField = document.getElementById('cid');
+  const nameFld = document.getElementById('nameField');
+  const descFld = document.getElementById('descriptionField');
+  const nameError = document.getElementById('nameError');
+  const descError = document.getElementById('descError');
+
+  function showSuccess(msg) {
+    const box = document.getElementById("successMessage");
+    const text = document.getElementById("successText");
+    text.innerText = msg;
+    box.classList.remove("d-none");
+    setTimeout(() => box.classList.add("d-none"), 2000);
+  }
+
+  function resetForm() {
+    idField.value = "";
+    nameFld.value = "";
+    descFld.value = "";
+    nameError.style.display = "none";
+    descError.style.display = "none";
+  }
+
+  document.getElementById('addBtn').addEventListener('click', () => {
+    title.textContent = "Add Metadata";
+    resetForm();
+    modal.show();
+  });
+
+  document.querySelectorAll('.editBtn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      title.textContent = "Edit Metadata";
+      idField.value = this.dataset.id;
+      nameFld.value = this.dataset.name;
+      descFld.value = this.dataset.description;
+      modal.show();
+    });
+  });
+
+  function validateForm() {
+    let valid = true;
+    if (!nameFld.value.trim()) {
+      nameError.innerText = "Name En is required.";
+      nameError.style.display = "block";
+      valid = false;
+    } else nameError.style.display = "none";
+
+    if (!descFld.value.trim()) {
+      descError.innerText = "Description EN is required.";
+      descError.style.display = "block";
+      valid = false;
+    } else descError.style.display = "none";
+    return valid;
+  }
+
+  document.getElementById('saveBtn').addEventListener('click', function () {
+    if (!validateForm()) return;
+
+    let cid = idField.value;
+    let url = cid ? `/superuser/standing-time/edit/${cid}/` : `/superuser/standing-time/add/`;
+
+    fetch(url, {
+      method: "POST",
+      headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value },
+      body: new FormData(document.getElementById('contentForm'))
+    })
+    .then(r => r.json())
+    .then(res => {
+      if (res.success) {
+        modal.hide();
+        showSuccess(cid ? "Metadata updated successfully!" : "Metadata added successfully!");
+        setTimeout(() => location.reload(), 1000);
+      } else {
+        nameError.innerText = res.msg || "Something went wrong!";
+        nameError.style.display = "block";
+      }
+    });
+  });
+
+  document.querySelectorAll('.deleteBtn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      if (!confirm("Delete this record?")) return;
+      fetch(`/superuser/standing-time/delete/${this.dataset.id}/`, {
+        method: "POST",
+        headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value }
+      })
+      .then(r => r.json())
+      .then(res => {
+        if (res.success) {
+          showSuccess("Deleted successfully!");
+          setTimeout(() => location.reload(), 1000);
+        } else {
+          alert(res.msg);
+        }
+      });
+    });
+  });
+});
+</script>
+{% endblock %}

@@ -2303,29 +2303,23 @@ class MyOrdersView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
-
-        # Prefetch main image for products
         main_image_prefetch = Prefetch(
             'items__product__images',
             queryset=ProductImage.objects.filter(is_main=True),
             to_attr='main_image'
         )
-
-        # Prefetch user reviews for products
         user_reviews_prefetch = Prefetch(
             'items__product__reviews',
             queryset=RatingReview.objects.filter(user=user),
             to_attr='user_reviews'
         )
 
-        # Prefetch returns for items
         returns_prefetch = Prefetch(
             'items__returns',
             queryset=Return.objects.all(),
             to_attr='all_returns'
         )
 
-        # Base queryset
         orders_qs = (
             Order.objects.filter(user=user)
             .select_related('payment')
@@ -2337,7 +2331,6 @@ class MyOrdersView(LoginRequiredMixin, TemplateView):
             )
         )
 
-        # Apply filters
         status = self.request.GET.get('status')
         start_date = self.request.GET.get('start_date')
         end_date = self.request.GET.get('end_date')
@@ -2355,7 +2348,7 @@ class MyOrdersView(LoginRequiredMixin, TemplateView):
         if end_date:
             try:
                 end_date = datetime.strptime(end_date, '%Y-%m-%d')
-                # Include entire end date
+
                 end_date = end_date.replace(hour=23, minute=59, second=59)
                 orders_qs = orders_qs.filter(created_at__lte=end_date)
             except ValueError:

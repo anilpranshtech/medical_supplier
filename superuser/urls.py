@@ -222,7 +222,41 @@ urlpatterns = [
      path('splash/add/', SplashScreenAddView.as_view(), name='add_splash_screen'),
      path('splash/edit/<int:pk>/', SplashScreenEditView.as_view(), name='edit_splash_screen'),
      path('splash/delete/<int:pk>/', SplashScreenDeleteView.as_view(), name='delete_splash_screen'),
+     #Static contents
+     path('standing-time/', StaticcontentsView.as_view(), name='standing_time'),
+     path('standing-time/add/', AddStaticcontentView.as_view(), name='add_staticcontent'),
+     path('standing-time/edit/<int:pk>/', EditStaticcontentView.as_view(), name='edit_staticcontent'),
+     path('standing-time/delete/<int:pk>/', DeleteStaticcontentView.as_view(), name='delete_staticcontent'),
+     #Social Links
+     path("social-links/", SocialLinksView.as_view(), name="social_links"),
+     path("social-links/add/", AddSocialLinkView.as_view(), name="add_social_link"),
+     path("social-links/edit/<int:pk>/", EditSocialLinkView.as_view(), name="edit_social_link"),
+     path("social-links/delete/<int:pk>/", DeleteSocialLinkView.as_view(), name="delete_social_link"),
+     #Faqs
+     path('faq/', FaqView.as_view(), name='faq'),
+     path('faq/add/', AddFaqView.as_view(), name='add_faq'),
+     path('faq/edit/<int:pk>/', EditFaqView.as_view(), name='edit_faq'),
+     path('faq/delete/<int:pk>/', DeleteFaqView.as_view(), name='delete_faq'),
+     #Admins List
+     path('admin-list/', AdminListView.as_view(), name='admin_list'),
+     path('admin-list/add/', AddAdminView.as_view(), name='add_admin'),
+     path('admin-list/edit/<int:pk>/', EditAdminView.as_view(), name='edit_admin'),
+     path('admin-list/delete/<int:pk>/', DeleteAdminView.as_view(), name='delete_admin'),
+     #Site Messages
+     path('site-messages/', SiteMessagesView.as_view(), name='site_messages'),
+     path('site-messages/delete/<int:pk>/', ContactDeleteView.as_view(), name='contact_delete'),
+     #Dynamic input 
+     path('dynamic-inputs/', DynamicInputListView.as_view(), name='dynamic_inputs'),
+     path('dynamic-inputs/add/', DynamicInputAddView.as_view(), name='dynamic_input_add'),
+     path('dynamic-inputs/edit/<int:pk>/', DynamicInputEditView.as_view(), name='dynamic_input_edit'),
+     path('dynamic-inputs/delete/<int:pk>/', DynamicInputDeleteView.as_view(), name='dynamic_input_delete'),
+
+     path('form-controls/', FormControlsView.as_view(), name='form_controls'),
+
+     
 ]
+
+
 
 
 

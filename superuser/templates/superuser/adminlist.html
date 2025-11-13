@@ -1,0 +1,314 @@
+{% extends 'superuser/superuser_base.html' %}
+{% load static %}
+
+{% block title %}Admin List{% endblock %}
+
+{% block content %}
+<div class="app-main flex-column flex-row-fluid" id="kt_app_main">
+  <div class="d-flex flex-column flex-column-fluid">
+    <div id="kt_app_content" class="app-content flex-column-fluid mx-5">
+      <div id="kt_app_content_container" class="app-container container-fluid">
+        <div id="successMessage" class="alert alert-success d-none" style="font-size:16px;">
+          <strong id="successText"></strong>
+        </div>
+
+        <div class="card card-flush shadow-sm">
+          <div class="card-header flex-wrap align-items-center py-5 gap-4">
+            <div class="card-title fw-bold fs-3">Admin List</div>
+            <div class="card-toolbar">
+              <button class="btn btn-primary" id="addBtn">
+                <i class="fas fa-plus me-2"></i>Add Admin
+              </button>
+            </div>
+          </div>
+ <div class="card-body table-responsive">
+            <table class="table table-row-dashed align-middle fs-6 gy-5" style="width: 100%;">
+              <thead>
+                <tr class="text-gray-500 fw-bold fs-7 text-uppercase text-center">
+                  <th>Name</th>
+                  <th>Username</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody class="fw-semibold text-gray-600 text-center">
+                {% for admin in links %}
+                <tr>
+                  <td>{{ admin.user.first_name }}</td>
+                  <td>{{ admin.user.username }}</td>
+                  <td>{{ admin.user.email }}</td>
+                  <td>{{ admin.role|title }}</td>
+                  <td>
+                    <button class="btn btn-sm btn-light-primary editBtn"
+                            data-id="{{ admin.id }}"
+                            data-name="{{ admin.user.first_name }}"
+                            data-username="{{ admin.user.username }}"
+                            data-email="{{ admin.user.email }}"
+                            data-role="{{ admin.role }}">
+                      Edit
+                    </button>
+                    <button class="btn btn-sm btn-light-danger deleteBtn"
+                            data-id="{{ admin.id }}">
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5">No admin records found.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="adminModal">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content rounded-3">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="modalTitle"></h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="adminForm">
+          {% csrf_token %}
+          <input type="hidden" id="sid" name="sid">
+
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Name <span style="color:red;">*</span></label>
+              <input type="text" name="name" id="nameField" class="form-control" required>
+              <div class="text-danger mt-1" id="nameError" style="display:none;"></div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Username  <span style="color:red;">*</span></label>
+              <input type="text" name="username" id="usernameField" class="form-control" required>
+              <div class="text-danger mt-1" id="usernameError" style="display:none;"></div>
+            </div>
+          </div>
+<div class="row mb-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Email  <span style="color:red;">*</span></label>
+              <input type="email" name="email" id="emailField" class="form-control" required>
+              <div class="text-danger mt-1" id="emailError" style="display:none;"></div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Role  <span style="color:red;">*</span></label>
+              <select name="role" id="roleField" class="form-control" required>
+                <option value="">Select Role</option>
+                <option value="superadmin">Super Admin</option>
+                <option value="staff">Staff</option>
+                <option value="editor">Editor</option>
+              </select>
+              <div class="text-danger mt-1" id="roleError" style="display:none;"></div>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-6 position-relative">
+              <label class="form-label fw-semibold">Password <span style="color:red;">*</span></label>
+              <div class="input-group">
+                <input type="password" name="password" id="passwordField" class="form-control">
+                <button type="button" class="btn btn-outline-secondary toggle-password" data-target="passwordField">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+              <div class="text-danger mt-1" id="passwordError" style="display:none;"></div>
+            </div>
+            <div class="col-md-6 position-relative">
+              <label class="form-label fw-semibold">Confirm Password  <span style="color:red;">*</span></label>
+              <div class="input-group">
+                <input type="password" name="confirm_password" id="confirmPasswordField" class="form-control">
+                <button type="button" class="btn btn-outline-secondary toggle-password" data-target="confirmPasswordField">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+              <div class="text-danger mt-1" id="confirmPasswordError" style="display:none;"></div>
+            </div>
+          </div>
+
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" id="saveBtn">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block page_only_scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const modal = new bootstrap.Modal(document.getElementById('adminModal'));
+      const idField = document.getElementById('sid');
+      const nameFld = document.getElementById('nameField');
+      const usernameFld = document.getElementById('usernameField');
+      const emailFld = document.getElementById('emailField');
+      const passwordFld = document.getElementById('passwordField');
+      const confirmFld = document.getElementById('confirmPasswordField');
+      const roleFld = document.getElementById('roleField');
+      const modalTitle = document.getElementById('modalTitle');
+    
+      const passwordError = document.getElementById('passwordError');
+      const confirmPasswordError = document.getElementById('confirmPasswordError');
+
+      function isStrongPassword(password) {
+        const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        return regex.test(password);
+      }
+
+      passwordFld.addEventListener("input", function () {
+        const value = passwordFld.value;
+        if (!value.trim()) {
+          passwordError.style.display = "none";
+          return;
+        }
+    
+        if (!isStrongPassword(value)) {
+          passwordError.innerText = "Password must be at least 8 characters, with uppercase, lowercase, number, and special character.";
+          passwordError.style.display = "block";
+        } else {
+          passwordError.style.display = "none";
+        }
+      });
+      confirmFld.addEventListener("input", function () {
+        if (confirmFld.value && passwordFld.value !== confirmFld.value) {
+          confirmPasswordError.innerText = "Passwords do not match!";
+          confirmPasswordError.style.display = "block";
+        } else {
+          confirmPasswordError.style.display = "none";
+        }
+      });
+    
+      function showSuccess(msg) {
+        const box = document.getElementById("successMessage");
+        const text = document.getElementById("successText");
+        text.innerText = msg;
+        box.classList.remove("d-none");
+        setTimeout(() => box.classList.add("d-none"), 2000);
+      }
+    
+      function resetForm() {
+        idField.value = "";
+        nameFld.value = "";
+        usernameFld.value = "";
+        emailFld.value = "";
+        passwordFld.value = "";
+        confirmFld.value = "";
+        roleFld.value = "";
+        document.querySelectorAll('.text-danger').forEach(e => e.style.display = 'none');
+      }
+    
+      document.getElementById('addBtn').addEventListener('click', () => {
+        modalTitle.textContent = "Add Admin";
+        resetForm();
+        modal.show();
+      });
+    
+      document.querySelectorAll('.editBtn').forEach(btn => {
+        btn.addEventListener('click', function () {
+          modalTitle.textContent = "Edit Admin";
+          resetForm();
+          idField.value = this.dataset.id;
+          nameFld.value = this.dataset.name;
+          usernameFld.value = this.dataset.username;
+          emailFld.value = this.dataset.email;
+          roleFld.value = this.dataset.role;
+          modal.show();
+        });
+      });
+      function validateForm() {
+        let valid = true;
+    
+        function showError(id, msg) {
+          const e = document.getElementById(id);
+          e.innerText = msg;
+          e.style.display = "block";
+        }
+    
+        if (!nameFld.value.trim()) { showError("nameError", "Name is required."); valid = false; }
+        if (!usernameFld.value.trim()) { showError("usernameError", "Username is required."); valid = false; }
+        if (!emailFld.value.trim()) { showError("emailError", "Email is required."); valid = false; }
+        if (!roleFld.value.trim()) { showError("roleError", "Role is required."); valid = false; }
+    
+        const sid = idField.value;
+        if (!sid) { 
+          if (!passwordFld.value.trim()) { showError("passwordError", "Password is required."); valid = false; }
+          if (!confirmFld.value.trim()) { showError("confirmPasswordError", "Confirm Password is required."); valid = false; }
+          if (passwordFld.value.trim() && !isStrongPassword(passwordFld.value)) {
+            showError("passwordError", "Weak password. Must include uppercase, lowercase, number, special char, and 8+ chars.");
+            valid = false;
+          }
+          if (passwordFld.value !== confirmFld.value) {
+            showError("confirmPasswordError", "Passwords do not match!"); valid = false;
+          }
+        } else {
+          if (passwordFld.value.trim() || confirmFld.value.trim()) {
+            if (!isStrongPassword(passwordFld.value)) {
+              showError("passwordError", "Weak password. Must include uppercase, lowercase, number, special char, and 8+ chars.");
+              valid = false;
+            }
+            if (passwordFld.value !== confirmFld.value) {
+              showError("confirmPasswordError", "Passwords do not match!"); valid = false;
+            }
+          }
+        }
+    
+        return valid;
+      }
+
+      document.getElementById('saveBtn').addEventListener('click', function () {
+        if (!validateForm()) return;
+    
+        const sid = idField.value;
+        const url = sid ? `/superuser/admin-list/edit/${sid}/` : `/superuser/admin-list/add/`;
+    
+        fetch(url, {
+          method: "POST",
+          headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value },
+          body: new FormData(document.getElementById('adminForm'))
+        })
+        .then(r => r.json())
+        .then(res => {
+          if (res.success) {
+            modal.hide();
+            showSuccess(sid ? "Admin updated successfully!" : "Admin added successfully!");
+            setTimeout(() => location.reload(), 1000);
+          } else {
+            alert(res.msg || "Something went wrong!");
+          }
+        });
+      });
+    
+      // Delete
+      document.querySelectorAll('.deleteBtn').forEach(btn => {
+        btn.addEventListener('click', function () {
+          if (!confirm("Are you sure you want to delete this admin?")) return;
+          const id = this.dataset.id;
+          fetch(`/superuser/admin-list/delete/${id}/`, {
+            method: "POST",
+            headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value }
+          })
+          .then(r => r.json())
+          .then(res => {
+            if (res.success) {
+              showSuccess("Admin deleted successfully!");
+              setTimeout(() => location.reload(), 1000);
+            } else {
+              alert(res.msg || "Failed to delete admin!");
+            }
+          })
+          .catch(() => alert("Error while deleting record."));
+        });
+      });
+    });
+    </script>
+    
+{% endblock %}

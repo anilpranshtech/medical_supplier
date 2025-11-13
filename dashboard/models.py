@@ -637,7 +637,6 @@ class CustomerBillingAddress(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def delete(self, *args, **kwargs):
-        """Override delete method to implement soft delete"""
         self.is_deleted = True
         self.save()
 
@@ -1796,3 +1795,69 @@ class SplashScreen(models.Model):
 
     def __str__(self):
         return f"{self.screen_title} ({self.get_screen_language_display()})"
+
+class Staticcontents(models.Model):
+    name_en = models.CharField(max_length=255, verbose_name="Name En *")
+    description_en = models.TextField(verbose_name="Description EN *")
+
+    class Meta:
+        verbose_name = "Website Metadata"
+        verbose_name_plural = "Website Metadata"
+
+    def __str__(self):
+        return self.name_en
+class SocialLinks(models.Model):
+    title = models.CharField(max_length=255, verbose_name="Title *")
+    link = models.URLField(max_length=500, verbose_name="Link *")
+
+    class Meta:
+        verbose_name = "Social Link"
+        verbose_name_plural = "Social Links"
+
+    def __str__(self):
+        return self.title
+class FaqForm(models.Model):
+    title_en = models.CharField("Title En", max_length=255, blank=False, null=False)
+    description_en = models.TextField("Description En", blank=False, null=False)
+
+    def __str__(self):
+        return self.title_en
+
+    class Meta:
+        verbose_name = "FAQ Form"
+        verbose_name_plural = "FAQ Forms"
+        ordering = ["title_en"]
+class AdminUser(models.Model):
+    ROLE_CHOICES = [
+        ('admin', 'Admin'),
+        ('sub admin', 'Sub Admin'),
+      
+    ]
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    role = models.CharField(max_length=50, choices=ROLE_CHOICES)
+
+    def __str__(self):
+        return self.user.username
+class DynamicInput(models.Model):
+    FIELD_TYPES = [
+        ('text', 'Text'),
+        ('checkbox', 'Checkbox'),
+        ('select', 'Select'),
+    ]
+
+    form_name = models.CharField(max_length=100) 
+    field_type = models.CharField(max_length=20, choices=FIELD_TYPES)
+    title_en = models.CharField(max_length=200)
+    required = models.BooleanField(default=False)
+    status = models.BooleanField(default=True)  
+
+    def __str__(self):
+        return f"{self.title_en} ({self.field_type})"
+class FormControl(models.Model):
+    form = models.CharField(max_length=100)    
+    name = models.CharField(max_length=255)     
+    required = models.BooleanField(default=True) 
+    status = models.BooleanField(default=True)   
+
+    def __str__(self):
+        return f"{self.form} - {self.name}"
