@@ -250,10 +250,26 @@ urlpatterns = [
      path('dynamic-inputs/add/', DynamicInputAddView.as_view(), name='dynamic_input_add'),
      path('dynamic-inputs/edit/<int:pk>/', DynamicInputEditView.as_view(), name='dynamic_input_edit'),
      path('dynamic-inputs/delete/<int:pk>/', DynamicInputDeleteView.as_view(), name='dynamic_input_delete'),
-
+     #form controls
      path('form-controls/', FormControlsView.as_view(), name='form_controls'),
+     #catalog
+     path('catalog/', CatalogView.as_view(), name='catalog'),
+     path('catalog/add/', add_catalog, name='catalog_add'),
+     path('catalog/edit/<int:pk>/', edit_catalog, name='catalog_edit'),
+     path('catalog/delete/<int:pk>/', delete_catalog, name='catalog_delete'),
+     #configuration
+     path('configurations/', ConfigurationView.as_view(), name='configurations'),
+     path('configurations/update/<int:pk>/', update_configuration, name='config_update'),
+     #smsconfiguration
+     path('sms-configuration/', SMSConfigurationView.as_view(), name='sms_configuration'),
+     path('sms/edit/<int:uid>/', sms_edit, name='sms_edit'),
+     path('sms/toggle/<int:uid>/', sms_toggle_status, name='sms_toggle'),
+     #theme
+     path('theme/', ThemeView.as_view(), name='theme_list'),
+     path('theme/edit/<int:pk>/', edit_theme_value, name='edit_theme_value'),
+ 
 
-     
+
 ]
 
 

@@ -1,0 +1,153 @@
+{% extends 'superuser/superuser_base.html' %}
+{% load static %}
+{% load superuser_tags %}
+
+{% block title %}Theme Configurations{% endblock %}
+
+{% block content %}
+{% tag_user_permissions_list request.user as user_permissions_list %}
+
+<div class="app-main flex-column flex-row-fluid" id="kt_app_main">
+  <div class="d-flex flex-column flex-column-fluid">
+    <div id="kt_app_content" class="app-content flex-column-fluid mx-5">
+      <div id="kt_app_content_container" class="app-container container-fluid">
+
+        <div id="successMessage" class="alert alert-success d-none" style="font-size:16px;">
+          <strong id="successText"></strong>
+        </div>
+
+        <div class="card card-flush">
+          <div class="card-header flex-wrap align-items-center py-5 gap-4">
+            <div class="card-title">Theme Configurations</div>
+          </div>
+
+          <div class="card-body table-responsive">
+            <table class="table table-row-dashed align-middle fs-6 gy-5" style="width: 100%;">
+              <thead>
+                <tr class="text-gray-500 fw-bold fs-7 text-uppercase text-center">
+                  <th>Key</th>
+                  <th>Description</th>
+                  <th>Value</th>
+                  <th>Type</th>
+                  <th>Image</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+
+              <tbody class="fw-semibold text-gray-600 text-center">
+                {% for obj in theme_list %}
+                <tr>
+                  <td>{{ obj.key }}</td>
+                  <td>{{ obj.description }}</td>
+                  <td>
+                    {{ obj.value }}
+                    
+                  </td>
+                  <td>
+                    {% if obj.image %}
+                    <br>
+                    <img src="{{ obj.image.url }}" alt="Theme Image" style="max-height:50px; max-width:50px; margin-top:5px;">
+                    {% endif %}
+                  </td>
+                  <td>{{ obj.get_type_display }}</td>
+                  <td>
+                    <button class="btn btn-sm btn-light-primary editBtn"
+                      data-id="{{ obj.id }}"
+                      data-value="{{ obj.value }}"
+                      data-image="{% if obj.image %}{{ obj.image.url }}{% endif %}">
+                      Edit
+                    </button>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="5" class="text-muted">No themes available.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+              
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal fade" id="themeModal">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-3">
+      <div class="modal-header text-white">
+        <h5 class="modal-title">Edit Theme Value</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <form id="themeForm">
+          {% csrf_token %}
+          <input type="hidden" id="theme_id" name="theme_id">
+
+          <label class="form-label fw-semibold mt-3">Value *</label>
+          <input type="text" id="valueField" name="value" class="form-control">
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" id="saveThemeBtn">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block page_only_scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const modal = new bootstrap.Modal(document.getElementById('themeModal'));
+
+  // Edit button 
+  document.querySelectorAll(".editBtn").forEach(btn => {
+    btn.addEventListener("click", function () {
+      const id = this.dataset.id;
+      const value = this.dataset.value || '';
+
+      document.getElementById("theme_id").value = id;
+      document.getElementById("valueField").value = value;
+
+      modal.show();
+    });
+  });
+
+  // Save
+  document.getElementById("saveThemeBtn").addEventListener("click", function () {
+    let id = document.getElementById("theme_id").value;
+
+    fetch(`/superuser/theme/edit/${id}/`, {
+      method: "POST",
+      headers: {"X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value},
+      body: new FormData(document.getElementById("themeForm"))
+    })
+    .then(r => r.json())
+    .then(res => {
+      if (res.success) {
+        modal.hide();
+        showSuccess("Theme value updated successfully!");
+        setTimeout(() => location.reload(), 1200);
+      }
+    });
+  });
+
+  // Show success message
+  function showSuccess(msg) {
+    const box = document.getElementById("successMessage");
+    document.getElementById("successText").innerText = msg;
+    box.classList.remove("d-none");
+    setTimeout(() => box.classList.add("d-none"), 2000);
+  }
+});
+</script>
+{% endblock %}

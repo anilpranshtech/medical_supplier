@@ -1,0 +1,172 @@
+{% extends 'superuser/superuser_base.html' %}
+{% load static %}
+{% load superuser_tags %}
+
+{% block title %}SMS Configurations{% endblock %}
+
+{% block content %}
+{% tag_user_permissions_list request.user as user_permissions_list %}
+
+<div class="app-main flex-column flex-row-fluid" id="kt_app_main">
+  <div class="d-flex flex-column flex-column-fluid">
+    <div id="kt_app_content" class="app-content flex-column-fluid mx-5">
+      <div id="kt_app_content_container" class="app-container container-fluid">
+
+        <div id="successMessage" class="alert alert-success d-none" style="font-size:16px;">
+          <strong id="successText"></strong>
+        </div>
+
+        <div class="card card-flush">
+          <div class="card-header flex-wrap align-items-center py-5 gap-4">
+            <div class="card-title">SMS Configurations</div>
+          </div>
+
+          <div class="card-body table-responsive">
+            <table class="table table-row-dashed align-middle fs-6 gy-5" style="width: 100%;">
+              <thead>
+                <tr class="text-gray-500 fw-bold fs-7 text-uppercase text-center">
+                  <th>Name</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+
+              <tbody class="fw-semibold text-gray-600 text-center">
+                {% for obj in sms_list %}
+                <tr>
+                  <td>{{ obj.name }}</td>
+                  <td>
+                    <div class="form-check form-switch d-flex justify-content-center">
+                      <input class="form-check-input toggleStatusSwitch" type="checkbox"
+                             data-id="{{ obj.id }}"
+                             {% if obj.status %}checked{% endif %}>
+                    </div>
+                  </td>
+                  <td>
+                    <button class="btn btn-sm btn-light-primary editBtn"
+                      data-id="{{ obj.id }}"
+                      data-sender="{{ obj.sms_sender }}"
+                      data-auth_token="{{ obj.sms_auth_token }}"
+                      data-account_sid="{{ obj.sms_account_sid }}"
+                    >
+                      Edit
+                    </button>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="3" class="text-muted">No SMS configuration available.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal fade" id="smsModal">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-3">
+      <div class="modal-header text-white">
+        <h5 class="modal-title">Edit SMS Configuration</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <form id="smsForm">
+          {% csrf_token %}
+          <input type="hidden" id="uid" name="uid">
+
+          <label class="form-label fw-semibold mt-3">SMS Sender Name / Mobile Number *</label>
+          <input type="text" id="senderField" name="sms_sender" class="form-control">
+
+          <label class="form-label fw-semibold mt-3">SMS Auth Token *</label>
+          <input type="text" id="authTokenField" name="sms_auth_token" class="form-control">
+
+          <label class="form-label fw-semibold mt-3">SMS Account SID *</label>
+          <input type="text" id="accountSidField" name="sms_account_sid" class="form-control">
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" id="saveBtn">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block page_only_scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+  const modal = new bootstrap.Modal(document.getElementById('smsModal'));
+
+  // Edit button 
+  document.querySelectorAll(".editBtn").forEach(btn => {
+    btn.addEventListener("click", function () {
+      document.getElementById("uid").value = this.dataset.id;
+      document.getElementById("senderField").value = this.dataset.sender || '';
+      document.getElementById("authTokenField").value = this.dataset.auth_token || '';
+      document.getElementById("accountSidField").value = this.dataset.account_sid || '';
+      modal.show();
+    });
+  });
+
+  // Save 
+  document.getElementById("saveBtn").addEventListener("click", function () {
+    let uid = document.getElementById("uid").value;
+
+    fetch(`/superuser/sms/edit/${uid}/`, {
+      method: "POST",
+      headers: {"X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value},
+      body: new FormData(document.getElementById("smsForm"))
+    })
+    .then(r => r.json())
+    .then(res => {
+      if (res.success) {
+        modal.hide();
+        showSuccess("Configuration Updated Successfully!");
+        setTimeout(() => location.reload(), 1200);
+      }
+    });
+  });
+
+  // Show success message
+  function showSuccess(msg) {
+    const box = document.getElementById("successMessage");
+    document.getElementById("successText").innerText = msg;
+    box.classList.remove("d-none");
+    setTimeout(() => box.classList.add("d-none"), 2000);
+  }
+
+  // Toggle status
+  document.querySelectorAll(".toggleStatusSwitch").forEach(switchEl => {
+    switchEl.addEventListener("change", function () {
+      let id = this.dataset.id;
+
+      fetch(`/superuser/sms/toggle/${id}/`, {
+        method: "POST",
+        headers: { "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value }
+      })
+      .then(r => r.json())
+      .then(res => {
+        if (res.success) {
+          showSuccess(this.checked ? "Activated" : "Deactivated");
+        } else {
+          alert("Failed to update status!");
+        }
+      });
+    });
+  });
+
+});
+</script>
+{% endblock %}

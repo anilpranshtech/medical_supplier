@@ -4654,3 +4654,120 @@ class FormControlToggleView(View):
             form_control.save()
             return JsonResponse({'success': True})
         return JsonResponse({'success': False})
+    
+class CatalogView(TemplateView):
+    template_name = 'superuser/Catalog.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['catalogs'] = Catalog.objects.all()
+        return context
+def add_catalog(request):
+    if request.method == "POST":
+        key = request.POST.get("key", "").strip()
+        description = request.POST.get("description", "").strip()
+
+        if not key:
+            return JsonResponse({"success": False, "msg": "Key is required."})
+        if not description:
+            return JsonResponse({"success": False, "msg": "Description is required."})
+
+        if Catalog.objects.filter(key=key).exists():
+            return JsonResponse({"success": False, "msg": "Key must be unique."})
+
+        Catalog.objects.create(key=key, description=description)
+        return JsonResponse({"success": True})
+
+def edit_catalog(request, pk):
+    catalog = Catalog.objects.get(id=pk)
+
+    if request.method == "POST":
+        key = request.POST.get("key", "").strip()
+        description = request.POST.get("description", "").strip()
+
+        if not key:
+            return JsonResponse({"success": False, "msg": "Key is required."})
+        if not description:
+            return JsonResponse({"success": False, "msg": "Description is required."})
+
+        if Catalog.objects.filter(key=key).exclude(id=pk).exists():
+            return JsonResponse({"success": False, "msg": "Key must be unique."})
+
+        catalog.key = key
+        catalog.description = description
+        catalog.save()
+
+        return JsonResponse({"success": True})
+
+def delete_catalog(request, pk):
+    Catalog.objects.filter(id=pk).delete()
+    return JsonResponse({"success": True})
+
+class ConfigurationView(TemplateView):
+    template_name = "superuser/configuration.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["configs"] = Configuration.objects.all()
+        return context
+def update_configuration(request, pk):
+    obj = Configuration.objects.get(pk=pk)
+    new_status = request.POST.get("status") == "true"
+    obj.status = new_status
+    obj.save()
+    return JsonResponse({"success": True})
+
+
+class SMSConfigurationView(TemplateView):
+    template_name = "superuser/smsconfiguration.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["sms_list"] = SMSConfiguration.objects.all()
+        return context
+def sms_edit(request, uid):
+    if request.method == "POST":
+        try:
+            sms = SMSConfiguration.objects.get(id=uid)
+        except SMSConfiguration.DoesNotExist:
+            return JsonResponse({"success": False, "msg": "Record not found"})
+
+        sms.sms_sender = request.POST.get("sms_sender")
+        sms.sms_auth_token = request.POST.get("sms_auth_token")
+        sms.sms_account_sid = request.POST.get("sms_account_sid")
+
+        sms.save()
+        return JsonResponse({"success": True})
+
+    return JsonResponse({"success": False})
+def sms_toggle_status(request, uid):
+    if request.method == "POST":
+        try:
+            sms = SMSConfiguration.objects.get(id=uid)
+        except SMSConfiguration.DoesNotExist:
+            return JsonResponse({"success": False})
+
+        sms.status = not sms.status  
+        sms.save()
+        return JsonResponse({"success": True})
+
+    return JsonResponse({"success": False})
+
+class ThemeView(TemplateView):
+    template_name = "superuser/theme.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['theme_list'] = Theme.objects.all() 
+        return context
+
+def edit_theme_value(request, pk):
+    if request.method == "POST":
+        try:
+            theme = Theme.objects.get(pk=pk)
+            theme.value = request.POST.get("value", "")
+            theme.save()
+            return JsonResponse({"success": True})
+        except Theme.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Theme not found"})
+    return JsonResponse({"success": False, "error": "Invalid request"})

@@ -1861,3 +1861,55 @@ class FormControl(models.Model):
 
     def __str__(self):
         return f"{self.form} - {self.name}"
+class Catalog(models.Model):
+    key = models.CharField(max_length=255, unique=True)   
+    description = models.TextField()                 
+
+    def __str__(self):
+        return self.key
+class Configuration(models.Model):
+    key = models.CharField(max_length=255, unique=True)
+    status = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.key
+class SMSConfiguration(models.Model):
+    PROVIDER_CHOICES = (
+        ('twilio', 'Twilio'),
+    )
+
+    name = models.CharField(
+        max_length=100,
+        choices=PROVIDER_CHOICES,
+        unique=True
+    )
+
+    sms_sender = models.CharField(max_length=200, verbose_name="SMS Sender Name / Mobile Number")
+    sms_auth_token = models.CharField(max_length=200, verbose_name="SMS Auth Token")
+    sms_account_sid = models.CharField(max_length=200, verbose_name="SMS Account SID")
+
+    status = models.BooleanField(default=False)  
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+class Theme(models.Model):
+    THEME_TYPE_CHOICES = (
+        ('text', 'Text'),
+        ('image', 'Image'),
+        ('icon', 'Icon'),
+        ('theme', 'Theme'),
+    )
+
+    key = models.CharField(max_length=100, unique=True, help_text="Unique key for the theme")
+    description = models.TextField(blank=True, help_text="Description of the theme")
+    value = models.CharField(max_length=200, blank=True, help_text="Value associated with the theme")
+    image = models.ImageField(upload_to='theme_images/', blank=True, null=True, help_text="Image for the theme")
+    type = models.CharField(max_length=50, choices=THEME_TYPE_CHOICES, default='custom', help_text="Type of the theme")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.key
