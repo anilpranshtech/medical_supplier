@@ -47,8 +47,7 @@
                       data-id="{{ obj.id }}"
                       data-sender="{{ obj.sms_sender }}"
                       data-auth_token="{{ obj.sms_auth_token }}"
-                      data-account_sid="{{ obj.sms_account_sid }}"
-                    >
+                      data-account_sid="{{ obj.sms_account_sid }}" >
                       Edit
                     </button>
                   </td>
@@ -68,7 +67,7 @@
   </div>
 </div>
 
-<!-- EDIT MODAL -->
+<!-- EDIT  -->
 <div class="modal fade" id="smsModal">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content rounded-3">
@@ -109,7 +108,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const modal = new bootstrap.Modal(document.getElementById('smsModal'));
 
-  // Edit button 
+  // Edit  
   document.querySelectorAll(".editBtn").forEach(btn => {
     btn.addEventListener("click", function () {
       document.getElementById("uid").value = this.dataset.id;
@@ -139,7 +138,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
-  // Show success message
   function showSuccess(msg) {
     const box = document.getElementById("successMessage");
     document.getElementById("successText").innerText = msg;
@@ -147,7 +145,7 @@ document.addEventListener("DOMContentLoaded", function () {
     setTimeout(() => box.classList.add("d-none"), 2000);
   }
 
-  // Toggle status
+  // Toggle 
   document.querySelectorAll(".toggleStatusSwitch").forEach(switchEl => {
     switchEl.addEventListener("change", function () {
       let id = this.dataset.id;

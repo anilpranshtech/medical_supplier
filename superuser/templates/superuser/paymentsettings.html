@@ -1,0 +1,103 @@
+{% extends 'superuser/superuser_base.html' %}
+{% load static %}
+{% load superuser_tags %}
+
+{% block title %}Payment Settings{% endblock %}
+
+{% block content %}
+{% tag_user_permissions_list request.user as user_permissions_list %}
+
+<div class="app-main flex-column flex-row-fluid" id="kt_app_main">
+  <div class="d-flex flex-column flex-column-fluid">
+    <div id="kt_app_content" class="app-content flex-column-fluid mx-5">
+      <div id="kt_app_content_container" class="app-container container-fluid">
+
+        <div id="successMessage" class="alert alert-success d-none" style="font-size:16px;">
+          <strong id="successText"></strong>
+        </div>
+
+        <div class="card card-flush">
+          <div class="card-header flex-wrap align-items-center py-5 gap-4">
+            <div class="card-title">Payment Settings</div>
+          </div>
+
+          <div class="card-body table-responsive">
+
+            <form id="csrfForm">{% csrf_token %}</form>
+
+            <table class="table table-row-dashed align-middle fs-6 gy-5" style="width: 100%;">
+              <thead>
+                <tr class="text-gray-500 fw-bold fs-7 text-uppercase text-center">
+                  <th style="padding: 12px;">Key</th>
+                  <th style="padding: 12px;">Status</th>
+                </tr>
+              </thead>
+
+              <tbody class="fw-semibold text-gray-600 text-center">
+                {% for setting in settings_data %}
+                <tr>
+                  <td style="padding: 12px;">{{ setting.key }}</td>
+
+                  <td style="padding: 12px;">
+                    <div class="form-check form-switch d-flex justify-content-center">
+                      <input class="form-check-input toggleStatusSwitch"
+                             type="checkbox"
+                             data-id="{{ setting.id }}"
+                             {% if setting.status == 'active' %}checked{% endif %}>
+                    </div>
+                  </td>
+                </tr>
+
+                {% empty %}
+                <tr>
+                  <td colspan="2" style="padding: 12px; color: #888;">No Payment Settings Found.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block page_only_scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+  function showSuccess(msg) {
+    const box = document.getElementById("successMessage");
+    document.getElementById("successText").innerText = msg;
+
+    box.classList.remove("d-none");
+    setTimeout(() => box.classList.add("d-none"), 2000);
+  }
+
+  // Toggle 
+  document.querySelectorAll('.toggleStatusSwitch').forEach(sw => {
+    sw.addEventListener('change', function () {
+
+      fetch(`/superuser/payment-setting/toggle/${this.dataset.id}/`, {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": document.querySelector('#csrfForm [name=csrfmiddlewaretoken]').value
+        }
+      })
+      .then(r => r.json())
+      .then(res => {
+        if (res.success) {
+          showSuccess("Status updated!");
+        }
+      });
+
+    });
+  });
+
+});
+</script>
+{% endblock %}

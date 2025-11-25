@@ -1913,3 +1913,47 @@ class Theme(models.Model):
 
     def __str__(self):
         return self.key
+class APIControls(models.Model):
+    portal = models.CharField(max_length=100)
+    api_name = models.CharField(max_length=200)
+    status = models.CharField(
+        max_length=10,
+        choices=[
+            ('active', 'Active'),
+            ('inactive', 'Inactive'),
+
+        ],
+        default='active'
+    )
+
+    def __str__(self):
+        return f"{self.portal} - {self.api_name}"
+class SEOSettings(models.Model):
+
+    TYPE_CHOICES = (
+        ('text', 'Text'),
+    )
+
+    key = models.CharField(max_length=200, unique=True)
+    description = models.CharField(max_length=300, blank=True, null=True)
+    value = models.TextField(blank=True, null=True)
+    image = models.ImageField(upload_to='seo_images/', blank=True, null=True)
+    type = models.CharField(max_length=20, choices=TYPE_CHOICES, default='text')
+
+    def __str__(self):
+        return self.key
+
+class PaymentSettings(models.Model):
+    key = models.CharField(max_length=200, unique=True)
+
+    status = models.CharField(
+        max_length=10,
+        choices=[
+            ('active', 'Active'),
+            ('inactive', 'Inactive'),
+        ],
+        default='inactive'
+    )
+
+    def __str__(self):
+        return f"{self.key} - {self.status}"

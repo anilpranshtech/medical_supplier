@@ -267,7 +267,16 @@ urlpatterns = [
      #theme
      path('theme/', ThemeView.as_view(), name='theme_list'),
      path('theme/edit/<int:pk>/', edit_theme_value, name='edit_theme_value'),
- 
+     #api settings
+     path('api-control/', APIControlView.as_view(), name='api_control'),
+     path('api-control/toggle/<int:id>/', toggle_api_status, name='toggle_api'),
+     #seo settings
+     path('seo-settings/', SEOSettingsView.as_view(), name='seo_settings'),
+     path('seo-settings/edit/<int:pk>/', SEOEditView.as_view(), name='seo_edit'),
+     #payment settings
+     path('payment-setting/', PaymentsettingsView.as_view(),name = 'payment_settings'),
+     path("payment-setting/toggle/<int:pk>/", PaymentToggleStatus.as_view(), name="payment_toggle"),
+
 
 
 ]

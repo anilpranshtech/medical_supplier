@@ -1,0 +1,168 @@
+{% extends 'superuser/superuser_base.html' %}
+{% load static %}
+{% load superuser_tags %}
+
+{% block title %}SEO Settings{% endblock %}
+
+{% block content %}
+{% tag_user_permissions_list request.user as user_permissions_list %}
+
+<div class="app-main flex-column flex-row-fluid" id="kt_app_main">
+  <div class="d-flex flex-column flex-column-fluid">
+    <div id="kt_app_content" class="app-content flex-column-fluid mx-5">
+      <div id="kt_app_content_container" class="app-container container-fluid">
+
+        <div id="successMessage" class="alert alert-success d-none" style="font-size:16px;">
+          <strong id="successText"></strong>
+        </div>
+
+        <div class="card card-flush">
+          <div class="card-header flex-wrap align-items-center py-5">
+            <h3 class="card-title">SEO Settings</h3>
+          </div>
+
+          <div class="card-body table-responsive">
+            <table class="table table-row-dashed">
+                <thead>
+                  <tr class="text-gray-500 fw-bold fs-7 text-uppercase text-center">
+                    <th>Key</th>
+                    <th>Description</th>
+                    <th>Value</th>
+                    <th>Image</th>      
+                    <th>Type</th>        
+                    <th>Action</th>
+                  </tr>
+                </thead>
+              
+                <tbody class="fw-semibold text-gray-600 text-center">
+                  {% for seo in seo_list %}
+                  <tr>
+                    <td>{{ seo.key }}</td>
+                    <td>{{ seo.description }}</td>
+                    <td>{{ seo.value|truncatechars:40 }}</td>
+              
+                 
+                    <td>
+                      {% if seo.image %}
+                        <img src="{{ seo.image.url }}" alt="SEO Image" style="height:50px; border-radius:5px;">
+                      {% else %}
+                        <span class="text-muted">No Image</span>
+                      {% endif %}
+                    </td>
+                    <td>{{ seo.type }}</td>
+              
+                    <td>
+                      <button class="btn btn-sm btn-primary editBtn"
+                              data-id="{{ seo.id }}"
+                              data-value="{{ seo.value }}">
+                        Edit
+                      </button>
+                    </td>
+                  </tr>
+                  {% empty %}
+                  <tr>
+                    <td colspan="5" class="text-muted">No SEO settings found.</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+              
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal fade" id="seoModal">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-3">
+      <div class="modal-header">
+        <h5 class="modal-title">Edit SEO Value</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <form id="seoForm">
+          {% csrf_token %}
+          <input type="hidden" id="seoId">
+
+          <label class="form-label fw-semibold">Value</label>
+          <textarea class="form-control" name="value" id="valueField" rows="4" required></textarea>
+          <div class="text-danger mt-1" id="valueError" style="display:none;"></div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" id="saveBtn">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block page_only_scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+  const modal = new bootstrap.Modal(document.getElementById('seoModal'));
+  const idField = document.getElementById("seoId");
+  const valueFld = document.getElementById("valueField");
+  const valueError = document.getElementById("valueError");
+
+  function showSuccess(msg) {
+    const box = document.getElementById("successMessage");
+    const text = document.getElementById("successText");
+    text.innerText = msg;
+    box.classList.remove("d-none");
+    setTimeout(() => box.classList.add("d-none"), 2000);
+  }
+
+  document.querySelectorAll(".editBtn").forEach(btn => {
+    btn.addEventListener("click", function () {
+      idField.value = this.dataset.id;
+      valueFld.value = this.dataset.value;
+      modal.show();
+    });
+  });
+
+  function validateForm() {
+    if (!valueFld.value.trim()) {
+      valueError.innerText = "Value is required.";
+      valueError.style.display = "block";
+      return false;
+    }
+    valueError.style.display = "none";
+    return true;
+  }
+
+  document.getElementById("saveBtn").addEventListener("click", function () {
+    if (!validateForm()) return;
+
+    const id = idField.value;
+
+    fetch(`/superuser/seo-settings/edit/${id}/`, {
+      method: "POST",
+      headers: { "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value },
+      body: new FormData(document.getElementById("seoForm"))
+    })
+    .then(r => r.json())
+    .then(res => {
+      if (res.success) {
+        modal.hide();
+        showSuccess("SEO value updated successfully!");
+        setTimeout(() => location.reload(), 1000);
+      } else {
+        alert(res.msg || "Something went wrong!");
+      }
+    });
+  });
+
+});
+</script>
+{% endblock %}

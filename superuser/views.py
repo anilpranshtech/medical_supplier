@@ -4771,3 +4771,49 @@ def edit_theme_value(request, pk):
         except Theme.DoesNotExist:
             return JsonResponse({"success": False, "error": "Theme not found"})
     return JsonResponse({"success": False, "error": "Invalid request"})
+
+class APIControlView(TemplateView):
+    template_name = "superuser/apicontrol.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["apis"] = APIControls.objects.all()
+        return ctx
+@csrf_exempt
+def toggle_api_status(request, id):
+    if request.method == "POST":
+        api = APIControls.objects.get(id=id)
+        api.status = "inactive" if api.status == "active" else "active"
+        api.save()
+        return JsonResponse({"success": True})
+    return JsonResponse({"success": False}, status=400)
+
+class SEOSettingsView(TemplateView):
+    template_name = "superuser/seo.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['seo_list'] = SEOSettings.objects.all()
+        return context
+class SEOEditView(View):
+    def post(self, request, pk):
+        try:
+            seo = SEOSettings.objects.get(id=pk)
+            seo.value = request.POST.get("value", "")
+            seo.save()
+            return JsonResponse({"success": True})
+        except SEOSettings.DoesNotExist:
+            return JsonResponse({"success": False, "msg": "SEO setting not found"})
+
+class PaymentsettingsView(View):
+    template_name = "superuser/paymentsettings.html"
+
+    def get(self, request):
+        settings_data = PaymentSettings.objects.all()
+        return render(request, self.template_name, {"settings_data": settings_data})
+class PaymentToggleStatus(View):
+    def post(self, request, pk):
+        setting = PaymentSettings.objects.get(id=pk)
+        setting.status = "inactive" if setting.status == "active" else "active"
+        setting.save()
+        return JsonResponse({"success": True})
