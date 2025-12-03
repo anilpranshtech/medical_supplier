@@ -1697,7 +1697,7 @@ class RFQListView(LoginRequiredMixin, SupplierPermissionMixin, OnboardingRequire
         return context
 
 
-class SupplierQuotationUpdateView(LoginRequiredMixin, SupplierPermissionMixin, SuperuserRequiredMixin, UpdateView):
+class SupplierQuotationUpdateView(LoginRequiredMixin, SupplierPermissionMixin, UpdateView):
     model = RFQRequest
     form_class = SupplierRFQQuotationForm
     template_name = 'supplier/rfq_quotation_form.html'
@@ -2136,7 +2136,7 @@ class RatingView(OnboardingRequiredMixin,TemplateView):
 
         return context
 
-class SupplierReturnsView(LoginRequiredMixin, OnboardingRequiredMixin, TemplateView):
+class SupplierReturnsView(LoginRequiredMixin, TemplateView):
 
     template_name = 'supplier/returns.html'
     login_url = 'dashboard:login'
@@ -2147,8 +2147,8 @@ class SupplierReturnsView(LoginRequiredMixin, OnboardingRequiredMixin, TemplateV
         user = self.request.user
 
         # Check user permissions
-        if not (user.is_superuser or (hasattr(user, 'userprofile') and user.userprofile.is_supplier)):
-            raise PermissionDenied("You are not authorized to access this page.")
+        # if not (user.is_superuser or (hasattr(user, 'userprofile') and user.userprofile.is_supplier)):
+        #     raise PermissionDenied("You are not authorized to access this page.")
 
         # Base queryset for returns
         if user.is_superuser:

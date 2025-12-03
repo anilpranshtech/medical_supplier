@@ -1693,7 +1693,7 @@ class AdminRFQListView(LoginRequiredMixin, ListView):
         return context
 
 
-class AdminQuotationUpdateView(LoginRequiredMixin, UpdateView):
+class AdminQuotationUpdateView(UpdateView):
     model = RFQRequest
     form_class = SuperuserRFQQuotationForm
     template_name = 'superuser/rfq_quotation_form.html'
