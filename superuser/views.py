@@ -2241,7 +2241,7 @@ class AJAXGetCategoriesView(StaffAccountRequiredMixin, View):
         categories = ProductCategory.objects.values("id", "name").order_by("name")
         return JsonResponse({"categories": list(categories)})
 
-class AJAXCreateCategory(StaffAccountRequiredMixin, View):
+class AJAXCreateCategory(View):
     def post(self, request):
         name = request.POST.get('name')
         image = request.FILES.get('image')  
@@ -2266,7 +2266,7 @@ def get_subcategories(request):
     ]
     return JsonResponse(data, safe=False)
 
-class AJAXCreateSubCategory(StaffAccountRequiredMixin, View):
+class AJAXCreateSubCategory( View):
     def post(self, request):
         name = request.POST.get('name')
         category_id = request.POST.get('category')
@@ -2287,7 +2287,7 @@ class AJAXCreateSubCategory(StaffAccountRequiredMixin, View):
             "category_id": subcat.category_id,
         })
 
-class AJAXCreateLastCategory(StaffAccountRequiredMixin, View):
+class AJAXCreateLastCategory(View):
     def post(self, request):
         name = request.POST.get('name')
         sub_category_id = request.POST.get('sub_category')
