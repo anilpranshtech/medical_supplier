@@ -539,7 +539,7 @@ input.is-invalid, textarea.is-invalid, select.is-invalid {
 </div>
 
 <script>
-    // Add red border to inputs with errors
+ 
     document.addEventListener('DOMContentLoaded', function() {
         const inputs = document.querySelectorAll('input, select, textarea');
         inputs.forEach(input => {
@@ -548,19 +548,18 @@ input.is-invalid, textarea.is-invalid, select.is-invalid {
             }
         });
     });
-    //zip code
+
      document.getElementById("id_zip_code").classList.add("is-invalid");
 </script>
-<!-- template mein head section mein -->
+
 <script>
-    // Browser history modify karein
+
     if (window.history && window.history.replaceState) {
         window.history.replaceState(null, null, window.location.href);
     }
-    
-    // Back button handle karein
+  
     window.onbeforeunload = function() {
-        // Kuch bhi return nahi karen to browser default behavior follow karega
+     
     };
     </script>
 {% endblock %}
