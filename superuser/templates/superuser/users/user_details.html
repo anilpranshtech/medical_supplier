@@ -852,7 +852,7 @@ function deleteUserAccount(userId, button) {
             const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
             $.ajax({
-                url: `/superuser/users/${userId}/delete/`,
+                url: `/admin-panel/users/${userId}/delete/`,
                 type: 'POST',
                 data: {
                     csrfmiddlewaretoken: csrfToken  
