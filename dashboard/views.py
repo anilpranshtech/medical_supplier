@@ -285,17 +285,44 @@ class SupplierListView(TemplateView):
 class SupplierProductsView(TemplateView):
     template_name = "userdashboard/view/supplier_products.html"
 
+    def _add_ratings(self, products):
+        for product in products:
+            reviews = product.reviews.all()
+
+            if reviews.exists():
+                total_reviews = reviews.count()
+                avg_rating = reviews.aggregate(Avg("rating"))["rating__avg"]
+                product.rating = round(avg_rating, 1)
+                product.total_reviews = total_reviews
+            else:
+                product.rating = 0.0
+                product.total_reviews = 0
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         supplier_user_id = self.kwargs['user_id']
+
         try:
-            supplier = SupplierProfile.objects.get(user__id=supplier_user_id, current_status='active')
+            supplier = SupplierProfile.objects.get(
+                user__id=supplier_user_id,
+                current_status='active'
+            )
+
+            products = Product.objects.filter(
+                created_by__id=supplier_user_id,
+                is_active=True
+            ).order_by('-created_at')
+            self._add_ratings(products)
+
             context['supplier'] = supplier
-            context['products'] = Product.objects.filter(created_by__id=supplier_user_id, is_active=True).order_by('-created_at')
+            context['products'] = products
+
         except SupplierProfile.DoesNotExist:
             context['supplier'] = None
             context['products'] = []
+
         return context
+
 class CustomLoginView(FormView):
     form_class = EmailOnlyLoginForm
     template_name = 'dashboard/login.html'
@@ -413,7 +440,7 @@ class RegistrationView(View):
     def get(self, request):
         context = {
             'form_data': {},
-            'nationalities': Nationality.objects.all(),
+            'nationalities': Country.objects.all().order_by('name'),
             'residencies': Residency.objects.all(),
             'country_codes': CountryCode.objects.all(),
             'specialities': Speciality.objects.all(),
@@ -546,7 +573,9 @@ class RegistrationView(View):
                     })
 
                 elif buyer_type == 'retailer':
-                    nationality = Nationality.objects.filter(id=data.get('nationality')).first()
+                    nationality = Country.objects.filter(id=data.get('nationality')).first()
+                    state = State.objects.filter(id=data.get('state')).first() if data.get('state') else None
+                    city = City.objects.filter(id=data.get('city')).first() if data.get('city') else None
                     residency = Residency.objects.filter(id=data.get('residency')).first()
                     country_code = CountryCode.objects.filter(id=data.get('country_code')).first()
                     speciality = Speciality.objects.filter(id=data.get('speciality')).first()
@@ -556,6 +585,8 @@ class RegistrationView(View):
                         current_position=data.get('current_position', ''),
                         workplace=data.get('workplace', ''),
                         nationality=nationality,
+                        state=state,         
+                        city=city,
                         residency=residency,
                         country_code=country_code,
                         speciality=speciality,
@@ -577,7 +608,16 @@ class RegistrationView(View):
         except Exception as e:
             return JsonResponse({'success': False, 'errors': {'general': f'Error creating account: {str(e)}'}}, status=500)
 
+def get_states(request, country_id):
+    states = State.objects.filter(country_id=country_id).order_by('name')
+    data = [{'id': state.id, 'name': state.name} for state in states]
+    return JsonResponse({'states': data})
 
+def get_cities(request, state_id):
+    cities = City.objects.filter(state_id=state_id).order_by('name')
+    data = [{'id': city.id, 'name': city.name} for city in cities]
+    
+    return JsonResponse({'cities': data})
 # class ConfirmEmailView(View):
 #     def get(self, request, token):
 #         try:
@@ -818,6 +858,11 @@ class SearchResultsGridView(TemplateView):
                 )),
                 default=F('price'),
                 output_field=DecimalField(max_digits=10, decimal_places=2)
+                ),
+            avg_rating=Coalesce(
+                Avg('reviews__rating'),
+                Value(0.0),
+                output_field=DecimalField(max_digits=3, decimal_places=1)
             )
         ).prefetch_related('images')[:4]
         logger.debug(
@@ -838,6 +883,11 @@ class SearchResultsGridView(TemplateView):
                 When(offer_active=True, offer_percentage__isnull=False, then=effective_price),
                 default=F('price'),
                 output_field=DecimalField(max_digits=10, decimal_places=2)
+                   ),
+            avg_rating=Coalesce(
+                Avg('reviews__rating'),
+                Value(0.0),
+                output_field=DecimalField(max_digits=3, decimal_places=1)
             )
         ).prefetch_related('images')
    
@@ -887,6 +937,10 @@ class SearchResultsGridView(TemplateView):
                     products = products.order_by('-effective_price')
                 elif sort_by == '2':
                     products = products.order_by('effective_price')
+                elif sort_by == '3': 
+                    products = products.order_by('-avg_rating')
+                elif sort_by == '4':  
+                    products = products.order_by('avg_rating')
                 else:
                     products = products.order_by('-created_at')
 
@@ -961,8 +1015,9 @@ class SearchResultsGridView(TemplateView):
             context['user_cart_ids'] = []
             context['user_wishlist_ids'] = []
             context['user_registered_event_ids'] = []
-
+        context['show_ratings'] = True
         logger.debug(f"Final context: {context.keys()}")
+        logger.debug(f"Sample product rating: {context.get('products', [])[:1]}")
         return context
 
 #-------------------------------------------------------------------------------------------------------------------------------------------
@@ -1079,7 +1134,13 @@ class SearchResultsListView(TemplateView):
                 When(offer_active=True, offer_percentage__isnull=False, then=effective_price),
                 default=F('price'),
                 output_field=DecimalField(max_digits=10, decimal_places=2)
+                ),
+            avg_rating=Coalesce(
+                Avg('reviews__rating'),
+                Value(0.0),
+                output_field=DecimalField(max_digits=3, decimal_places=1)
             )
+            
         ).prefetch_related('images')
 
         # Filtering + sorting
@@ -1094,6 +1155,10 @@ class SearchResultsListView(TemplateView):
                 products_qs = products_qs.order_by('-effective_price')
             elif sort_by == '2':
                 products_qs = products_qs.order_by('effective_price')
+            elif sort_by == '3':
+                products_qs = products_qs.order_by('-avg_rating', '-created_at')  
+            elif sort_by == '4':
+                products_qs = products_qs.order_by('avg_rating', '-created_at')
             else:
                 products_qs = products_qs.order_by('-created_at')
 
@@ -1116,6 +1181,10 @@ class SearchResultsListView(TemplateView):
                     products_qs = products_qs.order_by('-effective_price')
                 elif sort_by == '2':
                     products_qs = products_qs.order_by('effective_price')
+                elif sort_by == '3':
+                    products_qs = products_qs.order_by('-avg_rating', '-created_at')
+                elif sort_by == '4':
+                    products_qs = products_qs.order_by('avg_rating', '-created_at')
                 else:
                     products_qs = products_qs.order_by('-created_at')
 
@@ -1158,15 +1227,20 @@ class SearchResultsListView(TemplateView):
                         products_qs = products_qs.order_by('-effective_price')
                     elif sort_by == '2':
                         products_qs = products_qs.order_by('effective_price')
+                    elif sort_by == '3':
+                        products_qs = products_qs.order_by('-avg_rating', '-created_at')
+                    elif sort_by == '4':
+                        products_qs = products_qs.order_by('avg_rating', '-created_at')
                     else:
                         products_qs = products_qs.order_by('-created_at')
 
                     paginator = Paginator(products_qs, 10)
                     page_obj = paginator.get_page(page_number)
+                    
 
                     context.update({
                         'products': page_obj,
-                        'page_obj': page_obj,
+                        'page_obj': page_obj,   
                         'paginator': paginator,
                         'total_products': paginator.count,
                         'selected_category': category
@@ -1181,7 +1255,6 @@ class SearchResultsListView(TemplateView):
         else:
             context['products'] = []
 
-        # User-specific wishlist/cart IDs
         if self.request.user.is_authenticated:
             cart_ids = CartProduct.objects.filter(user=self.request.user).values_list('product_id', flat=True)
             wishlist_ids = WishlistProduct.objects.filter(user=self.request.user).values_list('product_id', flat=True)
@@ -1193,6 +1266,7 @@ class SearchResultsListView(TemplateView):
             context['user_cart_ids'] = []
             context['user_wishlist_ids'] = []
             context['user_registered_event_ids'] = []
+            context['show_ratings'] = True
 
         return context
 
@@ -3872,6 +3946,7 @@ class DeleteNotificationView(LoginRequiredMixin, View):
 
 class CategoryProductListView(TemplateView):
     template_name = "userdashboard/view/category_products_list.html"
+
     def _add_delivery_dates(self, products):
         today = date.today()
         for product in products:
@@ -3881,6 +3956,20 @@ class CategoryProductListView(TemplateView):
             else:
                 product.delivery_date = "N/A"
 
+    def _add_ratings(self, products):
+        """Add dynamic rating & total reviews to each product"""
+        for product in products:
+            reviews = product.reviews.all()
+
+            if reviews.exists():
+                total_reviews = reviews.count()
+                avg_rating = reviews.aggregate(Avg("rating"))["rating__avg"]
+                product.rating = round(avg_rating, 1)
+                product.total_reviews = total_reviews
+            else:
+                product.rating = 0.0
+                product.total_reviews = 0
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         category_id = self.kwargs["category_id"]
@@ -3889,20 +3978,18 @@ class CategoryProductListView(TemplateView):
         last_categories = ProductLastCategory.objects.filter(sub_category__category=category)
 
         products = Product.objects.filter(category=category, is_active=True)
-
         self._add_delivery_dates(products)
+        self._add_ratings(products)
 
         user_cart_ids = []
         user_cart_quantities = {}
         user_wishlist_ids = []
 
         if self.request.user.is_authenticated:
-        
             cart_items = CartProduct.objects.filter(user=self.request.user)
             user_cart_ids = [item.product.id for item in cart_items]
             user_cart_quantities = {item.product.id: item.quantity for item in cart_items}
 
-       
             wishlist_items = WishlistProduct.objects.filter(user=self.request.user)
             user_wishlist_ids = [item.product.id for item in wishlist_items]
 
@@ -3912,7 +3999,9 @@ class CategoryProductListView(TemplateView):
         context["user_cart_ids"] = user_cart_ids
         context["user_cart_quantities"] = user_cart_quantities
         context["user_wishlist_ids"] = user_wishlist_ids
+
         return context
+
 
 
 class AboutView(TemplateView):

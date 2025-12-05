@@ -3378,56 +3378,53 @@ class AddBasketPromotionView(TemplateView):
             return JsonResponse({'success': True})
         except Exception as e:
             return JsonResponse({'success': False, 'msg': str(e)})
-class EditBasketPromotionView(TemplateView):
+# views.py
+class EditBasketPromotionView(View):
     def get(self, request, pk):
+        promo = get_object_or_404(BasketPromotion, pk=pk)
         try:
-            promo = BasketPromotion.objects.get(pk=pk)
-            start_str, _, end_str = promo.promotion_period.partition(' - ')
-            start_str = start_str.strip()
-            end_str   = end_str.strip()
+            start_str, end_str = [x.strip() for x in promo.promotion_period.split(" - ")]
+            start = datetime.strptime(start_str, "%d %b %Y").strftime("%Y-%m-%dT00:00")
+            end = datetime.strptime(end_str, "%d %b %Y").strftime("%Y-%m-%dT23:59")
+        except:
+            start = end = ""
 
-            def fmt(dt_str):
-                try:
-                    dt = datetime.strptime(dt_str, "%d %b %Y")
-                    return dt.strftime("%Y-%m-%dT00:00")
-                except:
-                    return ""
-
-            data = {
-                'product_type'    : promo.product_type,
-                'supplier'        : list(promo.supplier.values_list('id', flat=True)),
-                'product'         : list(promo.product.values_list('id', flat=True)),
-                'time_limit'      : promo.time_limit or "",
-                'title_en'        : promo.title_en or "",
-                'description_en'  : promo.description_en or "",
-                'main_image_url'  : promo.main_image.url if promo.main_image else "",
-                'start_datetime'  : fmt(start_str),
-                'end_datetime'    : fmt(end_str),
-            }
-            return JsonResponse({'success': True, 'data': data})
-        except BasketPromotion.DoesNotExist:
-            return JsonResponse({'success': False, 'msg': 'Promotion not found'})
+        data = {
+            'product_type': promo.product_type,
+            'supplier': list(promo.supplier.values_list('id', flat=True)),
+            'product': list(promo.product.values_list('id', flat=True)),
+            'title_en': promo.title_en or "",
+            'description_en': promo.description_en or "",
+            'time_limit': promo.time_limit or "",
+            'main_image_url': promo.main_image.url if promo.main_image else "",
+            'start_datetime': start,
+            'end_datetime': end,
+        }
+        return JsonResponse({'success': True, 'data': data})
 
     def post(self, request, pk):
+        promo = get_object_or_404(BasketPromotion, pk=pk)
         try:
-            promo = BasketPromotion.objects.get(pk=pk)
+            start = request.POST['start_datetime']
+            end = request.POST['end_datetime']
+            start_dt = datetime.strptime(start, "%Y-%m-%dT%H:%M")
+            end_dt = datetime.strptime(end, "%Y-%m-%dT%H:%M")
 
-            promo.product_type     = request.POST.get('product_type')
-            promo.time_limit       = request.POST.get('time_limit')
-            promo.title_en         = request.POST.get('title_en')
-            promo.description_en   = request.POST.get('description_en')
-            promo.supplier.set(request.POST.getlist('supplier'))
-            promo.product.set(request.POST.getlist('product'))
+            promo.promotion_period = f"{start_dt.strftime('%d %b %Y')} - {end_dt.strftime('%d %b %Y')}"
+            promo.product_type = request.POST['product_type']
+            promo.title_en = request.POST['title_en']
+            promo.description_en = request.POST['description_en']
+            promo.time_limit = request.POST['time_limit']
+
             if 'main_image' in request.FILES:
+                if promo.main_image:
+                    promo.main_image.delete(save=False)
                 promo.main_image = request.FILES['main_image']
 
-            start = request.POST.get('start_datetime')
-            end   = request.POST.get('end_datetime')
-            start_dt = datetime.strptime(start, "%Y-%m-%dT%H:%M")
-            end_dt   = datetime.strptime(end,   "%Y-%m-%dT%H:%M")
-            promo.promotion_period = f"{start_dt.strftime('%d %b %Y')} - {end_dt.strftime('%d %b %Y')}"
-
+            promo.supplier.set(request.POST.getlist('supplier'))
+            promo.product.set(request.POST.getlist('product'))
             promo.save()
+
             return JsonResponse({'success': True})
         except Exception as e:
             return JsonResponse({'success': False, 'msg': str(e)})

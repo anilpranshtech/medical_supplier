@@ -17,7 +17,7 @@ from superuser.refunds import process_refund
 from superuser.utils import send_refund_notification
 from supplier.forms import *
 from supplier.models import *
-from dashboard.mixins import SupplierPermissionMixin
+# from dashboard.mixins import SupplierPermissionMixin
 from dashboard.models import *
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth import authenticate, login
@@ -50,7 +50,7 @@ from xhtml2pdf import pisa
 logger = logging.getLogger(__name__)
 
 
-class HomeView(LoginRequiredMixin, SupplierPermissionMixin,OnboardingRequiredMixin, View):
+class HomeView(LoginRequiredMixin,OnboardingRequiredMixin, View):
     login_url = 'supplier:admin_login'
 
     def get(self, request):
@@ -282,7 +282,7 @@ class ProductsView(LoginRequiredMixin,OnboardingRequiredMixin, View):
         })
 
 
-class AddproductsView(LoginRequiredMixin, SupplierPermissionMixin,OnboardingRequiredMixin, View):
+class AddproductsView(LoginRequiredMixin,OnboardingRequiredMixin, View):
     template = 'supplier/add-product.html'
 
     def dispatch(self, request, *args, **kwargs):
@@ -528,7 +528,7 @@ class AddproductsView(LoginRequiredMixin, SupplierPermissionMixin,OnboardingRequ
         })
 
     
-class EditproductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
+class EditproductsView(LoginRequiredMixin, View):
     template = 'supplier/edit-product.html'
 
     def get(self, request, pk):
@@ -840,7 +840,7 @@ class EditproductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
         })
 
 
-class DeleteProductImageView(LoginRequiredMixin, SupplierPermissionMixin, View):
+class DeleteProductImageView(LoginRequiredMixin, View):
     def post(self, request, pk):
         image = get_object_or_404(ProductImage, pk=pk)
         product_id = image.product.id
@@ -851,7 +851,7 @@ class DeleteProductImageView(LoginRequiredMixin, SupplierPermissionMixin, View):
         return self.post(request, pk)
 
 
-class DeleteProductView(LoginRequiredMixin, SupplierPermissionMixin, View):
+class DeleteProductView(LoginRequiredMixin, View):
     def post(self, request, pk):
         try:
             product = get_object_or_404(Product, pk=pk)
@@ -863,7 +863,7 @@ class DeleteProductView(LoginRequiredMixin, SupplierPermissionMixin, View):
             return JsonResponse({'success': False})
 
 
-class CreateProductCategoryView(SupplierPermissionMixin, View):
+class CreateProductCategoryView(View):
     def post(self, request):
         name = request.POST.get('name')
         if not name:
@@ -879,7 +879,7 @@ class CreateProductCategoryView(SupplierPermissionMixin, View):
         return redirect('supplier:add_product')
  
 
-class CreateProductSubCategoryView(SupplierPermissionMixin, View):
+class CreateProductSubCategoryView( View):
     def post(self, request):
         name = request.POST.get('name')
         category_id = request.POST.get('category')
@@ -897,7 +897,7 @@ class CreateProductSubCategoryView(SupplierPermissionMixin, View):
         return redirect('supplier:add_product')
 
     
-class CreateProductLastCategoryView(SupplierPermissionMixin, View):
+class CreateProductLastCategoryView( View):
     def post(self, request):
         name = request.POST.get('name')
         sub_category_id = request.POST.get('sub_category')
@@ -914,7 +914,7 @@ class CreateProductLastCategoryView(SupplierPermissionMixin, View):
         return redirect('supplier:add_product')
     
 
-class GetSubcategoriesView(SupplierPermissionMixin, View):
+class GetSubcategoriesView(View):
     def get(self, request, *args, **kwargs):
         category_id = request.GET.get('category_id')
         if category_id:
@@ -923,7 +923,7 @@ class GetSubcategoriesView(SupplierPermissionMixin, View):
         return JsonResponse([], safe=False)
 
 
-class GetLastCategoriesView(SupplierPermissionMixin, View):
+class GetLastCategoriesView( View):
     def get(self, request, *args, **kwargs):
         sub_id = request.GET.get('sub_id')
         if sub_id:
@@ -932,7 +932,7 @@ class GetLastCategoriesView(SupplierPermissionMixin, View):
         return JsonResponse([], safe=False)
 
 
-class AdminloginView(SupplierPermissionMixin, View):
+class AdminloginView( View):
     def get(self, request):
         return render(request, 'supplier/sign-in.html')
 
@@ -958,7 +958,7 @@ class AdminloginView(SupplierPermissionMixin, View):
 
 
 @method_decorator(login_required, name='dispatch')
-class UserListView(SupplierPermissionMixin,OnboardingRequiredMixin, ListView):
+class UserListView(OnboardingRequiredMixin, ListView):
     model = User
     template_name = 'supplier/user_list.html'
     context_object_name = 'users'
@@ -1011,7 +1011,7 @@ class UserListView(SupplierPermissionMixin,OnboardingRequiredMixin, ListView):
 
 
 @method_decorator(login_required, name='dispatch')
-class UserAddView(SupplierPermissionMixin, CreateView):
+class UserAddView( CreateView):
     model = User
     template_name = 'supplier/user_add.html'
     success_url = reverse_lazy('supplier:user_list')
@@ -1060,7 +1060,7 @@ class UserAddView(SupplierPermissionMixin, CreateView):
 
 
 @method_decorator(login_required, name='dispatch')
-class UserEditView(SupplierPermissionMixin, UpdateView):
+class UserEditView( UpdateView):
     model = User
     template_name = 'supplier/user_edit.html'
     success_url = reverse_lazy('supplier:user_list')
@@ -1192,7 +1192,7 @@ class UserEditView(SupplierPermissionMixin, UpdateView):
 
 
 @method_decorator(login_required, name='dispatch')
-class UserDetailView(SupplierPermissionMixin, DetailView):
+class UserDetailView( DetailView):
     model = User
     template_name = 'supplier/user_detail.html'
     context_object_name = 'user'
@@ -1211,7 +1211,7 @@ class UserDetailView(SupplierPermissionMixin, DetailView):
 
 @method_decorator(login_required, name='dispatch')
 @method_decorator(csrf_exempt, name='dispatch')
-class UserDeleteView(SupplierPermissionMixin, View):
+class UserDeleteView(View):
     def post(self, request, pk):
         try:
             user = get_object_or_404(User, pk=pk)
@@ -1221,7 +1221,7 @@ class UserDeleteView(SupplierPermissionMixin, View):
             return JsonResponse({'success': False, 'error': str(e)}, status=400)
 
 
-class OrderListingView(SupplierPermissionMixin, OnboardingRequiredMixin,View):
+class OrderListingView( OnboardingRequiredMixin,View):
     def get(self, request):
         status_filter = request.GET.get('status')
         supplier = request.user
@@ -1284,7 +1284,7 @@ class OrderListingView(SupplierPermissionMixin, OnboardingRequiredMixin,View):
         return render(request, 'supplier/order-listing.html', context)
 
 
-class OrderDetailsView(SupplierPermissionMixin, View):
+class OrderDetailsView( View):
     def get(self, request, order_id):
         supplier = request.user
         order = get_object_or_404(
@@ -1338,7 +1338,7 @@ class OrderDetailsView(SupplierPermissionMixin, View):
         return render(request, 'supplier/order-details.html', context)
 
 
-class OrderDeleteView(SupplierPermissionMixin, View):
+class OrderDeleteView(View):
     def post(self, request, order_id):
         supplier = request.user
         order = get_object_or_404(
@@ -1359,17 +1359,17 @@ class OrderDeleteView(SupplierPermissionMixin, View):
         return JsonResponse({'success': True})
 
 
-class UserProfileView(SupplierPermissionMixin, View):
+class UserProfileView( View):
     def get(self, request):
         return render(request, 'supplier/user-profile.html')
 
 
-class UserOverView(SupplierPermissionMixin, OnboardingRequiredMixin,View):
+class UserOverView( OnboardingRequiredMixin,View):
     def get(self, request):
         return render(request, 'supplier/overview.html')
 
 
-class AdminSettingView(SupplierPermissionMixin, View):
+class AdminSettingView( View):
     def get(self, request):
         return render(request, 'supplier/settings.html')
 
@@ -1409,7 +1409,7 @@ class AdminSettingView(SupplierPermissionMixin, View):
             return redirect('supplier:profile_setting')
 
 
-class CompanyDetailsView(LoginRequiredMixin, SupplierPermissionMixin, View):
+class CompanyDetailsView(LoginRequiredMixin, View):
     template = "supplier/company_details.html"
 
     def get(self, request, *args, **kwargd):
@@ -1456,7 +1456,7 @@ class CompanyDetailsView(LoginRequiredMixin, SupplierPermissionMixin, View):
             return redirect("supplier:company_details")
 
 
-class WishlistProductView(LoginRequiredMixin, SupplierPermissionMixin, View):
+class WishlistProductView(LoginRequiredMixin, View):
     template = 'supplier/wishlist_product.html'
 
     def get(self, request, *args, **kwargs):
@@ -1513,7 +1513,7 @@ class WishlistProductView(LoginRequiredMixin, SupplierPermissionMixin, View):
                 return redirect('supplier:wishlist_products_list')
 
 
-class CartProductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
+class CartProductsView(LoginRequiredMixin, View):
     template = "supplier/cart_product.html"
 
     def get(self, request, *args, **kwargs):
@@ -1534,7 +1534,7 @@ class CartProductsView(LoginRequiredMixin, SupplierPermissionMixin, View):
 
 
 @method_decorator(csrf_exempt, name='dispatch')
-class UpdateCartQuantityView(LoginRequiredMixin, SupplierPermissionMixin, View):
+class UpdateCartQuantityView(LoginRequiredMixin, View):
     def post(self, request):
         data = json.loads(request.body)
         product_id = data.get("product_id")
@@ -1555,7 +1555,7 @@ class UpdateCartQuantityView(LoginRequiredMixin, SupplierPermissionMixin, View):
 
 
 @method_decorator(csrf_exempt, name='dispatch')
-class DeleteCartItemView(LoginRequiredMixin, SupplierPermissionMixin, View):
+class DeleteCartItemView(LoginRequiredMixin, View):
     def post(self, request):
         data = json.loads(request.body)
         product_id = data.get("product_id")
@@ -1575,7 +1575,7 @@ class DeleteCartItemView(LoginRequiredMixin, SupplierPermissionMixin, View):
             return JsonResponse({"success": False, "message": "Item not found"}, status=404)
 
 
-class MarkNotificationReadView(SupplierPermissionMixin, View):
+class MarkNotificationReadView( View):
     def post(self, request, pk):
         try:
             notif = Notification.objects.get(pk=pk)
@@ -1586,7 +1586,7 @@ class MarkNotificationReadView(SupplierPermissionMixin, View):
             return JsonResponse({'error': 'Notification not found'}, status=404)
 
 
-class ClearAllNotificationsView(LoginRequiredMixin, SupplierPermissionMixin, View):
+class ClearAllNotificationsView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         if request.user.is_superuser:
             Notification.objects.all().delete()
@@ -1595,7 +1595,7 @@ class ClearAllNotificationsView(LoginRequiredMixin, SupplierPermissionMixin, Vie
             return JsonResponse({'status': 'unauthorized'}, status=403)
 
 
-class MarkNotificationReadView(SupplierPermissionMixin, View):
+class MarkNotificationReadView( View):
     def post(self, request, pk):
         notif = Notification.objects.get(pk=pk)
         notif.is_read = True
@@ -1616,7 +1616,7 @@ class DeleteNotificationView(LoginRequiredMixin, View):
         return JsonResponse({'status': 'success'})
 
 
-class LogoutView(SupplierPermissionMixin, View):
+class LogoutView(View):
     def get(self, request):
         logout(request)
         return redirect('supplier:admin_login') 
@@ -1635,7 +1635,7 @@ class LogoutView(SupplierPermissionMixin, View):
 #         return RFQRequest.objects.none()
 
 
-class RFQListView(LoginRequiredMixin, SupplierPermissionMixin, OnboardingRequiredMixin, ListView):
+class RFQListView(LoginRequiredMixin, OnboardingRequiredMixin, ListView):
     template_name = 'supplier/rfq_list.html'
     context_object_name = 'rfqs'
     paginate_by = 15
@@ -1697,7 +1697,7 @@ class RFQListView(LoginRequiredMixin, SupplierPermissionMixin, OnboardingRequire
         return context
 
 
-class SupplierQuotationUpdateView(LoginRequiredMixin, SupplierPermissionMixin, SuperuserRequiredMixin, UpdateView):
+class SupplierQuotationUpdateView(LoginRequiredMixin, SuperuserRequiredMixin, UpdateView):
     model = RFQRequest
     form_class = SupplierRFQQuotationForm
     template_name = 'supplier/rfq_quotation_form.html'
@@ -2428,19 +2428,34 @@ class PickupShippingView(TemplateView):
         context["form"] = form
         context["step"] = 6
         context["progress"] = 90
+        context["saved_country"] = profile.country_id or ""
+        context["saved_state"] = profile.state_id or ""
+        context["saved_city"] = profile.city_id or ""
         return context
 
     def post(self, request, *args, **kwargs):
         profile = SupplierProfile.objects.get(user=request.user)
-        form = PickupandShipping(request.POST, request.FILES, instance=profile)
+        form = PickupandShipping(request.POST, instance=profile)
 
         if form.is_valid():
             form.save()
-            return redirect("supplier:supplier_documents") 
+            return redirect("supplier:supplier_documents")
+
         context = self.get_context_data()
         context["form"] = form
         return self.render_to_response(context)
 
+class GetStatesView(View):
+    def get(self, request, *args, **kwargs):
+        country_id = request.GET.get("country_id")
+        states = State.objects.filter(country_id=country_id).values("id", "name")
+        return JsonResponse(list(states), safe=False)
+
+class GetCitiesView(View):
+    def get(self, request, *args, **kwargs):
+        state_id = request.GET.get("state_id")
+        cities = City.objects.filter(state_id=state_id).values("id", "name")
+        return JsonResponse(list(cities), safe=False)
     
 class SupplierDocumentsView(TemplateView):
     template_name = "supplier/user_information.html"

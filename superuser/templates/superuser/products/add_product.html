@@ -1515,7 +1515,6 @@ document.addEventListener("DOMContentLoaded", function () {
     fixedPrice?.addEventListener("input", validateFixedPrice);
     basePrice?.addEventListener("input", validateFixedPrice);
 
-    // Trigger initial validations for pre-filled fields
     [productName, productFrom, sellingCountries, keywords, manufactureDate, expiryDate, offerStart, offerEnd, basePrice, discountPrice, fixedPrice].forEach(input => {
         if (input && input.value) {
             input.dispatchEvent(new Event('input'));

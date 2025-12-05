@@ -17,7 +17,9 @@ urlpatterns = [
     path('resend-otp/', ResendOTPView.as_view(), name='resend_otp'),
     path('profile/', UserProfileView.as_view(), name='profile'),
     path('upload-profile-picture/', views.UploadProfilePictureView.as_view(), name='upload_profile_picture'),
-    
+    path('api/states/<int:country_id>/', views.get_states, name='get_states'),
+    path('api/cities/<int:state_id>/', views.get_cities, name='get_cities'),
+
     # user dashboard
     path('search-results-grid/', views.SearchResultsGridView.as_view(), name='search_results_grid'),
     path('search-results-list/', views.SearchResultsListView.as_view(), name='search_results_list'),

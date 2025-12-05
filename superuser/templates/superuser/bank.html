@@ -207,7 +207,8 @@ setTimeout(() => {
     document.querySelectorAll(".editBankBtn").forEach(btn => {
       btn.onclick = function () {
         const id = this.dataset.id;
-        fetch(`/superuser/banks/get/${id}/`)
+        fetch("{% url 'superuser:bank_get' 0 %}".replace("/0/", `/${id}/`))
+
         .then(r => r.json())
         .then(res => {
           if(res.success){
@@ -246,7 +247,8 @@ setTimeout(() => {
       const id = document.getElementById("editBankId").value;
       const formData = new FormData(form);
     
-      fetch(`/superuser/banks/edit/${id}/`, {
+      fetch("{% url 'superuser:bank_edit' 0 %}".replace("/0/", `/${id}/`), {
+
         method: "POST",
         headers: { "X-CSRFToken": "{{ csrf_token }}" },
         body: formData
@@ -279,7 +281,8 @@ setTimeout(() => {
     
   
     document.getElementById("confirmDeleteBank").onclick = () => {
-      fetch(`/superuser/banks/delete/${deleteBankId}/`, {
+      fetch("{% url 'superuser:bank_delete' 0 %}".replace("/0/", `/${deleteBankId}/`), {
+
         method: "POST",
         headers: { "X-CSRFToken": "{{ csrf_token }}" }
       })

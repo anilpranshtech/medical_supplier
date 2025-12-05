@@ -189,7 +189,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!validateForm()) return;
 
     let rid = idField.value;
-    let url = rid ? `/superuser/standingtime/edit/${rid}/` : `/superuser/standingtime/add/`;
+    let url = rid ? `/admin-panel/standingtime/edit/${rid}/` : `/admin-panel/standingtime/add/`;
 
     fetch(url, {
       method: "POST",
@@ -212,7 +212,7 @@ document.addEventListener("DOMContentLoaded", function () {
   document.querySelectorAll('.deleteBtn').forEach(btn => {
     btn.addEventListener('click', function () {
       if (!confirm("Delete this Standing Time?")) return;
-      fetch(`/superuser/standingtime/delete/${this.dataset.id}/`, {
+      fetch(`/admin-panel/standingtime/delete/${this.dataset.id}/`, {
         method: "POST",
         headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value }
       })

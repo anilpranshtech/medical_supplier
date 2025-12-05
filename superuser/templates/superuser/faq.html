@@ -156,7 +156,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!validateForm()) return;
 
     const fid = idField.value;
-    const url = fid ? `/superuser/faq/edit/${fid}/` : `/superuser/faq/add/`;
+    const url = fid ? `/admin-panel/faq/edit/${fid}/` : `/admin-panel/faq/add/`;
 
     fetch(url, {
       method: "POST",
@@ -179,7 +179,7 @@ document.addEventListener("DOMContentLoaded", function () {
   document.querySelectorAll('.deleteBtn').forEach(btn => {
     btn.addEventListener('click', function () {
       if (!confirm("Delete this FAQ?")) return;
-      fetch(`/superuser/faq/delete/${this.dataset.id}/`, {
+      fetch(`/admin-panel/faq/delete/${this.dataset.id}/`, {
         method: "POST",
         headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value }
       })

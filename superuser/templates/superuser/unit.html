@@ -171,7 +171,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!validateForm()) return;
 
     let uid = idField.value;
-    let url = uid ? `/superuser/unit/edit/${uid}/` : `/superuser/unit/add/`;
+    let url = uid ? `/admin-panel/unit/edit/${uid}/` : `/admin-panel/unit/add/`;
 
     fetch(url, {
       method: "POST",
@@ -194,7 +194,7 @@ document.addEventListener("DOMContentLoaded", function () {
   document.querySelectorAll('.deleteBtn').forEach(btn => {
     btn.addEventListener('click', function () {
       if (!confirm("Delete this unit?")) return;
-      fetch(`/superuser/unit/delete/${this.dataset.id}/`, {
+      fetch(`/admin-panel/unit/delete/${this.dataset.id}/`, {
         method: "POST",
         headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value }
       })

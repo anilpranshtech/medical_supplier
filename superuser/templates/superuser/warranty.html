@@ -171,7 +171,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!validateForm()) return;
 
     let wid = idField.value;
-    let url = wid ? `/superuser/warranty/edit/${wid}/` : `/superuser/warranty/add/`;
+    let url = wid ? `/admin-panel/warranty/edit/${wid}/` : `/admin-panel/warranty/add/`;
 
     fetch(url, {
       method: "POST",
@@ -194,7 +194,7 @@ document.addEventListener("DOMContentLoaded", function () {
   document.querySelectorAll('.deleteBtn').forEach(btn => {
     btn.addEventListener('click', function () {
       if (!confirm("Delete this warranty?")) return;
-      fetch(`/superuser/warranty/delete/${this.dataset.id}/`, {
+      fetch(`/admin-panel/warranty/delete/${this.dataset.id}/`, {
         method: "POST",
         headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value }
       })

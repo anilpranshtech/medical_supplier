@@ -558,6 +558,17 @@
                                         Delivery by: <strong>{{ product.delivery_date }}</strong>
                                     </p>
                                     {% endif %}
+                                    <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1">
+                                        <i class="ki-solid ki-star text-white -mt-0.5"></i>
+                                        {{ product.avg_rating|default:"0.0"|floatformat:1 }}
+                                    </span>
+                                    
+                                    {% if product.total_reviews > 0 %}
+                                    <span class="text-xs text-muted">
+                                        ({{ product.total_reviews }} reviews)
+                                    </span>
+                                    {% endif %}
+                                    
                                 </div>
                                 
 
@@ -589,6 +600,7 @@
                             <div class="flex items-center flex-wrap justify-between gap-5 px-2.5 pb-1">
                                 <div class="flex items-center flex-wrap gap-1.5">
                                     {% if product.category.name not in 'Conference,Webinar,Event' %}
+                                    
                                     {% if product.offer_percentage and product.offer_active %}
                                     <span class="text-xs font-normal text-secondary-foreground line-through pt-[1px]">${{ product.price|floatformat:2 }}</span>
                                     <span class="text-sm font-medium text-mono">${{ product.discounted_price|floatformat:2 }}</span>

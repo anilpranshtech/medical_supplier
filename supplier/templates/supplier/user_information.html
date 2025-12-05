@@ -345,9 +345,21 @@ input.is-invalid, textarea.is-invalid, select.is-invalid {
 </div>
 
        
-            {% elif step == 4 %}
-                <h4>Selling Categories</h4>
-                <div class="form-group">{{ form.selling_categories }}</div>
+{% elif step == 4 %}
+<h4>Selling Categories</h4><br>
+{% if form.fields.selling_categories.queryset.exists %}
+    <div class="form-group" style="margin-left: 20px;">
+        {% for checkbox in form.selling_categories %}
+            <div class="checkbox-item" style="margin-bottom: 8px; display: flex; align-items: center;">
+                <div style="margin-right: 10px;">
+                    {{ checkbox.tag }}</div>
+                <label for="{{ checkbox.id_for_label }}" style="margin-bottom: 0;">
+                    {{ checkbox.choice_label }}</label></div>
+        {% endfor %}
+    </div>
+{% else %}
+    <p >No categories available</p>
+{% endif %}
             
             {% elif step == 5 %}
                 <h4>Supplier Description</h4>
@@ -537,21 +549,7 @@ input.is-invalid, textarea.is-invalid, select.is-invalid {
         </form>
     </div>
 </div>
-
-<script>
- 
-    document.addEventListener('DOMContentLoaded', function() {
-        const inputs = document.querySelectorAll('input, select, textarea');
-        inputs.forEach(input => {
-            if (input.parentElement.querySelector('.errorlist')) {
-                input.classList.add('error-input');
-            }
-        });
-    });
-
-     document.getElementById("id_zip_code").classList.add("is-invalid");
-</script>
-
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
 
     if (window.history && window.history.replaceState) {
@@ -561,6 +559,62 @@ input.is-invalid, textarea.is-invalid, select.is-invalid {
     window.onbeforeunload = function() {
      
     };
+    $(document).ready(function () {
+
+let saved_country = "{{ saved_country }}";
+let saved_state = "{{ saved_state }}";
+let saved_city = "{{ saved_city }}";
+function loadCities(state_id, selected_city=null) {
+    if(!state_id) return;
+    $.ajax({
+        url: "{% url 'supplier:get_cities' %}",
+        type: "GET",
+        data: { state_id: state_id },
+        success: function (cities) {
+            $("#id_city").empty().append('<option value="">Select City</option>');
+            cities.forEach(function (city) {
+                let selected = (city.id == selected_city) ? "selected" : "";
+                $("#id_city").append(`<option value="${city.id}" ${selected}>${city.name}</option>`);
+            });
+        }
+    });
+}
+function loadStates(country_id, selected_state=null, selected_city=null) {
+    if(!country_id) return;
+    $.ajax({
+        url: "{% url 'supplier:get_states' %}",
+        type: "GET",
+        data: { country_id: country_id },
+        success: function (states) {
+            $("#id_state").empty().append('<option value="">Select State</option>');
+            states.forEach(function (state) {
+                let selected = (state.id == selected_state) ? "selected" : "";
+                $("#id_state").append(`<option value="${state.id}" ${selected}>${state.name}</option>`);
+            });
+            if(selected_state) loadCities(selected_state, selected_city);
+        }
+    });
+}
+
+if(saved_country) {
+    $("#id_country").val(saved_country);
+    loadStates(saved_country, saved_state, saved_city);
+}
+
+$("#id_country").change(function () {
+    let country_id = $(this).val();
+    $("#id_state").empty().append('<option value="">Loading...</option>');
+    $("#id_city").empty().append('<option value="">Select City</option>');
+    loadStates(country_id);
+});
+$("#id_state").change(function () {
+    let state_id = $(this).val();
+    loadCities(state_id);
+});
+
+});
     </script>
+
+    
 {% endblock %}
 

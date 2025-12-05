@@ -45,7 +45,10 @@ class City(models.Model):
         unique_together = ("state", "name")
 
     def __str__(self):
-        return f"{self.name}, {self.state.name}"
+        city = self.name if self.name else "Unnamed City"
+        state = self.state.name if self.state and self.state.name else "No State"
+        return f"{city}, {state}"
+
 
 
 # -------------------- Specialities --------------------
@@ -90,13 +93,18 @@ class Nationality(models.Model):
 # -------------------- CountryCode --------------------
 class CountryCode(models.Model):
     code = models.CharField(max_length=10, unique=True)
-    countries = models.ManyToManyField(Nationality, related_name="phone_codes")
+    country = models.ForeignKey(
+        Country,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="phone_codes"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
-
     def __str__(self):
-        # Returns codes like "+1 → United States, Canada"
-        country_names = ", ".join(self.countries.values_list("country", flat=True))
-        return f"{self.code} → {country_names if country_names else 'No countries'}"
+        return f"{self.code} → {self.country.name if self.country else 'No country'}"
+
+
 
 
 class AdminUserProfile(models.Model):
@@ -116,7 +124,9 @@ class RetailProfile(models.Model):
     current_position = models.CharField(max_length=255)
     workplace = models.CharField(max_length=255)
 
-    nationality = models.ForeignKey(Nationality, on_delete=models.SET_NULL, null=True)
+    nationality = models.ForeignKey(Country, on_delete=models.SET_NULL, null=True, blank=True)
+    state = models.ForeignKey(State, on_delete=models.SET_NULL, null=True, blank=True)
+    city = models.ForeignKey(City, on_delete=models.SET_NULL, null=True, blank=True)
     residency = models.ForeignKey(Residency, on_delete=models.SET_NULL, null=True)
     country_code = models.ForeignKey(CountryCode, on_delete=models.SET_NULL, null=True)
     speciality = models.ForeignKey(Speciality, on_delete=models.SET_NULL, null=True)
@@ -155,8 +165,6 @@ class ProductCategory(models.Model):
         ordering = ["-created_at"]
         verbose_name = verbose_name_plural ="Product Category"
 
-from django.db import models
-from django.contrib.auth.models import User
 
 SUPPLIER_TYPE_CHOICES = [
     ('distributor', 'Distributor'),
@@ -196,7 +204,7 @@ class SupplierProfile(models.Model):
     iso_certificate = models.ImageField(upload_to='iso_certificates/', null=True, blank=True)
     export_import_license = models.ImageField(upload_to='export_import_licenses/', null=True, blank=True)
 
-     # 🔹 Bank Details
+     # Bank Details
     account_holder_name = models.CharField(max_length=255, blank=True, null=True)
     account_number = models.CharField(max_length=50, blank=True, null=True)
     iban_code = models.CharField(max_length=50, blank=True, null=True)
@@ -204,10 +212,10 @@ class SupplierProfile(models.Model):
     bank_name = models.CharField(max_length=255, blank=True, null=True)
     swift_code = models.CharField(max_length=50, blank=True, null=True)
 
-    # 🔹 Selling Categories (Many to Many with ProductCategory)
+    # 
     selling_categories = models.ManyToManyField(ProductCategory, blank=True, related_name="suppliers")
 
-    # 🔹 Supplier description fields
+    # Supplier description fields
     facebook = models.URLField(max_length=500, blank=True, null=True)
     instagram = models.URLField(max_length=500, blank=True, null=True)
     twitter = models.URLField(max_length=500, blank=True, null=True)
@@ -221,14 +229,14 @@ class SupplierProfile(models.Model):
     banner = models.ImageField(upload_to='supplier_banners/', null=True, blank=True)
 
 
-      # 🔹 pickup Description Fields
+      # pickup Description Fields
     country = models.ForeignKey(Country, on_delete=models.SET_NULL, null=True, blank=True)
     state = models.ForeignKey(State, on_delete=models.SET_NULL, null=True, blank=True)
     city = models.ForeignKey(City, on_delete=models.SET_NULL, null=True, blank=True)
     zip_code = models.CharField(max_length=20, blank=True, null=True)
     support_pickup = models.BooleanField(default=False)
 
-    # 🔹 Suppier Documents
+    #  Suppier Documents
     signature_authority_doc = models.ImageField(upload_to='supplier_docs/signature_authority/', null=True, blank=True)
     memorandum_of_association = models.ImageField(upload_to='supplier_docs/memorandum/', null=True, blank=True)
     ce_certificate = models.ImageField(upload_to='supplier_docs/ce_certificates/', null=True, blank=True)

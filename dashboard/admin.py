@@ -222,15 +222,13 @@ class ResidencyAdmin(admin.ModelAdmin):
 
 @admin.register(CountryCode)
 class CountryCodeAdmin(admin.ModelAdmin):
-    list_display = ('id', 'code', 'get_countries', 'created_at')
-    search_fields = ('code', 'countries__country')
+    list_display = ('id', 'code', 'get_country', 'created_at')
+    search_fields = ('code', 'country__name')  
     list_filter = ('created_at',)
-    filter_horizontal = ('countries',)
 
-    def get_countries(self, obj):
-        return ", ".join([c.country for c in obj.countries.all()])
-    get_countries.short_description = "Countries"
-
+    def get_country(self, obj):
+        return obj.country.name if obj.country else "-"
+    get_country.short_description = "Country"
 
 @admin.register(Speciality)
 class SpecialityAdmin(admin.ModelAdmin):

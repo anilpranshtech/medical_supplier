@@ -96,14 +96,11 @@ class UserInformationForm(forms.ModelForm):
             raise forms.ValidationError("Job title should only contain letters.")
         return job_title
     def clean_phone(self):
-        phone = self.cleaned_data.get("phone")
-
+        phone = self.cleaned_data.get("phone", "").strip()
         if not phone.isdigit():
             raise forms.ValidationError("Phone number should only contain digits.")
-
-        if "0" in phone:
-            raise forms.ValidationError("Phone number cannot contain 0.")
-
+        if phone == "0" or phone.lstrip('0') == '':
+            raise forms.ValidationError("Phone number cannot be zero.")
         return phone
     
 
@@ -124,7 +121,7 @@ class BusinessInformationForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         for field_name, field in self.fields.items():
-            # File fields → not required
+
             if field_name in [
                 "company_logo",
                 "company_commercial_license",
@@ -135,7 +132,6 @@ class BusinessInformationForm(forms.ModelForm):
             else:
                 field.required = True
 
-            # Add CSS class for styling
             field.widget.attrs.update({"class": "form-control"})
 
     def clean_registration_number(self):
@@ -144,9 +140,10 @@ class BusinessInformationForm(forms.ModelForm):
         if not value.isdigit():
             raise forms.ValidationError("Registration number must contain digits only.")
 
-        if "0" in value:
-            raise forms.ValidationError("Registration number cannot contain 0.")
-
+        if len(value) < 3:  
+            raise forms.ValidationError("Registration number too short.")
+        if value.lstrip('0') == '':
+            raise forms.ValidationError("Registration number cannot be all zeros.")
         return value
 
             
@@ -189,23 +186,24 @@ class BankDetailsForm(forms.ModelForm):
         value = self.cleaned_data.get("account_number", "")
         if not value.isdigit():
             raise forms.ValidationError("Account number must contain digits only.")
-        if "0" in value:
-            raise forms.ValidationError("Account number cannot contain 0.")
+        if value.lstrip('0') == '':
+            raise forms.ValidationError("Account number cannot be all zeros.")
         return value
+    
     def clean_iban_code(self):
         value = self.cleaned_data.get("iban_code", "")
         if not value.isdigit():
             raise forms.ValidationError("IBAN code must contain digits only.")
-        if "0" in value:
-            raise forms.ValidationError("IBAN code cannot contain 0.")
+        if value.lstrip('0') == '':
+            raise forms.ValidationError("Account number cannot be all zeros.")
         return value
 
     def clean_swift_code(self):
         value = self.cleaned_data.get("swift_code", "")
         if not value.isdigit():
             raise forms.ValidationError("Swift code must contain digits only.")
-        if "0" in value:
-            raise forms.ValidationError("Swift code cannot contain 0.")
+        if value.lstrip('0') == '':
+            raise forms.ValidationError("Account number cannot be all zeros.")
         return value
 
 class SellingCategoriesForm(forms.ModelForm):

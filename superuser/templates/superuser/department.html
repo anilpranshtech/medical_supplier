@@ -159,8 +159,8 @@
 
       let cid = idField.value;
       let url = cid ?
-        `/superuser/department/edit/${cid}/` :
-        `/superuser/department/add/`;
+        `/admin-panel/department/edit/${cid}/` :
+        `/admin-panel/department/add/`;
 
       fetch(url, {
         method: "POST",
@@ -186,7 +186,7 @@ else {
       btn.addEventListener('click', function () {
         if (!confirm("Delete this department?")) return;
 
-        fetch(`/superuser/department/delete/${this.dataset.id}/`, {
+        fetch(`/admin-panel/department/delete/${this.dataset.id}/`, {
           method: "POST",
           headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value }
         })

@@ -248,7 +248,7 @@
       document.getElementById('saveBtn').addEventListener('click', function () {
         if(!validateForm()) return;
     
-        fetch(`/superuser/currency/add/`, {
+        fetch(`/admin-panel/currency/add/`, {
           method: "POST",
           headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value },
           body: new FormData(document.getElementById('currencyForm'))
@@ -267,7 +267,7 @@
       document.querySelectorAll('.deleteBtn').forEach(btn => {
         btn.addEventListener('click', function () {
           if(!confirm("Delete this currency?")) return;
-          fetch(`/superuser/currency/delete/${this.dataset.id}/`, {
+          fetch(`/admin-panel/currency/delete/${this.dataset.id}/`, {
             method: "POST",
             headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value }
           })

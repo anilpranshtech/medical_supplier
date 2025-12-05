@@ -123,7 +123,7 @@ document.addEventListener("DOMContentLoaded", function () {
   document.getElementById("saveBtn").addEventListener("click", function () {
     let uid = document.getElementById("uid").value;
 
-    fetch(`/superuser/sms/edit/${uid}/`, {
+    fetch(`/admin-panel/sms/edit/${uid}/`, {
       method: "POST",
       headers: {"X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value},
       body: new FormData(document.getElementById("smsForm"))
@@ -150,7 +150,7 @@ document.addEventListener("DOMContentLoaded", function () {
     switchEl.addEventListener("change", function () {
       let id = this.dataset.id;
 
-      fetch(`/superuser/sms/toggle/${id}/`, {
+      fetch(`/admin-panel/sms/toggle/${id}/`, {
         method: "POST",
         headers: { "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value }
       })

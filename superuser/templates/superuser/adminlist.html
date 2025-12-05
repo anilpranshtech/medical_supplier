@@ -268,7 +268,7 @@
         if (!validateForm()) return;
     
         const sid = idField.value;
-        const url = sid ? `/superuser/admin-list/edit/${sid}/` : `/superuser/admin-list/add/`;
+        const url = sid ? `/admin-panel/admin-list/edit/${sid}/` : `/admin-panel/admin-list/add/`;
     
         fetch(url, {
           method: "POST",
@@ -292,7 +292,7 @@
         btn.addEventListener('click', function () {
           if (!confirm("Are you sure you want to delete this admin?")) return;
           const id = this.dataset.id;
-          fetch(`/superuser/admin-list/delete/${id}/`, {
+          fetch(`/admin-panel/admin-list/delete/${id}/`, {
             method: "POST",
             headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value }
           })

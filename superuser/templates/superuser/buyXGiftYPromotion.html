@@ -283,164 +283,164 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const addModal  = new bootstrap.Modal(document.getElementById('promotionAddModal'));
-    const editModal = new bootstrap.Modal(document.getElementById('promotionEditModal'));
-    const alertBox  = document.getElementById('alertBox');
-  
-    function showAlert(msg, type='success'){
-      alertBox.textContent = msg;
-      alertBox.className = `alert alert-${type} mt-3`;
-      alertBox.classList.remove('d-none');
-      setTimeout(() => alertBox.classList.add('d-none'), 3000);
-    }
-    function showFieldError(input, msg){
-      clearFieldError(input);
-      const el = document.createElement('div');
-      el.className = 'text-danger mt-1 small';
-      el.textContent = msg;
-      input.closest('.col-md-6, .col-md-3').appendChild(el);
-    }
-    function clearFieldError(input){
-      const parent = input.closest('.col-md-6, .col-md-3');
-      if (!parent) return;
-      parent.querySelectorAll('.text-danger.small').forEach(e => e.remove());
-    }
-  
-    $('.select2').select2({ width: '100%', allowClear: true });
-  
-    function validateDates(start, end){
-      const now = new Date();
-      const s = new Date(start.value);
-      const e = new Date(end.value);
-      let ok = true;
-      clearFieldError(start); clearFieldError(end);
-      if (s < now) { showFieldError(start, 'Start cannot be in the past'); ok = false; }
-      if (e < now) { showFieldError(end,   'End cannot be in the past');   ok = false; }
-      if (e <= s)  { showFieldError(end,   'End must be after start');     ok = false; }
-      return ok;
-    }
-  
-    function validateRequiredFields(form){
-      let valid = true;
-      form.querySelectorAll('select, input').forEach(el => {
-        clearFieldError(el);
-        if (el.required && !el.value){
-          valid = false;
-          showFieldError(el, 'This field is required');
-        }
-        if ($(el).hasClass('select2') && el.multiple){
-          const val = $(el).val();
-          if (!val || val.length === 0){
-            valid = false;
-            showFieldError(el, 'Please select at least one option');
-          }
-        }
-      });
-      return valid;
-    }
+document.addEventListener("DOMContentLoaded", function () {
+  const addModal  = new bootstrap.Modal(document.getElementById('promotionAddModal'));
+  const editModal = new bootstrap.Modal(document.getElementById('promotionEditModal'));
+  const delModal  = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+  const alertBox  = document.getElementById('alertBox');
 
-    document.getElementById('addPromotionBtn').addEventListener('click', () => {
-      document.getElementById('addPromotionForm').reset();
-      $('.select2').val(null).trigger('change');
-      addModal.show();
-    });
-  
-    document.getElementById('saveAddPromotionBtn').addEventListener('click', () => {
-      const form = document.getElementById('addPromotionForm');
-      const start = form.querySelector('[name="start_datetime"]');
-      const end   = form.querySelector('[name="end_datetime"]');
-  
-      if (!validateRequiredFields(form)) return;
-      if (!validateDates(start, end)) return;
-  
-      const fd = new FormData(form);
-      const fmt = d => d.toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'});
-      fd.append('promotion_period', `${fmt(new Date(fd.get('start_datetime')))} - ${fmt(new Date(fd.get('end_datetime')))}`);
-  
-      fetch("{% url 'superuser:add_gift_promotion' %}", {
-        method: 'POST',
-        headers: { 'X-CSRFToken': '{{ csrf_token }}' },
-        body: fd
-      })
-      .then(r => r.json())
-      .then(res => {
-        if (res.success){ addModal.hide(); showAlert('Promotion added!','success'); setTimeout(()=>location.reload(),1200); }
-        else showAlert(res.msg||'Failed','danger');
-      })
-      .catch(()=>showAlert('Network error','danger'));
-    });
-  
-    document.querySelectorAll('.edit-promo-btn').forEach(btn => {
-      btn.addEventListener('click', function(){
-        const id = this.dataset.id;
-        document.getElementById('promoIdField').value = id;
-        fetch(`/superuser/buyxgifty/edit/${id}/`)
-          .then(r=>r.json())
-          .then(res => {
-            if (!res.success) return showAlert(res.msg||'Load error','danger');
-            const d = res.data;
-            $('#productType').val(d.product_type);
-            $('#buyInput').val(d.buy);
-            $('#giftInput').val(d.gift);
-            $('#startInput').val(d.start_datetime);
-            $('#endInput').val(d.end_datetime);
-            $('#supplierSelect').val(d.supplier).trigger('change');
-            $('#productSelect').val(d.product).trigger('change');
-            $('#giftproductSelect').val(d.giftproduct).trigger('change');
-            editModal.show();
-          })
-          .catch(()=>showAlert('Load error','danger'));
-      });
-    });
-  
-    document.getElementById('saveEditPromotionBtn').addEventListener('click', () => {
-      const form = document.getElementById('editPromotionForm');
-      const id   = document.getElementById('promoIdField').value;
-      const start = form.querySelector('[name="start_datetime"]');
-      const end   = form.querySelector('[name="end_datetime"]');
-  
-      if (!validateRequiredFields(form)) return;
-      if (!validateDates(start, end)) return;
-  
-      const fd = new FormData(form);
-      const fmt = d => d.toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'});
-      fd.append('promotion_period', `${fmt(new Date(fd.get('start_datetime')))} - ${fmt(new Date(fd.get('end_datetime')))}`);
-  
-      fetch(`/superuser/buyxgifty/edit/${id}/`, {
-        method: 'POST',
-        headers: { 'X-CSRFToken': '{{ csrf_token }}' },
-        body: fd
-      })
-      .then(r=>r.json())
-      .then(res => {
-        if (res.success){ editModal.hide(); showAlert('Updated!','success'); setTimeout(()=>location.reload(),1200); }
-        else showAlert(res.msg||'Failed','danger');
-      })
-      .catch(()=>showAlert('Network error','danger'));
-    });
-  
+  function showAlert(msg, type='success'){
+    alertBox.textContent = msg;
+    alertBox.className = `alert alert-${type} mt-3`;
+    alertBox.classList.remove('d-none');
+    setTimeout(() => alertBox.classList.add('d-none'), 3000);
+  }
 
-    let deleteId = null;
-    const delModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
-    document.querySelectorAll('.delete-promo-btn').forEach(b => {
-      b.addEventListener('click', e => { e.preventDefault(); deleteId = b.dataset.id; delModal.show(); });
-    });
-    document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
-      if (!deleteId) return;
-      fetch(`/superuser/buyxgifty/delete/${deleteId}/`, {
-        method: 'POST',
-        headers: { 'X-CSRFToken': '{{ csrf_token }}' }
-      })
-      .then(r=>r.json())
-      .then(d => {
-        if (d.success){ delModal.hide(); showAlert('Deleted Promotion','danger'); setTimeout(()=>location.reload(),1000); }
-        else showAlert('Delete failed','danger');
-      })
-      .catch(()=>showAlert('Network error','danger'));
-    });
-  
+  $('.select2').select2({ width: '100%', allowClear: true });
+
+  // ADD BUTTON
+  document.getElementById('addPromotionBtn').addEventListener('click', () => {
+    document.getElementById('addPromotionForm').reset();
+    $('.select2').val(null).trigger('change');
+    addModal.show();
   });
-  </script>
-  
+
+  // SAVE ADD
+  document.getElementById('saveAddPromotionBtn').addEventListener('click', () => {
+    const form = document.getElementById('addPromotionForm');
+    const start = form.querySelector('[name="start_datetime"]');
+    const end   = form.querySelector('[name="end_datetime"]');
+
+    if (!validateRequiredFields(form)) return;
+    if (!validateDates(start, end)) return;
+
+    const fd = new FormData(form);
+    const fmt = d => d.toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'});
+    fd.append('promotion_period', `${fmt(new Date(fd.get('start_datetime')))} - ${fmt(new Date(fd.get('end_datetime')))}`);
+
+    fetch("{% url 'superuser:add_gift_promotion' %}", {
+      method: 'POST',
+      headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+      body: fd
+    })
+    .then(r => r.json())
+    .then(res => {
+      if (res.success){ addModal.hide(); showAlert('Promotion added!','success'); setTimeout(()=>location.reload(),1200); }
+      else showAlert(res.msg||'Failed','danger');
+    });
+  });
+
+  // EDIT – FIXED URL
+  document.querySelectorAll('.edit-promo-btn').forEach(btn => {
+    btn.addEventListener('click', function(){
+      const id = this.dataset.id;
+      document.getElementById('promoIdField').value = id;
+
+      fetch("{% url 'superuser:edit_gift_promotion' 0 %}".replace('0', id))
+        .then(r=>r.json())
+        .then(res => {
+          if (!res.success) return showAlert(res.msg||'Load error','danger');
+          const d = res.data;
+          $('#productType').val(d.product_type);
+          $('#buyInput').val(d.buy);
+          $('#giftInput').val(d.gift);
+          $('#startInput').val(d.start_datetime);
+          $('#endInput').val(d.end_datetime);
+          $('#supplierSelect').val(d.supplier).trigger('change');
+          $('#productSelect').val(d.product).trigger('change');
+          $('#giftproductSelect').val(d.giftproduct).trigger('change');
+          editModal.show();
+        })
+        .catch(()=>showAlert('Load error','danger'));
+    });
+  });
+
+  // SAVE EDIT – FIXED URL
+  document.getElementById('saveEditPromotionBtn').addEventListener('click', () => {
+    const form = document.getElementById('editPromotionForm');
+    const id   = document.getElementById('promoIdField').value;
+    const start = form.querySelector('[name="start_datetime"]');
+    const end   = form.querySelector('[name="end_datetime"]');
+
+    if (!validateRequiredFields(form)) return;
+    if (!validateDates(start, end)) return;
+
+    const fd = new FormData(form);
+    const fmt = d => d.toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'});
+    fd.append('promotion_period', `${fmt(new Date(fd.get('start_datetime')))} - ${fmt(new Date(fd.get('end_datetime')))}`);
+
+    fetch("{% url 'superuser:edit_gift_promotion' 0 %}".replace('0', id), {
+      method: 'POST',
+      headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+      body: fd
+    })
+    .then(r=>r.json())
+    .then(res => {
+      if (res.success){ editModal.hide(); showAlert('Updated!','success'); setTimeout(()=>location.reload(),1200); }
+      else showAlert(res.msg||'Failed','danger');
+    });
+  });
+
+  // DELETE – FIXED URL
+  let deleteId = null;
+  document.querySelectorAll('.delete-promo-btn').forEach(b => {
+    b.addEventListener('click', e => { e.preventDefault(); deleteId = b.dataset.id; delModal.show(); });
+  });
+  document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
+    if (!deleteId) return;
+    fetch("{% url 'superuser:delete_gift_promotion' 0 %}".replace('0', deleteId), {
+      method: 'POST',
+      headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+    })
+    .then(r=>r.json())
+    .then(d => {
+      if (d.success){ delModal.hide(); showAlert('Deleted!','danger'); setTimeout(()=>location.reload(),1000); }
+      else showAlert('Delete failed','danger');
+    });
+  });
+
+  // Your validation functions (keep them exactly as you have)
+  function validateDates(start, end){
+    const now = new Date();
+    const s = new Date(start.value);
+    const e = new Date(end.value);
+    let ok = true;
+    clearFieldError(start); clearFieldError(end);
+    if (s < now) { showFieldError(start, 'Start cannot be in the past'); ok = false; }
+    if (e < now) { showFieldError(end,   'End cannot be in the past');   ok = false; }
+    if (e <= s)  { showFieldError(end,   'End must be after start');     ok = false; }
+    return ok;
+  }
+  function validateRequiredFields(form){
+    let valid = true;
+    form.querySelectorAll('select, input').forEach(el => {
+      clearFieldError(el);
+      if (el.required && !el.value){
+        valid = false;
+        showFieldError(el, 'This field is required');
+      }
+      if ($(el).hasClass('select2') && el.multiple){
+        const val = $(el).val();
+        if (!val || val.length === 0){
+          valid = false;
+          showFieldError(el, 'Please select at least one option');
+        }
+      }
+    });
+    return valid;
+  }
+  function showFieldError(input, msg){
+    clearFieldError(input);
+    const el = document.createElement('div');
+    el.className = 'text-danger mt-1 small';
+    el.textContent = msg;
+    input.closest('.col-md-6, .col-md-3').appendChild(el);
+  }
+  function clearFieldError(input){
+    const parent = input.closest('.col-md-6, .col-md-3');
+    if (!parent) return;
+    parent.querySelectorAll('.text-danger.small').forEach(e => e.remove());
+  }
+});
+</script>
 {% endblock %}

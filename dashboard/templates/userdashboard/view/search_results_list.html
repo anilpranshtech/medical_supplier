@@ -676,6 +676,10 @@
                             Delivery by: <strong>{{ product.delivery_date }}</strong>
                         </p>
                         {% endif %}
+                        <span class="kt-badge kt-badge-success kt-badge-sm rounded-full gap-1">
+                            <i class="ki-solid ki-star text-white -mt-0.5"></i>
+                            {{ product.avg_rating|default:"0.0"|floatformat:1 }}
+                        </span>
                         <div class="flex items-center gap-4">
                             {% if product.average_rating %}
                             <span class="kt-badge

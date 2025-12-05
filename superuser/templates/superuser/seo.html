@@ -146,7 +146,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const id = idField.value;
 
-    fetch(`/superuser/seo-settings/edit/${id}/`, {
+    fetch(`/admin-panel/seo-settings/edit/${id}/`, {
       method: "POST",
       headers: { "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value },
       body: new FormData(document.getElementById("seoForm"))

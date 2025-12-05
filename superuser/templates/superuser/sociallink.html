@@ -156,7 +156,7 @@ document.addEventListener("DOMContentLoaded", function () {
   document.getElementById('saveBtn').addEventListener('click', function () {
     if (!validateForm()) return;
     const sid = idField.value;
-    const url = sid ? `/superuser/social-links/edit/${sid}/` : `/superuser/social-links/add/`;
+    const url = sid ? `/admin-panel/social-links/edit/${sid}/` : `/admin-panel/social-links/add/`;
 
     fetch(url, {
       method: "POST",
@@ -179,7 +179,7 @@ document.addEventListener("DOMContentLoaded", function () {
   document.querySelectorAll('.deleteBtn').forEach(btn => {
     btn.addEventListener('click', function () {
       if (!confirm("Delete this record?")) return;
-      fetch(`/superuser/social-links/delete/${this.dataset.id}/`, {
+      fetch(`/admin-panel/social-links/delete/${this.dataset.id}/`, {
         method: "POST",
         headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value }
       })

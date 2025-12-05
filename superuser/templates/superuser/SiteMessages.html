@@ -138,7 +138,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (!confirm("Delete this record?")) return;
 
-    fetch(`/superuser/site-messages/delete/${contactId}/`, {
+    fetch(`/admin-panel/site-messages/delete/${contactId}/`, {
       method: "POST",
       headers: {
         "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value,

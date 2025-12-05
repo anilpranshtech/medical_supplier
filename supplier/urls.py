@@ -85,8 +85,11 @@ urlpatterns = [
     path("selling-categories/", SellingCategoriesView.as_view(), name="selling_categories"),
     path("supplier-description/", SupplierDescriptionView.as_view(), name="supplier_description"),
     path("pickup-shipping/", PickupShippingView.as_view(), name="pickup_shipping"),
+    path("get-states/", GetStatesView.as_view(), name="get_states"),
+    path("get-cities/", GetCitiesView.as_view(), name="get_cities"),
     path('supplier/documents/', SupplierDocumentsView.as_view(), name='supplier_documents'),
-    path('supplier/status/', SupplierStatusView.as_view(), name='supplier_status'),  
+    path('supplier/status/', SupplierStatusView.as_view(), name='supplier_status'),
+
     #return 
     path('returns/update/<str:return_serial>/', AdminReturnUpdateStatusView.as_view(), name='admin_returns_update_status'),
     path('returns/delete/<str:return_serial>/', ReturnDeleteView.as_view(), name='admin_returns_delete'),

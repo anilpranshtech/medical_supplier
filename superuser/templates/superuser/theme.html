@@ -126,7 +126,7 @@ document.addEventListener("DOMContentLoaded", function () {
   document.getElementById("saveThemeBtn").addEventListener("click", function () {
     let id = document.getElementById("theme_id").value;
 
-    fetch(`/superuser/theme/edit/${id}/`, {
+    fetch(`/admin-panel/theme/edit/${id}/`, {
       method: "POST",
       headers: {"X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value},
       body: new FormData(document.getElementById("themeForm"))

@@ -176,7 +176,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!validForm()) return;
 
     let id = idField.value;
-let url = id ? `/superuser/addresstype/edit/${id}/` : `/superuser/addresstype/add/`;
+let url = id ? `/admin-panel/addresstype/edit/${id}/` : `/admin-panel/addresstype/add/`;
 
 fetch(url, {
       method: "POST",
@@ -203,7 +203,7 @@ else {
     btn.addEventListener('click', function () {
       if (!confirm("Delete this Supplier Type?")) return;
 
-      fetch(`/superuser/addresstype/delete/${this.dataset.id}/`, {
+      fetch(`/admin-panel/addresstype/delete/${this.dataset.id}/`, {
         method: "POST",
         headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value }
       })

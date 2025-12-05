@@ -372,31 +372,31 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="first_name">First Name</label>
+                        <label for="first_name">First Name <span style="color: red;">*</span></label>
                         <input type="text" name="first_name" id="first_name" class="input-field" placeholder="Your first name" value="{{ form_data.first_name|default_if_none:'' }}" required>
                         <div class="error-message" id="first_name_error">Please enter your first name</div>
                     </div>
 
                     <div class="form-group">
-                        <label for="last_name">Last Name</label>
+                        <label for="last_name">Last Name <span style="color: red;">*</span></label>
                         <input type="text" name="last_name" id="last_name" class="input-field" placeholder="Your last name" value="{{ form_data.last_name|default_if_none:'' }}" required>
                         <div class="error-message" id="last_name_error">Please enter your last name</div>
                     </div>
 
                     <div class="form-group">
-                        <label for="email">Email</label>
+                        <label for="email">Email <span style="color: red;">*</span></label>
                         <input type="email" name="email" id="email" class="input-field" placeholder="Your email" value="{{ form_data.email|default_if_none:'' }}" required>
                         <div class="error-message" id="email_error">Please enter a valid email address</div>
                     </div>
 
                     <div class="form-group">
-                        <label for="phone">Phone Number</label>
+                        <label for="phone">Phone Number <span style="color: red;">*</span></label>
                         <input type="tel" name="phone" id="phone" class="input-field" placeholder="Your phone number" value="{{ form_data.phone|default_if_none:'' }}" required>
                         <div class="error-message" id="phone_error">Please enter a valid phone number</div>
                     </div>
 
                     <div class="form-group">
-                        <label for="password">Password</label>
+                        <label for="password">Password <span style="color: red;">*</span></label>
                         <div class="password-input-container">
                             <input type="password" name="password" id="password" placeholder="Your password" class="input-field" required>
                             <button type="button" class="toggle-password" aria-label="Toggle password visibility">
@@ -412,7 +412,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="confirm_password">Confirm Password</label>
+                        <label for="confirm_password">Confirm Password <span style="color: red;">*</span></label>
                         <div class="password-input-container">
                             <input type="password" name="confirm_password" id="confirm_password" placeholder="Confirm your password" class="input-field" required>
                             <button type="button" class="toggle-password" aria-label="Toggle password visibility">
@@ -439,27 +439,50 @@
                 <div id="step2Fields" class="space-y-4 hidden">
                     <div id="retailFields" class="user-fields hidden">
                         <div class="form-group">
-                            <label for="current_position">Current Position</label>
+                            <label for="current_position">Current Position <span style="color: red;">*</span></label>
                             <input type="text" name="current_position" id="current_position" placeholder="Your current position" value="{{ form_data.current_position|default_if_none:'' }}" class="input-field">
                             <div class="error-message" id="current_position_error">Please enter your current position</div>
                         </div>
                         <div class="form-group">
-                            <label for="workplace">Workplace</label>
+                            <label for="workplace">Workplace <span style="color: red;">*</span></label>
                             <input type="text" name="workplace" id="workplace" placeholder="Your workplace" value="{{ form_data.workplace|default_if_none:'' }}" class="input-field">
                             <div class="error-message" id="workplace_error">Please enter your workplace</div>
                         </div>
+
+                        
                         <div class="form-group">
-                            <label for="nationality">Nationality</label>
-                            <select name="nationality" id="nationality" class="input-field">
+                            <label for="nationality">Nationality <span style="color: red;">*</span></label>
+                            <select name="nationality" id="nationality" class="input-field" required>
                                 <option value="">Select your nationality</option>
-                                {% for nationality in nationalities %}
-                                    <option value="{{ nationality.id }}" {% if form_data.nationality|add:0 == nationality.id %}selected{% endif %}>{{ nationality.country }}</option>
+                                {% for country in nationalities %}
+                                    <option value="{{ country.id }}" 
+                                        {% if form_data.nationality|add:0 == country.id %}selected{% endif %}>
+                                        {{ country.name }}
+                                    </option>
                                 {% endfor %}
                             </select>
-                            <div class="error-message" id="nationality_error">Please select a valid nationality</div>
+                            <div class="error-message" id="nationality_error"></div>
                         </div>
+                        
                         <div class="form-group">
-                            <label for="residency">Residency</label>
+                            <label for="state">State <span style="color: red;">*</span></label>
+                            <select name="state" id="state" class="input-field" required>
+                                <option value="">Select state first</option>
+                           
+                            </select>
+                            <div class="error-message" id="state_error"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="city">City <span style="color: red;">*</span></label>
+                            <select name="city" id="city" class="input-field" required>
+                                <option value="">Select city first</option>
+                            </select>
+                            <div class="error-message" id="city_error"></div>
+                        </div>
+
+ <div class="form-group">
+                            <label for="residency">Residency <span style="color: red;">*</span></label>
                             <select name="residency" id="residency" class="input-field">
                                 <option value="">Select your residency</option>
                                 {% for residency in residencies %}
@@ -469,7 +492,7 @@
                             <div class="error-message" id="residency_error">Please select a valid residency</div>
                         </div>
                         <div class="form-group">
-                            <label for="country_code">Country Code</label>
+                            <label for="country_code">Country Code <span style="color: red;">*</span></label>
                             <select name="country_code" id="country_code" class="input-field">
                                 <option value="">Select your country code</option>
                                 {% for code in country_codes %}
@@ -479,7 +502,7 @@
                             <div class="error-message" id="country_code_error">Please select a valid country code</div>
                         </div>
                         <div class="form-group">
-                            <label for="speciality">Speciality</label>
+                            <label for="speciality">Speciality <span style="color: red;">*</span></label>
                             <select name="speciality" id="speciality" class="input-field">
                                 <option value="">Select your speciality</option>
                                 {% for speciality in specialities %}
@@ -492,22 +515,22 @@
 
                     <div id="wholesalerFields" class="user-fields hidden">
                         <div class="form-group">
-                            <label for="company_name">Company Name</label>
+                            <label for="company_name">Company Name <span style="color: red;">*</span></label>
                             <input type="text" name="company_name" id="company_name" placeholder="Your company name" value="{{ form_data.company_name|default_if_none:'' }}" class="input-field">
                             <div class="error-message" id="company_name_error">Please enter your company name</div>
                         </div>
                         <div class="form-group">
-                            <label for="gst_number">GST Number</label>
+                            <label for="gst_number">GST Number <span style="color: red;">*</span></label>
                             <input type="text" name="gst_number" id="gst_number" placeholder="Your GST number" value="{{ form_data.gst_number|default_if_none:'' }}" class="input-field">
                             <div class="error-message" id="gst_number_error">Please enter a valid GST number</div>
                         </div>
                         <div class="form-group">
-                            <label for="department">Department</label>
+                            <label for="department">Department <span style="color: red;">*</span></label>
                             <input type="text" name="department" id="department" placeholder="Your department" value="{{ form_data.department|default_if_none:'' }}" class="input-field">
                             <div class="error-message" id="department_error">Please enter your department</div>
                         </div>
                         <div class="form-group">
-                            <label for="purchase_capacity">Purchase Capacity</label>
+                            <label for="purchase_capacity">Purchase Capacity <span style="color: red;">*</span></label>
                             <input type="text" name="purchase_capacity" id="purchase_capacity" placeholder="Your purchase capacity" value="{{ form_data.purchase_capacity|default_if_none:'' }}" class="input-field">
                             <div class="error-message" id="purchase_capacity_error">Please enter a valid number</div>
                         </div>
@@ -515,12 +538,12 @@
 
                     <div id="supplierFields" class="user-fields hidden">
                         <div class="form-group">
-                            <label for="supplier_company_name">Company Name</label>
+                            <label for="supplier_company_name">Company Name <span style="color: red;">*</span></label>
                             <input type="text" name="supplier_company_name" id="supplier_company_name" placeholder="Your company name" value="{{ form_data.supplier_company_name|default_if_none:'' }}" class="input-field">
                             <div class="error-message" id="supplier_company_name_error">Please enter your company name</div>
                         </div>
                         <div class="form-group">
-                            <label for="license_number">License Number</label>
+                            <label for="license_number">License Number <span style="color: red;">*</span></label>
                             <input type="text" name="license_number" id="license_number" placeholder="Your license number" value="{{ form_data.license_number|default_if_none:'' }}" class="input-field">
                             <div class="error-message" id="license_number_error">Please enter a valid license number</div>
                         </div>
@@ -548,7 +571,7 @@
             <form id="otpForm" class="flex flex-col gap-4">
                 {% csrf_token %}
                 <div class="form-group">
-                    <label for="otp">OTP</label>
+                    <label for="otp">OTP <span style="color: red;">*</span></label>
                     <div class="otp-input-container">
                         <input class="otp-input" type="text" maxlength="1" pattern="[0-9]" required>
                         <input class="otp-input" type="text" maxlength="1" pattern="[0-9]" required>
@@ -950,5 +973,62 @@
     });
 });
 </script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const nationalitySelect = document.getElementById('nationality');
+        const stateSelect = document.getElementById('state');
+        const citySelect = document.getElementById('city');
+    
+      
+        nationalitySelect.addEventListener('change', function () {
+            const countryId = this.value;
+            stateSelect.innerHTML = '<option value="">Loading states...</option>';
+            citySelect.innerHTML = '<option value="">Select city first</option>';
+    
+            if (!countryId) {
+                stateSelect.innerHTML = '<option value="">Select state first</option>';
+                return;
+            }
+    
+            fetch(`/api/states/${countryId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    stateSelect.innerHTML = '<option value="">Select your state</option>';
+                    data.states.forEach(state => {
+                        const option = document.createElement('option');
+                        option.value = state.id;
+                        option.textContent = state.name;
+                        stateSelect.appendChild(option);
+                    });
+                });
+        });
+    
+        // When state changes → load cities
+        stateSelect.addEventListener('change', function () {
+            const stateId = this.value;
+            citySelect.innerHTML = '<option value="">Loading cities...</option>';
+    
+            if (!stateId) {
+                citySelect.innerHTML = '<option value="">Select city first</option>';
+                return;
+            }
+    
+            fetch(`/api/cities/${stateId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    citySelect.innerHTML = '<option value="">Select your city</option>';
+                    data.cities.forEach(city => {
+                        const option = document.createElement('option');
+                        option.value = city.id;
+                        option.textContent = city.name;
+                        citySelect.appendChild(option);
+                    });
+                });
+        });
+    
+       
+       
+    });
+    </script>
 </body>
 </html>

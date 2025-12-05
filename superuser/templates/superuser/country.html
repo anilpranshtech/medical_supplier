@@ -272,7 +272,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!validateForm()) return;
 
     let cid = cidField.value;
-    let url = cid ? `/superuser/country/edit/${cid}/` : `/superuser/country/add/`;
+    let url = cid ? `/admin-panel/country/edit/${cid}/` : `/admin-panel/country/add/`;
 
     fetch(url, {
       method: "POST",
@@ -301,7 +301,7 @@ document.addEventListener("DOMContentLoaded", function () {
     btn.addEventListener('click', function () {
       if (!confirm("Delete this country?")) return;
 
-      fetch(`/superuser/country/delete/${this.dataset.id}/`, {
+      fetch(`/admin-panel/country/delete/${this.dataset.id}/`, {
         method: "POST",
         headers: {
           "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value

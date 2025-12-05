@@ -201,7 +201,7 @@ document.getElementById('saveBtn').addEventListener('click', function () {
   if (!validateForm()) return;
 
   let rid = idField.value;
-  let url = rid ? `/superuser/region/edit/${rid}/` : `/superuser/region/add/`;
+  let url = rid ? `/admin-panel/region/edit/${rid}/` : `/admin-panel/region/add/`;
 
   fetch(url, {
     method: "POST",
@@ -226,7 +226,7 @@ document.querySelectorAll('.deleteBtn').forEach(btn => {
   btn.addEventListener('click', function () {
     if (!confirm("Delete this region?")) return;
 
-    fetch(`/superuser/region/delete/${this.dataset.id}/`, {
+    fetch(`/admin-panel/region/delete/${this.dataset.id}/`, {
       method: "POST",
       headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value }
     })

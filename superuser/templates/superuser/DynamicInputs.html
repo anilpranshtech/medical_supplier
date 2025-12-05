@@ -212,7 +212,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!validateForm()) return;
 
     const did = idField.value;
-    const url = did ? `/superuser/dynamic-inputs/edit/${did}/` : `/superuser/dynamic-inputs/add/`;
+    const url = did ? `/admin-panel/dynamic-inputs/edit/${did}/` : `/admin-panel/dynamic-inputs/add/`;
     fetch(url, {
       method: "POST",
       headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value },
@@ -233,7 +233,7 @@ document.addEventListener("DOMContentLoaded", function () {
   document.querySelectorAll('.deleteBtn').forEach(btn => {
     btn.addEventListener('click', function () {
       if (!confirm("Delete this record?")) return;
-      fetch(`/superuser/dynamic-inputs/delete/${this.dataset.id}/`, {
+      fetch(`/admin-panel/dynamic-inputs/delete/${this.dataset.id}/`, {
         method: "POST",
         headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value }
       })

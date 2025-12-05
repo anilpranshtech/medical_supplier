@@ -173,7 +173,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!validForm()) return;
 
     let id = idField.value;
-    let url = id ? `/superuser/suppliertype/edit/${id}/` : `/superuser/suppliertype/add/`;
+    let url = id ? `/admin-panel/suppliertype/edit/${id}/` : `/admin-panel/suppliertype/add/`;
 
     fetch(url, {
       method: "POST",
@@ -199,7 +199,7 @@ document.addEventListener("DOMContentLoaded", function () {
     btn.addEventListener('click', function () {
       if (!confirm("Delete this Supplier Type?")) return;
 
-      fetch(`/superuser/suppliertype/delete/${this.dataset.id}/`, {
+      fetch(`/admin-panel/suppliertype/delete/${this.dataset.id}/`, {
         method: "POST",
         headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value }
       })

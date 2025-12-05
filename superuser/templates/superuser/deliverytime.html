@@ -171,7 +171,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!validateForm()) return;
 
     let did = idField.value;
-    let url = did ? `/superuser/deliverytime/edit/${did}/` : `/superuser/deliverytime/add/`;
+    let url = did ? `/admin-panel/deliverytime/edit/${did}/` : `/admin-panel/deliverytime/add/`;
 
     fetch(url, {
       method: "POST",
@@ -194,7 +194,7 @@ document.addEventListener("DOMContentLoaded", function () {
   document.querySelectorAll('.deleteBtn').forEach(btn => {
     btn.addEventListener('click', function () {
       if (!confirm("Delete this Delivery Time?")) return;
-      fetch(`/superuser/deliverytime/delete/${this.dataset.id}/`, {
+      fetch(`/admin-panel/deliverytime/delete/${this.dataset.id}/`, {
         method: "POST",
         headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value }
       })
