@@ -2,16 +2,12 @@
 {% load static %}
 
 {% block content %}
-
-<!--begin::Main-->
 <div class="app-main flex-column flex-row-fluid " id="kt_app_main">
-    <!--begin::Content wrapper-->
     <div class="d-flex flex-column flex-column-fluid">
-        <!--begin::Content-->
-        <div id="kt_app_content" class="app-content  flex-column-fluid ">
-            <!--begin::Content container-->
+
+        <div id="kt_app_content" class="app-content  flex-column-fluid mx-5" >
             <div id="kt_app_content_container" class="app-container  container-fluid ">
-                <!--begin::Order details page-->
+
                 <div class="d-flex flex-column gap-7 gap-lg-10">
                     <div class="d-flex flex-wrap flex-stack gap-5 gap-lg-10">
                         <!--begin:::Tabs-->
@@ -172,7 +168,18 @@
                                                     </span>
                                                 </div>
                                             </td>
-                                            <td class="fw-bold text-end">{{ order.payment_type }}</td>
+                                            <td class="fw-bold text-end">
+                                            {% if order.payment.payment_method == 'stripe' %}
+                                                Card 
+                                            {% elif order.payment.payment_method == 'razorpay' %}
+                                                UPI
+                                            {% elif order.payment.payment_method == 'cod' %}
+                                                Cash on Delivery
+                                            {% else %}
+                                            {{ order.payment.payment_method|title }}
+                                            {% endif %}
+                                            </td>
+
                                         <tr>
                                             <td class="text-muted">
                                                 <div class="d-flex align-items-center">
@@ -182,7 +189,7 @@
                                                     </span>
                                                 </div>
                                             </td>
-                                            <td class="fw-bold text-end">{{ order.payment_status }}</td>
+                                            <td class="fw-bold text-end">{{ order.status }}</td>
                                         </tr>
                                         <tr>
                                             <td class="text-muted">
@@ -195,7 +202,7 @@
                                                     </span>
                                                 </div>
                                             </td>
-                                            <td class="fw-bold text-end">{{ order.payment_currency }}</td>
+                                            <td class="fw-bold text-end">USD</td>
                                         </tr>
                                         </tbody>
                                     </table>
@@ -394,8 +401,14 @@
                     <!--end::Tab pane-->
                     <!--end:::Main-->
 
-                    {% endblock %}
 
-                    {% block page_only_scripts %}
+                </div>
+            </div>
+    </div>
+</div>
 
-                    {% endblock page_only_scripts %}
+{% endblock %}
+{% block page_only_scripts %}
+{% endblock page_only_scripts %}
+
+

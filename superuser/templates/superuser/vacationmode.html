@@ -50,9 +50,16 @@
                   </td>
                   <td>
                     <button type="button" class="btn btn-success btn-sm action-btn"
-                      data-id="{{ req.id }}" data-action="approve">Approve</button>
-                    <button type="button" class="btn btn-danger btn-sm action-btn"
-                      data-id="{{ req.id }}" data-action="reject">Reject</button>
+                    data-id="{{ req.id }}" data-action="approve"
+                    {% if req.status != 'Pending' %} disabled {% endif %}>
+                    Approve
+                </button>
+                <button type="button" class="btn btn-danger btn-sm action-btn"
+                    data-id="{{ req.id }}" data-action="reject"
+                    {% if req.status != 'Pending' %} disabled {% endif %}>
+                    Reject
+                </button>
+                
                   </td>
                 </tr>
                 {% endfor %}
@@ -71,7 +78,7 @@
 {% endblock %}
 
 {% block page_only_scripts %}
-<!-- SweetAlert2 -->
+
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
@@ -82,6 +89,16 @@ document.addEventListener("DOMContentLoaded", function () {
     btn.addEventListener("click", function () {
       const requestId = this.dataset.id;
       const action = this.dataset.action;
+      const statusBadge = document.querySelector(`#status-${requestId}`);
+      if (statusBadge.textContent === 'Approved' || statusBadge.textContent === 'Rejected') {
+        Swal.fire({
+          icon: 'info',
+          title: 'Already processed',
+          text: 'You cannot change this request again.',
+          confirmButtonColor: '#4f46e5',
+        });
+        return;
+      }
 
       fetch("", {
         method: "POST",
@@ -97,16 +114,22 @@ document.addEventListener("DOMContentLoaded", function () {
       .then(response => response.json())
       .then(data => {
         if (data.success) {
-          // Update status instantly in table
-          const statusBadge = document.querySelector(`#status-${requestId}`);
           statusBadge.textContent = action.charAt(0).toUpperCase() + action.slice(1);
           statusBadge.className = `badge badge-${action === 'approve' ? 'success' : 'danger'}`;
+          const rowButtons = document.querySelectorAll(`#row-${requestId} .action-btn`);
+          rowButtons.forEach(b => b.disabled = true);
 
-          // Show success popup
           Swal.fire({
             icon: 'success',
             title: 'Success',
-            text: 'Your Submission has been sent.',
+            text: data.message,
+            confirmButtonColor: '#4f46e5',
+          });
+        } else if (data.error) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: data.error,
             confirmButtonColor: '#4f46e5',
           });
         }
@@ -114,5 +137,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 });
+
 </script>
 {% endblock %}

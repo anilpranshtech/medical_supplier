@@ -113,19 +113,31 @@
                         <table class="table align-middle table-row-dashed fs-6 gy-5">
                             <thead>
                                 <tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
-                                    <th class="text-center">Product ID</th>
-                                    <th class="text-center">Product Name</th>
+                                    <th class="text-center">Product</th>
+                                    <th class="text-center">PRoduct Name</th>
                                     <th class="text-center">Price</th>
-                                    <th class="text-center">Average Rating</th>
-                                    <th class="text-center">Total Reviews</th>
+                                    <th class="text-center">Avg Rating</th>
+                                    <th class="text-center">Reviews</th>
+                                    <th class="text-center">Action</th>
                                 </tr>
                             </thead>
+                        
                             <tbody class="fw-semibold text-gray-600">
                                 {% for p in products %}
                                 <tr>
-                                    <td class="text-center">{{ p.id }}</td>
+                                    <td class="text-center">
+                                        {% if p.get_main_image %}
+                                            <img src="{{ p.get_main_image }}" width="60" height="60" style="border-radius:8px;" alt="Product Image">
+                                        {% else %}
+                                            <span class="text-muted">No image</span>
+                                        {% endif %}
+                                    </td>
+                                    
+                        
                                     <td class="text-center">{{ p.name }}</td>
+                        
                                     <td class="text-center">${{ p.price|floatformat:2 }}</td>
+                        
                                     <td class="text-center">
                                         {% if p.avg_rating %}
                                             <span class="rating-star">★</span> {{ p.avg_rating|floatformat:1 }} / 5
@@ -133,17 +145,33 @@
                                             No Ratings
                                         {% endif %}
                                     </td>
+                        
+                                    <td class="text-center">{{ p.review_count }}</td>
+                        
+                                    <!-- Action Menu -->
                                     <td class="text-center">
-                                        {{ p.review_count }}
+                                        <div class="dropdown">
+                                            <button class="btn btn-light btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                                                Action
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li>
+                                                    <a class="dropdown-item" href="{% url 'supplier:product_ratings' p.id %}">
+                                                        View All Ratings
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
                                     </td>
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="5" class="text-center text-muted">No products found.</td>
+                                    <td colspan="6" class="text-center text-muted">No products found.</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
+                        
                     </div>
                 </div>
                 {% include "supplier/pagination.html" %}

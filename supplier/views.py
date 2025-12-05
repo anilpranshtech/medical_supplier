@@ -1338,25 +1338,25 @@ class OrderDetailsView( View):
         return render(request, 'supplier/order-details.html', context)
 
 
-class OrderDeleteView(View):
-    def post(self, request, order_id):
-        supplier = request.user
-        order = get_object_or_404(
-            Order.objects.filter(items__order_to=supplier).distinct(),
-            order_id=order_id
-        )
+# class OrderDeleteView(View):
+#     def post(self, request, order_id):
+#         supplier = request.user
+#         order = get_object_or_404(
+#             Order.objects.filter(items__order_to=supplier).distinct(),
+#             order_id=order_id
+#         )
 
-        # Check if supplier has items in this order
-        if not order.items.filter(order_to=supplier).exists():
-            logger.warning(f"Supplier {supplier.id} attempted to delete order {order.id} with no relevant items")
-            return JsonResponse({'success': False, 'error': 'You do not have permission to delete this order'}, status=403)
+#         # Check if supplier has items in this order
+#         if not order.items.filter(order_to=supplier).exists():
+#             logger.warning(f"Supplier {supplier.id} attempted to delete order {order.id} with no relevant items")
+#             return JsonResponse({'success': False, 'error': 'You do not have permission to delete this order'}, status=403)
 
-        # Soft delete by updating status to 'cancelled'
-        order.status = 'cancelled'
-        order.save()
-        order.items.filter(order_to=supplier).update(status='cancelled')
-        logger.info(f"Supplier {supplier.id} cancelled order {order.order_id}")
-        return JsonResponse({'success': True})
+#         # Soft delete by updating status to 'cancelled'
+#         order.status = 'cancelled'
+#         order.save()
+#         order.items.filter(order_to=supplier).update(status='cancelled')
+#         logger.info(f"Supplier {supplier.id} cancelled order {order.order_id}")
+#         return JsonResponse({'success': True})
 
 
 class UserProfileView( View):
@@ -1635,10 +1635,11 @@ class LogoutView(View):
 #         return RFQRequest.objects.none()
 
 
-class RFQListView(LoginRequiredMixin, OnboardingRequiredMixin, ListView):
+# 
+class SupplierRFQListView(LoginRequiredMixin, ListView):
     template_name = 'supplier/rfq_list.html'
     context_object_name = 'rfqs'
-    paginate_by = 15
+    paginate_by = 10   
 
     def get_queryset(self):
         user = self.request.user
@@ -1651,7 +1652,6 @@ class RFQListView(LoginRequiredMixin, OnboardingRequiredMixin, ListView):
         created_at_from = self.request.GET.get('created_at_from', '')
         created_at_to = self.request.GET.get('created_at_to', '')
 
-        # Search filter (Product, Requested By, Company)
         if search_query:
             queryset = queryset.filter(
                 Q(product__name__icontains=search_query) |
@@ -1659,37 +1659,33 @@ class RFQListView(LoginRequiredMixin, OnboardingRequiredMixin, ListView):
                 Q(company_name__icontains=search_query)
             )
 
-        # Status filter
         if status_filter and status_filter != 'all':
             queryset = queryset.filter(status=status_filter)
 
-        # Quantity filter
         if quantity_filter:
             try:
                 quantity = int(quantity_filter)
                 if quantity > 0:
                     queryset = queryset.filter(quantity__gte=quantity)
             except ValueError:
-                pass  # Ignore invalid inputs
+                pass  
 
-        # Created At filter (from date)
         if created_at_from:
             try:
                 created_at_from = datetime.strptime(created_at_from, '%Y-%m-%d')
                 queryset = queryset.filter(created_at__gte=created_at_from)
             except ValueError:
-                pass
+                pass  
 
-        # Created At filter (to date)
         if created_at_to:
             try:
                 created_at_to = datetime.strptime(created_at_to, '%Y-%m-%d')
                 created_at_to = created_at_to.replace(hour=23, minute=59, second=59)
                 queryset = queryset.filter(created_at__lte=created_at_to)
             except ValueError:
-                pass
+                pass  
 
-        return queryset.order_by('-created_at')   #  latest first
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1697,48 +1693,76 @@ class RFQListView(LoginRequiredMixin, OnboardingRequiredMixin, ListView):
         return context
 
 
-class SupplierQuotationUpdateView(LoginRequiredMixin, SuperuserRequiredMixin, UpdateView):
+class SupplierQuotationUpdateView(UpdateView):
     model = RFQRequest
     form_class = SupplierRFQQuotationForm
     template_name = 'supplier/rfq_quotation_form.html'
-    success_url = reverse_lazy('supplier:rfq_list')  # Adjusted to use reverse_lazy
+    success_url = reverse_lazy('supplier:rfq_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['comments'] = self.object.comments.all()
+        return context
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+
+        # === 1. ADD COMMENT ===
+        if 'add_comment' in request.POST:
+            comment_text = request.POST.get('comment', '').strip()
+            if comment_text:
+                RFQComment.objects.create(
+                    rfq=self.object,
+                    comment=comment_text,
+                    commented_by=request.user,
+                )
+                messages.success(request, "Comment added.")
+            else:
+                messages.error(request, "Comment cannot be empty.")
+            return redirect('supplier:rfq_quote', pk=self.object.pk)
+
+        # === 2. ADD ADMIN REPLY ===
+        if 'add_reply' in request.POST:
+            reply_to_id = request.POST.get('reply_to')
+            reply_text = request.POST.get('admin_reply', '').strip()
+
+            if not reply_to_id or not reply_text:
+                messages.error(request, "Invalid reply.")
+                return redirect('supplier:rfq_quote', pk=self.object.pk)
+
+            try:
+                comment = RFQComment.objects.get(id=reply_to_id, rfq=self.object)
+                if comment.admin_reply:
+                    messages.error(request, "Reply already exists.")
+                else:
+                    comment.admin_reply = reply_text
+                    comment.replied_at = timezone.now()
+                    comment.save()
+                    messages.success(request, "Reply saved.")
+            except RFQComment.DoesNotExist:
+                messages.error(request, "Comment not found.")
+            return redirect('supplier:rfq_quote', pk=self.object.pk)
+
+        # === 3. SEND QUOTATION ===
+        if 'send_quotation' in request.POST:
+            form = self.get_form()
+            if form.is_valid():
+                return self.form_valid(form)
+            else:
+                return self.form_invalid(form)
+
+        return redirect('supplier:rfq_quote', pk=self.object.pk)
 
     def form_valid(self, form):
-        rfq_instance = form.save(commit=False)
-        actual_price = rfq_instance.product.price
-        quoted_price = form.cleaned_data.get('quoted_price')
-        quote_delivery_date = form.cleaned_data.get('quote_delivery_date')
+        rfq = form.save(commit=False)
+        rfq.quoted_by = self.request.user
+        rfq.quote_sent_at = timezone.now()
+        rfq.status = 'quoted'
+        rfq.save()
 
-        # Validate future delivery date
-        if quote_delivery_date and quote_delivery_date < timezone.now().date():
-            form.add_error(
-                'quote_delivery_date',
-                'Delivery date must be in the future'
-            )
-            return self.form_invalid(form)
-
-        # Validate quoted price
-        if quoted_price and quoted_price > actual_price:
-            form.add_error(
-                'quoted_price',
-                'Quoted price cannot be greater than actual price'
-            )
-            return self.form_invalid(form)
-
-        # Set additional fields
-        rfq_instance.quoted_by = self.request.user
-        rfq_instance.quote_sent_at = timezone.now()
-        rfq_instance.status = 'quoted'
-        rfq_instance.save()
-
-        # Send quotation email
-        self.send_quotation_email(rfq_instance)
-
-        messages.success(
-            self.request,
-            "Quotation sent and email delivered to the user."
-        )
-        return redirect(self.success_url)
+        self.send_quotation_email(rfq)
+        messages.success(self.request, "Quotation sent and email delivered.")
+        return super().form_valid(form)
 
     def send_quotation_email(self, rfq):
         subject = f"Quotation for RFQ #{rfq.id} - {rfq.product.name}"
@@ -1746,10 +1770,9 @@ class SupplierQuotationUpdateView(LoginRequiredMixin, SuperuserRequiredMixin, Up
         context = {
             'rfq': rfq,
             'supplier': rfq.quoted_by,
+            'comments': rfq.comments.all(),
         }
-
-        message = render_to_string('supplier/snippets/rfq_quotation_sent.html', context)
-
+        message = render_to_string('supplier/rfq_quotation_sent.html', context)
         email = EmailMessage(
             subject=subject,
             body=message,
@@ -1757,14 +1780,12 @@ class SupplierQuotationUpdateView(LoginRequiredMixin, SuperuserRequiredMixin, Up
             to=[recipient_email]
         )
         email.content_subtype = 'html'
-
         if rfq.quote_attached_file:
             email.attach_file(rfq.quote_attached_file.path)
-
         email.send(fail_silently=False)
 
     def test_func(self):
-        return hasattr(self.request.user, 'is_supplier') and self.request.user.is_supplier
+        return self.request.user.is_staff or self.request.user.is_superuser
 
 
 # from django.core.paginator import Paginator
@@ -2037,6 +2058,7 @@ class QuestionView(OnboardingRequiredMixin,TemplateView):
         elif action_type == "delete":
             question.delete()
             messages.success(request, "Question deleted successfully.")
+            
 
         return redirect('supplier:question_list')
 
@@ -2134,6 +2156,21 @@ class RatingView(OnboardingRequiredMixin,TemplateView):
             'page_obj': page_obj,
         })
 
+        return context
+class ProductRatingListView(TemplateView):
+    template_name = "supplier/product_ratings.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        product_id = self.kwargs['product_id']
+
+        product = Product.objects.get(id=product_id)
+        ratings = RatingReview.objects.filter(product=product)
+
+        context.update({
+            "product": product,
+            "ratings": ratings
+        })
         return context
 
 class SupplierReturnsView(LoginRequiredMixin, TemplateView):

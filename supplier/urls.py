@@ -26,7 +26,9 @@ urlpatterns = [
     #order
     path('orderlist/', OrderListingView.as_view(), name='order_listing'),
     path('order-detail/<slug:order_id>/', OrderDetailsView.as_view(), name='order_detail'),
-    path('orders/delete/<slug:order_id>/', OrderDeleteView.as_view(), name='order_delete'),
+    # path('orders/delete/<slug:order_id>/', OrderDeleteView.as_view(), name='order_delete'),
+    
+
 
     # Cart
     path('cart/products', CartProductsView.as_view(), name='cart_product_list'),
@@ -55,8 +57,9 @@ urlpatterns = [
     path('delete-notification/<int:id>/', DeleteNotificationView.as_view(), name='delete_notification'),
    
     #RFQ Request for Quotation
-    path('rfq/', RFQListView.as_view(), name='rfq_list'),
+    path('rfq/', SupplierRFQListView.as_view(), name='rfq_list'),
     path('rfq/<int:pk>/quote/', SupplierQuotationUpdateView.as_view(), name='rfq_quote'),
+   
 
     #Banner Upload
     # path('banner-list/', BannerListView.as_view(), name='banner_list'),
@@ -67,13 +70,15 @@ urlpatterns = [
     path('print-bill/<int:pk>/', PrintBillView, name='print_bill'),
     path('question/', QuestionView.as_view(), name='question_list'),
     path('rating/', RatingView.as_view(), name='rating_list'),
-    
+    path('rating/<int:product_id>/', ProductRatingListView.as_view(), name='product_ratings'),
     path('most-viewed-products/', MostViewedProductsView.as_view(), name='view_product'),
+    
     #shipping method
     path('shipping-list/', ShippingListView.as_view(), name='shipping_list'),
     path('shipping-create/', ShippingCreateView.as_view(), name='shipping_create'),
     path('shipping-update/<int:pk>/', ShippingUpdateView.as_view(), name='shipping_update'),
     path('shipping-delete/<int:pk>/', ShippingDeleteView.as_view(), name='shipping_delete'),
+
     #return
     path('supplier/returns/', SupplierReturnsView.as_view(), name='supplier_returns'),
     path('supplier/returns/<str:return_serial>/', SupplierReturnsView.as_view(), name='supplier_returns'),

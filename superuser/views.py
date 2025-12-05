@@ -3067,16 +3067,29 @@ class AdminVacationModeView(View):
         action = request.POST.get('action')
         vacation_request = get_object_or_404(VacationRequest, id=request_id)
 
+        # Only allow update if status is Pending
+        if vacation_request.status != 'Pending':
+            return JsonResponse({
+                'success': False,
+                'error': 'This request has already been processed.'
+            })
+
         if action == 'approve':
             vacation_request.status = 'Approved'
         elif action == 'reject':
             vacation_request.status = 'Rejected'
-        vacation_request.save()
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': 'Invalid action.'
+            })
 
+        vacation_request.save()
         return JsonResponse({
             'success': True,
             'message': f"Vacation request has been {vacation_request.status.lower()}!"
         })
+
 
 
 

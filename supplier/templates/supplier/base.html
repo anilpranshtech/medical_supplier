@@ -55,6 +55,7 @@
         -moz-osx-font-smoothing: grayscale;
         text-rendering: optimizeLegibility;
       }
+      
     </style>
 
 
@@ -233,6 +234,60 @@
         opacity: 1;
     }
 }
+[data-bs-theme="dark"] .notification-btn {
+    background-color: #2b2b2b !important;
+    border-color: #444 !important;
+    color: #fff !important;
+}
+
+[data-bs-theme="dark"] .notification-btn i {
+    color: #fff !important;
+}
+
+[data-bs-theme="dark"] .notification-badge {
+    background-color: #ff4d4f !important;
+}
+[data-bs-theme="dark"] #notificationDrawer {
+    background-color: #1e1e2d !important;
+    color: #fff !important;
+    border-left: 1px solid #2a2a3a !important;
+}
+[data-bs-theme="dark"] #notificationDrawer .border-bottom {
+    border-color: #2a2a3a !important;
+}
+[data-bs-theme="dark"] #notificationDrawer .btn-light {
+    background-color: #2a2a3a !important;
+    color: #fff !important;
+    border-color: #3a3a4a !important;
+}
+[data-bs-theme="dark"] #notificationDrawer .nav-link {
+    color: #c8c8d0 !important;
+}
+[data-bs-theme="dark"] #notificationDrawer .nav-link.active {
+    color: #fff !important;
+    background-color: #2a2a3a !important;
+    border-color: #3a3a4a #3a3a4a transparent !important;
+}
+[data-bs-theme="dark"] #notificationDrawer .border-bottom {
+    border-color: #333 !important;
+}
+
+[data-bs-theme="dark"] #notificationDrawer .time-display {
+    background-color: #2a2a3a !important;
+    color: #fff !important;
+}
+[data-bs-theme="dark"] #notificationDrawer .btn-sm.btn-light {
+    background-color: #292938 !important;
+    color: #fff !important;
+    border-color: #3d3d4d !important;
+}
+[data-bs-theme="dark"] #notificationDrawer .badge.bg-danger {
+    background-color: #ff4d4f !important;
+}
+[data-bs-theme="dark"] #notificationDrawer .badge.bg-success {
+    background-color: #28a745 !important;
+}
+
 </style>
 
 </head>
@@ -293,9 +348,9 @@
                        <!-- Notification data -->
 <div class="app-navbar-item position-relative">
     <div onclick="toggleNotificationPanel()"
-         class="btn btn-icon border border-200 bg-gray-100 btn-color-gray-200 w-40px h-40px"
-         style="cursor: pointer;">
-        <i class="fas fa-bell fa-shake fs-4"></i>
+    class="btn btn-icon border border-200 bg-gray-100 btn-color-gray-200 w-40px h-40px notification-btn"
+    style="cursor: pointer;">
+   <i class="fas fa-bell fa-shake fs-4"></i>
         {% if unread_notifications %}
         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
               style="font-size: 0.75rem;">
@@ -304,6 +359,8 @@
         {% endif %}
     </div>
 </div>
+
+
 
 <!-- Notification Drawer -->
 <div id="notificationDrawer" class="position-fixed top-0 end-0 bg-white shadow-lg"
@@ -447,13 +504,19 @@
                                         </div>
 
                                         <div class="d-flex flex-column">
-                                            <div class="fw-bold d-flex align-items-center fs-5">
-                                                {{request.user}} <span
-                                                    class="badge badge-light-success fw-bold fs-7 px-2 py-1 ms-2">Supplier</span>
+                                            <div class="fw-bold d-flex align-items-center fs-6">
+                                                {{ request.user }}
+                                                <span class="badge badge-light-success fw-bold px-1 py-0 ms-2"
+                                                      style="font-size: 7px; line-height: 10px; padding: 0 3px !important;">
+                                                    Supplier
+                                                </span>
                                             </div>
-
-                                            <a href="#" class="fw-semibold text-muted text-hover-primary fs-7">
-                                                {{request.user}} </a>
+                                            
+                                            <a href="#" class="fw-semibold text-muted text-hover-primary fs-8">
+                                                {{ request.user }}
+                                            </a>
+                                            
+                                            
                                         </div>
                                     </div>
                                 </div>
@@ -586,14 +649,14 @@
                 <div class="app-container  container-fluid d-flex flex-column flex-md-row flex-center flex-md-stack py-3 ">
                     <div class="text-gray-900 order-2 order-md-1">
                         <span class="text-muted fw-semibold me-1">2025&copy;</span>
-                        <a href="https://keenthemes.com/" target="_blank"
+                        <a href="{% url 'supplier:supplier' %}" target="_blank"
                            class="text-gray-800 text-hover-primary">Medical Supplier</a>
                     </div>
-
+                  
                     <ul class="menu menu-gray-600 menu-hover-primary fw-semibold order-1">
-                        <li class="menu-item"><a href="https://keenthemes.com/" target="_blank"
+                        <li class="menu-item"><a href="#" target="_blank"
                                                  class="menu-link px-2">About</a></li>
-                        <li class="menu-item"><a href="https://devs.keenthemes.com/" target="_blank"
+                        <li class="menu-item"><a href="#" target="_blank"
                                                  class="menu-link px-2">Support</a></li>
                     </ul>
                 </div>

@@ -1,0 +1,29 @@
+{% extends "supplier/base.html" %}
+{% load static %}
+
+{% block content %}
+
+<h2>{{ product.name }} - All Ratings</h2>
+
+<div class="card mt-4">
+    <div class="card-body">
+        {% for r in ratings %}
+        <div class="border-bottom py-3">
+            <strong>{{ r.user.username }}</strong> – 
+            <span class="rating-star">★ {{ r.rating }}</span>
+
+            <p>{{ r.review }}</p>
+
+            {% if r.photo %}
+            <img src="{{ r.photo.url }}" width="120" class="rounded mb-2">
+            {% endif %}
+
+            <small class="text-muted">{{ r.created_at }}</small>
+        </div>
+        {% empty %}
+        <p>No ratings found.</p>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}

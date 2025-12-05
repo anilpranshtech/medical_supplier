@@ -2,7 +2,7 @@ from django import forms
 from dashboard.models import RFQRequest,SupplierProfile,ProductCategory,SUPPLIER_TYPE_CHOICES
 from .models import *
 import re
-
+from django.utils import timezone
 
 class SupplierRFQQuotationForm(forms.ModelForm):
     class Meta:
@@ -22,10 +22,15 @@ class SupplierRFQQuotationForm(forms.ModelForm):
         labels = {
             'quoted_price': 'Quoted Price',
             'quote_delivery_date': 'Expected Delivery Date',
-            'supplier_notes': 'Additional Notes',
-            'quote_attached_file': 'Attach Quotation File',
+            'supplier_notes': 'Notes',
+            'quote_attached_file': 'Attachment (Optional)',
         }
 
+    def clean_quote_delivery_date(self):
+        delivery_date = self.cleaned_data['quote_delivery_date']
+        if delivery_date and delivery_date < timezone.localdate():
+            raise forms.ValidationError("Delivery date cannot be in the past.")
+        return delivery_date
 
 class BannerForm(forms.ModelForm):
     class Meta:
