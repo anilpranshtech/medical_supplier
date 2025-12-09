@@ -2173,7 +2173,7 @@ class ProductRatingListView(TemplateView):
         })
         return context
 
-class SupplierReturnsView(LoginRequiredMixin, TemplateView):
+class   SupplierReturnsView(LoginRequiredMixin, TemplateView):
 
     template_name = 'supplier/returns.html'
     login_url = 'dashboard:login'
@@ -2679,8 +2679,6 @@ class ShippingCreateView(View):
         price = request.POST.get('price')
         period = request.POST.get('period')
         period_type = request.POST.get('period_type')
-
-        # Validation
         if float(order_subtotal_from) > float(order_subtotal_to):
             return JsonResponse({'status':'error','message':'Subtotal To must be >= Subtotal From'})
 
@@ -2725,15 +2723,20 @@ class ShippingDeleteView(View):
         shipping.delete()
         return JsonResponse({'status':'success','message':'Shipping deleted'})
 
-
 class supplierCouponView(TemplateView):
     template_name = "supplier/coupons.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["coupons"] = Coupon.objects.all().select_related("created_by")
-        context["clients"] = User.objects.all() 
+        coupons_qs = Coupon.objects.all().select_related("created_by").order_by("-id")
+        page = self.request.GET.get("page", 1)
+        paginator = Paginator(coupons_qs, 10)    
+        coupons = paginator.get_page(page)
+        context["coupons"] = coupons
+        context["page_obj"] = coupons              
+        context["clients"] = User.objects.all()
         context["products"] = Product.objects.all()
+
         return context
 
     def post(self, request, *args, **kwargs):
@@ -2770,17 +2773,21 @@ class supplierCouponView(TemplateView):
                 can_be_used_with_promotions=can_be_used_with_promotions,
                 created_by=request.user if request.user.is_authenticated else None,
             )
+
             client_ids = request.POST.getlist("client_ids[]", [])
             product_ids = request.POST.getlist("product_ids[]", [])
 
             if client_ids:
                 coupon.client.set(User.objects.filter(id__in=client_ids))
+
             if product_ids:
                 coupon.products.set(Product.objects.filter(id__in=product_ids))
 
             return JsonResponse({"status": "success", "message": "Coupon created successfully!"})
+
         except Exception as e:
             return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
 
 def supplier_edit_coupon(request):
     if request.method == 'POST':
@@ -2854,12 +2861,10 @@ class VacationRequestView(LoginRequiredMixin, View):
     template_name = 'supplier/vacationrequest.html'
 
     def get(self, request):
-        # show only this supplier’s vacation requests
         requests = VacationRequest.objects.filter(supplier=request.user).order_by('-created_at')
         return render(request, self.template_name, {'requests': requests})
 
     def post(self, request):
-        # Get data from form submission
         reason = request.POST.get('reason')
         from_date = request.POST.get('from_date')
         to_date = request.POST.get('to_date')
@@ -2976,7 +2981,6 @@ def supplier_delete_promotion(request, pk):
         return JsonResponse({'success': True})
     except:
         return JsonResponse({'success': False})
-
 class supplierBuyXGiftYPromotionView(TemplateView):
     template_name = 'supplier/Buyxgiftypromotion.html'
 
@@ -2984,19 +2988,37 @@ class supplierBuyXGiftYPromotionView(TemplateView):
         ctx = super().get_context_data(**kwargs)
         ctx['page_title'] = 'Buy X Gift Y Promotion'
         ctx['promotions'] = BuyXGiftYPromotion.objects.all()
-        ctx['suppliers']  = SupplierProfile.objects.all()
-        ctx['products']   = Product.objects.all()
+
+        user = self.request.user
+
+        if hasattr(user, 'supplierprofile'):
+            ctx['suppliers'] = [user.supplierprofile]
+            ctx['products'] = Product.objects.filter(created_by=user)
+        else:
+            ctx['suppliers'] = SupplierProfile.objects.all()
+            ctx['products'] = Product.objects.all()
+
         return ctx
+
+
 class supplierAddGiftPromotionView(TemplateView):
     def post(self, request):
         try:
-            product_type   = request.POST.get('product_type')
-            supplier_ids   = request.POST.getlist('supplier')
-            product_ids    = request.POST.getlist('product')
-            giftproduct_ids= request.POST.getlist('giftproduct')
-            buy            = request.POST.get('buy')
-            gift           = request.POST.get('gift')
-            promotion_period = request.POST.get('promotion_period')
+            product_type = request.POST.get('product_type')
+            if hasattr(request.user, 'supplierprofile'):
+                supplier_ids = [request.user.supplierprofile.id]
+            else:
+                supplier_ids = request.POST.getlist('supplier')
+
+            product_ids = request.POST.getlist('product')
+            giftproduct_ids = request.POST.getlist('giftproduct')
+            buy = request.POST.get('buy')
+            gift = request.POST.get('gift')
+            start = request.POST.get('start_datetime')
+            end = request.POST.get('end_datetime')
+            start_dt = datetime.strptime(start, "%Y-%m-%dT%H:%M")
+            end_dt = datetime.strptime(end, "%Y-%m-%dT%H:%M")
+            promotion_period = f"{start_dt.strftime('%d %b %Y')} - {end_dt.strftime('%d %b %Y')}"
 
             promo = BuyXGiftYPromotion.objects.create(
                 product_type=product_type,
@@ -3007,18 +3029,20 @@ class supplierAddGiftPromotionView(TemplateView):
             promo.supplier.set(supplier_ids)
             promo.product.set(product_ids)
             promo.giftproduct.set(giftproduct_ids)
-            promo.save()               
+            promo.save()
 
             return JsonResponse({'success': True})
         except Exception as e:
             return JsonResponse({'success': False, 'msg': str(e)})
+
+
 class supplierEditGiftPromotionView(TemplateView):
     def get(self, request, pk):
         try:
             promo = BuyXGiftYPromotion.objects.get(pk=pk)
             start_str, _, end_str = promo.promotion_period.partition(' - ')
             start_str = start_str.strip()
-            end_str   = end_str.strip()
+            end_str = end_str.strip()
 
             def fmt(dt_str):
                 try:
@@ -3029,13 +3053,13 @@ class supplierEditGiftPromotionView(TemplateView):
 
             data = {
                 'product_type': promo.product_type,
-                'supplier'    : list(promo.supplier.values_list('id', flat=True)),
-                'product'     : list(promo.product.values_list('id', flat=True)),
-                'giftproduct' : list(promo.giftproduct.values_list('id', flat=True)),
-                'buy'         : promo.buy,
-                'gift'        : promo.gift,
+                'supplier': list(promo.supplier.values_list('id', flat=True)),
+                'product': list(promo.product.values_list('id', flat=True)),
+                'giftproduct': list(promo.giftproduct.values_list('id', flat=True)),
+                'buy': promo.buy,
+                'gift': promo.gift,
                 'start_datetime': fmt(start_str),
-                'end_datetime'  : fmt(end_str),
+                'end_datetime': fmt(end_str),
             }
             return JsonResponse({'success': True, 'data': data})
         except BuyXGiftYPromotion.DoesNotExist:
@@ -3046,21 +3070,28 @@ class supplierEditGiftPromotionView(TemplateView):
             promo = BuyXGiftYPromotion.objects.get(pk=pk)
 
             promo.product_type = request.POST.get('product_type')
-            promo.buy          = request.POST.get('buy')
-            promo.gift         = request.POST.get('gift')
-            promo.supplier.set(request.POST.getlist('supplier'))
+            promo.buy = request.POST.get('buy')
+            promo.gift = request.POST.get('gift')
+
+            if hasattr(request.user, 'supplierprofile'):
+                promo.supplier.set([request.user.supplierprofile.id])
+            else:
+                promo.supplier.set(request.POST.getlist('supplier'))
+
             promo.product.set(request.POST.getlist('product'))
             promo.giftproduct.set(request.POST.getlist('giftproduct'))
+
             start = request.POST.get('start_datetime')
-            end   = request.POST.get('end_datetime')
+            end = request.POST.get('end_datetime')
             start_dt = datetime.strptime(start, "%Y-%m-%dT%H:%M")
-            end_dt   = datetime.strptime(end,   "%Y-%m-%dT%H:%M")
+            end_dt = datetime.strptime(end, "%Y-%m-%dT%H:%M")
             promo.promotion_period = f"{start_dt.strftime('%d %b %Y')} - {end_dt.strftime('%d %b %Y')}"
 
-            promo.save()                 
+            promo.save()
             return JsonResponse({'success': True})
         except Exception as e:
             return JsonResponse({'success': False, 'msg': str(e)})
+
 
 def supplier_delete_gift_promotion(request, pk):
     try:
@@ -3072,104 +3103,123 @@ class supplierBasketPromotionView(TemplateView):
     template_name = 'supplier/Basketpromotion.html'
 
     def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx['page_title'] = 'Basket Promotions'
-        ctx['promotions'] = BasketPromotion.objects.all().order_by('-created_at')
-        ctx['suppliers']  = SupplierProfile.objects.all()
-        ctx['products']   = Product.objects.all()
-        return ctx
-class supplierAddBasketPromotionView(TemplateView):
+        context = super().get_context_data(**kwargs)
+        context['page_title'] = 'Basket Promotions'
+        context['promotions'] = BasketPromotion.objects.all().order_by('-created_at')
+
+        user = self.request.user
+
+        if hasattr(user, 'supplierprofile'):
+            context['suppliers'] = [user.supplierprofile]
+            context['products'] = Product.objects.filter(created_by=user)
+        else:
+            context['suppliers'] = SupplierProfile.objects.all()
+            context['products'] = Product.objects.all()
+
+        return context
+class supplierAddBasketPromotionView(View):
     def post(self, request):
         try:
-            product_type   = request.POST.get('product_type')
-            supplier_ids   = request.POST.getlist('supplier')
-            product_ids    = request.POST.getlist('product')
-            promotion_period = request.POST.get('promotion_period')
-            time_limit     = request.POST.get('time_limit')
-            title_en       = request.POST.get('title_en')
+            product_type = request.POST.get('product_type')
+            title_en = request.POST.get('title_en')
+            time_limit = request.POST.get('time_limit')
             description_en = request.POST.get('description_en')
-            main_image     = request.FILES.get('main_image')
+            main_image = request.FILES.get('main_image')
+            start = request.POST.get('start_datetime')
+            end = request.POST.get('end_datetime')
+            start_dt = datetime.strptime(start, "%Y-%m-%dT%H:%M")
+            end_dt = datetime.strptime(end, "%Y-%m-%dT%H:%M")
+            promotion_period = f"{start_dt.strftime('%d %b %Y')} - {end_dt.strftime('%d %b %Y')}"
+            if hasattr(request.user, 'supplierprofile'):
+                supplier_ids = [request.user.supplierprofile.id]
+            else:
+                supplier_ids = request.POST.getlist('supplier')
 
+            product_ids = request.POST.getlist('product')
             promo = BasketPromotion.objects.create(
                 product_type=product_type,
                 promotion_period=promotion_period,
                 time_limit=time_limit,
                 title_en=title_en,
                 description_en=description_en,
-                main_image=main_image
+                main_image=main_image,
             )
             promo.supplier.set(supplier_ids)
             promo.product.set(product_ids)
-            promo.save()  
+            promo.save()
 
             return JsonResponse({'success': True})
+
         except Exception as e:
             return JsonResponse({'success': False, 'msg': str(e)})
-class supplierEditBasketPromotionView(TemplateView):
+class supplierEditBasketPromotionView(View):
     def get(self, request, pk):
         try:
             promo = BasketPromotion.objects.get(pk=pk)
             start_str, _, end_str = promo.promotion_period.partition(' - ')
-            start_str = start_str.strip()
-            end_str   = end_str.strip()
 
-            def fmt(dt_str):
+            def parse_date(date_str):
                 try:
-                    dt = datetime.strptime(dt_str, "%d %b %Y")
-                    return dt.strftime("%Y-%m-%dT00:00")
+                    return datetime.strptime(date_str.strip(), "%d %b %Y").strftime("%Y-%m-%dT%H:%M")
                 except:
                     return ""
 
             data = {
-                'product_type'    : promo.product_type,
-                'supplier'        : list(promo.supplier.values_list('id', flat=True)),
-                'product'         : list(promo.product.values_list('id', flat=True)),
-                'time_limit'      : promo.time_limit or "",
-                'title_en'        : promo.title_en or "",
-                'description_en'  : promo.description_en or "",
-                'main_image_url'  : promo.main_image.url if promo.main_image else "",
-                'start_datetime'  : fmt(start_str),
-                'end_datetime'    : fmt(end_str),
+                'product_type': promo.product_type,
+                'supplier': list(promo.supplier.values_list('id', flat=True)),
+                'product': list(promo.product.values_list('id', flat=True)),
+                'title_en': promo.title_en or "",
+                'time_limit': promo.time_limit or "",
+                'description_en': promo.description_en or "",
+                'main_image_url': promo.main_image.url if promo.main_image else "",
+                'start_datetime': parse_date(start_str),
+                'end_datetime': parse_date(end_str),
             }
             return JsonResponse({'success': True, 'data': data})
+
         except BasketPromotion.DoesNotExist:
             return JsonResponse({'success': False, 'msg': 'Promotion not found'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'msg': str(e)})
 
     def post(self, request, pk):
         try:
             promo = BasketPromotion.objects.get(pk=pk)
 
-            promo.product_type     = request.POST.get('product_type')
-            promo.time_limit       = request.POST.get('time_limit')
-            promo.title_en         = request.POST.get('title_en')
-            promo.description_en   = request.POST.get('description_en')
-            promo.supplier.set(request.POST.getlist('supplier'))
-            promo.product.set(request.POST.getlist('product'))
-            if 'main_image' in request.FILES:
-                promo.main_image = request.FILES['main_image']
+            promo.product_type = request.POST.get('product_type')
+            promo.title_en = request.POST.get('title_en')
+            promo.time_limit = request.POST.get('time_limit')
+            promo.description_en = request.POST.get('description_en')
 
+            if 'main_image' in request.FILES:
+                if promo.main_image:
+                    promo.main_image.delete(save=False)
+                promo.main_image = request.FILES['main_image']
+            if hasattr(request.user, 'supplierprofile'):
+                promo.supplier.set([request.user.supplierprofile.id])
+            else:
+                promo.supplier.set(request.POST.getlist('supplier'))
+
+            promo.product.set(request.POST.getlist('product'))
             start = request.POST.get('start_datetime')
-            end   = request.POST.get('end_datetime')
+            end = request.POST.get('end_datetime')
             start_dt = datetime.strptime(start, "%Y-%m-%dT%H:%M")
-            end_dt   = datetime.strptime(end,   "%Y-%m-%dT%H:%M")
+            end_dt = datetime.strptime(end, "%Y-%m-%dT%H:%M")
             promo.promotion_period = f"{start_dt.strftime('%d %b %Y')} - {end_dt.strftime('%d %b %Y')}"
 
             promo.save()
             return JsonResponse({'success': True})
+
         except Exception as e:
             return JsonResponse({'success': False, 'msg': str(e)})
 def supplier_delete_basket_promotion(request, pk):
     try:
         promo = BasketPromotion.objects.get(pk=pk)
         if promo.main_image:
-            promo.main_image.delete(save=False)
+            promo.main_image.delete(save=False)  
         promo.delete()
         return JsonResponse({'success': True})
-    except Exception:
-        return JsonResponse({'success': False})
-
-
-
-
-
-
+    except BasketPromotion.DoesNotExist:
+        return JsonResponse({'success': False, 'msg': 'Not found'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'msg': str(e)})

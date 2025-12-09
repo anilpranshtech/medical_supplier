@@ -29,10 +29,10 @@
             <table class="table align-middle table-row-dashed fs-6 gy-5">
               <thead>
                 <tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
-                  <th class="text-start min-w-100px">Product Type</th>
-                  <th class="text-start min-w-150px">Supplier</th>
-                  <th class="text-start min-w-150px">Product</th>
-                  <th class="text-start min-w-150px">Gift Product</th>
+                  <th class="text-center min-w-100px">Product Type</th>
+                  <th class="text-center min-w-150px">Supplier</th>
+                  <th class="text-center min-w-150px">Product</th>
+                  <th class="text-center min-w-150px">Gift Product</th>
                   <th class="text-center min-w-100px">Buy</th>
                   <th class="text-center min-w-100px">Gift</th>
                   <th class="text-center min-w-200px">Promotion Period</th>
@@ -44,24 +44,24 @@
               <tbody class="fw-semibold text-gray-600">
                 {% for promo in promotions %}
                 <tr>
-                  <td class="text-start">{{ promo.product_type|upper }}</td>
-                  <td class="text-start">
+                  <td class="text-center">{{ promo.product_type|upper }}</td>
+                  <td class="text-center">
                     {% for s in promo.supplier.all %}
-                      {{ s.user.username }}{% if not forloop.last %}, {% endif %}
+                      <div>{{ s.user.username }}</div>
                     {% empty %}
                       <span class="text-muted">No supplier</span>
                     {% endfor %}
                   </td>
-                  <td class="text-start">
+                  <td class="text-center">
                     {% for p in promo.product.all %}
-                      {{ p.name }}{% if not forloop.last %}, {% endif %}
+                      <div>{{ p.name }}</div>
                     {% empty %}
                       <span class="text-muted">No product</span>
                     {% endfor %}
                   </td>
-                  <td class="text-start">
+                  <td class="text-center">
                     {% for g in promo.giftproduct.all %}
-                      {{ g.name }}{% if not forloop.last %}, {% endif %}
+                      <div>{{ g.name }}</div>
                     {% empty %}
                       <span class="text-muted">No gift</span>
                     {% endfor %}
@@ -78,12 +78,27 @@
                   </td>
                   <td class="text-center">{{ promo.created_at|date:"d M Y H:i" }}</td>
                   <td class="text-center">
-                    <button class="btn btn-sm btn-light-primary edit-promo-btn me-1"
-                            data-id="{{ promo.id }}">
-                      <i class="fas fa-edit"></i> Edit
-                    </button>
-                    <a href="#" class="btn btn-sm btn-light-danger delete-promo-btn"
-                       data-id="{{ promo.id }}">Delete</a>
+                    <div class="dropdown">
+                      <button class="btn btn-sm btn-light-primary dropdown-toggle" type="button" 
+                              data-bs-toggle="dropdown" aria-expanded="false">
+                       Actions
+                      </button>
+                      <ul class="dropdown-menu">
+                        <li>
+                          <button class="dropdown-item edit-promo-btn" 
+                                  data-id="{{ promo.id }}">
+                            <i class="fas fa-edit me-2"></i> Edit
+                          </button>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                          <button class="dropdown-item text-danger delete-promo-btn" 
+                                  data-id="{{ promo.id }}">
+                            <i class="fas fa-trash me-2"></i> Delete
+                          </button>
+                        </li>
+                      </ul>
+                    </div>
                   </td>
                 </tr>
                 {% endfor %}
@@ -120,35 +135,44 @@
               </select>
             </div>
 
-            <div class="col-md-6">
-              <label class="form-label fw-semibold">Supplier <span style="color: red;">*</span></label>
-              <select name="supplier" class="form-select select2" multiple required
-                      data-placeholder="Select suppliers">
-                {% for s in suppliers %}
-                  <option value="{{ s.id }}">{{ s.user.username }}</option>
-                {% endfor %}
-              </select>
-            </div>
+         <!-- Supplier field -->
+<div class="col-md-6">
+  <label class="form-label fw-semibold">Supplier <span style="color: red;">*</span></label>
+  {% if request.user.supplierprofile %}
+    <input type="hidden" name="supplier" value="{{ suppliers.0.id }}">
+    <input type="text" class="form-control" value="{{ suppliers.0.user.username }}" disabled>
+  {% else %}
+    <select name="supplier" class="form-select select2" multiple required
+            data-placeholder="Select suppliers">
+      {% for s in suppliers %}
+        <option value="{{ s.id }}">{{ s.user.username }}</option>
+      {% endfor %}
+    </select>
+  {% endif %}
+</div>
 
-            <div class="col-md-6">
-              <label class="form-label fw-semibold">Product  <span style="color: red;">*</span></label>
-              <select name="product" class="form-select select2" multiple required
-                      data-placeholder="Select products">
-                {% for p in products %}
-                  <option value="{{ p.id }}">{{ p.name }}</option>
-                {% endfor %}
-              </select>
-            </div>
+<!-- Product field -->
+<div class="col-md-6">
+  <label class="form-label fw-semibold">Product  <span style="color: red;">*</span></label>
+  <select name="product" class="form-select select2" multiple required
+          data-placeholder="Select products">
+    {% for p in products %}
+      <option value="{{ p.id }}">{{ p.name }}</option>
+    {% endfor %}
+  </select>
+</div>
 
-            <div class="col-md-6">
-              <label class="form-label fw-semibold">Gift Product <span style="color: red;">*</span></label>
-              <select name="giftproduct" class="form-select select2" multiple required
-                      data-placeholder="Select gift products">
-                {% for p in products %}
-                  <option value="{{ p.id }}">{{ p.name }}</option>
-                {% endfor %}
-              </select>
-            </div>
+<!-- Gift Product field -->
+<div class="col-md-6">
+  <label class="form-label fw-semibold">Gift Product <span style="color: red;">*</span></label>
+  <select name="giftproduct" class="form-select select2" multiple required
+          data-placeholder="Select gift products">
+    {% for p in products %}
+      <option value="{{ p.id }}">{{ p.name }}</option>
+    {% endfor %}
+  </select>
+</div>
+
 
             <div class="col-md-3">
               <label class="form-label fw-semibold">Buy <span style="color: red;">*</span></label>
@@ -172,7 +196,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" id="saveAddPromotionBtn" class="btn btn-primary">Save</button>
+        <button type="button" id="saveAddPromotionBtn" class="btn btn-primary btn-with-loader">Save</button>
       </div>
     </div>
   </div>
@@ -200,17 +224,21 @@
                 <option value="b2c">B2C</option>
               </select>
             </div>
-
             <div class="col-md-6">
               <label class="form-label fw-semibold">Supplier <span style="color: red;">*</span></label>
-              <select name="supplier" id="supplierSelect" class="form-select select2" multiple required
-                      data-placeholder="Select suppliers">
-                {% for s in suppliers %}
-                  <option value="{{ s.id }}">{{ s.user.username }}</option>
-                {% endfor %}
-              </select>
+              {% if request.user.supplierprofile %}
+                <input type="hidden" name="supplier" id="supplierEditHidden" value="{{ suppliers.0.id }}">
+                <input type="text" class="form-control" value="{{ suppliers.0.user.username }}" disabled>
+              {% else %}
+                <select name="supplier" id="supplierSelect" class="form-select select2" multiple required
+                        data-placeholder="Select suppliers">
+                  {% for s in suppliers %}
+                    <option value="{{ s.id }}">{{ s.user.username }}</option>
+                  {% endfor %}
+                </select>
+              {% endif %}
             </div>
-
+            
             <div class="col-md-6">
               <label class="form-label fw-semibold">Product <span style="color: red;">*</span></label>
               <select name="product" id="productSelect" class="form-select select2" multiple required
@@ -253,7 +281,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" id="saveEditPromotionBtn" class="btn btn-primary">Save</button>
+        <button type="button" id="saveEditPromotionBtn" class="btn btn-primary btn-with-loader">Save</button>
       </div>
     </div>
   </div>
@@ -263,7 +291,7 @@
 <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content rounded-3 shadow">
-      <div class="modal-header bg-danger text-white">
+      <div class="modal-header  text-white">
         <h5 class="modal-title">Confirm Delete</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
@@ -272,7 +300,7 @@
       </div>
       <div class="modal-footer justify-content-center">
         <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" id="confirmDeleteBtn" class="btn btn-danger">Delete</button>
+        <button type="button" id="confirmDeleteBtn" class="btn btn-danger btn-with-loader">Delete</button>
       </div>
     </div>
   </div>
@@ -281,6 +309,7 @@
 {% endblock %}
 
 {% block page_only_scripts %}
+<script src="{% static 'js/buttonLoader.js' %}"></script>
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
@@ -349,11 +378,12 @@ document.addEventListener("DOMContentLoaded", function () {
     })
     .catch(() => showAlert('Network error', 'danger'));
   });
-
-  // EDIT Promotion
-  document.querySelectorAll('.edit-promo-btn').forEach(btn => {
-    btn.addEventListener('click', function () {
-      const id = this.dataset.id;
+  document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('edit-promo-btn') || 
+        e.target.closest('.edit-promo-btn')) {
+      const btn = e.target.classList.contains('edit-promo-btn') ? 
+                  e.target : e.target.closest('.edit-promo-btn');
+      const id = btn.dataset.id;
       document.getElementById('promoIdField').value = id;
 
       fetch("{% url 'supplier:edit_gift_promotion' 0 %}".replace('0', id))
@@ -367,14 +397,31 @@ document.addEventListener("DOMContentLoaded", function () {
           $('#giftInput').val(d.gift);
           $('#startInput').val(d.start_datetime);
           $('#endInput').val(d.end_datetime);
-          $('#supplierSelect').val(d.supplier).trigger('change');
+
+          // Handle supplier selection
+          if (document.getElementById('supplierSelect')) {
+            $('#supplierSelect').val(d.supplier).trigger('change');
+          }
+
           $('#productSelect').val(d.product).trigger('change');
           $('#giftproductSelect').val(d.giftproduct).trigger('change');
 
           editModal.show();
         })
         .catch(() => showAlert('Failed to load data', 'danger'));
-    });
+    }
+  });
+
+  // DELETE Promotion - Update event listeners for dropdown buttons
+  document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('delete-promo-btn') || 
+        e.target.closest('.delete-promo-btn')) {
+      e.preventDefault();
+      const btn = e.target.classList.contains('delete-promo-btn') ? 
+                  e.target : e.target.closest('.delete-promo-btn');
+      deleteId = btn.dataset.id;
+      delModal.show();
+    }
   });
 
   // SAVE EDIT
@@ -411,13 +458,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // DELETE Promotion
   let deleteId = null;
-  document.querySelectorAll('.delete-promo-btn').forEach(btn => {
-    btn.addEventListener('click', e => {
-      e.preventDefault();
-      deleteId = btn.dataset.id;
-      delModal.show();
-    });
-  });
 
   document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
     if (!deleteId) return;

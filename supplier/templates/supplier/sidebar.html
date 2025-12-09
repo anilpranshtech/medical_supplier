@@ -231,13 +231,13 @@ class="menu-item py-2 {% if request.resolver_match.url_name == 'user_information
                       <span class="menu-title">RFQ Requests</span>
                     </a>
 
-                    <a class="menu-link {% if request.resolver_match.url_name == 'view_product' %} active {% endif %}"
+                    <!-- <a class="menu-link {% if request.resolver_match.url_name == 'view_product' %} active {% endif %}"
                     href="{% url 'supplier:view_product' %}">
                     <span class="menu-bullet">
                     <span class="bullet bullet-dot"></span>
                     </span>
                     <span class="menu-title">View Products</span>
-                    </a>
+                    </a> -->
                     <a class="menu-link {% if request.resolver_match.url_name == 'rating_list' %} active {% endif %}"
                        href="{% url 'supplier:rating_list' %}">
                       <span class="menu-bullet">
