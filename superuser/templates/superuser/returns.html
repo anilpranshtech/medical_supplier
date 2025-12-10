@@ -134,7 +134,9 @@
                   <th>Order ID</th>
                   <th>Supplier</th>
                   <th>Request Date</th>
+                  {% if "dashboard.change_return" in user_permissions_list or "dashboard.delete_return" in user_permissions_list %}
                   <th>Actions</th>
+                  {% endif %}
                 </tr>
               </thead>
               <tbody class="fw-semibold text-gray-600 text-center">
@@ -165,6 +167,8 @@
                       {{ return.request_date|date:"d M, Y" }}
                     </div>
                   </td>
+
+                {% if "dashboard.change_return" in user_permissions_list or "dashboard.delete_return" in user_permissions_list or "dashboard.view_return" in user_permissions_list %}
                   <td class="text-center">
                     <!-- Actions Dropdown -->
                     <a href="#" class="btn btn-sm btn-light btn-flex btn-center btn-active-light-primary"
@@ -177,12 +181,14 @@
                                 menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-150px py-4"
                          data-kt-menu="true">
                       <!-- Update Status -->
+                    {% if "dashboard.change_return" in user_permissions_list %}
                       <div class="menu-item px-3">
                         <a href="#" class="menu-link px-3"
                            data-bs-toggle="modal" data-bs-target="#updateReturnModal{{ return.id }}">
                           Update Status
                         </a>
                       </div>
+                     {% endif %}
                       <!-- Refund Action -->
                       {% if return.return_status == "approved" and not return.is_refunded %}
                       <div class="menu-item px-3">
@@ -205,19 +211,23 @@
                       </div>
                       {% endif %}
                       <!-- VIEW -->
+                    {% if "dashboard.view_return" in user_permissions_list %}
                       <div class="menu-item px-3">
                         <a href="#" class="menu-link px-3"
                            data-bs-toggle="modal" data-bs-target="#viewReturnModal{{ return.id }}">
                           View 
                         </a>
                       </div>
+                    {% endif %}
                       <!-- Delete Action -->
-                      <div class="menu-item px-3">
-                        <a href="#" class="menu-link px-3"
-                           data-bs-toggle="modal" data-bs-target="#deleteReturnModal{{ return.id }}">
-                          Delete
-                        </a>
-                      </div>
+                    {% if "dashboard.delete_return" in user_permissions_list %}
+                        <div class="menu-item px-3">
+                            <a href="#" class="menu-link px-3"
+                               data-bs-toggle="modal" data-bs-target="#deleteReturnModal{{ return.id }}">
+                              Delete
+                            </a>
+                          </div>
+                    {% endif %}
                     </div>
 
                     <!-- Modal for Update Status -->
@@ -532,6 +542,7 @@
                       </div>
                     </div>
                   </td>
+                {% endif %}
                 </tr>
                 {% empty %}
                 <tr>

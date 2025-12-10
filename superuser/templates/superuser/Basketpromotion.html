@@ -16,9 +16,11 @@
           <div class="card-header flex-wrap align-items-center py-5 gap-4">
             <div class="card-title w-100 w-md-auto">Basket Promotions</div>
             <div class="card-toolbar">
+              {% if "dashboard.add_basketpromotion" in user_permissions_list  %}
               <button class="btn btn-primary" id="addPromotionBtn">
                 <i class="fas fa-plus me-2"></i>Add Promotion
               </button>
+              {% endif %}
             </div>
           </div>
 
@@ -35,7 +37,9 @@
                   <th class="text-center min-w-200px">Period</th>
                   <th class="text-center min-w-100px">Status</th>
                   <th class="text-center min-w-150px">Created</th>
+                  {% if "dashboard.change_basketpromotion" in user_permissions_list or "dashboard.delete_basketpromotion" in user_permissions_list  %}
                   <th class="text-center min-w-100px">Actions</th>
+                  {% endif %}
                 </tr>
               </thead>
               <tbody class="fw-semibold text-gray-600">
@@ -69,14 +73,21 @@
                     {% endif %}
                   </td>
                   <td class="text-center">{{ promo.created_at|date:"d M Y H:i" }}</td>
-                  <td class="text-center">
-                    <button class="btn btn-sm btn-light-primary edit-promo-btn me-1" data-id="{{ promo.id }}">
-                      <i class="fas fa-edit"></i> Edit
-                    </button>
-                    <a href="#" class="btn btn-sm btn-light-danger delete-promo-btn" data-id="{{ promo.id }}">
-                      Delete
-                    </a>
-                  </td>
+                  {% if "dashboard.change_basketpromotion" in user_permissions_list or "dashboard.delete_basketpromotion" in user_permissions_list  %}
+                    <td class="text-center">
+                        {% if "dashboard.change_basketpromotion" in user_permissions_list %}
+                        <button class="btn btn-sm btn-light-primary edit-promo-btn me-1" data-id="{{ promo.id }}">
+                          <i class="fas fa-edit"></i> Edit
+                        </button>
+                            {% endif %}
+
+                        {% if "dashboard.delete_basketpromotion" in user_permissions_list %}
+                        <a href="#" class="btn btn-sm btn-light-danger delete-promo-btn" data-id="{{ promo.id }}">
+                          Delete
+                        </a>
+                        {% endif %}
+                      </td>
+                    {% endif %}
                 </tr>
                 {% endfor %}
               </tbody>

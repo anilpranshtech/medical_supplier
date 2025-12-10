@@ -6,7 +6,6 @@
 
 {% block content %}
 
-{% tag_user_permissions_list request.user as user_permissions_list %}
 <div id="alertBox" class="alert d-none mt-3" role="alert"></div>
 <div class="app-main flex-column flex-row-fluid" id="kt_app_main">
   <div class="d-flex flex-column flex-column-fluid">
@@ -16,9 +15,12 @@
           <div class="card-header flex-wrap align-items-center py-5 gap-4">
             <div class="card-title w-100 w-md-auto">Buy X Get Y Promotions</div>
             <div class="card-toolbar">
-              <button class="btn btn-primary" id="addPromotionBtn">
-                <i class="fas fa-plus me-2"></i>Add Promotion
-              </button>
+                {% if "dashboard.add_buyxgetypromotion" in user_permissions_list  %}
+                <button class="btn btn-primary" id="addPromotionBtn">
+                    <i class="fas fa-plus me-2"></i>Add Promotion
+                  </button>
+                {% endif %}
+
             </div>
           </div>
 
@@ -35,7 +37,9 @@
                   <th class="text-center min-w-200px">Promotion Period</th>
                   <th class="text-center min-w-150px">Status</th>
                   <th class="text-center min-w-150px">Created Date</th>
+                  {% if "dashboard.change_buyxgetypromotion" in user_permissions_list or "dashboard.delete_buyxgetypromotion" in user_permissions_list  %}
                   <th class="text-center min-w-100px">Actions</th>
+                  {% endif %}
                 </tr>
               </thead>
               <tbody class="fw-semibold text-gray-600">
@@ -67,14 +71,24 @@
                     {% endif %}
                   </td>
                   <td class="text-center">{{ promo.created_at|date:"d M Y H:i" }}</td>
-                  <td class="text-center">
-                    <button class="btn btn-sm btn-light-primary edit-promo-btn me-1" data-id="{{ promo.id }}">
-                      <i class="fas fa-edit"></i> Edit
-                    </button>
-                    <a href="#" class="btn btn-sm btn-light-danger delete-promo-btn" data-id="{{ promo.id }}">
-                      Delete
-                    </a>
-                  </td>
+
+                  {% if "dashboard.change_buyxgetypromotion" in user_permissions_list or "dashboard.delete_buyxgetypromotion" in user_permissions_list  %}
+                      <td class="text-center">
+                        {% if "dashboard.change_buyxgetypromotion" in user_permissions_list %}
+                          <button class="btn btn-sm btn-light-primary edit-promo-btn me-1" data-id="{{ promo.id }}">
+                              <i class="fas fa-edit"></i> Edit
+                            </button>
+                        {% endif %}
+
+                        {% if "dashboard.delete_buyxgetypromotion" in user_permissions_list %}
+                            <a href="#" class="btn btn-sm btn-light-danger delete-promo-btn" data-id="{{ promo.id }}">
+                              Delete
+                            </a>
+                        {% endif %}
+
+                      </td>
+                  {% endif %}
+
                 </tr>
                 {% endfor %}
               </tbody>
@@ -247,6 +261,7 @@
 document.addEventListener("DOMContentLoaded", function () {
   const editModal = new bootstrap.Modal(document.getElementById('promotionEditModal'));
   const deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+    const addModal = new bootstrap.Modal(document.getElementById('promotionAddModal'));
   const alertBox = document.getElementById('alertBox');
 
   function showAlert(msg, type = 'success') {
@@ -257,6 +272,14 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   $('.select2').select2({ width: '100%' });
+
+
+     // ADD PROMO BUTTON
+  document.getElementById('addPromotionBtn').addEventListener('click', function () {
+      document.getElementById('addPromotionForm').reset();
+      $('.select2').val(null).trigger('change');   // Clear multiple selects
+      addModal.show();
+  });
 
   let deleteId = null;
 

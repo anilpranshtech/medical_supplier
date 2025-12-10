@@ -467,14 +467,19 @@ class User_Accounts_AddNewUser(StaffAccountRequiredMixin, View):
         return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
 
 
-GROUP_PERMISSIONS_MODELS_LIST = ['user', 'product', 'order', 'rfqrequest', 'banner', 'ratingreview', 'notification', ]
+GROUP_PERMISSIONS_MODELS_LIST = ['user', 'product', 'productcategory','order', 'return', 'rfqrequest', 'banner', 'ratingreview',
+  'question', 'topsupplier', 'vacationrequest', 'coupon', 'buyxgetypromotion', 'buyxgiftypromotion',
+  'basketpromotion', 'notification',]
 
 class PermissionsUsers(LoginRequiredMixin, StaffAccountRequiredMixin, View):
     template_name = 'superuser/permissions/permissions.html'
 
     def get(self, request, *args, **kwargs):
-        skipped_permissions = ['add_order',  'add_rfqrequest' #'delete_order', 'change_order',
-                               'add_ratingreview', 'change_ratingreview', 'delete_ratingreview',]
+        skipped_permissions = ['add_order', 'add_return',
+                               'add_rfqrequest',
+                               'add_ratingreview', 'change_ratingreview', 'delete_ratingreview',
+                               'add_question',
+                               'add_vacationrequest', 'delete_vacationrequest']
 
 
         groups = Group.objects.all().order_by('pk')
@@ -553,8 +558,10 @@ class User_Permissions_EditGroup(StaffAccountRequiredMixin, View):
             if request.headers.get('HX-Request'):
                 id = kwargs['UID']
 
-                skipped_permissions = ['add_order', 'add_rfqrequest' #'delete_order', 'change_order',
-                                       'add_ratingreview', 'change_ratingreview', 'delete_ratingreview']
+                skipped_permissions = ['add_order', 'add_rfqrequest', 'add_return',
+                                       'add_ratingreview', 'change_ratingreview', 'delete_ratingreview', 'view_ratingrevie',
+                                       'add_question',
+                               'add_vacationrequest', 'delete_vacationrequest']
 
                 group_obj = get_object_or_404(Group, pk=id)
 
@@ -1569,9 +1576,9 @@ class RatingView(TemplateView):
 
 
 
-class BannerListView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView): 
+class BannerListView(LoginRequiredMixin, TemplateView):
     template_name = 'superuser/banner_list.html'
-    required_permissions = ('superuser.view_banner',)
+    # required_permissions = ('dashboard.view_banner')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1643,7 +1650,7 @@ class AdminRFQListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         user = self.request.user
-        queryset = RFQRequest.objects.all() if user.is_superuser else RFQRequest.objects.filter(product__created_by=user)
+        queryset = RFQRequest.objects.all()
 
         # Apply filters
         search_query = self.request.GET.get('search', '')

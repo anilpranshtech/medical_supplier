@@ -43,7 +43,9 @@
                                     <th class="text-center">Question</th>
                                     <th class="text-center">Reply</th>
                                     <th class="text-center">Created At</th>
+                                    {% if "dashboard.change_question" in user_permissions_list or "dashboard.delete_question" in user_permissions_list %}
                                     <th class="text-center">Action</th>
+                                    {% endif %}
                                 </tr>
                             </thead>
 
@@ -71,6 +73,7 @@
 
                                     <td class="text-center">{{ q.created_at|date:"d M Y" }}</td>
 
+                                    {% if "dashboard.change_question" in user_permissions_list or "dashboard.delete_question" in user_permissions_list %}
                                     <td class="text-center">
                                         <div class="dropdown" data-bs-display="static">
                                             <button class="btn btn-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
@@ -78,6 +81,7 @@
                                             </button>
 
                                             <ul class="dropdown-menu">
+                                                {% if "dashboard.change_question" in user_permissions_list  %}
                                                 <li>
                                                     <a class="dropdown-item"
                                                        href="#"
@@ -86,8 +90,9 @@
                                                        {% if q.reply %}Edit Reply{% else %}Reply{% endif %}
                                                     </a>
                                                 </li>
+                                                {% endif %}
                                                 
-                                                {% if request.user.is_superuser %}
+                                                {% if "dashboard.delete_question" in user_permissions_list  %}
                                                 <li>
                                                     <button type="button"
                                                             class="dropdown-item text-danger"
@@ -99,6 +104,7 @@
                                             </ul>
                                         </div>
                                     </td>
+                                    {% endif %}
                                 </tr>   
 
                                 <!-- Reply Modal -->

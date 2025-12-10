@@ -27,7 +27,9 @@
                   <th class="text-center">Email</th>
                   <th class="text-center">Order</th>
                   <th class="text-center">Created At</th>
+                  {% if "dashboard.change_topsupplier" in user_permissions_list or "dashboard.delete_topsupplier" in user_permissions_list %}
                   <th class="text-center">Action</th>
+                  {% endif %}
                 </tr>
               </thead>
               <tbody class="fw-semibold text-gray-600">
@@ -38,20 +40,30 @@
                   <td class="text-center">{{ item.supplier.user.email }}</td>
                   <td class="text-center">{{ item.order }}</td>
                   <td class="text-center">{{ item.created_at|date:"Y-m-d H:i" }}</td>
+
+                  {% if "dashboard.change_topsupplier" in user_permissions_list or "dashboard.delete_topsupplier" in user_permissions_list %}
                   <td class="text-center">
-                    <button 
+                    {% if "dashboard.change_topsupplier" in user_permissions_list %}
+                    <button
                       class="btn btn-sm btn-light-primary edit-btn" 
                       data-id="{{ item.id }}" 
                       data-supplier="{{ item.supplier.company_name }}" 
                       data-order="{{ item.order }}">
                       <i class="fas fa-edit"></i> Edit
                     </button>
+                     {% endif %}
+
+                    {% if "dashboard.delete_topsupplier" in user_permissions_list %}
                     <button 
                       class="btn btn-sm btn-light-danger delete-btn" 
                       data-id="{{ item.id }}">
                       <i class="fas fa-trash"></i> Delete
                     </button>
+                        {% endif %}
                   </td>
+
+                  {% endif %}
+
                 </tr>
                 {% endfor %}
               </tbody>
