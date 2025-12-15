@@ -365,3 +365,10 @@ def is_returnable(item):
 def get_delivery_date(item):
     """Get the delivery date for an OrderItem, falling back to order's delivered_at."""
     return item.delivery_date or item.order.delivered_at
+
+@register.filter
+def mul(value, arg):
+    try:
+        return float(value) * float(arg)
+    except:
+        return 0

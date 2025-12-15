@@ -112,27 +112,29 @@ urlpatterns = [
     path('vacation-mode/', AdminVacationModeView.as_view(), name='admin_vacation_mode'),
 
     #Top supplier
-     path('add-to-supplier/', AddTopSupplierView.as_view(), name='add_to_supplier'),
+     # path('add-to-supplier/', AddTopSupplierView.as_view(), name='add_to_supplier'),
      path('top-supplier-list/', TopSupplierListView.as_view(), name='topsupplierlist'),
-     path('edit-top-supplier/', EditTopSupplierView.as_view(), name='edit_top_supplier'),
-     path('delete-top-supplier/', DeleteTopSupplierView.as_view(), name='delete_top_supplier'),
+     # path('edit-top-supplier/', EditTopSupplierView.as_view(), name='edit_top_supplier'),
+     # path('delete-top-supplier/', DeleteTopSupplierView.as_view(), name='delete_top_supplier'),
 
      #Marketing tools
 
      #coupons
-    path('coupons/', CouponView.as_view(), name='coupons'),
-    path('edit-coupon/', edit_coupon, name='edit_coupon'),
-    path('delete-coupon/',delete_coupon, name='delete_coupon'),
-    path('coupon/<int:coupon_id>/details/', coupon_details, name='coupon_details'),
+     path('admincoupons/', CouponsView.as_view(), name='coupons'),
+    path('admincoupon/edit/', edit_coupon, name='edit_coupon'),
+    path('admincoupon/delete/', delete_coupon, name='delete_coupon'),
+    path('admincoupon/details/<int:coupon_id>/', coupon_details, name='coupon_details'),
+
      path('buyxgety/', BuyXGetYPromotionView.as_view(), name='buyxgety_promotion'),
      path('buyxgety/add/', AddPromotionView.as_view(), name='add_promotion'),
      path('buyxgety/edit/<int:pk>/', EditPromotionView.as_view(), name='edit_promotion'),
      path('buyxgety/delete/<int:pk>/', delete_promotion, name='delete_promotion'),
 
      path('buyxgifty/',BuyXGiftYPromotionView.as_view(),name='buyxgift_promotion'),
-     path('buyxgifty/add/', AddGiftPromotionView.as_view(), name='add_gift_promotion'),
+     path('buyxgifty/add/',AddGiftPromotionView.as_view(), name='add_gift_promotion'),
      path('buyxgifty/edit/<int:pk>/', EditGiftPromotionView.as_view(), name='edit_gift_promotion'),
      path('buyxgifty/delete/<int:pk>/', delete_gift_promotion, name='delete_gift_promotion'),
+
 
      path('basketpromotion/', BasketPromotionView.as_view(), name='basket_promotion'),
      path('basketpromotion/add/', AddBasketPromotionView.as_view(),name='add_basket_promotion'),

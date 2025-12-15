@@ -400,13 +400,14 @@
                         <div class="password-input-container">
                             <input type="password" name="password" id="password" placeholder="Your password" class="input-field" required>
                             <button type="button" class="toggle-password" aria-label="Toggle password visibility">
-                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                                     <path d="M10 4.375C3.75 4.375 1.25 10 1.25 10C1.25 10 3.75 15.625 10 15.625C16.25 15.625 18.75 10 18.75 10C18.75 10 16.25 4.375 10 4.375Z"
                                           stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M10 13.125C11.7259 13.125 13.125 11.7259 13.125 10C13.125 8.27411 11.7259 6.875 10 6.875C8.27411 6.875 6.875 8.27411 6.875 10C6.875 11.7259 8.27411 13.125 10 13.125Z"
+                                    <path d="M2.5 2.5L17.5 17.5"
                                           stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
                             </button>
+                            
                         </div>
                         <div class="error-message" id="password_error">Please enter a valid password</div>
                     </div>
@@ -416,13 +417,14 @@
                         <div class="password-input-container">
                             <input type="password" name="confirm_password" id="confirm_password" placeholder="Confirm your password" class="input-field" required>
                             <button type="button" class="toggle-password" aria-label="Toggle password visibility">
-                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                                     <path d="M10 4.375C3.75 4.375 1.25 10 1.25 10C1.25 10 3.75 15.625 10 15.625C16.25 15.625 18.75 10 18.75 10C18.75 10 16.25 4.375 10 4.375Z"
                                           stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M10 13.125C11.7259 13.125 13.125 11.7259 13.125 10C13.125 8.27411 11.7259 6.875 10 6.875C8.27411 6.875 6.875 8.27411 6.875 10C6.875 11.7259 8.27411 13.125 10 13.125Z"
+                                    <path d="M2.5 2.5L17.5 17.5"
                                           stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
                             </button>
+                            
                         </div>
                         <div class="error-message" id="confirm_password_error">Passwords do not match</div>
                     </div>
@@ -470,6 +472,7 @@
                                 <option value="">Select state first</option>
                            
                             </select>
+                            <div class="error-message" id="state_error">Please select your state</div>
                             <div class="error-message" id="state_error"></div>
                         </div>
                         
@@ -478,6 +481,7 @@
                             <select name="city" id="city" class="input-field" required>
                                 <option value="">Select city first</option>
                             </select>
+                            <div class="error-message" id="city_error">Please select your city</div>
                             <div class="error-message" id="city_error"></div>
                         </div>
 
@@ -584,7 +588,7 @@
                     <input type="hidden" name="otp" id="otp">
                 </div>
                 <div class="resend-link" id="resend-otp">Resend OTP</div>
-                <button type="submit" class="verify-btn ">Verify</button>
+                <button type="submit" class="verify-btn  btn-with-loader">Verify</button>
             </form>
         </div>
     </div>
@@ -764,21 +768,33 @@
         step1.classList.remove("hidden");
     });
 
-    // Password visibility toggle
     document.querySelectorAll('.toggle-password').forEach(button => {
-        button.addEventListener('click', () => {
-            const input = button.parentElement.querySelector('input');
-            const type = input.type === 'password' ? 'text' : 'password';
-            input.type = type;
-            const svg = button.querySelector('svg');
-            svg.innerHTML = type === 'text' ?
-                `<path d="M10 4.375C3.75 4.375 1.25 10 1.25 10C1.25 10 3.75 15.625 10 15.625C16.25 15.625 18.75 10 18.75 10C18.75 10 16.25 4.375 10 4.375Z" stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                 <path d="M2.5 2.5L17.5 17.5" stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                 <path d="M7.975 7.975C7.37083 8.57917 7.08333 9.375 7.08333 10C7.08333 11.7259 8.47411 13.125 10 13.125C10.625 13.125 11.4208 12.8375 12.025 12.2333" stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>` :
-                `<path d="M10 4.375C3.75 4.375 1.25 10 1.25 10C1.25 10 3.75 15.625 10 15.625C16.25 15.625 18.75 10 18.75 10C18.75 10 16.25 4.375 10 4.375Z" stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                 <path d="M10 13.125C11.7259 13.125 13.125 11.7259 13.125 10C13.125 8.27411 11.7259 6.875 10 6.875C8.27411 6.875 6.875 8.27411 6.875 10C6.875 11.7259 8.27411 13.125 10 13.125Z" stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>`;
-        });
+    button.addEventListener('click', () => {
+        const input = button.parentElement.querySelector('input');
+        
+        // Toggle type
+        const isVisible = input.type === 'text';
+        input.type = isVisible ? 'password' : 'text';
+
+        const svg = button.querySelector('svg');
+        if (!isVisible) {
+            svg.innerHTML = `
+                <path d="M10 4.375C3.75 4.375 1.25 10 1.25 10C1.25 10 3.75 15.625 10 15.625C16.25 15.625 18.75 10 18.75 10C18.75 10 16.25 4.375 10 4.375Z"
+                      stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M10 13.125C11.7259 13.125 13.125 11.7259 13.125 10C13.125 8.27411 11.7259 6.875 10 6.875C8.27411 6.875 6.875 8.27411 6.875 10C6.875 11.7259 8.27411 13.125 10 13.125Z"
+                      stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            `;
+        } 
+        else {
+            svg.innerHTML = `
+                <path d="M10 4.375C3.75 4.375 1.25 10 1.25 10C1.25 10 3.75 15.625 10 15.625C16.25 15.625 18.75 10 18.75 10C18.75 10 16.25 4.375 10 4.375Z"
+                      stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M2.5 2.5L17.5 17.5" stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            `;
+        }
     });
+});
+
 
     // OTP input handling
     const otpInputs = document.querySelectorAll('.otp-input');

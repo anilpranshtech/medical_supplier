@@ -2723,139 +2723,134 @@ class ShippingDeleteView(View):
         shipping.delete()
         return JsonResponse({'status':'success','message':'Shipping deleted'})
 
-class supplierCouponView(TemplateView):
+class SupplierCouponsView(TemplateView):
     template_name = "supplier/coupons.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        if not hasattr(request.user, 'supplierprofile'):
+            return redirect('supplier:dashboard')  
+        return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        coupons_qs = Coupon.objects.all().select_related("created_by").order_by("-id")
+        coupons_qs = Coupon.objects.select_related("created_by").order_by("-id")
+        paginator = Paginator(coupons_qs, 10)
         page = self.request.GET.get("page", 1)
-        paginator = Paginator(coupons_qs, 10)    
         coupons = paginator.get_page(page)
-        context["coupons"] = coupons
-        context["page_obj"] = coupons              
-        context["clients"] = User.objects.all()
-        context["products"] = Product.objects.all()
+        supplier_products = Product.objects.filter(
+            created_by=self.request.user
+        ).select_related('category', 'brand')
+        buyer_ids = OrderItem.objects.filter(
+            product__created_by=self.request.user
+        ).values_list('order__user_id', flat=True).distinct()
 
+        clients = User.objects.filter(id__in=buyer_ids) if buyer_ids else User.objects.none()
+
+        context.update({
+            "coupons": coupons,
+            "page_obj": coupons,
+            "products": supplier_products,
+            "clients": clients or User.objects.none(),  
+        })
         return context
 
     def post(self, request, *args, **kwargs):
         try:
-            code = request.POST.get("code")
-            coupon_type = request.POST.get("coupon_type")
-            discount_type = request.POST.get("discount_type")
-            discount = Decimal(request.POST.get("discount", "0"))
-            max_discount = Decimal(request.POST.get("max_discount", "0"))
-            min_purchase = Decimal(request.POST.get("minimum_purchase_amount", "0"))
-            count_of_use = int(request.POST.get("count_of_use", "1"))
-            start_date = request.POST.get("start_date")
-            end_date = request.POST.get("end_date")
-            filter_orders_count = int(request.POST.get("filter_by_orders_count", "0"))
-            filter_orders_amount = Decimal(request.POST.get("filter_by_orders_amount", "0"))
-            can_be_used_with_promotions = request.POST.get("can_be_used_with_promotions") == "true"
-            start_time = request.POST.get("start_time") or timezone.now().time()
-            end_time = request.POST.get("end_time") or timezone.now().time()
+            code = request.POST.get("code").strip().upper()
+            if Coupon.objects.filter(code=code).exists():
+                return JsonResponse({"status": "error", "message": "Coupon code already exists!"}, status=400)
 
             coupon = Coupon.objects.create(
                 code=code,
-                coupon_type=coupon_type,
-                discount_type=discount_type,
-                discount=discount,
-                max_discount=max_discount,
-                minimum_purchase_amount=min_purchase,
-                count_of_use=count_of_use,
-                start_date=start_date,
-                end_date=end_date,
-                start_time=start_time,
-                end_time=end_time,
-                filter_by_orders_count=filter_orders_count,
-                filter_by_orders_amount=filter_orders_amount,
-                can_be_used_with_promotions=can_be_used_with_promotions,
-                created_by=request.user if request.user.is_authenticated else None,
+                coupon_type=request.POST.get("coupon_type"),
+                discount_type=request.POST.get("discount_type"),
+                discount=Decimal(request.POST.get("discount", "0")),
+                max_discount=Decimal(request.POST.get("max_discount", "0")),
+                minimum_purchase_amount=Decimal(request.POST.get("minimum_purchase_amount", "0")),
+                count_of_use=int(request.POST.get("count_of_use", 1)),
+                filter_by_orders_count=int(request.POST.get("filter_by_orders_count", 0)),
+                filter_by_orders_amount=Decimal(request.POST.get("filter_by_orders_amount", "0")),
+                start_date=request.POST.get("start_date"),
+                end_date=request.POST.get("end_date"),
+                start_time=request.POST.get("start_time", "00:00"),
+                end_time=request.POST.get("end_time", "23:59"),
+                can_be_used_with_promotions=request.POST.get("can_be_used_with_promotions") == "true",
+                created_by=request.user,
             )
 
-            client_ids = request.POST.getlist("client_ids[]", [])
-            product_ids = request.POST.getlist("product_ids[]", [])
+            # Assign products & clients
+            product_ids = request.POST.getlist("product_ids[]")
+            client_ids = request.POST.getlist("client_ids[]")
 
+            if product_ids:
+                coupon.products.set(Product.objects.filter(id__in=product_ids, created_by=request.user))
             if client_ids:
                 coupon.client.set(User.objects.filter(id__in=client_ids))
 
-            if product_ids:
-                coupon.products.set(Product.objects.filter(id__in=product_ids))
-
             return JsonResponse({"status": "success", "message": "Coupon created successfully!"})
-
         except Exception as e:
             return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
 
+@login_required
 def supplier_edit_coupon(request):
-    if request.method == 'POST':
-        coupon_id = request.POST.get('coupon_id')
-        coupon = get_object_or_404(Coupon, id=coupon_id)
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
 
-        try:
-            coupon.code = request.POST.get('code')
-            coupon.coupon_type = request.POST.get('coupon_type')
-            coupon.discount_type = request.POST.get('discount_type')
-            coupon.discount = Decimal(request.POST.get('discount', '0'))
-            coupon.minimum_purchase_amount = Decimal(request.POST.get('minimum_purchase_amount', '0'))
-            coupon.max_discount = Decimal(request.POST.get('max_discount', '0'))
-            coupon.count_of_use = int(request.POST.get('count_of_use', '1'))
-            coupon.filter_by_orders_count = int(request.POST.get('filter_by_orders_count', '0'))
-            coupon.filter_by_orders_amount = Decimal(request.POST.get('filter_by_orders_amount', '0'))
-            coupon.start_date = request.POST.get('start_date')
-            coupon.end_date = request.POST.get('end_date')
-            coupon.start_time = request.POST.get('start_time') or coupon.start_time
-            coupon.end_time = request.POST.get('end_time') or coupon.end_time
-            coupon.can_be_used_with_promotions = request.POST.get('can_be_used_with_promotions') == 'true'
+    coupon_id = request.POST.get('coupon_id')
+    coupon = get_object_or_404(Coupon, id=coupon_id)
 
-            coupon.save()
+    try:
+        coupon.code = request.POST.get('code').strip().upper()
+        coupon.coupon_type = request.POST.get('coupon_type')
+        coupon.discount_type = request.POST.get('discount_type')
+        coupon.discount = Decimal(request.POST.get('discount'))
+        coupon.minimum_purchase_amount = Decimal(request.POST.get('minimum_purchase_amount', '0'))
+        coupon.max_discount = Decimal(request.POST.get('max_discount', '0'))
+        coupon.count_of_use = int(request.POST.get('count_of_use', 1))
+        coupon.filter_by_orders_count = int(request.POST.get('filter_by_orders_count', 0))
+        coupon.filter_by_orders_amount = Decimal(request.POST.get('filter_by_orders_amount', '0'))
+        coupon.start_date = request.POST.get('start_date')
+        coupon.end_date = request.POST.get('end_date')
+        coupon.start_time = request.POST.get('start_time') or "00:00"
+        coupon.end_time = request.POST.get('end_time') or "23:59"
+        coupon.can_be_used_with_promotions = request.POST.get('can_be_used_with_promotions') == 'true'
+        coupon.save()
 
-            product_ids = request.POST.getlist('product_ids[]', [])
-            client_ids = request.POST.getlist('client_ids[]', [])
+        product_ids = request.POST.getlist('product_ids[]')
+        client_ids = request.POST.getlist('client_ids[]')
+        valid_products = Product.objects.filter(created_by=request.user, id__in=product_ids)
+        coupon.products.set(valid_products)
 
-            if product_ids:
-                coupon.products.set(Product.objects.filter(id__in=product_ids))
-            else:
-                coupon.products.clear()
+        coupon.client.set(User.objects.filter(id__in=client_ids))
 
-            if client_ids:
-                coupon.client.set(User.objects.filter(id__in=client_ids))
-            else:
-                coupon.client.clear()
+        return JsonResponse({'status': 'success', 'message': 'Coupon updated successfully!'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
-            return JsonResponse({'status': 'success', 'message': 'Coupon updated successfully!'})
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
-    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
-
+@login_required
 def supplier_delete_coupon(request):
     if request.method == 'POST':
         coupon_id = request.POST.get('coupon_id')
-        try:
-            coupon = get_object_or_404(Coupon, id=coupon_id)
-            coupon.delete()
-            return JsonResponse({'status': 'success', 'message': 'Coupon deleted successfully!'})
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+        coupon = get_object_or_404(Coupon, id=coupon_id)
+        coupon.delete()
+        return JsonResponse({'status': 'success', 'message': 'Coupon deleted successfully!'})
     return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
 
+
+@login_required
 def supplier_coupon_details(request, coupon_id):
-    if request.method == 'GET':
-        try:
-            coupon = get_object_or_404(Coupon, id=coupon_id)
-            product_ids = list(coupon.products.values_list('id', flat=True))
-            client_ids = list(coupon.client.values_list('id', flat=True))
-            return JsonResponse({
-                'status': 'success',
-                'products': product_ids,
-                'clients': client_ids
-            })
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
-    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=400)
+    coupon = get_object_or_404(Coupon, id=coupon_id)
+
+    product_ids = list(coupon.products.filter(created_by=request.user).values_list('id', flat=True))
+    client_ids = list(coupon.client.values_list('id', flat=True))
+
+    return JsonResponse({
+        'status': 'success',
+        'products': product_ids,
+        'clients': client_ids
+    })
 
 class VacationRequestView(LoginRequiredMixin, View):
     template_name = 'supplier/vacationrequest.html'

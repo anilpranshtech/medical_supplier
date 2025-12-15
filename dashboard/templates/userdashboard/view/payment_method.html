@@ -203,59 +203,71 @@
                         </div>
                     </div>
 
-                    <!-- Order Summary -->
-                    <div class="lg:col-span-1" id="order-summary-box">
-                        <div class="kt-card bg-accent/50">
-                            <div class="kt-card-header px-5">
-                                <h3 class="kt-card-title">Order Summary</h3>
-                            </div>
-                            <div class="kt-card-content px-0 py-5 space-y-2">
-                                <div class="flex flex-col px-5">
-                                    <span class="text-sm font-medium text-mono mb-1.5">
-                                        {% if billing %}
-                                            Shipping to {{ billing.address_title|default:"Default Address" }}
-                                        {% else %}
-                                            No shipping address selected
-                                        {% endif %}
-                                    </span>
-                                    <div class="flex flex-col gap-1 text-xs font-normal text-secondary-foreground">
-                                        {% if billing %}
-                                            <span>{{ billing.customer_name|default:user.get_full_name }}</span>
-                                            <span>{{ billing.customer_address1 }}</span>
-                                            {% if billing.customer_address2 %}
-                                                <span>{{ billing.customer_address2 }}</span>
-                                            {% endif %}
-                                            <span>{{ billing.customer_city }}, {{ billing.customer_state }} {{ billing.customer_postal_code }}</span>
-                                            <span>{{ billing.customer_country }}</span>
-                                            {% if billing.phone %}
-                                                <span>Phone: {{ billing.phone }}</span>
-                                            {% endif %}
-                                        {% else %}
-                                            <span>Please select an address</span>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                <div class="border-b border-border mb-4 mt-5"></div>
-                                <span class="text-sm font-medium block text-mono mb-3.5 px-5">Price Details</span>
-                                <div class="flex justify-between items-center px-5">
-                                    <span class="text-sm font-normal text-secondary-foreground">Subtotal</span>
-                                    <span class="text-sm font-medium text-mono" id="price-subtotal">{{ currency_symbol }}{{ order_summary.subtotal|floatformat:2 }}</span>
-                                </div>
-                                <div class="flex justify-between items-center px-5">
-                                    <span class="text-sm font-normal text-secondary-foreground">Shipping</span>
-                                    <span class="text-sm font-medium text-mono">{{ currency_symbol }}{{ order_summary.shipping|floatformat:2 }}</span>
-                                </div>
-                                <div class="flex justify-between items-center px-5">
-                                    <span class="text-sm font-normal text-secondary-foreground">VAT</span>
-                                    <span class="text-sm font-medium text-mono">{{ currency_symbol }}{{ order_summary.vat|floatformat:2 }}</span>
-                                </div>
-                            </div>
-                            <div class="kt-card-footer flex justify-between items-center px-5">
-                                <span class="text-sm font-normal text-secondary-foreground">Total</span>
-                                <span class="text-base font-semibold text-mono" id="price-total">{{ currency_symbol }}{{ order_summary.total|floatformat:2 }}</span>
-                            </div>
-                        </div>
-                    </div>
+            <!-- Order Summary -->
+<div class="lg:col-span-1" id="order-summary-box">
+    <div class="kt-card bg-accent/50">
+        <div class="kt-card-header px-5">
+            <h3 class="kt-card-title">Order Summary</h3>
+        </div>
+        <div class="kt-card-content px-0 py-5 space-y-2">
+            <div class="flex flex-col px-5">
+                <span class="text-sm font-medium text-mono mb-1.5">
+                    {% if billing %}
+                        Shipping to {{ billing.address_title|default:"Default Address" }}
+                    {% else %}
+                        No shipping address selected
+                    {% endif %}
+                </span>
+                <div class="flex flex-col gap-1 text-xs font-normal text-secondary-foreground">
+                    {% if billing %}
+                        <span>{{ billing.customer_name|default:user.get_full_name }}</span>
+                        <span>{{ billing.customer_address1 }}</span>
+                        {% if billing.customer_address2 %}
+                            <span>{{ billing.customer_address2 }}</span>
+                        {% endif %}
+                        <span>{{ billing.customer_city }}, {{ billing.customer_state }} {{ billing.customer_postal_code }}</span>
+                        <span>{{ billing.customer_country }}</span>
+                        {% if billing.phone %}
+                            <span>Phone: {{ billing.phone }}</span>
+                        {% endif %}
+                    {% else %}
+                        <span>Please select an address</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="border-b border-border mb-4 mt-5"></div>
+            <span class="text-sm font-medium block text-mono mb-3.5 px-5">Price Details</span>
+            <div class="flex justify-between items-center px-5">
+                <span class="text-sm font-normal text-secondary-foreground">Subtotal</span>
+                <span class="text-sm font-medium text-mono" id="price-subtotal">{{ currency_symbol }}{{ order_summary.subtotal|floatformat:2 }}</span>
+            </div>
+            <div class="flex justify-between items-center px-5">
+                <span class="text-sm font-normal text-secondary-foreground">Shipping</span>
+                <span class="text-sm font-medium text-mono">{{ currency_symbol }}{{ order_summary.shipping|floatformat:2 }}</span>
+            </div>
+            <div class="flex justify-between items-center px-5">
+                <span class="text-sm font-normal text-secondary-foreground">VAT</span>
+                <span class="text-sm font-medium text-mono">{{ currency_symbol }}{{ order_summary.vat|floatformat:2 }}</span>
+            </div>
+            
+            {# Show discount only if there's a coupon applied #}
+            {% if order_summary.coupon_discount > 0 %}
+            <div class="flex justify-between items-center px-5">
+                <span class="text-sm font-normal text-secondary-foreground">Discount</span>
+                <span class="text-sm font-medium text-mono text-green-600">
+                    -{{ order_summary.coupon_discount|floatformat:2 }}
+                </span>
+            </div>
+            {% endif %}
+        </div>
+        <div class="kt-card-footer flex justify-between items-center px-5">
+            <span class="text-sm font-normal text-secondary-foreground">Total</span>
+            <span class="text-base font-semibold text-mono" id="price-total">{{ currency_symbol }}{{ order_summary.total|floatformat:2 }}</span>
+        </div>
+    </div>
+</div>
+
+
                 </div>
             </div>
         </main>

@@ -76,3 +76,4 @@ def tag_format_model_name(model_name):
     elif model_name == 'rfqrequest': format_model_name = "RFQ request"
 
     return format_model_name
+

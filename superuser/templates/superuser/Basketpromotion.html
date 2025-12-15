@@ -12,6 +12,8 @@
   <div class="d-flex flex-column flex-column-fluid">
     <div id="kt_app_content" class="app-content flex-column-fluid mx-5">
       <div id="kt_app_content_container" class="app-container container-fluid">
+
+        <!-- Card -->
         <div class="card card-flush">
           <div class="card-header flex-wrap align-items-center py-5 gap-4">
             <div class="card-title w-100 w-md-auto">Basket Promotions</div>
@@ -70,13 +72,28 @@
                   </td>
                   <td class="text-center">{{ promo.created_at|date:"d M Y H:i" }}</td>
                   <td class="text-center">
-                    <button class="btn btn-sm btn-light-primary edit-promo-btn me-1" data-id="{{ promo.id }}">
-                      <i class="fas fa-edit"></i> Edit
-                    </button>
-                    <a href="#" class="btn btn-sm btn-light-danger delete-promo-btn" data-id="{{ promo.id }}">
-                      Delete
-                    </a>
-                  </td>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-light btn-active-light-primary dropdown-toggle"
+                                type="button" data-bs-toggle="dropdown">
+                            Actions
+                        </button>
+                
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a href="#" class="dropdown-item edit-promo-btn" data-id="{{ promo.id }}">
+                                    <i class="fas fa-edit me-2"></i>Edit
+                                </a>
+                            </li>
+                
+                            <li>
+                                <a href="#" class="dropdown-item text-danger delete-promo-btn" data-id="{{ promo.id }}">
+                                    <i class="fas fa-trash me-2"></i>Delete
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </td>
+                
                 </tr>
                 {% endfor %}
               </tbody>
@@ -104,51 +121,56 @@
           {% csrf_token %}
           <div class="row g-3">
             <div class="col-md-6">
-              <label class="form-label fw-semibold">Product Type <span style="color: red;">*</span></label>
+              <label class="form-label fw-semibold">Product Type</label>
               <select name="product_type" class="form-select" required>
                 <option value="">Select Type</option>
                 <option value="b2b">B2B</option>
                 <option value="b2c">B2C</option>
               </select>
             </div>
+<div class="col-md-6">
+  <label class="form-label fw-semibold">Supplier <span style="color: red;">*</span></label>
+  {% if request.user.supplierprofile %}
+    <input type="hidden" name="supplier" value="{{ request.user.supplierprofile.id }}">
+    <input type="text" class="form-control" value="{{ request.user.supplierprofile.user.username }}" disabled>
+  {% else %}
+    <select name="supplier" class="form-select select2" multiple required data-placeholder="Select suppliers">
+      {% for s in suppliers %}
+        <option value="{{ s.id }}">{{ s.user.username }}</option>
+      {% endfor %}
+    </select>
+  {% endif %}
+</div>
+<div class="col-md-6">
+  <label class="form-label fw-semibold">Product <span style="color: red;">*</span></label>
+  <select name="product" class="form-select select2" multiple required data-placeholder="Select products">
+    {% for p in products %}
+      <option value="{{ p.id }}">{{ p.name }}</option>
+    {% endfor %}
+  </select>
+</div>
             <div class="col-md-6">
-              <label class="form-label fw-semibold">Supplier <span style="color: red;">*</span></label>
-              <select name="supplier" class="form-select select2" multiple required data-placeholder="Select suppliers">
-                {% for s in suppliers %}
-                  <option value="{{ s.id }}">{{ s.user.username }}</option>
-                {% endfor %}
-              </select>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label fw-semibold">Product <span style="color: red;">*</span></label>
-              <select name="product" class="form-select select2" multiple required data-placeholder="Select products">
-                {% for p in products %}
-                  <option value="{{ p.id }}">{{ p.name }}</option>
-                {% endfor %}
-              </select>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label fw-semibold">Title (EN) <span style="color: red;">*</span></label>
+              <label class="form-label fw-semibold">Title (EN)</label>
               <input type="text" name="title_en" class="form-control" maxlength="255">
             </div>
             <div class="col-md-6">
-              <label class="form-label fw-semibold">Time Limit <span style="color: red;">*</span></label>
+              <label class="form-label fw-semibold">Time Limit</label>
               <input type="text" name="time_limit" class="form-control" placeholder="e.g., 24 hours">
             </div>
             <div class="col-md-12">
-              <label class="form-label fw-semibold">Description (EN) <span style="color: red;">*</span></label>
+              <label class="form-label fw-semibold">Description (EN)</label>
               <textarea name="description_en" class="form-control" rows="3"></textarea>
             </div>
             <div class="col-md-6">
-              <label class="form-label fw-semibold">Main Image <span style="color: red;">*</span></label>
+              <label class="form-label fw-semibold">Main Image</label>
               <input type="file" name="main_image" class="form-control" accept="image/*">
             </div>
             <div class="col-md-6">
-              <label class="form-label fw-semibold">Start Date & Time <span style="color: red;">*</span></label>
+              <label class="form-label fw-semibold">Start Date & Time</label>
               <input type="datetime-local" name="start_datetime" class="form-control" required>
             </div>
             <div class="col-md-6">
-              <label class="form-label fw-semibold">End Date & Time <span style="color: red;">*</span></label>
+              <label class="form-label fw-semibold">End Date & Time</label>
               <input type="datetime-local" name="end_datetime" class="form-control" required>
             </div>
           </div>
@@ -156,7 +178,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" id="saveAddPromotionBtn" class="btn btn-primary">Save</button>
+        <button type="button" id="saveAddPromotionBtn" class="btn btn-primary btn-with-loader">Save</button>
       </div>
     </div>
   </div>
@@ -176,54 +198,59 @@
           <input type="hidden" id="promoIdField" name="promo_id">
           <div class="row g-3">
             <div class="col-md-6">
-              <label class="form-label fw-semibold">Product Type <span style="color: red;">*</span></label>
+              <label class="form-label fw-semibold">Product Type</label>
               <select name="product_type" id="productType" class="form-select" required>
                 <option value="">Select Type</option>
                 <option value="b2b">B2B</option>
                 <option value="b2c">B2C</option>
               </select>
             </div>
+<div class="col-md-6">
+  <label class="form-label fw-semibold">Supplier <span style="color: red;">*</span></label>
+  {% if request.user.supplierprofile %}
+    <input type="hidden" name="supplier" id="supplierEditHidden" value="{{ request.user.supplierprofile.id }}">
+    <input type="text" class="form-control" value="{{ request.user.supplierprofile.user.username }}" disabled>
+  {% else %}
+    <select name="supplier" id="supplierSelect" class="form-select select2" multiple required
+            data-placeholder="Select suppliers">
+      {% for s in suppliers %}
+        <option value="{{ s.id }}">{{ s.user.username }}</option>
+      {% endfor %}
+    </select>
+  {% endif %}
+</div>
+<div class="col-md-6">
+  <label class="form-label fw-semibold">Product <span style="color: red;">*</span></label>
+  <select name="product" id="productSelect" class="form-select select2" multiple required
+          data-placeholder="Select products">
+    {% for p in products %}
+      <option value="{{ p.id }}">{{ p.name }}</option>
+    {% endfor %}
+  </select>
+</div>
             <div class="col-md-6">
-              <label class="form-label fw-semibold">Supplier <span style="color: red;">*</span></label>
-              <select name="supplier" id="supplierSelect" class="form-select select2" multiple required
-                      data-placeholder="Select suppliers">
-                {% for s in suppliers %}
-                  <option value="{{ s.id }}">{{ s.user.username }}</option>
-                {% endfor %}
-              </select>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label fw-semibold">Product <span style="color: red;">*</span></label>
-              <select name="product" id="productSelect" class="form-select select2" multiple required
-                      data-placeholder="Select products">
-                {% for p in products %}
-                  <option value="{{ p.id }}">{{ p.name }}</option>
-                {% endfor %}
-              </select>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label fw-semibold">Title (EN) <span style="color: red;">*</span></label>
+              <label class="form-label fw-semibold">Title (EN)</label>
               <input type="text" name="title_en" id="titleInput" class="form-control" maxlength="255">
             </div>
             <div class="col-md-6">
-              <label class="form-label fw-semibold">Time Limit <span style="color: red;">*</span></label>
+              <label class="form-label fw-semibold">Time Limit</label>
               <input type="text" name="time_limit" id="timeLimitInput" class="form-control" placeholder="e.g., 24 hours">
             </div>
             <div class="col-md-12">
-              <label class="form-label fw-semibold">Description (EN) <span style="color: red;">*</span></label>
+              <label class="form-label fw-semibold">Description (EN)</label>
               <textarea name="description_en" id="descInput" class="form-control" rows="3"></textarea>
             </div>
             <div class="col-md-6">
-              <label class="form-label fw-semibold">Main Image <span style="color: red;">*</span></label>
+              <label class="form-label fw-semibold">Main Image</label>
               <input type="file" name="main_image" class="form-control" accept="image/*">
               <div id="currentImage" class="mt-2"></div>
             </div>
             <div class="col-md-6">
-              <label class="form-label fw-semibold">Start Date & Time <span style="color: red;">*</span></label>
+              <label class="form-label fw-semibold">Start Date & Time</label>
               <input type="datetime-local" name="start_datetime" id="startInput" class="form-control" required>
             </div>
             <div class="col-md-6">
-              <label class="form-label fw-semibold">End Date & Time <span style="color: red;">*</span></label>
+              <label class="form-label fw-semibold">End Date & Time</label>
               <input type="datetime-local" name="end_datetime" id="endInput" class="form-control" required>
             </div>
           </div>
@@ -231,7 +258,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" id="saveEditPromotionBtn" class="btn btn-primary">Save</button>
+        <button type="button" id="saveEditPromotionBtn" class="btn btn-primary btn-with-loader">Save</button>
       </div>
     </div>
   </div>
@@ -241,7 +268,7 @@
 <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content rounded-3 shadow">
-      <div class="modal-header bg-danger text-white">
+      <div class="modal-header  text-white">
         <h5 class="modal-title">Confirm Delete</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
@@ -250,7 +277,7 @@
       </div>
       <div class="modal-footer justify-content-center">
         <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" id="confirmDeleteBtn" class="btn btn-danger">Delete</button>
+        <button type="button" id="confirmDeleteBtn" class="btn btn-danger btn-with-loader">Delete</button>
       </div>
     </div>
   </div>
@@ -259,13 +286,16 @@
 {% endblock %}
 
 {% block page_only_scripts %}
+<script src="{% static 'js/buttonLoader.js' %}"></script>
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 <script>
 document.addEventListener("DOMContentLoaded", function () {
+  const addModal  = new bootstrap.Modal(document.getElementById('promotionAddModal'));
   const editModal = new bootstrap.Modal(document.getElementById('promotionEditModal'));
-  const deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
-  const alertBox = document.getElementById('alertBox');
+  const delModal  = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+  const alertBox  = document.getElementById('alertBox');
 
   function showAlert(msg, type = 'success') {
     alertBox.textContent = msg;
@@ -274,11 +304,105 @@ document.addEventListener("DOMContentLoaded", function () {
     setTimeout(() => alertBox.classList.add('d-none'), 3000);
   }
 
-  $('.select2').select2({ width: '100%' });
+  function showFieldError(input, msg) {
+    clearFieldError(input);
+    const el = document.createElement('div');
+    el.className = 'text-danger mt-1 small';
+    el.textContent = msg;
+    input.closest('.col-md-6, .col-md-12').appendChild(el);
+  }
+  function clearFieldError(input) {
+    const parent = input.closest('.col-md-6, .col-md-12');
+    if (!parent) return;
+    parent.querySelectorAll('.text-danger.small').forEach(e => e.remove());
+  }
 
-  let deleteId = null;
+  $('.select2').select2({ width: '100%', allowClear: true });
 
-  // EDIT – Fixed URL
+  // Open Add Modal
+  document.getElementById('addPromotionBtn').addEventListener('click', () => {
+    document.getElementById('addPromotionForm').reset();
+    $('.select2').val(null).trigger('change');
+    addModal.show();
+  });
+
+  // Date Validation
+  function validateDates(start, end) {
+    const now = new Date();
+    const s = new Date(start.value);
+    const e = new Date(end.value);
+    let ok = true;
+    clearFieldError(start); clearFieldError(end);
+    if (!start.value) { showFieldError(start, 'Start date is required'); ok = false; }
+    if (!end.value)   { showFieldError(end,   'End date is required');   ok = false; }
+    if (s < now)      { showFieldError(start, 'Start cannot be in the past'); ok = false; }
+    if (e < now)      { showFieldError(end,   'End cannot be in the past');   ok = false; }
+    if (e <= s)       { showFieldError(end,   'End must be after start');     ok = false; }
+    return ok;
+  }
+
+  function validateForm(form) {
+    let valid = true;
+    form.querySelectorAll('.text-danger').forEach(el => el.remove());
+
+    const productType = form.querySelector('[name="product_type"]');
+    const title       = form.querySelector('[name="title_en"]');
+    const timeLimit   = form.querySelector('[name="time_limit"]');
+    const desc        = form.querySelector('[name="description_en"]');
+    const supplier    = $(form).find('[name="supplier"]');
+    const product     = $(form).find('[name="product"]');
+    const start       = form.querySelector('[name="start_datetime"]');
+    const end         = form.querySelector('[name="end_datetime"]');
+
+    if (!productType.value) { showFieldError(productType, 'Select product type'); valid = false; }
+    if (!title.value.trim()) { showFieldError(title, 'Title is required'); valid = false; }
+    if (!timeLimit.value.trim()) { showFieldError(timeLimit, 'Time limit is required'); valid = false; }
+    if (!desc.value.trim()) { showFieldError(desc, 'Description is required'); valid = false; }
+
+    if (!supplier.val() || supplier.val().length === 0) {
+      const el = supplier.next('.select2');
+      if (el.length) el.after('<div class="text-danger mt-1 small">Select at least one supplier</div>');
+      valid = false;
+    }
+    if (!product.val() || product.val().length === 0) {
+      const el = product.next('.select2');
+      if (el.length) el.after('<div class="text-danger mt-1 small">Select at least one product</div>');
+      valid = false;
+    }
+
+    if (!validateDates(start, end)) valid = false;
+
+    return valid;
+  }
+
+  // ADD Promotion
+  document.getElementById('saveAddPromotionBtn').addEventListener('click', () => {
+    const form = document.getElementById('addPromotionForm');
+    if (!validateForm(form)) return;
+
+    const fd = new FormData(form);
+    const fmt = d => d.toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'});
+    fd.append('promotion_period', `${fmt(new Date(fd.get('start_datetime')))} - ${fmt(new Date(fd.get('end_datetime')))}`);
+
+    fetch("{% url 'superuser:add_basket_promotion' %}", {
+      method: 'POST',
+      headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+      body: fd
+    })
+    .then(r => r.json())
+    .then(res => {
+      if (res.success) {
+        addModal.hide();
+        showAlert('Promotion added successfully!', 'success');
+        setTimeout(() => location.reload(), 1200);
+      } else {
+        showAlert(res.msg || 'Failed to save', 'danger');
+      }
+    })
+    .catch(() => showAlert('Network error', 'danger'));
+  });
+
+  // EDIT Promotion
   document.querySelectorAll('.edit-promo-btn').forEach(btn => {
     btn.addEventListener('click', function () {
       const id = this.dataset.id;
@@ -287,7 +411,7 @@ document.addEventListener("DOMContentLoaded", function () {
       fetch("{% url 'superuser:edit_basket_promotion' 0 %}".replace('0', id))
         .then(r => r.json())
         .then(res => {
-          if (!res.success) return showAlert(res.msg || 'Not found', 'danger');
+          if (!res.success) return showAlert(res.msg || 'Failed to load', 'danger');
           const d = res.data;
 
           $('#productType').val(d.product_type);
@@ -299,21 +423,28 @@ document.addEventListener("DOMContentLoaded", function () {
           $('#supplierSelect').val(d.supplier).trigger('change');
           $('#productSelect').val(d.product).trigger('change');
 
-          document.getElementById('currentImage').innerHTML = d.main_image_url
-            ? `<img src="${d.main_image_url}" class="img-fluid rounded mt-2" style="max-height:120px;">`
-            : '<small class="text-muted">No image</small>';
+          const imgDiv = document.getElementById('currentImage');
+          if (d.main_image_url) {
+            imgDiv.innerHTML = `<img src="${d.main_image_url}" class="img-fluid rounded mt-2" style="max-height:120px;">`;
+          } else {
+            imgDiv.innerHTML = '<small class="text-muted">No image uploaded</small>';
+          }
 
           editModal.show();
         })
-        .catch(() => showAlert('Load failed', 'danger'));
+        .catch(() => showAlert('Error loading promotion', 'danger'));
     });
   });
 
-  // SAVE EDIT – Fixed URL
+  // SAVE EDIT
   document.getElementById('saveEditPromotionBtn').addEventListener('click', () => {
     const form = document.getElementById('editPromotionForm');
     const id = document.getElementById('promoIdField').value;
+    if (!validateForm(form)) return;
+
     const fd = new FormData(form);
+    const fmt = d => d.toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'});
+    fd.append('promotion_period', `${fmt(new Date(fd.get('start_datetime')))} - ${fmt(new Date(fd.get('end_datetime')))}`);
 
     fetch("{% url 'superuser:edit_basket_promotion' 0 %}".replace('0', id), {
       method: 'POST',
@@ -324,20 +455,22 @@ document.addEventListener("DOMContentLoaded", function () {
     .then(res => {
       if (res.success) {
         editModal.hide();
-        showAlert('Updated successfully!', 'success');
-        setTimeout(() => location.reload(), 1000);
+        showAlert('Promotion updated successfully!', 'success');
+        setTimeout(() => location.reload(), 1200);
       } else {
         showAlert(res.msg || 'Update failed', 'danger');
       }
-    });
+    })
+    .catch(() => showAlert('Network error', 'danger'));
   });
 
-  // DELETE – Fixed URL
+  // DELETE Promotion
+  let deleteId = null;
   document.querySelectorAll('.delete-promo-btn').forEach(btn => {
-    btn.addEventListener('click', function (e) {
+    btn.addEventListener('click', e => {
       e.preventDefault();
-      deleteId = this.dataset.id;
-      deleteModal.show();
+      deleteId = btn.dataset.id;
+      delModal.show();
     });
   });
 
@@ -350,14 +483,15 @@ document.addEventListener("DOMContentLoaded", function () {
     })
     .then(r => r.json())
     .then(res => {
-      deleteModal.hide();
+      delModal.hide();  
       if (res.success) {
-        showAlert('Deleted successfully!', 'danger');
+        showAlert('Promotion deleted!', 'danger');
         setTimeout(() => location.reload(), 1000);
       } else {
         showAlert('Delete failed', 'danger');
       }
-    });
+    })
+    .catch(() => showAlert('Network error', 'danger'));
   });
 });
 </script>

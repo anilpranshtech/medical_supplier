@@ -71,10 +71,12 @@
                                         No address added
                                     {% endif %}
                                 </td>
+                                
                                 <td class="py-4 text-right">
                                     {% comment %}<a href="{% url 'dashboard:shipping_info' %}" class="text-blue-600 hover:underline dark:text-blue-400 dark:hover:text-blue-300 text-sm">Manage</a>{% endcomment %}
                                 </td>
                             </tr>
+                            
                         </tbody>
                     </table>
                 </div>
@@ -348,7 +350,7 @@
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Last Name<span style="color:red;">*</span></label>
                             <input type="text" name="last_name" class="block w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 transition-colors duration-200" value="{{ user.last_name }}" required>
                         </div>
-                    </div>
+                    </div><br>
                     <div id="dynamic-profile-field">
                         {% if profile_type == 'doctor' %}
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Specialization<span style="color:red;">*</span></label>
@@ -357,7 +359,21 @@
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Company Name<span style="color:red;">*</span></label>
                             <input type="text" name="company_name" class="block w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 transition-colors duration-200" value="{{ profile.company_name }}">
                         {% endif %}
+                    </div><br>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">
+                            Change Password
+                        </label>
+                    
+                        <input type="password" name="password" placeholder="Enter new password"
+                            class="block w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 transition-colors duration-200">
                     </div>
+                    
+                    <div>
+                        <input type="password" name="confirm_password" placeholder="Confirm new password"
+                            class="block w-full mt-2 px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 transition-colors duration-200">
+                    </div>
+                    
                 </div>
                 <div class="p-5 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700">
                     <button type="button" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200" onclick="closeModal('modal_edit_profile')">

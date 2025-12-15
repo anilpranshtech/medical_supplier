@@ -102,10 +102,10 @@ urlpatterns = [
     path('returns/', AdminReturnsView.as_view(), name='admin_returns'),
     
     #coupons
-    path('suppliercoupons/', supplierCouponView.as_view(), name='coupons'),
-    path('supplieredit-coupon/', supplier_edit_coupon, name='edit_coupon'),
-    path('supplierdelete-coupon/',supplier_delete_coupon, name='delete_coupon'),
-    path('suppliercoupon/<int:coupon_id>/details/', supplier_coupon_details, name='coupon_details'),
+    path('coupons/', SupplierCouponsView.as_view(), name='coupons'),
+    path('coupon/edit/', supplier_edit_coupon, name='edit_coupon'),
+    path('coupon/delete/', supplier_delete_coupon, name='delete_coupon'),
+    path('coupon/details/<int:coupon_id>/', supplier_coupon_details, name='coupon_details'),
 
     #vacationmode
     path('vacation-request/', VacationRequestView.as_view(), name='vacation_request'),

@@ -132,12 +132,12 @@
         }
         .delete-btn {
             position: absolute;
-            top: 15px;
-            right: 20px;
+            top: 0px;
+            right: 0px;
             background: none;
             border: none;
             font-size: 1.5rem;
-            color: #d32f2f;
+            color: #0b0a0a;
             cursor: pointer;
             padding: 5px 10px; 
         }
@@ -235,6 +235,7 @@
                  data-title="{{ n.title|escapejs }}"
                  data-message="{{ n.message|escapejs }}"
                  data-is-read="{{ n.is_read|yesno:'true,false' }}">
+                 
                 <h6>{{ n.title }}</h6>
                 <small class="long-message"> {{ n.message }} - {{ n.recipient.username }}</small>
                 <span class="time-display" data-created="{{ n.created_at|date:'c' }}"></span>

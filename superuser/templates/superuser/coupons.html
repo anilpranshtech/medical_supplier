@@ -1,6 +1,5 @@
 {% extends 'superuser/superuser_base.html' %}
 {% load static %}
-{% load superuser_tags %}
 
 {% block content %}
 <div class="app-main flex-column flex-row-fluid" id="kt_app_main">
@@ -55,29 +54,42 @@
                               {% endif %}
                             </td>
                             <td>
-                              <button class="btn btn-sm btn-light-primary editCouponBtn"
-                                      data-id="{{ coupon.id }}"
-                                      data-code="{{ coupon.code }}"
-                                      data-type="{{ coupon.coupon_type }}"
-                                      data-discount-type="{{ coupon.discount_type }}"
-                                      data-discount="{{ coupon.discount }}"
-                                      data-min="{{ coupon.minimum_purchase_amount }}"
-                                      data-max="{{ coupon.max_discount }}"
-                                      data-count="{{ coupon.count_of_use }}"
-                                      data-orders-count="{{ coupon.filter_by_orders_count }}"
-                                      data-orders-amount="{{ coupon.filter_by_orders_amount }}"
-                                      data-start-date="{{ coupon.start_date|date:'Y-m-d' }}"
-                                      data-end-date="{{ coupon.end_date|date:'Y-m-d' }}"
-                                      data-start-time="{{ coupon.start_time|time:'H:i' }}"
-                                      data-end-time="{{ coupon.end_time|time:'H:i' }}"
-                                      data-promotion="{{ coupon.can_be_used_with_promotions|yesno:'True,False' }}">
-                                <i class="bi bi-pencil-square"></i>
-                              </button>
-                              <button class="btn btn-sm btn-light-danger deleteCouponBtn"
-                                      data-id="{{ coupon.id }}"
-                                      data-code="{{ coupon.code }}">
-                                <i class="bi bi-trash"></i>
-                              </button>
+                              <div class="dropdown">
+                                <button class="btn btn-sm btn-light btn-active-light-primary dropdown-toggle"
+                                type="button" data-bs-toggle="dropdown">    
+                                  Actions
+                                </button>
+                                <ul class="dropdown-menu">
+                                  <li>
+                                    <a class="dropdown-item editCouponBtn" href="#"
+                                       data-id="{{ coupon.id }}"
+                                       data-code="{{ coupon.code }}"
+                                       data-type="{{ coupon.coupon_type }}"
+                                       data-discount-type="{{ coupon.discount_type }}"
+                                       data-discount="{{ coupon.discount }}"
+                                       data-min="{{ coupon.minimum_purchase_amount }}"
+                                       data-max="{{ coupon.max_discount }}"
+                                       data-count="{{ coupon.count_of_use }}"
+                                       data-orders-count="{{ coupon.filter_by_orders_count }}"
+                                       data-orders-amount="{{ coupon.filter_by_orders_amount }}"
+                                       data-start-date="{{ coupon.start_date|date:'Y-m-d' }}"
+                                       data-end-date="{{ coupon.end_date|date:'Y-m-d' }}"
+                                       data-start-time="{{ coupon.start_time|time:'H:i' }}"
+                                       data-end-time="{{ coupon.end_time|time:'H:i' }}"
+                                       data-promotion="{{ coupon.can_be_used_with_promotions|yesno:'True,False' }}">
+                                      <i class="bi bi-pencil-square me-2"></i> Edit
+                                    </a>
+                                  </li>
+                                  <li><hr class="dropdown-divider"></li>
+                                  <li>
+                                    <a class="dropdown-item deleteCouponBtn" href="#"
+                                       data-id="{{ coupon.id }}"
+                                       data-code="{{ coupon.code }}">
+                                      <i class="bi bi-trash me-2"></i> Delete
+                                    </a>
+                                  </li>
+                                </ul>
+                              </div>
                             </td>
                           </tr>
                           {% empty %}
@@ -186,7 +198,7 @@
                                 <div id="couponMessage"></div>
                             </div>
                             <div class="modal-footer">
-                                <button type="button" id="saveCoupon" class="btn btn-primary ">Save</button>
+                                <button type="button" id="saveCoupon" class="btn btn-primary btn-with-loader">Save</button>
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                             </div>
                         </div>
@@ -272,10 +284,13 @@
                                             <label class="form-label">Select Products</label>
                                             <select name="product_ids[]" class="form-select select2" multiple id="edit_productSelect">
                                                 {% for p in products %}
-                                                    <option value="{{ p.id }}">{{ p.name }}</option>
+                                                    <option value="{{ p.id }}">{{ p.name }} (SKU: {{ p.supplier_sku|default:"N/A" }})</option>
                                                 {% endfor %}
                                             </select>
+                                            
+                                                       
                                         </div>
+                                        <!-- mqbakery referance fields -->
                                         <div class="col-md-12 mb-3">
                                             <label class="form-label">Select Clients</label>
                                             <select name="client_ids[]" class="form-select select2" multiple id="edit_clientSelect">
@@ -289,7 +304,7 @@
                                 <div id="editCouponMessage"></div>
                             </div>
                             <div class="modal-footer">
-                                <button type="button" id="updateCoupon" class="btn btn-primary ">Update</button>
+                                <button type="button" id="updateCoupon" class="btn btn-primary btn-with-loader">Update</button>
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                             </div>
                         </div>
@@ -298,7 +313,7 @@
                 <div class="modal fade" id="deleteCouponModal" tabindex="-1" aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content">
-                            <div class="modal-header bg-danger text-white">
+                            <div class="modal-header  text-white">
                                 <h5 class="modal-title">Delete Coupon</h5>
                                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                             </div>
@@ -309,18 +324,21 @@
                             </div>
                             <div class="modal-footer justify-content-center">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                <button type="button" id="confirmDeleteCoupon" class="btn btn-danger btn-with-loader">Delete</button>
+                                <button type="button" id="confirmDeleteCoupon" class="btn btn-danger btn-with-loader btn-with-loader">Delete</button>
                             </div>
                         </div>
                     </div>
                 </div>
+                {% include "supplier/pagination.html" %}
             </div>
         </div>
+        
     </div>
 </div>
 {% endblock %}
 
 {% block page_only_scripts %}
+<script src="{% static 'js/buttonLoader.js' %}"></script>
 
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
@@ -430,13 +448,9 @@
                 if (targetMsg) targetMsg.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
             });
         }
-    
-        // Create Coupon
         document.getElementById('saveCoupon').addEventListener('click', function(){
             handleSubmit('couponForm', "{% url 'superuser:coupons' %}");
         });
-    
-        // Edit Coupon button click
         document.querySelectorAll('.editCouponBtn').forEach(btn => {
             btn.addEventListener('click', function(){
                 const couponId = this.dataset.id;
@@ -487,10 +501,10 @@
     
         // Update Coupon
         document.getElementById('updateCoupon').addEventListener('click', function(){
-            handleSubmit('editCouponForm', "{% url 'superuser:edit_coupon' %}", 'editCouponMessage');
+            handleSubmit('editCouponForm', "{% url 'supplier:edit_coupon' %}", 'editCouponMessage');
         });
     
-        // Delete Coupon
+        // Delete Coupon - updated selector for dropdown items
         document.querySelectorAll('.deleteCouponBtn').forEach(btn => {
             btn.addEventListener('click', function(){
                 const modal = new bootstrap.Modal(document.getElementById('deleteCouponModal'));

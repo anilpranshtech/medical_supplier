@@ -132,9 +132,10 @@
                                                 </div>
                                             </td>
                                             <td class="fw-bold text-end">
-                                                {{ order.phone_number }}
+                                                {{ order.user.customerbillingaddress_set.first.phone|default:"---" }}
                                             </td>
                                         </tr>
+                                        
 
                                         </tbody>
                                     </table>
@@ -357,18 +358,18 @@
                                                 <td class="text-center">{{ item.product.product_from }}</td>
                                                 <td class="text-center">{{ item.product.brand.name }}</td>
                                                 <td class="text-center">{{ item.product.supplier_sku }}</td>
-                                                <td class="text-center">${{ item.price }}</td>
+                                                <td class="text-center">${{ order.payment.amount|floatformat:2|default:"0.00" }}</td>
                                                 <td class="text-center">{{ item.quantity }}</td>
                                                 <td class="text-center">{{ item.product.commission_percentage }}%</td>
-                                                <td class="text-center">${{ item.price }}</td>
-                                                <td class="text-center">${{ item.price|floatformat:2 }}</td>
+                                                <td class="text-center">${{ order.payment.amount|floatformat:2|default:"0.00" }}</td>
+                                                <td class="text-center">${{ order.payment.amount|floatformat:2|default:"0.00" }}</td>
                                             </tr>
                                             {% endfor %}
 
                                             <!-- Totals -->
                                             <tr>
                                                 <td colspan="8" class="text-end">Subtotal</td>
-                                                <td class="text-end">${{ subtotal }}</td>
+                                                <td class="text-end">${{ order.payment.amount|floatformat:2|default:"0.00" }} </td>
                                             </tr>
                                             <tr>
                                                 <td colspan="8" class="text-end">Total Discount</td>

@@ -237,70 +237,77 @@
                     </div>
                     <div class="col-span-1">
                         <div class="space-y-5">
-                            <!-- begin: Card -->
-                            <div class="kt-card bg-accent/50">
-                                <div class="kt-card-header px-5">
-                                    <h3 class="kt-card-title">
-                                        Cart Summary
-                                    </h3>
-                                </div>
-                                <div class="kt-card-content px-5 py-4 space-y-2">
-                                    {% if cart_items %}
-                                    <h4 class="text-sm font-medium text-mono mb-3.5">
-                                        Price Details
-                                    </h4>
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-sm font-normal text-secondary-foreground">
-                                            Subtotal
-                                        </span>
-                                        <span class="text-sm font-medium text-mono">
-                                            ${{ total|default:"0.00" }}
-                                        </span>
-                                    </div>
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-sm font-normal text-secondary-foreground">
-                                            Shipping
-                                        </span>
-                                        <span class="text-sm font-medium text-mono">
-                                            $0.00
-                                        </span>
-                                    </div>
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-sm font-normal text-secondary-foreground">
-                                            VAT
-                                        </span>
-                                        <span class="text-sm font-medium text-mono">
-                                            $0.00
-                                        </span>
-                                    </div>
-                                    {% else %}
-                                    <p class="text-muted text-sm font-normal text-center text-secondary-foreground">No items in cart to summarize.</p>
-                                    {% endif %}
-                                </div>
-                                <div class="flex justify-between items-center mt-4">
-                                    <input id="coupon-code" type="text" placeholder="Enter coupon code" 
-                                           class="border border-gray-300 rounded-md px-3 py-2 text-sm w-2/3 focus:outline-none focus:ring focus:ring-primary/40">
-                                    <button id="apply-coupon-btn" 
-                                            class="kt-btn kt-btn-primary text-sm px-4 py-2 rounded-md">
-                                        Apply
-                                    </button>
-                                </div>
-                                
-                                <p id="coupon-message" class="text-xs mt-2 text-green-600 hidden"></p>
-                                
-                                <div class="kt-card-footer flex justify-between items-center px-5">
-                                    <span class="text-sm font-normal text-secondary-foreground">
-                                        Total
-                                    </span>
-                                    <span class="text-base font-semibold text-mono">
-                                        ${{ total|default:"0.00" }}
-                                    </span>
-                                 
-                                    <p id="coupon-message" class="text-xs mt-2 text-green-600 hidden"></p>
-                                    
-                                </div>
-                            </div>
-                            <!-- end: Card -->
+<!-- begin: Card -->
+<div class="kt-card bg-accent/50">
+    <div class="kt-card-header px-5">
+        <h3 class="kt-card-title">Cart Summary</h3>
+    </div>
+
+    <div class="kt-card-content px-5 py-4 space-y-2">
+        {% if cart_items %}
+        <h4 class="text-sm font-medium text-mono mb-3.5">Price Details</h4>
+
+        <div class="flex justify-between items-center">
+            <span class="text-sm text-secondary-foreground">Subtotal</span>
+            <span class="text-sm font-medium text-mono">${{ subtotal|default:"0.00" }}</span>
+        </div>
+
+        <div class="flex justify-between items-center">
+            <span class="text-sm text-secondary-foreground">Shipping</span>
+            <span class="text-sm font-medium text-mono">$0.00</span>
+        </div>
+
+        <div class="flex justify-between items-center">
+            <span class="text-sm text-secondary-foreground">VAT</span>
+            <span class="text-sm font-medium text-mono">$0.00</span>
+        </div>
+        
+        <!-- Discount row - ONLY SHOWS IF DISCOUNT EXISTS -->
+        {% if has_discount %}
+        <div id="discount-row" class="flex justify-between items-center">
+            <span class="text-sm font-normal text-secondary-foreground">
+                Discount ({{ applied_coupon.code }})
+            </span>
+            <span class="text-sm font-medium text-mono text-green-600">
+                - ${{ discount_amount|default:"0.00" }}
+            </span>
+        </div>
+        {% endif %}
+       
+        {% else %}
+        <p class="text-muted text-sm text-center text-secondary-foreground">
+            No items in cart to summarize.
+        </p>
+        {% endif %}
+    </div>
+    
+    <div class="px-5 pb-4">
+        <div class="flex items-center gap-3">
+            <input id="coupon-code"
+                   type="text"
+                   placeholder="Enter coupon code"
+                   class="border border-gray-300 rounded-md px-3 py-2 text-sm w-full focus:outline-none focus:ring focus:ring-primary/40"
+                   {% if applied_coupon %}value="{{ applied_coupon.code }}" disabled{% endif %}>
+
+            <button id="apply-coupon-btn"
+                    class="kt-btn text-sm px-4 py-2 rounded-md whitespace-nowrap 
+                           {% if applied_coupon %}kt-btn-danger{% else %}kt-btn-primary{% endif %}">
+                {% if applied_coupon %}Remove{% else %}Apply{% endif %}
+            </button>
+        </div>
+
+        <p id="coupon-message" class="text-xs mt-2 hidden"></p>
+    </div>
+
+    <div class="kt-card-footer flex justify-between items-center px-5 py-4">
+        <span class="text-sm text-secondary-foreground">Total</span>
+        <span class="text-base font-semibold text-mono">
+            ${{ final_total|default:subtotal|default:"0.00" }}
+        </span>
+    </div>
+</div>
+<!-- end: Card -->
+
                         </div>
                     </div>
 
@@ -448,7 +455,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             console.log('Cart empty → hiding Shipping Info button');
             if (shippingBtn) {
-                shippingBtn.style.display = "none"; // 🔥 hide
+                shippingBtn.style.display = "none"; 
             }
         } else {
             if (emptyMessage) {
@@ -457,7 +464,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             console.log('Cart has items → showing Shipping Info button');
             if (shippingBtn) {
-                shippingBtn.style.display = "inline-flex"; // 🔥 show again
+                shippingBtn.style.display = "inline-flex"; 
             }
         }
     }
@@ -485,13 +492,20 @@ document.addEventListener("DOMContentLoaded", function () {
     if (applyBtn) {
         applyBtn.addEventListener('click', function() {
             const code = couponInput.value.trim();
+            const isRemoving = applyBtn.textContent.trim() === 'Remove';
+            if (isRemoving) {
+                removeCoupon();
+                return;
+            }
             if (!code) {
-                messageBox.textContent = "Please enter a coupon code.";
-                messageBox.classList.remove('hidden', 'text-green-600');
-                messageBox.classList.add('text-red-600');
+                showMessage("Please enter a coupon code.", 'error');
                 return;
             }
 
+            applyCoupon(code);
+        });
+        
+        function applyCoupon(code) {
             applyBtn.disabled = true;
             messageBox.classList.add('hidden');
 
@@ -506,47 +520,118 @@ document.addEventListener("DOMContentLoaded", function () {
             .then(response => response.json())
             .then(data => {
                 applyBtn.disabled = false;
-                messageBox.classList.remove('hidden');
 
                 if (data.status === "success") {
-                    messageBox.textContent = data.message;
-                    messageBox.classList.remove('text-red-600');
-                    messageBox.classList.add('text-green-600');
-
-                    // Update cart totals
-                    const totalEl = document.querySelector('.kt-card-footer .text-base.font-semibold.text-mono');
-                    const subtotalEl = document.querySelector('.kt-card-content .flex.justify-between.items-center .text-sm.font-medium.text-mono');
-                    if (totalEl) totalEl.textContent = `$${data.new_total}`;
-                    if (subtotalEl) subtotalEl.textContent = `$${data.new_total}`;
-
-                    // Add a visual discount row
-                    let discountRow = document.getElementById('discount-row');
-                    if (!discountRow) {
-                        discountRow = document.createElement('div');
-                        discountRow.id = 'discount-row';
-                        discountRow.className = 'flex justify-between items-center';
-                        discountRow.innerHTML = `
-                            <span class="text-sm font-normal text-secondary-foreground">Discount (${data.coupon_code})</span>
-                            <span class="text-sm font-medium text-mono text-green-600">- $${data.discount_amount}</span>
-                        `;
-                        document.querySelector('.kt-card-content').appendChild(discountRow);
-                    }
+                    showMessage(data.message, 'success');
+                    applyBtn.textContent = 'Remove';
+                    applyBtn.classList.remove('kt-btn-primary');
+                    applyBtn.classList.add('kt-btn-danger');
+                    couponInput.disabled = true;
+                    couponInput.value = data.coupon_code;
+                    updateCartTotals(data);
+                    showDiscountRow(data);
+                    
                 } else {
-                    messageBox.textContent = data.message;
-                    messageBox.classList.remove('text-green-600');
-                    messageBox.classList.add('text-red-600');
+                    showMessage(data.message, 'error');
                 }
             })
             .catch(error => {
                 applyBtn.disabled = false;
-                messageBox.textContent = "Something went wrong. Try again.";
-                messageBox.classList.remove('hidden');
-                messageBox.classList.add('text-red-600');
+                showMessage("Something went wrong. Try again.", 'error');
                 console.error('Error:', error);
             });
-        });
+        }
+        
+        function removeCoupon() {
+            if (!confirm("Are you sure you want to remove this coupon?")) {
+                return;
+            }
+            
+            applyBtn.disabled = true;
+            
+            fetch("{% url 'dashboard:remove_coupon' %}", {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": "{{ csrf_token }}",
+                    "Content-Type": "application/x-www-form-urlencoded"
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                applyBtn.disabled = false;
+                
+                if (data.status === "success") {
+                    showMessage(data.message, 'success');
+                    applyBtn.textContent = 'Apply';
+                    applyBtn.classList.remove('kt-btn-danger');
+                    applyBtn.classList.add('kt-btn-primary');
+                    couponInput.disabled = false;
+                    couponInput.value = '';
+                    hideDiscountRow();
+                    updateCartTotals(data);
+                    
+                } else {
+                    showMessage(data.message || "Failed to remove coupon.", 'error');
+                }
+            })
+            .catch(error => {
+                applyBtn.disabled = false;
+                showMessage("Error removing coupon. Please try again.", 'error');
+                console.error('Error:', error);
+            });
+        }
+        
+        function updateCartTotals(data) {
+            const totalEl = document.querySelector('.kt-card-footer .text-base.font-semibold.text-mono');
+            const subtotalEl = document.querySelector('.kt-card-content .flex.justify-between.items-center:nth-child(2) .text-sm.font-medium.text-mono');
+            
+            if (totalEl && data.new_total) {
+                totalEl.textContent = `$${data.new_total}`;
+            }
+            
+            if (subtotalEl && data.subtotal) {
+                subtotalEl.textContent = `$${data.subtotal}`;
+            }
+        }
+        
+        function showDiscountRow(data) {
+            let discountRow = document.getElementById('discount-row');
+            if (!discountRow) {
+                discountRow = document.createElement('div');
+                discountRow.id = 'discount-row';
+                discountRow.className = 'flex justify-between items-center';
+                discountRow.innerHTML = `
+                    <span class="text-sm font-normal text-secondary-foreground">Discount (${data.coupon_code})</span>
+                    <span class="text-sm font-medium text-mono text-green-600">- $${data.discount_amount}</span>
+                `;
+                const vatRow = document.querySelector('.kt-card-content .flex.justify-between.items-center:nth-child(4)');
+                if (vatRow && vatRow.nextSibling) {
+                    vatRow.parentNode.insertBefore(discountRow, vatRow.nextSibling);
+                } else if (vatRow) {
+                    vatRow.parentNode.appendChild(discountRow);
+                }
+            }
+        }
+        
+        function hideDiscountRow() {
+            const discountRow = document.getElementById('discount-row');
+            if (discountRow) {
+                discountRow.remove();
+            }
+        }
+        
+        function showMessage(text, type) {
+            messageBox.textContent = text;
+            messageBox.classList.remove('hidden');
+            messageBox.classList.remove('text-green-600', 'text-red-600');
+            
+            if (type === 'success') {
+                messageBox.classList.add('text-green-600');
+            } else {
+                messageBox.classList.add('text-red-600');
+            }
+        }
     }
 });
-
 </script>
 {% endblock content %}

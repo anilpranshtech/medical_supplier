@@ -883,13 +883,6 @@ class AddproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
             'suppliers': SupplierProfile.objects.all(),
             **data.dict()
         })
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import messages
-from django.utils.dateparse import parse_date
-from decimal import Decimal
-from datetime import datetime, timedelta
-from .mixins import StaffAccountRequiredMixin
 
 
 class EditproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
@@ -1904,7 +1897,6 @@ class AdminMostViewedProductsView(View):
         context = {'products': products}
         return render(request, 'superuser/view_product.html', context)
 
-
 class AdminReturnsView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
     template_name = 'superuser/returns.html'
     login_url = 'dashboard:login'
@@ -1914,25 +1906,27 @@ class AdminReturnsView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView
         context = super().get_context_data(**kwargs)
 
         qs = Return.objects.select_related(
-            'order_item__product__brand',
+            'order_item__product__brand__supplier',
             'order_item__order__payment',
+            'order_item__order', 
             'client'
+        ).prefetch_related(
+            'order_item__order' 
         ).order_by('-request_date')
 
-        # ---- Pagination Setup ----
-        paginator = Paginator(qs, 13) 
+        paginator = Paginator(qs, 13)
         page_number = self.request.GET.get("page")
         page_obj = paginator.get_page(page_number)
 
-        # Add to context
-        context['page_obj'] = page_obj
-        context['returns'] = page_obj.object_list 
-        context['count_all'] = qs.count()
-        context['count_approved'] = qs.filter(return_status='approved').count()
-        context['count_pending'] = qs.filter(return_status='pending').count()
-        context['count_rejected'] = qs.filter(return_status='rejected').count()
-        context['user_permissions_list'] = self.request.user.get_all_permissions()
-
+        context.update({
+            'page_obj': page_obj,
+            'returns': page_obj.object_list,
+            'count_all': qs.count(),
+            'count_approved': qs.filter(return_status='approved').count(),
+            'count_pending': qs.filter(return_status='pending').count(),
+            'count_rejected': qs.filter(return_status='rejected').count(),
+            'user_permissions_list': self.request.user.get_all_permissions(),
+        })
         return context
 
 
@@ -3093,76 +3087,84 @@ class AdminVacationModeView(View):
 
 
 
-class AddTopSupplierView(View):
-    template_name = 'superuser/addtopsupplier.html'
+# class AddTopSupplierView(View):
+#     template_name = 'superuser/addtopsupplier.html'
 
-    def get(self, request):
-        suppliers = SupplierProfile.objects.all()
-        return render(request, self.template_name, {'suppliers': suppliers})
+#     def get(self, request):
+#         suppliers = SupplierProfile.objects.all()
+#         return render(request, self.template_name, {'suppliers': suppliers})
 
-    def post(self, request):
-        supplier_id = request.POST.get('supplier')
-        order = request.POST.get('order')
+#     def post(self, request):
+#         supplier_id = request.POST.get('supplier')
+#         order = request.POST.get('order')
 
-        if not supplier_id or not order:
-            messages.error(request, "All fields are required.")
-            suppliers = SupplierProfile.objects.all()
-            return render(request, self.template_name, {'suppliers': suppliers})
+#         if not supplier_id or not order:
+#             messages.error(request, "All fields are required.")
+#             suppliers = SupplierProfile.objects.all()
+#             return render(request, self.template_name, {'suppliers': suppliers})
 
-        try:
-            supplier = SupplierProfile.objects.get(id=supplier_id)
-            TopSupplier.objects.create(supplier=supplier, order=order)
-            messages.success(request, "Supplier added successfully!")
-            return redirect('superuser:add_to_supplier')
-        except SupplierProfile.DoesNotExist:
-            messages.error(request, "Invalid supplier selected.")
-            return redirect('superuser:add_to_supplier')
+#         try:
+#             supplier = SupplierProfile.objects.get(id=supplier_id)
+#             TopSupplier.objects.create(supplier=supplier, order=order)
+#             messages.success(request, "Supplier added successfully!")
+#             return redirect('superuser:add_to_supplier')
+#         except SupplierProfile.DoesNotExist:
+#             messages.error(request, "Invalid supplier selected.")
+#             return redirect('superuser:add_to_supplier')
 
 
 
 class TopSupplierListView(View):
     def get(self, request):
-        top_suppliers = TopSupplier.objects.all().select_related('supplier__user')
-        all_suppliers = SupplierProfile.objects.all()
-        return render(request, 'superuser/topsupplierlist.html', {
-            'top_suppliers': top_suppliers,
-            'all_suppliers': all_suppliers
+
+        top_suppliers = (
+            SupplierProfile.objects.annotate(
+                order_count=Count(
+                    "user__brands__product__orderitem",
+                    distinct=True
+                )
+            )
+            .order_by("-order_count")
+        )
+
+        return render(request, "superuser/topsupplierlist.html", {
+            "top_suppliers": top_suppliers,
         })
 
 
-class EditTopSupplierView(View):
-    def post(self, request):
-        id = request.POST.get('id')
-        supplier_id = request.POST.get('supplier')
-        order = request.POST.get('order')
+# class EditTopSupplierView(View):
+#     def post(self, request):
+#         id = request.POST.get('id')
+#         supplier_id = request.POST.get('supplier')
+#         order = request.POST.get('order')
 
-        try:
-            top_supplier = TopSupplier.objects.get(id=id)
-            supplier = SupplierProfile.objects.get(id=supplier_id)
+#         try:
+#             top_supplier = TopSupplier.objects.get(id=id)
+#             supplier = SupplierProfile.objects.get(id=supplier_id)
 
-            top_supplier.supplier = supplier
-            top_supplier.order = order
-            top_supplier.save()
+#             top_supplier.supplier = supplier
+#             top_supplier.order = order
+#             top_supplier.save()
 
-            return JsonResponse({'success': True})
-        except TopSupplier.DoesNotExist:
-            return JsonResponse({'success': False, 'error': 'Top Supplier not found'})
-        except SupplierProfile.DoesNotExist:
-            return JsonResponse({'success': False, 'error': 'Supplier not found'})
+#             return JsonResponse({'success': True})
+#         except TopSupplier.DoesNotExist:
+#             return JsonResponse({'success': False, 'error': 'Top Supplier not found'})
+#         except SupplierProfile.DoesNotExist:
+#             return JsonResponse({'success': False, 'error': 'Supplier not found'})
 
 
-class DeleteTopSupplierView(View):
-    def post(self, request):
-        import json
-        data = json.loads(request.body)
-        id = data.get('id')
+# class DeleteTopSupplierView(View):
+#     def post(self, request):
+#         import json
+#         data = json.loads(request.body)
+#         id = data.get('id')
 
-        try:
-            supplier = TopSupplier.objects.get(id=id)
-            supplier.delete()
-            return JsonResponse({'success': True})
-        except TopSupplier.DoesNotExist:
-            return JsonResponse({'success': False, 'error': 'Supplier not found'})
+#         try:
+#             supplier = TopSupplier.objects.get(id=id)
+#             supplier.delete()
+#             return JsonResponse({'success': True})
+#         except TopSupplier.DoesNotExist:
+#             return JsonResponse({'success': False, 'error': 'Supplier not found'})
         
 
 class BuyXGetYPromotionView(TemplateView):
@@ -3270,19 +3272,37 @@ class BuyXGiftYPromotionView(TemplateView):
         ctx = super().get_context_data(**kwargs)
         ctx['page_title'] = 'Buy X Gift Y Promotion'
         ctx['promotions'] = BuyXGiftYPromotion.objects.all()
-        ctx['suppliers']  = SupplierProfile.objects.all()
-        ctx['products']   = Product.objects.all()
+
+        user = self.request.user
+
+        if hasattr(user, 'supplierprofile'):
+            ctx['suppliers'] = [user.supplierprofile]
+            ctx['products'] = Product.objects.filter(created_by=user)
+        else:
+            ctx['suppliers'] = SupplierProfile.objects.all()
+            ctx['products'] = Product.objects.all()
+
         return ctx
+
+
 class AddGiftPromotionView(TemplateView):
     def post(self, request):
         try:
-            product_type   = request.POST.get('product_type')
-            supplier_ids   = request.POST.getlist('supplier')
-            product_ids    = request.POST.getlist('product')
-            giftproduct_ids= request.POST.getlist('giftproduct')
-            buy            = request.POST.get('buy')
-            gift           = request.POST.get('gift')
-            promotion_period = request.POST.get('promotion_period')
+            product_type = request.POST.get('product_type')
+            if hasattr(request.user, 'supplierprofile'):
+                supplier_ids = [request.user.supplierprofile.id]
+            else:
+                supplier_ids = request.POST.getlist('supplier')
+
+            product_ids = request.POST.getlist('product')
+            giftproduct_ids = request.POST.getlist('giftproduct')
+            buy = request.POST.get('buy')
+            gift = request.POST.get('gift')
+            start = request.POST.get('start_datetime')
+            end = request.POST.get('end_datetime')
+            start_dt = datetime.strptime(start, "%Y-%m-%dT%H:%M")
+            end_dt = datetime.strptime(end, "%Y-%m-%dT%H:%M")
+            promotion_period = f"{start_dt.strftime('%d %b %Y')} - {end_dt.strftime('%d %b %Y')}"
 
             promo = BuyXGiftYPromotion.objects.create(
                 product_type=product_type,
@@ -3293,18 +3313,20 @@ class AddGiftPromotionView(TemplateView):
             promo.supplier.set(supplier_ids)
             promo.product.set(product_ids)
             promo.giftproduct.set(giftproduct_ids)
-            promo.save()               
+            promo.save()
 
             return JsonResponse({'success': True})
         except Exception as e:
             return JsonResponse({'success': False, 'msg': str(e)})
+
+
 class EditGiftPromotionView(TemplateView):
     def get(self, request, pk):
         try:
             promo = BuyXGiftYPromotion.objects.get(pk=pk)
             start_str, _, end_str = promo.promotion_period.partition(' - ')
             start_str = start_str.strip()
-            end_str   = end_str.strip()
+            end_str = end_str.strip()
 
             def fmt(dt_str):
                 try:
@@ -3315,13 +3337,13 @@ class EditGiftPromotionView(TemplateView):
 
             data = {
                 'product_type': promo.product_type,
-                'supplier'    : list(promo.supplier.values_list('id', flat=True)),
-                'product'     : list(promo.product.values_list('id', flat=True)),
-                'giftproduct' : list(promo.giftproduct.values_list('id', flat=True)),
-                'buy'         : promo.buy,
-                'gift'        : promo.gift,
+                'supplier': list(promo.supplier.values_list('id', flat=True)),
+                'product': list(promo.product.values_list('id', flat=True)),
+                'giftproduct': list(promo.giftproduct.values_list('id', flat=True)),
+                'buy': promo.buy,
+                'gift': promo.gift,
                 'start_datetime': fmt(start_str),
-                'end_datetime'  : fmt(end_str),
+                'end_datetime': fmt(end_str),
             }
             return JsonResponse({'success': True, 'data': data})
         except BuyXGiftYPromotion.DoesNotExist:
@@ -3332,21 +3354,28 @@ class EditGiftPromotionView(TemplateView):
             promo = BuyXGiftYPromotion.objects.get(pk=pk)
 
             promo.product_type = request.POST.get('product_type')
-            promo.buy          = request.POST.get('buy')
-            promo.gift         = request.POST.get('gift')
-            promo.supplier.set(request.POST.getlist('supplier'))
+            promo.buy = request.POST.get('buy')
+            promo.gift = request.POST.get('gift')
+
+            if hasattr(request.user, 'supplierprofile'):
+                promo.supplier.set([request.user.supplierprofile.id])
+            else:
+                promo.supplier.set(request.POST.getlist('supplier'))
+
             promo.product.set(request.POST.getlist('product'))
             promo.giftproduct.set(request.POST.getlist('giftproduct'))
+
             start = request.POST.get('start_datetime')
-            end   = request.POST.get('end_datetime')
+            end = request.POST.get('end_datetime')
             start_dt = datetime.strptime(start, "%Y-%m-%dT%H:%M")
-            end_dt   = datetime.strptime(end,   "%Y-%m-%dT%H:%M")
+            end_dt = datetime.strptime(end, "%Y-%m-%dT%H:%M")
             promo.promotion_period = f"{start_dt.strftime('%d %b %Y')} - {end_dt.strftime('%d %b %Y')}"
 
-            promo.save()                 
+            promo.save()
             return JsonResponse({'success': True})
         except Exception as e:
             return JsonResponse({'success': False, 'msg': str(e)})
+
 
 def delete_gift_promotion(request, pk):
     try:
@@ -3358,231 +3387,278 @@ class BasketPromotionView(TemplateView):
     template_name = 'superuser/Basketpromotion.html'
 
     def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx['page_title'] = 'Basket Promotions'
-        ctx['promotions'] = BasketPromotion.objects.all().order_by('-created_at')
-        ctx['suppliers']  = SupplierProfile.objects.all()
-        ctx['products']   = Product.objects.all()
-        return ctx
-class AddBasketPromotionView(TemplateView):
+        context = super().get_context_data(**kwargs)
+        context['page_title'] = 'Basket Promotions'
+        context['promotions'] = BasketPromotion.objects.all().order_by('-created_at')
+
+        user = self.request.user
+
+        if hasattr(user, 'supplierprofile'):
+            context['suppliers'] = [user.supplierprofile]
+            context['products'] = Product.objects.filter(created_by=user)
+        else:
+            context['suppliers'] = SupplierProfile.objects.all()
+            context['products'] = Product.objects.all()
+
+        return context
+class AddBasketPromotionView(View):
     def post(self, request):
         try:
-            product_type   = request.POST.get('product_type')
-            supplier_ids   = request.POST.getlist('supplier')
-            product_ids    = request.POST.getlist('product')
-            promotion_period = request.POST.get('promotion_period')
-            time_limit     = request.POST.get('time_limit')
-            title_en       = request.POST.get('title_en')
+            product_type = request.POST.get('product_type')
+            title_en = request.POST.get('title_en')
+            time_limit = request.POST.get('time_limit')
             description_en = request.POST.get('description_en')
-            main_image     = request.FILES.get('main_image')
+            main_image = request.FILES.get('main_image')
+            start = request.POST.get('start_datetime')
+            end = request.POST.get('end_datetime')
+            start_dt = datetime.strptime(start, "%Y-%m-%dT%H:%M")
+            end_dt = datetime.strptime(end, "%Y-%m-%dT%H:%M")
+            promotion_period = f"{start_dt.strftime('%d %b %Y')} - {end_dt.strftime('%d %b %Y')}"
+            if hasattr(request.user, 'supplierprofile'):
+                supplier_ids = [request.user.supplierprofile.id]
+            else:
+                supplier_ids = request.POST.getlist('supplier')
 
+            product_ids = request.POST.getlist('product')
             promo = BasketPromotion.objects.create(
                 product_type=product_type,
                 promotion_period=promotion_period,
                 time_limit=time_limit,
                 title_en=title_en,
                 description_en=description_en,
-                main_image=main_image
+                main_image=main_image,
             )
             promo.supplier.set(supplier_ids)
             promo.product.set(product_ids)
-            promo.save()  
+            promo.save()
 
             return JsonResponse({'success': True})
+
         except Exception as e:
             return JsonResponse({'success': False, 'msg': str(e)})
-# views.py
 class EditBasketPromotionView(View):
     def get(self, request, pk):
-        promo = get_object_or_404(BasketPromotion, pk=pk)
         try:
-            start_str, end_str = [x.strip() for x in promo.promotion_period.split(" - ")]
-            start = datetime.strptime(start_str, "%d %b %Y").strftime("%Y-%m-%dT00:00")
-            end = datetime.strptime(end_str, "%d %b %Y").strftime("%Y-%m-%dT23:59")
-        except:
-            start = end = ""
+            promo = BasketPromotion.objects.get(pk=pk)
+            start_str, _, end_str = promo.promotion_period.partition(' - ')
 
-        data = {
-            'product_type': promo.product_type,
-            'supplier': list(promo.supplier.values_list('id', flat=True)),
-            'product': list(promo.product.values_list('id', flat=True)),
-            'title_en': promo.title_en or "",
-            'description_en': promo.description_en or "",
-            'time_limit': promo.time_limit or "",
-            'main_image_url': promo.main_image.url if promo.main_image else "",
-            'start_datetime': start,
-            'end_datetime': end,
-        }
-        return JsonResponse({'success': True, 'data': data})
+            def parse_date(date_str):
+                try:
+                    return datetime.strptime(date_str.strip(), "%d %b %Y").strftime("%Y-%m-%dT%H:%M")
+                except:
+                    return ""
+
+            data = {
+                'product_type': promo.product_type,
+                'supplier': list(promo.supplier.values_list('id', flat=True)),
+                'product': list(promo.product.values_list('id', flat=True)),
+                'title_en': promo.title_en or "",
+                'time_limit': promo.time_limit or "",
+                'description_en': promo.description_en or "",
+                'main_image_url': promo.main_image.url if promo.main_image else "",
+                'start_datetime': parse_date(start_str),
+                'end_datetime': parse_date(end_str),
+            }
+            return JsonResponse({'success': True, 'data': data})
+
+        except BasketPromotion.DoesNotExist:
+            return JsonResponse({'success': False, 'msg': 'Promotion not found'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'msg': str(e)})
 
     def post(self, request, pk):
-        promo = get_object_or_404(BasketPromotion, pk=pk)
         try:
-            start = request.POST['start_datetime']
-            end = request.POST['end_datetime']
-            start_dt = datetime.strptime(start, "%Y-%m-%dT%H:%M")
-            end_dt = datetime.strptime(end, "%Y-%m-%dT%H:%M")
+            promo = BasketPromotion.objects.get(pk=pk)
 
-            promo.promotion_period = f"{start_dt.strftime('%d %b %Y')} - {end_dt.strftime('%d %b %Y')}"
-            promo.product_type = request.POST['product_type']
-            promo.title_en = request.POST['title_en']
-            promo.description_en = request.POST['description_en']
-            promo.time_limit = request.POST['time_limit']
+            promo.product_type = request.POST.get('product_type')
+            promo.title_en = request.POST.get('title_en')
+            promo.time_limit = request.POST.get('time_limit')
+            promo.description_en = request.POST.get('description_en')
 
             if 'main_image' in request.FILES:
                 if promo.main_image:
                     promo.main_image.delete(save=False)
                 promo.main_image = request.FILES['main_image']
+            if hasattr(request.user, 'supplierprofile'):
+                promo.supplier.set([request.user.supplierprofile.id])
+            else:
+                promo.supplier.set(request.POST.getlist('supplier'))
 
-            promo.supplier.set(request.POST.getlist('supplier'))
             promo.product.set(request.POST.getlist('product'))
-            promo.save()
+            start = request.POST.get('start_datetime')
+            end = request.POST.get('end_datetime')
+            start_dt = datetime.strptime(start, "%Y-%m-%dT%H:%M")
+            end_dt = datetime.strptime(end, "%Y-%m-%dT%H:%M")
+            promo.promotion_period = f"{start_dt.strftime('%d %b %Y')} - {end_dt.strftime('%d %b %Y')}"
 
+            promo.save()
             return JsonResponse({'success': True})
+
         except Exception as e:
             return JsonResponse({'success': False, 'msg': str(e)})
 def delete_basket_promotion(request, pk):
     try:
         promo = BasketPromotion.objects.get(pk=pk)
         if promo.main_image:
-            promo.main_image.delete(save=False)
+            promo.main_image.delete(save=False)  
         promo.delete()
         return JsonResponse({'success': True})
-    except Exception:
-        return JsonResponse({'success': False})
-class CouponView(TemplateView):
+    except BasketPromotion.DoesNotExist:
+        return JsonResponse({'success': False, 'msg': 'Not found'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'msg': str(e)})
+class CouponsView(TemplateView):
     template_name = "superuser/coupons.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        if not hasattr(request.user, 'supplierprofile'):
+            return redirect('superuser:superuser')  
+        return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["coupons"] = Coupon.objects.all().select_related("created_by")
-        context["clients"] = User.objects.all() 
-        context["products"] = Product.objects.all()
+        coupons_qs = Coupon.objects.select_related("created_by").order_by("-id")
+        paginator = Paginator(coupons_qs, 10)
+        page = self.request.GET.get("page", 1)
+        coupons = paginator.get_page(page)
+        supplier_products = Product.objects.filter(
+            created_by=self.request.user
+        ).select_related('category', 'brand')
+        buyer_ids = OrderItem.objects.filter(
+            product__created_by=self.request.user
+        ).values_list('order__user_id', flat=True).distinct()
+
+        clients = User.objects.filter(id__in=buyer_ids) if buyer_ids else User.objects.none()
+
+        context.update({
+            "coupons": coupons,
+            "page_obj": coupons,
+            "products": supplier_products,
+            "clients": clients or User.objects.none(),  
+        })
         return context
 
     def post(self, request, *args, **kwargs):
         try:
-            code = request.POST.get("code")
-            coupon_type = request.POST.get("coupon_type")
-            discount_type = request.POST.get("discount_type")
-            discount = Decimal(request.POST.get("discount", "0"))
-            max_discount = Decimal(request.POST.get("max_discount", "0"))
-            min_purchase = Decimal(request.POST.get("minimum_purchase_amount", "0"))
-            count_of_use = int(request.POST.get("count_of_use", "1"))
-            start_date = request.POST.get("start_date")
-            end_date = request.POST.get("end_date")
-            filter_orders_count = int(request.POST.get("filter_by_orders_count", "0"))
-            filter_orders_amount = Decimal(request.POST.get("filter_by_orders_amount", "0"))
-            can_be_used_with_promotions = request.POST.get("can_be_used_with_promotions") == "true"
-            start_time = request.POST.get("start_time") or timezone.now().time()
-            end_time = request.POST.get("end_time") or timezone.now().time()
+            code = request.POST.get("code").strip().upper()
+            if Coupon.objects.filter(code=code).exists():
+                return JsonResponse({"status": "error", "message": "Coupon code already exists!"}, status=400)
 
             coupon = Coupon.objects.create(
                 code=code,
-                coupon_type=coupon_type,
-                discount_type=discount_type,
-                discount=discount,
-                max_discount=max_discount,
-                minimum_purchase_amount=min_purchase,
-                count_of_use=count_of_use,
-                start_date=start_date,
-                end_date=end_date,
-                start_time=start_time,
-                end_time=end_time,
-                filter_by_orders_count=filter_orders_count,
-                filter_by_orders_amount=filter_orders_amount,
-                can_be_used_with_promotions=can_be_used_with_promotions,
-                created_by=request.user if request.user.is_authenticated else None,
+                coupon_type=request.POST.get("coupon_type"),
+                discount_type=request.POST.get("discount_type"),
+                discount=Decimal(request.POST.get("discount", "0")),
+                max_discount=Decimal(request.POST.get("max_discount", "0")),
+                minimum_purchase_amount=Decimal(request.POST.get("minimum_purchase_amount", "0")),
+                count_of_use=int(request.POST.get("count_of_use", 1)),
+                filter_by_orders_count=int(request.POST.get("filter_by_orders_count", 0)),
+                filter_by_orders_amount=Decimal(request.POST.get("filter_by_orders_amount", "0")),
+                start_date=request.POST.get("start_date"),
+                end_date=request.POST.get("end_date"),
+                start_time=request.POST.get("start_time", "00:00"),
+                end_time=request.POST.get("end_time", "23:59"),
+                can_be_used_with_promotions=request.POST.get("can_be_used_with_promotions") == "true",
+                created_by=request.user,
             )
-            client_ids = request.POST.getlist("client_ids[]", [])
-            product_ids = request.POST.getlist("product_ids[]", [])
 
+            # Assign products & clients
+            product_ids = request.POST.getlist("product_ids[]")
+            client_ids = request.POST.getlist("client_ids[]")
+
+            if product_ids:
+                coupon.products.set(Product.objects.filter(id__in=product_ids, created_by=request.user))
             if client_ids:
                 coupon.client.set(User.objects.filter(id__in=client_ids))
-            if product_ids:
-                coupon.products.set(Product.objects.filter(id__in=product_ids))
 
             return JsonResponse({"status": "success", "message": "Coupon created successfully!"})
         except Exception as e:
             return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
 def edit_coupon(request):
-    if request.method == 'POST':
-        coupon_id = request.POST.get('coupon_id')
-        coupon = get_object_or_404(Coupon, id=coupon_id)
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
 
-        try:
-            coupon.code = request.POST.get('code')
-            coupon.coupon_type = request.POST.get('coupon_type')
-            coupon.discount_type = request.POST.get('discount_type')
-            coupon.discount = Decimal(request.POST.get('discount', '0'))
-            coupon.minimum_purchase_amount = Decimal(request.POST.get('minimum_purchase_amount', '0'))
-            coupon.max_discount = Decimal(request.POST.get('max_discount', '0'))
-            coupon.count_of_use = int(request.POST.get('count_of_use', '1'))
-            coupon.filter_by_orders_count = int(request.POST.get('filter_by_orders_count', '0'))
-            coupon.filter_by_orders_amount = Decimal(request.POST.get('filter_by_orders_amount', '0'))
-            coupon.start_date = request.POST.get('start_date')
-            coupon.end_date = request.POST.get('end_date')
-            coupon.start_time = request.POST.get('start_time') or coupon.start_time
-            coupon.end_time = request.POST.get('end_time') or coupon.end_time
-            coupon.can_be_used_with_promotions = request.POST.get('can_be_used_with_promotions') == 'true'
+    coupon_id = request.POST.get('coupon_id')
+    coupon = get_object_or_404(Coupon, id=coupon_id)
 
-            coupon.save()
+    try:
+        coupon.code = request.POST.get('code').strip().upper()
+        coupon.coupon_type = request.POST.get('coupon_type')
+        coupon.discount_type = request.POST.get('discount_type')
+        coupon.discount = Decimal(request.POST.get('discount'))
+        coupon.minimum_purchase_amount = Decimal(request.POST.get('minimum_purchase_amount', '0'))
+        coupon.max_discount = Decimal(request.POST.get('max_discount', '0'))
+        coupon.count_of_use = int(request.POST.get('count_of_use', 1))
+        coupon.filter_by_orders_count = int(request.POST.get('filter_by_orders_count', 0))
+        coupon.filter_by_orders_amount = Decimal(request.POST.get('filter_by_orders_amount', '0'))
+        coupon.start_date = request.POST.get('start_date')
+        coupon.end_date = request.POST.get('end_date')
+        coupon.start_time = request.POST.get('start_time') or "00:00"
+        coupon.end_time = request.POST.get('end_time') or "23:59"
+        coupon.can_be_used_with_promotions = request.POST.get('can_be_used_with_promotions') == 'true'
+        coupon.save()
 
-            product_ids = request.POST.getlist('product_ids[]', [])
-            client_ids = request.POST.getlist('client_ids[]', [])
+        product_ids = request.POST.getlist('product_ids[]')
+        client_ids = request.POST.getlist('client_ids[]')
+        valid_products = Product.objects.filter(created_by=request.user, id__in=product_ids)
+        coupon.products.set(valid_products)
 
-            if product_ids:
-                coupon.products.set(Product.objects.filter(id__in=product_ids))
-            else:
-                coupon.products.clear()
+        coupon.client.set(User.objects.filter(id__in=client_ids))
 
-            if client_ids:
-                coupon.client.set(User.objects.filter(id__in=client_ids))
-            else:
-                coupon.client.clear()
-
-            return JsonResponse({'status': 'success', 'message': 'Coupon updated successfully!'})
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
-
-    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
+        return JsonResponse({'status': 'success', 'message': 'Coupon updated successfully!'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 def delete_coupon(request):
     if request.method == 'POST':
         coupon_id = request.POST.get('coupon_id')
-        try:
-            coupon = get_object_or_404(Coupon, id=coupon_id)
-            coupon.delete()
-            return JsonResponse({'status': 'success', 'message': 'Coupon deleted successfully!'})
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+        coupon = get_object_or_404(Coupon, id=coupon_id)
+        coupon.delete()
+        return JsonResponse({'status': 'success', 'message': 'Coupon deleted successfully!'})
     return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
 
+
 def coupon_details(request, coupon_id):
-    if request.method == 'GET':
-        try:
-            coupon = get_object_or_404(Coupon, id=coupon_id)
-            product_ids = list(coupon.products.values_list('id', flat=True))
-            client_ids = list(coupon.client.values_list('id', flat=True))
-            return JsonResponse({
-                'status': 'success',
-                'products': product_ids,
-                'clients': client_ids
-            })
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
-    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=400)
+    coupon = get_object_or_404(Coupon, id=coupon_id)
 
+    product_ids = list(coupon.products.filter(created_by=request.user).values_list('id', flat=True))
+    client_ids = list(coupon.client.values_list('id', flat=True))
 
-
+    return JsonResponse({
+        'status': 'success',
+        'products': product_ids,
+        'clients': client_ids
+    })
 
 class BankView(TemplateView):
     template_name = "superuser/bank.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["banks"] = Bank.objects.all()
+
+        search = self.request.GET.get("search", "")
+        created_range = self.request.GET.get("created_date", "")
+
+        banks = Bank.objects.all()
+        if search:
+            banks = banks.filter(name__icontains=search)
+        if created_range:
+            try:
+                start, end = created_range.split(" - ")
+                start_date = parse_date(start)
+                end_date = parse_date(end)
+
+                if start_date and end_date:
+                    banks = banks.filter(created_at__date__range=[start_date, end_date])
+            except:
+                pass
+        paginator = Paginator(banks.order_by("-id"), 10)
+        page_number = self.request.GET.get("page")
+        page_obj = paginator.get_page(page_number)
+
+        context["banks"] = page_obj
+        context["page_obj"] = page_obj
         return context
 
 
@@ -3623,14 +3699,48 @@ class DeleteBankView(View):
         bank = get_object_or_404(Bank, pk=pk)
         bank.delete()
         return JsonResponse({"success": True})
-    
 class OriginCountryView(TemplateView):
     template_name = "superuser/origincountry.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["countries"] = Country.objects.all().order_by("name")
+
+        countries = Country.objects.all()
+        search_by = self.request.GET.get("search_by")
+        if search_by:
+            countries = countries.filter(name__icontains=search_by)
+        created_date = self.request.GET.get("created_date")
+        if created_date:
+            try:
+                start_str, end_str = created_date.split(" - ")
+                start_date = datetime.strptime(start_str.strip(), "%m/%d/%Y")
+                end_date = datetime.strptime(end_str.strip(), "%m/%d/%Y")
+                countries = countries.filter(
+                    created_at__date__gte=start_date.date(),
+                    created_at__date__lte=end_date.date()
+                )
+            except ValueError:
+                pass
+        sort_by = self.request.GET.get("sort_by")
+        if sort_by == "asc_created":
+            countries = countries.order_by("created_at")
+        else: 
+            countries = countries.order_by("-created_at")
+
+        # --- Pagination ---
+        page_number = self.request.GET.get("page", 1)
+        paginator = Paginator(countries, 10)
+        page_obj = paginator.get_page(page_number)
+
+        # --- Context ---
+        context["countries"] = page_obj.object_list
+        context["page_obj"] = page_obj
+        context["search_by"] = search_by or ""
+        context["sort_by"] = sort_by or "desc_created"
+        context["created_date"] = created_date or ""
+
         return context
+
 
 def add_origin_country(request):
     if request.method == "POST":
@@ -3666,11 +3776,36 @@ def delete_origin_country(request, pk):
 
     country.delete()
     return JsonResponse({"success": True, "msg": "Deleted successfully"})
-
 class CountryView(ListView):
     model = OriginCountry
     template_name = "superuser/country.html"
     context_object_name = "countries"
+    paginate_by = 10 
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        search = self.request.GET.get("search", "")
+        if search:
+            queryset = queryset.filter(
+                Q(name_en__icontains=search) |
+                Q(iso__icontains=search) |
+                Q(currency__icontains=search)
+            )
+        sort_by = self.request.GET.get("sort_by", "")
+        if sort_by in ["name_en", "-name_en", "order", "-order", "created_at", "-created_at"]:
+            queryset = queryset.order_by(sort_by)
+        else:
+            queryset = queryset.order_by("name_en") 
+        start_date = self.request.GET.get("start_date", "")
+        end_date = self.request.GET.get("end_date", "")
+        if start_date and end_date:
+            try:
+                start = datetime.strptime(start_date, "%Y-%m-%d")
+                end = datetime.strptime(end_date, "%Y-%m-%d")
+                queryset = queryset.filter(created_at__date__range=(start, end))
+            except ValueError:
+                pass 
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -3680,8 +3815,10 @@ class CountryView(ListView):
             context["currency_list"] = list(data["rates"].keys())
         except:
             context["currency_list"] = ["USD", "EUR", "INR"]
+        context["current_filters"] = self.request.GET.dict()
 
         return context
+
 class CountryAddView(View):
     def post(self, request):
         name_en = request.POST.get("name_en")
@@ -3744,9 +3881,46 @@ class RegionView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["regions"] = Region.objects.all()
+
+        regions_list = Region.objects.all()
+
+        search = self.request.GET.get("search_by")
+        adv_region = self.request.GET.get("adv_region_name")
+        created_range = self.request.GET.get("created_date")
+
+        sort_by = self.request.GET.get("sort_by")
+        if search:
+            regions_list = regions_list.filter(name_en__icontains=search)
+
+        if adv_region:
+            regions_list = regions_list.filter(name_en__icontains=adv_region)
+        if created_range:
+            try:
+                start_str, end_str = created_range.split(" - ")
+
+                start_date = datetime.strptime(start_str, "%m/%d/%Y").date()
+                end_date = datetime.strptime(end_str, "%m/%d/%Y").date()
+
+                regions_list = regions_list.filter(
+                    created_at__date__gte=start_date,
+                    created_at__date__lte=end_date
+                )
+
+            except ValueError:
+                pass
+        if sort_by == "asc_created":
+            regions_list = regions_list.order_by("created_at")
+        else:
+            regions_list = regions_list.order_by("-created_at")
+        paginator = Paginator(regions_list, 8)
+        page_number = self.request.GET.get("page")
+        page_obj = paginator.get_page(page_number)
+        context["page_obj"] = page_obj
         context["countries"] = get_country_list()
+
         return context
+
+
 class RegionAddView(View):
     def post(self, request):
         name = request.POST.get("name")
@@ -3777,15 +3951,48 @@ class RegionDeleteView(View):
         region = get_object_or_404(Region, pk=pk)
         region.delete()
         return JsonResponse({"success": True, "msg": "Region deleted"})
+from datetime import datetime
 
 class CityListView(ListView):
     model = City
     template_name = "superuser/cities.html"
     context_object_name = "cities"
+    paginate_by = 8
+
+    def get_queryset(self):
+        qs = City.objects.all()
+        search = self.request.GET.get("search_by")
+        if search:
+            qs = qs.filter(name__icontains=search)
+        date_range = self.request.GET.get("created_date")
+
+        if date_range:
+            try:
+                start_str, end_str = date_range.split(" - ")
+
+                start_date = datetime.strptime(start_str, "%m/%d/%Y").date()
+                end_date = datetime.strptime(end_str, "%m/%d/%Y").date()
+
+                qs = qs.filter(created_at__date__gte=start_date,
+                               created_at__date__lte=end_date)
+            except:
+                pass
+        sort_by = self.request.GET.get("sort_by")
+        sort_map = {
+            "asc_created": "created_at",
+            "desc_created": "-created_at",
+            "asc_name": "name",
+            "desc_name": "-name",
+        }
+
+        if sort_by in sort_map:
+            qs = qs.order_by(sort_map[sort_by])
+
+        return qs
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx["regions"] = Regioncities.objects.all()  
+        ctx["regions"] = Region.objects.all()
         return ctx
 
 
@@ -3828,15 +4035,38 @@ class CityDeleteView(View):
             return JsonResponse({"success": True})
         except:
             return JsonResponse({"success": False, "msg": "Delete failed"})
-
-
-class CurrencyView(TemplateView):
+class CurrencyView(ListView):
+    model = Currency
     template_name = "superuser/currency.html"
+    context_object_name = "currencies"
+    paginate_by = 8
 
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx['currencies'] = Currency.objects.all()
-        return ctx
+    def get_queryset(self):
+        qs = Currency.objects.all()
+        search = self.request.GET.get("search_by")
+        if search:
+            qs = qs.filter(name_en__icontains=search)
+        date_range = self.request.GET.get("created_date")
+        if date_range:
+            try:
+                start_str, end_str = date_range.split(" - ")
+                start = datetime.strptime(start_str, "%m/%d/%Y").date()
+                end = datetime.strptime(end_str, "%m/%d/%Y").date()
+                qs = qs.filter(created_at__date__gte=start, created_at__date__lte=end)
+            except:
+                pass
+        sort_by = self.request.GET.get("sort_by")
+        sort_map = {
+            "asc_created": "created_at",
+            "desc_created": "-created_at",
+            "asc_name": "name_en",
+            "desc_name": "-name_en",
+        }
+        order_field = sort_map.get(sort_by, "-created_at")
+        qs = qs.order_by(order_field)
+
+        return qs
+
 
 
 def add_currency(request):
@@ -3884,8 +4114,35 @@ class ReturnReasonView(TemplateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx["reasons"] = ReturnReason.objects.all()
+        reasons_list = ReturnReason.objects.all()
+        search_query = self.request.GET.get('search_by', '')
+        if search_query:
+            reasons_list = reasons_list.filter(Q(reason_en__icontains=search_query))
+        created_date = self.request.GET.get('created_date', '')
+        if created_date:
+            try:
+                dates = created_date.split(' - ')
+                if len(dates) == 2:
+                    start_date = datetime.strptime(dates[0], '%m/%d/%Y')
+                    end_date = datetime.strptime(dates[1], '%m/%d/%Y')
+                    reasons_list = reasons_list.filter(created_at__date__gte=start_date, created_at__date__lte=end_date)
+                else:
+                    single_date = datetime.strptime(dates[0], '%m/%d/%Y')
+                    reasons_list = reasons_list.filter(created_at__date=single_date)
+            except ValueError:
+                pass  
+        sort_by = self.request.GET.get('sort_by', 'desc_created')
+        if sort_by == 'desc_created':
+            reasons_list = reasons_list.order_by('-id')
+        elif sort_by == 'asc_created':
+            reasons_list = reasons_list.order_by('id')
+        page_number = self.request.GET.get('page', 1)
+        paginator = Paginator(reasons_list, 8) 
+        page_obj = paginator.get_page(page_number)
+        ctx['reasons'] = page_obj.object_list
+        ctx['page_obj'] = page_obj
         return ctx
+
 
 def add_return_reason(request):
     if request.method == "POST":
@@ -3928,8 +4185,41 @@ class DepartmentView(TemplateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx["departments"] = Department.objects.all()
+        qs = Department.objects.all()
+        search_by = self.request.GET.get('search_by')
+        if search_by:
+            qs = qs.filter(Q(name_en__icontains=search_by))
+        created_date = self.request.GET.get('created_date')
+        if created_date:
+            dates = [d.strip() for d in created_date.split('-')]
+            if len(dates) == 2:
+                created_from, created_to = dates
+            else:
+                created_from = created_to = dates[0]
+            from datetime import datetime
+            try:
+                created_from = datetime.strptime(created_from, "%m/%d/%Y").date()
+                created_to = datetime.strptime(created_to, "%m/%d/%Y").date()
+                qs = qs.filter(created_at__date__range=[created_from, created_to])
+            except ValueError:
+                pass  
+        sort_by = self.request.GET.get('sort_by', 'desc_created') 
+        sort_mapping = {
+            'asc_name': 'name_en',
+            'desc_name': '-name_en',
+            'asc_created': 'created_at',
+            'desc_created': '-created_at',
+        }
+        qs = qs.order_by(sort_mapping.get(sort_by, '-created_at'))
+        page_number = self.request.GET.get('page', 1)
+        per_page = self.request.GET.get('per_page', 8)
+        paginator = Paginator(qs, per_page)
+        page_obj = paginator.get_page(page_number)
+        ctx['departments'] = page_obj.object_list
+        ctx['page_obj'] = page_obj
+        ctx['request'] = self.request 
         return ctx
+
 
 def add_department(request):
     if request.method == "POST":
@@ -3980,9 +4270,40 @@ class AddressTypeView(TemplateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx["address_types"] = AddressType.objects.all()
-        return ctx
 
+        qs = AddressType.objects.all()
+        search = self.request.GET.get('search_by', '')
+        if search:
+            qs = qs.filter(name_en__icontains=search)
+        date_range = self.request.GET.get('created_date')
+        if date_range:
+            try:
+                start_date, end_date = [d.strip() for d in date_range.split('-')]
+                from datetime import datetime
+                start_date = datetime.strptime(start_date, "%m/%d/%Y")
+                end_date = datetime.strptime(end_date, "%m/%d/%Y")
+                qs = qs.filter(created_at__date__range=[start_date, end_date])
+            except:
+                pass
+        sort_by = self.request.GET.get('sort_by', '-created_at')
+        allowed = {
+            'asc_created': 'created_at',
+            'desc_created': '-created_at',
+            'asc_name': 'name_en',
+            'desc_name': '-name_en',
+        }
+        qs = qs.order_by(allowed.get(sort_by, '-created_at'))
+        paginator = Paginator(qs, self.request.GET.get('per_page', 8))
+        page_obj = paginator.get_page(self.request.GET.get('page'))
+
+        ctx.update({
+            'address_types': page_obj,
+            'page_obj': page_obj,
+            'request': self.request,
+            'search_by': search,
+            'sort_by': sort_by      
+        })
+        return ctx
 def add_address_type(request):
     if request.method == "POST":
         name = request.POST.get("name_en", "").strip()
@@ -4036,8 +4357,53 @@ class SupplierTypeView(TemplateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx["supplier_types"] = SupplierType.objects.all()
+        
+        qs = SupplierType.objects.all()
+        search_by = self.request.GET.get('search_by')
+        if search_by:
+            qs = qs.filter(name_en__icontains=search_by)
+        created_date = self.request.GET.get('created_date')
+        start_date = end_date = None
+        if created_date:
+            try:
+                dates = created_date.split(" - ")
+                if len(dates) == 2:
+                    start_date = datetime.strptime(dates[0].strip(), "%m/%d/%Y")
+                    end_date = datetime.strptime(dates[1].strip(), "%m/%d/%Y")
+                    qs = qs.filter(created_at__date__range=[start_date, end_date])
+                else:
+                    single_date = datetime.strptime(dates[0].strip(), "%m/%d/%Y")
+                    qs = qs.filter(created_at__date=single_date)
+            except:
+                pass  
+
+        # Sorting
+        sort_by = self.request.GET.get('sort_by', 'desc_created')
+        sort_mapping = {
+            'asc_name': 'name_en',
+            'desc_name': '-name_en',
+            'asc_created': 'created_at',
+            'desc_created': '-created_at',
+        }
+        qs = qs.order_by(sort_mapping.get(sort_by, '-created_at'))
+
+        # Pagination
+        page_number = self.request.GET.get('page', 1)
+        per_page = self.request.GET.get('per_page', 8)
+        paginator = Paginator(qs, per_page)
+        page_obj = paginator.get_page(page_number)
+
+        # Context
+        ctx['supplier_types'] = page_obj.object_list
+        ctx['page_obj'] = page_obj
+        ctx['request'] = self.request
+        ctx['search_by'] = search_by or ""
+        ctx['sort_by'] = sort_by
+        ctx['created_date'] = created_date or "" 
+        ctx['sort_options'] = sort_mapping
         return ctx
+
+
 
 def add_supplier_type(request):
     if request.method == "POST":
@@ -4088,12 +4454,51 @@ def delete_supplier_type(request, pk):
             return JsonResponse({"success": False, "msg": "Supplier Type not found."})
 
     return JsonResponse({"success": False, "msg": "Invalid request"})
-
+from datetime import datetime
 
 class UnitView(View):
     def get(self, request):
-        units = Unit.objects.all()
-        return render(request, 'superuser/unit.html', {'units': units})
+        qs = Unit.objects.all()
+        search_by = request.GET.get("search_by")
+        if search_by:
+            qs = qs.filter(
+                Q(name__icontains=search_by)
+            )
+        sort_by = request.GET.get("sort_by") 
+        if sort_by:
+            try:
+                field, order = sort_by.rsplit("_", 1)
+                if order == "asc":
+                    qs = qs.order_by(field)
+                elif order == "desc":
+                    qs = qs.order_by(f"-{field}")
+            except ValueError:
+                pass 
+        created_date = request.GET.get("created_date")
+        if created_date:
+            try:
+                if " - " in created_date:
+                    start_str, end_str = created_date.split(" - ")
+                else:
+                    start_str = end_str = created_date
+
+                start_date = datetime.strptime(start_str.strip(), "%m/%d/%Y")
+                end_date = datetime.strptime(end_str.strip(), "%m/%d/%Y")
+
+                qs = qs.filter(created_at__date__range=[start_date, end_date])
+            except ValueError:
+                pass  
+        page = request.GET.get("page", 1)
+        per_page = request.GET.get("per_page", 8)
+        paginator = Paginator(qs, per_page)
+        page_obj = paginator.get_page(page)
+
+        return render(request, 'superuser/unit.html', {
+            'units': page_obj.object_list,
+            'page_obj': page_obj,
+            'request': request,
+        })
+
 
 
 class AddUnitView(View):
@@ -4136,11 +4541,59 @@ class DeleteUnitView(View):
         unit = get_object_or_404(Unit, id=id)
         unit.delete()
         return JsonResponse({'success': True})
-
 class DeliveryTimeView(View):
     def get(self, request):
-        delivery_times = DeliveryTime.objects.all()
-        return render(request, 'superuser/deliverytime.html', {'delivery_times': delivery_times})
+        qs = DeliveryTime.objects.all()
+
+        # ---- SEARCH FILTER ----
+        search_by = request.GET.get("search_by")
+        if search_by:
+            qs = qs.filter(
+                Q(name__icontains=search_by)
+            )
+
+        # ---- SORT FILTER (DYNAMIC) ----
+        sort_by = request.GET.get("sort_by")  # e.g., "name_asc" or "created_at_desc"
+        if sort_by:
+            try:
+                field, order = sort_by.rsplit("_", 1)
+                if order == "asc":
+                    qs = qs.order_by(field)
+                elif order == "desc":
+                    qs = qs.order_by(f"-{field}")
+            except ValueError:
+                pass  # ignore if sort_by format is incorrect
+
+        # ---- DATE RANGE FILTER (DYNAMIC) ----
+        created_date = request.GET.get("created_date")  # Expecting "MM/DD/YYYY - MM/DD/YYYY"
+        if created_date:
+            try:
+                if " - " in created_date:
+                    start_str, end_str = created_date.split(" - ")
+                else:
+                    start_str = end_str = created_date
+
+                start_date = datetime.strptime(start_str.strip(), "%m/%d/%Y")
+                end_date = datetime.strptime(end_str.strip(), "%m/%d/%Y")
+
+                qs = qs.filter(created_at__date__range=[start_date, end_date])
+            except ValueError:
+                pass  # Ignore invalid date formats
+
+        # ---- PAGINATION ----
+        page = request.GET.get("page", 1)
+        per_page = request.GET.get("per_page", 10)
+        paginator = Paginator(qs, per_page)
+        page_obj = paginator.get_page(page)
+
+        return render(request, 'superuser/deliverytime.html', {
+            'delivery_times': page_obj.object_list,
+            'page_obj': page_obj,
+            'request': request,
+        })
+
+
+
 
 class DeliveryTimeAddView(View):
     def post(self, request):
@@ -4175,12 +4628,52 @@ class DeliveryTimeDeleteView(View):
         delivery = get_object_or_404(DeliveryTime, pk=pk)
         delivery.delete()
         return JsonResponse({'success': True})
-
-
 class ReturnTimeView(View):
     def get(self, request):
-        return_times = ReturnTime.objects.all()
-        return render(request, 'superuser/ReturnTime.html', {'return_times': return_times})
+        qs = ReturnTime.objects.all()
+        search_by = request.GET.get("search_by")
+        if search_by:
+            qs = qs.filter(
+                Q(name__icontains=search_by) |
+                Q(value__icontains=search_by)
+            )
+        sort_by = request.GET.get("sort_by")  
+        if sort_by:
+            try:
+                field, order = sort_by.rsplit("_", 1)
+                if order == "asc":
+                    qs = qs.order_by(field)
+                elif order == "desc":
+                    qs = qs.order_by(f"-{field}")
+            except ValueError:
+                pass 
+        created_date = request.GET.get("created_date")  
+        if created_date:
+            try:
+                if " - " in created_date:
+                    start_str, end_str = created_date.split(" - ")
+                else:
+                    start_str = end_str = created_date
+
+                start_date = datetime.strptime(start_str.strip(), "%m/%d/%Y")
+                end_date = datetime.strptime(end_str.strip(), "%m/%d/%Y")
+
+                qs = qs.filter(created_at__date__range=[start_date, end_date])
+            except ValueError:
+                pass 
+
+        # ---- PAGINATION ----
+        page = request.GET.get("page", 1)
+        per_page = request.GET.get("per_page", 10)
+        paginator = Paginator(qs, per_page)
+        page_obj = paginator.get_page(page)
+
+        return render(request, 'superuser/ReturnTime.html', {
+            'return_times': page_obj.object_list,
+            'page_obj': page_obj,
+            'request': request,
+        })
+
 
 class ReturnTimeAddView(View):
     def post(self, request):
@@ -4211,12 +4704,60 @@ class ReturnTimeDeleteView(View):
         return_time = get_object_or_404(ReturnTime, pk=pk)
         return_time.delete()
         return JsonResponse({'success': True})
-
-
 class StandingTimeView(View):
     def get(self, request):
-        return_times = StandingTime.objects.all()
-        return render(request, 'superuser/StandingTime.html', {'return_times': return_times})
+        qs = StandingTime.objects.all()
+
+        # ---- SEARCH FILTER ----
+        search_by = request.GET.get("search_by")
+        if search_by:
+            qs = qs.filter(
+                Q(name__icontains=search_by) |
+                Q(value__icontains=search_by)
+            )
+
+        # ---- SORT FILTER ----
+        sort_options = {
+            "asc_created": "created_at",
+            "desc_created": "-created_at",
+            "asc_name": "name",
+            "desc_name": "-name",
+        }
+        sort_by = request.GET.get("sort_by")
+        if sort_by in sort_options:
+            qs = qs.order_by(sort_options[sort_by])
+
+        # ---- DATE RANGE FILTER ----
+        created_date = request.GET.get("created_date")
+        if created_date:
+            try:
+                # Expecting format: "MM/DD/YYYY - MM/DD/YYYY"
+                dates = created_date.split(" - ")
+                if len(dates) == 2:
+                    start_date = datetime.strptime(dates[0], "%m/%d/%Y")
+                    end_date = datetime.strptime(dates[1], "%m/%d/%Y")
+                else:
+                    # If only one date is selected
+                    start_date = end_date = datetime.strptime(dates[0], "%m/%d/%Y")
+                
+                qs = qs.filter(created_at__date__range=[start_date, end_date])
+            except ValueError:
+                pass  # Ignore invalid date formats
+
+        # ---- PAGINATION ----
+        page = request.GET.get("page", 1)
+        per_page = request.GET.get("per_page", 10)
+        paginator = Paginator(qs, per_page)
+        page_obj = paginator.get_page(page)
+
+        return render(request, 'superuser/StandingTime.html', {
+            'return_times': page_obj.object_list,
+            'page_obj': page_obj,
+            'request': request,
+            'sort_options': sort_options,
+        })
+
+
 
 class StandigTimeAddView(View):
     def post(self, request):
@@ -4247,11 +4788,54 @@ class StandingTimeDeleteView(View):
         return_time = get_object_or_404(StandingTime, pk=pk)
         return_time.delete()
         return JsonResponse({'success': True})
-
 class WarrantyView(View):
     def get(self, request):
-        warranties = Warranty.objects.all()
-        return render(request, 'superuser/warranty.html', {'warranties': warranties})
+        qs = Warranty.objects.all()
+        search_by = request.GET.get("search_by")
+        if search_by:
+            qs = qs.filter(
+                Q(name__icontains=search_by)
+            )
+        sort_by = request.GET.get("sort_by")  
+        if sort_by:
+            try:
+                field, order = sort_by.rsplit("_", 1)
+                if order == "asc":
+                    qs = qs.order_by(field)
+                elif order == "desc":
+                    qs = qs.order_by(f"-{field}")
+            except ValueError:
+                if sort_by == "asc_created":
+                    qs = qs.order_by("created_at")
+                elif sort_by == "desc_created":
+                    qs = qs.order_by("-created_at")
+        created_date = request.GET.get("created_date")
+        if created_date:
+            try:
+                if " - " in created_date:
+                    start_str, end_str = created_date.split(" - ")
+                else:
+                    start_str = end_str = created_date
+
+                start_date = datetime.strptime(start_str.strip(), "%m/%d/%Y")
+                end_date = datetime.strptime(end_str.strip(), "%m/%d/%Y")
+
+                qs = qs.filter(created_at__date__range=[start_date, end_date])
+            except ValueError:
+                pass 
+
+        # ---- PAGINATION ----
+        page = request.GET.get("page", 1)
+        per_page = request.GET.get("per_page", 10)
+        paginator = Paginator(qs, per_page)
+        page_obj = paginator.get_page(page)
+
+        return render(request, 'superuser/warranty.html', {
+            'warranties': page_obj.object_list,
+            'page_obj': page_obj,
+            'request': request,
+        })
+
 class AddWarrantyView(View):
     def post(self, request):
         name = request.POST.get('name')
@@ -4290,15 +4874,33 @@ class DeleteWarrantyView(View):
         warranty = get_object_or_404(Warranty, pk=pk)
         warranty.delete()
         return JsonResponse({'success': True})
-
-
 class SplashScreenView(TemplateView):
-    template_name = 'superuser/SplashScreen.html'
+    template_name = "superuser/SplashScreen.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['screens'] = SplashScreen.objects.all().order_by('screen_order')
+        qs = SplashScreen.objects.all().order_by("screen_order")
+
+        # ---- SEARCH FILTER ----
+        search_by = self.request.GET.get("search_by")
+        if search_by:
+            qs = qs.filter(
+                Q(screen_title__icontains=search_by) |
+                Q(screen_language__icontains=search_by)
+            )
+
+        # ---- PAGINATION ----
+        page_number = self.request.GET.get("page", 1)
+        per_page = self.request.GET.get("per_page", 10)
+        paginator = Paginator(qs, per_page)
+        page_obj = paginator.get_page(page_number)
+
+        context["screens"] = page_obj.object_list
+        context["page_obj"] = page_obj
+        context["search_by"] = search_by  # pass to template
         return context
+
+
 class SplashScreenAddView(View):
     def post(self, request):
         screen_image = request.FILES.get('screen_image')
@@ -4361,14 +4963,58 @@ class SplashScreenDeleteView(View):
         screen = get_object_or_404(SplashScreen, pk=pk)
         screen.delete()
         return JsonResponse({'success': True})
-
 class StaticcontentsView(TemplateView):
     template_name = "superuser/Staticcontents.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["contents"] = Staticcontents.objects.all().order_by("-id")
+
+        qs = Staticcontents.objects.all()
+
+        # ---- SEARCH FILTER ----
+        search_by = self.request.GET.get("search_by")
+        if search_by:
+            qs = qs.filter(
+                Q(name_en__icontains=search_by) |
+                Q(description_en__icontains=search_by)
+            )
+
+        # ---- DATE RANGE FILTER ----
+        created_date = self.request.GET.get("created_date")
+        if created_date:
+            try:
+                start_str, end_str = created_date.split(" - ")
+                start_date = datetime.strptime(start_str.strip(), "%m/%d/%Y")
+                end_date = datetime.strptime(end_str.strip(), "%m/%d/%Y")
+                end_date = end_date.replace(hour=23, minute=59, second=59)
+                qs = qs.filter(created_at__range=(start_date, end_date))
+            except ValueError:
+                pass  
+        # ---- SORT FILTER ----
+        sort_by = self.request.GET.get("sort_by")
+        if sort_by == "asc_created":
+            qs = qs.order_by("created_at")
+        else:  
+            qs = qs.order_by("-created_at")
+
+        # ---- PAGINATION ----
+        page_number = self.request.GET.get("page", 1)
+        per_page = self.request.GET.get("per_page", 10)
+        paginator = Paginator(qs, per_page)
+        page_obj = paginator.get_page(page_number)
+
+        context.update({
+            "contents": page_obj.object_list,
+            "page_obj": page_obj,
+            "search_by": search_by,
+            "sort_by": sort_by,
+            "created_date": created_date, 
+        })
+
         return context
+
+
+
 
 class AddStaticcontentView(View):
     def post(self, request):
@@ -4407,13 +5053,57 @@ class DeleteStaticcontentView(View):
         content = get_object_or_404(Staticcontents, pk=pk)
         content.delete()
         return JsonResponse({"success": True})
-
 class SocialLinksView(TemplateView):
     template_name = "superuser/sociallink.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["links"] = SocialLinks.objects.all()
+
+        qs = SocialLinks.objects.all()
+
+        # ---- SEARCH FILTER ----
+        search_by = self.request.GET.get("search_by")
+        if search_by:
+            qs = qs.filter(
+                Q(title__icontains=search_by) |
+                Q(link__icontains=search_by)
+            )
+
+        # ---- DATE RANGE FILTER ----
+        created_date = self.request.GET.get("created_date")
+        if created_date:
+            try:
+                start_str, end_str = created_date.split(" - ")
+                start_date = datetime.strptime(start_str.strip(), "%m/%d/%Y")
+                end_date = datetime.strptime(end_str.strip(), "%m/%d/%Y")
+                end_date = end_date.replace(hour=23, minute=59, second=59)
+                qs = qs.filter(created_at__range=(start_date, end_date))
+            except ValueError:
+                pass  
+
+        # ---- SORT FILTER ----
+        sort_by = self.request.GET.get("sort_by")
+        if sort_by == "asc_created":
+            qs = qs.order_by("created_at")
+        elif sort_by == "desc_created":
+            qs = qs.order_by("-created_at")
+        else:
+            qs = qs.order_by("-id")  
+
+        # ---- PAGINATION ----
+        page_number = self.request.GET.get("page", 1)
+        per_page = self.request.GET.get("per_page", 10)
+        paginator = Paginator(qs, per_page)
+        page_obj = paginator.get_page(page_number)
+
+        context.update({
+            "links": page_obj.object_list,
+            "page_obj": page_obj,
+            "search_by": search_by,
+            "sort_by": sort_by,
+            "created_date": created_date, 
+        })
+
         return context
 
 
@@ -4464,8 +5154,58 @@ class FaqView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['faqs'] = FaqForm.objects.all()
+
+        qs = FaqForm.objects.all()
+
+        # ---- SEARCH FILTER ----
+        search_by = self.request.GET.get("search_by")
+        if search_by:
+            qs = qs.filter(
+                Q(title_en__icontains=search_by) |
+                Q(description_en__icontains=search_by)
+            )
+
+        # ---- DATE RANGE FILTER ----
+        created_date = self.request.GET.get("created_date")
+        if created_date:
+            try:
+                start_str, end_str = created_date.split(" - ")
+                start_date = datetime.strptime(start_str.strip(), "%m/%d/%Y")
+                end_date = datetime.strptime(end_str.strip(), "%m/%d/%Y")
+                end_date = end_date.replace(hour=23, minute=59, second=59)
+                qs = qs.filter(created_at__range=(start_date, end_date))
+            except ValueError:
+                pass  
+
+        # ---- SORT FILTER ----
+        sort_by = self.request.GET.get("sort_by")
+        if sort_by == "asc_created":
+            qs = qs.order_by("created_at")
+        elif sort_by == "desc_created":
+            qs = qs.order_by("-created_at")
+        elif sort_by == "asc_title":
+            qs = qs.order_by("title_en")
+        elif sort_by == "desc_title":
+            qs = qs.order_by("-title_en")
+        else:
+            qs = qs.order_by("-id")  
+
+        # ---- PAGINATION ----
+        page_number = self.request.GET.get("page", 1)
+        per_page = self.request.GET.get("per_page", 10)
+        paginator = Paginator(qs, per_page)
+        page_obj = paginator.get_page(page_number)
+
+        context.update({
+            "faqs": page_obj.object_list,
+            "page_obj": page_obj,
+            "search_by": search_by,
+            "sort_by": sort_by,
+            "created_date": created_date, 
+        })
+
         return context
+
 
 
 class AddFaqView(View):
@@ -4569,14 +5309,68 @@ class DeleteAdminView(View):
         admin_user.user.delete()
         admin_user.delete()
         return JsonResponse({'success': True})
-
 class SiteMessagesView(TemplateView):
     template_name = "superuser/SiteMessages.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['contacts'] = Contact.objects.all().order_by('-created_at')
+
+        qs = Contact.objects.all()
+
+        # ---- SEARCH FILTER ----
+        search_by = self.request.GET.get("search_by")
+        if search_by:
+            qs = qs.filter(
+                Q(full_name__icontains=search_by) |
+                Q(email__icontains=search_by) |
+                Q(phone__icontains=search_by) |
+                Q(subject__icontains=search_by) |
+                Q(message__icontains=search_by)
+            )
+
+        # ---- DATE RANGE FILTER ----
+        created_date = self.request.GET.get("created_date")
+        if created_date:
+            try:
+                start_str, end_str = created_date.split(" - ")
+                start_date = datetime.strptime(start_str.strip(), "%m/%d/%Y")
+                end_date = datetime.strptime(end_str.strip(), "%m/%d/%Y")
+           
+                end_date = end_date.replace(hour=23, minute=59, second=59)
+                qs = qs.filter(created_at__range=(start_date, end_date))
+            except ValueError:
+                pass  
+
+        # ---- SORT FILTER ----
+        sort_by = self.request.GET.get("sort_by")
+        if sort_by == "asc_created":
+            qs = qs.order_by("created_at")
+        elif sort_by == "desc_created":
+            qs = qs.order_by("-created_at")
+        elif sort_by == "asc_name":
+            qs = qs.order_by("full_name")
+        elif sort_by == "desc_name":
+            qs = qs.order_by("-full_name")
+        else:
+            qs = qs.order_by("-created_at") 
+
+        # ---- PAGINATION ----
+        page_number = self.request.GET.get("page", 1)
+        per_page = self.request.GET.get("per_page", 10)
+        paginator = Paginator(qs, per_page)
+        page_obj = paginator.get_page(page_number)
+
+        context.update({
+            "contacts": page_obj.object_list,
+            "page_obj": page_obj,
+            "search_by": search_by,
+            "sort_by": sort_by,
+            "created_date": created_date,  
+        })
+
         return context
+
+
 
 class ContactDeleteView(View):
     def post(self, request, pk):
@@ -4585,21 +5379,47 @@ class ContactDeleteView(View):
         return JsonResponse({'success': True})
 
 from dashboard.forms import RetailProfileForm, WholesaleBuyerProfileForm, SupplierProfileForm
-
 class DynamicInputListView(View):
-    """Render the page with all dynamic inputs and form names"""
+    template_name = 'superuser/DynamicInputs.html'
+
     def get(self, request):
         inputs = DynamicInput.objects.all()
 
-        # Get form names dynamically
-        form_classes = [RetailProfileForm, WholesaleBuyerProfileForm, SupplierProfileForm]
-        form_names = [form_class.__name__ for form_class in form_classes] 
+        # ---- SEARCH ----
+        search_by = request.GET.get("search_by")
+        if search_by:
+            inputs = inputs.filter(
+                Q(title_en__icontains=search_by) |
+                Q(form_name__icontains=search_by) |
+                Q(field_type__icontains=search_by)
+            )
 
-        return render(
-            request, 
-            'superuser/DynamicInputs.html', 
-            {'inputs': inputs, 'form_names': form_names}
-        )
+        # ---- SORT ----
+        sort_by = request.GET.get("sort_by")
+        if sort_by == "asc_created":
+            inputs = inputs.order_by("created_at")
+        elif sort_by == "desc_created":
+            inputs = inputs.order_by("-created_at")
+        else:
+            inputs = inputs.order_by("-created_at")
+
+        # ---- PAGINATION ----
+        page_number = request.GET.get("page", 1)
+        per_page = request.GET.get("per_page", 10)
+        paginator = Paginator(inputs, per_page)
+        page_obj = paginator.get_page(page_number)
+
+        form_classes = [RetailProfileForm, WholesaleBuyerProfileForm, SupplierProfileForm]
+        form_names = [f.__name__ for f in form_classes]
+
+        return render(request, self.template_name, {
+            'inputs': page_obj.object_list,
+            'form_names': form_names,
+            'page_obj': page_obj,
+            'search_by': search_by,
+            'sort_by': sort_by
+        })
+
 
 class DynamicInputAddView(View):
     def post(self, request):
@@ -4648,7 +5468,31 @@ class FormControlsView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['controls'] = FormControl.objects.all()
+        qs = FormControl.objects.all()
+
+        search_by = self.request.GET.get("search_by")
+        if search_by:
+            qs = qs.filter(Q(name__icontains=search_by) | Q(form__icontains=search_by))
+
+        sort_by = self.request.GET.get("sort_by")
+        if sort_by == "asc_created":
+            qs = qs.order_by("created_at")
+        elif sort_by == "desc_created":
+            qs = qs.order_by("-created_at")
+        else:
+            qs = qs.order_by("-created_at")
+
+        page_number = self.request.GET.get("page", 1)
+        per_page = self.request.GET.get("per_page", 10)
+        paginator = Paginator(qs, per_page)
+        page_obj = paginator.get_page(page_number)
+
+        context.update({
+            'controls': page_obj.object_list,
+            'page_obj': page_obj,
+            'search_by': search_by,
+            'sort_by': sort_by
+        })
         return context
 
 
@@ -4670,8 +5514,33 @@ class CatalogView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['catalogs'] = Catalog.objects.all()
+        qs = Catalog.objects.all()
+
+        search_by = self.request.GET.get("search_by")
+        if search_by:
+            qs = qs.filter(Q(key__icontains=search_by) | Q(description__icontains=search_by))
+
+        sort_by = self.request.GET.get("sort_by")
+        if sort_by == "asc_created":
+            qs = qs.order_by("created_at")
+        elif sort_by == "desc_created":
+            qs = qs.order_by("-created_at")
+        else:
+            qs = qs.order_by("-created_at")
+
+        page_number = self.request.GET.get("page", 1)
+        per_page = self.request.GET.get("per_page", 10)
+        paginator = Paginator(qs, per_page)
+        page_obj = paginator.get_page(page_number)
+
+        context.update({
+            'catalogs': page_obj.object_list,
+            'page_obj': page_obj,
+            'search_by': search_by,
+            'sort_by': sort_by
+        })
         return context
+
 def add_catalog(request):
     if request.method == "POST":
         key = request.POST.get("key", "").strip()
@@ -4712,14 +5581,39 @@ def edit_catalog(request, pk):
 def delete_catalog(request, pk):
     Catalog.objects.filter(id=pk).delete()
     return JsonResponse({"success": True})
-
 class ConfigurationView(TemplateView):
     template_name = "superuser/configuration.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["configs"] = Configuration.objects.all()
+        qs = Configuration.objects.all()
+
+        search_by = self.request.GET.get("search_by")
+        if search_by:
+            qs = qs.filter(Q(key__icontains=search_by))
+
+        sort_by = self.request.GET.get("sort_by")
+        if sort_by == "asc_created":
+            qs = qs.order_by("created_at")
+        elif sort_by == "desc_created":
+            qs = qs.order_by("-created_at")
+        else:
+            qs = qs.order_by("-created_at")
+
+        page_number = self.request.GET.get("page", 1)
+        per_page = self.request.GET.get("per_page", 10)
+        paginator = Paginator(qs, per_page)
+        page_obj = paginator.get_page(page_number)
+
+        context.update({
+            'configs': page_obj.object_list,
+            'page_obj': page_obj,
+            'search_by': search_by,
+            'sort_by': sort_by
+        })
         return context
+
+    
 def update_configuration(request, pk):
     obj = Configuration.objects.get(pk=pk)
     new_status = request.POST.get("status") == "true"
@@ -4727,14 +5621,38 @@ def update_configuration(request, pk):
     obj.save()
     return JsonResponse({"success": True})
 
-
 class SMSConfigurationView(TemplateView):
     template_name = "superuser/smsconfiguration.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["sms_list"] = SMSConfiguration.objects.all()
+        qs = SMSConfiguration.objects.all()
+
+        search_by = self.request.GET.get("search_by")
+        if search_by:
+            qs = qs.filter(Q(name__icontains=search_by) | Q(sms_sender__icontains=search_by))
+
+        sort_by = self.request.GET.get("sort_by")
+        if sort_by == "asc_created":
+            qs = qs.order_by("created_at")
+        elif sort_by == "desc_created":
+            qs = qs.order_by("-created_at")
+        else:
+            qs = qs.order_by("-created_at")
+
+        page_number = self.request.GET.get("page", 1)
+        per_page = self.request.GET.get("per_page", 10)
+        paginator = Paginator(qs, per_page)
+        page_obj = paginator.get_page(page_number)
+
+        context.update({
+            'sms_list': page_obj.object_list,
+            'page_obj': page_obj,
+            'search_by': search_by,
+            'sort_by': sort_by
+        })
         return context
+    
 def sms_edit(request, uid):
     if request.method == "POST":
         try:
@@ -4762,14 +5680,39 @@ def sms_toggle_status(request, uid):
         return JsonResponse({"success": True})
 
     return JsonResponse({"success": False})
-
 class ThemeView(TemplateView):
     template_name = "superuser/theme.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['theme_list'] = Theme.objects.all() 
+        qs = Theme.objects.all()
+
+        search_by = self.request.GET.get("search_by")
+        if search_by:
+            qs = qs.filter(Q(key__icontains=search_by) | Q(description__icontains=search_by))
+
+        sort_by = self.request.GET.get("sort_by")
+        if sort_by == "asc_created":
+            qs = qs.order_by("created_at")
+        elif sort_by == "desc_created":
+            qs = qs.order_by("-created_at")
+        else:
+            qs = qs.order_by("-created_at")
+
+        page_number = self.request.GET.get("page", 1)
+        per_page = self.request.GET.get("per_page", 10)
+        paginator = Paginator(qs, per_page)
+        page_obj = paginator.get_page(page_number)
+
+        context.update({
+            'theme_list': page_obj.object_list,
+            'page_obj': page_obj,
+            'search_by': search_by,
+            'sort_by': sort_by
+        })
         return context
+
+
 
 def edit_theme_value(request, pk):
     if request.method == "POST":
@@ -4781,14 +5724,39 @@ def edit_theme_value(request, pk):
         except Theme.DoesNotExist:
             return JsonResponse({"success": False, "error": "Theme not found"})
     return JsonResponse({"success": False, "error": "Invalid request"})
-
 class APIControlView(TemplateView):
     template_name = "superuser/apicontrol.html"
 
     def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx["apis"] = APIControls.objects.all()
-        return ctx
+        context = super().get_context_data(**kwargs)
+        qs = APIControls.objects.all()
+
+        search_by = self.request.GET.get("search_by")
+        if search_by:
+            qs = qs.filter(Q(portal__icontains=search_by) | Q(api_name__icontains=search_by))
+
+        sort_by = self.request.GET.get("sort_by")
+        if sort_by == "asc_created":
+            qs = qs.order_by("created_at")
+        elif sort_by == "desc_created":
+            qs = qs.order_by("-created_at")
+        else:
+            qs = qs.order_by("-created_at")
+
+        page_number = self.request.GET.get("page", 1)
+        per_page = self.request.GET.get("per_page", 10)
+        paginator = Paginator(qs, per_page)
+        page_obj = paginator.get_page(page_number)
+
+        context.update({
+            'apis': page_obj.object_list,
+            'page_obj': page_obj,
+            'search_by': search_by,
+            'sort_by': sort_by
+        })
+        return context
+
+
 @csrf_exempt
 def toggle_api_status(request, id):
     if request.method == "POST":
@@ -4797,14 +5765,39 @@ def toggle_api_status(request, id):
         api.save()
         return JsonResponse({"success": True})
     return JsonResponse({"success": False}, status=400)
-
 class SEOSettingsView(TemplateView):
     template_name = "superuser/seo.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['seo_list'] = SEOSettings.objects.all()
+        qs = SEOSettings.objects.all()
+
+        search_by = self.request.GET.get("search_by")
+        if search_by:
+            qs = qs.filter(Q(key__icontains=search_by) | Q(description__icontains=search_by))
+
+        sort_by = self.request.GET.get("sort_by")
+        if sort_by == "asc_created":
+            qs = qs.order_by("created_at")
+        elif sort_by == "desc_created":
+            qs = qs.order_by("-created_at")
+        else:
+            qs = qs.order_by("-created_at")
+
+        page_number = self.request.GET.get("page", 1)
+        per_page = self.request.GET.get("per_page", 10)
+        paginator = Paginator(qs, per_page)
+        page_obj = paginator.get_page(page_number)
+
+        context.update({
+            'seo_list': page_obj.object_list,
+            'page_obj': page_obj,
+            'search_by': search_by,
+            'sort_by': sort_by
+        })
         return context
+        return context
+
 class SEOEditView(View):
     def post(self, request, pk):
         try:
@@ -4814,13 +5807,36 @@ class SEOEditView(View):
             return JsonResponse({"success": True})
         except SEOSettings.DoesNotExist:
             return JsonResponse({"success": False, "msg": "SEO setting not found"})
-
 class PaymentsettingsView(View):
     template_name = "superuser/paymentsettings.html"
 
     def get(self, request):
-        settings_data = PaymentSettings.objects.all()
-        return render(request, self.template_name, {"settings_data": settings_data})
+        qs = PaymentSettings.objects.all()
+
+        search_by = request.GET.get("search_by")
+        if search_by:
+            qs = qs.filter(Q(key__icontains=search_by) | Q(status__icontains=search_by))
+
+        sort_by = request.GET.get("sort_by")
+        if sort_by == "asc_created":
+            qs = qs.order_by("created_at")
+        elif sort_by == "desc_created":
+            qs = qs.order_by("-created_at")
+        else:
+            qs = qs.order_by("-created_at")
+
+        page_number = request.GET.get("page", 1)
+        per_page = request.GET.get("per_page", 10)
+        paginator = Paginator(qs, per_page)
+        page_obj = paginator.get_page(page_number)
+
+        return render(request, self.template_name, {
+            "settings_data": page_obj.object_list,
+            "page_obj": page_obj,
+            "search_by": search_by,
+            "sort_by": sort_by
+        })
+
 class PaymentToggleStatus(View):
     def post(self, request, pk):
         setting = PaymentSettings.objects.get(id=pk)

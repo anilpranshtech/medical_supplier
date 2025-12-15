@@ -12,7 +12,26 @@
   <div class="d-flex flex-column flex-column-fluid">
     <div id="kt_app_content" class="app-content flex-column-fluid mx-5">
       <div id="kt_app_content_container" class="app-container container-fluid">
-
+   <!-- Filter Form -->
+   <form action="{% url 'superuser:returntime' %}" method="GET">
+    <div class="card mb-7">
+        <div class="card-body">
+            {% include "superuser/pages/filters/filter_sort_by.html" %}
+            {% include "superuser/pages/filters/filter_search_by.html" with show_advance_search_link=True search_help_text='Choices: Origin' search_placeholder_text='Search Categories' %}
+            <div class="collapse" id="kt_advanced_search_form">
+                <div class="separator separator-dashed mt-9 mb-6"></div>
+                <div class="row g-8 mb-8">
+                    <div class="col-xxl-12">
+                        <div class="row g-8">
+                            {% include "superuser/pages/filters/filter_created_date_range_picker.html" %}
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
         <div id="successMessage" class="alert alert-success d-none" style="font-size:16px;">
           <strong id="successText"></strong>
         </div>
@@ -70,6 +89,7 @@
           </div>
           
         </div>
+        {% include "superuser/pages/pagination.html" with page_obj=page_obj %}
      </div>
     </div>
   </div>
@@ -115,6 +135,7 @@
 {% endblock %}
 
 {% block page_only_scripts %}
+{% include "superuser/pages/filters/filter_created_date_range_picker_js.html" %}
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 

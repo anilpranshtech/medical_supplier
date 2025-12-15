@@ -15,7 +15,28 @@
   <div class="d-flex flex-column flex-column-fluid">
     <div id="kt_app_content" class="app-content flex-column-fluid mx-5">
       <div id="kt_app_content_container" class="app-container container-fluid">
-
+   <!-- Filter Form -->
+   <form action="{% url 'superuser:region' %}" method="GET">
+    <div class="card mb-7">
+        <div class="card-body">
+            {% include "superuser/pages/filters/filter_sort_by.html" %}
+            {% include "superuser/pages/filters/filter_search_by.html" with show_advance_search_link=True search_help_text='Choices: Origin' search_placeholder_text='Search Categories' %}
+            <div class="collapse" id="kt_advanced_search_form">
+              <div class="separator separator-dashed mt-9 mb-6"></div>
+          
+              <div class="row g-8 mb-8">
+                  <div class="col-xxl-12">
+                          {% include "superuser/pages/filters/filter_created_date_range_picker.html" %}
+          
+                      </div>
+          
+                  </div>
+              </div>
+          </div>
+          
+        </div>
+    </div>
+</form>
         <div class="card card-flush">
           <div class="card-header flex-wrap align-items-center py-5 gap-4">
             <div class="card-title">Regions</div>
@@ -37,36 +58,38 @@
               </thead>
           
               <tbody class="fw-semibold text-gray-600" style="text-align: center;">
-                {% for r in regions %}
+                {% for r in page_obj %}
                 <tr>
-                  <td style="padding: 12px; vertical-align: middle;">{{ r.name_en }}</td>
-                  <td style="padding: 12px; vertical-align: middle;">{{ r.country }}</td>
-                  <td style="padding: 12px; vertical-align: middle;">
-                    <button class="btn btn-sm btn-light-primary editBtn"
-                            data-id="{{ r.id }}"
-                            data-name="{{ r.name_en }}"
-                            data-country="{{ r.country }}"
-                            style="margin: 0 4px; padding: 5px 12px; font-size: 13px;">
-                      Edit
-                    </button>
-                    <button class="btn btn-sm btn-light-danger deleteBtn"
-                            data-id="{{ r.id }}"
-                            style="margin: 0 4px; padding: 5px 12px; font-size: 13px;">
-                      Delete
-                    </button>
-                  </td>
+                    <td style="padding: 12px; vertical-align: middle;">{{ r.name_en }}</td>
+                    <td style="padding: 12px; vertical-align: middle;">{{ r.country }}</td>
+                    <td style="padding: 12px; vertical-align: middle;">
+                        <button class="btn btn-sm btn-light-primary editBtn"
+                                data-id="{{ r.id }}"
+                                data-name="{{ r.name_en }}"
+                                data-country="{{ r.country }}"
+                                style="margin: 0 4px; padding: 5px 12px; font-size: 13px;">
+                          Edit
+                        </button>
+                        <button class="btn btn-sm btn-light-danger deleteBtn"
+                                data-id="{{ r.id }}"
+                                style="margin: 0 4px; padding: 5px 12px; font-size: 13px;">
+                          Delete
+                        </button>
+                    </td>
                 </tr>
                 {% empty %}
                 <tr>
                   <td colspan="3" style="padding: 12px; color: #888;">No regions added yet.</td>
                 </tr>
                 {% endfor %}
-              </tbody>
+            </tbody>
+            
             </table>
           </div>
           
 
         </div>
+        {% include "superuser/pages/pagination.html" with page_obj=page_obj %}
 
       </div>
     </div>
@@ -112,6 +135,7 @@
         <button class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
         <button class="btn btn-primary" id="saveBtn">Save</button>
       </div>
+      
     </div>
   </div>
 </div>
@@ -119,6 +143,7 @@
 {% endblock %}
 
 {% block page_only_scripts %}
+{% include "superuser/pages/filters/filter_created_date_range_picker_js.html" %}
 <script>
    document.addEventListener("DOMContentLoaded", function () {
 

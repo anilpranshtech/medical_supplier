@@ -6,6 +6,7 @@
 {% block content %}
 
 {% tag_user_permissions_list request.user as user_permissions_list %}
+
 <div id="alertBox" class="alert d-none mt-3" role="alert"></div>
 <div class="app-main flex-column flex-row-fluid" id="kt_app_main">
   <div class="d-flex flex-column flex-column-fluid">
@@ -121,11 +122,11 @@
           
             <div class="col-md-6">
               <label class="form-label fw-semibold">Product</label>
-              <select name="product" class="form-select select2" multiple required data-placeholder="Select products">
+              <select name="product" id="productAddSelect" class="form-select select2" multiple required>
                 {% for product in products %}
-                  <option value="{{ product.id }}">{{ product.name }}</option>
+                    <option value="{{ product.id }}">{{ product.name }} {% if product.supplier_sku %}{% endif %}</option>
                 {% endfor %}
-              </select>
+            </select>
             </div>
             <div class="col-md-3">
               <label class="form-label fw-semibold">Buy</label>

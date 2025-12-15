@@ -132,9 +132,10 @@
                                                 </div>
                                             </td>
                                             <td class="fw-bold text-end">
-                                                {{ order.phone_number }}
+                                                {{ order.user.customerbillingaddress_set.first.phone|default:"---" }}
                                             </td>
                                         </tr>
+                                        
 
                                         </tbody>
                                     </table>

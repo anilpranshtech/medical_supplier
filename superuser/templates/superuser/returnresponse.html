@@ -15,7 +15,26 @@
   <div class="d-flex flex-column flex-column-fluid">
     <div id="kt_app_content" class="app-content flex-column-fluid mx-5">
       <div id="kt_app_content_container" class="app-container container-fluid">
-
+ <!-- Filter Form -->
+ <form action="{% url 'superuser:return_reason' %}" method="GET">
+  <div class="card mb-7">
+      <div class="card-body">
+          {% include "superuser/pages/filters/filter_sort_by.html" %}
+          {% include "superuser/pages/filters/filter_search_by.html" with show_advance_search_link=True search_help_text='Choices: Origin' search_placeholder_text='Search Categories' %}
+          <div class="collapse" id="kt_advanced_search_form">
+              <div class="separator separator-dashed mt-9 mb-6"></div>
+              <div class="row g-8 mb-8">
+                  <div class="col-xxl-12">
+                      <div class="row g-8">
+                          {% include "superuser/pages/filters/filter_created_date_range_picker.html" %}
+                          
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>
+</form>
         <div class="card card-flush">
           <div class="card-header flex-wrap align-items-center py-5 gap-4">
             <div class="card-title">Return Reason</div>
@@ -64,7 +83,7 @@
           
 
         </div>
-
+        {% include "superuser/pages/pagination.html" with page_obj=page_obj %}
       </div>
     </div>
   </div>
@@ -101,6 +120,7 @@
 {% endblock %}
 
 {% block page_only_scripts %}
+{% include "superuser/pages/filters/filter_created_date_range_picker_js.html" %}
 <script>
     function showSuccess(msg){
     const box = document.getElementById('successMessage');
@@ -168,8 +188,8 @@ document.addEventListener("DOMContentLoaded", function () {
     let rid = idField.value;
 
     let url = rid 
-      ? `/superuser/return-reason/edit/${rid}/`
-      : `/superuser/return-reason/add/`;
+      ? `/admin-panel/return-reason/edit/${rid}/`
+      : `/admin-panel/return-reason/add/`;
 
     fetch(url, {
       method: "POST",
@@ -195,7 +215,7 @@ else {
     btn.addEventListener('click', function () {
       if (!confirm("Delete this reason?")) return;
 
-      fetch(`/superuser/return-reason/delete/${this.dataset.id}/`, {
+      fetch(`/admin-panel/return-reason/delete/${this.dataset.id}/`, {
         method: "POST",
         headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value }
       })

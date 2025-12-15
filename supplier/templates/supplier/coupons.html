@@ -55,7 +55,8 @@
                             </td>
                             <td>
                               <div class="dropdown">
-                                <button class="btn btn-sm btn-light-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <button class="btn btn-sm btn-light btn-active-light-primary dropdown-toggle"
+                                type="button" data-bs-toggle="dropdown">    
                                   Actions
                                 </button>
                                 <ul class="dropdown-menu">
@@ -283,9 +284,11 @@
                                             <label class="form-label">Select Products</label>
                                             <select name="product_ids[]" class="form-select select2" multiple id="edit_productSelect">
                                                 {% for p in products %}
-                                                    <option value="{{ p.id }}">{{ p.name }}</option>
+                                                    <option value="{{ p.id }}">{{ p.name }} (SKU: {{ p.supplier_sku|default:"N/A" }})</option>
                                                 {% endfor %}
                                             </select>
+                                            
+                                                       
                                         </div>
                                         <!-- mqbakery referance fields -->
                                         <div class="col-md-12 mb-3">

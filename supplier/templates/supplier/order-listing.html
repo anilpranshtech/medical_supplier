@@ -168,7 +168,12 @@
                                         {% endif %}
                                     </td>
                                     <td>{{ order.payment.payment_method|title|default:"N/A" }}</td>
-                                    <td>{{ order.phone_number|default:"---" }}</td>
+                                    <td>
+                                        <span class="fw-bold">
+                                            {{ order.user.customerbillingaddress_set.first.phone|default:"---" }}
+                                        </span>
+                                    </td>
+                                    
                                     <td>
                                         <a href="#" class="btn btn-sm btn-light btn-flex btn-center btn-active-light-primary"
                                            data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">

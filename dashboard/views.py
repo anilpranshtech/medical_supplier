@@ -1307,28 +1307,39 @@ class ProductDetailsView(TemplateView):
                         last_category=product.last_category
                     ).exclude(id=product.id).select_related('brand', 'last_category')[:4] 
 
-             
                     for related_product in related_products:
                         main_img = ProductImage.objects.filter(product=related_product, is_main=True).first()
                         related_product.main_image = main_img.image.url if main_img else None
 
-                if self.request.user.is_authenticated:
-                    context['user_registered_event_ids'] = list(
-                        EventRegistration.objects.filter(user=self.request.user).values_list('product_id', flat=True)
-                    )
-                else:
-                    context['user_registered_event_ids'] = []
-
+                # User-specific data
                 user = self.request.user
-                user_cart_ids = list(CartProduct.objects.filter(user=user).values_list('product_id', flat=True)) if user.is_authenticated else []
-                user_wishlist_ids = list(WishlistProduct.objects.filter(user=user).values_list('product_id', flat=True)) if user.is_authenticated else []
+                if user.is_authenticated:
+                    # IDs of products in cart
+                    user_cart_ids = list(CartProduct.objects.filter(user=user).values_list('product_id', flat=True))
+                    
+                    # Quantities of products in cart as a dictionary
+                    user_cart_quantities = {
+                        item.product.id: item.quantity
+                        for item in CartProduct.objects.filter(user=user)
+                    }
 
+                    user_wishlist_ids = list(WishlistProduct.objects.filter(user=user).values_list('product_id', flat=True))
+                else:
+                    user_cart_ids = []
+                    user_cart_quantities = {}
+                    user_wishlist_ids = []
                 event = product.event if hasattr(product, 'event') and product.event else None
 
-                questions = (Question.objects
-                             .select_related('user')
-                             .filter(product=product)
-                             .order_by('-created_at'))
+                questions_qs = (
+                    Question.objects
+                    .select_related('user')
+                    .filter(product=product)
+                    .order_by('-created_at')
+                )
+                page = self.request.GET.get("qpage", 1)
+                paginator = Paginator(questions_qs, 5)
+                questions_page = paginator.get_page(page)
+                             
 
                 context.update({
                     'product': product,
@@ -1338,9 +1349,10 @@ class ProductDetailsView(TemplateView):
                     'total_reviews': total_reviews,
                     'average_rating': round(avg_rating, 1),
                     'user_cart_ids': user_cart_ids,
+                    'user_cart_quantities': user_cart_quantities, 
                     'user_wishlist_ids': user_wishlist_ids,
                     'event': event,
-                    'questions': questions,
+                    "questions": questions_page, 
                     'stock_status': stock_status,
                     'related_products': related_products,  
                 })
@@ -1352,6 +1364,7 @@ class ProductDetailsView(TemplateView):
                 context['related_products'] = [] 
 
         return context
+
 class EventRegistrationView(View):
     def post(self, request):
         product_id = request.POST.get('product_id')
@@ -1547,9 +1560,57 @@ class ShoppingCartView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        cart_items = CartProduct.objects.filter(user=self.request.user).select_related('product')
+        user = self.request.user
+        cart_items = CartProduct.objects.filter(user=user).select_related('product')
 
         total = sum(item.get_total_price() for item in cart_items)
+        discount_amount = Decimal('0.00')
+        applied_coupon_data = None
+        has_discount = False
+        session_coupon = self.request.session.get('applied_coupon')
+        
+        if session_coupon and cart_items.exists():
+            try:
+                coupon = Coupon.objects.get(code__iexact=session_coupon['code'])
+                if not coupon.is_valid_now():
+                    if 'applied_coupon' in self.request.session:
+                        del self.request.session['applied_coupon']
+                else:
+                    if coupon.client.exists() and user not in coupon.client.all():
+                        if 'applied_coupon' in self.request.session:
+                            del self.request.session['applied_coupon']
+                    else:
+                        eligible_product_ids = coupon.products.values_list('id', flat=True)
+                        if eligible_product_ids.exists():
+                            eligible_cart_items = cart_items.filter(product_id__in=eligible_product_ids)
+                        else:
+                            eligible_cart_items = cart_items
+                        
+                        if not eligible_cart_items.exists():
+                            if 'applied_coupon' in self.request.session:
+                                del self.request.session['applied_coupon']
+                        else:
+                            eligible_total = sum(item.get_total_price() for item in eligible_cart_items)
+                            if eligible_total < coupon.minimum_purchase_amount:
+                                if 'applied_coupon' in self.request.session:
+                                    del self.request.session['applied_coupon']
+                            else:
+                                used_count = user.applied_coupons.filter(id=coupon.id).count()
+                                if used_count >= coupon.count_of_use:
+                                    if 'applied_coupon' in self.request.session:
+                                        del self.request.session['applied_coupon']
+                                else:
+                                    discount_amount = coupon.calculate_discount(Decimal(eligible_total))
+                                    applied_coupon_data = {
+                                        'code': coupon.code,
+                                        'discount_amount': str(discount_amount),
+                                    }
+                                    has_discount = discount_amount > Decimal('0.00')
+                                    
+            except Coupon.DoesNotExist:
+                if 'applied_coupon' in self.request.session:
+                    del self.request.session['applied_coupon']
+        final_total = total - discount_amount
 
         paginator = Paginator(cart_items, 5)
         page_number = self.request.GET.get('page')
@@ -1557,7 +1618,11 @@ class ShoppingCartView(LoginRequiredMixin, TemplateView):
 
         context['cart_items'] = page_obj
         context['page_obj'] = page_obj
-        context['total'] = "{:.2f}".format(total)
+        context['subtotal'] = "{:.2f}".format(total)
+        context['discount_amount'] = "{:.2f}".format(discount_amount)
+        context['final_total'] = "{:.2f}".format(final_total)
+        context['applied_coupon'] = applied_coupon_data
+        context['has_discount'] = has_discount
 
         return context
 
@@ -1621,8 +1686,31 @@ def apply_coupon(request):
         'new_total': f'{new_total:.2f}',
         'coupon_code': coupon.code,
     })
-
-
+@require_POST
+def remove_coupon(request):
+    user = request.user
+    if 'applied_coupon' in request.session:
+        coupon_code = request.session['applied_coupon'].get('code')
+        del request.session['applied_coupon']
+        try:
+            coupon = Coupon.objects.get(code__iexact=coupon_code)
+            coupon.client.remove(user)
+        except Coupon.DoesNotExist:
+            pass
+        cart_items = CartProduct.objects.filter(user=user)
+        subtotal = sum(item.get_total_price() for item in cart_items) if cart_items.exists() else Decimal('0.00')
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Coupon removed successfully.',
+            'subtotal': f'{subtotal:.2f}',
+            'new_total': f'{subtotal:.2f}',
+        })
+    
+    return JsonResponse({
+        'status': 'error',
+        'message': 'No coupon to remove.',
+    })
 
 @require_POST
 def add_to_cart(request):
@@ -1916,7 +2004,10 @@ def create_orders_from_cart(user, payment_type, payment_status, payment):
             logger.error(f"No cart items found for user {user.id}")
             raise ValueError("Cart is empty")
 
-        billing = CustomerBillingAddress.objects.filter(user=user, is_default=True, is_deleted=False).first()
+        billing = CustomerBillingAddress.objects.filter(
+            user=user, is_default=True, is_deleted=False
+        ).first()
+
         if not billing:
             logger.error(f"No default billing address found for user {user.id}")
             raise ValueError("No default billing address found")
@@ -1926,37 +2017,68 @@ def create_orders_from_cart(user, payment_type, payment_status, payment):
         total = subtotal + shipping_fees
 
         with transaction.atomic():
+
+            # Create ORDER
             order = Order.objects.create(
                 user=user,
                 payment=payment,
                 order_id=generate_order_id(),
                 shipping_fees=shipping_fees,
                 shipping_type='Standard Shipping',
-                shipping_full_address=billing.customer_address1 + (f", {billing.customer_address2}" if billing.customer_address2 else ""),
+                shipping_full_address=billing.customer_address1 + (
+                    f", {billing.customer_address2}" if billing.customer_address2 else ""
+                ),
                 shipping_city=billing.customer_city,
                 shipping_country=billing.customer_country,
                 status='pending',
                 created_at=timezone.now()
             )
+
             logger.info(f"Created Order {order.order_id} (ID: {order.id}) for user {user.id} with payment {payment.id}")
 
+            # --------------------------
+            # STOCK REDUCTION HERE 🔥
+            # --------------------------
             for item in cart_items:
+                product = item.product
+
+                # 1. CHECK STOCK
+                if product.stock_quantity < item.quantity:
+                    raise ValueError(f"Not enough stock for {product.name}")
+
+                # 2. REDUCE STOCK
+                product.stock_quantity -= item.quantity
+
+                # 3. LOW STOCK TAG UPDATE
+                if product.stock_quantity <= product.low_stock_alert:
+                    product.tag = "limited"
+
+                # 4. SAVE PRODUCT
+                product.save()
+
+                # --------------------------
+                # CREATE ORDER ITEM
+                # --------------------------
                 OrderItem.objects.create(
                     order=order,
                     order_by=user,
-                    order_to=item.product.created_by,
-                    product=item.product,
+                    order_to=product.created_by,
+                    product=product,
                     quantity=item.quantity,
-                    price=item.product.discounted_price(),
+                    price=product.discounted_price(),
                     payment_type=payment_type,
                     payment_status=payment_status,
                     payment_currency='USD' if payment_type in ['stripe', 'cod'] else 'INR',
                     phone_number=billing.phone,
                     status='pending'
                 )
-                logger.info(f"Created OrderItem for product {item.product.id} (quantity: {item.quantity}) in Order {order.order_id}")
 
-            # Clear the cart
+                logger.info(
+                    f"Created OrderItem for product {product.id} (qty: {item.quantity}) in Order {order.order_id} "
+                    f"and updated stock to {product.stock_quantity}"
+                )
+
+            # CLEAR CART
             cart_items.delete()
             logger.info(f"Cleared cart for user {user.id}")
             print('created order ----------------------')
@@ -2344,7 +2466,7 @@ class OrderPlacedView(LoginRequiredMixin, TemplateView):
             is_deleted=False
         ).first()
 
-        # ✅ Update context
+        # Update context
         context.update({
             'payment': payment,
             'order': order,
@@ -2353,7 +2475,7 @@ class OrderPlacedView(LoginRequiredMixin, TemplateView):
                 'subtotal': subtotal,
                 'shipping': shipping,
                 'vat': vat,
-                'coupon_discount': coupon_discount,  # 👈 Added
+                'coupon_discount': coupon_discount, 
                 'total': total
             },
             'order_id': order.order_id,
@@ -2377,6 +2499,7 @@ class MyOrdersView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
+
         main_image_prefetch = Prefetch(
             'items__product__images',
             queryset=ProductImage.objects.filter(is_main=True),
@@ -2387,7 +2510,6 @@ class MyOrdersView(LoginRequiredMixin, TemplateView):
             queryset=RatingReview.objects.filter(user=user),
             to_attr='user_reviews'
         )
-
         returns_prefetch = Prefetch(
             'items__returns',
             queryset=Return.objects.all(),
@@ -2404,7 +2526,6 @@ class MyOrdersView(LoginRequiredMixin, TemplateView):
                 returns_prefetch
             )
         )
-
         status = self.request.GET.get('status')
         start_date = self.request.GET.get('start_date')
         end_date = self.request.GET.get('end_date')
@@ -2422,31 +2543,35 @@ class MyOrdersView(LoginRequiredMixin, TemplateView):
         if end_date:
             try:
                 end_date = datetime.strptime(end_date, '%Y-%m-%d')
-
                 end_date = end_date.replace(hour=23, minute=59, second=59)
                 orders_qs = orders_qs.filter(created_at__lte=end_date)
             except ValueError:
                 pass
 
-        # Order by created_at descending
         orders_qs = orders_qs.order_by('-created_at')
-
-        # Paginate the orders
         paginator = Paginator(orders_qs, 2)
         page_number = self.request.GET.get('page')
         page_obj = paginator.get_page(page_number)
-
-        # Add has_pending_returns flag to each item
         for order in page_obj.object_list:
+            subtotal = sum(item.price * item.quantity for item in order.items.all())
+            shipping = order.shipping_fees or Decimal('0.00')
+            vat = Decimal('0.00')
+            coupon_discount = Decimal('0.00')
+            coupon_data = self.request.session.get('applied_coupon')
+
+            if coupon_data and 'discount_amount' in coupon_data:
+                coupon_discount = Decimal(str(coupon_data['discount_amount']))
+            order.final_total = subtotal - coupon_discount + shipping + vat
             for item in order.items.all():
                 item.has_pending_returns = any(
-                    return_obj.return_status == 'pending' for return_obj in item.all_returns
+                    return_obj.return_status == 'pending'
+                    for return_obj in item.all_returns
                 )
 
         context['orders'] = page_obj.object_list
         context['page_obj'] = page_obj
-        # Add order status choices to context for filter dropdown
         context['order_status_choices'] = OrderItem.ORDER_STATUS_CHOICES
+
         return context
 
 
@@ -2918,8 +3043,6 @@ class UploadAvatarView(LoginRequiredMixin, View):
 class EditProfileView(LoginRequiredMixin, View):
     def post(self, request):
         user = request.user
-
-        # Detect profile type and get profile
         profile = None
         profile_type = None
         if hasattr(user, 'retailprofile'):
@@ -2942,22 +3065,29 @@ class EditProfileView(LoginRequiredMixin, View):
         last_name = request.POST.get('last_name', '').strip()
         company_name = request.POST.get('company_name', '').strip()
 
-        # Basic validation
+        # Password fields
+        password = request.POST.get('password', '').strip()
+        confirm_password = request.POST.get('confirm_password', '').strip()
         if not first_name or not last_name:
             return JsonResponse({'status': 'error', 'message': 'First and last name are required.'}, status=400)
+        if password or confirm_password:
+            if password != confirm_password:
+                return JsonResponse({'status': 'error', 'message': 'Passwords do not match.'}, status=400)
 
-        # Update User model
+            if len(password) < 6:
+                return JsonResponse({'status': 'error', 'message': 'Password must be at least 6 characters.'}, status=400)
+
+            user.set_password(password)
+            user.save()
         user.first_name = first_name
         user.last_name = last_name
         user.save()
-
-        # Update profile's company_name (if applicable)
         if profile_type in ['wholesaler', 'supplier']:
             profile.company_name = company_name
 
         profile.save()
 
-        return JsonResponse({'status': 'success', 'message': 'Profile updated successfully.'})
+        return JsonResponse({'status': 'success', 'message': 'Profile updated successfully. Please login again if password was changed.'})
 
 
 class EditEmailView(LoginRequiredMixin, View):

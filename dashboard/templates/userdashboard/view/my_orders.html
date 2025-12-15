@@ -148,9 +148,10 @@
                 <div class="flex-1 min-w-[150px]">
                     <span class="text-xs text-gray-500">Total</span>
                     <div class="text-sm font-bold">
-                        {{ order.payment.payment_currency|default:"USD" }} {{ order|order_total|floatformat:2 }}
+                        {{ order.payment.payment_currency|default:"USD" }} {{ order.final_total|floatformat:2 }}
                     </div>
                 </div>
+                
                 <div class="flex-1 min-w-[150px]">
                     <span class="text-xs text-gray-500">Ship to</span>
                     <div class="text-sm font-bold">{{ order.shipping_full_address }}</div>
@@ -346,7 +347,10 @@
                                                 <div class="flex items-center justify-between pt-2 border-t">
                                                     <div class="text-xs text-gray-600">
                                                         <div><strong>Return Period:</strong> {{ item|get_return_status_message }}</div>
-                                                        <div><strong>Refund Amount:</strong> {{ item.price|format_currency:item.payment_currency|default:"USD" }}</div>
+                                                        <div><strong>Refund Amount:</strong> 
+                                                            {{ item.price|mul:item.quantity|format_currency:item.payment_currency|default:"USD" }}
+                                                        </div>
+                                                        
                                                     </div>
 
                                                     <div class="space-x-2">

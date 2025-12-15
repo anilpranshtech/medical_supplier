@@ -21,31 +21,45 @@
         <div class="d-flex flex-lg-grow-1 flex-stack" id="kt_app_header_wrapper">
 
             <div id="kt_header_search" class="header-search d-flex align-items-start ms-4 w-lg-800px"
-                 data-kt-search-keypress="true" data-kt-search-min-length="2" data-kt-search-enter="enter"
-                 data-kt-search-layout="menu" data-kt-search-responsive="true" data-kt-menu-trigger="auto"
-                 data-kt-menu-permanent="true" data-kt-menu-placement="bottom-start">
-
-                <a href="{% url 'superuser:user_accounts' %}" class="btn btn-sm position-relative mx-3 fw-bolder" style="background:#ffcccc ;color: #ff0000; width:190px;">
-                    Total Users <br>{% tag_total_users %}
-                </a>
-
-                <a href="{% url 'superuser:user_accounts' %}?account_status=active" class="btn btn-sm position-relative mx-3 fw-bolder" style="background:#e6ccff ;color: #8c1aff; width:190px;">
-                    Active Users <br>{% tag_total_active_users %}
-                </a>
-
-                <a href="{% url 'superuser:user_accounts' %}?account_type=retailer" class="btn btn-sm position-relative mx-3 fw-bolder" style="background:#cce6ff ;color: #0066cc; width:190px;">
-                    Retailer <br> {% tag_total_retailer %}
-                </a>
-
-                <a href="{% url 'superuser:user_accounts' %}?account_type=wholesaler" class="btn btn-sm position-relative mx-3 fw-bolder" style="background:#fff0b3 ;color: #e69900 ; width:190px;">
-                    Wholesaler <br> {% tag_total_wholesaler %}
-                </a>
-
-                <a href="{% url 'superuser:user_accounts' %}?account_type=supplier" class="btn btn-sm position-relative mx-3 fw-bolder"
-                        style="background:#c2f0c2; color:#29a329; width:190px;">
-                    Supplier <br> {% tag_total_suppliers %}
-                </a>
-            </div>
+            data-kt-search-keypress="true" data-kt-search-min-length="2" data-kt-search-enter="enter"
+            data-kt-search-layout="menu" data-kt-search-responsive="true" data-kt-menu-trigger="auto"
+            data-kt-menu-permanent="true" data-kt-menu-placement="bottom-start">
+           
+           <!-- Responsive wrapper -->
+           <div class="row g-2 w-100">
+               <!-- Each button in a responsive column -->
+               <div class="col-12 col-sm-6 col-lg-auto">
+                   <a href="{% url 'superuser:user_accounts' %}" class="btn btn-sm position-relative fw-bolder d-block w-100" style="background:#ffcccc ;color: #ff0000; min-width: 150px;">
+                       Total Users <br>{% tag_total_users %}
+                   </a>
+               </div>
+               
+               <div class="col-12 col-sm-6 col-lg-auto">
+                   <a href="{% url 'superuser:user_accounts' %}?account_status=active" class="btn btn-sm position-relative fw-bolder d-block w-100" style="background:#e6ccff ;color: #8c1aff; min-width: 150px;">
+                       Active Users <br>{% tag_total_active_users %}
+                   </a>
+               </div>
+               
+               <div class="col-12 col-sm-6 col-lg-auto">
+                   <a href="{% url 'superuser:user_accounts' %}?account_type=retailer" class="btn btn-sm position-relative fw-bolder d-block w-100" style="background:#cce6ff ;color: #0066cc; min-width: 150px;">
+                       Retailer <br> {% tag_total_retailer %}
+                   </a>
+               </div>
+               
+               <div class="col-12 col-sm-6 col-lg-auto">
+                   <a href="{% url 'superuser:user_accounts' %}?account_type=wholesaler" class="btn btn-sm position-relative fw-bolder d-block w-100" style="background:#fff0b3 ;color: #e69900 ; min-width: 150px;">
+                       Wholesaler <br> {% tag_total_wholesaler %}
+                   </a>
+               </div>
+               
+               <div class="col-12 col-sm-6 col-lg-auto">
+                   <a href="{% url 'superuser:user_accounts' %}?account_type=supplier" class="btn btn-sm position-relative fw-bolder d-block w-100"
+                           style="background:#c2f0c2; color:#29a329; min-width: 150px;">
+                       Supplier <br> {% tag_total_suppliers %}
+                   </a>
+               </div>
+           </div>
+       </div>
 
 
 
@@ -114,10 +128,18 @@
                                 </div>
 
                                 <div class="d-flex flex-column">
-                                    <div class="fw-bold d-flex align-items-center fs-5">
-                                        {{request.user}} <span
-                                            class="badge badge-light-success fw-bold fs-7 px-2 py-1 ms-2"> {% if request.user.is_superuser %} SuperUser {% else %}Staff {% endif %}</span>
+                                    <div class="fw-bold d-flex align-items-center fs-5" style="white-space: nowrap;">
+                                        {{ request.user.first_name }} {{ request.user.last_name }}
+                                        <span class="badge badge-light-success fw-bold ms-2" style="font-size: 10px; padding: 2px 6px;">
+                                            {% if request.user.is_superuser %}
+                                                SuperUser
+                                            {% else %}
+                                                Staff
+                                            {% endif %}
+                                        </span>
+                                        
                                     </div>
+                                    
 
                                     <a href="#" class="fw-semibold text-muted text-hover-primary fs-7">
                                         {{request.user}} </a>

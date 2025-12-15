@@ -2,62 +2,68 @@
 {% load static %}
 {% load custom_filters %}
 {% load tz %}
-
 {% block content %}
 <style>
- 
     #loginRequiredModal, #rfqModal, #imageModal, #eventRegistrationModal, #questionModal {
         z-index: 9999;
         backdrop-filter: blur(8px);
         background-color: rgba(0, 0, 0, 0.4);
     }
-
     .swiper-button-next,
     .swiper-button-prev {
         z-index: 10;
+        color: #fff;
+        background: rgba(0, 0, 0, 0.5);
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
-
+    .swiper-button-next:after,
+    .swiper-button-prev:after {
+        font-size: 20px;
+    }
     .thumbSwiper {
         overflow: visible !important;
     }
-
     .thumbSwiper .swiper-wrapper {
         transform: none !important;
         flex-wrap: wrap;
         gap: 8px;
+        justify-content: center;
+        padding: 0;
     }
-
     .thumbSwiper .swiper-slide {
         width: 64px !important;
         height: 64px;
         margin: 0 !important;
+        flex-shrink: 0;
     }
-
     .thumbSwiper img {
         border: 2px solid transparent;
         transition: border-color 0.3s;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
     }
-
     .swiper-slide-thumb-active img {
         border-color: #3b82f6;
     }
-
     .product-specs p {
         display: flex;
         justify-content: space-between;
         padding: 0.25rem 0;
         border-bottom: 1px solid #e5e7eb;
     }
-
     .spec-label {
         font-weight: 600;
         color: #374151;
     }
-
     .spec-value {
         color: #4b5563;
     }
-
     .ratings-section h3 {
         font-weight: 700;
         color: #0b1727;
@@ -66,49 +72,39 @@
         align-items: center;
         gap: 6px;
     }
-
     .ratings-section span {
         color: #7f91a0;
         font-size: 22px;
     }
-
     .review-rating {
         min-width: 40px;
         text-align: center;
     }
-
     .review-content p {
         margin: 0 0 6px 0;
         color: #242424;
     }
-
     .review-content small {
         color: #a0a0a0;
     }
-
     .main-image-wrapper {
         border: 1px solid #e5e7eb;
         background-color: #f9fafb;
     }
-
     .thumbnail-wrapper {
         border: 1px solid #d1d5db;
         background-color: #ffffff;
     }
-
     .text-red-500 {
         color: #ef4444 !important;
     }
-
     .heart-icon {
         transition: color 0.2s ease-in-out;
     }
-
     #additional-info-content, #event-details-content {
         transition: max-height 0.3s ease;
         overflow: hidden;
     }
-
     .loader {
         display: none;
         border: 2px solid #ffffff;
@@ -119,33 +115,26 @@
         animation: spin 1s linear infinite;
         margin-left: 8px;
     }
-
     @keyframes spin {
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
     }
-
     .loading .loader {
         display: inline-block;
     }
-
     .kt-wishlist-icon {
         cursor: pointer;
         transition: color 0.2s ease-in-out;
     }
-
     .kt-wishlist-icon:hover i {
         color: #ff0000;
     }
-
     .kt-wishlist-icon i {
         color: #6b7280;
     }
-
     .kt-wishlist-icon i.text-red-500 {
         color: #ff0000;
     }
-
     #imageModal .kt-card {
         display: flex;
         max-width: 90%;
@@ -153,7 +142,6 @@
         width: 800px;
         background: #fff;
     }
-
     #imageModal .image-section {
         flex: 1;
         display: flex;
@@ -162,197 +150,287 @@
         padding: 20px;
         background: #f9fafb;
     }
-
     #imageModal .info-section {
         flex: 1;
         padding: 20px;
         overflow-y: auto;
         max-height: 80vh;
     }
-
     #imageModal .info-section .rating {
         font-size: 24px;
         font-weight: bold;
         color: #0b7663;
         margin-bottom: 10px;
     }
-
     #imageModal .info-section p {
         margin: 10px 0;
         color: #242424;
     }
-
     #imageModal .info-section small {
         color: #a0a0a0;
         font-size: 14px;
     }
-
-    /* Center the Swiper containers */
-    .mainSwiper, .thumbSwiper {
+    /* Grid layout for two columns */
+    .product-detail-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+    @media (min-width: 768px) {
+        .product-detail-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+        }
+    }
+    /* Image section styling */
+    .image-section-container {
+        position: relative;
         width: 100%;
-        max-width: 510px; 
-        margin: 0 auto;
+        background-color: #f9fafb;
+        border-radius: 0.5rem;
+        overflow: hidden;
+        border: 1px solid #e5e7eb;
+        padding: 0;
     }
-
-
-    .thumbSwiper .swiper-wrapper {
+    .mainSwiper {
+        width: 100%;
+        height: 500px;
+        background: #f9fafb;
+        margin: 0;
+        padding: 0;
+    }
+    .mainSwiper .swiper-slide {
         display: flex;
+        align-items: center;
         justify-content: center;
-        flex-wrap: wrap;
-        gap: 8px;
+        background: #f9fafb;
     }
-
-    .thumbSwiper .swiper-wrapper {
-        transform: none !important;
+    .mainSwiper .swiper-slide img {
+        max-width: 100%;
+        max-height: 100%;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+        display: block;
     }
-
-    .flex-col.items-center.justify-center {
-        text-align: center;
+    .thumbSwiper {
+        width: 100%;
+        height: 80px;
+        margin-top: 1rem;
+        background: #f9fafb;
+        padding: 0.5rem;
     }
-
-    .border.border-gray-200.dark\:border-gray-700.bg-gray-50.dark\:bg-gray-800.rounded-lg.overflow-hidden.shadow-sm.max-w-\[510px\].mx-auto {
-        height: 510px;
+    /* Info section styling */
+    .info-section-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
     }
-
+    /* Ratings and Reviews in right column */
+    .right-column-ratings {
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #e5e7eb;
+    }
     
+    /* Related Products Section - Keep original styling */
+    .related-products {
+        margin-top: 3rem;
+        padding-top: 2rem;
+        border-top: 1px solid #e5e7eb;
+    }
     .related-products .grid {
         display: grid;
-        gap: 1rem;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.5rem;
+        margin-top: 1rem;
     }
-
-    .related-products .border {
-        transition: transform 0.2s ease-in-out;
+    @media (max-width: 1024px) {
+        .related-products .grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
     }
-
-    .related-products .border:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    @media (max-width: 640px) {
+        .related-products .grid {
+            grid-template-columns: 1fr;
+        }
     }
-
-    .related-products img {
-        max-height: 192px; 
-        object-fit: contain;
+    /* Ratings specific styling */
+    .ratings-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
     }
-
-    .related-products h3 {
+    .ratings-overview {
+        display: flex;
+        align-items: flex-start;
+        gap: 2rem;
+        margin-top: 1rem;
+    }
+    .average-rating {
+        text-align: center;
+        min-width: 120px;
+    }
+    .rating-breakdown {
+        flex-grow: 1;
+        max-width: 300px;
+    }
+    .rating-bar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 6px;
+    }
+    .rating-bar span:first-child {
+        width: 24px;
+        font-size: 15px;
+        color: #99a1af;
+    }
+    .rating-progress {
+        flex-grow: 1;
+        background: #e0e0e0;
+        height: 8px;
+        border-radius: 4px;
         overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
     }
-
-    .related-products p {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+    .rating-progress-fill {
+        height: 100%;
+    }
+    .rating-count {
+        width: 20px;
+        font-size: 14px;
+        color: #99a1af;
+        text-align: right;
+    }
+    /* Fix for reviews spacing */
+    .reviews-section h4 {
+        margin: 1.5rem 0 1rem 0;
+        color: #374151;
+    }
+    /* Remove extra spacing in image display */
+    .swiper-slide img {
+        display: block;
+        margin: 0;
+        padding: 0;
     }
 </style>
 
-<div class="kt-container-fixed mt-1" style="max-width: var(--custom-container-width, 85;);">
-    <div class="flex flex-col items-stretch gap-7 mt-5 py-5" style="align-items: center;">
+<div class="kt-container-fixed mt-1" style="max-width: var(--custom-container-width, 85%);">
+    <div class="flex flex-col items-stretch gap-7 mt-5 py-5">
         <!-- Product Title -->
         <h1 class="text-3xl font-semibold text-gray-650 dark:text-white">
             {{ product.name|default:'Product Not Found' }}
         </h1>
+        
         {% if product %}
-        <div class="flex flex-col items-center justify-center gap-4">
-            {% if product.main_image or other_images %}
-                <!-- Main Image -->
-                <div class="border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-lg overflow-hidden shadow-sm max-w-[510px] mx-auto">
-                    <div class="swiper mainSwiper h-[510px] sm:h-[510px]">
+        <!-- Product Grid - Two Column Layout -->
+        <div class="product-detail-grid">
+            <!-- Left Column: Images -->
+            <div class="image-section-container">
+                {% if product.main_image or other_images %}
+                    <!-- Main Image Slider -->
+                    <div class="swiper mainSwiper">
                         <div class="swiper-wrapper">
                             {% if product.main_image %}
                             <div class="swiper-slide">
-                                <img src="{{ product.main_image }}" alt="{{ product.name }}" class="w-full h-full object-contain" loading="lazy" />
+                                <img src="{{ product.main_image }}" alt="{{ product.name }}" loading="lazy" />
                             </div>
                             {% endif %}
                             {% for img in other_images %}
                             <div class="swiper-slide">
-                                <img src="{{ img.image.url }}" alt="Product Image" class="w-full h-full object-contain" loading="lazy" />
+                                <img src="{{ img.image.url }}" alt="Product Image" loading="lazy" />
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <!-- Navigation -->
+                        <div class="swiper-button-prev"></div>
+                        <div class="swiper-button-next"></div>
+                    </div>
+                    
+                    <!-- Thumbnails Slider -->
+                    <div class="swiper thumbSwiper">
+                        <div class="swiper-wrapper">
+                            {% if product.main_image %}
+                            <div class="swiper-slide cursor-pointer">
+                                <img src="{{ product.main_image }}" alt="Thumbnail" loading="lazy" />
+                            </div>
+                            {% endif %}
+                            {% for img in other_images %}
+                            <div class="swiper-slide cursor-pointer">
+                                <img src="{{ img.image.url }}" alt="Thumbnail" loading="lazy" />
                             </div>
                             {% endfor %}
                         </div>
                     </div>
-                </div>
-                    </div>
-
-                <!-- Thumbnails -->
-                <div class="swiper thumbSwiper h-20 max-w-[510px] mx-auto">
-                    <div class="swiper-wrapper flex justify-center">
-                        {% if product.main_image %}
-                        <div class="swiper-slide w-16 h-16 cursor-pointer">
-                            <img src="{{ product.main_image }}" alt="Thumbnail" class="w-full h-full object-cover border border-gray-200 dark:border-gray-700 rounded" loading="lazy" />
-                        </div>
-                        {% endif %}
-                        {% for img in other_images %}
-                        <div class="swiper-slide w-16 h-16 cursor-pointer">
-                            <img src="{{ img.image.url }}" alt="Thumbnail" class="w-full h-full object-cover border border-gray-200 dark:border-gray-700 rounded" loading="lazy" />
-                            
-                        </div>
-                        {% endfor %}
-                     <div class="swiper-button-prev bg-white dark:bg-gray-800 shadow-md"></div>
-                        <div class="swiper-button-next bg-white dark:bg-gray-800 shadow-md"></div>  
-                    </div>
-                </div>
                 {% else %}
-                <div class="flex flex-col items-center justify-center border border-gray-200 dark:border-gray-700 rounded-lg p-6 bg-white dark:bg-gray-800 text-red-500">
-                    <img src="{% static 'default.png' %}" alt="Default Product Image" class="w-48 h-48 object-cover" loading="lazy" />
-                    <p class="mt-4">Image not available. Please check the URL or try again.</p>
-                    <a href="{% url 'dashboard:home' %}" class="mt-4 inline-block kt-btn kt-btn-primary kt-btn-sm">Back to Home</a>
-                </div>
-            {% endif %}
-        </div>
-        
-        <!-- Product Details -->
-            <div>
+                    <div class="flex flex-col items-center justify-center h-[500px] bg-white dark:bg-gray-800 text-red-500">
+                        <img src="{% static 'default.png' %}" alt="Default Product Image" class="w-48 h-48 object-cover" loading="lazy" />
+                        <p class="mt-4">Image not available. Please check the URL or try again.</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Right Column: Product Information -->
+            <div class="info-section-container">
                 <!-- Description -->
-                <h2 class="text-xl font-semibold text-gray-650 dark:text-white mb-3">Product Information</h2>
-                <p class="text-gray-650 dark:text-gray-650 text-base leading-relaxed mb-6">
-                    {{ product.description|default:'No description available' }}
-                </p>
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-650 dark:text-white mb-3">Product Information</h2>
+                    <p class="text-gray-650 dark:text-gray-650 text-base leading-relaxed">
+                        {{ product.description|default:'No description available' }}
+                    </p>
+                </div>
 
                 {% if product.category.name|lower != "conference" and product.category.name|lower != "webinar" and product.category.name|lower != "event" %}
                     <!-- Product Price and Offer -->
-                    {% if product.offer_percentage and product.offer_active %}
-                    <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">
-                        save {{ product.offer_percentage|floatformat:0 }}%
-                    </span>
-                    {% endif %}
-                    <div class="flex items-center gap-4 mb-6">
-                        {% if product.offer_active and product.offer_percentage and product.offer_percentage > 0 %}
-                            <span class="text-base font-medium text-gray-500 line-through">
-                                ${{ product.price|floatformat:2 }}
-                            </span>
-                            <span class="text-2xl font-bold text-gray-650 dark:text-white">
-                                ${{ product.discounted_price|floatformat:2 }}
-                            </span>
-                        {% else %}
-                            <span class="text-2xl font-bold text-gray-650 dark:text-white">
-                                ${{ product.price|floatformat:2 }}
-                            </span>
+                    <div>
+                        {% if product.offer_percentage and product.offer_active %}
+                        <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">
+                            save {{ product.offer_percentage|floatformat:0 }}%
+                        </span>
                         {% endif %}
-                    </div>
-<!-- Stock Status -->
-{% if stock_status %}
-<p class="text-red-500 font-semibold mb-4">{{ stock_status }}</p>
-{% endif %}
-                    <!-- Buttons for Products -->
-                    <div class="flex items-center gap-3 mt-4">
-                        {% if request.user.is_authenticated %}
-                            {% if product.id in user_cart_ids %}
-                                <button class="kt-btn kt-btn-outline kt-btn-sm ms-1" style="background:#3b82f6; color:white;" data-product-id="{{ product.id }}">
-                                    In cart <i class="ki-filled ki-handcart text-white"></i>
-                                </button>
+                        <div class="flex items-center gap-4 mt-2">
+                            {% if product.offer_active and product.offer_percentage and product.offer_percentage > 0 %}
+                                <span class="text-base font-medium text-gray-500 line-through">
+                                    ${{ product.price|floatformat:2 }}
+                                </span>
+                                <span class="text-2xl font-bold text-gray-650 dark:text-white">
+                                    ${{ product.discounted_price|floatformat:2 }}
+                                </span>
                             {% else %}
-                                <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 add-to-cart-btn" data-product-id="{{ product.id }}">
-                                    Add <i class="ki-filled ki-handcart"></i>
+                                <span class="text-2xl font-bold text-gray-650 dark:text-white">
+                                    ${{ product.price|floatformat:2 }}
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Stock Status -->
+                    {% if stock_status %}
+                    <p class="text-red-500 font-semibold">{{ stock_status }}</p>
+                    {% endif %}
+
+                    <!-- Buttons for Products -->
+                    <div class="flex items-center gap-3">
+                        <div class="cart-button-container" data-product-id="{{ product.id }}">
+                            {% if request.user.is_authenticated %}
+                                {% if product.id in user_cart_ids %}
+                                    <div class="cart-quantity-controls flex items-center gap-2">
+                                        <button class="decrease-btn px-2 py-1 bg-gray-200 rounded text-sm">-</button>
+                                        <span class="quantity font-semibold">{{ user_cart_quantities|get_item:product.id }}</span>
+                                        <button class="increase-btn px-2 py-1 bg-gray-200 rounded text-sm">+</button>
+                                    </div>
+                                {% else %}
+                                    <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 add-to-cart-btn">
+                                        Add <i class="ki-filled ki-handcart text-xs"></i>
+                                    </button>
+                                {% endif %}
+                            {% else %}
+                                <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 show-login-modal">
+                                    Add <i class="ki-filled ki-handcart text-xs"></i>
                                 </button>
                             {% endif %}
-                        {% else %}
-                            <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 show-login-modal">
-                                Add <i class="ki-filled ki-handcart text-xs"></i>
-                            </button>
-                        {% endif %}
-
+                        </div>
                         {% if request.user.is_authenticated %}
                             {% if product.show_rfq or product.Both %}
                                 <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 open-rfq-modal"
@@ -365,7 +443,6 @@
                                 </button>
                             {% endif %}
                         {% endif %}
-
                         {% if request.user.is_authenticated %}
                             <span class="kt-wishlist-icon cursor-pointer"
                                   data-kt-wishlist-toggle="true"
@@ -380,40 +457,254 @@
                             </span>
                         {% endif %}
                     </div>
+<!-- Additional Information for Products -->
+<div class="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+    <h2 class="text-xl font-semibold text-gray-650 dark:text-white mb-3">Additional Information</h2>
+    <div id="additional-info-content" class="text-sm text-gray-650 dark:text-gray-300 space-y-2 max-h-36 overflow-hidden transition-all duration-300">
 
-                    <!-- Additional Information for Products -->
-                    <div class="border-t border-gray-200 dark:border-gray-700 pt-4 mt-5">
-                        <h2 class="text-xl font-semibold text-gray-650 dark:text-white mb-3">Additional Information</h2>
-                        <div id="additional-info-content" class="text-sm text-gray-650 dark:text-gray-300 space-y-2 max-h-36 overflow-hidden transition-all duration-300">
-                            <p class="flex justify-between"><span class="font-semibold">SKU:</span> {{ product.supplier_sku|default:'N/A' }}</p>
-                            <p class="flex justify-between"><span class="font-semibold">Category:</span> {{ product.category.name|default:'Uncategorized' }}</p>
-                            <p class="flex justify-between"><span class="font-semibold">Brand:</span> {{ product.brand.name|default:'Unbranded' }}</p>
-                            <p class="flex justify-between"><span class="font-semibold">Product From:</span> {{ product.product_from|default:'N/A' }}</p>
-                            <p class="flex justify-between"><span class="font-semibold">Condition:</span> {{ product.get_condition_display }}</p>
-                            <p class="flex justify-between"><span class="font-semibold">Warranty:</span> {{ product.get_warranty_display }}</p>
-                            <p class="flex justify-between"><span class="font-semibold">Tag:</span> {{ product.get_tag_display }}</p>
-                            <p class="flex justify-between"><span class="font-semibold">Manufacture Date:</span> {{ product.manufacture_date|date:"d M, Y"|default:'N/A' }}</p>
-                            <p class="flex justify-between"><span class="font-semibold">Expiration Days:</span> {{ product.expiration_days|default:'N/A' }}</p>
-                            <p class="flex justify-between"><span class="font-semibold">Delivery Time:</span> {{ product.delivery_time }} Days</p>
-                            <p class="flex justify-between"><span class="font-semibold">Return Time Limit:</span> {{ product.return_time_limit }} Days</p>
-                            <p class="flex justify-between"><span class="font-semibold">Available Stock:</span> {{ product.stock_quantity }}</p>
-                            <p class="flex justify-between"><span class="font-semibold">Weight:</span> {{ product.weight }} {{ product.weight_unit }}</p>
+        {% if product.supplier_sku %}
+        <p class="flex justify-between"><span class="font-semibold">SKU:</span> {{ product.supplier_sku }}</p>
+        {% endif %}
+
+        {% if product.category %}
+        <p class="flex justify-between"><span class="font-semibold">Category:</span> {{ product.category.name }}</p>
+        {% endif %}
+
+        {% if product.brand %}
+        <p class="flex justify-between"><span class="font-semibold">Brand:</span> {{ product.brand.name }}</p>
+        {% endif %}
+
+        {% if product.product_from %}
+        <p class="flex justify-between"><span class="font-semibold">Product From:</span> {{ product.product_from }}</p>
+        {% endif %}
+
+        {% if product.get_condition_display %}
+        <p class="flex justify-between"><span class="font-semibold">Condition:</span> {{ product.get_condition_display }}</p>
+        {% endif %}
+
+        {% if product.get_warranty_display %}
+        <p class="flex justify-between"><span class="font-semibold">Warranty:</span> {{ product.get_warranty_display }}</p>
+        {% endif %}
+
+        {% if product.get_tag_display %}
+        <p class="flex justify-between"><span class="font-semibold">Tag:</span> {{ product.get_tag_display }}</p>
+        {% endif %}
+
+        {% if product.manufacture_date %}
+        <p class="flex justify-between"><span class="font-semibold">Manufacture Date:</span> {{ product.manufacture_date|date:"d M, Y" }}</p>
+        {% endif %}
+
+        {% if product.expiration_days %}
+        <p class="flex justify-between"><span class="font-semibold">Expiration Days:</span> {{ product.expiration_days }}</p>
+        {% endif %}
+
+        {% if product.delivery_time %}
+        <p class="flex justify-between"><span class="font-semibold">Delivery Time:</span> {{ product.delivery_time }} Days</p>
+        {% endif %}
+
+        {% if product.return_time_limit %}
+        <p class="flex justify-between"><span class="font-semibold">Return Time Limit:</span> {{ product.return_time_limit }} Days</p>
+        {% endif %}
+
+        {% if product.stock_quantity %}
+        <p class="flex justify-between"><span class="font-semibold">Available Stock:</span> {{ product.stock_quantity }}</p>
+        {% endif %}
+
+        {% if product.weight %}
+        <p class="flex justify-between"><span class="font-semibold">Weight:</span> {{ product.weight }} {{ product.weight_unit }}</p>
+        {% endif %}
+
+    </div>
+    <button id="toggle-additional-info" class="text-blue-600 dark:text-blue-400 font-semibold mt-2 hover:underline focus:outline-none" aria-expanded="false">
+        See More
+    </button>
+</div>
+
+
+                    <!-- Ratings and Reviews Section (Below Additional Information) -->
+                    <div class="right-column-ratings">
+                        <!-- Ratings Section -->
+                        <div class="ratings-section">
+                            <div class="ratings-header">
+                                <h3 style="font-size: 18px; font-weight: 600; color: #99a1af;">
+                                    RATINGS <span style="color: #7f91a0;">☆</span>
+                                </h3>
+                                {% if request.user.is_authenticated %}
+                                <button id="openQuestionModal" class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700">
+                                    Post Your Question
+                                </button>
+                                {% else %}
+                                <button id="openQuestionModal" class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700 show-login-modal">
+                                    Post Your Question
+                                </button>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="ratings-overview">
+                                <div class="average-rating">
+                                    <div style="font-size: 38px; font-weight: 500; color: #0b7663; line-height: 1;">
+                                        {{ average_rating|default:"0.0" }}★
+                                    </div>
+                                    <div style="font-size: 15px; color: #99a1af; margin-top: 6px;">
+                                        {{ total_reviews }} Verified Buyer{{ total_reviews|pluralize }}
+                                    </div>
+                                </div>
+                                
+                                <div style="width: 1px; background: #e0e0e0; height: 65px; margin-top: 5px;"></div>
+                                
+                                <div class="rating-breakdown">
+                                    {% for i in "54321" %}
+                                    <div class="rating-bar">
+                                        <span>{{ i }}★</span>
+                                        <div class="rating-progress">
+                                            <div class="rating-progress-fill" 
+                                                 style="width: {{ rating_counts|get:i|percentage:total_reviews|floatformat:'0' }}%; 
+                                                        background: {% if i == '1' %}#ff4d4f{% elif i == '2' %}#ffc107{% else %}#0b7663{% endif %};">
+                                            </div>
+                                        </div>
+                                        <span class="rating-count">
+                                            {{ rating_counts|get:i|default:"0" }}
+                                        </span>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
                         </div>
-                        <button id="toggle-additional-info" class="text-blue-600 dark:text-blue-400 font-semibold mt-2 hover:underline focus:outline-none" aria-expanded="false">
-                            See More
-                        </button>
+
+                        <!-- Reviews Section -->
+                        <div class="mt-6">
+                            <h4 class="text-lg font-semibold text-gray-400 dark:text-white">Customer Reviews ({{ total_reviews }})</h4><br>
+                            {% if reviews %}
+                            <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+                                <!-- First Review -->
+                                <div class="flex gap-4">
+                                    <div class="bg-teal-600 px-3 py-1 rounded text-sm font-bold w-12 text-center" style="color: #0b7663;">
+                                        {{ reviews.0.rating }}★
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-gray-400 dark:text-gray-200">{{ reviews.0.review|default:"No comment provided." }}</p>
+                                        {% if reviews.0.photo %}
+                                        <img src="{{ reviews.0.photo.url }}" alt="Review Photo" class="w-24 h-auto rounded mt-2 shadow-sm cursor-pointer review-photo" data-full-image="{{ reviews.0.photo.url }}" data-review="{{ reviews.0.review|default:'No comment provided.' }}" data-rating="{{ reviews.0.rating }}" data-username="{{ reviews.0.user.username }}" data-date="{{ reviews.0.created_at|date:'d M Y' }}" loading="lazy" />
+                                        {% endif %}
+                                        <small class="text-gray-500 dark:text-gray-400">{{ reviews.0.user.username }} | {{ reviews.0.created_at|date:"d M Y" }}</small>
+                                    </div>
+                                </div>
+                                <!-- More Reviews -->
+                                <div id="more-reviews" class="hidden">
+                                    {% for review in reviews|slice:"1:" %}
+                                    <div class="border-t border-gray-200 dark:border-gray-700 pt-4 flex gap-4">
+                                        <div class="bg-teal-600 px-3 py-1 rounded text-sm font-bold w-12 text-center" style="color: #0b7663;">
+                                            {{ review.rating }}★
+                                        </div>
+                                        <div class="flex-1">
+                                            <p class="text-gray-400 dark:text-gray-200">{{ review.review|default:"No comment provided." }}</p>
+                                            {% if review.photo %}
+                                            <img src="{{ review.photo.url }}" alt="Review Photo" class="w-24 h-auto rounded mt-2 shadow-sm cursor-pointer review-photo" data-full-image="{{ review.photo.url }}" data-review="{{ review.review|default:'No comment provided.' }}" data-rating="{{ review.rating }}" data-username="{{ review.user.username }}" data-date="{{ review.created_at|date:'d M Y' }}" loading="lazy" />
+                                            {% endif %}
+                                            <small class="text-gray-500 dark:text-gray-400">{{ review.user.get_full_name }}   | {{ review.created_at|date:"d M Y" }}</small>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                <!-- Toggle Buttons -->
+                                <a href="#" id="view-all-reviews-btn" style="color: #e60023; font-weight: bold; display: block; margin-top: 20px;">
+                                    View all {{ total_reviews }} reviews
+                                </a>
+                                <a href="#" id="see-less-reviews-btn" style="display: none; color: #0b7663; font-weight: bold; margin-top: 10px;">
+                                    See less reviews
+                                </a>
+                            {% else %}
+                                <p class="text-gray-500 mt-4">No reviews yet for this product.</p>
+                            {% endif %}
+                            </div>
+                        </div><br>
+
+                        
+                        <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+
+
+
+                 <!-- Question Q&A section (bigger + separated box) -->
+<div class="mt-6">
+    <div class="bg-white shadow-lg border border-gray-200 rounded-xl p-5">
+
+        <h3 class="text-lg font-bold mb-3">Questions &amp; Answers</h3>
+
+        {% if questions %}
+            <ul class="space-y-3 max-h-56 overflow-y-auto pr-1 text-[15px] leading-7">
+                {% for q in questions %}
+                    <li class="text-[15px] leading-7 bg-gray-50 p-3 rounded-md">
+                        <p class="font-semibold">
+                            Q: {{ q.text|linebreaksbr }}
+                            {% if q.user_id == request.user.id %}
+                                <span class="ml-2 text-xs rounded px-2 py-0.5 bg-gray-200">You</span>
+                            {% endif %}
+                        </p>
+
+                        <p class="mt-1">
+                            <span class="font-semibold">Supplier:</span>
+                            {% if q.reply %}
+                                {{ q.reply|linebreaksbr }}
+                            {% else %}
+                                <span class="text-gray-500 italic">No answer yet.</span>
+                            {% endif %}
+                        </p>
+                    </li>
+                {% endfor %}
+            </ul>
+
+            <!--  Pagination -->
+            {% if questions.has_other_pages %}
+                <div class="flex items-center justify-between mt-3 text-[14px]">
+
+                    {% if questions.has_previous %}
+                        <a href="?qpage={{ questions.previous_page_number }}" class="text-blue-600 hover:underline">
+                            Previous
+                        </a>
+                    {% else %}
+                        <span class="text-gray-400">Previous</span>
+                    {% endif %}
+
+                    <span class="text-gray-600">
+                        Page {{ questions.number }} of {{ questions.paginator.num_pages }}
+                    </span>
+
+                    {% if questions.has_next %}
+                        <a href="?qpage={{ questions.next_page_number }}" class="text-blue-600 hover:underline">
+                            Next
+                        </a>
+                    {% else %}
+                        <span class="text-gray-400">Next</span>
+                    {% endif %}
+
+                </div>
+            {% endif %}
+
+        {% else %}
+            <p class="text-sm text-gray-500">No questions yet. Be the first to ask!</p>
+        {% endif %}
+
+    </div>
+</div>
+
+ </div>
+
+
+
+
+
+
                     </div>
                 {% endif %}
 
                 <!-- Event Details Section (Displayed only for events) -->
                 {% if product.category.name|lower == "conference" or product.category.name|lower == "webinar" or product.category.name|lower == "event" %}
-                    <div class="border-t border-gray-200 dark:border-gray-700 pt-4 mt-5">
+                    <div class="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
                         <div class="flex items-center justify-between mb-3">
                             <h2 class="text-xl font-semibold text-gray-650 dark:text-white flex items-center gap-3">
                                 Event Details
                                 <span class="kt-badge kt-badge-primary kt-badge-sm">Event</span>
                             </h2>
-
                             {% if request.user.is_authenticated %}
                                 {% if product.id in user_registered_event_ids %}
                                 <button class="kt-btn kt-btn-xs bg-blue-600 text-white hover:bg-blue-700 cursor-not-allowed" disabled>
@@ -432,7 +723,6 @@
                             </button>
                             {% endif %}
                         </div>
-
                         <div id="event-details-content" class="text-sm text-gray-650 dark:text-gray-300 space-y-2 max-h-36 overflow-hidden transition-all duration-300">
                             {% if request.user.is_authenticated %}
                             {% if event.conference_link %}
@@ -471,184 +761,96 @@
                             {% endif %}
                             {% endif %}
                         </div>
-                        {% comment %}
-                        <button id="toggle-event-details" class="text-blue-600 dark:text-blue-400 font-semibold mt-2 hover:underline focus:outline-none" aria-expanded="false">
-                            See More
-                        </button>
-                        {% endcomment %}
                     </div>
-                {% endif %}
-
-                <!-- Ratings Section for Products -->
-                {% if product.category.name|lower != "conference" and product.category.name|lower != "webinar" and product.category.name|lower != "event" %}
-                    <div class="ratings-section" style="margin-top: 30px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <h3 style="font-size: 18px; font-weight: 600; color: #99a1af;">RATINGS <span style="color: #7f91a0;">☆</span></h3>
-                            {% if request.user.is_authenticated %}
-                            <button id="openQuestionModal" class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700">
-                                Post Your Question
-                            </button>
-                            {% else %}
-                            <button id="openQuestionModal" class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700 show-login-modal">
-                                Post Your Question
-                            </button>
-                            {% endif %}
-                        </div>
-                        <div style="display: flex; gap: 40px; margin-top: 20px; align-items: flex-start;">
-                            <div style="min-width: 100px; text-align: center;">
-                                <div style="font-size: 38px; font-weight: 500; color: #0b7663; line-height: 1;">
-                                    {{ average_rating|default:"0.0" }}★
-                                </div>
-                                <div style="font-size: 15px; color: #99a1af; margin-top: 6px;">
-                                    {{ total_reviews }} Verified Buyer{{ total_reviews|pluralize }}
-                                </div>
-                            </div>
-                            <div style="width: 1px; background: #e0e0e0; height: 65px; margin-top: 5px;"></div>
-                            <div style="flex-grow: 1; max-width: 300px; padding-left: 10px;">
-                                {% for i in "54321" %}
-                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                                    <span style="width: 24px; font-size: 15px; color: #99a1af;">{{ i }}★</span>
-                                    <div style="flex-grow: 1; background: #e0e0e0; height: 8px; border-radius: 4px; overflow: hidden;">
-                                        <div style="width: {{ rating_counts|get:i|percentage:total_reviews|floatformat:"0" }}%; height: 100%; background: {% if i == '1' %}#ff4d4f{% elif i == '2' %}#ffc107{% else %}#0b7663{% endif %};"></div>
-                                    </div>
-                                    <span style="width: 20px; font-size: 14px; color: #99a1af; text-align: right;">
-                                        {{ rating_counts|get:i|default:"0" }}
-                                    </span>
-                                </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Reviews Section for Products -->
-                    <div class="mt-8">
-                        <h4 class="text-lg font-semibold text-gray-400 dark:text-white">Customer Reviews ({{ total_reviews }})</h4>
-                        {% if reviews %}
-                        <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
-                            <!-- First Review -->
-                            <div class="flex gap-4">
-                                <div class="bg-teal-600 px-3 py-1 rounded text-sm font-bold w-12 text-center" style="color: #0b7663;">
-                                    {{ reviews.0.rating }}★
-                                </div>
-                                <div class="flex-1">
-                                    <p class="text-gray-400 dark:text-gray-200">{{ reviews.0.review|default:"No comment provided." }}</p>
-                                    {% if reviews.0.photo %}
-                                    <img src="{{ reviews.0.photo.url }}" alt="Review Photo" class="w-24 h-auto rounded mt-2 shadow-sm cursor-pointer review-photo" data-full-image="{{ reviews.0.photo.url }}" data-review="{{ reviews.0.review|default:'No comment provided.' }}" data-rating="{{ reviews.0.rating }}" data-username="{{ reviews.0.user.username }}" data-date="{{ reviews.0.created_at|date:'d M Y' }}" loading="lazy" />
-                                    {% endif %}
-                                    <small class="text-gray-500 dark:text-gray-400">{{ reviews.0.user.username }} | {{ reviews.0.created_at|date:"d M Y" }}</small>
-                                </div>
-                            </div>
-
-                            <!-- More Reviews -->
-                            <div id="more-reviews" class="hidden">
-                                {% for review in reviews|slice:"1:" %}
-                                <div class="border-t border-gray-200 dark:border-gray-700 pt-4 flex gap-4">
-                                    <div class="bg-teal-600 px-3 py-1 rounded text-sm font-bold w-12 text-center" style="color: #0b7663;">
-                                        {{ review.rating }}★
-                                    </div>
-                                    <div class="flex-1">
-                                        <p class="text-gray-400 dark:text-gray-200">{{ review.review|default:"No comment provided." }}</p>
-                                        {% if review.photo %}
-                                        <img src="{{ review.photo.url }}" alt="Review Photo" class="w-24 h-auto rounded mt-2 shadow-sm cursor-pointer review-photo" data-full-image="{{ review.photo.url }}" data-review="{{ review.review|default:'No comment provided.' }}" data-rating="{{ review.rating }}" data-username="{{ review.user.username }}" data-date="{{ review.created_at|date:'d M Y' }}" loading="lazy" />
-                                        {% endif %}
-                                        <small class="text-gray-500 dark:text-gray-400">{{ review.user.username }} | {{ review.created_at|date:"d M Y" }}</small>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            </div>
-
-                            <!-- Toggle Buttons -->
-                            <a href="#" id="view-all-reviews-btn" style="color: #e60023; font-weight: bold; display: block; margin-top: 20px;">
-                                View all {{ total_reviews }} reviews
-                            </a>
-                            <a href="#" id="see-less-reviews-btn" style="display: none; color: #0b7663; font-weight: bold; margin-top: 10px;">
-                                See less reviews
-                            </a>
-                        {% else %}
-                            <p class="text-gray-500 mt-4">No reviews yet for this product.</p>
-                        {% endif %}
-                    </div>
-
-                    <!-- Added Related Products Section -->
-                    {% if related_products %}
-                    <div class="border-t border-gray-200 dark:border-gray-700 pt-6 mt-6 related-products">
-                        <h2 class="text-xl font-semibold text-gray-650 dark:text-white mb-4">Related Products</h2>
-                        <div class="grid grid-cols-4 gap-4">
-                            {% for related_product in related_products %}
-                            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800 shadow-sm">
-                                <a href="{% url 'dashboard:product_detail' related_product.id %}">
-                                    {% if related_product.main_image %}
-                                    <img src="{{ related_product.main_image }}" alt="{{ related_product.name }}" class="w-full h-48 object-contain rounded mb-3" loading="lazy" />
-                                    {% else %}
-                                    <img src="{% static 'default.png' %}" alt="Default Product Image" class="w-full h-48 object-contain rounded mb-3" loading="lazy" />
-                                    {% endif %}
-                                    <h3 class="text-base font-semibold text-gray-650 dark:text-white truncate">{{ related_product.name }}</h3>
-                                    <div class="flex items-center gap-2 mt-2">
-                                        {% if related_product.offer_active and related_product.offer_percentage and related_product.offer_percentage > 0 %}
-                                        <span class="text-sm font-medium text-gray-500 line-through">${{ related_product.price|floatformat:2 }}</span>
-                                        <span class="text-base font-bold text-gray-650 dark:text-white">${{ related_product.discounted_price|floatformat:2 }}</span>
-                                        {% else %}
-                                        <span class="text-base font-bold text-gray-650 dark:text-white">${{ related_product.price|floatformat:2 }}</span>
-                                        {% endif %}
-                                    </div>
-                                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 truncate">{{ related_product.description|default:'No description available' }}</p>
-                                    <div class="flex items-center gap-2 mt-3">
-                                        {% if request.user.is_authenticated %}
-                                            {% if related_product.id in user_cart_ids %}
-                                            <button class="kt-btn kt-btn-outline kt-btn-sm" style="background:#3b82f6; color:white;" disabled>
-                                                In cart <i class="ki-filled ki-handcart text-white"></i>
-                                            </button>
-                                            {% else %}
-                                            <button class="kt-btn kt-btn-outline kt-btn-sm add-to-cart-btn" data-product-id="{{ related_product.id }}">
-                                                Add <i class="ki-filled ki-handcart"></i>
-                                            </button>
-                                            {% endif %}
-                                        {% else %}
-                                            <button class="kt-btn kt-btn-outline kt-btn-sm show-login-modal">
-                                                Add <i class="ki-filled ki-handcart text-xs"></i>
-                                            </button>
-                                        {% endif %}
-                                        {% if request.user.is_authenticated %}
-                                            {% if related_product.show_rfq or related_product.Both %}
-                                                <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 open-rfq-modal"
-                                                        data-product-id="{{ related_product.id }}"
-                                                        data-product-name="{{ related_product.name }}"
-                                                        data-product-price="{{ related_product.discounted_price|default:related_product.price|floatformat:2 }}"
-                                                        data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
-                                                        data-quantity="1">
-                                                    RFQ <i class="ki-filled ki-directbox-default text-xs"></i>
-                                                </button>
-                                            {% endif %}
-                                        {% endif %}
-                                        {% if request.user.is_authenticated %}
-                                            <span class="kt-wishlist-icon cursor-pointer"
-                                                  data-kt-wishlist-toggle="true"
-                                                  data-product-id="{{ related_product.id }}"
-                                                  title="{% if related_product.id in user_wishlist_ids %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}">
-                                                <i class="ki-solid ki-heart {% if related_product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
-                                            </span>
-                                        {% else %}
-                                            <span class="kt-wishlist-icon cursor-pointer show-login-modal"
-                                                  title="Login to Add to Wishlist">
-                                                <i class="ki-solid ki-heart"></i>
-                                            </span>
-                                        {% endif %}
-                                    </div>
-                                </a>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                    {% endif %}
                 {% endif %}
             </div>
         </div>
+
+        <!-- Related Products Section (Full width below the grid) -->
+        {% if product.category.name|lower != "conference" and product.category.name|lower != "webinar" and product.category.name|lower != "event" %}
+            {% if related_products %}
+            <div class="related-products">
+                <h2 class="text-xl font-semibold text-gray-650 dark:text-white mb-4">Related Products</h2>
+                <div class="grid">
+                    {% for related_product in related_products %}
+                    <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800 shadow-sm">
+                        <a href="{% url 'dashboard:product_detail' related_product.id %}">
+                            {% if related_product.main_image %}
+                            <img src="{{ related_product.main_image }}" alt="{{ related_product.name }}" class="w-full h-48 object-contain rounded mb-3" loading="lazy" />
+                            {% else %}
+                            <img src="{% static 'default.png' %}" alt="Default Product Image" class="w-full h-48 object-contain rounded mb-3" loading="lazy" />
+                            {% endif %}
+                            <h3 class="text-base font-semibold text-gray-650 dark:text-white truncate">{{ related_product.name }}</h3>
+                            <div class="flex items-center gap-2 mt-2">
+                                {% if related_product.offer_active and related_product.offer_percentage and related_product.offer_percentage > 0 %}
+                                <span class="text-sm font-medium text-gray-500 line-through">${{ related_product.price|floatformat:2 }}</span>
+                                <span class="text-base font-bold text-gray-650 dark:text-white">${{ related_product.discounted_price|floatformat:2 }}</span>
+                                {% else %}
+                                <span class="text-base font-bold text-gray-650 dark:text-white">${{ related_product.price|floatformat:2 }}</span>
+                                {% endif %}
+                            </div>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 truncate">{{ related_product.description|default:'No description available' }}</p>
+                            <div class="flex items-center gap-2 mt-3">
+                                <div class="cart-button-container" data-product-id="{{ product.id }}">
+                                    {% if request.user.is_authenticated %}
+                                        {% if product.id in user_cart_ids %}
+                                            <div class="cart-quantity-controls flex items-center gap-2">
+                                                <button class="decrease-btn px-2 py-1 bg-gray-200 rounded text-sm">-</button>
+                                                <span class="quantity font-semibold">{{ user_cart_quantities|get_item:product.id }}</span>
+                                                <button class="increase-btn px-2 py-1 bg-gray-200 rounded text-sm">+</button>
+                                            </div>
+                                        {% else %}
+                                            <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 add-to-cart-btn">
+                                                Add <i class="ki-filled ki-handcart text-xs"></i>
+                                            </button>
+                                        {% endif %}
+                                    {% else %}
+                                        <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 show-login-modal">
+                                            Add <i class="ki-filled ki-handcart text-xs"></i>
+                                        </button>
+                                    {% endif %}
+                                </div>
+                                {% if request.user.is_authenticated %}
+                                    {% if related_product.show_rfq or related_product.Both %}
+                                        <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 open-rfq-modal"
+                                                data-product-id="{{ related_product.id }}"
+                                                data-product-name="{{ related_product.name }}"
+                                                data-product-price="{{ related_product.discounted_price|default:related_product.price|floatformat:2 }}"
+                                                data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
+                                                data-quantity="1">
+                                            RFQ <i class="ki-filled ki-directbox-default text-xs"></i>
+                                        </button>
+                                    {% endif %}
+                                {% endif %}
+                                {% if request.user.is_authenticated %}
+                                    <span class="kt-wishlist-icon cursor-pointer"
+                                          data-kt-wishlist-toggle="true"
+                                          data-product-id="{{ related_product.id }}"
+                                          title="{% if related_product.id in user_wishlist_ids %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}">
+                                        <i class="ki-solid ki-heart {% if related_product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
+                                    </span>
+                                {% else %}
+                                    <span class="kt-wishlist-icon cursor-pointer show-login-modal"
+                                          title="Login to Add to Wishlist">
+                                        <i class="ki-solid ki-heart"></i>
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %} 
+        {% endif %}
+
         {% else %}
         <div class="text-center py-10 text-gray-500 dark:text-gray-400">
             <p>Product not found. Please check the URL or try again.</p>
             <a href="{% url 'dashboard:home' %}" class="mt-4 inline-block kt-btn kt-btn-primary kt-btn-sm">Back to Home</a>
         </div>
         {% endif %}
+    </div>
 </div>
 
 <!-- Login Required Modal -->
@@ -780,7 +982,7 @@
 <!-- q&a -->
 
 
-<!-- {--- Post Question Modal --- #} -->
+<!-- {--- Post Question Modal --- } -->
 <div id="questionModal" class="kt-modal hidden fixed inset-0 z-[9999] flex items-center justify-center bg-black/30 backdrop-blur-sm" data-kt-modal="true" role="dialog" aria-labelledby="questionModalTitle" aria-modal="true">
     <div class="kt-card w-full max-w-[600px] rounded-2xl border border-border bg-white dark:bg-background shadow-2xl transition-transform duration-300 ease-in-out transform scale-95">
         <div class="kt-card-header px-6 py-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
@@ -805,34 +1007,7 @@
           <p class="text-xs text-red-500 mt-1 hidden" id="questionTextError">Question is required.</p>
         </div>
 
-        <div class="mt-2">
-          <h3 class="text-base font-semibold mb-2">Questions &amp; Answers</h3>
 
-          {% if questions %}
-            <ul class="space-y-3 max-h-56 overflow-y-auto pr-1">
-              {% for q in questions %}
-                <li class="text-sm leading-6">
-                  <p class="font-medium">
-                    Q: {{ q.text|linebreaksbr }}
-                    {% if q.user_id == request.user.id %}
-                      <span class="ml-2 text-xs rounded px-2 py-0.5 bg-gray-100">You</span>
-                    {% endif %}
-                  </p>
-                  <p class="mt-1">
-                    <span class="font-medium">Supplier:</span>
-                    {% if q.reply %}
-                      {{ q.reply|linebreaksbr }}
-                    {% else %}
-                      <span class="text-gray-500 italic">No answer yet.</span>
-                    {% endif %}
-                  </p>
-                </li>
-              {% endfor %}
-            </ul>
-          {% else %}
-            <p class="text-sm text-gray-500">No questions yet. Be the first to ask!</p>
-          {% endif %}
-        </div>
       </div>
 
       <div class="kt-card-footer px-6 py-4 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700">
@@ -973,37 +1148,72 @@
         }
     });
 
-    // Add to Cart
+     // Add to Cart with Event Delegation
+     document.addEventListener("DOMContentLoaded", () => {
+        // Update UI for a specific product
+        const updateProductUI = (productId, quantity) => {
+            const containers = document.querySelectorAll(`.cart-button-container[data-product-id="${productId}"]`);
+            containers.forEach(container => {
+                if (!container) return;
 
-document.addEventListener('DOMContentLoaded', () => {
-    const markAsInCart = (btn) => {
-        btn.classList.remove('kt-btn-outline');
-        btn.classList.add('kt-btn-success');
-        btn.style.background = '#3b82f6';
-        btn.style.color = 'white';
-        btn.innerHTML = `In cart <i class="ki-filled ki-handcart text-white"></i>`;
-        btn.disabled = false;
-        btn.onclick = null;
-    };
+                if (quantity > 0) {
+                    container.innerHTML = `
+                        <div class="cart-quantity-controls flex items-center gap-2">
+                            <button class="decrease-btn px-2 py-1 bg-gray-200 rounded text-sm">-</button>
+                            <span class="quantity font-semibold">${quantity}</span>
+                            <button class="increase-btn px-2 py-1 bg-gray-200 rounded text-sm">+</button>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = `
+                        <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 add-to-cart-btn">
+                            Add <i class="ki-filled ki-handcart text-xs"></i>
+                        </button>
+                    `;
+                }
+            });
+        };
 
-    document.querySelectorAll('.add-to-cart-btn').forEach(button => {
-        button.addEventListener('click', () => {
-            const productId = button.dataset.productId;
+        // Event delegation for cart buttons
+        document.addEventListener('click', (e) => {
+            // Handle Add to Cart button
+            if (e.target.closest('.add-to-cart-btn')) {
+                e.preventDefault();
+                const container = e.target.closest('.cart-button-container');
+                const productId = container.dataset.productId;
+                updateCart(productId, 1);
+            }
 
-            // Save original content
-            const originalContent = button.innerHTML;
+            // Handle Increase button
+            else if (e.target.closest('.increase-btn')) {
+                e.preventDefault();
+                const container = e.target.closest('.cart-button-container');
+                const productId = container.dataset.productId;
+                const quantityEl = container.querySelector('.quantity');
+                const qty = parseInt(quantityEl.innerText);
+                updateCart(productId, qty + 1);
+            }
 
-            // Show loader
-            button.innerHTML = `
-                <svg class="animate-spin h-4 w-4 text-white inline-block mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-                </svg>
-                Adding...
-            `;
-            button.disabled = true;
+            // Handle Decrease button
+            else if (e.target.closest('.decrease-btn')) {
+                e.preventDefault();
+                const container = e.target.closest('.cart-button-container');
+                const productId = container.dataset.productId;
+                const quantityEl = container.querySelector('.quantity');
+                const qty = parseInt(quantityEl.innerText);
+                updateCart(productId, qty - 1);
+            }
 
-            fetch("{% url 'dashboard:add_to_cart' %}", {
+            // Handle Login modal buttons
+            else if (e.target.closest('.show-login-modal')) {
+                e.preventDefault();
+                openLoginModal();
+            }
+        });
+
+        // Update cart via AJAX
+        const updateCart = (productId, quantity) => {
+            fetch("{% url 'dashboard:update_cart_item' %}", {
                 method: "POST",
                 headers: {
                     "X-CSRFToken": csrftoken,
@@ -1011,28 +1221,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 body: new URLSearchParams({
                     product_id: productId,
-                    quantity: 1,
+                    quantity: quantity,
                 }),
             })
             .then(res => res.json())
             .then(data => {
                 if (data.status === "success") {
-                    document.querySelectorAll(`.add-to-cart-btn[data-product-id="${productId}"]`).forEach(markAsInCart);
+                    updateProductUI(productId, data.quantity);
+                } else if (data.status === "removed") {
+                    updateProductUI(productId, 0);
+                } else if (data.status === "error" && data.message === "Authentication required") {
+                    openLoginModal();
                 } else {
-                    alert("Something went wrong");
-                    button.innerHTML = originalContent;
-                    button.disabled = false;
+                    console.error('Cart update failed:', data.message);
                 }
             })
-            .catch(err => {
-                console.error("Add to cart error:", err);
-                button.innerHTML = originalContent;
-                button.disabled = false;
-            });
-        });
+            .catch(err => console.error("Cart update error:", err));
+        };
     });
-});
-
 
     // Wishlist Toggle
     document.querySelectorAll('.kt-wishlist-icon').forEach(button => {
@@ -1236,4 +1442,30 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelector('#imageModal .kt-btn-ghost').addEventListener('click', closeImageModal);
     });
 </script>
+<script>
+    document.getElementById('questionSubmitBtn').addEventListener('click', function (e) {
+        const questionText = document.getElementById('questionText');
+        const errorMsg = document.getElementById('questionTextError');
+    
+        // If empty → show error → stop form submission → hide loader
+        if (!questionText.value.trim()) {
+            e.preventDefault();  
+            errorMsg.classList.remove("hidden");
+            questionText.classList.add("border-red-500");
+    
+            // IMPORTANT: hide loader if already started
+            this.querySelector(".loader").style.display = "none";
+    
+            return false;
+        }
+    
+        // If valid → hide error + show loader
+        errorMsg.classList.add("hidden");
+        questionText.classList.remove("border-red-500");
+    
+        this.querySelector(".loader").style.display = "inline-block";
+    });
+    </script>
+    
+    
 {% endblock %}

@@ -100,8 +100,11 @@
                                     </td>
 
                                     <td>
-                                        <span class="fw-bold">{{ order.phone_number|default:"---" }}</span>
+                                        <span class="fw-bold">
+                                            {{ order.user.customerbillingaddress_set.first.phone|default:"---" }}
+                                        </span>
                                     </td>
+                                    
 
                                     <td data-order="{{ order.status }}">
                                         {% if order.status in "completed shipped delivered delivering" %}
