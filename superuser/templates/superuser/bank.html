@@ -13,55 +13,25 @@
 <div class="app-main flex-column flex-row-fluid">
 <div class="d-flex flex-column flex-column-fluid mx-5 pt-5">
 
-    <!-- FILTER CARD -->
-    <form action="{% url 'superuser:banks' %}" method="GET" id="bankFilterForm">
-        <div class="card mb-7">
-            <div class="card-body">
-
-                <!-- Search and Buttons -->
-                <div class="d-flex flex-column flex-sm-row w-100 gap-5">
-                    
-                    <!-- Search Input -->
-                    <div class="position-relative w-md-400px me-md-2">
-                        <i class="bi bi-search fs-3 text-gray-500 position-absolute top-50 translate-middle ms-6"></i>
-                        <input type="text" class="form-control form-control-solid ps-10"
-                               name="search" value="{{ request.GET.search }}"
-                               placeholder="Search Bank Name" />
-                    </div>
-
-                    <div class="d-flex align-items-center">
-                        <button type="submit" class="btn btn-primary me-3">Search</button>
-
-                        {% if request.GET.urlencode %}
-                        <a href="{% url 'superuser:banks' %}" class="btn btn-primary">Clear Filters</a>
-                        {% endif %}
-
-                        <a href="#" class="btn btn-link ms-3"
-                           data-bs-toggle="collapse"
-                           data-bs-target="#bankAdvancedFilter">
-                           Advanced Search
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Advanced Filters -->
-                <div class="collapse mt-5" id="bankAdvancedFilter">
-                    <div class="separator separator-dashed mb-6"></div>
-
-                    <div class="row g-8">
-                        <div class="col-md-4">
-                            <label class="fs-6 form-label fw-bold text-gray-900">Bank Name</label>
-                            <input type="text" class="form-control form-control-solid"
-                                   name="bank_name_filter"
-                                   value="{{ request.GET.bank_name_filter }}"
-                                   placeholder="Enter bank name" />
+   <!-- Filter Form -->
+   <form action="{% url 'superuser:banks' %}" method="GET">
+    <div class="card mb-7">
+        <div class="card-body">
+            {% include "superuser/pages/filters/filter_sort_by.html" %}
+            {% include "superuser/pages/filters/filter_search_by.html" with show_advance_search_link=True search_help_text='Choices: Origin' search_placeholder_text='Search Categories' %}
+            <div class="collapse" id="kt_advanced_search_form">
+                <div class="separator separator-dashed mt-9 mb-6"></div>
+                <div class="row g-8 mb-8">
+                    <div class="col-xxl-12">
+                        <div class="row g-8">
+                            {% include "superuser/pages/filters/filter_created_date_range_picker.html" %}
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
-    </form>
+    </div>
+</form>
 
     <!-- BANK TABLE -->
     <div class="card card-flush">
@@ -87,14 +57,24 @@
                 <tr>
                     <td>{{ bank.name }}</td>
                     <td>
-                        <button class="btn btn-sm btn-light-primary editBankBtn"
-                                data-id="{{ bank.id }}">
-                            Edit
-                        </button>
-                        <button class="btn btn-sm btn-light-danger deleteBankBtn"
-                                data-id="{{ bank.id }}">
-                            Delete
-                        </button>
+                        <!-- Actions Dropdown -->
+                        <div class="dropdown">
+                            <button class="btn btn-light-primary btn-sm dropdown-toggle" type="button" id="bankActionsDropdown{{ bank.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                Actions
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="bankActionsDropdown{{ bank.id }}">
+                                <li>
+                                    <a class="dropdown-item editBankBtn" href="javascript:void(0);" data-id="{{ bank.id }}">
+                                        Edit
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item deleteBankBtn" href="javascript:void(0);" data-id="{{ bank.id }}">
+                                        Delete
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
                     </td>
                 </tr>
                 {% empty %}
@@ -184,9 +164,9 @@
 
 
 {% block page_only_scripts %}
-<script>
-/* SAME JS EXACTLY FROM YOUR ORIGINAL CODE (NO CHANGE) */
+{% include "superuser/pages/filters/filter_created_date_range_picker_js.html" %}
 
+<script>
 function showSuccess(msg) {
     const box = document.getElementById("successMessage");
     const text = document.getElementById("successText");

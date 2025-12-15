@@ -27,9 +27,7 @@
                     <div class="row g-8 mb-8">
                         <div class="col-xxl-12">
                                 {% include "superuser/pages/filters/filter_created_date_range_picker.html" %}
-                
                             </div>
-                
                         </div>
                     </div>
                 </div>
@@ -70,18 +68,27 @@
                     {% endif %}
                   </td>
                   <td style="padding: 12px; vertical-align: middle;">
-                    <button class="btn btn-sm btn-light-primary editBtn"
-                            data-id="{{ city.id }}"
-                            data-name="{{ city.name }}"
-                            data-region-id="{% if city.region %}{{ city.region.id }}{% endif %}"
-                            style="margin: 0 4px; padding: 5px 12px; font-size: 13px;">
-                      Edit
-                    </button>
-                    <button class="btn btn-sm btn-light-danger deleteBtn"
-                            data-id="{{ city.id }}"
-                            style="margin: 0 4px; padding: 5px 12px; font-size: 13px;">
-                      Delete
-                    </button>
+                    <!-- Actions Dropdown -->
+                    <div class="dropdown">
+                      <button class="btn btn-light-primary btn-sm dropdown-toggle" type="button" id="cityActionsDropdown{{ city.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                        Actions
+                      </button>
+                      <ul class="dropdown-menu" aria-labelledby="cityActionsDropdown{{ city.id }}">
+                        <li>
+                          <a class="dropdown-item editBtn" href="javascript:void(0);"
+                             data-id="{{ city.id }}"
+                             data-name="{{ city.name }}"
+                             data-region-id="{% if city.region %}{{ city.region.id }}{% endif %}">
+                            Edit
+                          </a>
+                        </li>
+                        <li>
+                          <a class="dropdown-item deleteBtn" href="javascript:void(0);" data-id="{{ city.id }}">
+                            Delete
+                          </a>
+                        </li>
+                      </ul>
+                    </div>
                   </td>
                 </tr>
                 {% empty %}
@@ -185,11 +192,7 @@ document.querySelectorAll(".editBtn").forEach(btn => {
     idFld.value = btn.dataset.id;
     nameFld.value = btn.dataset.name;
     const regionId = btn.dataset.regionId;
-    if (regionId) {
-      regionFld.value = regionId;
-    } else {
-      regionFld.value = "";
-    }
+    regionFld.value = regionId || "";
 
     document.getElementById("modalTitle").innerText = "Edit City";
     modal.show();

@@ -65,20 +65,43 @@
                   </td>
                   
                   <td>
-                    <button class="btn btn-sm btn-light-primary viewBtn"
-                            data-id="{{ c.id }}"
-                            data-full_name="{{ c.full_name }}"
-                            data-email="{{ c.email }}"
-                            data-phone="{{ c.phone }}"
-                            data-subject="{{ c.subject }}"
-                            data-message="{{ c.message }}">
-                      View
-                    </button>
-                    <button class="btn btn-sm btn-light-danger deleteBtn"
-                            data-id="{{ c.id }}">
-                      Delete
-                    </button>
+                    <div class="dropdown">
+                      <button class="btn btn-light-primary btn-sm dropdown-toggle"
+                              type="button"
+                              id="contactActionsDropdown{{ c.id }}"
+                              data-bs-toggle="dropdown"
+                              aria-expanded="false">
+                        Actions
+                      </button>
+                  
+                      <ul class="dropdown-menu"
+                          aria-labelledby="contactActionsDropdown{{ c.id }}">
+                  
+                        <li>
+                          <a class="dropdown-item viewBtn"
+                             href="javascript:void(0);"
+                             data-id="{{ c.id }}"
+                             data-full_name="{{ c.full_name }}"
+                             data-email="{{ c.email }}"
+                             data-phone="{{ c.phone }}"
+                             data-subject="{{ c.subject }}"
+                             data-message="{{ c.message }}">
+                            View
+                          </a>
+                        </li>
+                  
+                        <li>
+                          <a class="dropdown-item deleteBtn"
+                             href="javascript:void(0);"
+                             data-id="{{ c.id }}">
+                            Delete
+                          </a>
+                        </li>
+                  
+                      </ul>
+                    </div>
                   </td>
+                  
                 </tr>
                 {% empty %}
                 <tr><td colspan="6">No records found.</td></tr>

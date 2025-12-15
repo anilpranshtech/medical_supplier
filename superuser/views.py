@@ -3173,16 +3173,41 @@ class TopSupplierListView(View):
 #         except TopSupplier.DoesNotExist:
 #             return JsonResponse({'success': False, 'error': 'Supplier not found'})
         
-
 class BuyXGetYPromotionView(TemplateView):
     template_name = 'superuser/Buyxgetypromotion.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['page_title'] = 'Buy X Get Y Promotion'
-        context['promotions'] = BuyXGetYPromotion.objects.all()
-        context['suppliers'] = SupplierProfile.objects.all()
-        context['products'] = Product.objects.all()
+        promotions_qs = BuyXGetYPromotion.objects.prefetch_related(
+            'supplier',
+            'product'
+        )
+        search_by = self.request.GET.get("search_by", "").strip()
+        if search_by:
+            promotions_qs = promotions_qs.filter(
+                Q(product_type__icontains=search_by) |
+                Q(supplier__user__username__icontains=search_by) |
+                Q(product__name__icontains=search_by)
+            ).distinct()
+        sort_by = self.request.GET.get("sort_by", "desc_created")
+        if sort_by == "asc_created":
+            promotions_qs = promotions_qs.order_by("created_at")
+        else:
+            promotions_qs = promotions_qs.order_by("-created_at")
+        paginator = Paginator(promotions_qs, 10)
+        page_number = self.request.GET.get("page", 1)
+        page_obj = paginator.get_page(page_number)
+        context.update({
+            "page_title": "Buy X Get Y Promotion",
+            "promotions": page_obj,
+            "page_obj": page_obj,
+            "suppliers": SupplierProfile.objects.all(),
+            "products": Product.objects.all(),
+            "search_placeholder_text": "Search Promotions",
+            "search_help_text": "Choices: Product Type, Supplier, Product",
+            "show_advance_search_link": True,
+        })
+
         return context
 
 class AddPromotionView(TemplateView):
@@ -3271,23 +3296,55 @@ def delete_promotion(request, pk):
     except:
         return JsonResponse({'success': False})
 
-
 class BuyXGiftYPromotionView(TemplateView):
     template_name = 'superuser/Buyxgiftypromotion.html'
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx['page_title'] = 'Buy X Gift Y Promotion'
-        ctx['promotions'] = BuyXGiftYPromotion.objects.all()
-
         user = self.request.user
 
+        # ---------------- BASE QUERYSET ----------------
+        promotions_qs = BuyXGiftYPromotion.objects.all()
+
+        # Filter by supplier if user is a supplier
         if hasattr(user, 'supplierprofile'):
+            promotions_qs = promotions_qs.filter(supplier=user.supplierprofile)
             ctx['suppliers'] = [user.supplierprofile]
             ctx['products'] = Product.objects.filter(created_by=user)
         else:
             ctx['suppliers'] = SupplierProfile.objects.all()
             ctx['products'] = Product.objects.all()
+
+        # ---------------- SEARCH FILTER ----------------
+        search_by = self.request.GET.get("search_by", "").strip()
+        if search_by:
+            promotions_qs = promotions_qs.filter(
+                Q(product_type__icontains=search_by) |
+                Q(supplier__user__username__icontains=search_by) |
+                Q(product__name__icontains=search_by)
+            ).distinct()
+
+        # ---------------- SORT FILTER ----------------
+        sort_by = self.request.GET.get("sort_by", "desc_created")
+        if sort_by == "asc_created":
+            promotions_qs = promotions_qs.order_by("created_at")
+        else:
+            promotions_qs = promotions_qs.order_by("-created_at")
+
+        # ---------------- PAGINATION ----------------
+        paginator = Paginator(promotions_qs, 10)
+        page_number = self.request.GET.get("page", 1)
+        page_obj = paginator.get_page(page_number)
+
+        # ---------------- CONTEXT ----------------
+        ctx.update({
+            "page_title": "Buy X Gift Y Promotion",
+            "promotions": page_obj,
+            "page_obj": page_obj,
+            "search_placeholder_text": "Search Promotions",
+            "search_help_text": "Choices: Product Type, Supplier, Product",
+            "show_advance_search_link": True,
+        })
 
         return ctx
 
@@ -3395,19 +3452,41 @@ class BasketPromotionView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['page_title'] = 'Basket Promotions'
-        context['promotions'] = BasketPromotion.objects.all().order_by('-created_at')
-
         user = self.request.user
-
+        promotions_qs = BasketPromotion.objects.all()
         if hasattr(user, 'supplierprofile'):
+            promotions_qs = promotions_qs.filter(supplier=user.supplierprofile)
             context['suppliers'] = [user.supplierprofile]
             context['products'] = Product.objects.filter(created_by=user)
         else:
             context['suppliers'] = SupplierProfile.objects.all()
             context['products'] = Product.objects.all()
+        search_by = self.request.GET.get("search_by", "").strip()
+        if search_by:
+            promotions_qs = promotions_qs.filter(
+                Q(title_en__icontains=search_by) |
+                Q(supplier__user__username__icontains=search_by) |
+                Q(product__name__icontains=search_by)
+            ).distinct()
+        sort_by = self.request.GET.get("sort_by", "desc_created")
+        if sort_by == "asc_created":
+            promotions_qs = promotions_qs.order_by("created_at")
+        else:
+            promotions_qs = promotions_qs.order_by("-created_at")
+        paginator = Paginator(promotions_qs, 10)  
+        page_number = self.request.GET.get("page", 1)
+        page_obj = paginator.get_page(page_number)
+        context.update({
+            "page_title": "Basket Promotions",
+            "promotions": page_obj,
+            "page_obj": page_obj,
+            "search_placeholder_text": "Search Promotions",
+            "search_help_text": "Choices: Title, Supplier, Products",
+            "show_advance_search_link": True,
+        })
 
         return context
+
 class AddBasketPromotionView(View):
     def post(self, request):
         try:
@@ -3519,37 +3598,63 @@ class CouponsView(TemplateView):
 
     def dispatch(self, request, *args, **kwargs):
         if not hasattr(request.user, 'supplierprofile'):
-            return redirect('superuser:superuser')  
+            return redirect('superuser:superuser')
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+        # ---------------- BASE QUERYSET ----------------
         coupons_qs = Coupon.objects.select_related("created_by").order_by("-id")
+
+        # ---------------- SEARCH FILTER ----------------
+        search_by = self.request.GET.get("search_by", "").strip()
+        if search_by:
+            coupons_qs = coupons_qs.filter(
+                Q(code__icontains=search_by) |
+                Q(coupon_type__icontains=search_by) |
+                Q(discount_type__icontains=search_by)
+            )
+
+        # ---------------- PAGINATION ----------------
         paginator = Paginator(coupons_qs, 10)
-        page = self.request.GET.get("page", 1)
-        coupons = paginator.get_page(page)
+        page_number = self.request.GET.get("page", 1)
+        coupons = paginator.get_page(page_number)
+
+        # ---------------- PRODUCTS ----------------
         supplier_products = Product.objects.filter(
             created_by=self.request.user
         ).select_related('category', 'brand')
+
+        # ---------------- CLIENTS ----------------
         buyer_ids = OrderItem.objects.filter(
             product__created_by=self.request.user
         ).values_list('order__user_id', flat=True).distinct()
 
         clients = User.objects.filter(id__in=buyer_ids) if buyer_ids else User.objects.none()
 
+        # ---------------- CONTEXT ----------------
         context.update({
             "coupons": coupons,
             "page_obj": coupons,
             "products": supplier_products,
-            "clients": clients or User.objects.none(),  
+            "clients": clients,
+            "search_placeholder_text": "Search Coupons",
+            "search_help_text": "Choices: Code, Coupon Type, Discount Type",
+            "show_advance_search_link": True,
         })
+
         return context
 
     def post(self, request, *args, **kwargs):
         try:
-            code = request.POST.get("code").strip().upper()
+            code = request.POST.get("code", "").strip().upper()
+
             if Coupon.objects.filter(code=code).exists():
-                return JsonResponse({"status": "error", "message": "Coupon code already exists!"}, status=400)
+                return JsonResponse(
+                    {"status": "error", "message": "Coupon code already exists!"},
+                    status=400
+                )
 
             coupon = Coupon.objects.create(
                 code=code,
@@ -3569,18 +3674,31 @@ class CouponsView(TemplateView):
                 created_by=request.user,
             )
 
-            # Assign products & clients
+            # -------- ASSIGN PRODUCTS & CLIENTS --------
             product_ids = request.POST.getlist("product_ids[]")
             client_ids = request.POST.getlist("client_ids[]")
 
             if product_ids:
-                coupon.products.set(Product.objects.filter(id__in=product_ids, created_by=request.user))
+                coupon.products.set(
+                    Product.objects.filter(
+                        id__in=product_ids,
+                        created_by=request.user
+                    )
+                )
+
             if client_ids:
                 coupon.client.set(User.objects.filter(id__in=client_ids))
 
-            return JsonResponse({"status": "success", "message": "Coupon created successfully!"})
+            return JsonResponse(
+                {"status": "success", "message": "Coupon created successfully!"}
+            )
+
         except Exception as e:
-            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+            return JsonResponse(
+                {"status": "error", "message": str(e)},
+                status=500
+            )
+
 
 def edit_coupon(request):
     if request.method != 'POST':
@@ -3637,36 +3755,58 @@ def coupon_details(request, coupon_id):
         'products': product_ids,
         'clients': client_ids
     })
-
 class BankView(TemplateView):
     template_name = "superuser/bank.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        search = self.request.GET.get("search", "")
-        created_range = self.request.GET.get("created_date", "")
-
+        # ---- SEARCH ----
+        search_by = self.request.GET.get("search_by", "")
         banks = Bank.objects.all()
-        if search:
-            banks = banks.filter(name__icontains=search)
-        if created_range:
-            try:
-                start, end = created_range.split(" - ")
-                start_date = parse_date(start)
-                end_date = parse_date(end)
+        if search_by:
+            banks = banks.filter(Q(name__icontains=search_by))
 
-                if start_date and end_date:
-                    banks = banks.filter(created_at__date__range=[start_date, end_date])
-            except:
+        # ---- SORT BY CREATED ----
+        sort_by = self.request.GET.get("sort_by")
+        if sort_by == "asc_created":
+            banks = banks.order_by("created_at")
+        elif sort_by == "desc_created":
+            banks = banks.order_by("-created_at")
+        else:
+            banks = banks.order_by("-id") 
+
+        # ---- DATE RANGE FILTER ----
+        created_date = self.request.GET.get("created_date", "")
+        if created_date:
+            try:
+                if " - " in created_date:
+                    start_str, end_str = created_date.split(" - ")
+                else:
+                    start_str = end_str = created_date
+
+                # Convert string to datetime object
+                start_date = datetime.strptime(start_str.strip(), "%m/%d/%Y")
+                end_date = datetime.strptime(end_str.strip(), "%m/%d/%Y")
+
+                # Filter by date range
+                banks = banks.filter(created_at__date__range=[start_date, end_date])
+            except ValueError:
                 pass
-        paginator = Paginator(banks.order_by("-id"), 10)
-        page_number = self.request.GET.get("page")
+
+        # ---- PAGINATION ----
+        page_number = self.request.GET.get("page", 1)
+        per_page = self.request.GET.get("per_page", 10)
+        paginator = Paginator(banks, per_page)
         page_obj = paginator.get_page(page_number)
 
-        context["banks"] = page_obj
+        context["banks"] = page_obj.object_list
         context["page_obj"] = page_obj
+        context["search_by"] = search_by
+        context["sort_by"] = sort_by
+        context["created_date"] = created_date
         return context
+
 
 
 class AddBankView(View):
@@ -3791,37 +3931,56 @@ class CountryView(ListView):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        search = self.request.GET.get("search", "")
-        if search:
+
+        # ---- SEARCH ----
+        search_by = self.request.GET.get("search_by", "")
+        if search_by:
             queryset = queryset.filter(
-                Q(name_en__icontains=search) |
-                Q(iso__icontains=search) |
-                Q(currency__icontains=search)
+                Q(name_en__icontains=search_by) |
+                Q(iso__icontains=search_by) |
+                Q(currency__icontains=search_by)
             )
-        sort_by = self.request.GET.get("sort_by", "")
-        if sort_by in ["name_en", "-name_en", "order", "-order", "created_at", "-created_at"]:
-            queryset = queryset.order_by(sort_by)
+
+        # ---- SORT BY CREATED ----
+        sort_by = self.request.GET.get("sort_by")
+        if sort_by == "asc_created":
+            queryset = queryset.order_by("created_at")
+        elif sort_by == "desc_created":
+            queryset = queryset.order_by("-created_at")
         else:
-            queryset = queryset.order_by("name_en") 
-        start_date = self.request.GET.get("start_date", "")
-        end_date = self.request.GET.get("end_date", "")
-        if start_date and end_date:
+            queryset = queryset.order_by("order", "name_en") 
+
+        # ---- DATE RANGE FILTER ----
+        created_date = self.request.GET.get("created_date", "")
+        if created_date:
             try:
-                start = datetime.strptime(start_date, "%Y-%m-%d")
-                end = datetime.strptime(end_date, "%Y-%m-%d")
-                queryset = queryset.filter(created_at__date__range=(start, end))
+                if " - " in created_date:
+                    start_str, end_str = created_date.split(" - ")
+                else:
+                    start_str = end_str = created_date
+
+                start_date = datetime.strptime(start_str.strip(), "%m/%d/%Y")
+                end_date = datetime.strptime(end_str.strip(), "%m/%d/%Y")
+
+                queryset = queryset.filter(created_at__date__range=[start_date, end_date])
             except ValueError:
-                pass 
+                pass  
+
         return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+        # ---- Currency list ----
         try:
             url = "https://open.er-api.com/v6/latest/USD"
             data = requests.get(url, timeout=5).json()
-            context["currency_list"] = list(data["rates"].keys())
+            context["currency_list"] = list(data.get("rates", {}).keys())
         except:
             context["currency_list"] = ["USD", "EUR", "INR"]
+        context["search_by"] = self.request.GET.get("search_by", "")
+        context["sort_by"] = self.request.GET.get("sort_by", "")
+        context["created_date"] = self.request.GET.get("created_date", "")
         context["current_filters"] = self.request.GET.dict()
 
         return context
@@ -4461,26 +4620,23 @@ def delete_supplier_type(request, pk):
             return JsonResponse({"success": False, "msg": "Supplier Type not found."})
 
     return JsonResponse({"success": False, "msg": "Invalid request"})
-from datetime import datetime
-
 class UnitView(View):
     def get(self, request):
         qs = Unit.objects.all()
+
+        # ---- SEARCH ----
         search_by = request.GET.get("search_by")
         if search_by:
-            qs = qs.filter(
-                Q(name__icontains=search_by)
-            )
-        sort_by = request.GET.get("sort_by") 
-        if sort_by:
-            try:
-                field, order = sort_by.rsplit("_", 1)
-                if order == "asc":
-                    qs = qs.order_by(field)
-                elif order == "desc":
-                    qs = qs.order_by(f"-{field}")
-            except ValueError:
-                pass 
+            qs = qs.filter(Q(name__icontains=search_by))
+
+        # ---- SORT BY CREATED (Unified) ----
+        sort_by = request.GET.get("sort_by")
+        if sort_by == "asc_created":
+            qs = qs.order_by("created_at")
+        elif sort_by == "desc_created":
+            qs = qs.order_by("-created_at")
+
+        # ---- DATE RANGE ----
         created_date = request.GET.get("created_date")
         if created_date:
             try:
@@ -4491,19 +4647,20 @@ class UnitView(View):
 
                 start_date = datetime.strptime(start_str.strip(), "%m/%d/%Y")
                 end_date = datetime.strptime(end_str.strip(), "%m/%d/%Y")
-
                 qs = qs.filter(created_at__date__range=[start_date, end_date])
             except ValueError:
-                pass  
+                pass
+
+        # ---- PAGINATION ----
         page = request.GET.get("page", 1)
         per_page = request.GET.get("per_page", 8)
         paginator = Paginator(qs, per_page)
         page_obj = paginator.get_page(page)
 
-        return render(request, 'superuser/unit.html', {
-            'units': page_obj.object_list,
-            'page_obj': page_obj,
-            'request': request,
+        return render(request, "superuser/unit.html", {
+            "units": page_obj.object_list,
+            "page_obj": page_obj,
+            "request": request,
         })
 
 
@@ -4552,56 +4709,41 @@ class DeliveryTimeView(View):
     def get(self, request):
         qs = DeliveryTime.objects.all()
 
-        # ---- SEARCH FILTER ----
+        # ---- SEARCH ----
         search_by = request.GET.get("search_by")
         if search_by:
-            qs = qs.filter(
-                Q(name__icontains=search_by)
-            )
+            qs = qs.filter(Q(name__icontains=search_by))
 
-        # ---- SORT FILTER (DYNAMIC) ----
-        sort_by = request.GET.get("sort_by")  # e.g., "name_asc" or "created_at_desc"
-        if sort_by:
-            try:
-                field, order = sort_by.rsplit("_", 1)
-                if order == "asc":
-                    qs = qs.order_by(field)
-                elif order == "desc":
-                    qs = qs.order_by(f"-{field}")
-            except ValueError:
-                pass  # ignore if sort_by format is incorrect
+        # ---- SORT BY CREATED ----
+        sort_by = request.GET.get("sort_by")
+        if sort_by == "asc_created":
+            qs = qs.order_by("created_at")
+        elif sort_by == "desc_created":
+            qs = qs.order_by("-created_at")
 
-        # ---- DATE RANGE FILTER (DYNAMIC) ----
-        created_date = request.GET.get("created_date")  # Expecting "MM/DD/YYYY - MM/DD/YYYY"
+        # ---- DATE RANGE ----
+        created_date = request.GET.get("created_date")
         if created_date:
             try:
                 if " - " in created_date:
                     start_str, end_str = created_date.split(" - ")
                 else:
                     start_str = end_str = created_date
-
                 start_date = datetime.strptime(start_str.strip(), "%m/%d/%Y")
                 end_date = datetime.strptime(end_str.strip(), "%m/%d/%Y")
-
                 qs = qs.filter(created_at__date__range=[start_date, end_date])
             except ValueError:
-                pass  # Ignore invalid date formats
+                pass
 
         # ---- PAGINATION ----
-        page = request.GET.get("page", 1)
-        per_page = request.GET.get("per_page", 10)
-        paginator = Paginator(qs, per_page)
-        page_obj = paginator.get_page(page)
+        paginator = Paginator(qs, request.GET.get("per_page", 10))
+        page_obj = paginator.get_page(request.GET.get("page", 1))
 
-        return render(request, 'superuser/deliverytime.html', {
-            'delivery_times': page_obj.object_list,
-            'page_obj': page_obj,
-            'request': request,
+        return render(request, "superuser/deliverytime.html", {
+            "delivery_times": page_obj.object_list,
+            "page_obj": page_obj,
+            "request": request,
         })
-
-
-
-
 class DeliveryTimeAddView(View):
     def post(self, request):
         name = request.POST.get('name')
@@ -4638,48 +4780,46 @@ class DeliveryTimeDeleteView(View):
 class ReturnTimeView(View):
     def get(self, request):
         qs = ReturnTime.objects.all()
+
+        # ---- SEARCH ----
         search_by = request.GET.get("search_by")
         if search_by:
             qs = qs.filter(
                 Q(name__icontains=search_by) |
                 Q(value__icontains=search_by)
             )
-        sort_by = request.GET.get("sort_by")  
-        if sort_by:
-            try:
-                field, order = sort_by.rsplit("_", 1)
-                if order == "asc":
-                    qs = qs.order_by(field)
-                elif order == "desc":
-                    qs = qs.order_by(f"-{field}")
-            except ValueError:
-                pass 
-        created_date = request.GET.get("created_date")  
+
+        # ---- SORT BY CREATED ----
+        sort_by = request.GET.get("sort_by")
+        if sort_by == "asc_created":
+            qs = qs.order_by("created_at")
+        elif sort_by == "desc_created":
+            qs = qs.order_by("-created_at")
+
+        # ---- DATE RANGE ----
+        created_date = request.GET.get("created_date")
         if created_date:
             try:
                 if " - " in created_date:
                     start_str, end_str = created_date.split(" - ")
                 else:
                     start_str = end_str = created_date
-
                 start_date = datetime.strptime(start_str.strip(), "%m/%d/%Y")
                 end_date = datetime.strptime(end_str.strip(), "%m/%d/%Y")
-
                 qs = qs.filter(created_at__date__range=[start_date, end_date])
             except ValueError:
-                pass 
+                pass
 
         # ---- PAGINATION ----
-        page = request.GET.get("page", 1)
-        per_page = request.GET.get("per_page", 10)
-        paginator = Paginator(qs, per_page)
-        page_obj = paginator.get_page(page)
+        paginator = Paginator(qs, request.GET.get("per_page", 10))
+        page_obj = paginator.get_page(request.GET.get("page", 1))
 
-        return render(request, 'superuser/ReturnTime.html', {
-            'return_times': page_obj.object_list,
-            'page_obj': page_obj,
-            'request': request,
+        return render(request, "superuser/ReturnTime.html", {
+            "return_times": page_obj.object_list,
+            "page_obj": page_obj,
+            "request": request,
         })
+
 
 
 class ReturnTimeAddView(View):
@@ -4715,7 +4855,7 @@ class StandingTimeView(View):
     def get(self, request):
         qs = StandingTime.objects.all()
 
-        # ---- SEARCH FILTER ----
+        # ---- SEARCH ----
         search_by = request.GET.get("search_by")
         if search_by:
             qs = qs.filter(
@@ -4723,46 +4863,37 @@ class StandingTimeView(View):
                 Q(value__icontains=search_by)
             )
 
-        # ---- SORT FILTER ----
-        sort_options = {
-            "asc_created": "created_at",
-            "desc_created": "-created_at",
-            "asc_name": "name",
-            "desc_name": "-name",
-        }
+        # ---- SORT BY CREATED ----
         sort_by = request.GET.get("sort_by")
-        if sort_by in sort_options:
-            qs = qs.order_by(sort_options[sort_by])
+        if sort_by == "asc_created":
+            qs = qs.order_by("created_at")
+        elif sort_by == "desc_created":
+            qs = qs.order_by("-created_at")
 
-        # ---- DATE RANGE FILTER ----
+        # ---- DATE RANGE ----
         created_date = request.GET.get("created_date")
         if created_date:
             try:
-                # Expecting format: "MM/DD/YYYY - MM/DD/YYYY"
-                dates = created_date.split(" - ")
-                if len(dates) == 2:
-                    start_date = datetime.strptime(dates[0], "%m/%d/%Y")
-                    end_date = datetime.strptime(dates[1], "%m/%d/%Y")
+                if " - " in created_date:
+                    start_str, end_str = created_date.split(" - ")
                 else:
-                    # If only one date is selected
-                    start_date = end_date = datetime.strptime(dates[0], "%m/%d/%Y")
-                
+                    start_str = end_str = created_date
+                start_date = datetime.strptime(start_str.strip(), "%m/%d/%Y")
+                end_date = datetime.strptime(end_str.strip(), "%m/%d/%Y")
                 qs = qs.filter(created_at__date__range=[start_date, end_date])
             except ValueError:
-                pass  # Ignore invalid date formats
+                pass
 
         # ---- PAGINATION ----
-        page = request.GET.get("page", 1)
-        per_page = request.GET.get("per_page", 10)
-        paginator = Paginator(qs, per_page)
-        page_obj = paginator.get_page(page)
+        paginator = Paginator(qs, request.GET.get("per_page", 10))
+        page_obj = paginator.get_page(request.GET.get("page", 1))
 
-        return render(request, 'superuser/StandingTime.html', {
-            'return_times': page_obj.object_list,
-            'page_obj': page_obj,
-            'request': request,
-            'sort_options': sort_options,
+        return render(request, "superuser/StandingTime.html", {
+            "return_times": page_obj.object_list,
+            "page_obj": page_obj,
+            "request": request,
         })
+
 
 
 
@@ -4798,24 +4929,20 @@ class StandingTimeDeleteView(View):
 class WarrantyView(View):
     def get(self, request):
         qs = Warranty.objects.all()
+
+        # ---- SEARCH ----
         search_by = request.GET.get("search_by")
         if search_by:
-            qs = qs.filter(
-                Q(name__icontains=search_by)
-            )
-        sort_by = request.GET.get("sort_by")  
-        if sort_by:
-            try:
-                field, order = sort_by.rsplit("_", 1)
-                if order == "asc":
-                    qs = qs.order_by(field)
-                elif order == "desc":
-                    qs = qs.order_by(f"-{field}")
-            except ValueError:
-                if sort_by == "asc_created":
-                    qs = qs.order_by("created_at")
-                elif sort_by == "desc_created":
-                    qs = qs.order_by("-created_at")
+            qs = qs.filter(Q(name__icontains=search_by))
+
+        # ---- SORT BY CREATED ----
+        sort_by = request.GET.get("sort_by")
+        if sort_by == "asc_created":
+            qs = qs.order_by("created_at")
+        elif sort_by == "desc_created":
+            qs = qs.order_by("-created_at")
+
+        # ---- DATE RANGE ----
         created_date = request.GET.get("created_date")
         if created_date:
             try:
@@ -4829,7 +4956,7 @@ class WarrantyView(View):
 
                 qs = qs.filter(created_at__date__range=[start_date, end_date])
             except ValueError:
-                pass 
+                pass
 
         # ---- PAGINATION ----
         page = request.GET.get("page", 1)
@@ -4837,11 +4964,12 @@ class WarrantyView(View):
         paginator = Paginator(qs, per_page)
         page_obj = paginator.get_page(page)
 
-        return render(request, 'superuser/warranty.html', {
-            'warranties': page_obj.object_list,
-            'page_obj': page_obj,
-            'request': request,
+        return render(request, "superuser/warranty.html", {
+            "warranties": page_obj.object_list,
+            "page_obj": page_obj,
+            "request": request,
         })
+
 
 class AddWarrantyView(View):
     def post(self, request):
@@ -4886,7 +5014,7 @@ class SplashScreenView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        qs = SplashScreen.objects.all().order_by("screen_order")
+        qs = SplashScreen.objects.all()
 
         # ---- SEARCH FILTER ----
         search_by = self.request.GET.get("search_by")
@@ -4896,6 +5024,31 @@ class SplashScreenView(TemplateView):
                 Q(screen_language__icontains=search_by)
             )
 
+        # ---- SORT BY CREATED ----
+        sort_by = self.request.GET.get("sort_by")
+        if sort_by == "asc_created":
+            qs = qs.order_by("created_at")
+        elif sort_by == "desc_created":
+            qs = qs.order_by("-created_at")
+        else:
+            qs = qs.order_by("screen_order")  
+
+        # ---- DATE RANGE FILTER ----
+        created_date = self.request.GET.get("created_date")
+        if created_date:
+            try:
+                if " - " in created_date:
+                    start_str, end_str = created_date.split(" - ")
+                else:
+                    start_str = end_str = created_date
+
+                start_date = datetime.strptime(start_str.strip(), "%m/%d/%Y")
+                end_date = datetime.strptime(end_str.strip(), "%m/%d/%Y")
+
+                qs = qs.filter(created_at__date__range=[start_date, end_date])
+            except ValueError:
+                pass 
+
         # ---- PAGINATION ----
         page_number = self.request.GET.get("page", 1)
         per_page = self.request.GET.get("per_page", 10)
@@ -4904,7 +5057,9 @@ class SplashScreenView(TemplateView):
 
         context["screens"] = page_obj.object_list
         context["page_obj"] = page_obj
-        context["search_by"] = search_by  # pass to template
+        context["search_by"] = search_by
+        context["sort_by"] = sort_by
+        context["created_date"] = created_date  
         return context
 
 
@@ -5386,6 +5541,7 @@ class ContactDeleteView(View):
         return JsonResponse({'success': True})
 
 from dashboard.forms import RetailProfileForm, WholesaleBuyerProfileForm, SupplierProfileForm
+from datetime import datetime, time
 class DynamicInputListView(View):
     template_name = 'superuser/DynamicInputs.html'
 
@@ -5401,12 +5557,26 @@ class DynamicInputListView(View):
                 Q(field_type__icontains=search_by)
             )
 
+        # ---- CREATED DATE RANGE FILTER ----
+        created_date = request.GET.get("created_date")
+        if created_date:
+            try:
+                start_str, end_str = created_date.split(" - ")
+
+                start_date = datetime.strptime(start_str, "%m/%d/%Y")
+                end_date = datetime.strptime(end_str, "%m/%d/%Y")
+                start_date = datetime.combine(start_date.date(), time.min)
+                end_date = datetime.combine(end_date.date(), time.max)
+
+                inputs = inputs.filter(
+                    created_at__range=(start_date, end_date)
+                )
+            except ValueError:
+                pass 
         # ---- SORT ----
         sort_by = request.GET.get("sort_by")
         if sort_by == "asc_created":
             inputs = inputs.order_by("created_at")
-        elif sort_by == "desc_created":
-            inputs = inputs.order_by("-created_at")
         else:
             inputs = inputs.order_by("-created_at")
 
@@ -5416,7 +5586,11 @@ class DynamicInputListView(View):
         paginator = Paginator(inputs, per_page)
         page_obj = paginator.get_page(page_number)
 
-        form_classes = [RetailProfileForm, WholesaleBuyerProfileForm, SupplierProfileForm]
+        form_classes = [
+            RetailProfileForm,
+            WholesaleBuyerProfileForm,
+            SupplierProfileForm
+        ]
         form_names = [f.__name__ for f in form_classes]
 
         return render(request, self.template_name, {
@@ -5424,9 +5598,9 @@ class DynamicInputListView(View):
             'form_names': form_names,
             'page_obj': page_obj,
             'search_by': search_by,
-            'sort_by': sort_by
+            'sort_by': sort_by,
+            'created_date': created_date
         })
-
 
 class DynamicInputAddView(View):
     def post(self, request):
@@ -5481,24 +5655,28 @@ class FormControlsView(TemplateView):
         if search_by:
             qs = qs.filter(Q(name__icontains=search_by) | Q(form__icontains=search_by))
 
-        sort_by = self.request.GET.get("sort_by")
-        if sort_by == "asc_created":
-            qs = qs.order_by("created_at")
-        elif sort_by == "desc_created":
-            qs = qs.order_by("-created_at")
-        else:
-            qs = qs.order_by("-created_at")
+        created_date = self.request.GET.get("created_date")
+        if created_date:
+            try:
+                start_str, end_str = created_date.split(" - ")
+                qs = qs.filter(
+                    created_at__date__gte=datetime.strptime(start_str, "%m/%d/%Y").date(),
+                    created_at__date__lte=datetime.strptime(end_str, "%m/%d/%Y").date()
+                )
+            except ValueError:
+                pass
 
-        page_number = self.request.GET.get("page", 1)
-        per_page = self.request.GET.get("per_page", 10)
-        paginator = Paginator(qs, per_page)
-        page_obj = paginator.get_page(page_number)
+        sort_by = self.request.GET.get("sort_by")
+        qs = qs.order_by("created_at" if sort_by == "asc_created" else "-created_at")
+
+        paginator = Paginator(qs, self.request.GET.get("per_page", 10))
+        page_obj = paginator.get_page(self.request.GET.get("page", 1))
 
         context.update({
-            'controls': page_obj.object_list,
-            'page_obj': page_obj,
-            'search_by': search_by,
-            'sort_by': sort_by
+            "controls": page_obj.object_list,
+            "page_obj": page_obj,
+            "search_by": search_by,
+            "sort_by": sort_by,
         })
         return context
 
@@ -5517,7 +5695,7 @@ class FormControlToggleView(View):
         return JsonResponse({'success': False})
     
 class CatalogView(TemplateView):
-    template_name = 'superuser/Catalog.html'
+    template_name = "superuser/Catalog.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -5527,26 +5705,31 @@ class CatalogView(TemplateView):
         if search_by:
             qs = qs.filter(Q(key__icontains=search_by) | Q(description__icontains=search_by))
 
-        sort_by = self.request.GET.get("sort_by")
-        if sort_by == "asc_created":
-            qs = qs.order_by("created_at")
-        elif sort_by == "desc_created":
-            qs = qs.order_by("-created_at")
-        else:
-            qs = qs.order_by("-created_at")
+        created_date = self.request.GET.get("created_date")
+        if created_date:
+            try:
+                start_str, end_str = created_date.split(" - ")
+                qs = qs.filter(
+                    created_at__date__gte=datetime.strptime(start_str, "%m/%d/%Y").date(),
+                    created_at__date__lte=datetime.strptime(end_str, "%m/%d/%Y").date()
+                )
+            except ValueError:
+                pass
 
-        page_number = self.request.GET.get("page", 1)
-        per_page = self.request.GET.get("per_page", 10)
-        paginator = Paginator(qs, per_page)
-        page_obj = paginator.get_page(page_number)
+        sort_by = self.request.GET.get("sort_by")
+        qs = qs.order_by("created_at" if sort_by == "asc_created" else "-created_at")
+
+        paginator = Paginator(qs, self.request.GET.get("per_page", 10))
+        page_obj = paginator.get_page(self.request.GET.get("page", 1))
 
         context.update({
-            'catalogs': page_obj.object_list,
-            'page_obj': page_obj,
-            'search_by': search_by,
-            'sort_by': sort_by
+            "catalogs": page_obj.object_list,
+            "page_obj": page_obj,
+            "search_by": search_by,
+            "sort_by": sort_by,
         })
         return context
+
 
 def add_catalog(request):
     if request.method == "POST":
@@ -5597,28 +5780,33 @@ class ConfigurationView(TemplateView):
 
         search_by = self.request.GET.get("search_by")
         if search_by:
-            qs = qs.filter(Q(key__icontains=search_by))
+            qs = qs.filter(key__icontains=search_by)
+
+        created_date = self.request.GET.get("created_date")
+        if created_date:
+            try:
+                start_str, end_str = created_date.split(" - ")
+                qs = qs.filter(
+                    created_at__date__gte=datetime.strptime(start_str, "%m/%d/%Y").date(),
+                    created_at__date__lte=datetime.strptime(end_str, "%m/%d/%Y").date()
+                )
+            except ValueError:
+                pass
 
         sort_by = self.request.GET.get("sort_by")
-        if sort_by == "asc_created":
-            qs = qs.order_by("created_at")
-        elif sort_by == "desc_created":
-            qs = qs.order_by("-created_at")
-        else:
-            qs = qs.order_by("-created_at")
+        qs = qs.order_by("created_at" if sort_by == "asc_created" else "-created_at")
 
-        page_number = self.request.GET.get("page", 1)
-        per_page = self.request.GET.get("per_page", 10)
-        paginator = Paginator(qs, per_page)
-        page_obj = paginator.get_page(page_number)
+        paginator = Paginator(qs, self.request.GET.get("per_page", 10))
+        page_obj = paginator.get_page(self.request.GET.get("page", 1))
 
         context.update({
-            'configs': page_obj.object_list,
-            'page_obj': page_obj,
-            'search_by': search_by,
-            'sort_by': sort_by
+            "configs": page_obj.object_list,
+            "page_obj": page_obj,
+            "search_by": search_by,
+            "sort_by": sort_by,
         })
         return context
+
 
     
 def update_configuration(request, pk):
@@ -5639,26 +5827,31 @@ class SMSConfigurationView(TemplateView):
         if search_by:
             qs = qs.filter(Q(name__icontains=search_by) | Q(sms_sender__icontains=search_by))
 
-        sort_by = self.request.GET.get("sort_by")
-        if sort_by == "asc_created":
-            qs = qs.order_by("created_at")
-        elif sort_by == "desc_created":
-            qs = qs.order_by("-created_at")
-        else:
-            qs = qs.order_by("-created_at")
+        created_date = self.request.GET.get("created_date")
+        if created_date:
+            try:
+                start_str, end_str = created_date.split(" - ")
+                qs = qs.filter(
+                    created_at__date__gte=datetime.strptime(start_str, "%m/%d/%Y").date(),
+                    created_at__date__lte=datetime.strptime(end_str, "%m/%d/%Y").date()
+                )
+            except ValueError:
+                pass
 
-        page_number = self.request.GET.get("page", 1)
-        per_page = self.request.GET.get("per_page", 10)
-        paginator = Paginator(qs, per_page)
-        page_obj = paginator.get_page(page_number)
+        sort_by = self.request.GET.get("sort_by")
+        qs = qs.order_by("created_at" if sort_by == "asc_created" else "-created_at")
+
+        paginator = Paginator(qs, self.request.GET.get("per_page", 10))
+        page_obj = paginator.get_page(self.request.GET.get("page", 1))
 
         context.update({
-            'sms_list': page_obj.object_list,
-            'page_obj': page_obj,
-            'search_by': search_by,
-            'sort_by': sort_by
+            "sms_list": page_obj.object_list,
+            "page_obj": page_obj,
+            "search_by": search_by,
+            "sort_by": sort_by,
         })
         return context
+
     
 def sms_edit(request, uid):
     if request.method == "POST":
@@ -5698,26 +5891,31 @@ class ThemeView(TemplateView):
         if search_by:
             qs = qs.filter(Q(key__icontains=search_by) | Q(description__icontains=search_by))
 
-        sort_by = self.request.GET.get("sort_by")
-        if sort_by == "asc_created":
-            qs = qs.order_by("created_at")
-        elif sort_by == "desc_created":
-            qs = qs.order_by("-created_at")
-        else:
-            qs = qs.order_by("-created_at")
+        created_date = self.request.GET.get("created_date")
+        if created_date:
+            try:
+                start_str, end_str = created_date.split(" - ")
+                qs = qs.filter(
+                    created_at__date__gte=datetime.strptime(start_str, "%m/%d/%Y").date(),
+                    created_at__date__lte=datetime.strptime(end_str, "%m/%d/%Y").date()
+                )
+            except ValueError:
+                pass
 
-        page_number = self.request.GET.get("page", 1)
-        per_page = self.request.GET.get("per_page", 10)
-        paginator = Paginator(qs, per_page)
-        page_obj = paginator.get_page(page_number)
+        sort_by = self.request.GET.get("sort_by")
+        qs = qs.order_by("created_at" if sort_by == "asc_created" else "-created_at")
+
+        paginator = Paginator(qs, self.request.GET.get("per_page", 10))
+        page_obj = paginator.get_page(self.request.GET.get("page", 1))
 
         context.update({
-            'theme_list': page_obj.object_list,
-            'page_obj': page_obj,
-            'search_by': search_by,
-            'sort_by': sort_by
+            "theme_list": page_obj.object_list,
+            "page_obj": page_obj,
+            "search_by": search_by,
+            "sort_by": sort_by,
         })
         return context
+
 
 
 
@@ -5742,24 +5940,28 @@ class APIControlView(TemplateView):
         if search_by:
             qs = qs.filter(Q(portal__icontains=search_by) | Q(api_name__icontains=search_by))
 
-        sort_by = self.request.GET.get("sort_by")
-        if sort_by == "asc_created":
-            qs = qs.order_by("created_at")
-        elif sort_by == "desc_created":
-            qs = qs.order_by("-created_at")
-        else:
-            qs = qs.order_by("-created_at")
+        created_date = self.request.GET.get("created_date")
+        if created_date:
+            try:
+                start_str, end_str = created_date.split(" - ")
+                qs = qs.filter(
+                    created_at__date__gte=datetime.strptime(start_str, "%m/%d/%Y").date(),
+                    created_at__date__lte=datetime.strptime(end_str, "%m/%d/%Y").date()
+                )
+            except ValueError:
+                pass
 
-        page_number = self.request.GET.get("page", 1)
-        per_page = self.request.GET.get("per_page", 10)
-        paginator = Paginator(qs, per_page)
-        page_obj = paginator.get_page(page_number)
+        sort_by = self.request.GET.get("sort_by")
+        qs = qs.order_by("created_at" if sort_by == "asc_created" else "-created_at")
+
+        paginator = Paginator(qs, self.request.GET.get("per_page", 10))
+        page_obj = paginator.get_page(self.request.GET.get("page", 1))
 
         context.update({
-            'apis': page_obj.object_list,
-            'page_obj': page_obj,
-            'search_by': search_by,
-            'sort_by': sort_by
+            "apis": page_obj.object_list,
+            "page_obj": page_obj,
+            "search_by": search_by,
+            "sort_by": sort_by,
         })
         return context
 
@@ -5783,27 +5985,31 @@ class SEOSettingsView(TemplateView):
         if search_by:
             qs = qs.filter(Q(key__icontains=search_by) | Q(description__icontains=search_by))
 
-        sort_by = self.request.GET.get("sort_by")
-        if sort_by == "asc_created":
-            qs = qs.order_by("created_at")
-        elif sort_by == "desc_created":
-            qs = qs.order_by("-created_at")
-        else:
-            qs = qs.order_by("-created_at")
+        created_date = self.request.GET.get("created_date")
+        if created_date:
+            try:
+                start_str, end_str = created_date.split(" - ")
+                qs = qs.filter(
+                    created_at__date__gte=datetime.strptime(start_str, "%m/%d/%Y").date(),
+                    created_at__date__lte=datetime.strptime(end_str, "%m/%d/%Y").date()
+                )
+            except ValueError:
+                pass
 
-        page_number = self.request.GET.get("page", 1)
-        per_page = self.request.GET.get("per_page", 10)
-        paginator = Paginator(qs, per_page)
-        page_obj = paginator.get_page(page_number)
+        sort_by = self.request.GET.get("sort_by")
+        qs = qs.order_by("created_at" if sort_by == "asc_created" else "-created_at")
+
+        paginator = Paginator(qs, self.request.GET.get("per_page", 10))
+        page_obj = paginator.get_page(self.request.GET.get("page", 1))
 
         context.update({
-            'seo_list': page_obj.object_list,
-            'page_obj': page_obj,
-            'search_by': search_by,
-            'sort_by': sort_by
+            "seo_list": page_obj.object_list,
+            "page_obj": page_obj,
+            "search_by": search_by,
+            "sort_by": sort_by,
         })
         return context
-        return context
+
 
 class SEOEditView(View):
     def post(self, request, pk):
@@ -5824,25 +6030,30 @@ class PaymentsettingsView(View):
         if search_by:
             qs = qs.filter(Q(key__icontains=search_by) | Q(status__icontains=search_by))
 
-        sort_by = request.GET.get("sort_by")
-        if sort_by == "asc_created":
-            qs = qs.order_by("created_at")
-        elif sort_by == "desc_created":
-            qs = qs.order_by("-created_at")
-        else:
-            qs = qs.order_by("-created_at")
+        created_date = request.GET.get("created_date")
+        if created_date:
+            try:
+                start_str, end_str = created_date.split(" - ")
+                qs = qs.filter(
+                    created_at__date__gte=datetime.strptime(start_str, "%m/%d/%Y").date(),
+                    created_at__date__lte=datetime.strptime(end_str, "%m/%d/%Y").date()
+                )
+            except ValueError:
+                pass
 
-        page_number = request.GET.get("page", 1)
-        per_page = request.GET.get("per_page", 10)
-        paginator = Paginator(qs, per_page)
-        page_obj = paginator.get_page(page_number)
+        sort_by = request.GET.get("sort_by")
+        qs = qs.order_by("created_at" if sort_by == "asc_created" else "-created_at")
+
+        paginator = Paginator(qs, request.GET.get("per_page", 10))
+        page_obj = paginator.get_page(request.GET.get("page", 1))
 
         return render(request, self.template_name, {
             "settings_data": page_obj.object_list,
             "page_obj": page_obj,
             "search_by": search_by,
-            "sort_by": sort_by
+            "sort_by": sort_by,
         })
+
 
 class PaymentToggleStatus(View):
     def post(self, request, pk):

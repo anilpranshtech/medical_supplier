@@ -11,26 +11,26 @@
   <div class="d-flex flex-column flex-column-fluid">
     <div id="kt_app_content" class="app-content flex-column-fluid mx-5">
       <div id="kt_app_content_container" class="app-container container-fluid">
-   <!-- Filter Form -->
-   <form action="{% url 'superuser:deliverytime' %}" method="GET">
-    <div class="card mb-7">
-        <div class="card-body">
-            {% include "superuser/pages/filters/filter_sort_by.html" %}
-            {% include "superuser/pages/filters/filter_search_by.html" with show_advance_search_link=True search_help_text='Choices: Origin' search_placeholder_text='Search Categories' %}
-            <div class="collapse" id="kt_advanced_search_form">
+        <!-- Filter Form -->
+        <form action="{% url 'superuser:deliverytime' %}" method="GET">
+          <div class="card mb-7">
+            <div class="card-body">
+              {% include "superuser/pages/filters/filter_sort_by.html" %}
+              {% include "superuser/pages/filters/filter_search_by.html" with show_advance_search_link=True search_help_text='Choices: Origin' search_placeholder_text='Search Categories' %}
+              <div class="collapse" id="kt_advanced_search_form">
                 <div class="separator separator-dashed mt-9 mb-6"></div>
                 <div class="row g-8 mb-8">
-                    <div class="col-xxl-12">
-                        <div class="row g-8">
-                            {% include "superuser/pages/filters/filter_created_date_range_picker.html" %}
-                            
-                        </div>
+                  <div class="col-xxl-12">
+                    <div class="row g-8">
+                      {% include "superuser/pages/filters/filter_created_date_range_picker.html" %}
                     </div>
+                  </div>
                 </div>
+              </div>
             </div>
-        </div>
-    </div>
-</form>
+          </div>
+        </form>
+
         <div id="successMessage" class="alert alert-success d-none" style="font-size:16px;">
           <strong id="successText"></strong>
         </div>
@@ -54,25 +54,34 @@
                   <th style="width: 33.3%; padding: 12px;">Actions</th>
                 </tr>
               </thead>
-          
+
               <tbody class="fw-semibold text-gray-600" style="text-align: center;">
                 {% for d in delivery_times %}
                 <tr>
                   <td style="padding: 12px; vertical-align: middle;">{{ d.name }}</td>
                   <td style="padding: 12px; vertical-align: middle;">{{ d.status }}</td>
                   <td style="padding: 12px; vertical-align: middle;">
-                    <button class="btn btn-sm btn-light-primary editBtn"
-                            data-id="{{ d.id }}"
-                            data-name="{{ d.name }}"
-                            data-status="{{ d.status }}"
-                            style="margin: 0 4px; padding: 5px 12px; font-size: 13px;">
-                      Edit
-                    </button>
-                    <button class="btn btn-sm btn-light-danger deleteBtn"
-                            data-id="{{ d.id }}"
-                            style="margin: 0 4px; padding: 5px 12px; font-size: 13px;">
-                      Delete
-                    </button>
+                    <!-- Actions Dropdown -->
+                    <div class="dropdown">
+                      <button class="btn btn-light-primary btn-sm dropdown-toggle" type="button" id="deliveryActionsDropdown{{ d.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                        Actions
+                      </button>
+                      <ul class="dropdown-menu" aria-labelledby="deliveryActionsDropdown{{ d.id }}">
+                        <li>
+                          <a class="dropdown-item editBtn" href="javascript:void(0);"
+                             data-id="{{ d.id }}"
+                             data-name="{{ d.name }}"
+                             data-status="{{ d.status }}">
+                            Edit
+                          </a>
+                        </li>
+                        <li>
+                          <a class="dropdown-item deleteBtn" href="javascript:void(0);" data-id="{{ d.id }}">
+                            Delete
+                          </a>
+                        </li>
+                      </ul>
+                    </div>
                   </td>
                 </tr>
                 {% empty %}
@@ -83,7 +92,7 @@
               </tbody>
             </table>
           </div>
-          
+
         </div>
         {% include "superuser/pages/pagination.html" with page_obj=page_obj %}
 
@@ -102,20 +111,20 @@
       </div>
       <div class="modal-body">
         <form id="deliveryForm">
-            {% csrf_token %}
-            <input type="hidden" id="did" name="did">
-            
-            <label class="form-label fw-semibold">Name (En) <span style="color:red;">*</span></label>
-            <input type="text" name="name" id="nameField" class="form-control" required>
-            <div class="text-danger mt-1" id="nameError" style="display:none;"></div>
+          {% csrf_token %}
+          <input type="hidden" id="did" name="did">
 
-            <label class="form-label fw-semibold mt-3">Status <span style="color:red;">*</span></label>
-            <select name="status" id="statusField" class="form-select" required>
-              <option value="">--Select--</option>
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
-            </select>
-            <div class="text-danger mt-1" id="statusError" style="display:none;"></div>
+          <label class="form-label fw-semibold">Name (En) <span style="color:red;">*</span></label>
+          <input type="text" name="name" id="nameField" class="form-control" required>
+          <div class="text-danger mt-1" id="nameError" style="display:none;"></div>
+
+          <label class="form-label fw-semibold mt-3">Status <span style="color:red;">*</span></label>
+          <select name="status" id="statusField" class="form-select" required>
+            <option value="">--Select--</option>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+          </select>
+          <div class="text-danger mt-1" id="statusError" style="display:none;"></div>
         </form>
       </div>
       <div class="modal-footer">

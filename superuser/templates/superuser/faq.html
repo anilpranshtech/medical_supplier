@@ -56,17 +56,40 @@
                   <td>{{ f.title_en }}</td>
                   <td>{{ f.description_en|truncatewords:10 }}</td>
                   <td>
-                    <button class="btn btn-sm btn-light-primary editBtn"
-                            data-id="{{ f.id }}"
-                            data-title="{{ f.title_en }}"
-                            data-description="{{ f.description_en }}">
-                      Edit
-                    </button>
-                    <button class="btn btn-sm btn-light-danger deleteBtn"
-                            data-id="{{ f.id }}">
-                      Delete
-                    </button>
+                    <div class="dropdown">
+                      <button class="btn btn-light-primary btn-sm dropdown-toggle"
+                              type="button"
+                              id="faqActionsDropdown{{ f.id }}"
+                              data-bs-toggle="dropdown"
+                              aria-expanded="false">
+                        Actions
+                      </button>
+                  
+                      <ul class="dropdown-menu"
+                          aria-labelledby="faqActionsDropdown{{ f.id }}">
+                  
+                        <li>
+                          <a class="dropdown-item editBtn"
+                             href="javascript:void(0);"
+                             data-id="{{ f.id }}"
+                             data-title="{{ f.title_en }}"
+                             data-description="{{ f.description_en }}">
+                            Edit
+                          </a>
+                        </li>
+                  
+                        <li>
+                          <a class="dropdown-item deleteBtn"
+                             href="javascript:void(0);"
+                             data-id="{{ f.id }}">
+                            Delete
+                          </a>
+                        </li>
+                  
+                      </ul>
+                    </div>
                   </td>
+                  
                 </tr>
                 {% empty %}
                 <tr><td colspan="3">No FAQs found.</td></tr>

@@ -65,20 +65,43 @@
                   <td>{{ input.required|yesno:"Yes,No" }}</td>
                   <td>{{ input.status|yesno:"Active,Inactive" }}</td>
                   <td>
-                    <button class="btn btn-sm btn-light-primary editBtn"
-                            data-id="{{ input.id }}"
-                            data-form_name="{{ input.form_name }}"
-                            data-field_type="{{ input.field_type }}"
-                            data-title_en="{{ input.title_en }}"
-                            data-required="{{ input.required }}"
-                            data-status="{{ input.status }}">
-                      Edit
-                    </button>
-                    <button class="btn btn-sm btn-light-danger deleteBtn"
-                            data-id="{{ input.id }}">
-                      Delete
-                    </button>
+                    <div class="dropdown">
+                      <button class="btn btn-light-primary btn-sm dropdown-toggle"
+                              type="button"
+                              id="dynamicActionsDropdown{{ input.id }}"
+                              data-bs-toggle="dropdown"
+                              aria-expanded="false">
+                        Actions
+                      </button>
+                  
+                      <ul class="dropdown-menu"
+                          aria-labelledby="dynamicActionsDropdown{{ input.id }}">
+                  
+                        <li>
+                          <a class="dropdown-item editBtn"
+                             href="javascript:void(0);"
+                             data-id="{{ input.id }}"
+                             data-form_name="{{ input.form_name }}"
+                             data-field_type="{{ input.field_type }}"
+                             data-title_en="{{ input.title_en }}"
+                             data-required="{{ input.required }}"
+                             data-status="{{ input.status }}">
+                            Edit
+                          </a>
+                        </li>
+                  
+                        <li>
+                          <a class="dropdown-item deleteBtn"
+                             href="javascript:void(0);"
+                             data-id="{{ input.id }}">
+                            Delete
+                          </a>
+                        </li>
+                  
+                      </ul>
+                    </div>
                   </td>
+                  
                 </tr>
                 {% empty %}
                 <tr><td colspan="6">No records found.</td></tr>

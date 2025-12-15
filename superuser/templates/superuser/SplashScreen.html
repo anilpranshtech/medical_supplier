@@ -69,21 +69,43 @@
                   <td style="width: 20%; padding: 10px 12px; text-align: center; vertical-align: middle; white-space: nowrap;">{{ s.screen_order }}</td>
                   <td style="width: 20%; padding: 10px 12px; text-align: center; vertical-align: middle; white-space: nowrap;">{{ s.get_screen_language_display }}</td>
                   <td style="width: 20%; padding: 10px 12px; text-align: center; vertical-align: middle; white-space: nowrap;">
-                    <button class="btn btn-sm btn-light-primary editBtn"
-                            data-id="{{ s.id }}"
-                            data-title="{{ s.screen_title }}"
-                            data-body="{{ s.screen_body }}"
-                            data-text="{{ s.screen_text }}"
-                            data-order="{{ s.screen_order }}"
-                            data-language="{{ s.screen_language }}"
-                            style="margin: 0 4px; padding: 4px 10px; font-size: 13px;">
-                      Edit
-                    </button>
-                    <button class="btn btn-sm btn-light-danger deleteBtn" data-id="{{ s.id }}"
-                            style="margin: 0 4px; padding: 4px 10px; font-size: 13px;">
-                      Delete
-                    </button>
+                    <div class="dropdown">
+                      <button class="btn btn-light-primary btn-sm dropdown-toggle"
+                              type="button"
+                              id="splashActionsDropdown{{ s.id }}"
+                              data-bs-toggle="dropdown"
+                              aria-expanded="false">
+                        Actions
+                      </button>
+                  
+                      <ul class="dropdown-menu"
+                          aria-labelledby="splashActionsDropdown{{ s.id }}">
+                  
+                        <li>
+                          <a class="dropdown-item editBtn"
+                             href="javascript:void(0);"
+                             data-id="{{ s.id }}"
+                             data-title="{{ s.screen_title }}"
+                             data-body="{{ s.screen_body }}"
+                             data-text="{{ s.screen_text }}"
+                             data-order="{{ s.screen_order }}"
+                             data-language="{{ s.screen_language }}">
+                            Edit
+                          </a>
+                        </li>
+                  
+                        <li>
+                          <a class="dropdown-item deleteBtn"
+                             href="javascript:void(0);"
+                             data-id="{{ s.id }}">
+                            Delete
+                          </a>
+                        </li>
+                  
+                      </ul>
+                    </div>
                   </td>
+                  
                 </tr>
                 {% empty %}
                 <tr>

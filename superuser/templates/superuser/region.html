@@ -23,17 +23,13 @@
             {% include "superuser/pages/filters/filter_search_by.html" with show_advance_search_link=True search_help_text='Choices: Origin' search_placeholder_text='Search Categories' %}
             <div class="collapse" id="kt_advanced_search_form">
               <div class="separator separator-dashed mt-9 mb-6"></div>
-          
               <div class="row g-8 mb-8">
                   <div class="col-xxl-12">
                           {% include "superuser/pages/filters/filter_created_date_range_picker.html" %}
-          
                       </div>
-          
                   </div>
               </div>
           </div>
-          
         </div>
     </div>
 </form>
@@ -63,18 +59,27 @@
                     <td style="padding: 12px; vertical-align: middle;">{{ r.name_en }}</td>
                     <td style="padding: 12px; vertical-align: middle;">{{ r.country }}</td>
                     <td style="padding: 12px; vertical-align: middle;">
-                        <button class="btn btn-sm btn-light-primary editBtn"
-                                data-id="{{ r.id }}"
-                                data-name="{{ r.name_en }}"
-                                data-country="{{ r.country }}"
-                                style="margin: 0 4px; padding: 5px 12px; font-size: 13px;">
-                          Edit
-                        </button>
-                        <button class="btn btn-sm btn-light-danger deleteBtn"
-                                data-id="{{ r.id }}"
-                                style="margin: 0 4px; padding: 5px 12px; font-size: 13px;">
-                          Delete
-                        </button>
+                        <!-- Actions Dropdown -->
+                        <div class="dropdown">
+                          <button class="btn btn-light-primary btn-sm dropdown-toggle" type="button" id="regionActionsDropdown{{ r.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                            Actions
+                          </button>
+                          <ul class="dropdown-menu" aria-labelledby="regionActionsDropdown{{ r.id }}">
+                            <li>
+                              <a class="dropdown-item editBtn" href="javascript:void(0);"
+                                 data-id="{{ r.id }}"
+                                 data-name="{{ r.name_en }}"
+                                 data-country="{{ r.country }}">
+                                Edit
+                              </a>
+                            </li>
+                            <li>
+                              <a class="dropdown-item deleteBtn" href="javascript:void(0);" data-id="{{ r.id }}">
+                                Delete
+                              </a>
+                            </li>
+                          </ul>
+                        </div>
                     </td>
                 </tr>
                 {% empty %}
@@ -83,12 +88,10 @@
                 </tr>
                 {% endfor %}
             </tbody>
-            
             </table>
           </div>
-          
-
         </div>
+
         {% include "superuser/pages/pagination.html" with page_obj=page_obj %}
 
       </div>
@@ -126,8 +129,6 @@
             </select>
             <div class="text-danger mt-1" id="countryError" style="display:none;"></div>
           </div>
-          
-
         </form>
 
       </div>
@@ -135,7 +136,6 @@
         <button class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
         <button class="btn btn-primary" id="saveBtn">Save</button>
       </div>
-      
     </div>
   </div>
 </div>
@@ -145,132 +145,119 @@
 {% block page_only_scripts %}
 {% include "superuser/pages/filters/filter_created_date_range_picker_js.html" %}
 <script>
-   document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", function () {
 
-const modal = new bootstrap.Modal(document.getElementById('regionModal'));
+  const modal = new bootstrap.Modal(document.getElementById('regionModal'));
 
-const idField = document.getElementById('rid');
-const nameFld = document.getElementById('nameField');
-const countryFld = document.getElementById('countryField');
+  const idField = document.getElementById('rid');
+  const nameFld = document.getElementById('nameField');
+  const countryFld = document.getElementById('countryField');
 
-const nameError = document.getElementById('nameError');
-const countryError = document.getElementById('countryError');
+  const nameError = document.getElementById('nameError');
+  const countryError = document.getElementById('countryError');
 
-function showSuccess(msg) {
-  const box = document.getElementById("successMessage");
-  const text = document.getElementById("successText");
+  function showSuccess(msg) {
+    const box = document.getElementById("successMessage");
+    const text = document.getElementById("successText");
+    text.innerText = msg;
+    box.classList.remove("d-none");
+    setTimeout(() => box.classList.add("d-none"), 1500);
+  }
 
-  text.innerText = msg;
-  box.classList.remove("d-none");
-
-  setTimeout(() => {
-    box.classList.add("d-none");
-  }, 1500);
-}
-
-function resetForm() {
-  idField.value = "";
-  nameFld.value = "";
-  countryFld.value = "";
-  nameFld.classList.remove("is-invalid");
-  countryFld.classList.remove("is-invalid");
-  nameError.style.display = "none";
-  countryError.style.display = "none";
-}
-
-document.getElementById('addBtn').addEventListener('click', function () {
-  document.getElementById('modalTitle').textContent = "Add Region";
-  resetForm();
-  modal.show();
-});
-
-document.querySelectorAll('.editBtn').forEach(btn => {
-  btn.addEventListener('click', function () {
-    document.getElementById('modalTitle').textContent = "Edit Region";
-    idField.value = this.dataset.id;
-    nameFld.value = this.dataset.name;
-    countryFld.value = this.dataset.country;
+  function resetForm() {
+    idField.value = "";
+    nameFld.value = "";
+    countryFld.value = "";
+    nameFld.classList.remove("is-invalid");
+    countryFld.classList.remove("is-invalid");
     nameError.style.display = "none";
     countryError.style.display = "none";
+  }
+
+  document.getElementById('addBtn').addEventListener('click', function () {
+    document.getElementById('modalTitle').textContent = "Add Region";
+    resetForm();
     modal.show();
   });
-});
 
-function validateForm() {
-  let valid = true;
-
-  if (!nameFld.value.trim()) {
-    nameFld.classList.add("is-invalid");
-    nameError.innerText = "Region Name is required.";
-    nameError.style.display = "block";
-    valid = false;
-  } else {
-    nameFld.classList.remove("is-invalid");
-    nameError.style.display = "none";
-  }
-
-  if (!countryFld.value.trim()) {
-    countryFld.classList.add("is-invalid");
-    countryError.innerText = "Country is required.";
-    countryError.style.display = "block";
-    valid = false;
-  } else {
-    countryFld.classList.remove("is-invalid");
-    countryError.style.display = "none";
-  }
-
-  return valid;
-}
-
-document.getElementById('saveBtn').addEventListener('click', function () {
-  if (!validateForm()) return;
-
-  let rid = idField.value;
-  let url = rid ? `/admin-panel/region/edit/${rid}/` : `/admin-panel/region/add/`;
-
-  fetch(url, {
-    method: "POST",
-    headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value },
-    body: new FormData(document.getElementById('regionForm'))
-  })
-  .then(r => r.json())
-  .then(res => {
-    if (res.success) {
-      modal.hide();
-
-      showSuccess(rid ? " Region updated successfully!" : "Region added successfully!");
-
-      setTimeout(() => location.reload(), 900);
-    } else {
-      alert(res.msg || "Something went wrong!");
-    }
+  document.querySelectorAll('.editBtn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      document.getElementById('modalTitle').textContent = "Edit Region";
+      idField.value = this.dataset.id;
+      nameFld.value = this.dataset.name;
+      countryFld.value = this.dataset.country;
+      nameError.style.display = "none";
+      countryError.style.display = "none";
+      modal.show();
+    });
   });
-});
 
-document.querySelectorAll('.deleteBtn').forEach(btn => {
-  btn.addEventListener('click', function () {
-    if (!confirm("Delete this region?")) return;
+  function validateForm() {
+    let valid = true;
+    if (!nameFld.value.trim()) {
+      nameFld.classList.add("is-invalid");
+      nameError.innerText = "Region Name is required.";
+      nameError.style.display = "block";
+      valid = false;
+    } else {
+      nameFld.classList.remove("is-invalid");
+      nameError.style.display = "none";
+    }
+    if (!countryFld.value.trim()) {
+      countryFld.classList.add("is-invalid");
+      countryError.innerText = "Country is required.";
+      countryError.style.display = "block";
+      valid = false;
+    } else {
+      countryFld.classList.remove("is-invalid");
+      countryError.style.display = "none";
+    }
+    return valid;
+  }
 
-    fetch(`/admin-panel/region/delete/${this.dataset.id}/`, {
+  document.getElementById('saveBtn').addEventListener('click', function () {
+    if (!validateForm()) return;
+
+    let rid = idField.value;
+    let url = rid ? `/admin-panel/region/edit/${rid}/` : `/admin-panel/region/add/`;
+
+    fetch(url, {
       method: "POST",
-      headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value }
+      headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value },
+      body: new FormData(document.getElementById('regionForm'))
     })
     .then(r => r.json())
     .then(res => {
       if (res.success) {
-
-        showSuccess("Region deleted successfully!");
-
+        modal.hide();
+        showSuccess(rid ? "Region updated successfully!" : "Region added successfully!");
         setTimeout(() => location.reload(), 900);
       } else {
-        alert(res.msg);
+        alert(res.msg || "Something went wrong!");
       }
     });
   });
-});
+
+  document.querySelectorAll('.deleteBtn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      if (!confirm("Delete this region?")) return;
+
+      fetch(`/admin-panel/region/delete/${this.dataset.id}/`, {
+        method: "POST",
+        headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value }
+      })
+      .then(r => r.json())
+      .then(res => {
+        if (res.success) {
+          showSuccess("Region deleted successfully!");
+          setTimeout(() => location.reload(), 900);
+        } else {
+          alert(res.msg);
+        }
+      });
+    });
+  });
 
 });
-
-    </script>
-    
+</script>
 {% endblock %}

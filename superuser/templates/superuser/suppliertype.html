@@ -9,32 +9,32 @@
 
 <div id="successMessage" class="alert alert-success d-none" style="font-size:16px;">
     <strong id="successText"></strong>
-  </div>
+</div>
   
 <div class="app-main flex-column flex-row-fluid" id="kt_app_main">
   <div class="d-flex flex-column flex-column-fluid">
     <div id="kt_app_content" class="app-content flex-column-fluid mx-5">
       <div id="kt_app_content_container" class="app-container container-fluid">
-   <!-- Filter Form -->
-   <form action="{% url 'superuser:suppliertype' %}" method="GET">
-    <div class="card mb-7">
-        <div class="card-body">
-            {% include "superuser/pages/filters/filter_sort_by.html" %}
-            {% include "superuser/pages/filters/filter_search_by.html" with show_advance_search_link=True search_help_text='Choices: Origin' search_placeholder_text='Search Categories' %}
-            <div class="collapse" id="kt_advanced_search_form">
-                <div class="separator separator-dashed mt-9 mb-6"></div>
-                <div class="row g-8 mb-8">
-                    <div class="col-xxl-12">
-                        <div class="row g-8">
-                            {% include "superuser/pages/filters/filter_created_date_range_picker.html" %}
-                            
+        <!-- Filter Form -->
+        <form action="{% url 'superuser:suppliertype' %}" method="GET">
+          <div class="card mb-7">
+            <div class="card-body">
+                {% include "superuser/pages/filters/filter_sort_by.html" %}
+                {% include "superuser/pages/filters/filter_search_by.html" with show_advance_search_link=True search_help_text='Choices: Origin' search_placeholder_text='Search Categories' %}
+                <div class="collapse" id="kt_advanced_search_form">
+                    <div class="separator separator-dashed mt-9 mb-6"></div>
+                    <div class="row g-8 mb-8">
+                        <div class="col-xxl-12">
+                            <div class="row g-8">
+                                {% include "superuser/pages/filters/filter_created_date_range_picker.html" %}
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-</form>
+          </div>
+        </form>
+
         <div class="card card-flush">
           <div class="card-header flex-wrap align-items-center py-5 gap-4">
             <div class="card-title">Supplier Types</div>
@@ -61,18 +61,27 @@
                   <td style="padding: 12px; vertical-align: middle;">{{ s.name_en }}</td>
                   <td style="padding: 12px; vertical-align: middle;">{{ s.status|title }}</td>
                   <td style="padding: 12px; vertical-align: middle;">
-                    <button class="btn btn-sm btn-light-primary editBtn"
-                            data-id="{{ s.id }}"
-                            data-name="{{ s.name_en }}"
-                            data-status="{{ s.status }}"
-                            style="margin: 0 4px; padding: 5px 12px; font-size: 13px;">
-                      Edit
-                    </button>
-                    <button class="btn btn-sm btn-light-danger deleteBtn"
-                            data-id="{{ s.id }}"
-                            style="margin: 0 4px; padding: 5px 12px; font-size: 13px;">
-                      Delete
-                    </button>
+                    <!-- Actions Dropdown -->
+                    <div class="dropdown">
+                      <button class="btn btn-light-primary btn-sm dropdown-toggle" type="button" id="supplierActionsDropdown{{ s.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                        Actions
+                      </button>
+                      <ul class="dropdown-menu" aria-labelledby="supplierActionsDropdown{{ s.id }}">
+                        <li>
+                          <a class="dropdown-item editBtn" href="javascript:void(0);"
+                             data-id="{{ s.id }}"
+                             data-name="{{ s.name_en }}"
+                             data-status="{{ s.status }}">
+                            Edit
+                          </a>
+                        </li>
+                        <li>
+                          <a class="dropdown-item deleteBtn" href="javascript:void(0);" data-id="{{ s.id }}">
+                            Delete
+                          </a>
+                        </li>
+                      </ul>
+                    </div>
                   </td>
                 </tr>
                 {% empty %}
@@ -132,7 +141,7 @@
 {% block page_only_scripts %}
 {% include "superuser/pages/filters/filter_created_date_range_picker_js.html" %}
 <script>
-    function showSuccess(msg){
+function showSuccess(msg){
   const box = document.getElementById("successMessage");
   const text = document.getElementById("successText");
 
@@ -203,13 +212,12 @@ document.addEventListener("DOMContentLoaded", function () {
       .then(r => r.json())
       .then(res => {
         if (res.success) {
-    modal.hide();
-    showSuccess("Department saved successfully!");
-    setTimeout(() => location.reload(), 800);
-}
- else {
+            modal.hide();
+            showSuccess("Supplier Type saved successfully!");
+            setTimeout(() => location.reload(), 800);
+        } else {
           nameFld.classList.add("is-invalid");
-          nameError.innerText = res.msg;
+          nameError.innerText = res.msg || "Something went wrong!";
           nameError.style.display = "block";
         }
       });
@@ -223,17 +231,15 @@ document.addEventListener("DOMContentLoaded", function () {
         method: "POST",
         headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value }
       })
-        .then(r => r.json())
-        .then(res => {
-            if (res.success) {
-    showSuccess("Department deleted successfully!");
-    setTimeout(() => location.reload(), 800);
-}
-
-          else alert(res.msg);
-        });
+      .then(r => r.json())
+      .then(res => {
+        if (res.success){
+            showSuccess("Supplier Type deleted successfully!");
+            setTimeout(() => location.reload(), 800);
+        } else alert(res.msg);
+      });
     });
-  });
+  }); 
 
 });
 </script>

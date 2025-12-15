@@ -10,6 +10,25 @@
 <div class="app-main flex-column flex-row-fluid" id="kt_app_main">
   <div class="d-flex flex-column flex-column-fluid">
     <div id="kt_app_content" class="app-content flex-column-fluid mx-5">
+         <!-- Filter Form -->
+   <form action="{% url 'superuser:buyxgety_promotion' %}" method="GET">
+    <div class="card mb-7">
+        <div class="card-body">
+            {% include "superuser/pages/filters/filter_sort_by.html" %}
+            {% include "superuser/pages/filters/filter_search_by.html" with show_advance_search_link=True search_help_text='Choices: Origin' search_placeholder_text='Search Categories' %}
+            <div class="collapse" id="kt_advanced_search_form">
+                <div class="separator separator-dashed mt-9 mb-6"></div>
+                <div class="row g-8 mb-8">
+                    <div class="col-xxl-12">
+                        <div class="row g-8">
+                            {% include "superuser/pages/filters/filter_created_date_range_picker.html" %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
       <div id="kt_app_content_container" class="app-container container-fluid">
         <div class="card card-flush">
           <div class="card-header flex-wrap align-items-center py-5 gap-4">
@@ -98,6 +117,7 @@
             {% endif %}
           </div>
         </div>
+        {% include "superuser/pages/pagination.html" with page_obj=page_obj %}
       </div>
     </div>
   </div>
@@ -254,6 +274,7 @@
 
 
 {% block page_only_scripts %}
+{% include "superuser/pages/filters/filter_created_date_range_picker_js.html" %}
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 

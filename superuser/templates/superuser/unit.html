@@ -61,18 +61,27 @@
                   <td style="padding: 12px; vertical-align: middle;">{{ u.name }}</td>
                   <td style="padding: 12px; vertical-align: middle;">{{ u.status }}</td>
                   <td style="padding: 12px; vertical-align: middle;">
-                    <button class="btn btn-sm btn-light-primary editBtn"
-                            data-id="{{ u.id }}"
-                            data-name="{{ u.name }}"
-                            data-status="{{ u.status }}"
-                            style="margin: 0 4px; padding: 5px 12px; font-size: 13px;">
-                      Edit
-                    </button>
-                    <button class="btn btn-sm btn-light-danger deleteBtn"
-                            data-id="{{ u.id }}"
-                            style="margin: 0 4px; padding: 5px 12px; font-size: 13px;">
-                      Delete
-                    </button>
+                    <!-- Actions Dropdown -->
+                    <div class="dropdown">
+                      <button class="btn btn-light-primary btn-sm dropdown-toggle" type="button" id="unitActionsDropdown{{ u.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                        Actions
+                      </button>
+                      <ul class="dropdown-menu" aria-labelledby="unitActionsDropdown{{ u.id }}">
+                        <li>
+                          <a class="dropdown-item editBtn" href="javascript:void(0);"
+                             data-id="{{ u.id }}"
+                             data-name="{{ u.name }}"
+                             data-status="{{ u.status }}">
+                            Edit
+                          </a>
+                        </li>
+                        <li>
+                          <a class="dropdown-item deleteBtn" href="javascript:void(0);" data-id="{{ u.id }}">
+                            Delete
+                          </a>
+                        </li>
+                      </ul>
+                    </div>
                   </td>
                 </tr>
                 {% empty %}

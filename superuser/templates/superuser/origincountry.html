@@ -15,6 +15,7 @@
         <div id="successMessage" class="alert alert-success d-none" style="font-size:16px;">
           <strong id="successText"></strong>
         </div>
+
    <!-- Filter Form -->
    <form action="{% url 'superuser:origin_country' %}" method="GET">
     <div class="card mb-7">
@@ -27,7 +28,6 @@
                     <div class="col-xxl-12">
                         <div class="row g-8">
                             {% include "superuser/pages/filters/filter_created_date_range_picker.html" %}
-                            
                         </div>
                     </div>
                 </div>
@@ -35,6 +35,7 @@
         </div>
     </div>
 </form>
+
         <div class="card card-flush">
           <div class="card-header flex-wrap align-items-center py-5 gap-4">
             <div class="card-title">Origin Country</div>
@@ -59,17 +60,24 @@
                 <tr>
                   <td style="padding: 12px; vertical-align: middle;">{{ c.name }}</td>
                   <td style="padding: 12px; vertical-align: middle;">
-                    <button class="btn btn-sm btn-light-primary editBtn"
-                            data-id="{{ c.id }}"
-                            data-name="{{ c.name }}"
-                            style="margin: 0 4px; padding: 5px 12px; font-size: 13px;">
-                      Edit
-                    </button>
-                    <button class="btn btn-sm btn-light-danger deleteBtn"
-                            data-id="{{ c.id }}"
-                            style="margin: 0 4px; padding: 5px 12px; font-size: 13px;">
-                      Delete
-                    </button>
+                    <!-- Actions Dropdown -->
+                    <div class="dropdown">
+                      <button class="btn btn-light-primary btn-sm dropdown-toggle" type="button" id="countryActionsDropdown{{ c.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                        Actions
+                      </button>
+                      <ul class="dropdown-menu" aria-labelledby="countryActionsDropdown{{ c.id }}">
+                        <li>
+                          <a class="dropdown-item editBtn" href="javascript:void(0);" data-id="{{ c.id }}" data-name="{{ c.name }}">
+                            Edit
+                          </a>
+                        </li>
+                        <li>
+                          <a class="dropdown-item deleteBtn" href="javascript:void(0);" data-id="{{ c.id }}">
+                            Delete
+                          </a>
+                        </li>
+                      </ul>
+                    </div>
                   </td>
                 </tr>
                 {% empty %}
@@ -80,7 +88,6 @@
               </tbody>
             </table>
           </div>
-          
 
         </div>
         {% include "superuser/pages/pagination.html" with page_obj=page_obj %}
@@ -194,7 +201,6 @@ document.addEventListener("DOMContentLoaded", function () {
       if (res.success) {
         modal.hide();
         showSuccess(cid ? "Country updated successfully!" : "Country added successfully!");
-
         setTimeout(() => location.reload(), 1000);
       } else {
         nameFld.classList.add("is-invalid");
@@ -226,6 +232,5 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
 });
-
 </script>
 {% endblock %}
