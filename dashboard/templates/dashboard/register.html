@@ -463,7 +463,7 @@
                                     </option>
                                 {% endfor %}
                             </select>
-                            <div class="error-message" id="nationality_error"></div>
+                            <div class="error-message" id="nationality_error">Please select your nationality</div>
                         </div>
                         
                         <div class="form-group">
@@ -473,7 +473,6 @@
                            
                             </select>
                             <div class="error-message" id="state_error">Please select your state</div>
-                            <div class="error-message" id="state_error"></div>
                         </div>
                         
                         <div class="form-group">
@@ -482,10 +481,9 @@
                                 <option value="">Select city first</option>
                             </select>
                             <div class="error-message" id="city_error">Please select your city</div>
-                            <div class="error-message" id="city_error"></div>
                         </div>
 
- <div class="form-group">
+                        <div class="form-group">
                             <label for="residency">Residency <span style="color: red;">*</span></label>
                             <select name="residency" id="residency" class="input-field">
                                 <option value="">Select your residency</option>
@@ -493,7 +491,7 @@
                                     <option value="{{ residency.id }}" {% if form_data.residency|add:0 == residency.id %}selected{% endif %}>{{ residency.country }}</option>
                                 {% endfor %}
                             </select>
-                            <div class="error-message" id="residency_error">Please select a valid residency</div>
+                            <div class="error-message" id="residency_error">Please select your residency</div>
                         </div>
                         <div class="form-group">
                             <label for="country_code">Country Code <span style="color: red;">*</span></label>
@@ -503,7 +501,7 @@
                                     <option value="{{ code.id }}" {% if form_data.country_code|add:0 == code.id %}selected{% endif %}>{{ code.code }} ({{ code.country }})</option>
                                 {% endfor %}
                             </select>
-                            <div class="error-message" id="country_code_error">Please select a valid country code</div>
+                            <div class="error-message" id="country_code_error">Please select your country code</div>
                         </div>
                         <div class="form-group">
                             <label for="speciality">Speciality <span style="color: red;">*</span></label>
@@ -513,7 +511,7 @@
                                     <option value="{{ speciality.id }}" {% if form_data.speciality|add:0 == speciality.id %}selected{% endif %}>{{ speciality.name }}</option>
                                 {% endfor %}
                             </select>
-                            <div class="error-message" id="speciality_error">Please select a valid speciality</div>
+                            <div class="error-message" id="speciality_error">Please select your speciality</div>
                         </div>
                     </div>
 
@@ -630,6 +628,8 @@
     const currentPositionInput = document.getElementById("current_position");
     const workplaceInput = document.getElementById("workplace");
     const nationalityInput = document.getElementById("nationality");
+    const stateSelect = document.getElementById("state");
+    const citySelect = document.getElementById("city");
     const residencyInput = document.getElementById("residency");
     const countryCodeInput = document.getElementById("country_code");
     const specialityInput = document.getElementById("speciality");
@@ -644,6 +644,8 @@
     const currentPositionError = document.getElementById("current_position_error");
     const workplaceError = document.getElementById("workplace_error");
     const nationalityError = document.getElementById("nationality_error");
+    const stateError = document.getElementById("state_error");
+    const cityError = document.getElementById("city_error");
     const residencyError = document.getElementById("residency_error");
     const countryCodeError = document.getElementById("country_code_error");
     const specialityError = document.getElementById("speciality_error");
@@ -857,6 +859,51 @@
         [currentPositionError, workplaceError, companyNameError, gstNumberError, departmentError, purchaseCapacityError, supplierCompanyNameError, licenseNumberError].forEach(error => {
             if (error) error.style.display = "none";
         });
+
+        // === RETAILER VALIDATION (NEWLY ADDED) ===
+        if (!retailFields.classList.contains("hidden")) {
+            if (!currentPositionInput.value.trim()) {
+                currentPositionInput.classList.add("input-error");
+                currentPositionError.style.display = "block";
+                isValid = false;
+            }
+            if (!workplaceInput.value.trim()) {
+                workplaceInput.classList.add("input-error");
+                workplaceError.style.display = "block";
+                isValid = false;
+            }
+            if (!nationalityInput.value) {
+                nationalityInput.classList.add("input-error");
+                nationalityError.style.display = "block";
+                isValid = false;
+            }
+            if (!stateSelect.value) {
+                stateSelect.classList.add("input-error");
+                stateError.style.display = "block";
+                isValid = false;
+            }
+            if (!citySelect.value) {
+                citySelect.classList.add("input-error");
+                cityError.style.display = "block";
+                isValid = false;
+            }
+            if (!residencyInput.value) {
+                residencyInput.classList.add("input-error");
+                residencyError.style.display = "block";
+                isValid = false;
+            }
+            if (!countryCodeInput.value) {
+                countryCodeInput.classList.add("input-error");
+                countryCodeError.style.display = "block";
+                isValid = false;
+            }
+            if (!specialityInput.value) {
+                specialityInput.classList.add("input-error");
+                specialityError.style.display = "block";
+                isValid = false;
+            }
+        }
+        // === END RETAILER VALIDATION ===
 
         if (!wholesalerFields.classList.contains("hidden")) {
             if (!companyNameInput.value.trim()) {
