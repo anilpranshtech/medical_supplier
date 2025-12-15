@@ -19,7 +19,7 @@ class Regioncities(models.Model):
 
 class Country(models.Model):
     name = models.CharField(max_length=100, unique=True)
-    created_at = models.DateTimeField(auto_now_add=True) 
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
 
     def __str__(self):
@@ -40,7 +40,7 @@ class State(models.Model):
 class City(models.Model):
     state = models.ForeignKey(State, on_delete=models.CASCADE, null=True,blank=True, related_name="cities")
     region = models.ForeignKey(Regioncities, on_delete=models.SET_NULL, null=True, blank=True, related_name="cities")
-    created_at = models.DateTimeField(auto_now_add=True) 
+    created_at = models.DateTimeField(auto_now_add=True, null=True,blank=True)
   
     name = models.CharField(max_length=100)
 
@@ -1657,7 +1657,7 @@ class TopSupplier(models.Model):
 
 class Bank(models.Model):
     name = models.CharField(max_length=150, unique=True)
-    created_at = models.DateTimeField(auto_now_add=True) 
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -1668,7 +1668,7 @@ class OriginCountry(models.Model):
     order = models.PositiveIntegerField(default=0)          
     currency = models.CharField(max_length=20, blank=True, null=True)  
     is_default = models.BooleanField(default=False)      
-    created_at = models.DateTimeField(auto_now_add=True) 
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
 
     class Meta:
         ordering = ['order', 'name_en']
@@ -1678,7 +1678,7 @@ class OriginCountry(models.Model):
 class Region(models.Model):
     name_en = models.CharField(max_length=150)
     country = models.CharField(max_length=150) 
-    created_at = models.DateTimeField(auto_now_add=True) 
+    created_at = models.DateTimeField(auto_now_add=True,blank=True, null=True)
 
     def __str__(self):
         return f"{self.name_en} ({self.country})"
@@ -1688,7 +1688,7 @@ class Currency(models.Model):
     code_en = models.CharField(max_length=10)
     rate = models.DecimalField(max_digits=10, decimal_places=4)
     country = models.CharField(max_length=100)  
-    created_at = models.DateTimeField(auto_now_add=True) 
+    created_at = models.DateTimeField(auto_now_add=True,blank=True, null=True)
 
     status = models.CharField(
         max_length=10,
@@ -1700,15 +1700,16 @@ class Currency(models.Model):
 
     def __str__(self):
         return self.name_en
+
 class ReturnReason(models.Model):
     reason_en = models.CharField(max_length=255)
-    created_at = models.DateTimeField(auto_now_add=True) 
+    created_at = models.DateTimeField(auto_now_add=True,blank=True, null=True)
 
     def __str__(self):
         return self.reason_en
 class Department(models.Model):
     name_en = models.CharField(max_length=255)
-    created_at = models.DateTimeField(auto_now_add=True) 
+    created_at = models.DateTimeField(auto_now_add=True,blank=True, null=True)
 
     def __str__(self):
         return self.name_en
@@ -1720,7 +1721,7 @@ class SupplierType(models.Model):
 
     name_en = models.CharField(max_length=255)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='active')
-    created_at = models.DateTimeField(auto_now_add=True) 
+    created_at = models.DateTimeField(auto_now_add=True,blank=True, null=True)
 
     def __str__(self):
         return self.name_en
@@ -1731,7 +1732,7 @@ class AddressType(models.Model):
     )
     name_en = models.CharField(max_length=255)
     client_type = models.CharField(max_length=10,choices=CLIENT_TYPE,default='b2b')
-    created_at = models.DateTimeField(auto_now_add=True) 
+    created_at = models.DateTimeField(auto_now_add=True,blank=True, null=True)
 
     def __str__(self):
         return self.name_en
@@ -1744,7 +1745,7 @@ class Unit(models.Model):
 
     name = models.CharField(max_length=100, verbose_name="Name (En)")
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Active')
-    created_at = models.DateTimeField(auto_now_add=True) 
+    created_at = models.DateTimeField(auto_now_add=True,blank=True, null=True)
 
     def __str__(self):
         return self.name
@@ -1756,7 +1757,7 @@ class DeliveryTime(models.Model):
 
     name = models.CharField(max_length=100, verbose_name="Name (En)")
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Active')
-    created_at = models.DateTimeField(auto_now_add=True) 
+    created_at = models.DateTimeField(auto_now_add=True,blank=True, null=True)
 
     def __str__(self):
         return self.name
@@ -1769,13 +1770,11 @@ class ReturnTime(models.Model):
     name = models.CharField(max_length=100, verbose_name="Name (En)")
     value = models.CharField(max_length=100, verbose_name="Value")
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Active')
-    created_at = models.DateTimeField(auto_now_add=True) 
-
-    
-    
+    created_at = models.DateTimeField(auto_now_add=True,blank=True, null=True)
 
     def __str__(self):
         return f"{self.name} ({self.value})"
+
 class StandingTime(models.Model):
     STATUS_CHOICES = (
         ('Active','Active'),
@@ -1784,8 +1783,7 @@ class StandingTime(models.Model):
     name = models.CharField(max_length=100, verbose_name="Name (En)")
     value = models.CharField(max_length=100,verbose_name="Value")
     status = models.CharField(max_length=10,choices=STATUS_CHOICES , default='Active')
-    created_at = models.DateTimeField(auto_now_add=True) 
-
+    created_at = models.DateTimeField(auto_now_add=True,blank=True, null=True)
 
     def __str__(self):
         return f"{self.name} ({self.value})"
@@ -1798,11 +1796,11 @@ class Warranty(models.Model):
 
         name = models.CharField(max_length=100,verbose_name="Name(En)")
         status = models.CharField(max_length=10,choices=STATUS_CHOICES,default='Active')
-        created_at = models.DateTimeField(auto_now_add=True) 
-
+        created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
         def __str__(self):
             return self.name
+
 class SplashScreen(models.Model):
     LANGUAGE_CHOICES = [
         ('gu', 'Gujarati'),
@@ -1816,8 +1814,7 @@ class SplashScreen(models.Model):
     screen_body = models.TextField(verbose_name="Screen Body")
     screen_order = models.PositiveIntegerField(verbose_name="Screen Order")
     screen_language = models.CharField(max_length=10, choices=LANGUAGE_CHOICES, verbose_name="Screen Language")
-    created_at = models.DateTimeField(auto_now_add=True) 
-  
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
         ordering = ['screen_order']
@@ -1830,7 +1827,7 @@ class SplashScreen(models.Model):
 class Staticcontents(models.Model):
     name_en = models.CharField(max_length=255, verbose_name="Name En *")
     description_en = models.TextField(verbose_name="Description EN *")
-    created_at = models.DateTimeField(auto_now_add=True) 
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
         verbose_name = "Website Metadata"
@@ -1841,8 +1838,7 @@ class Staticcontents(models.Model):
 class SocialLinks(models.Model):
     title = models.CharField(max_length=255, verbose_name="Title *")
     link = models.URLField(max_length=500, verbose_name="Link *")
-    created_at = models.DateTimeField(auto_now_add=True) 
-
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
         verbose_name = "Social Link"
@@ -1850,11 +1846,11 @@ class SocialLinks(models.Model):
 
     def __str__(self):
         return self.title
+
 class FaqForm(models.Model):
     title_en = models.CharField("Title En", max_length=255, blank=False, null=False)
     description_en = models.TextField("Description En", blank=False, null=False)
-    created_at = models.DateTimeField(auto_now_add=True) 
-
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     def __str__(self):
         return self.title_en
@@ -1863,6 +1859,7 @@ class FaqForm(models.Model):
         verbose_name = "FAQ Form"
         verbose_name_plural = "FAQ Forms"
         ordering = ["title_en"]
+
 class AdminUser(models.Model):
     ROLE_CHOICES = [
         ('admin', 'Admin'),
@@ -1886,33 +1883,37 @@ class DynamicInput(models.Model):
     title_en = models.CharField(max_length=200)
     required = models.BooleanField(default=False)
     status = models.BooleanField(default=True)  
-    created_at = models.DateTimeField(auto_now_add=True) 
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     def __str__(self):
         return f"{self.title_en} ({self.field_type})"
+
 class FormControl(models.Model):
     form = models.CharField(max_length=100)    
     name = models.CharField(max_length=255)     
     required = models.BooleanField(default=True) 
     status = models.BooleanField(default=True) 
-    created_at = models.DateTimeField(auto_now_add=True)   
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     def __str__(self):
         return f"{self.form} - {self.name}"
+
 class Catalog(models.Model):
     key = models.CharField(max_length=255, unique=True)   
     description = models.TextField() 
-    created_at = models.DateTimeField(auto_now_add=True)                 
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     def __str__(self):
         return self.key
+
 class Configuration(models.Model):
     key = models.CharField(max_length=255, unique=True)
     status = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True) 
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     def __str__(self):
         return self.key
+
 class SMSConfiguration(models.Model):
     PROVIDER_CHOICES = (
         ('twilio', 'Twilio'),
@@ -1956,7 +1957,7 @@ class Theme(models.Model):
 class APIControls(models.Model):
     portal = models.CharField(max_length=100)
     api_name = models.CharField(max_length=200)
-    created_at = models.DateTimeField(auto_now_add=True) 
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     status = models.CharField(
         max_length=10,
         choices=[
@@ -1969,6 +1970,7 @@ class APIControls(models.Model):
 
     def __str__(self):
         return f"{self.portal} - {self.api_name}"
+
 class SEOSettings(models.Model):
 
     TYPE_CHOICES = (
@@ -1980,14 +1982,14 @@ class SEOSettings(models.Model):
     value = models.TextField(blank=True, null=True)
     image = models.ImageField(upload_to='seo_images/', blank=True, null=True)
     type = models.CharField(max_length=20, choices=TYPE_CHOICES, default='text')
-    created_at = models.DateTimeField(auto_now_add=True) 
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     def __str__(self):
         return self.key
 
 class PaymentSettings(models.Model):
     key = models.CharField(max_length=200, unique=True)
-    created_at = models.DateTimeField(auto_now_add=True) 
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     status = models.CharField(
         max_length=10,
