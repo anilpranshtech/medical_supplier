@@ -59,7 +59,8 @@
                       {{ req.status }}
                     </span>
                   </td>
-                  <td class="text-center pe-4">
+                {% if "dashboard.change_vacationrequest" in user_permissions_list %}
+                <td class="text-center pe-4">
                     <div class="d-flex justify-content-center gap-2">
                       <button type="button" class="btn btn-sm btn-success action-btn"
                           data-id="{{ req.id }}" data-action="approve"
