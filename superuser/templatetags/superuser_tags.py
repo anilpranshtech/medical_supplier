@@ -39,7 +39,7 @@ def tag_total_wholesaler():
 @register.simple_tag
 def tag_user_permissions_list(user):
     if user.is_authenticated:
-        # print('permission -----------', user.get_all_permissions())
+        print('permission -----------', user.get_all_permissions())
         return user.get_all_permissions()
     return []
 

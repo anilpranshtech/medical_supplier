@@ -33,13 +33,17 @@ Product Categories
                 </form>
                 <!-- Categories Table -->
                 <div class="card card-flush">
-                   {% if "dashboard.add_productcategory" in user_permissions_list %}
+
                    <div class="card-header flex-wrap align-items-end py-5 gap-4 pb-0">
+
+                    {% if "dashboard.add_productcategory" in user_permissions_list %}
                     <div class="card-toolbar d-flex justify-content-end w-100">
                         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
                             Add Category
                         </button>
                     </div>
+                    {% endif %}
+
                   </div>
                     {% endif %}
                 <!-- Add Category -->
@@ -125,7 +129,7 @@ Product Categories
                                     <th class="text-center min-w-100px">Created At</th>
                                     <th class="text-center min-w-100px">Updated At</th>
                                     <th class="text-center min-w-125px">Subcategories</th>
-                                    {% if "dashboard.change_productcategory" in user_permissions_list or "dashboard.delete_productcategory" in user_permissions_list %}
+                                    {% if "dashboard.change_productcategory" in user_permissions_list or "dashboard.delete_productcategory" in user_permissions_list or "dashboard.view_productcategory" in user_permissions_list %}
                                     <th class="text-center min-w-100px">Actions</th>
                                     {% endif %}
                                 </tr>
