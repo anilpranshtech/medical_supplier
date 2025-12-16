@@ -85,7 +85,8 @@
                                   Actions
                                 </button>
                                 <ul class="dropdown-menu">
-                                  <li>
+                                  {% if "dashboard.change_coupon" in user_permissions_list %}
+                                    <li>
                                     <a class="dropdown-item editCouponBtn" href="#"
                                        data-id="{{ coupon.id }}"
                                        data-code="{{ coupon.code }}"
@@ -106,6 +107,9 @@
                                     </a>
                                   </li>
                                   <li><hr class="dropdown-divider"></li>
+                                  {% endif %}
+
+                                {% if "dashboard.delete_coupon" in user_permissions_list %}
                                   <li>
                                     <a class="dropdown-item deleteCouponBtn" href="#"
                                        data-id="{{ coupon.id }}"
@@ -113,6 +117,7 @@
                                       <i class="bi bi-trash me-2"></i> Delete
                                     </a>
                                   </li>
+                                  {% endif %}
                                 </ul>
                               </div>
                             </td>

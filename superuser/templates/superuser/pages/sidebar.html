@@ -40,414 +40,414 @@
           </div>
 
          <!-- Admin settings -->
-{% if "supplier.view_banner" in user_permissions_list or "dashboard.view_ratingreview" in user_permissions_list or "dashboard.view_notification" in user_permissions_list %}
-<div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="right-start"
-     class="menu-item py-2 {% if request.resolver_match.url_name == 'banks' or request.resolver_match.url_name == 'countrys' or request.resolver_match.url_name == 'region' or request.resolver_match.url_name == 'cities_list' or request.resolver_match.url_name == 'currency' or request.resolver_match.url_name == 'return_reason' or request.resolver_match.url_name == 'department' or request.resolver_match.url_name == 'suppliertype' or request.resolver_match.url_name == 'addresstype' or request.resolver_match.url_name == 'unit' or request.resolver_match.url_name == 'deliverytime' or request.resolver_match.url_name == 'returntime' or request.resolver_match.url_name == 'standingtime' or request.resolver_match.url_name == 'warranty'  or request.resolver_match.url_name == 'origin_country' or request.resolver_match.url_name == 'standing_time' or request.resolver_match.url_name == 'social_links' or request.resolver_match.url_name == 'site_messages' or request.resolver_match.url_name == 'faq' or request.resolver_match.url_name == 'splash_screen' or request.resolver_match.url_name == 'dynamic_inputs' or request.resolver_match.url_name == 'form_controls' or request.resolver_match.url_name == 'admin_list' or  request.resolver_match.url_name == 'catalog' or request.resolver_match.url_name == 'configurations' or request.resolver_match.url_name == 'sms_configuration' or request.resolver_match.url_name == 'theme_list' or request.resolver_match.url_name == 'api_control' or  request.resolver_match.url_name == 'seo_settings' or request.resolver_match.url_name == 'payment_settings' %} here show {% endif %}">
-    
-    <span class="menu-link menu-center">
-        <span class="menu-icon me-0">
-            <i class="bi bi-gear fs-1"></i>
-        </span>
-    </span>
+            {% if request.user.is_superuser %}
+            <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="right-start"
+                 class="menu-item py-2 {% if request.resolver_match.url_name == 'banks' or request.resolver_match.url_name == 'countrys' or request.resolver_match.url_name == 'region' or request.resolver_match.url_name == 'cities_list' or request.resolver_match.url_name == 'currency' or request.resolver_match.url_name == 'return_reason' or request.resolver_match.url_name == 'department' or request.resolver_match.url_name == 'suppliertype' or request.resolver_match.url_name == 'addresstype' or request.resolver_match.url_name == 'unit' or request.resolver_match.url_name == 'deliverytime' or request.resolver_match.url_name == 'returntime' or request.resolver_match.url_name == 'standingtime' or request.resolver_match.url_name == 'warranty'  or request.resolver_match.url_name == 'origin_country' or request.resolver_match.url_name == 'standing_time' or request.resolver_match.url_name == 'social_links' or request.resolver_match.url_name == 'site_messages' or request.resolver_match.url_name == 'faq' or request.resolver_match.url_name == 'splash_screen' or request.resolver_match.url_name == 'dynamic_inputs' or request.resolver_match.url_name == 'form_controls' or request.resolver_match.url_name == 'admin_list' or  request.resolver_match.url_name == 'catalog' or request.resolver_match.url_name == 'configurations' or request.resolver_match.url_name == 'sms_configuration' or request.resolver_match.url_name == 'theme_list' or request.resolver_match.url_name == 'api_control' or  request.resolver_match.url_name == 'seo_settings' or request.resolver_match.url_name == 'payment_settings' %} here show {% endif %}">
 
-    <div class="menu-sub menu-sub-dropdown px-2 py-4 w-250px mh-75 overflow-auto">
-
-        <!-- Title -->
-        <div class="menu-item">
-            <div class="menu-content">
-                <span class="menu-section fs-5 fw-bolder ps-1 py-1">
-                    Admin Settings
-                </span>
-            </div>
-        </div>
-
-        <!-- General Settings -->
-        <div data-kt-menu-trigger="click" class="menu-item menu-accordion {% if request.resolver_match.url_name == 'banks' or request.resolver_match.url_name == 'countrys' or request.resolver_match.url_name == 'region' or request.resolver_match.url_name == 'cities_list' or request.resolver_match.url_name == 'currency' or request.resolver_match.url_name == 'return_reason' or request.resolver_match.url_name == 'department' or request.resolver_match.url_name == 'suppliertype' or request.resolver_match.url_name == 'addresstype' or request.resolver_match.url_name == 'origin_country'  %} here show {% endif %}">
-            <span class="menu-link">
-                <span class="menu-bullet"><i class="fa-solid fa-cogs"></i></span>
-                <span class="menu-title">General Settings</span>
-                <span class="menu-arrow"></span>
-            </span>
-<div class="menu-sub menu-sub-accordion">
-
-                <!-- Banks -->
-                <div class="menu-item">
-                    <a class="menu-link {% if request.resolver_match.url_name == 'banks' %} active {% endif %}"
-                       href="{% url 'superuser:banks' %}">
-                        <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
-                        <span class="menu-title">Banks</span>
-                    </a>
-                </div>
-
-                <!-- Origin Countries -->
-                <div class="menu-item">
-                    <a class="menu-link {% if request.resolver_match.url_name == 'origin_country' %} active {% endif %}"
-                       href="{% url 'superuser:origin_country' %}">
-                        <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
-                        <span class="menu-title">Origin Countries</span>
-                    </a>
-                </div>
-
-                <!-- Countries -->
-                <div class="menu-item">
-                    <a class="menu-link {% if request.resolver_match.url_name == 'countrys' %} active {% endif %}"
-                       href="{% url 'superuser:countrys' %}">
-                        <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
-                        <span class="menu-title">Countries</span>
-                    </a>
-                </div>
-
-                <!-- Region -->
-                <div class="menu-item">
-                    <a class="menu-link {% if request.resolver_match.url_name == 'region' %} active {% endif %}"
-                       href="{% url 'superuser:region' %}">
-                        <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
-                        <span class="menu-title">Region</span>
-                    </a>
-                </div>
-
-                <!-- Cities -->
-                <div class="menu-item">
-                    <a class="menu-link {% if request.resolver_match.url_name == 'cities_list' %} active {% endif %}"
-                       href="{% url 'superuser:cities_list' %}">
-                        <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
-                        <span class="menu-title">Cities</span>
-                    </a>
-                </div>
-
-                <!-- Currency -->
-                <div class="menu-item">
-                    <a class="menu-link {% if request.resolver_match.url_name == 'currency' %} active {% endif %}"
-                       href="{% url 'superuser:currency' %}">
-                        <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
-                        <span class="menu-title">Currency</span>
-                    </a>
-                </div>
-
-                <!-- Return Reasons -->
-                <div class="menu-item">
-                    <a class="menu-link {% if request.resolver_match.url_name == 'return_reason' %} active {% endif %}"
-                       href="{% url 'superuser:return_reason' %}">
-                        <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
-                        <span class="menu-title">Return Reasons</span>
-                    </a>
-                </div>
-
-                <!-- Departments -->
-                <div class="menu-item">
-                    <a class="menu-link {% if request.resolver_match.url_name == 'department' %} active {% endif %}"
-                       href="{% url 'superuser:department' %}">
-                        <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
-                        <span class="menu-title">Departments</span>
-                    </a>
-                </div>
-
-                <!-- Supplier Types -->
-                <div class="menu-item">
-                    <a class="menu-link {% if request.resolver_match.url_name == 'suppliertype' %} active {% endif %}"
-                       href="{% url 'superuser:suppliertype' %}">
-                        <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
-                        <span class="menu-title">Supplier Types</span>
-                    </a>
-                </div>
-
-                <!-- Address Types -->
-                <div class="menu-item">
-                    <a class="menu-link {% if request.resolver_match.url_name == 'addresstype' %} active {% endif %}"
-                       href="{% url 'superuser:addresstype' %}">
-                        <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
-                        <span class="menu-title">Address Types</span>
-                    </a>
-                </div>
-            </div>
-           </div>
-                <!-- Product Settings -->
-                <div data-kt-menu-trigger="click" class="menu-item menu-accordion {% if request.resolver_match.url_name == 'unit' or request.resolver_match.url_name == 'deliverytime' or request.resolver_match.url_name == 'returntime' or request.resolver_match.url_name == 'standingtime' or request.resolver_match.url_name == 'warranty' %} here show {% endif %}">
-                    <span class="menu-link">
-                        <span class="menu-bullet"><i class="svg-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="20" height="20">
-                              <path fill="currentColor" d="M505.12019,19.09375c-1.18945-5.53125-6.65819-11-12.207-12.1875C460.716,0,435.507,0,410.40747,0,307.17523,0,245.26909,55.20312,199.05238,128H94.83772c-16.34763.01562-35.55658,11.875-42.88664,26.48438L2.51562,253.29688A28.4,28.4,0,0,0,0,264a24.00867,24.00867,0,0,0,24.00582,24H127.81618l-22.47457,22.46875c-11.36521,11.36133-12.99607,32.25781,0,45.25L156.24582,406.625c11.15623,11.1875,32.15619,13.15625,45.27726,0l22.47457-22.46875V488a24.00867,24.00867,0,0,0,24.00581,24,28.55934,28.55934,0,0,0,10.707-2.51562l98.72834-49.39063c14.62888-7.29687,26.50776-26.5,26.50776-42.85937V312.79688c72.59753-46.3125,128.03493-108.40626,128.03493-211.09376C512.07526,76.5,512.07526,51.29688,505.12019,19.09375ZM384.04033,168A40,40,0,1,1,424.05,128,40.02322,40.02322,0,0,1,384.04033,168Z"/>
-                            </svg>
-                            </i>
-                            </span>
-                        <span class="menu-title">Product Settings</span>
-                        <span class="menu-arrow"></span>
+                <span class="menu-link menu-center">
+                    <span class="menu-icon me-0">
+                        <i class="bi bi-gear fs-1"></i>
                     </span>
-                    <div class="menu-sub menu-sub-accordion">
-        
-                        <!-- Units -->
-                        <div class="menu-item">
-                            <a class="menu-link {% if request.resolver_match.url_name == 'unit' %} active {% endif %}"
-                               href="{% url 'superuser:unit' %}">
-                                <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
-                                <span class="menu-title">Units</span>
-                            </a>
+                </span>
+
+                <div class="menu-sub menu-sub-dropdown px-2 py-4 w-250px mh-75 overflow-auto">
+
+                    <!-- Title -->
+                    <div class="menu-item">
+                        <div class="menu-content">
+                            <span class="menu-section fs-5 fw-bolder ps-1 py-1">
+                                Admin Settings
+                            </span>
                         </div>
-                        <!-- delivery time-->
-                        <div class="menu-item">
-                            <a class="menu-link {% if request.resolver_match.url_name == 'deliverytime' %} active {% endif %}"
-                               href="{% url 'superuser:deliverytime' %}">
-                                <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
-                                <span class="menu-title">
-                                    Delivery Time</span>
-                            </a>
-                        </div>
-                            <!-- Return Time-->
+                    </div>
+
+                    <!-- General Settings -->
+                    <div data-kt-menu-trigger="click" class="menu-item menu-accordion {% if request.resolver_match.url_name == 'banks' or request.resolver_match.url_name == 'countrys' or request.resolver_match.url_name == 'region' or request.resolver_match.url_name == 'cities_list' or request.resolver_match.url_name == 'currency' or request.resolver_match.url_name == 'return_reason' or request.resolver_match.url_name == 'department' or request.resolver_match.url_name == 'suppliertype' or request.resolver_match.url_name == 'addresstype' or request.resolver_match.url_name == 'origin_country'  %} here show {% endif %}">
+                        <span class="menu-link">
+                            <span class="menu-bullet"><i class="fa-solid fa-cogs"></i></span>
+                            <span class="menu-title">General Settings</span>
+                            <span class="menu-arrow"></span>
+                        </span>
+            <div class="menu-sub menu-sub-accordion">
+
+                            <!-- Banks -->
                             <div class="menu-item">
-                                <a class="menu-link {% if request.resolver_match.url_name == 'returntime' %} active {% endif %}"
-                                   href="{% url 'superuser:returntime' %}">
+                                <a class="menu-link {% if request.resolver_match.url_name == 'banks' %} active {% endif %}"
+                                   href="{% url 'superuser:banks' %}">
                                     <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
-                                    <span class="menu-title">
-                                        Return Time</span>
+                                    <span class="menu-title">Banks</span>
                                 </a>
                             </div>
-                             <!-- Standing Time-->
-                             <div class="menu-item">
-                                <a class="menu-link {% if request.resolver_match.url_name == 'standingtime' %} active {% endif %}"
-                                   href="{% url 'superuser:standingtime' %}">
+
+                            <!-- Origin Countries -->
+                            <div class="menu-item">
+                                <a class="menu-link {% if request.resolver_match.url_name == 'origin_country' %} active {% endif %}"
+                                   href="{% url 'superuser:origin_country' %}">
                                     <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
-                                    <span class="menu-title">
-                                        Standing Time</span>
+                                    <span class="menu-title">Origin Countries</span>
                                 </a>
                             </div>
-                                <!-- Warranty -->
-                                <div class="menu-item">
-                                    <a class="menu-link {% if request.resolver_match.url_name == 'warranty' %} active {% endif %}"
-                                       href="{% url 'superuser:warranty' %}">
+
+                            <!-- Countries -->
+                            <div class="menu-item">
+                                <a class="menu-link {% if request.resolver_match.url_name == 'countrys' %} active {% endif %}"
+                                   href="{% url 'superuser:countrys' %}">
+                                    <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                                    <span class="menu-title">Countries</span>
+                                </a>
+                            </div>
+
+                            <!-- Region -->
+                            <div class="menu-item">
+                                <a class="menu-link {% if request.resolver_match.url_name == 'region' %} active {% endif %}"
+                                   href="{% url 'superuser:region' %}">
+                                    <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                                    <span class="menu-title">Region</span>
+                                </a>
+                            </div>
+
+                            <!-- Cities -->
+                            <div class="menu-item">
+                                <a class="menu-link {% if request.resolver_match.url_name == 'cities_list' %} active {% endif %}"
+                                   href="{% url 'superuser:cities_list' %}">
+                                    <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                                    <span class="menu-title">Cities</span>
+                                </a>
+                            </div>
+
+                            <!-- Currency -->
+                            <div class="menu-item">
+                                <a class="menu-link {% if request.resolver_match.url_name == 'currency' %} active {% endif %}"
+                                   href="{% url 'superuser:currency' %}">
+                                    <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                                    <span class="menu-title">Currency</span>
+                                </a>
+                            </div>
+
+                            <!-- Return Reasons -->
+                            <div class="menu-item">
+                                <a class="menu-link {% if request.resolver_match.url_name == 'return_reason' %} active {% endif %}"
+                                   href="{% url 'superuser:return_reason' %}">
+                                    <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                                    <span class="menu-title">Return Reasons</span>
+                                </a>
+                            </div>
+
+                            <!-- Departments -->
+                            <div class="menu-item">
+                                <a class="menu-link {% if request.resolver_match.url_name == 'department' %} active {% endif %}"
+                                   href="{% url 'superuser:department' %}">
+                                    <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                                    <span class="menu-title">Departments</span>
+                                </a>
+                            </div>
+
+                            <!-- Supplier Types -->
+                            <div class="menu-item">
+                                <a class="menu-link {% if request.resolver_match.url_name == 'suppliertype' %} active {% endif %}"
+                                   href="{% url 'superuser:suppliertype' %}">
+                                    <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                                    <span class="menu-title">Supplier Types</span>
+                                </a>
+                            </div>
+
+                            <!-- Address Types -->
+                            <div class="menu-item">
+                                <a class="menu-link {% if request.resolver_match.url_name == 'addresstype' %} active {% endif %}"
+                                   href="{% url 'superuser:addresstype' %}">
+                                    <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                                    <span class="menu-title">Address Types</span>
+                                </a>
+                            </div>
+                        </div>
+                       </div>
+                            <!-- Product Settings -->
+                            <div data-kt-menu-trigger="click" class="menu-item menu-accordion {% if request.resolver_match.url_name == 'unit' or request.resolver_match.url_name == 'deliverytime' or request.resolver_match.url_name == 'returntime' or request.resolver_match.url_name == 'standingtime' or request.resolver_match.url_name == 'warranty' %} here show {% endif %}">
+                                <span class="menu-link">
+                                    <span class="menu-bullet"><i class="svg-icon">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="20" height="20">
+                                          <path fill="currentColor" d="M505.12019,19.09375c-1.18945-5.53125-6.65819-11-12.207-12.1875C460.716,0,435.507,0,410.40747,0,307.17523,0,245.26909,55.20312,199.05238,128H94.83772c-16.34763.01562-35.55658,11.875-42.88664,26.48438L2.51562,253.29688A28.4,28.4,0,0,0,0,264a24.00867,24.00867,0,0,0,24.00582,24H127.81618l-22.47457,22.46875c-11.36521,11.36133-12.99607,32.25781,0,45.25L156.24582,406.625c11.15623,11.1875,32.15619,13.15625,45.27726,0l22.47457-22.46875V488a24.00867,24.00867,0,0,0,24.00581,24,28.55934,28.55934,0,0,0,10.707-2.51562l98.72834-49.39063c14.62888-7.29687,26.50776-26.5,26.50776-42.85937V312.79688c72.59753-46.3125,128.03493-108.40626,128.03493-211.09376C512.07526,76.5,512.07526,51.29688,505.12019,19.09375ZM384.04033,168A40,40,0,1,1,424.05,128,40.02322,40.02322,0,0,1,384.04033,168Z"/>
+                                        </svg>
+                                        </i>
+                                        </span>
+                                    <span class="menu-title">Product Settings</span>
+                                    <span class="menu-arrow"></span>
+                                </span>
+                                <div class="menu-sub menu-sub-accordion">
+
+                                    <!-- Units -->
+                                    <div class="menu-item">
+                                        <a class="menu-link {% if request.resolver_match.url_name == 'unit' %} active {% endif %}"
+                                           href="{% url 'superuser:unit' %}">
+                                            <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                                            <span class="menu-title">Units</span>
+                                        </a>
+                                    </div>
+                                    <!-- delivery time-->
+                                    <div class="menu-item">
+                                        <a class="menu-link {% if request.resolver_match.url_name == 'deliverytime' %} active {% endif %}"
+                                           href="{% url 'superuser:deliverytime' %}">
+                                            <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                                            <span class="menu-title">
+                                                Delivery Time</span>
+                                        </a>
+                                    </div>
+                                        <!-- Return Time-->
+                                        <div class="menu-item">
+                                            <a class="menu-link {% if request.resolver_match.url_name == 'returntime' %} active {% endif %}"
+                                               href="{% url 'superuser:returntime' %}">
+                                                <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                                                <span class="menu-title">
+                                                    Return Time</span>
+                                            </a>
+                                        </div>
+                                         <!-- Standing Time-->
+                                         <div class="menu-item">
+                                            <a class="menu-link {% if request.resolver_match.url_name == 'standingtime' %} active {% endif %}"
+                                               href="{% url 'superuser:standingtime' %}">
+                                                <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                                                <span class="menu-title">
+                                                    Standing Time</span>
+                                            </a>
+                                        </div>
+                                            <!-- Warranty -->
+                                            <div class="menu-item">
+                                                <a class="menu-link {% if request.resolver_match.url_name == 'warranty' %} active {% endif %}"
+                                                   href="{% url 'superuser:warranty' %}">
+                                                    <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                                                    <span class="menu-title">
+                                                        Warranty</span>
+                                                </a>
+                                            </div>
+                     </div>
+                     </div>
+
+                              <!-- Website Settings -->
+                              <div data-kt-menu-trigger="click" class="menu-item menu-accordion {% if request.resolver_match.url_name == 'standing_time' or request.resolver_match.url_name == 'social_links' or request.resolver_match.url_name == 'site_messages' or request.resolver_match.url_name == 'faq' %} here show {% endif %}">
+                                <span class="menu-link">
+                                  <!-- Icon -->
+            <svg xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 512 512"
+            width="20" height="12"
+            fill="currentColor">
+            <path d="M128 352H32c-17.67 0-32 14.33-32 32v96c0 17.67 14.33 32 32 32h96c17.67 0 32-14.33 32-32v-96c0-17.67-14.33-32-32-32zm-24-80h192v48h48v-48h192v48h48v-57.59c0-21.17-17.23-38.41-38.41-38.41H344v-64h40c17.67 0 32-14.33 32-32V32c0-17.67-14.33-32-32-32H256c-17.67 0-32 14.33-32 32v96c0 17.67 14.33 32 32 32h40v64H94.41C73.23 224 56 241.23 56 262.41V320h48v-48zm264 80h-96c-17.67 0-32 14.33-32 32v96c0 17.67 14.33 32 32 32h96c17.67 0 32-14.33 32-32v-96c0-17.67-14.33-32-32-32zm240 0h-96c-17.67 0-32 14.33-32 32v96c0 17.67 14.33 32 32 32h96c17.67 0 32-14.33 32-32v-96c0-17.67-14.33-32-32-32z"/>
+            </svg>
+
+
+                                    <span class="menu-title">Website Settings</span>
+                                    <span class="menu-arrow"></span>
+                                </span>
+                                <div class="menu-sub menu-sub-accordion">
+
+                                    <!-- Static contents -->
+                                    <div class="menu-item">
+                                        <a class="menu-link {% if request.resolver_match.url_name == 'standing_time' %} active {% endif %}"
+                                           href="{% url 'superuser:standing_time' %}">
+                                            <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                                            <span class="menu-title">Static contents</span>
+                                        </a>
+                                    </div>
+                                       <!-- Social Links -->
+                                       <div class="menu-item">
+                                        <a class="menu-link {% if request.resolver_match.url_name == 'social_links' %} active {% endif %}"
+                                           href="{% url 'superuser:social_links' %}">
+                                            <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                                            <span class="menu-title">Social Links</span>
+                                        </a>
+                                    </div>
+                <!-- Site Messages -->
+                <div class="menu-item">
+                    <a class="menu-link {% if request.resolver_match.url_name == 'site_messages' %} active {% endif %}"
+                       href="{% url 'superuser:site_messages' %}">
+                        <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                        <span class="menu-title">Site Messages</span>
+                    </a>
+                </div>
+                 <!-- Faqs -->
+                 <div class="menu-item">
+                    <a class="menu-link {% if request.resolver_match.url_name == 'faq' %} active {% endif %}"
+                       href="{% url 'superuser:faq' %}">
+                        <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                        <span class="menu-title">Faqs</span>
+                    </a>
+                </div>
+
+                                </div>
+                     </div>
+
+                              <!-- Mobile Settings -->
+                              <div data-kt-menu-trigger="click" class="menu-item menu-accordion {% if request.resolver_match.url_name == 'splash_screen'%} here show {% endif %}">
+                                <span class="menu-link">
+                                    <span class="menu-bullet">
+                                        <i class="svg-icon">
+                                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="20" height="20">
+                                            <rect x="128" y="32" width="192" height="448" rx="24" ry="24" fill="none" stroke="currentColor" stroke-width="32"/>
+                                            <circle cx="224" cy="432" r="16" fill="currentColor"/>
+                                            <path fill="currentColor" d="M466.1 286.7l-28.3-16.4c2.6-13.9 2.6-28.1 0-42l28.3-16.4a12.07 12.07 0 0 0 4.6-16.4l-27.1-47a12.07 12.07 0 0 0-16.4-4.6l-28.3 16.4a136.62 136.62 0 0 0-36.4-21.1v-32.8A12 12 0 0 0 320 56h-54a12 12 0 0 0-12 12v32.8a136.62 136.62 0 0 0-36.4 21.1l-28.3-16.4a12.07 12.07 0 0 0-16.4 4.6l-27.1 47a12.07 12.07 0 0 0 4.6 16.4l28.3 16.4a139.79 139.79 0 0 0 0 42l-28.3 16.4a12.07 12.07 0 0 0-4.6 16.4l27.1 47a12.07 12.07 0 0 0 16.4 4.6l28.3-16.4a136.62 136.62 0 0 0 36.4 21.1V440a12 12 0 0 0 12 12h54a12 12 0 0 0 12-12v-32.8a136.62 136.62 0 0 0 36.4-21.1l28.3 16.4a12.07 12.07 0 0 0 16.4-4.6l27.1-47a12.07 12.07 0 0 0-4.6-16.4zM293 320a67 67 0 1 1 67-67 67.08 67.08 0 0 1-67 67z"/>
+                                          </svg>
+                                        </i>
+                                      </span>
+
+                                    <span class="menu-title">Mobile Settings</span>
+                                    <span class="menu-arrow"></span>
+                                </span>
+                                <div class="menu-sub menu-sub-accordion">
+
+                                    <!-- Splash Screen List -->
+                                    <div class="menu-item">
+                                        <a class="menu-link {% if request.resolver_match.url_name == 'splash_screen' %} active {% endif %}"
+                                           href="{% url 'superuser:splash_screen' %}">
+                                            <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                                            <span class="menu-title">Splash Screen List</span>
+                                        </a>
+                                    </div>
+
+                     </div>
+                     </div>
+                           <!-- Form  Settings -->
+                           <div data-kt-menu-trigger="click" class="menu-item menu-accordion {% if request.resolver_match.url_name == 'dynamic_inputs' or request.resolver_match.url_name == 'form_controls' %} here show {% endif %}">
+                            <span class="menu-link">
+            <svg xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 512 512"
+            width="15" height="15"
+            fill="currentColor">
+            <path d="M384 64H128c-17.67 0-32 14.33-32 32v320c0 17.67 14.33 32 32 32h256c17.67 0 32-14.33 32-32V96c0-17.67-14.33-32-32-32zm-16 320H144V112h224v272z"/>
+            <path d="M256 160c-53 0-96 43-96 96s43 96 96 96 96-43 96-96-43-96-96-96zm0 160c-35.35 0-64-28.65-64-64s28.65-64 64-64 64 28.65 64 64-28.65 64-64 64z"/>
+            <path d="M369.45 142.55l-12.02-12.02-17.68 17.68 12.02 12.02 17.68-17.68zm-226.9 0l17.68 17.68 12.02-12.02-17.68-17.68-12.02 12.02zM256 96v32h16V96h-16zm0 288v32h16v-32h-16zm160-160h-32v16h32v-16zm-288 0H96v16h32v-16z"/>
+            </svg>
+
+
+                                <span class="menu-title">Form Settings</span>
+                                <span class="menu-arrow"></span>
+                            </span>
+                            <div class="menu-sub menu-sub-accordion">
+
+                                  <!-- Splash Screen List -->
+                                  <div class="menu-item">
+                                    <a class="menu-link {% if request.resolver_match.url_name == 'dynamic_inputs' %} active {% endif %}"
+                                       href="{% url 'superuser:dynamic_inputs' %}">
                                         <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
-                                        <span class="menu-title">
-                                            Warranty</span>
+                                        <span class="menu-title">Dynamic Inputs</span>
                                     </a>
                                 </div>
-         </div>
-         </div>
-         
-                  <!-- Website Settings -->
-                  <div data-kt-menu-trigger="click" class="menu-item menu-accordion {% if request.resolver_match.url_name == 'standing_time' or request.resolver_match.url_name == 'social_links' or request.resolver_match.url_name == 'site_messages' or request.resolver_match.url_name == 'faq' %} here show {% endif %}">
-                    <span class="menu-link">
-                      <!-- Icon -->
-<svg xmlns="http://www.w3.org/2000/svg" 
-viewBox="0 0 512 512" 
-width="20" height="12" 
-fill="currentColor">
-<path d="M128 352H32c-17.67 0-32 14.33-32 32v96c0 17.67 14.33 32 32 32h96c17.67 0 32-14.33 32-32v-96c0-17.67-14.33-32-32-32zm-24-80h192v48h48v-48h192v48h48v-57.59c0-21.17-17.23-38.41-38.41-38.41H344v-64h40c17.67 0 32-14.33 32-32V32c0-17.67-14.33-32-32-32H256c-17.67 0-32 14.33-32 32v96c0 17.67 14.33 32 32 32h40v64H94.41C73.23 224 56 241.23 56 262.41V320h48v-48zm264 80h-96c-17.67 0-32 14.33-32 32v96c0 17.67 14.33 32 32 32h96c17.67 0 32-14.33 32-32v-96c0-17.67-14.33-32-32-32zm240 0h-96c-17.67 0-32 14.33-32 32v96c0 17.67 14.33 32 32 32h96c17.67 0 32-14.33 32-32v-96c0-17.67-14.33-32-32-32z"/>
-</svg>
+                                <!-- Form Controls -->
+                                <div class="menu-item">
+                                    <a class="menu-link {% if request.resolver_match.url_name == 'form_controls' %} active {% endif %}"
+                                       href="{% url 'superuser:form_controls' %}">
+                                        <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                                        <span class="menu-title">Form Controls</span>
+                                    </a>
+                                </div>
 
-                          
-                        <span class="menu-title">Website Settings</span>
-                        <span class="menu-arrow"></span>
-                    </span>
-                    <div class="menu-sub menu-sub-accordion">
-        
-                        <!-- Static contents -->
-                        <div class="menu-item">
-                            <a class="menu-link {% if request.resolver_match.url_name == 'standing_time' %} active {% endif %}"
-                               href="{% url 'superuser:standing_time' %}">
-                                <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
-                                <span class="menu-title">Static contents</span>
-                            </a>
-                        </div>
-                           <!-- Social Links -->
-                           <div class="menu-item">
-                            <a class="menu-link {% if request.resolver_match.url_name == 'social_links' %} active {% endif %}"
-                               href="{% url 'superuser:social_links' %}">
-                                <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
-                                <span class="menu-title">Social Links</span>
-                            </a>
-                        </div>
-    <!-- Site Messages -->
-    <div class="menu-item">
-        <a class="menu-link {% if request.resolver_match.url_name == 'site_messages' %} active {% endif %}"
-           href="{% url 'superuser:site_messages' %}">
-            <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
-            <span class="menu-title">Site Messages</span>
-        </a>
-    </div>
-     <!-- Faqs -->
-     <div class="menu-item">
-        <a class="menu-link {% if request.resolver_match.url_name == 'faq' %} active {% endif %}"
-           href="{% url 'superuser:faq' %}">
-            <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
-            <span class="menu-title">Faqs</span>
-        </a>
-    </div>
-       
-                    </div>
-         </div>
-                
-                  <!-- Mobile Settings -->
-                  <div data-kt-menu-trigger="click" class="menu-item menu-accordion {% if request.resolver_match.url_name == 'splash_screen'%} here show {% endif %}">
-                    <span class="menu-link">
-                        <span class="menu-bullet">
-                            <i class="svg-icon">
-                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="20" height="20">
-                                <rect x="128" y="32" width="192" height="448" rx="24" ry="24" fill="none" stroke="currentColor" stroke-width="32"/>
-                                <circle cx="224" cy="432" r="16" fill="currentColor"/>
-                                <path fill="currentColor" d="M466.1 286.7l-28.3-16.4c2.6-13.9 2.6-28.1 0-42l28.3-16.4a12.07 12.07 0 0 0 4.6-16.4l-27.1-47a12.07 12.07 0 0 0-16.4-4.6l-28.3 16.4a136.62 136.62 0 0 0-36.4-21.1v-32.8A12 12 0 0 0 320 56h-54a12 12 0 0 0-12 12v32.8a136.62 136.62 0 0 0-36.4 21.1l-28.3-16.4a12.07 12.07 0 0 0-16.4 4.6l-27.1 47a12.07 12.07 0 0 0 4.6 16.4l28.3 16.4a139.79 139.79 0 0 0 0 42l-28.3 16.4a12.07 12.07 0 0 0-4.6 16.4l27.1 47a12.07 12.07 0 0 0 16.4 4.6l28.3-16.4a136.62 136.62 0 0 0 36.4 21.1V440a12 12 0 0 0 12 12h54a12 12 0 0 0 12-12v-32.8a136.62 136.62 0 0 0 36.4-21.1l28.3 16.4a12.07 12.07 0 0 0 16.4-4.6l27.1-47a12.07 12.07 0 0 0-4.6-16.4zM293 320a67 67 0 1 1 67-67 67.08 67.08 0 0 1-67 67z"/>
-                              </svg>
-                            </i>
-                          </span>
-                          
-                        <span class="menu-title">Mobile Settings</span>
-                        <span class="menu-arrow"></span>
-                    </span>
-                    <div class="menu-sub menu-sub-accordion">
-        
-                        <!-- Splash Screen List -->
-                        <div class="menu-item">
-                            <a class="menu-link {% if request.resolver_match.url_name == 'splash_screen' %} active {% endif %}"
-                               href="{% url 'superuser:splash_screen' %}">
-                                <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
-                                <span class="menu-title">Splash Screen List</span>
-                            </a>
-                        </div>
-                      
-         </div>
-         </div>
-               <!-- Form  Settings -->
-               <div data-kt-menu-trigger="click" class="menu-item menu-accordion {% if request.resolver_match.url_name == 'dynamic_inputs' or request.resolver_match.url_name == 'form_controls' %} here show {% endif %}">
-                <span class="menu-link">
-<svg xmlns="http://www.w3.org/2000/svg" 
-viewBox="0 0 512 512" 
-width="15" height="15" 
-fill="currentColor">
-<path d="M384 64H128c-17.67 0-32 14.33-32 32v320c0 17.67 14.33 32 32 32h256c17.67 0 32-14.33 32-32V96c0-17.67-14.33-32-32-32zm-16 320H144V112h224v272z"/>
-<path d="M256 160c-53 0-96 43-96 96s43 96 96 96 96-43 96-96-43-96-96-96zm0 160c-35.35 0-64-28.65-64-64s28.65-64 64-64 64 28.65 64 64-28.65 64-64 64z"/>
-<path d="M369.45 142.55l-12.02-12.02-17.68 17.68 12.02 12.02 17.68-17.68zm-226.9 0l17.68 17.68 12.02-12.02-17.68-17.68-12.02 12.02zM256 96v32h16V96h-16zm0 288v32h16v-32h-16zm160-160h-32v16h32v-16zm-288 0H96v16h32v-16z"/>
-</svg>
+                 </div>
+                 </div>
+                          <!-- Admin Settings -->
+                          <!-- <div data-kt-menu-trigger="click" class="menu-item menu-accordion {% if request.resolver_match.url_name == 'admin_list'%} here show {% endif %}">
+                            <span class="menu-link">
+                                <span class="menu-bullet">
+                                    <i class="fa-solid fa-user-shield"></i>
 
-                      
-                    <span class="menu-title">Form Settings</span>
-                    <span class="menu-arrow"></span>
-                </span>
-                <div class="menu-sub menu-sub-accordion">
+                                  </span>
 
-                      <!-- Splash Screen List -->
-                      <div class="menu-item">
-                        <a class="menu-link {% if request.resolver_match.url_name == 'dynamic_inputs' %} active {% endif %}"
-                           href="{% url 'superuser:dynamic_inputs' %}">
-                            <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
-                            <span class="menu-title">Dynamic Inputs</span>
-                        </a>
-                    </div>
-                    <!-- Form Controls -->
-                    <div class="menu-item">
-                        <a class="menu-link {% if request.resolver_match.url_name == 'form_controls' %} active {% endif %}"
-                           href="{% url 'superuser:form_controls' %}">
-                            <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
-                            <span class="menu-title">Form Controls</span>
-                        </a>
-                    </div>
-                  
-     </div>
-     </div>
-              <!-- Admin Settings -->
-              <!-- <div data-kt-menu-trigger="click" class="menu-item menu-accordion {% if request.resolver_match.url_name == 'admin_list'%} here show {% endif %}">
-                <span class="menu-link">
-                    <span class="menu-bullet">
-                        <i class="fa-solid fa-user-shield"></i>
-
-                      </span>
-                      
-                    <span class="menu-title">Admins</span>
-                    <span class="menu-arrow"></span>
-                </span>
-                <div class="menu-sub menu-sub-accordion">
-   
-                    <div class="menu-item">
-                        <a class="menu-link {% if request.resolver_match.url_name == 'admin_list' %} active {% endif %}"
-                           href="{% url 'superuser:admin_list' %}">
-                            <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
-                            <span class="menu-title">  Admins List</span>
-                        </a>
-                    </div> </div>
-     </div> -->
-               <!-- Catalogs -->
-                <div class="menu-sub menu-sub-accordion">
-  
-                    <div class="menu-item">
-                        <a class="menu-link {% if request.resolver_match.url_name == 'catalog' %} active {% endif %}"
-                           href="{% url 'superuser:catalog' %}">
-                            <span class="menu-bullet"><i class="fa-solid fa-book"></i></span></span>
-                            <span class="menu-title">Catalogs</span>
-                        </a>
-                    </div> </div>
-                         <!-- Configuration -->
-                <div class="menu-sub menu-sub-accordion">
-  
-                    <div class="menu-item">
-                        <a class="menu-link {% if request.resolver_match.url_name == 'configurations' %} active {% endif %}"
-                           href="{% url 'superuser:configurations' %}">
-                           <span class="menu-bullet">
-                            <span class="svg-icon svg-icon-2">
-                                <svg width="10" height="10" viewBox="0 0 512 512" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M487.4 315.7l-42.6-24.6c4.3-23.2 4.3-47 0-70.2l42.6-24.6c4.9-2.8 7.1-8.6 5.5-14-11.1-35.6-30-67.8-54.7-94.6-3.8-4.1-10-5.1-14.8-2.3L380.8 110c-17.9-15.4-38.5-27.3-60.8-35.1V25.8c0-5.6-3.9-10.5-9.4-11.7-36.7-8.2-74.3-7.8-109.2 0-5.5 1.2-9.4 6.1-9.4 11.7V75c-22.2 7.9-42.8 19.8-60.8 35.1L88.7 85.5c-4.9-2.8-11-1.9-14.8 2.3-24.7 26.7-43.6 58.9-54.7 94.6-1.7 5.4.6 11.2 5.5 14L67.3 221c-4.3 23.2-4.3 47 0 70.2l-42.6 24.6c-4.9 2.8-7.1 8.6-5.5 14 11.1 35.6 30 67.8 54.7 94.6 3.8 4.1 10 5.1 14.8 2.3l42.6-24.6c17.9 15.4 38.5 27.3 60.8 35.1v49.2c0 5.6 3.9 10.5 9.4 11.7 36.7 8.2 74.3 7.8 109.2 0 5.5-1.2 9.4-6.1 9.4-11.7v-49.2c22.2-7.9 42.8-19.8 60.8-35.1l42.6 24.6c4.9 2.8 11 1.9 14.8-2.3 24.7-26.7 43.6-58.9 54.7-94.6 1.5-5.5-.7-11.3-5.6-14.1zM256 336c-44.1 0-80-35.9-80-80s35.9-80 80-80 80 35.9 80 80-35.9 80-80 80z"/>
-                                </svg>
+                                <span class="menu-title">Admins</span>
+                                <span class="menu-arrow"></span>
                             </span>
-                        </span>
-                        </span>
-                            <span class="menu-title">Configuration</span>
-                        </a>
-                    </div> </div>
-                          <!-- SMS Configuration -->
-                <div class="menu-sub menu-sub-accordion">
-  
-                    <div class="menu-item">
-                        <a class="menu-link {% if request.resolver_match.url_name == 'sms_configuration' %} active {% endif %}"
-                           href="{% url 'superuser:sms_configuration' %}">
-                            <span class="menu-bullet"><i class="fas fa-sms"></i>
-                            </span></span>
-                            <span class="menu-title">SMS Configuration</span>
-                        </a>
-                    </div> </div>
-                                   <!-- Theme  -->
-                <div class="menu-sub menu-sub-accordion">
-  
-                    <div class="menu-item">
-                        <a class="menu-link {% if request.resolver_match.url_name == 'theme_list' %} active {% endif %}"
-                           href="{% url 'superuser:theme_list' %}">
-                           <i class="fa-solid fa-sun"></i>
-                        </span></span>
-                            <span class="menu-title">Theme </span>
-                        </a>
-                    </div> </div>
-                                      <!-- apicontrol  -->
-                <div class="menu-sub menu-sub-accordion">
-  
-                    <div class="menu-item">
-                        <a class="menu-link {% if request.resolver_match.url_name == 'api_control' %} active {% endif %}"
-                           href="{% url 'superuser:api_control' %}">
-                            <span class="menu-bullet"><i class="fa-solid fa-plug"></i>
-                            </span></span>
-                            <span class="menu-title">Api control </span>
-                        </a>
-                    </div> </div>
-                                         <!-- SEO  -->
-                <div class="menu-sub menu-sub-accordion">
-  
-                    <div class="menu-item">
-                        <a class="menu-link {% if request.resolver_match.url_name == 'seo_settings' %} active {% endif %}"
-                           href="{% url 'superuser:seo_settings' %}">
-                            <span class="menu-bullet"><i class="fas fa-search-dollar"></i>
-                            </span></span>
-                            <span class="menu-title">SEO </span>
-                        </a>
-                    </div> </div>
-                      <!-- Payment Settings  -->
-                <div class="menu-sub menu-sub-accordion">
-  
-                    <div class="menu-item">
-                        <a class="menu-link {% if request.resolver_match.url_name == 'payment_settings' %} active {% endif %}"
-                           href="{% url 'superuser:payment_settings' %}">
-                            <span class="menu-bullet"><i class="fas fa-credit-card"></i>
-                            </span></span>
-                            <span class="menu-title">Payment Settings </span>
-                        </a>
-                    </div> </div>
-   
-    </div>
-</div>
-{% endif %}
+                            <div class="menu-sub menu-sub-accordion">
+
+                                <div class="menu-item">
+                                    <a class="menu-link {% if request.resolver_match.url_name == 'admin_list' %} active {% endif %}"
+                                       href="{% url 'superuser:admin_list' %}">
+                                        <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                                        <span class="menu-title">  Admins List</span>
+                                    </a>
+                                </div> </div>
+                 </div> -->
+                           <!-- Catalogs -->
+                            <div class="menu-sub menu-sub-accordion">
+
+                                <div class="menu-item">
+                                    <a class="menu-link {% if request.resolver_match.url_name == 'catalog' %} active {% endif %}"
+                                       href="{% url 'superuser:catalog' %}">
+                                        <span class="menu-bullet"><i class="fa-solid fa-book"></i></span></span>
+                                        <span class="menu-title">Catalogs</span>
+                                    </a>
+                                </div> </div>
+                                     <!-- Configuration -->
+                            <div class="menu-sub menu-sub-accordion">
+
+                                <div class="menu-item">
+                                    <a class="menu-link {% if request.resolver_match.url_name == 'configurations' %} active {% endif %}"
+                                       href="{% url 'superuser:configurations' %}">
+                                       <span class="menu-bullet">
+                                        <span class="svg-icon svg-icon-2">
+                                            <svg width="10" height="10" viewBox="0 0 512 512" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M487.4 315.7l-42.6-24.6c4.3-23.2 4.3-47 0-70.2l42.6-24.6c4.9-2.8 7.1-8.6 5.5-14-11.1-35.6-30-67.8-54.7-94.6-3.8-4.1-10-5.1-14.8-2.3L380.8 110c-17.9-15.4-38.5-27.3-60.8-35.1V25.8c0-5.6-3.9-10.5-9.4-11.7-36.7-8.2-74.3-7.8-109.2 0-5.5 1.2-9.4 6.1-9.4 11.7V75c-22.2 7.9-42.8 19.8-60.8 35.1L88.7 85.5c-4.9-2.8-11-1.9-14.8 2.3-24.7 26.7-43.6 58.9-54.7 94.6-1.7 5.4.6 11.2 5.5 14L67.3 221c-4.3 23.2-4.3 47 0 70.2l-42.6 24.6c-4.9 2.8-7.1 8.6-5.5 14 11.1 35.6 30 67.8 54.7 94.6 3.8 4.1 10 5.1 14.8 2.3l42.6-24.6c17.9 15.4 38.5 27.3 60.8 35.1v49.2c0 5.6 3.9 10.5 9.4 11.7 36.7 8.2 74.3 7.8 109.2 0 5.5-1.2 9.4-6.1 9.4-11.7v-49.2c22.2-7.9 42.8-19.8 60.8-35.1l42.6 24.6c4.9 2.8 11 1.9 14.8-2.3 24.7-26.7 43.6-58.9 54.7-94.6 1.5-5.5-.7-11.3-5.6-14.1zM256 336c-44.1 0-80-35.9-80-80s35.9-80 80-80 80 35.9 80 80-35.9 80-80 80z"/>
+                                            </svg>
+                                        </span>
+                                    </span>
+                                    </span>
+                                        <span class="menu-title">Configuration</span>
+                                    </a>
+                                </div> </div>
+                                      <!-- SMS Configuration -->
+                            <div class="menu-sub menu-sub-accordion">
+
+                                <div class="menu-item">
+                                    <a class="menu-link {% if request.resolver_match.url_name == 'sms_configuration' %} active {% endif %}"
+                                       href="{% url 'superuser:sms_configuration' %}">
+                                        <span class="menu-bullet"><i class="fas fa-sms"></i>
+                                        </span></span>
+                                        <span class="menu-title">SMS Configuration</span>
+                                    </a>
+                                </div> </div>
+                                               <!-- Theme  -->
+                            <div class="menu-sub menu-sub-accordion">
+
+                                <div class="menu-item">
+                                    <a class="menu-link {% if request.resolver_match.url_name == 'theme_list' %} active {% endif %}"
+                                       href="{% url 'superuser:theme_list' %}">
+                                       <i class="fa-solid fa-sun"></i>
+                                    </span></span>
+                                        <span class="menu-title">Theme </span>
+                                    </a>
+                                </div> </div>
+                                                  <!-- apicontrol  -->
+                            <div class="menu-sub menu-sub-accordion">
+
+                                <div class="menu-item">
+                                    <a class="menu-link {% if request.resolver_match.url_name == 'api_control' %} active {% endif %}"
+                                       href="{% url 'superuser:api_control' %}">
+                                        <span class="menu-bullet"><i class="fa-solid fa-plug"></i>
+                                        </span></span>
+                                        <span class="menu-title">Api control </span>
+                                    </a>
+                                </div> </div>
+                                                     <!-- SEO  -->
+                            <div class="menu-sub menu-sub-accordion">
+
+                                <div class="menu-item">
+                                    <a class="menu-link {% if request.resolver_match.url_name == 'seo_settings' %} active {% endif %}"
+                                       href="{% url 'superuser:seo_settings' %}">
+                                        <span class="menu-bullet"><i class="fas fa-search-dollar"></i>
+                                        </span></span>
+                                        <span class="menu-title">SEO </span>
+                                    </a>
+                                </div> </div>
+                                  <!-- Payment Settings  -->
+                            <div class="menu-sub menu-sub-accordion">
+
+                                <div class="menu-item">
+                                    <a class="menu-link {% if request.resolver_match.url_name == 'payment_settings' %} active {% endif %}"
+                                       href="{% url 'superuser:payment_settings' %}">
+                                        <span class="menu-bullet"><i class="fas fa-credit-card"></i>
+                                        </span></span>
+                                        <span class="menu-title">Payment Settings </span>
+                                    </a>
+                                </div> </div>
+
+                </div>
+            </div>
+            {% endif %}
 
           <!-- Users -->
           {% if "auth.view_user" in user_permissions_list %}
@@ -496,7 +496,7 @@ fill="currentColor">
           {% endif %}
 
           <!-- Products -->
-          {% if "dashboard.view_product" in user_permissions_list or "dashboard.view_order" in user_permissions_list %}
+          {% if "dashboard.view_product" in user_permissions_list or "dashboard.view_order" in user_permissions_list or "dashboard.view_return" in user_permissions_list or "dashboard.view_productcategory" in user_permissions_list %}
           <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="right-start"
                class="menu-item py-2 {% if request.resolver_match.url_name == 'products_list' or request.resolver_match.url_name == 'orders_list' or request.resolver_match.url_name == 'admin_returns' or request.resolver_match.url_name == 'view_product' %} here show {% endif %}">
               <span class="menu-link menu-center">
@@ -543,6 +543,7 @@ fill="currentColor">
                   </div>
                  {% endif %}
 
+                 {% if "dashboard.view_return" in user_permissions_list %}
                  <div class="menu-sub menu-sub-accordion">
                        <div class="menu-item {% if request.resolver_match.url_name == 'admin_returns' %} here show {% endif %}">
                            <a class="menu-link" href="{% url 'superuser:admin_returns' %}">
@@ -553,18 +554,20 @@ fill="currentColor">
                           </a>
                       </div>
                   </div>
+                     {% endif %}
 
-                <!-- {% if "dashboard.view_ratingreview" in user_permissions_list  %}
-                <div class="menu-item">
-                    <a class="menu-link {% if request.resolver_match.url_name == 'view_product' %} active {% endif %}"
-                        href="{% url 'superuser:view_product' %}">
-                        <span class="menu-bullet">
-                            <span class="bullet bullet-dot"></span>
-                            </span>
-                        <span class="menu-title">Most Popular Products</span>
-                    </a>
-                </div>
-                {% endif %} -->
+{#                 {% if "dashboard.view_ratingreview" in user_permissions_list  %}#}
+{#                <div class="menu-item">#}
+{#                    <a class="menu-link {% if request.resolver_match.url_name == 'view_product' %} active {% endif %}"#}
+{#                        href="{% url 'superuser:view_product' %}">#}
+{#                        <span class="menu-bullet">#}
+{#                            <span class="bullet bullet-dot"></span>#}
+{#                            </span>#}
+{#                        <span class="menu-title">Most Popular Products</span>#}
+{#                    </a>#}
+{#                </div>#}
+{#                {% endif %} #}
+            {% if "dashboard.view_productcategory" in user_permissions_list  %}
                 <div class="menu-item">
                     <a class="menu-link {% if request.resolver_match.url_name == 'view_product' %} active {% endif %}"
                         href="{% url 'superuser:categories' %}">
@@ -574,6 +577,7 @@ fill="currentColor">
                         <span class="menu-title">Categories</span>
                     </a>
                 </div>
+                {% endif %}
                 <!-- <div class="menu-item">
                     <a class="menu-link {% if request.resolver_match.url_name == 'supplier_commission' %} active {% endif %}"
                         href="{% url 'superuser:supplier_commission' %}">
@@ -590,7 +594,7 @@ fill="currentColor">
 
 
           <!-- RFQ Requests -->
-          {% if "dashboard.view_rfqrequest" in user_permissions_list %}
+          {% if "dashboard.view_rfqrequest" in user_permissions_list or "supplier.view_banner" in user_permissions_list %}
           <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}"
                data-kt-menu-placement="right-start"
                class="menu-item py-2  {% if request.resolver_match.url_name == 'rfq_list' or request.resolver_match.url_name == 'banner_list'  %} here show {% endif %}">
@@ -641,7 +645,7 @@ fill="currentColor">
 
 
           <!--   Reviews & Q&A   -->
-          {% if "dashboard.view_ratingreview" in user_permissions_list %}
+          {% if "dashboard.view_ratingreview" in user_permissions_list or "dashboard.view_question" in user_permissions_list %}
           <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="right-start"
                class="menu-item py-2 {% if request.resolver_match.url_name == 'rating_list' or request.resolver_match.url_name == 'question_list'  %} here show {% endif %}">
               <span class="menu-link menu-center">
@@ -672,7 +676,7 @@ fill="currentColor">
                   </div>
                  {% endif %}
 
-
+                 {% if "dashboard.view_question" in user_permissions_list  %}
                   <div class="menu-sub menu-sub-accordion">
                        <div class="menu-item {% if request.resolver_match.url_name == 'question_list' %} here show {% endif %}">
                            <a class="menu-link" href="{% url 'superuser:question_list' %}">
@@ -683,12 +687,13 @@ fill="currentColor">
                             </a>
                       </div>
                   </div>
+                 {% endif %}
 </div>
 </div>
 {% endif %}
 
    <!--   Supplier   -->
-   {% if "dashboard.view_ratingreview" in user_permissions_list %}
+    {% if "dashboard.add_topsupplier" in user_permissions_list or "dashboard.view_topsupplier" in user_permissions_list or "dashboard.view_vacationrequest" in user_permissions_list%}
    <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="right-start"
         class="menu-item py-2 {% if  request.resolver_match.url_name == 'admin_vacation_mode' or request.resolver_match.url_name == 'topsupplierlist'  %} here show {% endif %} ">
        <span class="menu-link menu-center">
@@ -708,7 +713,7 @@ fill="currentColor">
 
         
 
-
+           {% if "dashboard.view_topsupplier" in user_permissions_list %}
            <div class="menu-sub menu-sub-accordion">
                 <div class="menu-item {% if request.resolver_match.url_name == 'topsupplierlist' %} here show {% endif %}">
                     <a class="menu-link" href="{% url 'superuser:topsupplierlist' %}">
@@ -719,30 +724,33 @@ fill="currentColor">
                      </a>
                </div>
            </div>
+           {% endif %}
 
+            {% if "dashboard.view_vacationrequest" in user_permissions_list %}
            <div class="menu-sub menu-sub-accordion">
-            <div class="menu-item {% if request.resolver_match.url_name == 'admin_vacation_mode' %} here show {% endif %}">
-                <a class="menu-link" href="{% url 'superuser:admin_vacation_mode' %}">
-                   <span class="menu-bullet">
-                       <span class="bullet bullet-dot"></span>
-                   </span>
-                    <span class="menu-title">Vacation Request</span>
-               </a>
+                <div class="menu-item {% if request.resolver_match.url_name == 'admin_vacation_mode' %} here show {% endif %}">
+                    <a class="menu-link" href="{% url 'superuser:admin_vacation_mode' %}">
+                       <span class="menu-bullet">
+                           <span class="bullet bullet-dot"></span>
+                       </span>
+                        <span class="menu-title">Vacation Request</span>
+                   </a>
+               </div>
            </div>
-       </div>
+           {% endif %}
     
 </div>
 </div>
 {% endif %}
 
    <!--   Marketing Tools    -->
-   {% if "dashboard.view_ratingreview" in user_permissions_list %}
+    {% if "dashboard.view_coupon" in user_permissions_list or "dashboard.view_buyxgetypromotion" in user_permissions_list or "dashboard.view_buyxgiftypromotion" in user_permissions_list or "dashboard.view_basketpromotion" in user_permissions_list or "dashboard.view_notification" in user_permissions_list  %}
    <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="right-start"
         class="menu-item py-2 {% if request.resolver_match.url_name == 'buyxgety_promotion' or request.resolver_match.url_name == 'buyxgift_promotion'  or request.resolver_match.url_name == 'notifications_list' or request.resolver_match.url_name == 'coupons' or request.resolver_match.url_name == 'basket_promotion' %} here show {% endif %}">
        <span class="menu-link menu-center">
            <span class="menu-icon me-0">
-<!-- plain marketing/rss icon -->
-<svg xmlns="http://www.w3.org/2000/svg"
+                <!-- plain marketing/rss icon -->
+                <svg xmlns="http://www.w3.org/2000/svg"
      viewBox="0 0 448 512"
      role="img"
      aria-labelledby="rssTitle"
@@ -763,17 +771,20 @@ fill="currentColor">
                    </span>
                </div>
            </div>
-           <div class="menu-sub menu-sub-accordion">
-            <div class="menu-item {% if request.resolver_match.url_name == 'coupons' %} here show {% endif %}">
-                <a class="menu-link" href="{% url 'superuser:coupons' %}">
-                     <span class="menu-bullet">
-                         <span class="bullet bullet-dot"></span>
-                         </span>
-                     <span class="menu-title">Coupons</span>
-                 </a>
+           {% if "dashboard.view_coupon" in user_permissions_list  %}
+               <div class="menu-sub menu-sub-accordion">
+                <div class="menu-item {% if request.resolver_match.url_name == 'coupons' %} here show {% endif %}">
+                    <a class="menu-link" href="{% url 'superuser:coupons' %}">
+                         <span class="menu-bullet">
+                             <span class="bullet bullet-dot"></span>
+                             </span>
+                         <span class="menu-title">Coupons</span>
+                     </a>
+               </div>
            </div>
-       </div>
-          {% if "dashboard.view_ratingreview" in user_permissions_list  %}
+           {% endif %}
+
+          {% if "dashboard.view_buyxgetypromotion" in user_permissions_list  %}
           <div class="menu-sub menu-sub-accordion">
                 <div class="menu-item {% if request.resolver_match.url_name == 'buyxgety_promotion'%} here show {% endif %}">
                     <a class="menu-link" href="{% url 'superuser:buyxgety_promotion' %}">
@@ -786,7 +797,7 @@ fill="currentColor">
            </div>
           {% endif %}
 
-
+           {% if "dashboard.view_buyxgiftypromotion" in user_permissions_list  %}
            <div class="menu-sub menu-sub-accordion">
                 <div class="menu-item {% if request.resolver_match.url_name == 'buyxgift_promotion' %} here show {% endif %}">
                     <a class="menu-link" href="{% url 'superuser:buyxgift_promotion' %}">
@@ -797,16 +808,20 @@ fill="currentColor">
                      </a>
                </div>
            </div>
+           {% endif %}
+
+           {% if "dashboard.view_basketpromotion" in user_permissions_list  %}
            <div class="menu-sub menu-sub-accordion">
-            <div class="menu-item {% if request.resolver_match.url_name == 'basket_promotion' %} here show {% endif %}">
-                <a class="menu-link" href="{% url 'superuser:basket_promotion' %}">
-                     <span class="menu-bullet">
-                         <span class="bullet bullet-dot"></span>
-                         </span>
-                     <span class="menu-title">Basket Promotions</span>
-                 </a>
+                <div class="menu-item {% if request.resolver_match.url_name == 'basket_promotion' %} here show {% endif %}">
+                    <a class="menu-link" href="{% url 'superuser:basket_promotion' %}">
+                         <span class="menu-bullet">
+                             <span class="bullet bullet-dot"></span>
+                             </span>
+                         <span class="menu-title">Basket Promotions</span>
+                     </a>
+               </div>
            </div>
-       </div>
+           {% endif %}
 
        {% if "dashboard.view_notification" in user_permissions_list  %}
        <div class="menu-sub menu-sub-accordion">

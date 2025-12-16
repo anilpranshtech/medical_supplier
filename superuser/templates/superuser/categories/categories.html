@@ -44,8 +44,7 @@ Product Categories
                     </div>
                     {% endif %}
 
-                  </div>
-                    {% endif %}
+                 
                 <!-- Add Category -->
                 <div class="modal fade" id="addCategoryModal" tabindex="-1" aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered">
@@ -261,10 +260,11 @@ Product Categories
                         </table>
                     </div>
                 </div>
-                {% include "superuser/pages/pagination.html" with page_obj=categories %}
-               
+
+
             </div>
         </div>
+         {% include "superuser/pages/pagination.html" with page_obj=categories %}
     </div>
 </div>
 
