@@ -16,7 +16,7 @@
     <div class="card mb-7">
         <div class="card-body">
             {% include "superuser/pages/filters/filter_sort_by.html" %}
-            {% include "superuser/pages/filters/filter_search_by.html" with show_advance_search_link=True search_help_text='Choices: Origin' search_placeholder_text='Search Categories' %}
+            {% include "superuser/pages/filters/filter_search_by.html" with show_advance_search_link=True search_help_text='Choices: Configuration Key' search_placeholder_text='Search Configuration' %}
             <div class="collapse" id="kt_advanced_search_form">
                 <div class="separator separator-dashed mt-9 mb-6"></div>
                 <div class="row g-8 mb-8">
@@ -46,7 +46,8 @@
                 <thead>
                     <tr class="text-gray-500 fw-bold fs-7 text-uppercase" style="text-align: center;">
                       <th style="padding: 12px;">Key</th>
-                      <th style="padding: 12px;">Status</th>  
+                      <th style="padding: 12px;">Status</th> 
+                      <th style="padding: 12px;">Created at</th>  
                     </tr>
                   </thead>
                   
@@ -67,12 +68,17 @@
                   
                         </div>
                       </td>
+                      <td class="text-center">
+                        <div class="badge badge-light fw-bold" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ c.created_at|date:'F d Y P' }}">
+                            {{ c.created_at|date:'F d Y' | default:'No date found' }}
+                        </div>
+                    </td>
                   
                     </tr>
                   
                     {% empty %}
                     <tr>
-                      <td colspan="2" style="padding: 12px; color: #888;">No configurations added yet.</td>
+                      <td colspan="3" style="padding: 12px; color: #888;">No configurations added yet.</td>
                     </tr>
                     {% endfor %}
                   </tbody>

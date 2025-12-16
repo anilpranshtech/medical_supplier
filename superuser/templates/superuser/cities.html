@@ -20,7 +20,7 @@
           <div class="card mb-7">
               <div class="card-body">
                   {% include "superuser/pages/filters/filter_sort_by.html" %}
-                  {% include "superuser/pages/filters/filter_search_by.html" with show_advance_search_link=True search_help_text='Choices: Origin' search_placeholder_text='Search Categories' %}
+                  {% include "superuser/pages/filters/filter_search_by.html" with show_advance_search_link=True search_help_text='Choices: City Name' search_placeholder_text='Search City' %}
                   <div class="collapse" id="kt_advanced_search_form">
                     <div class="separator separator-dashed mt-9 mb-6"></div>
                 
@@ -50,8 +50,9 @@
             <table class="table table-row-dashed align-middle fs-6 gy-5" style="width: 100%; border-collapse: collapse;">
               <thead>
                 <tr class="text-gray-500 fw-bold fs-7 text-uppercase" style="text-align: center;">
-                  <th style="padding: 12px;">Name</th>
+                  <th style="padding: 12px;">City Name</th>
                   <th style="padding: 12px;">Region</th>
+                  <th style="padding: 12px;">Created at</th>
                   <th style="padding: 12px;">Actions</th>
                 </tr>
               </thead>
@@ -67,6 +68,11 @@
                       -
                     {% endif %}
                   </td>
+                  <td class="text-center">
+                        <div class="badge badge-light fw-bold" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ city.created_at|date:'F d Y P' }}">
+                            {{ city.created_at|date:'F d Y' | default:'No date found' }}
+                        </div>
+                    </td>
                   <td style="padding: 12px; vertical-align: middle;">
                     <!-- Actions Dropdown -->
                     <div class="dropdown">
@@ -93,7 +99,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                  <td colspan="3" style="padding: 12px; color: #888;">No cities found</td>
+                  <td colspan="4" style="padding: 12px; color: #888;">No cities found</td>
                 </tr>
                 {% endfor %}
               </tbody>

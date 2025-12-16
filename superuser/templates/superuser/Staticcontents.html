@@ -12,7 +12,7 @@
   <div class="card mb-7">
       <div class="card-body">
           {% include "superuser/pages/filters/filter_sort_by.html" %}
-          {% include "superuser/pages/filters/filter_search_by.html" with show_advance_search_link=True search_help_text='Choices: Origin' search_placeholder_text='Search Categories' %}
+          {% include "superuser/pages/filters/filter_search_by.html" with show_advance_search_link=True search_help_text='Choices: Static Content' search_placeholder_text='Search Static Content' %}
           <div class="collapse" id="kt_advanced_search_form">
               <div class="separator separator-dashed mt-9 mb-6"></div>
               <div class="row g-8 mb-8">
@@ -45,8 +45,9 @@
             <table class="table table-row-dashed align-middle fs-6 gy-5" style="width: 100%;">
               <thead>
                 <tr class="text-gray-500 fw-bold fs-7 text-uppercase" style="text-align: center;">
-                  <th>Name (EN)</th>
+                  <th>Static Name (EN)</th>
                   <th>Description (EN)</th>
+                  <th>Created at</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -55,6 +56,11 @@
                 <tr>
                   <td>{{ c.name_en }}</td>
                   <td>{{ c.description_en|truncatewords:10 }}</td>
+                  <td class="text-center">
+                        <div class="badge badge-light fw-bold" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ c.created_at|date:'F d Y P' }}">
+                            {{ c.created_at|date:'F d Y' | default:'No date found' }}
+                        </div>
+                    </td>
                   <td>
                     <div class="dropdown">
                       <button class="btn btn-light-primary btn-sm dropdown-toggle"
@@ -92,7 +98,7 @@
                   
                 </tr>
                 {% empty %}
-                <tr><td colspan="3">No records found.</td></tr>
+                <tr><td colspan="4">No records found.</td></tr>
                 {% endfor %}
               </tbody>
             </table>
