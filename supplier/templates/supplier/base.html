@@ -93,7 +93,6 @@
         max-height: 300px;
         overflow-y: auto;
     }
-    /* ===== Notification Drawer (Right Sidebar) ===== */
 #notificationDrawer {
     border-left: 1px solid #e9ecef;
     border-radius: 14px 0 0 14px;
@@ -102,20 +101,16 @@
     transition: all 0.3s ease;
     font-family: "Inter", "Segoe UI", Roboto, sans-serif;
 }
-
 #notificationDrawer h5 {
     font-size: 1.2rem;
     color: #212529;
     font-weight: 700;
     letter-spacing: 0.3px;
 }
-
-/* ===== Tabs Styling ===== */
 #notiTabs {
     border-bottom: 1px solid #f1f3f5;
     margin-top: 4px;
 }
-
 #notiTabs .nav-link {
     font-weight: 500;
     color: #6c757d;
@@ -125,20 +120,33 @@
     margin: 0 4px;
     transition: all 0.25s ease-in-out;
 }
-
 #notiTabs .nav-link:hover {
     background: #f8f9fa;
     color: #212529;
 }
-
 #notiTabs .nav-link.active {
     background: #0d6efd;
     color: #fff !important;
     font-weight: 600;
     box-shadow: 0 3px 8px rgba(13, 110, 253, 0.25);
 }
-
-/* ===== Notification Items ===== */
+.notification-btn {
+    background-color: #f1f3f5 !important;
+    border-color: #dee2e6 !important;
+    color: #495057 !important;
+}
+.notification-btn i {
+    color: #495057 !important;
+}
+.notification-btn:hover,
+.notification-btn:focus {
+    background-color: #e9ecef !important;
+    border-color: #ced4da !important;
+}
+.notification-btn:hover i,
+.notification-btn:focus i {
+    color: #212529 !important;
+}
 #notificationDrawer .border-bottom {
     padding: 14px 14px 12px;
     border-radius: 10px;
@@ -146,47 +154,34 @@
     border-bottom: 1px solid #f2f2f2 !important;
     cursor: pointer;
 }
-
 #notificationDrawer .border-bottom:hover {
     background: #fdfdfd;
     transform: translateX(3px);
 }
-
-/* All Notifications */
 #notiAll .border-bottom {
     border-left: 4px solid #ced4da;
 }
-
-/* Unread Notifications */
 #notiUnread .border-bottom {
     border-left: 4px solid #dc3545;
     background: #fff6f6;
 }
-
 #notiUnread h6 {
     color: #c82333;
     font-weight: 600;
 }
-
-/* Read Notifications */
 #notiRead .border-bottom {
     border-left: 4px solid #198754;
     background: #f5fdf7;
 }
-
 #notiRead h6 {
     color: #146c43;
     font-weight: 600;
 }
-
-/* Message Text */
 #notificationDrawer small {
     font-size: 0.9rem;
     color: #555;
     line-height: 1.5;
 }
-
-/* ===== Time Badge ===== */
 .time-display {
     font-size: 0.75rem;
     font-weight: 500;
@@ -194,8 +189,6 @@
     margin-top: 6px;
     display: inline-block;
 }
-
-
 #notificationPopup {
     border-radius: 14px;
     box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.18);
@@ -203,27 +196,21 @@
     max-width: 420px;
     border: 1px solid #f1f3f5;
 }
-
 #notificationPopup h5 {
     font-size: 1.15rem;
     font-weight: 600;
     color: #212529;
 }
-
 #notificationPopup p {
     font-size: 0.95rem;
     line-height: 1.6;
     color: #444;
     margin-bottom: 0;
 }
-
-/* Overlay */
 #notificationOverlay {
     backdrop-filter: blur(6px);
     background: rgba(0, 0, 0, 0.45) !important;
 }
-
-/* Animation */
 @keyframes popupFade {
     from {
         transform: translate(-50%, -60%) scale(0.92);
@@ -286,6 +273,20 @@
 }
 [data-bs-theme="dark"] #notificationDrawer .badge.bg-success {
     background-color: #28a745 !important;
+}
+[data-bs-theme="dark"] #notificationDrawer h5 {
+    color: #ffffff !important;
+}
+[data-bs-theme="dark"] #notiTabs .nav-link:hover {
+    background-color: #2a2a3a !important;
+    color: #ffffff !important;
+}
+[data-bs-theme="dark"] #notificationDrawer .border-bottom:hover {
+    background-color: #262636 !important;
+}
+[data-bs-theme="dark"] #notificationDrawer h5,
+[data-bs-theme="dark"] #notificationDrawer h6 {
+    color: #ffffff !important;
 }
 
 </style>
@@ -509,7 +510,8 @@
 
                                         <div class="d-flex flex-column">
                                             <div class="fw-bold d-flex align-items-center fs-6">
-                                                {{ request.user }}
+                                                {{ request.user.first_name }} {{ request.user.last_name }}
+
                                                 <span class="badge badge-light-success fw-bold px-1 py-0 ms-2"
                                                       style="font-size: 7px; line-height: 10px; padding: 0 3px !important;">
                                                     Supplier
@@ -594,7 +596,7 @@
                                 <div class="separator my-2"></div>
 
                                 <div class="menu-item px-5">
-                                    <a href="#" class="menu-link px-5" data-bs-toggle="modal" data-bs-target="#signOutModal">
+                                    <a href="{% url 'dashboard:login' %}" class="menu-link px-5" data-bs-toggle="modal" data-bs-target="#signOutModal">
                                         Sign Out
                                     </a>
                                 </div>
@@ -686,7 +688,7 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <a href="{% url 'supplier:admin_logout' %}" class="btn btn-danger">Yes, Sign Out</a>
+          <a href="{% url 'supplier:admin_logout' %}" class="btn btn-danger  btn-with-loader">Yes, Sign Out</a>
         </div>
       </div>
     </div>
@@ -718,6 +720,7 @@
 {% endblock page_only_scripts %}
 
 </body>
+<script src="{% static 'js/buttonLoader.js' %}"></script>
 <script>
 function toggleNotificationPanel() {
     const drawer = document.getElementById("notificationDrawer");

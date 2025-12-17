@@ -303,17 +303,85 @@
         color: #99a1af;
         text-align: right;
     }
-    /* Fix for reviews spacing */
     .reviews-section h4 {
         margin: 1.5rem 0 1rem 0;
         color: #374151;
     }
-    /* Remove extra spacing in image display */
     .swiper-slide img {
         display: block;
         margin: 0;
         padding: 0;
     }
+.image-section-container {
+    align-self: flex-start;
+    height: fit-content;
+}
+.mainSwiper,
+.thumbSwiper {
+    height: auto !important;
+}
+.mainSwiper img {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+}
+.swiper-button-next,
+.swiper-button-prev {
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+}
+.swiper-button-next:active,
+.swiper-button-prev:active {
+    outline: none;
+}
+.add-to-cart-btn i,
+.show-login-modal i {
+    font-size: 0.75rem;
+}
+
+
+.add-to-cart-btn:hover,
+.show-login-modal:hover {
+    background-color: #e5e7eb;
+    border-color: #9ca3af;
+}
+
+
+.cart-quantity-controls {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.cart-quantity-controls button {
+    width: 28px;
+    height: 28px;
+    background-color: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease-in-out;
+}
+
+.cart-quantity-controls button:hover {
+    background-color: #e5e7eb;
+    border-color: #9ca3af;
+}
+
+
+.cart-quantity-controls .quantity {
+    min-width: 20px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
 </style>
 
 <div class="kt-container-fixed mt-1" style="max-width: var(--custom-container-width, 85%);">
@@ -420,7 +488,7 @@
                                         <span class="quantity font-semibold">{{ user_cart_quantities|get_item:product.id }}</span>
                                         <button class="increase-btn px-2 py-1 bg-gray-200 rounded text-sm">+</button>
                                     </div>
-                                {% else %}
+                                {% else %}  
                                     <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 add-to-cart-btn">
                                         Add <i class="ki-filled ki-handcart text-xs"></i>
                                     </button>
@@ -529,15 +597,7 @@
                                 <h3 style="font-size: 18px; font-weight: 600; color: #99a1af;">
                                     RATINGS <span style="color: #7f91a0;">☆</span>
                                 </h3>
-                                {% if request.user.is_authenticated %}
-                                <button id="openQuestionModal" class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700">
-                                    Post Your Question
-                                </button>
-                                {% else %}
-                                <button id="openQuestionModal" class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700 show-login-modal">
-                                    Post Your Question
-                                </button>
-                                {% endif %}
+                               
                             </div>
                             
                             <div class="ratings-overview">
@@ -624,68 +684,85 @@
 
 
 
-                 <!-- Question Q&A section (bigger + separated box) -->
-<div class="mt-6">
-    <div class="bg-white shadow-lg border border-gray-200 rounded-xl p-5">
-
-        <h3 class="text-lg font-bold mb-3">Questions &amp; Answers</h3>
-
-        {% if questions %}
-            <ul class="space-y-3 max-h-56 overflow-y-auto pr-1 text-[15px] leading-7">
-                {% for q in questions %}
-                    <li class="text-[15px] leading-7 bg-gray-50 p-3 rounded-md">
-                        <p class="font-semibold">
-                            Q: {{ q.text|linebreaksbr }}
-                            {% if q.user_id == request.user.id %}
-                                <span class="ml-2 text-xs rounded px-2 py-0.5 bg-gray-200">You</span>
-                            {% endif %}
-                        </p>
-
-                        <p class="mt-1">
-                            <span class="font-semibold">Supplier:</span>
-                            {% if q.reply %}
-                                {{ q.reply|linebreaksbr }}
-                            {% else %}
-                                <span class="text-gray-500 italic">No answer yet.</span>
-                            {% endif %}
-                        </p>
-                    </li>
-                {% endfor %}
-            </ul>
-
-            <!--  Pagination -->
-            {% if questions.has_other_pages %}
-                <div class="flex items-center justify-between mt-3 text-[14px]">
-
-                    {% if questions.has_previous %}
-                        <a href="?qpage={{ questions.previous_page_number }}" class="text-blue-600 hover:underline">
-                            Previous
-                        </a>
-                    {% else %}
-                        <span class="text-gray-400">Previous</span>
-                    {% endif %}
-
-                    <span class="text-gray-600">
-                        Page {{ questions.number }} of {{ questions.paginator.num_pages }}
-                    </span>
-
-                    {% if questions.has_next %}
-                        <a href="?qpage={{ questions.next_page_number }}" class="text-blue-600 hover:underline">
-                            Next
-                        </a>
-                    {% else %}
-                        <span class="text-gray-400">Next</span>
-                    {% endif %}
-
-                </div>
-            {% endif %}
-
-        {% else %}
-            <p class="text-sm text-gray-500">No questions yet. Be the first to ask!</p>
-        {% endif %}
-
-    </div>
-</div>
+                            <div class="mt-6">
+                                <div class="bg-white shadow-lg border border-gray-200 rounded-xl p-5">
+                            
+                                    <!-- Header with Button -->
+                                    <div class="flex items-center justify-between mb-4">
+                                        <h3 class="text-lg font-bold">Questions &amp; Answers</h3>
+                            
+                                        {% if request.user.is_authenticated %}
+                                            <button id="openQuestionModal"
+                                                    class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700">
+                                                Post Your Question
+                                            </button>
+                                        {% else %}
+                                            <button id="openQuestionModal"
+                                                    class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700 show-login-modal">
+                                                Post Your Question
+                                            </button>
+                                        {% endif %}
+                                    </div>
+                            
+                                    {% if questions %}
+                                        <ul class="space-y-3 max-h-56 overflow-y-auto pr-1 text-[15px] leading-7">
+                                            {% for q in questions %}
+                                                <li class="bg-gray-50 p-3 rounded-md">
+                                                    <p class="font-semibold">
+                                                        Q: {{ q.text|linebreaksbr }}
+                                                        {% if q.user_id == request.user.id %}
+                                                            <span class="ml-2 text-xs rounded px-2 py-0.5 bg-gray-200">You</span>
+                                                        {% endif %}
+                                                    </p>
+                            
+                                                    <p class="mt-1">
+                                                        <span class="font-semibold">Supplier:</span>
+                                                        {% if q.reply %}
+                                                            {{ q.reply|linebreaksbr }}
+                                                        {% else %}
+                                                            <span class="text-gray-500 italic">No answer yet.</span>
+                                                        {% endif %}
+                                                    </p>
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                            
+                                        <!-- Pagination -->
+                                        {% if questions.has_other_pages %}
+                                            <div class="flex items-center justify-between mt-3 text-[14px]">
+                            
+                                                {% if questions.has_previous %}
+                                                    <a href="?qpage={{ questions.previous_page_number }}" class="text-blue-600 hover:underline">
+                                                        Previous
+                                                    </a>
+                                                {% else %}
+                                                    <span class="text-gray-400">Previous</span>
+                                                {% endif %}
+                            
+                                                <span class="text-gray-600">
+                                                    Page {{ questions.number }} of {{ questions.paginator.num_pages }}
+                                                </span>
+                            
+                                                {% if questions.has_next %}
+                                                    <a href="?qpage={{ questions.next_page_number }}" class="text-blue-600 hover:underline">
+                                                        Next
+                                                    </a>
+                                                {% else %}
+                                                    <span class="text-gray-400">Next</span>
+                                                {% endif %}
+                            
+                                            </div>
+                                        {% endif %}
+                            
+                                    {% else %}
+                                        <p class="text-sm text-gray-500">
+                                            No questions yet. Be the first to ask!
+                                        </p>
+                                    {% endif %}
+                            
+                                </div>
+                            </div>
+                            
 
  </div>
 

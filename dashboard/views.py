@@ -3244,17 +3244,28 @@ class ResendOTPView(View):
         if request.headers.get('x-requested-with') != 'XMLHttpRequest':
             return JsonResponse({'message': 'Invalid request.'}, status=400)
 
-        signup_data = request.session.get('signup_data')
-        if not signup_data:
-            return JsonResponse({'success': False, 'message': 'Session expired. Please sign up again.'}, status=400)
+        token = request.POST.get('token')
+        if not token:
+            return JsonResponse({'success': False, 'message': 'Token is missing.'}, status=400)
 
-        phone = signup_data.get('phone')
+        try:
+            pending = PendingSignup.objects.get(token=token)
+        except PendingSignup.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Invalid or expired token.'}, status=400)
+
+        try:
+            data = json.loads(pending.data)
+        except Exception:
+            return JsonResponse({'success': False, 'message': 'Corrupted signup data.'}, status=500)
+
+        phone = data.get('phone')
         otp_response = send_phone_otp(phone, TEXTDRIP_OTP_TOKEN)
 
         if "error" in otp_response:
             return JsonResponse({'success': False, 'message': otp_response["error"]}, status=400)
 
         return JsonResponse({'success': True, 'message': 'OTP resent successfully.'})
+
 
 
 class CustomPasswordResetView(PasswordResetView):

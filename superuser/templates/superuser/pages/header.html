@@ -1,5 +1,5 @@
 {% load superuser_tags %}
-
+{% load static %}
 <div id="kt_app_header" class="app-header d-flex ">
     <div class="app-container container-fluid d-flex align-items-center justify-content-between"
          id="kt_app_header_container">
@@ -193,9 +193,10 @@
         </div>
         <div class="modal-footer justify-content-center">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <a href="{% url 'supplier:admin_logout' %}" class="btn btn-danger">Yes, Sign Out</a>
+          <a href="{% url 'supplier:admin_logout' %}" class="btn btn-danger btn-with-loader">Yes, Sign Out</a>
         </div>
       </div>
     </div>
   </div>
-  
+
+<script src="{% static 'js/buttonLoader.js' %}"></script>

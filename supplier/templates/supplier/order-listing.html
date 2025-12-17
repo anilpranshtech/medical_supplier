@@ -192,6 +192,18 @@
                                             <div class="menu-item px-3">
                                                 <a href="#" class="menu-link px-3 change-status-btn" data-id="{{ order.order_id }}" data-bs-toggle="modal" data-bs-target="#changeStatusModal">Change Status</a>
                                             </div>
+                                            <div class="menu-item px-3">
+                                                <a href="#"
+                                                   class="menu-link px-3 order-status-trigger"
+                                                   data-order-id="{{ order.order_id }}"
+                                                   data-order-status="{{ order.status }}"
+                                                   data-bs-toggle="modal"
+                                                   data-bs-target="#orderStatusModal">
+                                                    Order Status
+                                                </a>
+                                            </div>
+                                            
+                                            
                                             
                                         </div>
                                     </td>
@@ -239,7 +251,52 @@
       </div>
     </div>
   </div>
-  
+  <!-- order status model -->
+  <div class="modal fade" id="orderStatusModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Update Order Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <form id="order-status-form">
+                    {% csrf_token %}
+
+                    <input type="hidden" name="order_id" id="order-status-order-id">
+
+                    <div class="mb-3">
+                        <label class="form-label">Order Status</label>
+                        <select name="status"
+                                id="order-status-select"
+                                class="form-select"
+                                required>
+                            <option value="pending">Pending</option>
+                            <option value="processing">Processing</option>
+                            <option value="shipped">Shipped</option>
+                            <option value="delivering">Delivering</option>
+                            <option value="delivered">Delivered</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
+                            <option value="refunded">Refunded</option>
+                            <option value="failed">Failed</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">
+                        Update Status
+                    </button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
 {% block page_only_scripts %}
 <script>
     // Search box
@@ -304,6 +361,70 @@
     //     });
     // });
 </script>
-
+<script>
+    //payment status 
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll(".change-status-btn").forEach(btn => {
+            btn.addEventListener("click", function () {
+                document.getElementById("modalOrderId").value = this.dataset.id;
+            });
+        });
+        document.getElementById("changeStatusForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+    
+            const formData = new FormData(this);
+    
+            fetch("{% url 'supplier:update_payment_status' %}", {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": "{{ csrf_token }}",
+                },
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload(); 
+                } else {
+                    alert(data.error || "Failed to update payment status");
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Server error");
+            });
+        });
+    
+    });
+//order status
+    document.querySelectorAll('.order-status-trigger').forEach(btn => {
+        btn.addEventListener('click', function () {
+            document.getElementById('order-status-order-id').value = this.dataset.orderId;
+            document.getElementById('order-status-select').value = this.dataset.orderStatus;
+        });
+    });
+    
+    document.getElementById('order-status-form').addEventListener('submit', function (e) {
+        e.preventDefault();
+    
+        fetch("{% url 'supplier:change_order_status' %}", {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: new FormData(this)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert("Order status update failed");
+            }
+        });
+    });
+    </script>
+    
+        
 {% endblock page_only_scripts %}
 {% endblock %}

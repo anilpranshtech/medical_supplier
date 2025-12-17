@@ -1,29 +1,126 @@
-{% extends "supplier/base.html" %}
+{% extends 'supplier/base.html' %}
 {% load static %}
 
 {% block content %}
+<style>
+    .rating-star {
+        color: gold;
+        font-size: 16px;
+    }
+    
+    .review-text {
+        white-space: normal;
+        word-break: break-word;
+        max-width: 350px;
+        text-align: left;
+    }
 
-<h2>{{ product.name }} - All Ratings</h2>
+    /* Prevent dropdown clipping */
+    .table-responsive,
+    .card-body.table-responsive {
+        overflow: visible !important;
+    }
+</style>
 
-<div class="card mt-4">
-    <div class="card-body">
-        {% for r in ratings %}
-        <div class="border-bottom py-3">
-            <strong>{{ r.user.username }}</strong> – 
-            <span class="rating-star">★ {{ r.rating }}</span>
+<div class="app-main flex-column flex-row-fluid" id="kt_app_main">
+    <div class="d-flex flex-column flex-column-fluid">
+        <div id="kt_app_content" class="app-content flex-column-fluid pt-0">
+            <div id="kt_app_content_container" class="app-container container-fluid">
 
-            <p>{{ r.review }}</p>
+                <!-- Filter Form -->
+                <form action="" method="GET">
+                    <div class="card mb-7">
+                        <div class="card-body">
+                            {% include "superuser/pages/filters/filter_sort_by.html" %}
+                            {% include "superuser/pages/filters/filter_search_by.html" with show_advance_search_link=True search_help_text='Choices: Username, Review' search_placeholder_text='Search Ratings' %}
+                            <div class="collapse" id="kt_advanced_search_form">
+                                <div class="separator separator-dashed mt-9 mb-6"></div>
+                                <div class="row g-8 mb-8">
+                                    <div class="col-xxl-12">
+                                        <div class="row g-8">
+                                            {% include "superuser/pages/filters/filter_created_date_range_picker.html" %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
 
-            {% if r.photo %}
-            <img src="{{ r.photo.url }}" width="120" class="rounded mb-2">
-            {% endif %}
+                <!-- Ratings Table -->
+                <div class="card card-flush mb-3">
+                    <div class="card-header align-items-center py-5 gap-2 gap-md-5">
+                        <div class="card-title">
+                            <h3>{{ product.name }} - All Ratings</h3>
+                        </div>
+                    </div>
 
-            <small class="text-muted">{{ r.created_at }}</small>
+                    <div class="card-body table-responsive p-0">
+                        <table class="table align-middle table-row-dashed fs-6 gy-5">
+                            <thead>
+                                <tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
+                                    <th class="text-center">User</th>
+                                    <th class="text-center">Rating</th>
+                                    <th class="text-center">Review</th>
+                                    <th class="text-center">Photo</th>
+                                    <th class="text-center">Created At</th>
+                                  
+                                </tr>
+                            </thead>
+
+                            <tbody class="fw-semibold text-gray-600">
+                                {% for r in ratings %}
+                                <tr>
+                                    <td class="text-center">
+                                        <strong>{{ r.user.username }}</strong>
+                                    </td>
+
+                                    <td class="text-center">
+                                        <span class="rating-star">★</span> {{ r.rating }}
+                                    </td>
+
+                                    <td class="text-center review-text">
+                                        {% if r.review %}
+                                            {{ r.review }}
+                                        {% else %}
+                                            <span class="text-muted">No review</span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td class="text-center">
+                                        {% if r.photo %}
+                                            <img src="{{ r.photo.url }}" width="80" height="80" style="border-radius:8px;" alt="Review Photo">
+                                        {% else %}
+                                            <span class="text-muted">--</span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td class="text-center">{{ r.created_at|date:"d M Y" }}</td>
+
+                               
+                                </tr>
+
+
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted">No ratings found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {% include "superuser/pages/pagination.html" with page_obj=page_obj %}
+
+            </div>
         </div>
-        {% empty %}
-        <p>No ratings found.</p>
-        {% endfor %}
     </div>
 </div>
+{% endblock %}
+
+{% block page_only_scripts %}
+{% include "superuser/pages/filters/filter_created_date_range_picker_js.html" %}
+
 
 {% endblock %}

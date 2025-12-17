@@ -934,7 +934,7 @@ class GetLastCategoriesView( View):
 
 class AdminloginView( View):
     def get(self, request):
-        return render(request, 'supplier/sign-in.html')
+        return render(request, 'dashboard/login.html')
 
     def post(self, request):
         email = request.POST.get('email')
@@ -954,7 +954,7 @@ class AdminloginView( View):
                 messages.error(request, "Invalid email or password.")
         except User.DoesNotExist:
             messages.error(request, "User with this email does not exist.")
-        return render(request, 'supplier/sign-in.html')
+        return render(request, 'dashboard/login.html')
 
 
 @method_decorator(login_required, name='dispatch')
@@ -1282,8 +1282,88 @@ class OrderListingView( OnboardingRequiredMixin,View):
 
         logger.info(f"Supplier {supplier.id} viewed order listing with status filter: {status_filter}")
         return render(request, 'supplier/order-listing.html', context)
+class UpdatePaymentStatusView(LoginRequiredMixin, View):
+    def post(self, request):
+        order_id = request.POST.get("order_id")
+        paid = request.POST.get("paid")
 
+        if paid not in ["True", "False"]:
+            return JsonResponse({"success": False, "error": "Invalid status"})
 
+        order = get_object_or_404(Order, order_id=order_id)
+        if not order.items.filter(order_to=request.user).exists():
+            return JsonResponse({"success": False, "error": "Permission denied"})
+
+        if not order.payment:
+            return JsonResponse({"success": False, "error": "Payment not found"})
+
+        order.payment.paid = True if paid == "True" else False
+        order.payment.save(update_fields=["paid"])
+
+        return JsonResponse({
+            "success": True,
+            "paid": order.payment.paid
+        })
+class OrderListAndStatusView(View):
+    template_name = 'supplier/orders.html'
+
+    def get(self, request):
+        status = request.GET.get('status')
+
+        orders = Order.objects.select_related('user', 'payment')
+
+        if status:
+            orders = orders.filter(status=status)
+
+        context = {
+            'orders': orders,
+            'selected_status': status,
+
+            # DASHBOARD COUNTS
+            'total_orders': Order.objects.count(),
+            'completed_orders': Order.objects.filter(status='completed').count(),
+            'pending_orders': Order.objects.filter(status='pending').count(),
+            'cancelled_orders': Order.objects.filter(status='cancelled').count(),
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request):
+        order_id = request.POST.get('order_id')
+        status = request.POST.get('status')
+
+        order = get_object_or_404(Order, order_id=order_id)
+
+        valid_statuses = dict(Order._meta.get_field('status').choices)
+
+        if status not in valid_statuses:
+            return JsonResponse({'success': False, 'error': 'Invalid status'})
+
+        order.status = status
+
+        if status == 'delivered':
+            order.delivered_at = timezone.now()
+
+        order.save()
+
+        return JsonResponse({'success': True})
+class ChangeOrderStatusView(View):
+    def post(self, request):
+        order_id = request.POST.get('order_id')
+        new_status = request.POST.get('status')
+        if not order_id or not new_status:
+            return JsonResponse({'success': False, 'message': 'Invalid data'}, status=400)
+        order = get_object_or_404(Order, order_id=order_id)
+        order.status = new_status
+
+        if new_status == 'delivered':
+            order.delivered_at = timezone.now()
+
+        order.save()
+
+        return JsonResponse({
+            'success': True,
+            'new_status': new_status
+        })
 class OrderDetailsView( View):
     def get(self, request, order_id):
         supplier = request.user
@@ -2027,19 +2107,63 @@ class MostViewedProductsView(OnboardingRequiredMixin,View):
         return render(request, "supplier/view_product.html", context)
 
 
-class QuestionView(OnboardingRequiredMixin,TemplateView):
+class QuestionView(OnboardingRequiredMixin, TemplateView):
     template_name = 'supplier/question.html'
+    paginate_by = 10
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        user_products = Product.objects.filter(created_by=self.request.user)
 
-        context['questions'] = (
-            Question.objects.filter(product__in=user_products)
-            .select_related('user', 'product')
-            .order_by('-created_at')
-        )
+        user_products = Product.objects.filter(created_by=self.request.user)
+        questions_qs = Question.objects.filter(product__in=user_products).select_related('user', 'product')
+
+        # Search
+        search_by = self.request.GET.get('search_by')
+        if search_by:
+            questions_qs = questions_qs.filter(
+                Q(text__icontains=search_by) |
+                Q(user__username__icontains=search_by) |
+                Q(product__name__icontains=search_by)
+            )
+
+        # Sorting
+        sort_by = self.request.GET.get('sort_by')
+        if sort_by == "asc_created":
+            questions_qs = questions_qs.order_by('created_at')
+        else:
+            questions_qs = questions_qs.order_by('-created_at')
+
+        # Date range filter
+        created_date = self.request.GET.get('created_date') 
+        start_date = end_date = None
+        if created_date:
+            dates = created_date.split(' - ')
+            if len(dates) == 2:
+                start_date = datetime.strptime(dates[0], "%m/%d/%Y").date()
+                end_date = datetime.strptime(dates[1], "%m/%d/%Y").date()
+            elif len(dates) == 1:
+                start_date = end_date = datetime.strptime(dates[0], "%m/%d/%Y").date()
+
+        if start_date:
+            questions_qs = questions_qs.filter(created_at__date__gte=start_date)
+        if end_date:
+            questions_qs = questions_qs.filter(created_at__date__lte=end_date)
+
+        # Pagination
+        paginator = Paginator(questions_qs, self.paginate_by)
+        page_number = self.request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+
+        context.update({
+            'questions': page_obj.object_list,
+            'page_obj': page_obj,
+            'search_by': search_by,
+            'sort_by': sort_by,
+            'created_date': created_date,  
+        })
+
         return context
+
 
     def post(self, request, *args, **kwargs):
         question_id = request.POST.get('question_id')
@@ -2047,7 +2171,9 @@ class QuestionView(OnboardingRequiredMixin,TemplateView):
         action_type = request.POST.get('action_type')
 
         user_products = Product.objects.filter(created_by=request.user)
-        question = get_object_or_404(Question, id=question_id, product__in=user_products)
+        question = get_object_or_404(
+            Question, id=question_id, product__in=user_products
+        )
 
         if action_type == "reply":
             question.reply = reply_text
@@ -2058,9 +2184,10 @@ class QuestionView(OnboardingRequiredMixin,TemplateView):
         elif action_type == "delete":
             question.delete()
             messages.success(request, "Question deleted successfully.")
-            
 
         return redirect('supplier:question_list')
+
+
 
 
 class RatingView(OnboardingRequiredMixin,TemplateView):

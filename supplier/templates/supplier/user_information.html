@@ -131,6 +131,24 @@
 input.is-invalid, textarea.is-invalid, select.is-invalid {
     border: 1px solid red !important;
 }
+.selling-categories {
+    margin-left: 20px;
+    border-top: 1px solid #e5e7eb; 
+}
+.category-row {
+    display: flex;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #e5e7eb; 
+}
+.checkbox-wrap {
+    margin-right: 12px;
+}
+.category-row label {
+    margin: 0;
+    font-weight: 500;
+    cursor: pointer;
+}
 
 </style>
 <h2 class="page-title">Dashboard &gt; Complete Profile</h2>
@@ -347,19 +365,24 @@ input.is-invalid, textarea.is-invalid, select.is-invalid {
        
 {% elif step == 4 %}
 <h4>Selling Categories</h4><br>
+
 {% if form.fields.selling_categories.queryset.exists %}
-    <div class="form-group" style="margin-left: 20px;">
+    <div class="form-group selling-categories">
         {% for checkbox in form.selling_categories %}
-            <div class="checkbox-item" style="margin-bottom: 8px; display: flex; align-items: center;">
-                <div style="margin-right: 10px;">
-                    {{ checkbox.tag }}</div>
-                <label for="{{ checkbox.id_for_label }}" style="margin-bottom: 0;">
-                    {{ checkbox.choice_label }}</label></div>
+            <div class="category-row">
+                <div class="checkbox-wrap">
+                    {{ checkbox.tag }}
+                </div>
+                <label for="{{ checkbox.id_for_label }}">
+                    {{ checkbox.choice_label }}
+                </label>
+            </div>
         {% endfor %}
     </div>
 {% else %}
-    <p >No categories available</p>
+    <p>No categories available</p>
 {% endif %}
+
             
             {% elif step == 5 %}
                 <h4>Supplier Description</h4>

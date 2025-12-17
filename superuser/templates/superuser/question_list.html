@@ -16,6 +16,8 @@
         max-width: 250px;
         text-align: left;
     }
+
+    /* Prevent dropdown clipping */
     .table-responsive,
     .card-body.table-responsive {
         overflow: visible !important;
@@ -26,7 +28,25 @@
     <div class="d-flex flex-column flex-column-fluid">
         <div id="kt_app_content" class="app-content flex-column-fluid pt-0">
             <div id="kt_app_content_container" class="app-container container-fluid">
-
+  <!-- Filter Form -->
+  <form action="{% url 'superuser:question_list' %}" method="GET">
+    <div class="card mb-7">
+        <div class="card-body">
+            {% include "superuser/pages/filters/filter_sort_by.html" %}
+            {% include "superuser/pages/filters/filter_search_by.html" with show_advance_search_link=True search_help_text='Choices: Origin' search_placeholder_text='Search Categories' %}
+            <div class="collapse" id="kt_advanced_search_form">
+                <div class="separator separator-dashed mt-9 mb-6"></div>
+                <div class="row g-8 mb-8">
+                    <div class="col-xxl-12">
+                        <div class="row g-8">
+                            {% include "superuser/pages/filters/filter_created_date_range_picker.html" %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
                 <div class="card card-flush mb-3">
                     <div class="card-header align-items-center py-5 gap-2 gap-md-5">
                         <div class="card-title">
@@ -43,9 +63,7 @@
                                     <th class="text-center">Question</th>
                                     <th class="text-center">Reply</th>
                                     <th class="text-center">Created At</th>
-                                    {% if "dashboard.change_question" in user_permissions_list or "dashboard.delete_question" in user_permissions_list %}
                                     <th class="text-center">Action</th>
-                                    {% endif %}
                                 </tr>
                             </thead>
 
@@ -53,6 +71,8 @@
                                 {% for q in questions %}
                                 <tr>
                                     <td class="text-center">{{ q.user.username }}</td>
+
+                                    <!-- PRODUCT NAME COLUMN -->
                                     <td class="text-center">
                                         {% if q.product %}
                                             {{ q.product.name }}
@@ -73,7 +93,6 @@
 
                                     <td class="text-center">{{ q.created_at|date:"d M Y" }}</td>
 
-                                    {% if "dashboard.change_question" in user_permissions_list or "dashboard.delete_question" in user_permissions_list %}
                                     <td class="text-center">
                                         <div class="dropdown" data-bs-display="static">
                                             <button class="btn btn-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
@@ -81,7 +100,6 @@
                                             </button>
 
                                             <ul class="dropdown-menu">
-                                                {% if "dashboard.change_question" in user_permissions_list  %}
                                                 <li>
                                                     <a class="dropdown-item"
                                                        href="#"
@@ -90,9 +108,8 @@
                                                        {% if q.reply %}Edit Reply{% else %}Reply{% endif %}
                                                     </a>
                                                 </li>
-                                                {% endif %}
                                                 
-                                                {% if "dashboard.delete_question" in user_permissions_list  %}
+                                                <!-- {% if request.user.is_superuser %}
                                                 <li>
                                                     <button type="button"
                                                             class="dropdown-item text-danger"
@@ -100,12 +117,11 @@
                                                         Delete
                                                     </button>
                                                 </li>
-                                                {% endif %}
+                                                {% endif %} -->
                                             </ul>
                                         </div>
                                     </td>
-                                    {% endif %}
-                                </tr>   
+                               </tr>   
 
                                 <!-- Reply Modal -->
                                 <div class="modal fade" id="replyModal{{ q.id }}" tabindex="-1">
@@ -131,13 +147,13 @@
                                                 </div>
 
                                                 <div class="modal-footer">
-                                                    <button type="submit" class="btn btn-primary reply-btn">
+                                                    <button type="submit" class="btn btn-primary reply-btn  ">
                                                         Send Reply
                                                     </button>
                                                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                                        Cancel
+                                                        Cancel  
                                                     </button>
-                                                </div>
+                                                </div>  
                                             </div>
                                         </form>
                                     </div>
@@ -152,11 +168,15 @@
                         </table>
                     </div>
                 </div>
+                {% include "superuser/pages/pagination.html" with page_obj=page_obj %}
 
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+{% block page_only_scripts %}
+{% include "superuser/pages/filters/filter_created_date_range_picker_js.html" %}
 <script>
 function confirmDelete(id) {
     if (confirm("Are you sure you want to delete this question?")) {
@@ -172,6 +192,8 @@ function confirmDelete(id) {
     }
 }
 </script>
+
+<!-- Button Loader -->
 <script>
 document.querySelectorAll(".reply-form").forEach(form => {
     form.addEventListener("submit", function () {
@@ -179,7 +201,7 @@ document.querySelectorAll(".reply-form").forEach(form => {
         btn.disabled = true;
         btn.innerHTML = `
             <span class="spinner-border spinner-border-sm"></span>
-            Sending...
+            Loding...
         `;
     });
 });

@@ -55,6 +55,9 @@ urlpatterns = [
     # Orders Urls
     path('orders/list/', OrderListingView.as_view(), name='orders_list'),
     path('order/detail/<slug:order_id>/', OrderDetailesView.as_view(), name='orders_detail'),
+    path('orders/', OrderListAndStatusView.as_view(), name='orders'),
+    path('order/change-status/', ChangeOrderStatusView.as_view(), name='change_order_status'),
+    path( "orders/update-payment-status/", UpdatePaymentStatusView.as_view(), name="update_payment_status" ),
     path('orders/delete/<int:pk>/', OrderDeleteView.as_view(), name='order_delete'),
 
     path('banner-list/', BannerListView.as_view(), name='banner_list'),
