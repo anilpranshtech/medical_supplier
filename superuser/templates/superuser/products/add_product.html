@@ -157,7 +157,7 @@
                                             <label class="required form-label">Product Name</label>
                                             <input type="text" id="product_name" name="product_name" class="form-control mb-2" 
                                                    placeholder="Product name" value="{{ product_name }}" required />
-                                            <div class="text-muted fs-7">A product name is required (letters & numbers, max 10 characters).</div>
+                                            <div class="text-muted fs-7">A product name is required (letters & numbers allowed).</div>
                                         </div> 
                                         <div>
                                             <label class="form-label">Description</label>
@@ -1358,18 +1358,18 @@ document.addEventListener("DOMContentLoaded", function () {
             helpText.classList.remove('text-muted');
             helpText.classList.add('text-danger');
             helpText.textContent = 'Product Name can only contain letters, numbers, spaces, hyphen (-), and underscore (_).';
-        } else if (productName.value.length > 10) { // Adding max length validation as per HTML
-            productName.setCustomValidity("Product Name cannot exceed 10 characters.");
+        } else if (productName.value.length > 150) { // Adding max length validation as per HTML
+            productName.setCustomValidity("Product Name cannot exceed 150 characters.");
             productName.classList.add('is-invalid');
             helpText.classList.remove('text-muted');
             helpText.classList.add('text-danger');
-            helpText.textContent = 'Product Name cannot exceed 10 characters.';
+            helpText.textContent = 'Product Name cannot exceed 150 characters.';
         } else {
             productName.setCustomValidity("");
             productName.classList.remove('is-invalid');
             helpText.classList.remove('text-danger');
             helpText.classList.add('text-muted');
-            helpText.textContent = helpText.getAttribute('data-original-text') || 'A product name is required (letters & numbers, max 10 characters).';
+            helpText.textContent = helpText.getAttribute('data-original-text') || 'A product name is required (letters & numbers, max 150 characters).';
         }
     });
 

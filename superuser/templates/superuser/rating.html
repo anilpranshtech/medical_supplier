@@ -163,6 +163,11 @@
                                             </ul>
                                         </div>
                                     </td>
+                                    <td class="text-center">
+                        <div class="badge badge-light fw-bold" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ p.created_at|date:'F d Y P' }}">
+                            {{ p.created_at|date:'F d Y' | default:'No date found' }}
+                        </div>
+                    </td>
                                 </tr>
                                 {% empty %}
                                 <tr>

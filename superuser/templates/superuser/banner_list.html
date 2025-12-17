@@ -88,6 +88,7 @@
                   <th style="width: 14%;">Order</th>
                   <th style="width: 14%;">Status</th>
                   <th style="width: 14%;">Link</th>
+                  <th style="width: 14%;">Created at</th>
                   {% if "supplier.change_banner" in user_permissions_list or "supplier.delete_banner" in user_permissions_list %}
                   <th style="width: 16%;">Actions</th>
                   {% endif %}
@@ -124,6 +125,11 @@
                     <span class="text-muted">—</span>
                     {% endif %}
                   </td>
+                  <td class="text-center">
+                        <div class="badge badge-light fw-bold" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ banner.created_at|date:'F d Y P' }}">
+                            {{ banner.created_at|date:'F d Y' | default:'No date found' }}
+                        </div>
+                    </td>
                   {% if "supplier.change_banner" in user_permissions_list or "supplier.delete_banner" in user_permissions_list %}
                   <td>
                     <div class="dropdown">

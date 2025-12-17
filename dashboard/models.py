@@ -1327,6 +1327,7 @@ class ShippingMethod(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     period = models.PositiveIntegerField()  
     period_type = models.CharField(max_length=10, choices=PERIOD_TYPE_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     def __str__(self):
         return f"{self.country} - {self.state} - {self.city} : {self.price}"
