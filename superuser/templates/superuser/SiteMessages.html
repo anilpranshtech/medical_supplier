@@ -50,6 +50,7 @@
                   <th>Phone</th>
                   <th>Subject</th>
                   <th>Message</th>
+                  <th>Created at</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -63,7 +64,11 @@
                   <td style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                     {{ c.message }}
                   </td>
-                  
+                  <td class="text-center">
+                        <div class="badge badge-light fw-bold" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ c.created_at|date:'F d Y P' }}">
+                            {{ c.created_at|date:'F d Y' | default:'No date found' }}
+                        </div>
+                    </td>
                   <td>
                     <div class="dropdown">
                       <button class="btn btn-light-primary btn-sm dropdown-toggle"
@@ -104,7 +109,7 @@
                   
                 </tr>
                 {% empty %}
-                <tr><td colspan="6">No records found.</td></tr>
+                <tr><td colspan="7">No records found.</td></tr>
                 {% endfor %}
               </tbody>
             </table>

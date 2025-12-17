@@ -12,7 +12,7 @@
     <div class="card mb-7">
         <div class="card-body">
             {% include "superuser/pages/filters/filter_sort_by.html" %}
-            {% include "superuser/pages/filters/filter_search_by.html" with show_advance_search_link=True search_help_text='Choices: Origin' search_placeholder_text='Search Categories' %}
+            {% include "superuser/pages/filters/filter_search_by.html" with show_advance_search_link=True search_help_text='Choices: FAQ Title' search_placeholder_text='Search FAQ' %}
             <div class="collapse" id="kt_advanced_search_form">
                 <div class="separator separator-dashed mt-9 mb-6"></div>
                 <div class="row g-8 mb-8">
@@ -47,6 +47,7 @@
                 <tr class="text-gray-500 fw-bold fs-7 text-uppercase text-center">
                   <th>Title (EN)</th>
                   <th>Description (EN)</th>
+                  <th>Created at</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -55,6 +56,11 @@
                 <tr>
                   <td>{{ f.title_en }}</td>
                   <td>{{ f.description_en|truncatewords:10 }}</td>
+                  <td class="text-center">
+                        <div class="badge badge-light fw-bold" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ f.created_at|date:'F d Y P' }}">
+                            {{ f.created_at|date:'F d Y' | default:'No date found' }}
+                        </div>
+                    </td>
                   <td>
                     <div class="dropdown">
                       <button class="btn btn-light-primary btn-sm dropdown-toggle"
@@ -92,7 +98,7 @@
                   
                 </tr>
                 {% empty %}
-                <tr><td colspan="3">No FAQs found.</td></tr>
+                <tr><td colspan="4">No FAQs found.</td></tr>
                 {% endfor %}
               </tbody>
             </table>

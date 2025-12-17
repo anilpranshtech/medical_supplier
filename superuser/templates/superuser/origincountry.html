@@ -21,7 +21,7 @@
     <div class="card mb-7">
         <div class="card-body">
             {% include "superuser/pages/filters/filter_sort_by.html" %}
-            {% include "superuser/pages/filters/filter_search_by.html" with show_advance_search_link=True search_help_text='Choices: Origin' search_placeholder_text='Search Categories' %}
+            {% include "superuser/pages/filters/filter_search_by.html" with show_advance_search_link=True search_help_text='Choices: countrie Name' search_placeholder_text='Search countries' %}
             <div class="collapse" id="kt_advanced_search_form">
                 <div class="separator separator-dashed mt-9 mb-6"></div>
                 <div class="row g-8 mb-8">
@@ -50,8 +50,9 @@
             <table class="table table-row-dashed align-middle fs-6 gy-5" style="width: 100%; border-collapse: collapse;">
               <thead>
                 <tr class="text-gray-500 fw-bold fs-7 text-uppercase" style="text-align: center;">
-                  <th style="width: 50%; padding: 12px;">Name</th>
-                  <th style="width: 50%; padding: 12px;">Actions</th>
+                  <th style="width: 33%; padding: 12px;">countrie Name</th>
+                  <th style="width: 33%; padding: 12px;">Created at</th>
+                  <th style="width: 34%; padding: 12px;">Actions</th>
                 </tr>
               </thead>
           
@@ -59,6 +60,11 @@
                 {% for c in countries %}
                 <tr>
                   <td style="padding: 12px; vertical-align: middle;">{{ c.name }}</td>
+                  <td class="text-center">
+                        <div class="badge badge-light fw-bold" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ c.created_at|date:'F d Y P' }}">
+                            {{ c.created_at|date:'F d Y' | default:'No date found' }}
+                        </div>
+                    </td>
                   <td style="padding: 12px; vertical-align: middle;">
                     <!-- Actions Dropdown -->
                     <div class="dropdown">
@@ -82,7 +88,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                  <td colspan="2" style="padding: 12px; color: #888;">No countries added yet.</td>
+                  <td colspan="3" style="padding: 12px; color: #888;">No countries added yet.</td>
                 </tr>
                 {% endfor %}
               </tbody>

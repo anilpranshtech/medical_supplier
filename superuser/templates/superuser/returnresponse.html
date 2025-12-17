@@ -20,7 +20,7 @@
           <div class="card mb-7">
               <div class="card-body">
                   {% include "superuser/pages/filters/filter_sort_by.html" %}
-                  {% include "superuser/pages/filters/filter_search_by.html" with show_advance_search_link=True search_help_text='Choices: Origin' search_placeholder_text='Search Categories' %}
+                  {% include "superuser/pages/filters/filter_search_by.html" with show_advance_search_link=True search_help_text='Choices: Reason' search_placeholder_text='Search Reason' %}
                   <div class="collapse" id="kt_advanced_search_form">
                       <div class="separator separator-dashed mt-9 mb-6"></div>
                       <div class="row g-8 mb-8">
@@ -50,6 +50,7 @@
               <thead>
                 <tr class="text-gray-500 fw-bold fs-7 text-uppercase" style="text-align: center;">
                   <th style="padding: 12px;">Reason En</th>
+                  <th style="padding: 12px;">Created at</th>
                   <th style="padding: 12px;">Actions</th>
                 </tr>
               </thead>
@@ -58,6 +59,11 @@
                 {% for r in reasons %}
                 <tr>
                   <td style="padding: 12px; vertical-align: middle;">{{ r.reason_en }}</td>
+                  <td class="text-center">
+                        <div class="badge badge-light fw-bold" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ r.created_at|date:'F d Y P' }}">
+                            {{ r.created_at|date:'F d Y' | default:'No date found' }}
+                        </div>
+                    </td>
                   <td style="padding: 12px; vertical-align: middle;">
                     <!-- Actions Dropdown -->
                     <div class="dropdown">
@@ -83,7 +89,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                  <td colspan="2" style="padding: 12px; color: #888;">No return reasons added yet.</td>
+                  <td colspan="3" style="padding: 12px; color: #888;">No return reasons added yet.</td>
                 </tr>
                 {% endfor %}
               </tbody>

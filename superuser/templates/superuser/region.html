@@ -20,7 +20,7 @@
     <div class="card mb-7">
         <div class="card-body">
             {% include "superuser/pages/filters/filter_sort_by.html" %}
-            {% include "superuser/pages/filters/filter_search_by.html" with show_advance_search_link=True search_help_text='Choices: Origin' search_placeholder_text='Search Categories' %}
+            {% include "superuser/pages/filters/filter_search_by.html" with show_advance_search_link=True search_help_text='Choices: Region Name ' search_placeholder_text='Search Region' %}
             <div class="collapse" id="kt_advanced_search_form">
               <div class="separator separator-dashed mt-9 mb-6"></div>
               <div class="row g-8 mb-8">
@@ -49,6 +49,7 @@
                 <tr class="text-gray-500 fw-bold fs-7 text-uppercase" style="text-align: center;">
                   <th style="padding: 12px;">Region Name</th>
                   <th style="padding: 12px;">Country</th>
+                  <th style="padding: 12px;">Created at</th>
                   <th style="padding: 12px;">Actions</th>
                 </tr>
               </thead>
@@ -58,6 +59,11 @@
                 <tr>
                     <td style="padding: 12px; vertical-align: middle;">{{ r.name_en }}</td>
                     <td style="padding: 12px; vertical-align: middle;">{{ r.country }}</td>
+                    <td class="text-center">
+                        <div class="badge badge-light fw-bold" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ r.created_at|date:'F d Y P' }}">
+                            {{ r.created_at|date:'F d Y' | default:'No date found' }}
+                        </div>
+                    </td>
                     <td style="padding: 12px; vertical-align: middle;">
                         <!-- Actions Dropdown -->
                         <div class="dropdown">
@@ -84,7 +90,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                  <td colspan="3" style="padding: 12px; color: #888;">No regions added yet.</td>
+                  <td colspan="4" style="padding: 12px; color: #888;">No regions added yet.</td>
                 </tr>
                 {% endfor %}
             </tbody>

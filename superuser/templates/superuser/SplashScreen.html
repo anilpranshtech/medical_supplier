@@ -17,7 +17,7 @@
     <div class="card mb-7">
         <div class="card-body">
             {% include "superuser/pages/filters/filter_sort_by.html" %}
-            {% include "superuser/pages/filters/filter_search_by.html" with show_advance_search_link=True search_help_text='Choices: Origin' search_placeholder_text='Search Categories' %}
+            {% include "superuser/pages/filters/filter_search_by.html" with show_advance_search_link=True search_help_text='Choices: Splash Screen Title' search_placeholder_text='Search Splash Screen' %}
             <div class="collapse" id="kt_advanced_search_form">
                 <div class="separator separator-dashed mt-9 mb-6"></div>
                 <div class="row g-8 mb-8">
@@ -50,25 +50,31 @@
             <table class="table table-row-dashed align-middle fs-6 gy-5" style="border-collapse: collapse; width: 100%;">
               <thead>
                 <tr class="text-gray-500 fw-bold fs-7 text-uppercase">
-                  <th style="width: 20%; padding: 10px 12px; text-align: center; vertical-align: middle; white-space: nowrap;">Image</th>
-                  <th style="width: 20%; padding: 10px 12px; text-align: center; vertical-align: middle; white-space: nowrap;">Title</th>
-                  <th style="width: 20%; padding: 10px 12px; text-align: center; vertical-align: middle; white-space: nowrap;">Order</th>
-                  <th style="width: 20%; padding: 10px 12px; text-align: center; vertical-align: middle; white-space: nowrap;">Language</th>
-                  <th style="width: 20%; padding: 10px 12px; text-align: center; vertical-align: middle; white-space: nowrap;">Actions</th>
+                  <th style="width: 15%; padding: 10px 12px; text-align: center; vertical-align: middle; white-space: nowrap;">Image</th>
+                  <th style="width: 15%; padding: 10px 12px; text-align: center; vertical-align: middle; white-space: nowrap;">Splash Screen Title</th>
+                  <th style="width: 15%; padding: 10px 12px; text-align: center; vertical-align: middle; white-space: nowrap;">Order</th>
+                  <th style="width: 15%; padding: 10px 12px; text-align: center; vertical-align: middle; white-space: nowrap;">Language</th>
+                  <th style="width: 15%; padding: 10px 12px; text-align: center; vertical-align: middle; white-space: nowrap;">Created at</th>
+                  <th style="width: 15%; padding: 10px 12px; text-align: center; vertical-align: middle; white-space: nowrap;">Actions</th>
                 </tr>
               </thead>
               <tbody class="fw-semibold text-gray-600">
                 {% for s in screens %}
                 <tr>
-                  <td style="width: 20%; padding: 10px 12px; text-align: center; vertical-align: middle; white-space: nowrap;">
+                  <td style="width: 15%; padding: 10px 12px; text-align: center; vertical-align: middle; white-space: nowrap;">
                     {% if s.screen_image %}
                       <img src="{{ s.screen_image.url }}" width="60" height="60" class="rounded">
                     {% endif %}
                   </td>
-                  <td style="width: 20%; padding: 10px 12px; text-align: center; vertical-align: middle; white-space: nowrap;">{{ s.screen_title }}</td>
-                  <td style="width: 20%; padding: 10px 12px; text-align: center; vertical-align: middle; white-space: nowrap;">{{ s.screen_order }}</td>
-                  <td style="width: 20%; padding: 10px 12px; text-align: center; vertical-align: middle; white-space: nowrap;">{{ s.get_screen_language_display }}</td>
-                  <td style="width: 20%; padding: 10px 12px; text-align: center; vertical-align: middle; white-space: nowrap;">
+                  <td style="width: 15%; padding: 10px 12px; text-align: center; vertical-align: middle; white-space: nowrap;">{{ s.screen_title }}</td>
+                  <td style="width: 15%; padding: 10px 12px; text-align: center; vertical-align: middle; white-space: nowrap;">{{ s.screen_order }}</td>
+                  <td style="width: 15%; padding: 10px 12px; text-align: center; vertical-align: middle; white-space: nowrap;">{{ s.get_screen_language_display }}</td>
+                  <td class="text-center">
+                        <div class="badge badge-light fw-bold" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ s.created_at|date:'F d Y P' }}">
+                            {{ s.created_at|date:'F d Y' | default:'No date found' }}
+                        </div>
+                    </td>
+                  <td style="width: 15%; padding: 10px 12px; text-align: center; vertical-align: middle; white-space: nowrap;">
                     <div class="dropdown">
                       <button class="btn btn-light-primary btn-sm dropdown-toggle"
                               type="button"
@@ -109,7 +115,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                  <td colspan="5" class="text-center text-muted" style="padding: 10px 12px;">No splash screens added yet.</td>
+                  <td colspan="6" class="text-center text-muted" style="padding: 10px 12px;">No splash screens added yet.</td>
                 </tr>
                 {% endfor %}
               </tbody>

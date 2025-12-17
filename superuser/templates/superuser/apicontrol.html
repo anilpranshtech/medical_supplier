@@ -16,7 +16,7 @@
   <div class="card mb-7">
       <div class="card-body">
           {% include "superuser/pages/filters/filter_sort_by.html" %}
-          {% include "superuser/pages/filters/filter_search_by.html" with show_advance_search_link=True search_help_text='Choices: Origin' search_placeholder_text='Search Categories' %}
+          {% include "superuser/pages/filters/filter_search_by.html" with show_advance_search_link=True search_help_text='Choices: API Name' search_placeholder_text='Search API' %}
           <div class="collapse" id="kt_advanced_search_form">
               <div class="separator separator-dashed mt-9 mb-6"></div>
               <div class="row g-8 mb-8">
@@ -50,6 +50,7 @@
                   <th style="padding: 12px;">Portal</th>
                   <th style="padding: 12px;">API Name</th>
                   <th style="padding: 12px;">Status</th>
+                  <th style="padding: 12px;">Created at</th>
                 </tr>
               </thead>
 
@@ -67,11 +68,16 @@
                              {% if api.status == 'active' %}checked{% endif %}>
                     </div>
                   </td>
+                  <td class="text-center">
+                        <div class="badge badge-light fw-bold" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ api.created_at|date:'F d Y P' }}">
+                            {{ api.created_at|date:'F d Y' | default:'No date found' }}
+                        </div>
+                    </td>
                 </tr>
 
                 {% empty %}
                 <tr>
-                  <td colspan="3" style="padding: 12px; color: #888;">No API Entries Yet.</td>
+                  <td colspan="4" style="padding: 12px; color: #888;">No API Entries Yet.</td>
                 </tr>
                 {% endfor %}
               </tbody>
