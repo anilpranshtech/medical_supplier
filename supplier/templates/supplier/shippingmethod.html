@@ -64,6 +64,7 @@
                                     <th class="text-center">Price</th>
                                     <th class="text-center">Period</th>
                                     <th class="text-center">Period Type</th>
+                                    <th class="text-center">Created at</th>
                                     <th class="text-center">Action</th>
                                 </tr>
                             </thead>
@@ -79,6 +80,11 @@
                                     <td class="text-center">${{ shipping.price|floatformat:2 }}</td>
                                     <td class="text-center">{{ shipping.period }}</td>
                                     <td class="text-center">{{ shipping.get_period_type_display }}</td>
+                                    <td class="text-center">
+                                        <div class="" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ shipping.created_at|date:'F d Y P' }}">
+                                            {{ shipping.created_at|date:'F d Y' | default:'No date found' }}
+                                        </div>
+                                    </td>
                                     <td class="text-center">
                                         <button type="button" class="btn btn-sm btn-light-primary edit-shipping" 
                                                 data-id="{{ shipping.id }}">
