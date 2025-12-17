@@ -68,21 +68,39 @@
                             {{ r.created_at|date:'F d Y' | default:'No date found' }}
                         </div>
                     </td>
-                  <td style="padding: 12px; vertical-align: middle;">
-                    <button class="btn btn-sm btn-light-primary editBtn"
-                            data-id="{{ r.id }}"
-                            data-name="{{ r.name }}"
-                            data-value="{{ r.value }}"
-                            data-status="{{ r.status }}"
-                            style="margin: 0 4px; padding: 5px 12px; font-size: 13px;">
-                      Edit
-                    </button>
-                    <button class="btn btn-sm btn-light-danger deleteBtn"
-                            data-id="{{ r.id }}"
-                            style="margin: 0 4px; padding: 5px 12px; font-size: 13px;">
-                      Delete
-                    </button>
+                    <td class="text-center">
+                      <div class="dropdown">
+                          <button class="btn btn-sm btn-light btn-active-light-primary"
+                                  data-bs-toggle="dropdown"
+                                  aria-expanded="false">
+                              Actions
+                             
+                          </button>
+                  
+                          <ul class="dropdown-menu dropdown-menu-end">
+                              <li>
+                                  <a href="javascript:void(0);"
+                                     class="dropdown-item editBtn"
+                                     data-id="{{ r.id }}"
+                                     data-name="{{ r.name }}"
+                                     data-value="{{ r.value }}"
+                                     data-status="{{ r.status }}">
+                                      <i class="fas fa-edit me-2 text-primary"></i> Edit
+                                  </a>
+                              </li>
+                  
+                              <li>
+                                  <a href="javascript:void(0);"
+                                     class="dropdown-item deleteBtn"
+                                     data-id="{{ r.id }}">
+                                      <i class="fas fa-trash me-2 text-danger"></i> Delete
+                                  </a>
+                              </li>
+                          </ul>
+                      </div>
                   </td>
+                  
+                  
                 </tr>
                 {% empty %}
                 <tr>

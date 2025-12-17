@@ -356,7 +356,24 @@
         opacity: 1;
     }
 }
-
+.spinner-border-sm {
+        width: 1rem;
+        height: 1rem;
+        border-width: 0.15em;
+        vertical-align: text-bottom;
+    }
+    
+    .spinner-border {
+        display: inline-block;
+        border: 0.25em solid currentColor;
+        border-right-color: transparent;
+        border-radius: 50%;
+        animation: spinner-border 0.75s linear infinite;
+    }
+    
+    @keyframes spinner-border {
+        to { transform: rotate(360deg); }
+    }
     </style>
 </head>
 <body class="antialiased flex h-full text-base bg-background">
@@ -513,7 +530,7 @@
                             <div class="error-message" id="city_error">Please select your city</div>
                         </div>
 
-                        <div class="form-group">
+                        <!-- <div class="form-group">
                             <label for="residency">Residency <span style="color: red;">*</span></label>
                             <select name="residency" id="residency" class="input-field">
                                 <option value="">Select your residency</option>
@@ -522,14 +539,12 @@
                                 {% endfor %}
                             </select>
                             <div class="error-message" id="residency_error">Please select your residency</div>
-                        </div>
+                        </div> -->
                         <div class="form-group">
                             <label for="country_code">Country Code <span style="color: red;">*</span></label>
                             <select name="country_code" id="country_code" class="input-field">
-                                <option value="">Select your country code</option>
-                                {% for code in country_codes %}
-                                    <option value="{{ code.id }}" {% if form_data.country_code|add:0 == code.id %}selected{% endif %}>{{ code.code }} ({{ code.country }})</option>
-                                {% endfor %}
+                                <option value="">Select nationality first</option>
+                                <!-- Remove the loop, it will be populated by JavaScript -->
                             </select>
                             <div class="error-message" id="country_code_error">Please select your country code</div>
                         </div>
@@ -876,138 +891,187 @@
     // jQuery AJAX for registration and OTP verification
     let regToken = null;
 
-    $('#registerForm').submit(function (e) {
-        e.preventDefault();
-        $('.error-message').hide();
-        $('.input-field').removeClass('input-error');
-        messageDiv.style.display = 'none';
+   // Replace your existing $('#registerForm').submit() function with this:
 
-        // Client-side validation for Step 2
-        let isValid = true;
-        [currentPositionInput, workplaceInput, companyNameInput, gstNumberInput, departmentInput, purchaseCapacityInput, supplierCompanyNameInput, licenseNumberInput].forEach(input => {
-            if (input) input.classList.remove("input-error");
-        });
-        [currentPositionError, workplaceError, companyNameError, gstNumberError, departmentError, purchaseCapacityError, supplierCompanyNameError, licenseNumberError].forEach(error => {
-            if (error) error.style.display = "none";
-        });
+$('#registerForm').submit(function (e) {
+    e.preventDefault();
+    
+    // Reset all error states
+    $('.error-message').hide();
+    $('.input-field').removeClass('input-error');
+    messageDiv.style.display = 'none';
 
-        // === RETAILER VALIDATION (NEWLY ADDED) ===
-        if (!retailFields.classList.contains("hidden")) {
-            if (!currentPositionInput.value.trim()) {
-                currentPositionInput.classList.add("input-error");
-                currentPositionError.style.display = "block";
-                isValid = false;
-            }
-            if (!workplaceInput.value.trim()) {
-                workplaceInput.classList.add("input-error");
-                workplaceError.style.display = "block";
-                isValid = false;
-            }
-            if (!nationalityInput.value) {
-                nationalityInput.classList.add("input-error");
-                nationalityError.style.display = "block";
-                isValid = false;
-            }
-            if (!stateSelect.value) {
-                stateSelect.classList.add("input-error");
-                stateError.style.display = "block";
-                isValid = false;
-            }
-            if (!citySelect.value) {
-                citySelect.classList.add("input-error");
-                cityError.style.display = "block";
-                isValid = false;
-            }
-            if (!residencyInput.value) {
-                residencyInput.classList.add("input-error");
-                residencyError.style.display = "block";
-                isValid = false;
-            }
-            if (!countryCodeInput.value) {
-                countryCodeInput.classList.add("input-error");
-                countryCodeError.style.display = "block";
-                isValid = false;
-            }
-            if (!specialityInput.value) {
-                specialityInput.classList.add("input-error");
-                specialityError.style.display = "block";
-                isValid = false;
-            }
-        }
-        // === END RETAILER VALIDATION ===
-
-        if (!wholesalerFields.classList.contains("hidden")) {
-            if (!companyNameInput.value.trim()) {
-                companyNameInput.classList.add("input-error");
-                companyNameError.style.display = "block";
-                isValid = false;
-            }
-            if (!gstNumberInput.value.trim()) {
-                gstNumberInput.classList.add("input-error");
-                gstNumberError.style.display = "block";
-                isValid = false;
-            }
-            if (!departmentInput.value.trim()) {
-                departmentInput.classList.add("input-error");
-                departmentError.style.display = "block";
-                isValid = false;
-            }
-            if (!purchaseCapacityInput.value.trim() || isNaN(parseInt(purchaseCapacityInput.value))) {
-                purchaseCapacityInput.classList.add("input-error");
-                purchaseCapacityError.style.display = "block";
-                isValid = false;
-            }
-        }
-
-        if (!supplierFields.classList.contains("hidden")) {
-            if (!supplierCompanyNameInput.value.trim()) {
-                supplierCompanyNameInput.classList.add("input-error");
-                supplierCompanyNameError.style.display = "block";
-                isValid = false;
-            }
-            if (!licenseNumberInput.value.trim()) {
-                licenseNumberInput.classList.add("input-error");
-                licenseNumberError.style.display = "block";
-                isValid = false;
-            }
-        }
-
-        if (!isValid) return;
-
-        $.ajax({
-            url: "{% url 'dashboard:register' %}",
-            type: "POST",
-            data: $(this).serialize() + "&step=register",
-            headers: { 'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val() },
-            success: function (res) {
-                if (res.success) {
-                    regToken = res.token;
-                    $('#registerSection').hide();
-                    $('#otpSection').show();
-                }
-            },
-            error: function (xhr) {
-                const errors = xhr.responseJSON.errors;
-                for (const key in errors) {
-                    const errorEl = $(`#${key}_error`);
-                    const inputEl = $(`#${key}`);
-                    if (errorEl.length) {
-                        errorEl.text(errors[key]).show();
-                    }
-                    if (inputEl.length) {
-                        inputEl.addClass('input-error');
-                    }
-                }
-                if (errors.general) {
-                    messageDiv.textContent = errors.general;
-                    messageDiv.className = 'error-message';
-                    messageDiv.style.display = 'block';
-                    setTimeout(() => messageDiv.style.display = 'none', 5000);
-                }
-            }
-        });
+    // Client-side validation for Step 2
+    let isValid = true;
+    
+    // Clear previous errors
+    [currentPositionInput, workplaceInput, companyNameInput, gstNumberInput, 
+     departmentInput, purchaseCapacityInput, supplierCompanyNameInput, 
+     licenseNumberInput, nationalityInput, stateSelect, citySelect, 
+      countryCodeInput, specialityInput].forEach(input => {
+        if (input) input.classList.remove("input-error");
+    });
+    
+    [currentPositionError, workplaceError, companyNameError, gstNumberError, 
+     departmentError, purchaseCapacityError, supplierCompanyNameError, 
+     licenseNumberError, nationalityError, stateError, cityError, 
+      countryCodeError, specialityError].forEach(error => {
+        if (error) error.style.display = "none";
     });
 
+// === RETAILER VALIDATION ===
+if (!retailFields.classList.contains("hidden")) {
+    if (!currentPositionInput.value.trim()) {
+        currentPositionInput.classList.add("input-error");
+        currentPositionError.style.display = "block";
+        isValid = false;
+    }
+    if (!workplaceInput.value.trim()) {
+        workplaceInput.classList.add("input-error");
+        workplaceError.style.display = "block";
+        isValid = false;
+    }
+    if (!nationalityInput.value) {
+        nationalityInput.classList.add("input-error");
+        nationalityError.style.display = "block";
+        isValid = false;
+    }
+    if (!stateSelect.value) {
+        stateSelect.classList.add("input-error");
+        stateError.style.display = "block";
+        isValid = false;
+    }
+    if (!citySelect.value) {
+        citySelect.classList.add("input-error");
+        cityError.style.display = "block";
+        isValid = false;
+    }
+    /*
+    if (!residencyInput.value) {
+        residencyInput.classList.add("input-error");
+        residencyError.style.display = "block";
+        isValid = false;
+    }
+    */
+    if (!countryCodeInput.value) {
+        countryCodeInput.classList.add("input-error");
+        countryCodeError.style.display = "block";
+        isValid = false;
+    }
+    if (!specialityInput.value) {
+        specialityInput.classList.add("input-error");
+        specialityError.style.display = "block";
+        isValid = false;
+    }
+}
+
+    // === WHOLESALER VALIDATION ===
+    if (!wholesalerFields.classList.contains("hidden")) {
+        if (!companyNameInput.value.trim()) {
+            companyNameInput.classList.add("input-error");
+            companyNameError.style.display = "block";
+            isValid = false;
+        }
+        if (!gstNumberInput.value.trim()) {
+            gstNumberInput.classList.add("input-error");
+            gstNumberError.style.display = "block";
+            isValid = false;
+        }
+        if (!departmentInput.value.trim()) {
+            departmentInput.classList.add("input-error");
+            departmentError.style.display = "block";
+            isValid = false;
+        }
+        if (!purchaseCapacityInput.value.trim() || isNaN(parseInt(purchaseCapacityInput.value))) {
+            purchaseCapacityInput.classList.add("input-error");
+            purchaseCapacityError.style.display = "block";
+            isValid = false;
+        }
+    }
+
+    // === SUPPLIER VALIDATION ===
+    if (!supplierFields.classList.contains("hidden")) {
+        if (!supplierCompanyNameInput.value.trim()) {
+            supplierCompanyNameInput.classList.add("input-error");
+            supplierCompanyNameError.style.display = "block";
+            isValid = false;
+        }
+        if (!licenseNumberInput.value.trim()) {
+            licenseNumberInput.classList.add("input-error");
+            licenseNumberError.style.display = "block";
+            isValid = false;
+        }
+    }
+
+    // If validation fails, scroll to first error and DON'T show loader
+    if (!isValid) {
+        const firstError = document.querySelector('.input-error');
+        if (firstError) {
+            firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            firstError.focus();
+        }
+        return false; // Stop here - don't proceed with AJAX
+    }
+
+    // === VALIDATION PASSED - NOW SHOW LOADER ===
+    const submitBtn = document.querySelector('.create-btn');
+    if (submitBtn && submitBtn.dataset.loading !== "true") {
+        submitBtn.dataset.loading = "true";
+        submitBtn.dataset.originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Loading...';
+        submitBtn.disabled = true;
+    }
+
+    // Proceed with AJAX submission
+    $.ajax({
+        url: "{% url 'dashboard:register' %}",
+        type: "POST",
+        data: $(this).serialize() + "&step=register",
+        headers: { 'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val() },
+        success: function (res) {
+            if (res.success) {
+                regToken = res.token;
+                $('#registerSection').hide();
+                $('#otpSection').show();
+                
+                // Reset loader state
+                if (submitBtn) {
+                    submitBtn.dataset.loading = "false";
+                    submitBtn.innerHTML = submitBtn.dataset.originalText || 'Create Account';
+                    submitBtn.disabled = false;
+                }
+            }
+        },
+        error: function (xhr) {
+            // Reset loader on error
+            if (submitBtn) {
+                submitBtn.dataset.loading = "false";
+                submitBtn.innerHTML = submitBtn.dataset.originalText || 'Create Account';
+                submitBtn.disabled = false;
+            }
+            
+            const errors = xhr.responseJSON.errors;
+            for (const key in errors) {
+                const errorEl = $(`#${key}_error`);
+                const inputEl = $(`#${key}`);
+                if (errorEl.length) {
+                    errorEl.text(errors[key]).show();
+                }
+                if (inputEl.length) {
+                    inputEl.addClass('input-error');
+                }
+            }
+            if (errors.general) {
+                messageDiv.textContent = errors.general;
+                messageDiv.className = 'error-message';
+                messageDiv.style.display = 'block';
+                setTimeout(() => messageDiv.style.display = 'none', 5000);
+            }
+        }
+    });
+});
+
+// Also update the OTP form submission
 $('#otpForm').submit(function (e) {
     e.preventDefault();
     const otpValue = $('#otp').val();
@@ -1015,10 +1079,11 @@ $('#otpForm').submit(function (e) {
     otpError.style.display = 'none';
     messageDiv.style.display = 'none';
 
+    // Validate OTP
     if (!otpValue || otpValue.length !== 6) {
         $('.otp-input').addClass('input-error');
         otpError.style.display = 'block';
-        return;
+        return false; // Don't show loader
     }
 
     if (!regToken) {
@@ -1026,7 +1091,16 @@ $('#otpForm').submit(function (e) {
         messageDiv.className = 'error-message';
         messageDiv.style.display = 'block';
         setTimeout(() => messageDiv.style.display = 'none', 5000);
-        return;
+        return false; // Don't show loader
+    }
+
+    // === VALIDATION PASSED - SHOW LOADER ===
+    const verifyBtn = document.querySelector('.verify-btn');
+    if (verifyBtn && verifyBtn.dataset.loading !== "true") {
+        verifyBtn.dataset.loading = "true";
+        verifyBtn.dataset.originalText = verifyBtn.innerHTML;
+        verifyBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Verifying...';
+        verifyBtn.disabled = true;
     }
 
     $.ajax({
@@ -1055,13 +1129,19 @@ $('#otpForm').submit(function (e) {
                 messageDiv.style.borderRadius = '8px';
                 messageDiv.style.marginBottom = '20px';
                 
-                // Hide the form
                 $('#otpForm').css('opacity', '0.5');
                 
                 setTimeout(() => window.location.href = data.redirect, 2000);
             }
         },
         error: function (xhr) {
+            // Reset loader on error
+            if (verifyBtn) {
+                verifyBtn.dataset.loading = "false";
+                verifyBtn.innerHTML = verifyBtn.dataset.originalText || 'Verify';
+                verifyBtn.disabled = false;
+            }
+            
             $('.otp-input').addClass('input-error');
             const errors = xhr.responseJSON ? xhr.responseJSON.errors : {};
             if (errors.otp) {
@@ -1090,61 +1170,88 @@ $('#otpForm').submit(function (e) {
 });
 </script>
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const nationalitySelect = document.getElementById('nationality');
-        const stateSelect = document.getElementById('state');
-        const citySelect = document.getElementById('city');
-    
-      
-        nationalitySelect.addEventListener('change', function () {
-            const countryId = this.value;
-            stateSelect.innerHTML = '<option value="">Loading states...</option>';
-            citySelect.innerHTML = '<option value="">Select city first</option>';
-    
-            if (!countryId) {
-                stateSelect.innerHTML = '<option value="">Select state first</option>';
-                return;
-            }
-    
-            fetch(`/api/states/${countryId}/`)
-                .then(response => response.json())
-                .then(data => {
-                    stateSelect.innerHTML = '<option value="">Select your state</option>';
-                    data.states.forEach(state => {
-                        const option = document.createElement('option');
-                        option.value = state.id;
-                        option.textContent = state.name;
-                        stateSelect.appendChild(option);
-                    });
+document.addEventListener('DOMContentLoaded', function () {
+    const nationalitySelect = document.getElementById('nationality');
+    const stateSelect = document.getElementById('state');
+    const citySelect = document.getElementById('city');
+    const countryCodeSelect = document.getElementById('country_code');
+
+    nationalitySelect.addEventListener('change', function () {
+        const countryId = this.value;
+        
+        // Reset dependent dropdowns
+        stateSelect.innerHTML = '<option value="">Loading states...</option>';
+        citySelect.innerHTML = '<option value="">Select city first</option>';
+        countryCodeSelect.innerHTML = '<option value="">Loading country codes...</option>';
+
+        if (!countryId) {
+            stateSelect.innerHTML = '<option value="">Select state first</option>';
+            countryCodeSelect.innerHTML = '<option value="">Select country code first</option>';
+            return;
+        }
+
+        // Fetch states
+        fetch(`/api/states/${countryId}/`)
+            .then(response => response.json())
+            .then(data => {
+                stateSelect.innerHTML = '<option value="">Select your state</option>';
+                data.states.forEach(state => {
+                    const option = document.createElement('option');
+                    option.value = state.id;
+                    option.textContent = state.name;
+                    stateSelect.appendChild(option);
                 });
-        });
-    
-        // When state changes → load cities
-        stateSelect.addEventListener('change', function () {
-            const stateId = this.value;
-            citySelect.innerHTML = '<option value="">Loading cities...</option>';
-    
-            if (!stateId) {
-                citySelect.innerHTML = '<option value="">Select city first</option>';
-                return;
-            }
-    
-            fetch(`/api/cities/${stateId}/`)
-                .then(response => response.json())
-                .then(data => {
-                    citySelect.innerHTML = '<option value="">Select your city</option>';
-                    data.cities.forEach(city => {
-                        const option = document.createElement('option');
-                        option.value = city.id;
-                        option.textContent = city.name;
-                        citySelect.appendChild(option);
-                    });
+            })
+            .catch(error => {
+                console.error('Error fetching states:', error);
+                stateSelect.innerHTML = '<option value="">Error loading states</option>';
+            });
+
+        // Fetch country codes based on nationality
+        fetch(`/api/country-codes/${countryId}/`)
+            .then(response => response.json())
+            .then(data => {
+                countryCodeSelect.innerHTML = '<option value="">Select your country code</option>';
+                data.country_codes.forEach(code => {
+                    const option = document.createElement('option');
+                    option.value = code.id;
+                    option.textContent = `${code.code} (${code.country})`;
+                    countryCodeSelect.appendChild(option);
                 });
-        });
-    
-       
-       
+            })
+            .catch(error => {
+                console.error('Error fetching country codes:', error);
+                countryCodeSelect.innerHTML = '<option value="">Error loading country codes</option>';
+            });
     });
+
+    // When state changes → load cities
+    stateSelect.addEventListener('change', function () {
+        const stateId = this.value;
+        citySelect.innerHTML = '<option value="">Loading cities...</option>';
+
+        if (!stateId) {
+            citySelect.innerHTML = '<option value="">Select city first</option>';
+            return;
+        }
+
+        fetch(`/api/cities/${stateId}/`)
+            .then(response => response.json())
+            .then(data => {
+                citySelect.innerHTML = '<option value="">Select your city</option>';
+                data.cities.forEach(city => {
+                    const option = document.createElement('option');
+                    option.value = city.id;
+                    option.textContent = city.name;
+                    citySelect.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching cities:', error);
+                citySelect.innerHTML = '<option value="">Error loading cities</option>';
+            });
+    });
+});
     </script>
     <script>
         $('#resend-otp').click(function () {

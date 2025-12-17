@@ -288,6 +288,32 @@
 [data-bs-theme="dark"] #notificationDrawer h6 {
     color: #ffffff !important;
 }
+/* ---------- DARK MODE FIX FOR READ / UNREAD ---------- */
+
+[data-bs-theme="dark"] #notiUnread .border-bottom {
+    border-left: 4px solid #ff4d4f !important;
+    background: rgba(255, 77, 79, 0.12) !important;
+}
+
+[data-bs-theme="dark"] #notiUnread h6 {
+    color: #ff7875 !important;
+    font-weight: 600;
+}
+
+[data-bs-theme="dark"] #notiRead .border-bottom {
+    border-left: 4px solid #2ecc71 !important;
+    background: rgba(46, 204, 113, 0.12) !important;
+}
+
+[data-bs-theme="dark"] #notiRead h6 {
+    color: #6ee7b7 !important;
+    font-weight: 600;
+}
+
+[data-bs-theme="dark"] #notiAll .border-bottom {
+    border-left: 4px solid #6c757d !important;
+    background: #1e1e2d !important;
+}
 
 </style>
 
@@ -407,26 +433,27 @@
                 {% endif %}
             </div>
 
-            <!-- Read Tab -->
             <div class="tab-pane fade" id="notiRead">
-                {% for n in read_notifications %}
-                <div class="border-bottom pb-3 mb-3 position-relative" data-id="{{ n.id }}" data-tab="read">
-                    <h6 class="mb-1">{{ n.title }}</h6>
-                    <small class="text-muted d-block"
-                           style="white-space: pre-wrap; word-break: break-word;">
-                        {{ n.message }} - {{ n.recipient.username }}
-                    </small>
-                    <span class="badge bg-success text-white time-display"
-                          data-created="{{ n.created_at|date:'c' }}"></span>
-                    <button class="btn btn-sm btn-light position-absolute top-0 end-0" onclick="deleteNotification('{{ n.id }}', 'read')">
-                        <i class="fas fa-times"></i>
-                    </button>
+                <div id="readNotificationsContainer">
+                    {% for n in read_notifications %}
+                    <div class="border-bottom pb-3 mb-3 position-relative" data-id="{{ n.id }}" data-tab="read">
+                        <h6 class="mb-1">{{ n.title }}</h6>
+                        <small class="text-muted d-block"
+                               style="white-space: pre-wrap; word-break: break-word;">
+                            {{ n.message }} - {{ n.recipient.username }}
+                        </small>
+                        <span class="badge bg-success text-white time-display"
+                              data-created="{{ n.created_at|date:'c' }}"></span>
+                        <button class="btn btn-sm btn-light position-absolute top-0 end-0" onclick="deleteNotification('{{ n.id }}', 'read')">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted" id="noReadNotificationMsg">No read notifications.</p>
+                    {% endfor %}
                 </div>
-                {% empty %}
-                <p>No read notifications.</p>
-                {% endfor %}
             </div>
-
+            
             <!-- Unread Tab -->
             <div class="tab-pane fade" id="notiUnread">
                 {% for n in unread_notifications %}
@@ -519,7 +546,8 @@
                                             </div>
                                             
                                             <a href="#" class="fw-semibold text-muted text-hover-primary fs-8">
-                                                {{ request.user }}
+                                                {{ request.user.email }}
+
                                             </a>
                                             
                                             
@@ -661,9 +689,9 @@
                     </div>
                   
                     <ul class="menu menu-gray-600 menu-hover-primary fw-semibold order-1">
-                        <li class="menu-item"><a href="#" target="_blank"
+                        <li class="menu-item"><a href="{% url 'dashboard:about' %}" target="_blank"
                                                  class="menu-link px-2">About</a></li>
-                        <li class="menu-item"><a href="#" target="_blank"
+                        <li class="menu-item"><a href="{% url 'supplier:contact_us' %}" target="_blank"
                                                  class="menu-link px-2">Support</a></li>
                     </ul>
                 </div>

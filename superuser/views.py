@@ -1856,27 +1856,28 @@ class AdminQuotationUpdateView(UpdateView):
         return self.request.user.is_staff or self.request.user.is_superuser
 
 
-class RatingView(TemplateView, StaffAccountRequiredMixin, PermissionRequiredMixin, LoginRequiredMixin):
-    template_name = "superuser/rating.html"
-    required_permissions = ('dashboard.view_ratingreview',)
+class RatingView(TemplateView):
+    template_name = "superuser/rating.html"  
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        user = self.request.user
 
-        products = (
-            Product.objects
-            .annotate(
-                avg_rating=Avg('reviews__rating'),
-                review_count=Coalesce(
-                    Count(
-                        'reviews',
-                        filter=Q(reviews__rating__isnull=False) & ~Q(reviews__review="")
-                    ),
-                    Value(0)
-                )
+        if user.is_superuser:
+            products = Product.objects.all()
+        else:
+            products = Product.objects.filter(created_by=user)
+
+        products = products.annotate(
+            avg_rating=Avg('reviews__rating'),
+            review_count=Coalesce(
+                Count(
+                    'reviews',
+                    filter=Q(reviews__rating__isnull=False) & ~Q(reviews__review="")
+                ),
+                Value(0)
             )
-            .filter(avg_rating__isnull=False)
-        )
+        ).filter(avg_rating__isnull=False)
 
         # Get query parameters
         search_query = self.request.GET.get('search', '')
@@ -1884,12 +1885,14 @@ class RatingView(TemplateView, StaffAccountRequiredMixin, PermissionRequiredMixi
         review_count = self.request.GET.get('review_count', 'all')
         price_range = self.request.GET.get('price_range', 'all')
 
+        # Apply search filter (Product ID or Name)
         if search_query:
             products = products.filter(
                 Q(name__icontains=search_query) |
                 Q(id__icontains=search_query)
             )
 
+        # Apply rating filter
         if rating_filter != 'all':
             try:
                 min_rating, max_rating = map(float, rating_filter.split('-'))
@@ -1898,8 +1901,9 @@ class RatingView(TemplateView, StaffAccountRequiredMixin, PermissionRequiredMixi
                     avg_rating__lte=max_rating
                 )
             except ValueError:
-                pass  
+                pass  # invalid filter
 
+        # Apply review count filter
         if review_count != 'all':
             if review_count == '101-plus':
                 products = products.filter(review_count__gte=101)
@@ -1911,8 +1915,9 @@ class RatingView(TemplateView, StaffAccountRequiredMixin, PermissionRequiredMixi
                         review_count__lte=max_count
                     )
                 except ValueError:
-                    pass 
+                    pass
 
+        # Apply price range filter
         if price_range != 'all':
             if price_range == '201-plus':
                 products = products.filter(price__gte=201)
@@ -1924,17 +1929,65 @@ class RatingView(TemplateView, StaffAccountRequiredMixin, PermissionRequiredMixi
                         price__lte=max_price
                     )
                 except ValueError:
-                    pass  
+                    pass
+
 
         products = products.order_by('-avg_rating')
 
-        #  Pagination setup (3 per page)
-        paginator = Paginator(products, 12)
-        page_number = self.request.GET.get("page")
+        # Pagination
+        paginator = Paginator(products, 10)  
+        page_number = self.request.GET.get('page')
         page_obj = paginator.get_page(page_number)
 
-        context["page_obj"] = page_obj
-        context["products"] = page_obj.object_list  
+     
+        context.update({
+            'products': page_obj,
+            'search_query': search_query,
+            'rating_filter': rating_filter,
+            'review_count': review_count,
+            'price_range': price_range,
+            'page_obj': page_obj,
+        })
+
+        return context
+class ProductRatingListView(TemplateView):
+    template_name = "superuser/product_ratings.html"
+    paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        product = get_object_or_404(Product, id=self.kwargs['product_id'])
+
+        ratings_qs = RatingReview.objects.filter(product=product).select_related('user')
+        search_by = self.request.GET.get('search_by')
+        if search_by:
+            ratings_qs = ratings_qs.filter(
+                Q(user__username__icontains=search_by) |
+                Q(review__icontains=search_by)
+            )
+        created_date = self.request.GET.get('created_date')
+        if created_date:
+            try:
+                start_date, end_date = created_date.split(' - ')
+                start_date = datetime.strptime(start_date, '%m/%d/%Y')
+                end_date = datetime.strptime(end_date, '%m/%d/%Y')
+                ratings_qs = ratings_qs.filter(
+                    created_at__date__range=[start_date.date(), end_date.date()]
+                )
+            except ValueError:
+                pass
+        sort_by = self.request.GET.get('sort_by', 'desc_created')
+        ratings_qs = ratings_qs.order_by(
+            '-created_at' if sort_by == 'desc_created' else 'created_at'
+        )
+        paginator = Paginator(ratings_qs, self.paginate_by)
+        page_obj = paginator.get_page(self.request.GET.get('page'))
+
+        context.update({
+            "product": product,
+            "ratings": page_obj,
+            "page_obj": page_obj,
+        })
         return context
 
 
@@ -3710,19 +3763,13 @@ def delete_basket_promotion(request, pk):
         return JsonResponse({'success': False, 'msg': str(e)})
 class CouponsView(TemplateView):
     template_name = "superuser/coupons.html"
-
     def dispatch(self, request, *args, **kwargs):
         if not hasattr(request.user, 'supplierprofile'):
             return redirect('superuser:superuser')
         return super().dispatch(request, *args, **kwargs)
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
-        # ---------------- BASE QUERYSET ----------------
         coupons_qs = Coupon.objects.select_related("created_by").order_by("-id")
-
-        # ---------------- SEARCH FILTER ----------------
         search_by = self.request.GET.get("search_by", "").strip()
         if search_by:
             coupons_qs = coupons_qs.filter(
@@ -3730,6 +3777,24 @@ class CouponsView(TemplateView):
                 Q(coupon_type__icontains=search_by) |
                 Q(discount_type__icontains=search_by)
             )
+        created_date = self.request.GET.get("created_date", "").strip()
+        if created_date:
+            try:
+                start_str, end_str = created_date.split(" - ")
+
+                start_date = timezone.make_aware(
+                    datetime.strptime(start_str, "%m/%d/%Y")
+                )
+
+                end_date = timezone.make_aware(
+                    datetime.strptime(end_str, "%m/%d/%Y")
+                ).replace(hour=23, minute=59, second=59)
+
+                coupons_qs = coupons_qs.filter(
+                    created_at__range=(start_date, end_date)
+                )
+            except ValueError:
+                pass  
 
         # ---------------- PAGINATION ----------------
         paginator = Paginator(coupons_qs, 10)
@@ -3739,14 +3804,17 @@ class CouponsView(TemplateView):
         # ---------------- PRODUCTS ----------------
         supplier_products = Product.objects.filter(
             created_by=self.request.user
-        ).select_related('category', 'brand')
+        ).select_related("category", "brand")
 
         # ---------------- CLIENTS ----------------
         buyer_ids = OrderItem.objects.filter(
             product__created_by=self.request.user
-        ).values_list('order__user_id', flat=True).distinct()
+        ).values_list("order__user_id", flat=True).distinct()
 
-        clients = User.objects.filter(id__in=buyer_ids) if buyer_ids else User.objects.none()
+        clients = (
+            User.objects.filter(id__in=buyer_ids)
+            if buyer_ids else User.objects.none()
+        )
 
         # ---------------- CONTEXT ----------------
         context.update({
@@ -3757,10 +3825,10 @@ class CouponsView(TemplateView):
             "search_placeholder_text": "Search Coupons",
             "search_help_text": "Choices: Code, Coupon Type, Discount Type",
             "show_advance_search_link": True,
+            "created_date": created_date,
         })
 
         return context
-
     def post(self, request, *args, **kwargs):
         try:
             code = request.POST.get("code", "").strip().upper()
@@ -3770,26 +3838,44 @@ class CouponsView(TemplateView):
                     {"status": "error", "message": "Coupon code already exists!"},
                     status=400
                 )
+            start_datetime_str = request.POST.get("start_datetime", "").strip()
+            end_datetime_str = request.POST.get("end_datetime", "").strip()
 
+            if not start_datetime_str or not end_datetime_str:
+                return JsonResponse(
+                    {"status": "error", "message": "Start and End datetime required"},
+                    status=400
+                )
+
+            start_datetime = timezone.make_aware(
+                datetime.strptime(start_datetime_str, "%Y-%m-%dT%H:%M")
+            )
+            end_datetime = timezone.make_aware(
+                datetime.strptime(end_datetime_str, "%Y-%m-%dT%H:%M")
+            )
             coupon = Coupon.objects.create(
                 code=code,
                 coupon_type=request.POST.get("coupon_type"),
                 discount_type=request.POST.get("discount_type"),
                 discount=Decimal(request.POST.get("discount", "0")),
                 max_discount=Decimal(request.POST.get("max_discount", "0")),
-                minimum_purchase_amount=Decimal(request.POST.get("minimum_purchase_amount", "0")),
+                minimum_purchase_amount=Decimal(
+                    request.POST.get("minimum_purchase_amount", "0")
+                ),
                 count_of_use=int(request.POST.get("count_of_use", 1)),
-                filter_by_orders_count=int(request.POST.get("filter_by_orders_count", 0)),
-                filter_by_orders_amount=Decimal(request.POST.get("filter_by_orders_amount", "0")),
-                start_date=request.POST.get("start_date"),
-                end_date=request.POST.get("end_date"),
-                start_time=request.POST.get("start_time", "00:00"),
-                end_time=request.POST.get("end_time", "23:59"),
-                can_be_used_with_promotions=request.POST.get("can_be_used_with_promotions") == "true",
+                filter_by_orders_count=int(
+                    request.POST.get("filter_by_orders_count", 0)
+                ),
+                filter_by_orders_amount=Decimal(
+                    request.POST.get("filter_by_orders_amount", "0")
+                ),
+                start_datetime=start_datetime,
+                end_datetime=end_datetime,
+                can_be_used_with_promotions=(
+                    request.POST.get("can_be_used_with_promotions") == "true"
+                ),
                 created_by=request.user,
             )
-
-            # -------- ASSIGN PRODUCTS & CLIENTS --------
             product_ids = request.POST.getlist("product_ids[]")
             client_ids = request.POST.getlist("client_ids[]")
 
@@ -3808,6 +3894,11 @@ class CouponsView(TemplateView):
                 {"status": "success", "message": "Coupon created successfully!"}
             )
 
+        except ValueError as e:
+            return JsonResponse(
+                {"status": "error", "message": f"Invalid value: {str(e)}"},
+                status=400
+            )
         except Exception as e:
             return JsonResponse(
                 {"status": "error", "message": str(e)},
@@ -3823,6 +3914,21 @@ def edit_coupon(request):
     coupon = get_object_or_404(Coupon, id=coupon_id)
 
     try:
+        start_datetime_str = request.POST.get("start_datetime", "").strip()
+        end_datetime_str = request.POST.get("end_datetime", "").strip()
+        
+        if not start_datetime_str or not end_datetime_str:
+            return JsonResponse(
+                {"status": "error", "message": "Start date/time and end date/time are required"},
+                status=400
+            )
+        start_datetime = timezone.make_aware(
+            datetime.strptime(start_datetime_str, "%Y-%m-%dT%H:%M")
+        )
+        end_datetime = timezone.make_aware(
+            datetime.strptime(end_datetime_str, "%Y-%m-%dT%H:%M")
+        )
+        
         coupon.code = request.POST.get('code').strip().upper()
         coupon.coupon_type = request.POST.get('coupon_type')
         coupon.discount_type = request.POST.get('discount_type')
@@ -3832,10 +3938,8 @@ def edit_coupon(request):
         coupon.count_of_use = int(request.POST.get('count_of_use', 1))
         coupon.filter_by_orders_count = int(request.POST.get('filter_by_orders_count', 0))
         coupon.filter_by_orders_amount = Decimal(request.POST.get('filter_by_orders_amount', '0'))
-        coupon.start_date = request.POST.get('start_date')
-        coupon.end_date = request.POST.get('end_date')
-        coupon.start_time = request.POST.get('start_time') or "00:00"
-        coupon.end_time = request.POST.get('end_time') or "23:59"
+        coupon.start_datetime = start_datetime
+        coupon.end_datetime = end_datetime
         coupon.can_be_used_with_promotions = request.POST.get('can_be_used_with_promotions') == 'true'
         coupon.save()
 
@@ -3847,8 +3951,11 @@ def edit_coupon(request):
         coupon.client.set(User.objects.filter(id__in=client_ids))
 
         return JsonResponse({'status': 'success', 'message': 'Coupon updated successfully!'})
+    except ValueError as e:
+        return JsonResponse({'status': 'error', 'message': f'Invalid datetime format: {str(e)}'}, status=400)
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
 
 def delete_coupon(request):
     if request.method == 'POST':
@@ -6176,3 +6283,4 @@ class PaymentToggleStatus(View):
         setting.status = "inactive" if setting.status == "active" else "active"
         setting.save()
         return JsonResponse({"success": True})
+

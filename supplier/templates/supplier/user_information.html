@@ -637,8 +637,32 @@ $("#id_state").change(function () {
 });
 
 });
+//loader
+window.addEventListener('pageshow', function(event) {
+        const saveBtn = document.querySelector('.btn-with-loader');
+        if (saveBtn && saveBtn.dataset.loading === "true") {
+            if (saveBtn.dataset.originalText) {
+                saveBtn.innerHTML = saveBtn.dataset.originalText;
+            } else {
+                saveBtn.innerHTML = 'Save &amp; Continue';
+            }
+            saveBtn.disabled = false;
+            saveBtn.dataset.loading = "false";
+        }
+    });
+    document.addEventListener('DOMContentLoaded', function() {
+        const saveBtn = document.querySelector('.btn-with-loader');
+        if (saveBtn && saveBtn.dataset.loading === "true") {
+            if (saveBtn.dataset.originalText) {
+                saveBtn.innerHTML = saveBtn.dataset.originalText;
+            } else {
+                saveBtn.innerHTML = 'Save &amp; Continue';
+            }
+            saveBtn.disabled = false;
+            saveBtn.dataset.loading = "false";
+        }
+    });
     </script>
 
-    
 {% endblock %}
 

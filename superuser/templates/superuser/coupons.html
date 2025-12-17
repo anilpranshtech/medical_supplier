@@ -10,7 +10,7 @@
    <form action="{% url 'superuser:coupons' %}" method="GET">
     <div class="card mb-7">
         <div class="card-body">
-            {% include "superuser/pages/filters/filter_sort_by.html" %}
+          
             {% include "superuser/pages/filters/filter_search_by.html" with show_advance_search_link=True search_help_text='Choices: Origin' search_placeholder_text='Search Categories' %}
             <div class="collapse" id="kt_advanced_search_form">
                 <div class="separator separator-dashed mt-9 mb-6"></div>
@@ -25,8 +25,6 @@
         </div>
     </div>
 </form>
-
-   
 
                 <div class="card card-flush mb-3">
                     <div class="card-body table-responsive">
@@ -46,8 +44,8 @@
                             <th>Min Purchase</th>
                             <th>Max Disc</th>
                             <th>Created By</th>
-                            <th>Start Date</th>
-                            <th>End Date</th>
+                            <th>Start DateTime</th>
+                            <th>End DateTime</th>
                             <th>Updated At</th>
                             <th>Status</th>
                             {% if "dashboard.change_coupon" in user_permissions_list or "dashboard.delete_coupon" in user_permissions_list  %}
@@ -66,8 +64,8 @@
                             <td>${{ coupon.minimum_purchase_amount|floatformat:2 }}</td>
                             <td>${{ coupon.max_discount|floatformat:2 }}</td>
                             <td>{{ coupon.created_by }}</td>
-                            <td>{{ coupon.start_date }} {{ coupon.start_time }}</td>
-                            <td>{{ coupon.end_date }} {{ coupon.end_time }}</td>
+                            <td>{{ coupon.start_datetime|date:"Y-m-d H:i" }}</td>
+                            <td>{{ coupon.end_datetime|date:"Y-m-d H:i" }}</td>
                             <td>{{ coupon.updated_at|date:"Y-m-d H:i" }}</td>
                             <td>
                               {% if coupon.is_valid_now %}
@@ -98,10 +96,8 @@
                                        data-count="{{ coupon.count_of_use }}"
                                        data-orders-count="{{ coupon.filter_by_orders_count }}"
                                        data-orders-amount="{{ coupon.filter_by_orders_amount }}"
-                                       data-start-date="{{ coupon.start_date|date:'Y-m-d' }}"
-                                       data-end-date="{{ coupon.end_date|date:'Y-m-d' }}"
-                                       data-start-time="{{ coupon.start_time|time:'H:i' }}"
-                                       data-end-time="{{ coupon.end_time|time:'H:i' }}"
+                                       data-start-datetime="{{ coupon.start_datetime|date:'Y-m-d' }}T{{ coupon.start_datetime|time:'H:i' }}"
+                                       data-end-datetime="{{ coupon.end_datetime|date:'Y-m-d' }}T{{ coupon.end_datetime|time:'H:i' }}"
                                        data-promotion="{{ coupon.can_be_used_with_promotions|yesno:'True,False' }}">
                                       <i class="bi bi-pencil-square me-2"></i> Edit
                                     </a>
@@ -169,39 +165,31 @@
                                         </div>
                                         <div class="col-md-6 mb-3">
                                             <label class="form-label">Min Purchase</label>
-                                            <input type="number" step="0.01" class="form-control" name="minimum_purchase_amount">
+                                            <input type="number" step="0.01" class="form-control" name="minimum_purchase_amount" value="0">
                                         </div>
                                         <div class="col-md-6 mb-3">
                                             <label class="form-label">Max Discount</label>
-                                            <input type="number" step="0.01" class="form-control" name="max_discount">
+                                            <input type="number" step="0.01" class="form-control" name="max_discount" value="0">
                                         </div>
                                         <div class="col-md-6 mb-3">
                                             <label class="form-label">Count of Use</label>
-                                            <input type="number" class="form-control" name="count_of_use" min="1">
+                                            <input type="number" class="form-control" name="count_of_use" min="1" value="1">
                                         </div>
                                         <div class="col-md-6 mb-3">
                                             <label class="form-label">Filter Orders Count</label>
-                                            <input type="number" class="form-control" name="filter_by_orders_count" min="1">
+                                            <input type="number" class="form-control" name="filter_by_orders_count" min="0" value="0">
                                         </div>
                                         <div class="col-md-6 mb-3">
                                             <label class="form-label">Filter Orders Amount</label>
-                                            <input type="number" step="0.01" class="form-control" name="filter_by_orders_amount" min="1">
+                                            <input type="number" step="0.01" class="form-control" name="filter_by_orders_amount" min="0" value="0">
                                         </div>
                                         <div class="col-md-6 mb-3">
-                                            <label class="form-label">Start Date</label>
-                                            <input type="date" class="form-control" name="start_date" required>
+                                            <label class="form-label">Start Date & Time</label>
+                                            <input type="datetime-local" class="form-control" name="start_datetime" required>
                                         </div>
                                         <div class="col-md-6 mb-3">
-                                            <label class="form-label">End Date</label>
-                                            <input type="date" class="form-control" name="end_date" required>
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Start Time</label>
-                                            <input type="time" class="form-control" name="start_time" required>
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">End Time</label>
-                                            <input type="time" class="form-control" name="end_time" required>
+                                            <label class="form-label">End Date & Time</label>
+                                            <input type="datetime-local" class="form-control" name="end_datetime" required>
                                         </div>
                                         <div class="col-md-6 mb-3 form-check mt-4">
                                             <input type="checkbox" class="form-check-input" name="can_be_used_with_promotions" value="true">
@@ -292,20 +280,12 @@
                                             <input type="number" step="0.01" class="form-control" name="filter_by_orders_amount" id="edit_filter_orders_amount">
                                         </div>
                                         <div class="col-md-6 mb-3">
-                                            <label class="form-label">Start Date</label>
-                                            <input type="date" class="form-control" name="start_date" id="edit_start_date" required>
+                                            <label class="form-label">Start Date & Time</label>
+                                            <input type="datetime-local" class="form-control" name="start_datetime" id="edit_start_datetime" required>
                                         </div>
                                         <div class="col-md-6 mb-3">
-                                            <label class="form-label">End Date</label>
-                                            <input type="date" class="form-control" name="end_date" id="edit_end_date" required>
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Start Time</label>
-                                            <input type="time" class="form-control" name="start_time" id="edit_start_time" required>
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">End Time</label>
-                                            <input type="time" class="form-control" name="end_time" id="edit_end_time" required>
+                                            <label class="form-label">End Date & Time</label>
+                                            <input type="datetime-local" class="form-control" name="end_datetime" id="edit_end_datetime" required>
                                         </div>
                                         <div class="col-md-6 mb-3 form-check mt-4">
                                             <input type="checkbox" class="form-check-input" name="can_be_used_with_promotions" id="edit_can_be_used_with_promotions">
@@ -318,10 +298,7 @@
                                                     <option value="{{ p.id }}">{{ p.name }} (SKU: {{ p.supplier_sku|default:"N/A" }})</option>
                                                 {% endfor %}
                                             </select>
-                                            
-                                                       
                                         </div>
-                                        <!-- mqbakery referance fields -->
                                         <div class="col-md-12 mb-3">
                                             <label class="form-label">Select Clients</label>
                                             <select name="client_ids[]" class="form-select select2" multiple id="edit_clientSelect">
@@ -341,10 +318,11 @@
                         </div>
                     </div>
                 </div>
+
                 <div class="modal fade" id="deleteCouponModal" tabindex="-1" aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content">
-                            <div class="modal-header  text-white">
+                            <div class="modal-header text-white">
                                 <h5 class="modal-title">Delete Coupon</h5>
                                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                             </div>
@@ -355,7 +333,7 @@
                             </div>
                             <div class="modal-footer justify-content-center">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                <button type="button" id="confirmDeleteCoupon" class="btn btn-danger btn-with-loader btn-with-loader">Delete</button>
+                                <button type="button" id="confirmDeleteCoupon" class="btn btn-danger btn-with-loader">Delete</button>
                             </div>
                         </div>
                     </div>
@@ -363,7 +341,6 @@
                 {% include "supplier/pagination.html" %}
             </div>
         </div>
-        
     </div>
 </div>
 {% endblock %}
@@ -379,14 +356,12 @@
     document.addEventListener("DOMContentLoaded", function(){
         $('.select2').select2({width: '100%', placeholder: "Search and select", allowClear: false});
         const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-        function alertMsg(message, type='success', targetMsg=null) {
-            const target = targetMsg || document.getElementById('couponMessage');
-            target.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
-        }
+        
         function clearErrors(form) {
             form.querySelectorAll('.invalid-feedback').forEach(e => e.remove());
             form.querySelectorAll('.is-invalid').forEach(e => e.classList.remove('is-invalid'));
         }
+        
         function showError(input, message) {
             input.classList.add('is-invalid');
             const div = document.createElement('div');
@@ -394,63 +369,67 @@
             div.innerText = message;
             input.parentNode.appendChild(div);
         }
+        
         function validateCouponForm(form) {
             clearErrors(form);
             let errorFound = false;
     
-            const fields = [
-                'code','coupon_type','discount_type','discount',
-                'minimum_purchase_amount','max_discount','count_of_use',
-                'filter_by_orders_count','filter_by_orders_amount',
-                'start_date','end_date','start_time','end_time'
-            ];
-    
-            for (let name of fields) {
+            // Required fields
+            const requiredFields = ['code', 'coupon_type', 'discount_type', 'discount', 'start_datetime', 'end_datetime'];
+            
+            for (let name of requiredFields) {
                 const el = form.querySelector(`[name="${name}"]`);
-                if (!el.value.trim()) {
-                    showError(el, `${el.previousElementSibling.innerText} is required.`);
+                if (!el || !el.value.trim()) {
+                    const label = el?.previousElementSibling?.innerText || name;
+                    showError(el, `${label} is required.`);
                     errorFound = true;
                 }
             }
     
             // Numeric validations
-            const discount = parseFloat(form.querySelector('[name="discount"]').value || 0);
-            const minPurchase = parseFloat(form.querySelector('[name="minimum_purchase_amount"]').value || 0);
-            const maxDiscount = parseFloat(form.querySelector('[name="max_discount"]').value || 0);
-            const countOfUse = parseInt(form.querySelector('[name="count_of_use"]').value || 0);
-            const ordersCount = parseInt(form.querySelector('[name="filter_by_orders_count"]').value || 0);
-            const ordersAmount = parseFloat(form.querySelector('[name="filter_by_orders_amount"]').value || 0);
+            const discount = parseFloat(form.querySelector('[name="discount"]')?.value || 0);
+            const minPurchase = parseFloat(form.querySelector('[name="minimum_purchase_amount"]')?.value || 0);
+            const maxDiscount = parseFloat(form.querySelector('[name="max_discount"]')?.value || 0);
+            const countOfUse = parseInt(form.querySelector('[name="count_of_use"]')?.value || 0);
     
-            if (discount <= 0) { showError(form.querySelector('[name="discount"]'), "Discount must be greater than 0."); errorFound = true; }
-            if (minPurchase < 0) { showError(form.querySelector('[name="minimum_purchase_amount"]'), "Min Purchase cannot be negative."); errorFound = true; }
-            if (maxDiscount < 0) { showError(form.querySelector('[name="max_discount"]'), "Max Discount cannot be negative."); errorFound = true; }
-            if (countOfUse <= 0) { showError(form.querySelector('[name="count_of_use"]'), "Count of Use must be greater than 0."); errorFound = true; }
-            if (ordersCount <= 0) { showError(form.querySelector('[name="filter_by_orders_count"]'), "Filter Orders Count must be greater than 0."); errorFound = true; }
-            if (ordersAmount <= 0) { showError(form.querySelector('[name="filter_by_orders_amount"]'), "Filter Orders Amount must be greater than 0."); errorFound = true; }
-    
-            // Date and Time validation
-            const startDate = form.querySelector('[name="start_date"]').value;
-            const endDate = form.querySelector('[name="end_date"]').value;
-            const startTime = form.querySelector('[name="start_time"]').value;
-            const endTime = form.querySelector('[name="end_time"]').value;
-    
-            if (startDate && endDate && startDate > endDate) { 
-                showError(form.querySelector('[name="end_date"]'), "End Date must be after Start Date."); 
+            if (discount <= 0) { 
+                showError(form.querySelector('[name="discount"]'), "Discount must be greater than 0."); 
                 errorFound = true; 
             }
-            if (startDate && endDate && startDate === endDate && startTime && endTime && startTime >= endTime) { 
-                showError(form.querySelector('[name="end_time"]'), "End Time must be after Start Time."); 
+            if (minPurchase < 0) { 
+                showError(form.querySelector('[name="minimum_purchase_amount"]'), "Min Purchase cannot be negative."); 
+                errorFound = true; 
+            }
+            if (maxDiscount < 0) { 
+                showError(form.querySelector('[name="max_discount"]'), "Max Discount cannot be negative."); 
+                errorFound = true; 
+            }
+            if (countOfUse <= 0) { 
+                showError(form.querySelector('[name="count_of_use"]'), "Count of Use must be greater than 0."); 
+                errorFound = true; 
+            }
+    
+            // DateTime validation
+            const startDateTime = form.querySelector('[name="start_datetime"]')?.value;
+            const endDateTime = form.querySelector('[name="end_datetime"]')?.value;
+    
+            if (startDateTime && endDateTime && startDateTime >= endDateTime) { 
+                showError(form.querySelector('[name="end_datetime"]'), "End Date & Time must be after Start Date & Time."); 
                 errorFound = true; 
             }
     
             // Select2 validation
             const productSelect = form.querySelector('[name="product_ids[]"]');
             const clientSelect = form.querySelector('[name="client_ids[]"]');
-            const products = productSelect.selectedOptions;
-            const clients = clientSelect.selectedOptions;
     
-            if (!products.length) { showError($(productSelect).next()[0], "Select at least one product."); errorFound = true; }
-            if (!clients.length) { showError($(clientSelect).next()[0], "Select at least one client."); errorFound = true; }
+            if (productSelect && !productSelect.selectedOptions.length) { 
+                showError($(productSelect).next()[0], "Select at least one product."); 
+                errorFound = true; 
+            }
+            if (clientSelect && !clientSelect.selectedOptions.length) { 
+                showError($(clientSelect).next()[0], "Select at least one client."); 
+                errorFound = true; 
+            }
     
             return !errorFound;
         }
@@ -458,7 +437,8 @@
         // Generic form submit handler
         function handleSubmit(formId, url, targetMsgId=null) {
             const form = document.getElementById(formId);
-            const targetMsg = targetMsgId ? document.getElementById(targetMsgId) : null;
+            const targetMsg = targetMsgId ? document.getElementById(targetMsgId) : document.getElementById('couponMessage');
+            
             if (!validateCouponForm(form)) return;
     
             const data = new FormData(form);
@@ -480,13 +460,16 @@
                 if (targetMsg) targetMsg.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
             });
         }
+        
         document.getElementById('saveCoupon').addEventListener('click', function(){
             handleSubmit('couponForm', "{% url 'superuser:coupons' %}");
         });
+        
         document.querySelectorAll('.editCouponBtn').forEach(btn => {
             btn.addEventListener('click', function(){
                 const couponId = this.dataset.id;
                 const modal = new bootstrap.Modal(document.getElementById('editCouponModal'));
+                
                 document.getElementById('edit_coupon_id').value = couponId;
                 document.getElementById('edit_code').value = this.dataset.code;
                 document.getElementById('edit_coupon_type').value = this.dataset.type;
@@ -497,10 +480,8 @@
                 document.getElementById('edit_count_of_use').value = this.dataset.count;
                 document.getElementById('edit_filter_orders_count').value = this.dataset.ordersCount;
                 document.getElementById('edit_filter_orders_amount').value = this.dataset.ordersAmount;
-                document.getElementById('edit_start_date').value = this.dataset.startDate;
-                document.getElementById('edit_end_date').value = this.dataset.endDate;
-                document.getElementById('edit_start_time').value = this.dataset.startTime;
-                document.getElementById('edit_end_time').value = this.dataset.endTime;
+                document.getElementById('edit_start_datetime').value = this.dataset.startDatetime;
+                document.getElementById('edit_end_datetime').value = this.dataset.endDatetime;
                 document.getElementById('edit_can_be_used_with_promotions').checked = (this.dataset.promotion === 'True');
     
                 $('#edit_productSelect').val(null).trigger('change');
@@ -531,12 +512,10 @@
             });
         });
     
-        // Update Coupon
         document.getElementById('updateCoupon').addEventListener('click', function(){
             handleSubmit('editCouponForm', "{% url 'supplier:edit_coupon' %}", 'editCouponMessage');
         });
     
-        // Delete Coupon - updated selector for dropdown items
         document.querySelectorAll('.deleteCouponBtn').forEach(btn => {
             btn.addEventListener('click', function(){
                 const modal = new bootstrap.Modal(document.getElementById('deleteCouponModal'));
@@ -573,6 +552,5 @@
             });
         });
     });
-    </script>
-    
+</script>
 {% endblock %}
