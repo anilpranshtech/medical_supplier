@@ -409,14 +409,44 @@
                 errorFound = true; 
             }
     
-            // DateTime validation
-            const startDateTime = form.querySelector('[name="start_datetime"]')?.value;
-            const endDateTime = form.querySelector('[name="end_datetime"]')?.value;
-    
-            if (startDateTime && endDateTime && startDateTime >= endDateTime) { 
-                showError(form.querySelector('[name="end_datetime"]'), "End Date & Time must be after Start Date & Time."); 
-                errorFound = true; 
-            }
+         // DateTime validation
+const startDateTimeInput = form.querySelector('[name="start_datetime"]');
+const endDateTimeInput = form.querySelector('[name="end_datetime"]');
+
+const startDateTime = startDateTimeInput?.value;
+const endDateTime = endDateTimeInput?.value;
+
+const now = new Date();
+now.setSeconds(0, 0); // normalize seconds for comparison
+
+if (startDateTime) {
+    const start = new Date(startDateTime);
+
+    if (start < now) {
+        showError(startDateTimeInput, "Start Date & Time cannot be in the past.");
+        errorFound = true;
+    }
+}
+
+if (endDateTime) {
+    const end = new Date(endDateTime);
+
+    if (end < now) {
+        showError(endDateTimeInput, "End Date & Time cannot be in the past.");
+        errorFound = true;
+    }
+}
+
+if (startDateTime && endDateTime) {
+    const start = new Date(startDateTime);
+    const end = new Date(endDateTime);
+
+    if (end <= start) {
+        showError(endDateTimeInput, "End Date & Time must be after Start Date & Time.");
+        errorFound = true;
+    }
+}
+
     
             // Select2 validation
             const productSelect = form.querySelector('[name="product_ids[]"]');

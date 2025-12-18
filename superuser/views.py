@@ -1345,7 +1345,7 @@ class DeleteProductImageView(StaffAccountRequiredMixin, View):
         return self.post(request, pk)
 
 
-class OrderListingView(StaffAccountRequiredMixin, PermissionRequiredMixin, View):
+class OrderListingView( PermissionRequiredMixin, View):
     template_name = 'superuser/orders/orders_list.html'
     paginate_by = 25
     required_permissions = ('dashboard.view_order',)
@@ -1423,7 +1423,7 @@ class OrderListingView(StaffAccountRequiredMixin, PermissionRequiredMixin, View)
         }
 
         return render(request, self.template_name, context)
-class UpdatePaymentStatusView(LoginRequiredMixin, View):
+class UpdatePaymentStatusView( View):
     def post(self, request):
         order_id = request.POST.get("order_id")
         paid = request.POST.get("paid")
@@ -1493,12 +1493,12 @@ class ChangeOrderStatusView(View):
             'success': True,
             'new_status': new_status
         })
-class OrderDetailesView(StaffAccountRequiredMixin,View):
-    template_name = 'superuser/orders/order_details.html'
-
+class OrderDetailsView(View):
     def get(self, request, order_id):
+        supplier = request.user
+
         order = get_object_or_404(
-            Order.objects.all()
+            Order.objects.filter(items__order_to=supplier)
             .distinct()
             .select_related('user', 'payment')
             .prefetch_related(
@@ -1508,46 +1508,43 @@ class OrderDetailesView(StaffAccountRequiredMixin,View):
                         .select_related('product', 'order_by', 'order_to')
                         .prefetch_related(
                             Prefetch(
-                             
-                                'product__images',   
+                                'product__images',
                                 queryset=ProductImage.objects.filter(is_main=True),
                                 to_attr='main_image'
                             )
                         )
-                )   
+                )
             ),
             order_id=order_id
         )
 
-        # Calculate totals for supplier's order items
-        order_items = order.items.all()
+        order_items = order.items.filter(order_to=supplier)
         if not order_items.exists():
-            logger.warning(f"Supplier {request.user.id} attempted to view order {order.id} with no relevant items")
             messages.error(request, "You do not have permission to view this order.")
-            return redirect('supplier:order_listing')
-
-        subtotal = order_items.aggregate(
-            total=Sum(F('price') * F('quantity'))
-        )['total'] or 0.0
-
+            return redirect('superuser:order_listing')
+        subtotal = float(order.payment.amount) if order.payment else 0.0
         commission = order_items.aggregate(
-            total=Sum((F('price') * F('product__commission_percentage') / 100) * F('quantity'))
+            total=Sum(
+                (F('price') * F('product__commission_percentage') / 100) * F('quantity')
+            )
         )['total'] or 0.0
 
-        shipping_fee = float(order.shipping_fees) if order.shipping_fees else 0.0
-        grand_total = float(subtotal) - float(commission) + shipping_fee
+        shipping_fee = float(order.shipping_fees or 0.0)
+        grand_total = subtotal - float(commission) + shipping_fee
 
         context = {
             'order': order,
             'order_items': order_items,
-            'subtotal': round(float(subtotal), 2),
+            'subtotal': round(subtotal, 2),
             'total_commission': round(float(commission), 2),
             'shipping_fee': round(shipping_fee, 2),
             'grand_total': round(grand_total, 2),
             'user': order.user,
         }
 
-        return render(request, self.template_name, context)
+        logger.info(f"Supplier {supplier.id} viewed order {order.order_id}")
+        return render(request, 'superuser/orders/order_details.html', context)
+
 
 
 class OrderDeleteView(StaffAccountRequiredMixin, View):

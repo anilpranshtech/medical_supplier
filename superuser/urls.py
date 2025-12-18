@@ -53,8 +53,8 @@ urlpatterns = [
     path('ajax-last-category/create/', AJAXCreateLastCategory.as_view(), name='AJAX_create_lastcategory'),
 
     # Orders Urls
-    path('orders/list/', OrderListingView.as_view(), name='orders_list'),
-    path('order/detail/<slug:order_id>/', OrderDetailesView.as_view(), name='orders_detail'),
+    path('orderlist/', OrderListingView.as_view(), name='order_listing'),
+    path('order-detail/<slug:order_id>/', OrderDetailsView.as_view(), name='order_detail'),
     path('orders/', OrderListAndStatusView.as_view(), name='orders'),
     path('order/change-status/', ChangeOrderStatusView.as_view(), name='change_order_status'),
     path( "orders/update-payment-status/", UpdatePaymentStatusView.as_view(), name="update_payment_status" ),

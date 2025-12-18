@@ -1365,9 +1365,10 @@ class ChangeOrderStatusView(View):
             'success': True,
             'new_status': new_status
         })
-class OrderDetailsView( View):
+class OrderDetailsView(View):
     def get(self, request, order_id):
         supplier = request.user
+
         order = get_object_or_404(
             Order.objects.filter(items__order_to=supplier)
             .distinct()
@@ -1391,33 +1392,30 @@ class OrderDetailsView( View):
 
         order_items = order.items.filter(order_to=supplier)
         if not order_items.exists():
-            logger.warning(f"Supplier {supplier.id} attempted to view order {order.id} with no relevant items")
             messages.error(request, "You do not have permission to view this order.")
             return redirect('supplier:order_listing')
-
-        subtotal = order_items.aggregate(
-            total=Sum(F('price') * F('quantity'))
-        )['total'] or 0.0
-
+        subtotal = float(order.payment.amount) if order.payment else 0.0
         commission = order_items.aggregate(
-            total=Sum((F('price') * F('product__commission_percentage') / 100) * F('quantity'))
+            total=Sum(
+                (F('price') * F('product__commission_percentage') / 100) * F('quantity')
+            )
         )['total'] or 0.0
 
-        shipping_fee = float(order.shipping_fees) if order.shipping_fees else 0.0
-        grand_total = float(subtotal) - float(commission) + shipping_fee
+        shipping_fee = float(order.shipping_fees or 0.0)
+        grand_total = subtotal - float(commission) + shipping_fee
 
         context = {
             'order': order,
             'order_items': order_items,
-            'subtotal': round(float(subtotal), 2),
+            'subtotal': round(subtotal, 2),
             'total_commission': round(float(commission), 2),
             'shipping_fee': round(shipping_fee, 2),
             'grand_total': round(grand_total, 2),
             'user': order.user,
         }
-        logger.info(f"Supplier {supplier.id} viewed details for order {order.order_id}")
-        return render(request, 'supplier/order-details.html', context)
 
+        logger.info(f"Supplier {supplier.id} viewed order {order.order_id}")
+        return render(request, 'supplier/order-details.html', context)
 
 # class OrderDeleteView(View):
 #     def post(self, request, order_id):
@@ -2877,7 +2875,6 @@ class ShippingDeleteView(View):
         shipping = get_object_or_404(ShippingMethod, pk=pk)
         shipping.delete()
         return JsonResponse({'status':'success','message':'Shipping deleted'})
-
 class CouponsView(TemplateView):
     template_name = "supplier/coupons.html"
     def dispatch(self, request, *args, **kwargs):
@@ -3094,7 +3091,6 @@ def coupon_details(request, coupon_id):
         'products': product_ids,
         'clients': client_ids
     })
-
 class VacationRequestView(LoginRequiredMixin, View):
     template_name = 'supplier/vacationrequest.html'
 

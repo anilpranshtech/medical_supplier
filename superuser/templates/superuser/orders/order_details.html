@@ -358,36 +358,37 @@
                                                 <td class="text-center">{{ item.product.product_from }}</td>
                                                 <td class="text-center">{{ item.product.brand.name }}</td>
                                                 <td class="text-center">{{ item.product.supplier_sku }}</td>
-                                                <td class="text-center">${{ item.price }}</td>
+                                                <td class="text-center">${{ order.payment.amount|floatformat:2|default:"0.00" }}</td>
                                                 <td class="text-center">{{ item.quantity }}</td>
                                                 <td class="text-center">{{ item.product.commission_percentage }}%</td>
-                                                <td class="text-center">${{ item.price }}</td>
-                                                <td class="text-center">${{ item.price|floatformat:2 }}</td>
+                                                <td class="text-center">${{ order.payment.amount|floatformat:2|default:"0.00" }}</td>
+                                                <td class="text-center">${{ order.payment.amount|floatformat:2|default:"0.00" }}</td>
                                             </tr>
                                             {% endfor %}
 
                                             <!-- Totals -->
                                             <tr>
                                                 <td colspan="8" class="text-end">Subtotal</td>
-                                                <td class="text-end">${{ subtotal }}</td>
+                                                <td class="text-end">${{ subtotal|floatformat:2 }}</td>
                                             </tr>
-                                            <tr>
-                                                <td colspan="8" class="text-end">Total Discount</td>
-                                                <td class="text-end">$0.00</td>
-                                            </tr>
+                                            
                                             <tr>
                                                 <td colspan="8" class="text-end">Total Commission</td>
-                                                <td class="text-end">${{ total_commission }}</td>
+                                                <td class="text-end">${{ total_commission|floatformat:2 }}</td>
                                             </tr>
+                                            
                                             <tr>
                                                 <td colspan="8" class="text-end">Shipping Fee</td>
-                                                <td class="text-end">${{ shipping_fee }}</td>
+                                                <td class="text-end">${{ shipping_fee|floatformat:2 }}</td>
                                             </tr>
+                                            
                                             <tr>
-                                                <td colspan="8" class="fs-3 text-gray-900 text-end">Grand Total</td>
-                                                <td class="text-gray-900 fs-3 fw-bolder text-end">${{ grand_total }}
+                                                <td colspan="8" class="fs-3 text-end">Grand Total</td>
+                                                <td class="fs-3 fw-bold text-end">
+                                                    ${{ grand_total|floatformat:2 }}
                                                 </td>
                                             </tr>
+                                            
                                             </tbody>
                                         </table>
                                         <!--end::Table-->

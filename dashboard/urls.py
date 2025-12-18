@@ -63,6 +63,7 @@ urlpatterns = [
 
     # user profile
     path('user-profile/', views.UserProfile.as_view(), name='user_profile'),
+    path('change-password/', ChangePasswordView.as_view(), name='change_password'),
     path('upload-avatar/', UploadAvatarView.as_view(), name='upload_avatar'),
     path('profile/edit/', views.EditProfileView.as_view(), name='edit_profile'),
     path('profile/edit-email/', views.EditEmailView.as_view(), name='edit_email'),

@@ -49,7 +49,7 @@
                         <div class="flex flex-col items-end gap-1.5">
                           <span class="text-xs text-secondary-foreground">{{ item.quantity }} x</span>
                           <span class="text-sm font-semibold text-mono">
-                            {% if order.payment_currency == "INR" %}₹{% else %}${% endif %}{{ item.total_price|floatformat:2 }}
+                            ${{ order.payment.amount|floatformat:2|default:"0.00" }}
                           </span>
                         </div>
                       </div>
@@ -69,7 +69,7 @@
                     <div class="flex flex-col gap-1.5">
                       <span class="text-sm text-secondary-foreground">Total</span>
                       <span class="text-sm font-medium text-dark">
-                        {% if order.payment_currency == "INR" %}₹{% else %}${% endif %}{{ order_total|floatformat:2 }}
+                        ${{ order.payment.amount|floatformat:2|default:"0.00" }}
                       </span>
                     </div>
                     <div class="flex flex-col gap-1.5">

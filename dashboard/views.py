@@ -611,7 +611,7 @@ class RegistrationView(View):
 def get_states(request, country_id):
     states = State.objects.filter(country_id=country_id).order_by('name')
     data = [{'id': state.id, 'name': state.name} for state in states]
-    return JsonResponse({'states': data})
+    return JsonResponse({'states': data})   
 
 def get_cities(request, state_id):
     cities = City.objects.filter(state_id=state_id).order_by('name')
@@ -776,7 +776,11 @@ class SearchSuggestionsView(View):
             ]
 
         return JsonResponse({'suggestions': suggestions})
-
+class CheckEmailView(View):
+    def post(self, request):
+        email = request.POST.get('email', '').strip()
+        exists = User.objects.filter(username=email).exists()
+        return JsonResponse({'exists': exists})
 
 class SearchResultsGridView(TemplateView):
     template_name = 'userdashboard/view/search_results_grid.html'
@@ -1275,6 +1279,12 @@ class SearchResultsListView(TemplateView):
         return context
 
 
+# views.py - Updated ProductDetailsView
+
+from django.views.generic import TemplateView
+from django.core.paginator import Paginator
+from django.db.models import Avg
+
 class ProductDetailsView(TemplateView):
     template_name = 'userdashboard/view/product_details.html'
 
@@ -1292,10 +1302,15 @@ class ProductDetailsView(TemplateView):
                 product.main_image = main_img.image.url if main_img else None
                 other_images = ProductImage.objects.filter(product=product).exclude(id=main_img.id if main_img else None)
 
-                reviews = RatingReview.objects.filter(product=product)
-                rating_counts = {i: reviews.filter(rating=i).count() for i in range(1, 6)}
-                total_reviews = reviews.count()
-                avg_rating = reviews.aggregate(avg=Avg('rating'))['avg'] or 0
+                # Reviews with pagination
+                reviews_qs = RatingReview.objects.filter(product=product).order_by('-created_at')
+                reviews_page_number = self.request.GET.get('rpage', 1)
+                reviews_paginator = Paginator(reviews_qs, 3) 
+                reviews_page = reviews_paginator.get_page(reviews_page_number)
+                
+                rating_counts = {i: reviews_qs.filter(rating=i).count() for i in range(1, 6)}
+                total_reviews = reviews_qs.count()
+                avg_rating = reviews_qs.aggregate(avg=Avg('rating'))['avg'] or 0
 
                 stock_status = ""
                 if product.stock_quantity == 0:
@@ -1318,22 +1333,20 @@ class ProductDetailsView(TemplateView):
                 # User-specific data
                 user = self.request.user
                 if user.is_authenticated:
-                    # IDs of products in cart
                     user_cart_ids = list(CartProduct.objects.filter(user=user).values_list('product_id', flat=True))
-                    
-                    # Quantities of products in cart as a dictionary
                     user_cart_quantities = {
                         item.product.id: item.quantity
                         for item in CartProduct.objects.filter(user=user)
                     }
-
                     user_wishlist_ids = list(WishlistProduct.objects.filter(user=user).values_list('product_id', flat=True))
                 else:
                     user_cart_ids = []
                     user_cart_quantities = {}
                     user_wishlist_ids = []
+                
                 event = product.event if hasattr(product, 'event') and product.event else None
 
+                # Questions pagination
                 questions_qs = (
                     Question.objects
                     .select_related('user')
@@ -1343,12 +1356,11 @@ class ProductDetailsView(TemplateView):
                 page = self.request.GET.get("qpage", 1)
                 paginator = Paginator(questions_qs, 5)
                 questions_page = paginator.get_page(page)
-                             
 
                 context.update({
                     'product': product,
                     'other_images': other_images,
-                    'reviews': reviews,
+                    'reviews': reviews_page, 
                     'rating_counts': rating_counts,
                     'total_reviews': total_reviews,
                     'average_rating': round(avg_rating, 1),
@@ -1776,7 +1788,7 @@ def remove_from_cart(request):
         return JsonResponse({'status': 'success'})
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
-        
+       
 
 
 
@@ -2718,6 +2730,7 @@ class OrderReceiptView(LoginRequiredMixin, TemplateView):
         # Fetch related payment details
         payment = order.payment
         payment_method = payment.payment_method if payment else order.items.first().payment_type.lower()
+        
 
         # Determine payment details based on payment method
         payment_details = None
@@ -3048,8 +3061,8 @@ class UploadAvatarView(LoginRequiredMixin, View):
 class EditProfileView(LoginRequiredMixin, View):
     def post(self, request):
         user = request.user
-        profile = None
-        profile_type = None
+
+        # Detect profile
         if hasattr(user, 'retailprofile'):
             profile = user.retailprofile
             profile_type = 'retailer'
@@ -3059,40 +3072,59 @@ class EditProfileView(LoginRequiredMixin, View):
         elif hasattr(user, 'supplierprofile'):
             profile = user.supplierprofile
             profile_type = 'supplier'
-        elif user.is_superuser:
-            profile = user
-            profile_type = 'admin'
         else:
-            return JsonResponse({'status': 'error', 'message': 'Profile not found.'}, status=400)
+            return JsonResponse({'status': 'error', 'message': 'Profile not found'}, status=400)
 
-        # Get input fields
         first_name = request.POST.get('first_name', '').strip()
         last_name = request.POST.get('last_name', '').strip()
         company_name = request.POST.get('company_name', '').strip()
+        speciality = request.POST.get('speciality', '').strip()
 
-        # Password fields
-        password = request.POST.get('password', '').strip()
-        confirm_password = request.POST.get('confirm_password', '').strip()
         if not first_name or not last_name:
-            return JsonResponse({'status': 'error', 'message': 'First and last name are required.'}, status=400)
-        if password or confirm_password:
-            if password != confirm_password:
-                return JsonResponse({'status': 'error', 'message': 'Passwords do not match.'}, status=400)
+            return JsonResponse({'status': 'error', 'message': 'First and last name are required'}, status=400)
 
-            if len(password) < 6:
-                return JsonResponse({'status': 'error', 'message': 'Password must be at least 6 characters.'}, status=400)
-
-            user.set_password(password)
-            user.save()
         user.first_name = first_name
         user.last_name = last_name
         user.save()
+
         if profile_type in ['wholesaler', 'supplier']:
             profile.company_name = company_name
+        elif profile_type == 'retailer':
+            profile.speciality = speciality
 
         profile.save()
 
-        return JsonResponse({'status': 'success', 'message': 'Profile updated successfully. Please login again if password was changed.'})
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Profile updated successfully.'
+        })
+class ChangePasswordView(LoginRequiredMixin, View):
+    def post(self, request):
+        user = request.user
+
+        current = request.POST.get('current_password')
+        new = request.POST.get('new_password')
+        confirm = request.POST.get('confirm_password')
+
+        if not user.check_password(current):
+            return JsonResponse({'status': 'error', 'message': 'Current password is incorrect'}, status=400)
+
+        if new != confirm:
+            return JsonResponse({'status': 'error', 'message': 'Passwords do not match'}, status=400)
+
+        if len(new) < 6:
+            return JsonResponse({'status': 'error', 'message': 'Password must be at least 6 characters'}, status=400)
+
+        user.set_password(new)
+        user.save()
+        logout(request)
+
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Password changed successfully. Please login again.'
+        })
+
+
 
 
 class EditEmailView(LoginRequiredMixin, View):

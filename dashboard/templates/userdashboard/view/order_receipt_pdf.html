@@ -76,7 +76,7 @@
                 <td>{{ item.sku|default:"N/A" }}</td>
                 <td>{{ item.quantity }}</td>
                 <td class="text-right">
-                    {% if order.payment_currency == "INR" %}₹{% else %}${% endif %}{{ item.total_price|floatformat:2 }}
+                    ${{ order.payment.amount|floatformat:2|default:"0.00" }}
                 </td>
             </tr>
         {% endfor %}
@@ -90,7 +90,7 @@
     <table>
         <tr>
             <td>Subtotal</td>
-            <td class="text-right">{{ order_summary.subtotal|floatformat:2 }}</td>
+            <td class="text-right">    ${{ order.payment.amount|floatformat:2|default:"0.00" }}</td>
         </tr>
         <tr>
             <td>Shipping</td>
@@ -102,7 +102,7 @@
         </tr>
         <tr class="total-row">
             <td>Total</td>
-            <td class="text-right">{{ order_summary.total|floatformat:2 }}</td>
+            <td class="text-right">${{ order.payment.amount|floatformat:2|default:"0.00" }}</td>
         </tr>
     </table>
 </div>

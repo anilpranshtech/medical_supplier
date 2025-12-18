@@ -550,13 +550,18 @@
         <p class="flex justify-between"><span class="font-semibold">Condition:</span> {{ product.get_condition_display }}</p>
         {% endif %}
 
-        {% if product.get_warranty_display %}
-        <p class="flex justify-between"><span class="font-semibold">Warranty:</span> {{ product.get_warranty_display }}</p>
-        {% endif %}
-
-        {% if product.get_tag_display %}
-        <p class="flex justify-between"><span class="font-semibold">Tag:</span> {{ product.get_tag_display }}</p>
-        {% endif %}
+        {% if product.get_warranty_display and product.get_warranty_display != "None" %}
+        <p class="flex justify-between">
+            <span class="font-semibold">Warranty:</span> {{ product.get_warranty_display }}
+        </p>
+    {% endif %}
+    
+    {% if product.get_tag_display and product.get_tag_display != "None" %}
+        <p class="flex justify-between">
+            <span class="font-semibold">Tag:</span> {{ product.get_tag_display }}
+        </p>
+    {% endif %}
+    
 
         {% if product.manufacture_date %}
         <p class="flex justify-between"><span class="font-semibold">Manufacture Date:</span> {{ product.manufacture_date|date:"d M, Y" }}</p>
@@ -631,53 +636,90 @@
                             </div>
                         </div>
 
-                        <!-- Reviews Section -->
-                        <div class="mt-6">
-                            <h4 class="text-lg font-semibold text-gray-400 dark:text-white">Customer Reviews ({{ total_reviews }})</h4><br>
-                            {% if reviews %}
-                            <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
-                                <!-- First Review -->
-                                <div class="flex gap-4">
-                                    <div class="bg-teal-600 px-3 py-1 rounded text-sm font-bold w-12 text-center" style="color: #0b7663;">
-                                        {{ reviews.0.rating }}★
-                                    </div>
-                                    <div class="flex-1">
-                                        <p class="text-gray-400 dark:text-gray-200">{{ reviews.0.review|default:"No comment provided." }}</p>
-                                        {% if reviews.0.photo %}
-                                        <img src="{{ reviews.0.photo.url }}" alt="Review Photo" class="w-24 h-auto rounded mt-2 shadow-sm cursor-pointer review-photo" data-full-image="{{ reviews.0.photo.url }}" data-review="{{ reviews.0.review|default:'No comment provided.' }}" data-rating="{{ reviews.0.rating }}" data-username="{{ reviews.0.user.username }}" data-date="{{ reviews.0.created_at|date:'d M Y' }}" loading="lazy" />
-                                        {% endif %}
-                                        <small class="text-gray-500 dark:text-gray-400">{{ reviews.0.user.username }} | {{ reviews.0.created_at|date:"d M Y" }}</small>
-                                    </div>
-                                </div>
-                                <!-- More Reviews -->
-                                <div id="more-reviews" class="hidden">
-                                    {% for review in reviews|slice:"1:" %}
-                                    <div class="border-t border-gray-200 dark:border-gray-700 pt-4 flex gap-4">
-                                        <div class="bg-teal-600 px-3 py-1 rounded text-sm font-bold w-12 text-center" style="color: #0b7663;">
-                                            {{ review.rating }}★
-                                        </div>
-                                        <div class="flex-1">
-                                            <p class="text-gray-400 dark:text-gray-200">{{ review.review|default:"No comment provided." }}</p>
-                                            {% if review.photo %}
-                                            <img src="{{ review.photo.url }}" alt="Review Photo" class="w-24 h-auto rounded mt-2 shadow-sm cursor-pointer review-photo" data-full-image="{{ review.photo.url }}" data-review="{{ review.review|default:'No comment provided.' }}" data-rating="{{ review.rating }}" data-username="{{ review.user.username }}" data-date="{{ review.created_at|date:'d M Y' }}" loading="lazy" />
-                                            {% endif %}
-                                            <small class="text-gray-500 dark:text-gray-400">{{ review.user.get_full_name }}   | {{ review.created_at|date:"d M Y" }}</small>
-                                        </div>
-                                    </div>
-                                    {% endfor %}
-                                </div>
-                                <!-- Toggle Buttons -->
-                                <a href="#" id="view-all-reviews-btn" style="color: #e60023; font-weight: bold; display: block; margin-top: 20px;">
-                                    View all {{ total_reviews }} reviews
-                                </a>
-                                <a href="#" id="see-less-reviews-btn" style="display: none; color: #0b7663; font-weight: bold; margin-top: 10px;">
-                                    See less reviews
-                                </a>
-                            {% else %}
-                                <p class="text-gray-500 mt-4">No reviews yet for this product.</p>
-                            {% endif %}
-                            </div>
-                        </div><br>
+                      <!-- Reviews Section with Pagination -->
+<div class="mt-6" id="reviews-section">
+    <h4 class="text-lg font-semibold text-gray-400 dark:text-white">Customer Reviews ({{ total_reviews }})</h4><br>
+    
+    {% if reviews %}
+    <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+        <!-- Display Reviews -->
+        {% for review in reviews %}
+        <div class="flex gap-4 {% if not forloop.first %}border-t border-gray-200 dark:border-gray-700 pt-4{% endif %}">
+            <div class="bg-teal-600 px-3 py-1 rounded text-sm font-bold w-12 text-center" style="color: #0b7663;">
+                {{ review.rating }}★
+            </div>
+            <div class="flex-1">
+                <p class="text-gray-400 dark:text-gray-200">{{ review.review|default:"No comment provided." }}</p>
+                {% if review.photo %}
+                <img src="{{ review.photo.url }}" 
+                     alt="Review Photo" 
+                     class="w-24 h-auto rounded mt-2 shadow-sm cursor-pointer review-photo" 
+                     data-full-image="{{ review.photo.url }}" 
+                     data-review="{{ review.review|default:'No comment provided.' }}" 
+                     data-rating="{{ review.rating }}" 
+                     data-username="{{ review.user.username }}" 
+                     data-date="{{ review.created_at|date:'d M Y' }}" 
+                     loading="lazy" />
+                {% endif %}
+                <small class="text-gray-500 dark:text-gray-400">
+                    {{ review.user.username }} | {{ review.created_at|date:"d M Y" }}
+                </small>
+            </div>
+        </div>
+        {% endfor %}
+
+        <!-- Pagination Controls -->
+        {% if reviews.has_other_pages %}
+        <div class="flex justify-center items-center gap-2 mt-6">
+            {% if reviews.has_previous %}
+            <a href="?rpage={{ reviews.previous_page_number }}#reviews-section" 
+               class="px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600 text-sm">
+                Previous
+            </a>
+            {% else %}
+            <span class="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded text-gray-400 text-sm cursor-not-allowed">
+                Previous
+            </span>
+            {% endif %}
+
+            <div class="flex gap-1">
+                {% for num in reviews.paginator.page_range %}
+                    {% if reviews.number == num %}
+                    <span class="px-3 py-1 bg-teal-600 text-white rounded text-sm font-bold">
+                        {{ num }}
+                    </span>
+                    {% elif num > reviews.number|add:'-3' and num < reviews.number|add:'3' %}
+                    <a href="?rpage={{ num }}#reviews-section" 
+                       class="px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600 text-sm">
+                        {{ num }}
+                    </a>
+                    {% endif %}
+                {% endfor %}
+            </div>
+
+            {% if reviews.has_next %}
+            <a href="?rpage={{ reviews.next_page_number }}#reviews-section" 
+               class="px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600 text-sm">
+                Next
+            </a>
+            {% else %}
+            <span class="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded text-gray-400 text-sm cursor-not-allowed">
+                Next
+            </span>
+            {% endif %}
+        </div>
+        
+        <!-- Page Info -->
+        <p class="text-center text-sm text-gray-500 dark:text-gray-400 mt-2">
+            Showing {{ reviews.start_index }} - {{ reviews.end_index }} of {{ total_reviews }} reviews
+        </p>
+        {% endif %}
+    </div>
+    {% else %}
+    <p class="text-gray-500 mt-4">No reviews yet for this product.</p>
+    {% endif %}
+</div>
+<br>
 
                         
                         <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
@@ -1101,27 +1143,6 @@
 </div>
 
 <script>
-
-  function openQuestionModal() {
-    const modal = document.getElementById('questionModal');
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
-    document.body.style.overflow = 'hidden';
-    setTimeout(() => document.getElementById('questionText')?.focus(), 50);
-  }
-  function closeQuestionModal() {
-    const modal = document.getElementById('questionModal');
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
-    document.body.style.overflow = '';
-  }
-</script>
-
-<!-- SwiperJS CDN -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.css" />
-<script src="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.js"></script>
-
-<script>
     // CSRF Token
     function getCookie(name) {
         let cookieValue = null;
@@ -1138,6 +1159,19 @@
         return cookieValue;
     }
     const csrftoken = getCookie('csrftoken');
+
+    // Smooth scroll to reviews section on page load if rpage parameter exists
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('rpage')) {
+            const reviewsSection = document.getElementById('reviews-section');
+            if (reviewsSection) {
+                setTimeout(() => {
+                    reviewsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 100);
+            }
+        }
+    });
 
     // Swiper Initialization
     document.addEventListener("DOMContentLoaded", function () {
@@ -1199,28 +1233,6 @@
                     eventContent.style.maxHeight = collapsedHeight;
                     eventBtn.textContent = 'See More';
                 }
-            });
-        }
-    });
-
-    // Reviews Toggle
-    document.addEventListener('DOMContentLoaded', function () {
-        const viewAllBtn = document.getElementById('view-all-reviews-btn');
-        const seeLessBtn = document.getElementById('see-less-reviews-btn');
-        const moreReviews = document.getElementById('more-reviews');
-        if (viewAllBtn && seeLessBtn && moreReviews) {
-            viewAllBtn.addEventListener('click', function (e) {
-                e.preventDefault();
-                moreReviews.style.display = 'block';
-                viewAllBtn.style.display = 'none';
-                seeLessBtn.style.display = 'inline-block';
-            });
-
-            seeLessBtn.addEventListener('click', function (e) {
-                e.preventDefault();
-                moreReviews.style.display = 'none';
-                viewAllBtn.style.display = 'inline-block';
-                seeLessBtn.style.display = 'none';
             });
         }
     });
@@ -1422,16 +1434,15 @@
                 document.body.style.overflow = 'hidden';
             });
         });
-    //loader
-    document.getElementById('rfqSubmitBtn').addEventListener('click', function(e) {
-    const btn = e.currentTarget;
-    const loader = btn.querySelector('.loader');
-
-    // Show loader
-    loader.style.display = 'inline-block';
-
-   
-});
+        
+        //loader
+        document.getElementById('rfqSubmitBtn').addEventListener('click', function(e) {
+            const btn = e.currentTarget;
+            const loader = btn.querySelector('.loader');
+            // Show loader
+            loader.style.display = 'inline-block';
+        });
+        
         // Event Registration Modal Handlers
         document.querySelectorAll('.open-event-registration-modal').forEach(button => {
             button.addEventListener('click', function (e) {
@@ -1448,15 +1459,14 @@
                 document.body.style.overflow = 'hidden';
             });
         });
-            //loader
-    document.getElementById('eventRegistrationSubmitBtn').addEventListener('click', function(e) {
-    const btn = e.currentTarget;
-    const loader = btn.querySelector('.loader');
-
-    // Show loader
-    loader.style.display = 'inline-block';
-
-});
+        
+        //loader
+        document.getElementById('eventRegistrationSubmitBtn').addEventListener('click', function(e) {
+            const btn = e.currentTarget;
+            const loader = btn.querySelector('.loader');
+            // Show loader
+            loader.style.display = 'inline-block';
+        });
 
         // Question Modal Handlers
         document.getElementById('openQuestionModal').addEventListener('click', function (e) {
@@ -1464,17 +1474,14 @@
             openQuestionModal();
         });
     });
+    
     //loader
     document.getElementById('questionSubmitBtn').addEventListener('click', function(e) {
-    const btn = e.currentTarget;
-    const loader = btn.querySelector('.loader');
-
-    // Show loader
-    loader.style.display = 'inline-block';
-
-
-});
-
+        const btn = e.currentTarget;
+        const loader = btn.querySelector('.loader');
+        // Show loader
+        loader.style.display = 'inline-block';
+    });
 
     // Image Modal Functionality
     document.addEventListener('DOMContentLoaded', () => {

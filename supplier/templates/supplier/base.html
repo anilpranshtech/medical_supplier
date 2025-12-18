@@ -750,180 +750,186 @@
 </body>
 <script src="{% static 'js/buttonLoader.js' %}"></script>
 <script>
-function toggleNotificationPanel() {
-    const drawer = document.getElementById("notificationDrawer");
-    drawer.style.display = (drawer.style.display === "none" || drawer.style.display === "") ? "block" : "none";
-}
-
-function formatTimeElements() {
-    document.querySelectorAll(".time-display").forEach(el => {
-        const created = new Date(el.dataset.created);
-        const now = new Date();
-        const diff = (now - created) / 1000;
-
-        let text = "Just now";
-        if (diff > 60) text = `${Math.floor(diff / 60)} minute ago`;
-        if (diff > 3600) text = `${Math.floor(diff / 3600)} hour ago`;
-
-        el.textContent = text;
-    });
-}
-
-function showNotificationPopup(title, message, notificationId, tabType) {
-    document.getElementById('popupTitle').textContent = title;
-    document.getElementById('popupMessage').textContent = message;
-    document.getElementById('notificationOverlay').style.display = 'block';
-    document.getElementById('notificationPopup').style.display = 'block';
-    document.getElementById('notificationPopup').dataset.notificationId = notificationId;
-    document.getElementById('notificationPopup').dataset.tab = tabType;
-}
-
-function closeNotificationPopup() {
-    document.getElementById('notificationOverlay').style.display = 'none';
-    document.getElementById('notificationPopup').style.display = 'none';
-
-    const popup = document.getElementById('notificationPopup');
-    const notificationId = popup.dataset.notificationId;
-    const tabType = popup.dataset.tab;
-
-    if (notificationId && tabType === 'unread') {
-        fetch(`/mark-notification-read/${notificationId}/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': '{{ csrf_token }}',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({})
-        }).then(response => {
-            if (response.ok) {
-                const el = document.querySelector(`[data-notification-id="${notificationId}"]`);
-                if (el) el.remove();
-
-                const readTab = document.getElementById("notiRead");
-                const newRead = document.createElement("div");
-                newRead.className = "border-bottom pb-3 mb-3 position-relative";
-                newRead.setAttribute("data-id", notificationId);
-                newRead.setAttribute("data-tab", "read");
-
-                const now = new Date().toISOString();
-                const title = popup.querySelector('#popupTitle').textContent;
-                const message = popup.querySelector('#popupMessage').textContent;
-
-                newRead.innerHTML = `
-                    <h6 class="mb-1">${title}</h6>
-                    <small class="text-muted">${message}</small><br>
-                    <span class="badge bg-success text-white time-display" data-created="${now}">Just now</span>
-                    <button class="btn btn-sm btn-light position-absolute top-0 end-0" onclick="deleteNotification('${notificationId}', 'read')">
-                        <i class="fas fa-times"></i>
-                    </button>
-                `;
-
-                readTab.prepend(newRead);
-
-                newRead.addEventListener('click', function () {
-                    showNotificationPopup(title, message, notificationId, 'read');
-                });
-
-                formatTimeElements();
-            }
+    function toggleNotificationPanel() {
+        const drawer = document.getElementById("notificationDrawer");
+        drawer.style.display = (drawer.style.display === "none" || drawer.style.display === "") ? "block" : "none";
+    }
+    
+    function formatTimeElements() {
+        document.querySelectorAll(".time-display").forEach(el => {
+            const created = new Date(el.dataset.created);
+            const now = new Date();
+            const diff = (now - created) / 1000;
+    
+            let text = "Just now";
+            if (diff > 60) text = `${Math.floor(diff / 60)} minute ago`;
+            if (diff > 3600) text = `${Math.floor(diff / 3600)} hour ago`;
+    
+            el.textContent = text;
         });
     }
-}
-
-function deleteNotification(notificationId, tabType) {
-    if (confirm('Are you sure you want to delete this notification?')) {
-        fetch(`/delete-notification/${notificationId}/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken'),
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({})
-        }).then(response => {
-            if (response.ok) {
-                const el = document.querySelector(`[data-id="${notificationId}"]`);
-                if (el) el.remove();
-
-                // Update notification count
-                const unreadCount = document.querySelectorAll('#notiUnread .border-bottom').length;
-                const badge = document.querySelector('.badge.rounded-pill.bg-danger');
-                if (badge) {
-                    badge.textContent = unreadCount;
-                    if (unreadCount === 0) badge.remove();
-                }
-
-                // Check if tabs are empty
-                ['notiAll', 'notiRead', 'notiUnread'].forEach(tabId => {
-                    const tab = document.getElementById(tabId);
-                    if (tab.children.length === 0) {
-                        tab.innerHTML = "<p class='text-muted'>No notifications available.</p>";
+    
+    function showNotificationPopup(title, message, notificationId, tabType) {
+        document.getElementById('popupTitle').textContent = title;
+        document.getElementById('popupMessage').textContent = message;
+        document.getElementById('notificationOverlay').style.display = 'block';
+        document.getElementById('notificationPopup').style.display = 'block';
+        document.getElementById('notificationPopup').dataset.notificationId = notificationId;
+        document.getElementById('notificationPopup').dataset.tab = tabType;
+    }
+    
+    function closeNotificationPopup() {
+        document.getElementById('notificationOverlay').style.display = 'none';
+        document.getElementById('notificationPopup').style.display = 'none';
+    
+        const popup = document.getElementById('notificationPopup');
+        const notificationId = popup.dataset.notificationId;
+        const tabType = popup.dataset.tab;
+    
+        if (notificationId && tabType === 'unread') {
+            fetch(`/mark-notification-read/${notificationId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({})
+            }).then(response => {
+                if (response.ok) {
+                    const el = document.querySelector(`[data-notification-id="${notificationId}"]`);
+                    if (el) el.remove();
+    
+                    const readContainer = document.getElementById("readNotificationsContainer");
+                    
+                    // Remove "No read notifications" message if it exists
+                    const noReadMsg = document.getElementById("noReadNotificationMsg");
+                    if (noReadMsg) {
+                        noReadMsg.remove();
                     }
-                });
-            }
-        });
-    }
-}
-
-function attachNotificationClickHandlers() {
-    const notifications = document.querySelectorAll('.tab-content .border-bottom');
-    notifications.forEach(notification => {
-        const title = notification.querySelector('h6')?.textContent || '';
-        const message = notification.querySelector('small')?.textContent?.split(' - ')[0]?.trim() || '';
-        const notificationId = notification.dataset.id || '';
-        const tabType = notification.dataset.tab || '';
-
-        // Avoid adding click listener to delete button
-        notification.querySelector('.btn-light')?.addEventListener('click', (e) => e.stopPropagation());
-
-        notification.addEventListener('click', function (e) {
-            if (!e.target.closest('.btn-light')) {
-                showNotificationPopup(title, message, notificationId, tabType);
-            }
-        });
-    });
-}
-
-document.addEventListener('DOMContentLoaded', function () {
-    formatTimeElements();
-    attachNotificationClickHandlers();
-});
-
-function clearAllNotifications() {
-    fetch("{% url 'supplier:clear_all_notifications' %}", {
-        method: "POST",
-        headers: {
-            "X-CSRFToken": getCookie('csrftoken'),
-            "Content-Type": "application/json"
-        },
-    })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                document.getElementById("notiAll").innerHTML = "<p class='text-muted'>No notifications available.</p>";
-                document.getElementById("notiRead").innerHTML = "<p class='text-muted'>No read notifications.</p>";
-                document.getElementById("notiUnread").innerHTML = "<p class='text-muted'>No unread notifications.</p>";
-                const badge = document.querySelector('.badge.rounded-pill.bg-danger');
-                if (badge) badge.remove();
-            }
-        });
-}
-
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
+    
+                    const newRead = document.createElement("div");
+                    newRead.className = "border-bottom pb-3 mb-3 position-relative";
+                    newRead.setAttribute("data-id", notificationId);
+                    newRead.setAttribute("data-tab", "read");
+    
+                    const now = new Date().toISOString();
+                    const title = popup.querySelector('#popupTitle').textContent;
+                    const message = popup.querySelector('#popupMessage').textContent;
+    
+                    newRead.innerHTML = `
+                        <h6 class="mb-1">${title}</h6>
+                        <small class="text-muted">${message}</small><br>
+                        <span class="badge bg-success text-white time-display" data-created="${now}">Just now</span>
+                        <button class="btn btn-sm btn-light position-absolute top-0 end-0" onclick="deleteNotification('${notificationId}', 'read')">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    `;
+    
+                    readContainer.prepend(newRead);
+    
+                    newRead.addEventListener('click', function () {
+                        showNotificationPopup(title, message, notificationId, 'read');
+                    });
+    
+                    formatTimeElements();
+                }
+            });
         }
     }
-    return cookieValue;
-}
     
-</script>
-
+    function deleteNotification(notificationId, tabType) {
+        if (confirm('Are you sure you want to delete this notification?')) {
+            fetch(`/delete-notification/${notificationId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({})
+            }).then(response => {
+                if (response.ok) {
+                    const el = document.querySelector(`[data-id="${notificationId}"]`);
+                    if (el) el.remove();
+    
+                    // Update notification count
+                    const unreadCount = document.querySelectorAll('#notiUnread .border-bottom').length;
+                    const badge = document.querySelector('.badge.rounded-pill.bg-danger');
+                    if (badge) {
+                        badge.textContent = unreadCount;
+                        if (unreadCount === 0) badge.remove();
+                    }
+    
+                    // Check if tabs are empty
+                    ['notiAll', 'notiRead', 'notiUnread'].forEach(tabId => {
+                        const tab = document.getElementById(tabId);
+                        if (tab.children.length === 0) {
+                            tab.innerHTML = "<p class='text-muted'>No notifications available.</p>";
+                        }
+                    });
+                }
+            });
+        }
+    }
+    
+    function attachNotificationClickHandlers() {
+        const notifications = document.querySelectorAll('.tab-content .border-bottom');
+        notifications.forEach(notification => {
+            const title = notification.querySelector('h6')?.textContent || '';
+            const message = notification.querySelector('small')?.textContent?.split(' - ')[0]?.trim() || '';
+            const notificationId = notification.dataset.id || '';
+            const tabType = notification.dataset.tab || '';
+    
+            // Avoid adding click listener to delete button
+            notification.querySelector('.btn-light')?.addEventListener('click', (e) => e.stopPropagation());
+    
+            notification.addEventListener('click', function (e) {
+                if (!e.target.closest('.btn-light')) {
+                    showNotificationPopup(title, message, notificationId, tabType);
+                }
+            });
+        });
+    }
+    
+    document.addEventListener('DOMContentLoaded', function () {
+        formatTimeElements();
+        attachNotificationClickHandlers();
+    });
+    
+    function clearAllNotifications() {
+        fetch("{% url 'supplier:clear_all_notifications' %}", {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": getCookie('csrftoken'),
+                "Content-Type": "application/json"
+            },
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    document.getElementById("notiAll").innerHTML = "<p class='text-muted'>No notifications available.</p>";
+                    document.getElementById("notiRead").innerHTML = "<p class='text-muted'>No read notifications.</p>";
+                    document.getElementById("notiUnread").innerHTML = "<p class='text-muted'>No unread notifications.</p>";
+                    const badge = document.querySelector('.badge.rounded-pill.bg-danger');
+                    if (badge) badge.remove();
+                }
+            });
+    }
+    
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+        
+    </script>
 
 </html>
