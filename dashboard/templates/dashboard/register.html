@@ -433,6 +433,10 @@
                     <div class="form-group">
                         <label for="email">Email <span style="color: red;">*</span></label>
                         <input type="email" name="email" id="email" class="input-field" placeholder="Your email" value="{{ form_data.email|default_if_none:'' }}" required>
+                        <div class="error-message" id="email_exists_error">
+                            Email already exists
+                        </div>
+                        
                         <div class="error-message" id="email_error">Please enter a valid email address</div>
                     </div>
 
@@ -669,6 +673,7 @@
     const passwordError = document.getElementById("password_error");
     const confirmPasswordError = document.getElementById("confirm_password_error");
     const recaptchaError = document.getElementById("recaptcha_error");
+    
 
     // Step 2 fields
     const currentPositionInput = document.getElementById("current_position");
@@ -738,7 +743,8 @@
     }
 
     // Client-side validation for Step 1
-    nextBtn.addEventListener("click", () => {
+    nextBtn.addEventListener("click", async () => {
+
         let isValid = true;
 
         // Reset error states
@@ -756,20 +762,54 @@
             lastNameError.style.display = "block";
             isValid = false;
         }
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+emailInput.classList.remove("input-error");
+emailError.style.display = "none";
+document.getElementById("email_exists_error").style.display = "none";
 
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailInput.value.trim() || !emailRegex.test(emailInput.value)) {
+if (!emailInput.value.trim() || !emailRegex.test(emailInput.value)) {
+    emailInput.classList.add("input-error");
+    emailError.style.display = "block";
+    isValid = false;
+} else {
+    try {
+        const res = await $.ajax({
+            url: "{% url 'dashboard:check_email' %}",
+            type: "POST",
+            dataType: "json",
+            data: {
+                email: emailInput.value,
+                csrfmiddlewaretoken: $('[name=csrfmiddlewaretoken]').val()
+            }
+        });
+
+        if (res.exists === true) {
             emailInput.classList.add("input-error");
-            emailError.style.display = "block";
+            document.getElementById("email_exists_error").style.display = "block";
             isValid = false;
         }
+    } catch (err) {
+        console.error("Email check failed", err);
+    }
+}
 
-        const phoneRegex = /^\+?[1-9]\d{1,14}$/;
-        if (!phoneInput.value.trim() || !phoneRegex.test(phoneInput.value)) {
-            phoneInput.classList.add("input-error");
-            phoneError.style.display = "block";
-            isValid = false;
-        }
+let rawPhone = phoneInput.value;
+let cleanPhone = rawPhone.replace(/\D/g, '');
+
+phoneInput.classList.remove("input-error");
+phoneError.style.display = "none";
+const phoneRegex = /^[6-9]\d{9}$/;
+
+if (!cleanPhone || !phoneRegex.test(cleanPhone)) {
+    phoneInput.classList.add("input-error");
+    phoneError.textContent = "Enter a valid mobile number";
+    phoneError.style.display = "block";
+    isValid = false;
+} else {
+    phoneInput.value = cleanPhone;
+}
+
+
 
         if (!passwordInput.value.trim()) {
             passwordInput.classList.add("input-error");
@@ -793,6 +833,16 @@
             recaptchaError.style.display = "block";
             isValid = false;
         }
+        function checkEmailExists(email) {
+    return $.ajax({
+        url: "{% url 'dashboard:check_email' %}",
+        type: "POST",
+        data: {
+            email: email,
+            csrfmiddlewaretoken: $('[name=csrfmiddlewaretoken]').val()
+        }
+    });
+}
 
         if (isValid) {
             step1.classList.add("hidden");

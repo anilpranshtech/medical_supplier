@@ -622,6 +622,10 @@ def get_country_codes(request, country_id):
     country_codes = CountryCode.objects.filter(country_id=country_id).order_by('code')
     data = [{'id': code.id, 'code': code.code, 'country': code.country.name if code.country else ''} for code in country_codes]
     return JsonResponse({'country_codes': data})
+def check_email(request):
+    email = request.POST.get('email')
+    exists = User.objects.filter(email=email).exists()
+    return JsonResponse({'exists': exists})
 # class ConfirmEmailView(View):
 #     def get(self, request, token):
 #         try:

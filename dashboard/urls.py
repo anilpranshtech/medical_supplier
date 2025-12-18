@@ -23,7 +23,8 @@ urlpatterns = [
     # user dashboard
     path('search-results-grid/', views.SearchResultsGridView.as_view(), name='search_results_grid'),
     path('search-results-list/', views.SearchResultsListView.as_view(), name='search_results_list'),
-    
+
+    path('check-email/', views.check_email, name='check_email'),
     path('search-suggestions/', views.SearchSuggestionsView.as_view(), name='search_suggestions'),
     path('product-detail/<int:pk>/', views.ProductDetailsView.as_view(), name='product_detail'),
     path('product/<int:pk>/registrations/', EventRegisteredDataView.as_view(), name='event_registered_data'),
