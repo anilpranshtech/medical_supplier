@@ -62,8 +62,12 @@
                 <tr>
                   <td style="padding: 12px; vertical-align: middle;">{{ city.name }}</td>
                   <td style="padding: 12px; vertical-align: middle;">
-                    {% if city.region %}
-                      {{ city.region.name }}
+                    {% if city %}
+                       {% for region in regions %}
+                        <option value="{{ region.id }}">
+                            {{ region.name }}
+                        </option>
+                    {% endfor %}
                     {% else %}
                       -
                     {% endif %}

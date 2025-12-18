@@ -3225,8 +3225,46 @@ class AdminVacationModeView(View):
     template_name = 'superuser/vacationmode.html'
 
     def get(self, request):
-        vacation_requests = VacationRequest.objects.all().order_by('-created_at')
-        return render(request, self.template_name, {'vacation_requests': vacation_requests})
+        queryset = VacationRequest.objects.all().order_by('-created_at')
+        search_query = self.request.GET.get('search_by', '')
+        if search_query:
+            queryset = queryset.filter(
+                Q(supplier__username__icontains=search_query) |
+                Q(supplier__email__icontains=search_query)
+            )
+
+        created_date = request.GET.get("created_date", "")
+        if created_date:
+            try:
+                start_str, end_str = created_date.split(" - ")
+
+                start_date = datetime.strptime(start_str, "%m/%d/%Y")
+                end_date = datetime.strptime(end_str, "%m/%d/%Y")
+                end_date = end_date.replace(hour=23, minute=59, second=59)
+
+                queryset = queryset.filter(
+                    created_at__range=(start_date, end_date)
+                )
+            except ValueError:
+                pass
+
+        sort_by = request.GET.get("sort_by", "desc_created")
+        if sort_by == "asc_created":
+            queryset = queryset.order_by("created_at")
+        else: 
+            queryset = queryset.order_by("-created_at")
+            
+
+        # ---------------- PAGINATION ----------------
+        paginator = Paginator(queryset, 10)
+        page_number = request.GET.get("page")
+        page_obj = paginator.get_page(page_number)
+        
+        return render(request, self.template_name, {
+            "vacation_requests": page_obj.object_list,
+            "page_obj": page_obj,
+        })
+        
 
     def post(self, request):
         request_id = request.POST.get('request_id')
@@ -3255,6 +3293,7 @@ class AdminVacationModeView(View):
             'success': True,
             'message': f"Vacation request has been {vacation_request.status.lower()}!"
         })
+        
 
 
 
@@ -3288,19 +3327,52 @@ class AdminVacationModeView(View):
 
 class TopSupplierListView(View):
     def get(self, request):
-
-        top_suppliers = (
-            SupplierProfile.objects.annotate(
-                order_count=Count(
-                    "user__brands__product__orderitem",
-                    distinct=True
-                )
+        # Annotate suppliers with order count
+        queryset = SupplierProfile.objects.annotate(
+            order_count=Count(
+                "user__brands__product__orderitem",
+                distinct=True
             )
-            .order_by("-order_count")
         )
 
+        # ---------------- SEARCH FILTER ----------------
+        search_query = self.request.GET.get('search_by', '')
+        if search_query:
+            queryset = queryset.filter(
+                Q(company_name__icontains=search_query) |
+                Q(user__email__icontains=search_query)
+            )
+
+        created_date = request.GET.get("created_date", "")
+        if created_date:
+            try:
+                start_str, end_str = created_date.split(" - ")
+
+                start_date = datetime.strptime(start_str, "%m/%d/%Y")
+                end_date = datetime.strptime(end_str, "%m/%d/%Y")
+                end_date = end_date.replace(hour=23, minute=59, second=59)
+
+                queryset = queryset.filter(
+                    user__date_joined__range=(start_date, end_date)
+                )
+            except ValueError:
+                pass
+
+        sort_by = request.GET.get("sort_by", "desc_created")
+        if sort_by == "asc_created":
+            queryset = queryset.order_by("user__date_joined")
+        else: 
+            queryset = queryset.order_by("-user__date_joined")
+            
+
+        # ---------------- PAGINATION ----------------
+        paginator = Paginator(queryset, 10)
+        page_number = request.GET.get("page")
+        page_obj = paginator.get_page(page_number)
+
         return render(request, "superuser/topsupplierlist.html", {
-            "top_suppliers": top_suppliers,
+            "top_suppliers": page_obj.object_list,
+            "page_obj": page_obj,
         })
 
 
@@ -4087,7 +4159,7 @@ class OriginCountryView(TemplateView):
                 )
             except ValueError:
                 pass
-        sort_by = self.request.GET.get("sort_by")
+        sort_by = self.request.GET.get("sort_by", "desc_created")
         if sort_by == "asc_created":
             countries = countries.order_by("created_at")
         else: 
@@ -4164,10 +4236,10 @@ class CountryView(ListView):
         sort_by = self.request.GET.get("sort_by")
         if sort_by == "asc_created":
             queryset = queryset.order_by("created_at")
-        elif sort_by == "desc_created":
+        else: 
             queryset = queryset.order_by("-created_at")
-        else:
-            queryset = queryset.order_by("order", "name_en") 
+        # else:
+        #     queryset = queryset.order_by("order", "name_en") 
 
         # ---- DATE RANGE FILTER ----
         created_date = self.request.GET.get("created_date", "")
@@ -4377,7 +4449,7 @@ class CityListView(ListView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx["regions"] = Region.objects.all()
+        ctx["regions"] = Regioncities.objects.all()
         return ctx
 
 

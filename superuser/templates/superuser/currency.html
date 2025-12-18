@@ -61,8 +61,8 @@
               <tbody class="fw-semibold text-gray-600" style="text-align: center;">
                 {% for c in currencies %}
                 <tr>
-                  <td style="padding: 12px; vertical-align: middle;">{{ c.name_en }}</td>
-                  <td style="padding: 12px; vertical-align: middle;">{{ c.code_en }}</td>
+                  <td style="padding: 12px; vertical-align: middle;">{{ c.name_en }}</td> 
+                  <td style="padding: 12px; vertical-align: middle;">{{ c.code_en }}</td> 
                   <td style="padding: 12px; vertical-align: middle;">{{ c.rate }}</td>
                   <td style="padding: 12px; vertical-align: middle;">{{ c.country }}</td>
                   <td style="padding: 12px; vertical-align: middle;">{{ c.status }}</td>
@@ -249,22 +249,27 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if(!nameFld.value.trim()){
             nameError.textContent = "Currency Name is required";
+            nameError.style.display = "block";
             valid = false;
         }
         if(!codeFld.value.trim()){
             codeError.textContent = "Code is required";
+            codeError.style.display = "block";
             valid = false;
         }
         const rateVal = parseFloat(rateFld.value);
         if(!rateFld.value){
             rateError.textContent = "Rate is required";
+            rateError.style.display = "block";
             valid = false;
         } else if(isNaN(rateVal) || rateVal <= 0){
             rateError.textContent = "Rate must be greater than 0";
+            rateError.style.display = "block";
             valid = false;
         }
         if(!countryFld.value){
             countryError.textContent = "Country is required";
+            countryError.style.display = "block";
             valid = false;
         }
         if(!statusFld.value){
