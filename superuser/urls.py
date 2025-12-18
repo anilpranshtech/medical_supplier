@@ -68,7 +68,8 @@ urlpatterns = [
     path('rfq/<int:pk>/quote/', AdminQuotationUpdateView.as_view(), name='rfq_quote'),
     path('most-viewed-products/', AdminMostViewedProductsView.as_view(), name='view_product'),
    
-    path('rating/', RatingView.as_view(), name='rating_list'),
+     path('rating/', RatingView.as_view(), name='rating_list'),
+     path('rating/<int:product_id>/', ProductRatingListView.as_view(), name='product_ratings'),
     #notification
     path("notifications/", NotificationListView.as_view(), name="notifications_list"),
     path("notifications/add/", NotificationCreateView.as_view(), name="add_notification"),

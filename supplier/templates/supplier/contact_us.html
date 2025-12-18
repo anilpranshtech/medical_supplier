@@ -1,0 +1,237 @@
+{% extends 'supplier/base.html' %}
+{% load static %}
+
+{% block title %}
+Contact Us
+{% endblock title %}
+
+{% block content %}
+
+<div class="app-main flex-column flex-row-fluid" id="kt_app_main">
+    <div class="d-flex flex-column flex-column-fluid">
+        <div id="kt_app_content" class="app-content flex-column-fluid mx-5">
+            <div id="kt_app_content_container" class="app-container container-fluid">
+
+                <!-- Page Header -->
+                <div class="card mb-7">
+                    <div class="card-body">
+                        <h2 class="text-gray-900 fw-bold fs-2 mb-2">Contact Us</h2>
+                        <p class="text-gray-600 fs-6 mb-0">Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.</p>
+                    </div>
+                </div>
+
+                <div class="row g-7">
+                    <!-- Contact Form Card -->
+                    <div class="col-lg-8">
+                        <div class="card card-flush">
+                            <div class="card-header align-items-center py-5">
+                                <div class="card-title">
+                                    <h3 class="fw-bold text-gray-900 fs-4 mb-0">Send Us a Message</h3>
+                                </div>
+                            </div>
+
+                            <div class="card-body pt-5">
+                                <form method="post" id="contact_form">
+                                    {% csrf_token %}
+
+                                    <!-- Name and Email Row -->
+                                    <div class="row g-5 mb-7">
+                                        <div class="col-md-6">
+                                            <label class="fs-6 form-label fw-bold text-gray-900 required">Full Name</label>
+                                            {{ form.full_name }}
+                                            {% if form.full_name.errors %}
+                                                <div class="text-danger fs-7 mt-1">{{ form.full_name.errors.0 }}</div>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label class="fs-6 form-label fw-bold text-gray-900 required">Email Address</label>
+                                            {{ form.email }}
+                                            {% if form.email.errors %}
+                                                <div class="text-danger fs-7 mt-1">{{ form.email.errors.0 }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <!-- Phone and Subject Row -->
+                                    <div class="row g-5 mb-7">
+                                        <div class="col-md-6">
+                                            <label class="fs-6 form-label fw-bold text-gray-900 required">Phone Number</label>
+                                            {{ form.phone }}
+                                            {% if form.phone.errors %}
+                                                <div class="text-danger fs-7 mt-1">{{ form.phone.errors.0 }}</div>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label class="fs-6 form-label fw-bold text-gray-900 required">Subject</label>
+                                            {{ form.subject }}
+                                            {% if form.subject.errors %}
+                                                <div class="text-danger fs-7 mt-1">{{ form.subject.errors.0 }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <!-- Message Row -->
+                                    <div class="mb-7">
+                                        <label class="fs-6 form-label fw-bold text-gray-900 required">Message</label>
+                                        {{ form.message }}
+                                        {% if form.message.errors %}
+                                            <div class="text-danger fs-7 mt-1">{{ form.message.errors.0 }}</div>
+                                        {% endif %}
+                                        <small class="form-text text-muted">Please provide detailed information about your inquiry</small>
+                                    </div>
+
+                                    <!-- Submit Button -->
+                                    <div class="d-flex justify-content-end">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-send-fill fs-5 me-2"></i>
+                                            Send Message
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact Information Card -->
+                    <div class="col-lg-4">
+                        <div class="card card-flush mb-7">
+                            <div class="card-header align-items-center py-5">
+                                <div class="card-title">
+                                    <h3 class="fw-bold text-gray-900 fs-4 mb-0">Contact Information</h3>
+                                </div>
+                            </div>
+
+                            <div class="card-body pt-5">
+                                <!-- Office Address -->
+                                <div class="d-flex align-items-start mb-7">
+                                    <div class="symbol symbol-45px me-5">
+                                        <div class="symbol-label bg-light-primary">
+                                            <i class="bi bi-geo-alt-fill fs-2 text-primary"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h4 class="fs-6 fw-bold text-gray-900 mb-2">Office Address</h4>
+                                        <p class="text-gray-600 fs-7 mb-0">
+                                            123 Business Street<br>
+                                            Ahmedabad, Gujarat 380001<br>
+                                            India
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Email -->
+                                <div class="d-flex align-items-start mb-7">
+                                    <div class="symbol symbol-45px me-5">
+                                        <div class="symbol-label bg-light-success">
+                                            <i class="bi bi-envelope-fill fs-2 text-success"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h4 class="fs-6 fw-bold text-gray-900 mb-2">Email Address</h4>
+                                        <a href="mailto:info@company.com" class="text-gray-600 fs-7 text-hover-primary">
+                                            info@company.com<br>
+                                            support@company.com
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <!-- Phone -->
+                                <div class="d-flex align-items-start">
+                                    <div class="symbol symbol-45px me-5">
+                                        <div class="symbol-label bg-light-info">
+                                            <i class="bi bi-telephone-fill fs-2 text-info"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h4 class="fs-6 fw-bold text-gray-900 mb-2">Phone Number</h4>
+                                        <a href="tel:+911234567890" class="text-gray-600 fs-7 text-hover-primary">
+                                            +91 123 456 7890<br>
+                                            +91 098 765 4321
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Business Hours Card -->
+                        <div class="card card-flush">
+                            <div class="card-header align-items-center py-5">
+                                <div class="card-title">
+                                    <h3 class="fw-bold text-gray-900 fs-4 mb-0">Business Hours</h3>
+                                </div>
+                            </div>
+
+                            <div class="card-body pt-5">
+                                <div class="d-flex justify-content-between align-items-center mb-4">
+                                    <span class="text-gray-600 fs-7">Monday - Friday</span>
+                                    <span class="text-gray-900 fw-bold fs-7">9:00 AM - 6:00 PM</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mb-4">
+                                    <span class="text-gray-600 fs-7">Saturday</span>
+                                    <span class="text-gray-900 fw-bold fs-7">10:00 AM - 4:00 PM</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-gray-600 fs-7">Sunday</span>
+                                    <span class="text-danger fw-bold fs-7">Closed</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block page_only_scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const formInputs = document.querySelectorAll('#contact_form input, #contact_form textarea');
+        formInputs.forEach(input => {
+            input.classList.add('form-control', 'form-control-solid');
+            if (!input.placeholder) {
+                const label = input.closest('.col-md-6, .mb-7')?.querySelector('label');
+                if (label) {
+                    const labelText = label.textContent.trim().replace('*', '');
+                    input.placeholder = `Enter ${labelText.toLowerCase()}`;
+                }
+            }
+        });
+
+        // Form validation
+        const contactForm = document.getElementById('contact_form');
+        if (contactForm) {
+            contactForm.addEventListener('submit', function(e) {
+                let isValid = true;
+                const requiredFields = contactForm.querySelectorAll('[required]');
+                
+                requiredFields.forEach(field => {
+                    if (!field.value.trim()) {
+                        isValid = false;
+                        field.classList.add('is-invalid');
+                    } else {
+                        field.classList.remove('is-invalid');
+                    }
+                });
+
+                if (!isValid) {
+                    e.preventDefault();
+                    alert('Please fill in all required fields.');
+                }
+            });
+        }
+
+        // Remove invalid class on input
+        document.querySelectorAll('#contact_form input, #contact_form textarea').forEach(input => {
+            input.addEventListener('input', function() {
+                this.classList.remove('is-invalid');
+            });
+        });
+    });
+</script>
+{% endblock page_only_scripts %}

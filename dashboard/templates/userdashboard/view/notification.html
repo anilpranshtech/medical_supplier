@@ -356,23 +356,31 @@ function markNotificationAsRead(notificationId, title, message) {
             const unreadEl = document.querySelector(`#notiUnread [data-notification-id="${notificationId}"]`);
             if (unreadEl) unreadEl.remove();
             const readTab = document.getElementById("notiRead");
-            const existingRead = readTab.querySelector(`[data-notification-id="${notificationId}"]`);
-            if (!existingRead) {
-                const newRead = document.createElement("div");
-                newRead.className = "notification-item read";
-                newRead.setAttribute("data-id", notificationId);
-                newRead.setAttribute("data-tab", "read");
-                newRead.setAttribute("data-notification-id", notificationId);
-                newRead.setAttribute("data-title", title);
-                newRead.setAttribute("data-message", message);
-                newRead.setAttribute("data-is-read", "true");
-                const now = new Date().toISOString();
-                newRead.innerHTML = `
-                    <h6>${title}</h6>
-                    <small class="long-message">${message}</small>
-                    <span class="time-display" data-created="${now}">Just now</span>
-                    <button class="delete-btn" onclick="deleteNotification('${notificationId}')">&times;</button>
-                `;
+
+/* 🔥 REMOVE "No read notifications." PLACEHOLDER */
+const emptyReadMsg = readTab.querySelector('.notification-item.read:not([data-notification-id])');
+if (emptyReadMsg) emptyReadMsg.remove();
+
+const existingRead = readTab.querySelector(`[data-notification-id="${notificationId}"]`);
+
+if (!existingRead) {
+    const newRead = document.createElement("div");
+    newRead.className = "notification-item read";
+    newRead.setAttribute("data-id", notificationId);
+    newRead.setAttribute("data-tab", "read");
+    newRead.setAttribute("data-notification-id", notificationId);
+    newRead.setAttribute("data-title", title);
+    newRead.setAttribute("data-message", message);
+    newRead.setAttribute("data-is-read", "true");
+
+    const now = new Date().toISOString();
+
+    newRead.innerHTML = `
+        <h6>${title}</h6>
+        <small class="long-message">${message}</small>
+        <span class="time-display" data-created="${now}">Just now</span>
+        <button class="delete-btn" onclick="deleteNotification('${notificationId}')">&times;</button>
+    `;
                 readTab.insertBefore(newRead, readTab.firstChild);
                 const allTab = document.getElementById("notiAll");
                 const allEl = allTab.querySelector(`[data-notification-id="${notificationId}"]`);

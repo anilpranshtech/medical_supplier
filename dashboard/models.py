@@ -1409,17 +1409,16 @@ class Coupon(models.Model):
         default=1,
         verbose_name="Count Of Use"
     )
-    start_date = models.DateField(
-        verbose_name="Start Date"
+    start_datetime = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Start Date & Time"
     )
-    start_time = models.TimeField(
-        verbose_name="Start Time"
-    )
-    end_date = models.DateField(
-        verbose_name="End Date"
-    )
-    end_time = models.TimeField(
-        verbose_name="End Time"
+
+    end_datetime = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="End Date & Time"
     )
     can_be_used_with_promotions = models.BooleanField(
         default=False,
@@ -1438,13 +1437,11 @@ class Coupon(models.Model):
     def is_valid_now(self):
         """Check if coupon is currently active"""
         now = timezone.now()
-        start_dt = timezone.make_aware(
-            timezone.datetime.combine(self.start_date, self.start_time)
-        )
-        end_dt = timezone.make_aware(
-            timezone.datetime.combine(self.end_date, self.end_time)
-        )
-        return start_dt <= now <= end_dt
+
+        if not self.start_datetime or not self.end_datetime:
+            return False
+
+        return self.start_datetime <= now <= self.end_datetime
 
     def calculate_discount(self, order_total):
         """Return discount amount based on type."""

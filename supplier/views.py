@@ -45,6 +45,7 @@ from django.shortcuts import get_object_or_404
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from xhtml2pdf import pisa
+from dashboard.forms import ContactForm    
 
 
 logger = logging.getLogger(__name__)
@@ -2286,19 +2287,46 @@ class RatingView(OnboardingRequiredMixin,TemplateView):
         return context
 class ProductRatingListView(TemplateView):
     template_name = "supplier/product_ratings.html"
+    paginate_by = 10
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        product_id = self.kwargs['product_id']
+        product = get_object_or_404(Product, id=self.kwargs['product_id'])
 
-        product = Product.objects.get(id=product_id)
-        ratings = RatingReview.objects.filter(product=product)
+        ratings_qs = RatingReview.objects.filter(product=product).select_related('user')
+        search_by = self.request.GET.get('search_by')
+        if search_by:
+            ratings_qs = ratings_qs.filter(
+                Q(user__username__icontains=search_by) |
+                Q(review__icontains=search_by)
+            )
+        created_date = self.request.GET.get('created_date')
+        if created_date:
+            try:
+                start_date, end_date = created_date.split(' - ')
+                start_date = datetime.strptime(start_date, '%m/%d/%Y')
+                end_date = datetime.strptime(end_date, '%m/%d/%Y')
+                ratings_qs = ratings_qs.filter(
+                    created_at__date__range=[start_date.date(), end_date.date()]
+                )
+            except ValueError:
+                pass
+        sort_by = self.request.GET.get('sort_by', 'desc_created')
+        ratings_qs = ratings_qs.order_by(
+            '-created_at' if sort_by == 'desc_created' else 'created_at'
+        )
+        paginator = Paginator(ratings_qs, self.paginate_by)
+        page_obj = paginator.get_page(self.request.GET.get('page'))
 
         context.update({
             "product": product,
-            "ratings": ratings
+            "ratings": page_obj,
+            "page_obj": page_obj,
         })
         return context
+
+
+
 
 class   SupplierReturnsView(LoginRequiredMixin, TemplateView):
 
@@ -2850,77 +2878,152 @@ class ShippingDeleteView(View):
         shipping.delete()
         return JsonResponse({'status':'success','message':'Shipping deleted'})
 
-class SupplierCouponsView(TemplateView):
+class CouponsView(TemplateView):
     template_name = "supplier/coupons.html"
-
     def dispatch(self, request, *args, **kwargs):
         if not hasattr(request.user, 'supplierprofile'):
-            return redirect('supplier:dashboard')  
+            return redirect('supplier:supplier')
         return super().dispatch(request, *args, **kwargs)
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         coupons_qs = Coupon.objects.select_related("created_by").order_by("-id")
+        search_by = self.request.GET.get("search_by", "").strip()
+        if search_by:
+            coupons_qs = coupons_qs.filter(
+                Q(code__icontains=search_by) |
+                Q(coupon_type__icontains=search_by) |
+                Q(discount_type__icontains=search_by)
+            )
+        created_date = self.request.GET.get("created_date", "").strip()
+        if created_date:
+            try:
+                start_str, end_str = created_date.split(" - ")
+
+                start_date = timezone.make_aware(
+                    datetime.strptime(start_str, "%m/%d/%Y")
+                )
+
+                end_date = timezone.make_aware(
+                    datetime.strptime(end_str, "%m/%d/%Y")
+                ).replace(hour=23, minute=59, second=59)
+
+                coupons_qs = coupons_qs.filter(
+                    created_at__range=(start_date, end_date)
+                )
+            except ValueError:
+                pass  
+
+        # ---------------- PAGINATION ----------------
         paginator = Paginator(coupons_qs, 10)
-        page = self.request.GET.get("page", 1)
-        coupons = paginator.get_page(page)
+        page_number = self.request.GET.get("page", 1)
+        coupons = paginator.get_page(page_number)
+
+        # ---------------- PRODUCTS ----------------
         supplier_products = Product.objects.filter(
             created_by=self.request.user
-        ).select_related('category', 'brand')
+        ).select_related("category", "brand")
+
+        # ---------------- CLIENTS ----------------
         buyer_ids = OrderItem.objects.filter(
             product__created_by=self.request.user
-        ).values_list('order__user_id', flat=True).distinct()
+        ).values_list("order__user_id", flat=True).distinct()
 
-        clients = User.objects.filter(id__in=buyer_ids) if buyer_ids else User.objects.none()
+        clients = (
+            User.objects.filter(id__in=buyer_ids)
+            if buyer_ids else User.objects.none()
+        )
 
+        # ---------------- CONTEXT ----------------
         context.update({
             "coupons": coupons,
             "page_obj": coupons,
             "products": supplier_products,
-            "clients": clients or User.objects.none(),  
+            "clients": clients,
+            "search_placeholder_text": "Search Coupons",
+            "search_help_text": "Choices: Code, Coupon Type, Discount Type",
+            "show_advance_search_link": True,
+            "created_date": created_date,
         })
-        return context
 
+        return context
     def post(self, request, *args, **kwargs):
         try:
-            code = request.POST.get("code").strip().upper()
-            if Coupon.objects.filter(code=code).exists():
-                return JsonResponse({"status": "error", "message": "Coupon code already exists!"}, status=400)
+            code = request.POST.get("code", "").strip().upper()
 
+            if Coupon.objects.filter(code=code).exists():
+                return JsonResponse(
+                    {"status": "error", "message": "Coupon code already exists!"},
+                    status=400
+                )
+            start_datetime_str = request.POST.get("start_datetime", "").strip()
+            end_datetime_str = request.POST.get("end_datetime", "").strip()
+
+            if not start_datetime_str or not end_datetime_str:
+                return JsonResponse(
+                    {"status": "error", "message": "Start and End datetime required"},
+                    status=400
+                )
+
+            start_datetime = timezone.make_aware(
+                datetime.strptime(start_datetime_str, "%Y-%m-%dT%H:%M")
+            )
+            end_datetime = timezone.make_aware(
+                datetime.strptime(end_datetime_str, "%Y-%m-%dT%H:%M")
+            )
             coupon = Coupon.objects.create(
                 code=code,
                 coupon_type=request.POST.get("coupon_type"),
                 discount_type=request.POST.get("discount_type"),
                 discount=Decimal(request.POST.get("discount", "0")),
                 max_discount=Decimal(request.POST.get("max_discount", "0")),
-                minimum_purchase_amount=Decimal(request.POST.get("minimum_purchase_amount", "0")),
+                minimum_purchase_amount=Decimal(
+                    request.POST.get("minimum_purchase_amount", "0")
+                ),
                 count_of_use=int(request.POST.get("count_of_use", 1)),
-                filter_by_orders_count=int(request.POST.get("filter_by_orders_count", 0)),
-                filter_by_orders_amount=Decimal(request.POST.get("filter_by_orders_amount", "0")),
-                start_date=request.POST.get("start_date"),
-                end_date=request.POST.get("end_date"),
-                start_time=request.POST.get("start_time", "00:00"),
-                end_time=request.POST.get("end_time", "23:59"),
-                can_be_used_with_promotions=request.POST.get("can_be_used_with_promotions") == "true",
+                filter_by_orders_count=int(
+                    request.POST.get("filter_by_orders_count", 0)
+                ),
+                filter_by_orders_amount=Decimal(
+                    request.POST.get("filter_by_orders_amount", "0")
+                ),
+                start_datetime=start_datetime,
+                end_datetime=end_datetime,
+                can_be_used_with_promotions=(
+                    request.POST.get("can_be_used_with_promotions") == "true"
+                ),
                 created_by=request.user,
             )
-
-            # Assign products & clients
             product_ids = request.POST.getlist("product_ids[]")
             client_ids = request.POST.getlist("client_ids[]")
 
             if product_ids:
-                coupon.products.set(Product.objects.filter(id__in=product_ids, created_by=request.user))
+                coupon.products.set(
+                    Product.objects.filter(
+                        id__in=product_ids,
+                        created_by=request.user
+                    )
+                )
+
             if client_ids:
                 coupon.client.set(User.objects.filter(id__in=client_ids))
 
-            return JsonResponse({"status": "success", "message": "Coupon created successfully!"})
+            return JsonResponse(
+                {"status": "success", "message": "Coupon created successfully!"}
+            )
+
+        except ValueError as e:
+            return JsonResponse(
+                {"status": "error", "message": f"Invalid value: {str(e)}"},
+                status=400
+            )
         except Exception as e:
-            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+            return JsonResponse(
+                {"status": "error", "message": str(e)},
+                status=500
+            )
 
 
-@login_required
-def supplier_edit_coupon(request):
+def edit_coupon(request):
     if request.method != 'POST':
         return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
 
@@ -2928,6 +3031,21 @@ def supplier_edit_coupon(request):
     coupon = get_object_or_404(Coupon, id=coupon_id)
 
     try:
+        start_datetime_str = request.POST.get("start_datetime", "").strip()
+        end_datetime_str = request.POST.get("end_datetime", "").strip()
+        
+        if not start_datetime_str or not end_datetime_str:
+            return JsonResponse(
+                {"status": "error", "message": "Start date/time and end date/time are required"},
+                status=400
+            )
+        start_datetime = timezone.make_aware(
+            datetime.strptime(start_datetime_str, "%Y-%m-%dT%H:%M")
+        )
+        end_datetime = timezone.make_aware(
+            datetime.strptime(end_datetime_str, "%Y-%m-%dT%H:%M")
+        )
+        
         coupon.code = request.POST.get('code').strip().upper()
         coupon.coupon_type = request.POST.get('coupon_type')
         coupon.discount_type = request.POST.get('discount_type')
@@ -2937,10 +3055,8 @@ def supplier_edit_coupon(request):
         coupon.count_of_use = int(request.POST.get('count_of_use', 1))
         coupon.filter_by_orders_count = int(request.POST.get('filter_by_orders_count', 0))
         coupon.filter_by_orders_amount = Decimal(request.POST.get('filter_by_orders_amount', '0'))
-        coupon.start_date = request.POST.get('start_date')
-        coupon.end_date = request.POST.get('end_date')
-        coupon.start_time = request.POST.get('start_time') or "00:00"
-        coupon.end_time = request.POST.get('end_time') or "23:59"
+        coupon.start_datetime = start_datetime
+        coupon.end_datetime = end_datetime
         coupon.can_be_used_with_promotions = request.POST.get('can_be_used_with_promotions') == 'true'
         coupon.save()
 
@@ -2952,12 +3068,13 @@ def supplier_edit_coupon(request):
         coupon.client.set(User.objects.filter(id__in=client_ids))
 
         return JsonResponse({'status': 'success', 'message': 'Coupon updated successfully!'})
+    except ValueError as e:
+        return JsonResponse({'status': 'error', 'message': f'Invalid datetime format: {str(e)}'}, status=400)
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 
-@login_required
-def supplier_delete_coupon(request):
+def delete_coupon(request):
     if request.method == 'POST':
         coupon_id = request.POST.get('coupon_id')
         coupon = get_object_or_404(Coupon, id=coupon_id)
@@ -2966,8 +3083,7 @@ def supplier_delete_coupon(request):
     return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
 
 
-@login_required
-def supplier_coupon_details(request, coupon_id):
+def coupon_details(request, coupon_id):
     coupon = get_object_or_404(Coupon, id=coupon_id)
 
     product_ids = list(coupon.products.filter(created_by=request.user).values_list('id', flat=True))
@@ -3345,3 +3461,18 @@ def supplier_delete_basket_promotion(request, pk):
         return JsonResponse({'success': False, 'msg': 'Not found'})
     except Exception as e:
         return JsonResponse({'success': False, 'msg': str(e)})
+class SupplierContactUsView(FormView):
+    template_name = "supplier/contact_us.html"
+    form_class = ContactForm
+    success_url = reverse_lazy('supplier:contact_us')
+
+    def form_valid(self, form):
+        form.save()
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['contact_info'] = Contact.objects.filter(
+            display_phone__isnull=False
+        ).first()
+        return context

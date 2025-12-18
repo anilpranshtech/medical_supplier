@@ -8,6 +8,7 @@
         margin-left: 3px;
         font-weight: bold;
     }
+
 </style>
 
 <div class="app-main flex-column flex-row-fluid" id="kt_app_main">
@@ -26,23 +27,26 @@
                                     <label class="form-label">
                                         From Date <span class="required-star">*</span>
                                     </label>
-                                    <input type="date" name="from_date" class="form-control" required>
+                                    <input type="date" name="from_date" id="from_date" class="form-control" required>
+                                    <small class="text-danger d-none" id="from_date_error"></small>
                                 </div>
-
+                            
                                 <div class="col-md-4">
                                     <label class="form-label">
                                         To Date <span class="required-star">*</span>
                                     </label>
-                                    <input type="date" name="to_date" class="form-control" required>
+                                    <input type="date" name="to_date" id="to_date" class="form-control" required>
+                                    <small class="text-danger d-none" id="to_date_error"></small>
                                 </div>
-
+                            
                                 <div class="col-md-4">
                                     <label class="form-label">
                                         Reason <span class="required-star">*</span>
                                     </label>
-                                    <textarea name="reason" class="form-control" rows="2" placeholder="Reason for vacation" required></textarea>
+                                    <textarea name="reason" class="form-control" rows="2" required></textarea>
                                 </div>
                             </div>
+                            
 
                             <button type="submit" class="btn btn-primary  btn-with-loader">Submit Request</button>
                         </form>
@@ -100,4 +104,63 @@
     </div>
 </div>
 <script src="{% static 'js/buttonLoader.js' %}"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const fromDate = document.getElementById("from_date");
+        const toDate = document.getElementById("to_date");
+    
+        const fromDateError = document.getElementById("from_date_error");
+        const toDateError = document.getElementById("to_date_error");
+    
+        const form = fromDate.closest("form");
+    
+        const today = new Date().toISOString().split("T")[0];
+    
+        fromDate.min = today;
+        toDate.min = today;
+    
+        fromDate.addEventListener("change", function () {
+            resetErrors();
+            toDate.min = fromDate.value;
+            toDate.value = "";
+        });
+    
+        form.addEventListener("submit", function (e) {
+            let valid = true;
+            resetErrors();
+    
+            if (fromDate.value < today) {
+                showError(fromDate, fromDateError, "From date must be today or a future date.");
+                valid = false;
+            }
+    
+            if (toDate.value < fromDate.value) {
+                showError(toDate, toDateError, "To date cannot be earlier than From date.");
+                valid = false;
+            }
+    
+            if (!valid) {
+                e.preventDefault();
+            }
+        });
+    
+        function showError(input, errorElement, message) {
+            input.classList.add("is-invalid");
+            errorElement.textContent = message;
+            errorElement.classList.remove("d-none");
+        }
+    
+        function resetErrors() {
+            fromDate.classList.remove("is-invalid");
+            toDate.classList.remove("is-invalid");
+    
+            fromDateError.classList.add("d-none");
+            toDateError.classList.add("d-none");
+    
+            fromDateError.textContent = "";
+            toDateError.textContent = "";
+        }
+    });
+    </script>
+    
 {% endblock %}

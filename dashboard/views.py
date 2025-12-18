@@ -441,7 +441,7 @@ class RegistrationView(View):
         context = {
             'form_data': {},
             'nationalities': Country.objects.all().order_by('name'),
-            'residencies': Residency.objects.all(),
+            # 'residencies': Residency.objects.all(),
             'country_codes': CountryCode.objects.all(),
             'specialities': Speciality.objects.all(),
         }
@@ -576,7 +576,7 @@ class RegistrationView(View):
                     nationality = Country.objects.filter(id=data.get('nationality')).first()
                     state = State.objects.filter(id=data.get('state')).first() if data.get('state') else None
                     city = City.objects.filter(id=data.get('city')).first() if data.get('city') else None
-                    residency = Residency.objects.filter(id=data.get('residency')).first()
+                    # residency = Residency.objects.filter(id=data.get('residency')).first()
                     country_code = CountryCode.objects.filter(id=data.get('country_code')).first()
                     speciality = Speciality.objects.filter(id=data.get('speciality')).first()
                     RetailProfile.objects.create(
@@ -587,7 +587,7 @@ class RegistrationView(View):
                         nationality=nationality,
                         state=state,         
                         city=city,
-                        residency=residency,
+                        # residency=residency,
                         country_code=country_code,
                         speciality=speciality,
                     )
@@ -616,8 +616,12 @@ def get_states(request, country_id):
 def get_cities(request, state_id):
     cities = City.objects.filter(state_id=state_id).order_by('name')
     data = [{'id': city.id, 'name': city.name} for city in cities]
-    
     return JsonResponse({'cities': data})
+def get_country_codes(request, country_id):
+    """Fetch country codes based on selected nationality/country"""
+    country_codes = CountryCode.objects.filter(country_id=country_id).order_by('code')
+    data = [{'id': code.id, 'code': code.code, 'country': code.country.name if code.country else ''} for code in country_codes]
+    return JsonResponse({'country_codes': data})
 # class ConfirmEmailView(View):
 #     def get(self, request, token):
 #         try:
@@ -1568,64 +1572,65 @@ class ShoppingCartView(LoginRequiredMixin, TemplateView):
         applied_coupon_data = None
         has_discount = False
         session_coupon = self.request.session.get('applied_coupon')
-        
-        if session_coupon and cart_items.exists():
+
+        # Recalculate coupon dynamically
+        if session_coupon:
             try:
                 coupon = Coupon.objects.get(code__iexact=session_coupon['code'])
-                if not coupon.is_valid_now():
-                    if 'applied_coupon' in self.request.session:
-                        del self.request.session['applied_coupon']
-                else:
-                    if coupon.client.exists() and user not in coupon.client.all():
-                        if 'applied_coupon' in self.request.session:
-                            del self.request.session['applied_coupon']
+
+                if coupon.is_valid_now() and (not coupon.client.exists() or user in coupon.client.all()):
+                    eligible_product_ids = coupon.products.values_list('id', flat=True)
+                    if eligible_product_ids.exists():
+                        eligible_cart_items = cart_items.filter(product_id__in=eligible_product_ids)
                     else:
-                        eligible_product_ids = coupon.products.values_list('id', flat=True)
-                        if eligible_product_ids.exists():
-                            eligible_cart_items = cart_items.filter(product_id__in=eligible_product_ids)
-                        else:
-                            eligible_cart_items = cart_items
-                        
-                        if not eligible_cart_items.exists():
-                            if 'applied_coupon' in self.request.session:
-                                del self.request.session['applied_coupon']
-                        else:
-                            eligible_total = sum(item.get_total_price() for item in eligible_cart_items)
-                            if eligible_total < coupon.minimum_purchase_amount:
+                        eligible_cart_items = cart_items
+
+                    if eligible_cart_items.exists():
+                        eligible_total = sum(item.get_total_price() for item in eligible_cart_items)
+                        if eligible_total >= coupon.minimum_purchase_amount:
+                            used_count = user.applied_coupons.filter(id=coupon.id).count()
+                            if used_count < coupon.count_of_use:
+                                discount_amount = coupon.calculate_discount(Decimal(eligible_total))
+                                applied_coupon_data = {
+                                    'code': coupon.code,
+                                    'discount_amount': str(discount_amount),
+                                }
+                                has_discount = discount_amount > Decimal('0.00')
+                            else:
                                 if 'applied_coupon' in self.request.session:
                                     del self.request.session['applied_coupon']
-                            else:
-                                used_count = user.applied_coupons.filter(id=coupon.id).count()
-                                if used_count >= coupon.count_of_use:
-                                    if 'applied_coupon' in self.request.session:
-                                        del self.request.session['applied_coupon']
-                                else:
-                                    discount_amount = coupon.calculate_discount(Decimal(eligible_total))
-                                    applied_coupon_data = {
-                                        'code': coupon.code,
-                                        'discount_amount': str(discount_amount),
-                                    }
-                                    has_discount = discount_amount > Decimal('0.00')
-                                    
+                        else:
+                            if 'applied_coupon' in self.request.session:
+                                del self.request.session['applied_coupon']
+                    else:
+                        if 'applied_coupon' in self.request.session:
+                            del self.request.session['applied_coupon']
+                else:
+                    if 'applied_coupon' in self.request.session:
+                        del self.request.session['applied_coupon']
+
             except Coupon.DoesNotExist:
                 if 'applied_coupon' in self.request.session:
                     del self.request.session['applied_coupon']
+
         final_total = total - discount_amount
 
+        # Pagination
         paginator = Paginator(cart_items, 5)
         page_number = self.request.GET.get('page')
         page_obj = paginator.get_page(page_number)
 
-        context['cart_items'] = page_obj
-        context['page_obj'] = page_obj
-        context['subtotal'] = "{:.2f}".format(total)
-        context['discount_amount'] = "{:.2f}".format(discount_amount)
-        context['final_total'] = "{:.2f}".format(final_total)
-        context['applied_coupon'] = applied_coupon_data
-        context['has_discount'] = has_discount
+        context.update({
+            'cart_items': page_obj,
+            'page_obj': page_obj,
+            'subtotal': "{:.2f}".format(total),
+            'discount_amount': "{:.2f}".format(discount_amount),
+            'final_total': "{:.2f}".format(final_total),
+            'applied_coupon': applied_coupon_data,
+            'has_discount': has_discount,
+        })
 
         return context
-
 
 @require_POST
 def apply_coupon(request):

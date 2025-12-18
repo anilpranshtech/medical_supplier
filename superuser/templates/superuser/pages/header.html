@@ -130,19 +130,21 @@
                                 <div class="d-flex flex-column">
                                     <div class="fw-bold d-flex align-items-center fs-5" style="white-space: nowrap;">
                                         {{ request.user.first_name }} {{ request.user.last_name }}
-                                        <span class="badge badge-light-success fw-bold ms-2" style="font-size: 10px; padding: 2px 6px;">
+                                        <span class="badge badge-light-success ms-2"
+                                              style="font-size: 7px; padding: 0 3px; line-height: 1;">
                                             {% if request.user.is_superuser %}
                                                 SuperUser
                                             {% else %}
                                                 Staff
                                             {% endif %}
                                         </span>
-                                        
                                     </div>
+                                    
                                     
 
                                     <a href="#" class="fw-semibold text-muted text-hover-primary fs-7">
-                                        {{request.user}} </a>
+                                        {{ request.user.email }}
+                                    </a>
                                 </div>
                             </div>
                         </div>

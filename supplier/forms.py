@@ -261,6 +261,7 @@ class PickupandShipping(forms.ModelForm):
         super().__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
             field.required = True
+        self.fields['support_pickup'].required = False
     
     def clean_zip_code(self):
         value = self.cleaned_data.get("zip_code", "").strip()
