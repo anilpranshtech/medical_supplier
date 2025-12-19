@@ -20,18 +20,17 @@ urlpatterns = [
     path('api/states/<int:country_id>/', views.get_states, name='get_states'),
     path('api/cities/<int:state_id>/', views.get_cities, name='get_cities'),
     path('api/country-codes/<int:country_id>/', views.get_country_codes, name='get_country_codes'),
+    path('check-email/', views.check_email, name='check_email'),
     # user dashboard
     path('search-results-grid/', views.SearchResultsGridView.as_view(), name='search_results_grid'),
     path('search-results-list/', views.SearchResultsListView.as_view(), name='search_results_list'),
-
-    path('check-email/', views.check_email, name='check_email'),
     path('search-suggestions/', views.SearchSuggestionsView.as_view(), name='search_suggestions'),
     path('product-detail/<int:pk>/', views.ProductDetailsView.as_view(), name='product_detail'),
     path('product/<int:pk>/registrations/', EventRegisteredDataView.as_view(), name='event_registered_data'),
     path('event/register/', EventRegistrationView.as_view(), name='event_registration'),
     path('product-detail/', views.ProductDetailsView.as_view(), name='product_detail'),
    #cart
-    path('add-to-cart/', CartAddView.as_view(), name='add_to_cart'),
+     path('add-to-cart/', CartAddView.as_view(), name='add_to_cart'),
     # path('order-summary/', OrderSummaryView.as_view(), name='order_summary'),
     path('remove-from-cart/', RemoveFromCartView.as_view(), name='remove_from_cart'),
     path('clear_cart_items/', clearcart, name='clear_cart_items'),

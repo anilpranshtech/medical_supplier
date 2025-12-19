@@ -106,7 +106,7 @@ urlpatterns = [
     path('returns/', AdminReturnsView.as_view(), name='admin_returns'),
     
     #coupons
-     path('admincoupons/', CouponsView.as_view(), name='coupons'),
+    path('admincoupons/', CouponsView.as_view(), name='coupons'),
     path('admincoupon/edit/', edit_coupon, name='edit_coupon'),
     path('admincoupon/delete/', delete_coupon, name='delete_coupon'),
     path('admincoupon/details/<int:coupon_id>/', coupon_details, name='coupon_details'),
@@ -131,7 +131,8 @@ urlpatterns = [
      path('supplierbasketpromotion/delete/<int:pk>/', supplier_delete_basket_promotion,name='delete_basket_promotion'),
     
 
-     path('suppliercontact-us/', SupplierContactUsView.as_view(), name='contact_us'),
+    path('suppliercontact-us/', SupplierContactUsView.as_view(), name='contact_us'),
+    path('supplier-logs/', SupplierLogsView.as_view(), name='supplier_logs'),
     
     
 ]

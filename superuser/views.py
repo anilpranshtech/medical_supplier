@@ -50,7 +50,7 @@ from django.shortcuts import render
 from django.db.models import Count, Q
 import logging
 logger = logging.getLogger(__name__)
-
+from utils.adminlogs import *
 
 class HomeView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
     template_name = 'superuser/home.html'
@@ -203,6 +203,10 @@ class User_Accounts_Update_Profile(StaffAccountRequiredMixin, View):
                 supplier_profile.company_name = post_dict.get('company_name', '').strip()
                 supplier_profile.license_number = post_dict.get('license_number', '').strip()
                 supplier_profile.save()
+            admin_update_activity(
+                request.user,
+                f"Updated profile details for user: {user.username}"
+            )
 
             return JsonResponse({'status': 'valid', 'message': 'Profile has been updated!'}, status=200)
 
@@ -236,7 +240,7 @@ class User_Accounts_Change_Email(StaffAccountRequiredMixin, View):
         try:
             user_obj.email = user_new_email
             user_obj.save()
-
+            
             return JsonResponse(
                 {'status': 'valid', 'message': 'Email has been changed and all previous sessions has been deleted.'},
                 status=200)
@@ -261,7 +265,7 @@ class User_Accounts_Change_Password(StaffAccountRequiredMixin, View):
         if len(new_password) >= 8 and new_password == confirm_password:
             user_obj.set_password(new_password)
             user_obj.save()
-
+            admin_password_change_activity(request.user)
             return JsonResponse(
                 {'status': 'valid', 'message': 'Password has been changed and all previous sessions has been deleted.'},
                 status=200)
@@ -287,7 +291,13 @@ class UserUpdateAccountStatusView(View):
             user_obj.is_active = True
 
         user_obj.save()
+        status_text = "Activated" if user_obj.is_active else "Deactivated"
 
+        admin_update_activity(
+        request.user,
+        f"{status_text} account for user {user_obj.username}"
+        )
+   
         return JsonResponse({'status': 'success', 'message': 'Account status updated successfully.'})
 
 
@@ -321,6 +331,10 @@ class User_Accounts_Update_Role(StaffAccountRequiredMixin, View):
                 user_obj.is_superuser = False
 
             user_obj.save()
+            admin_update_activity(
+            request.user,
+           f"Updated role of user {user_obj.username} to {account_role}"
+           )
 
             return JsonResponse({'status': 'valid', 'message': 'Account role has been updated.'}, status=200)
         except:
@@ -341,7 +355,14 @@ class User_Accounts_Delete_Account(StaffAccountRequiredMixin, View):
             return JsonResponse({'status': 'error', 'message': 'This account can not be deleted!'}, status=400)
         user = user_obj
         try:
+            username = user_obj.username
             user_obj.delete()
+
+            admin_delete_activity(
+            request.user,
+           f"Deleted user account: {username}"
+            )
+
 
             return JsonResponse({'status': 'valid', 'message': 'Account has been deleted.'}, status=200)
         except Exception as e:
@@ -370,6 +391,12 @@ class User_Accounts_Modify_Permission_Groups(StaffAccountRequiredMixin, View):
             new_groups = Group.objects.filter(id__in=selected_group_ids)
             user_obj.groups.add(*new_groups)
 
+            group_names = list(new_groups.values_list('name', flat=True))
+
+            admin_update_activity(
+            request.user,
+            f"Updated permission groups for {user_obj.username}: {', '.join(group_names)}"
+            )
 
             return JsonResponse({'status': 'valid', 'message': 'Permission Groups has been updated.'}, status=200)
         except Exception as e:
@@ -458,6 +485,10 @@ class User_Accounts_AddNewUser(StaffAccountRequiredMixin, View):
                     company_name='Default Company',
                     license_number='N/A'
                 )
+            admin_create_activity(
+            request.user,
+            f"Created new {account_type} account: {user_obj.username}"
+            )
 
             return JsonResponse({'status': 'valid', 'message': 'New User has been added successfully!'}, status=200)
         except:
@@ -523,33 +554,45 @@ class User_Permissions_AddNewGroup(StaffAccountRequiredMixin, View):
             permission_objs = Permission.objects.filter(codename__in=permissions)
             group_obj.permissions.add(*permission_objs)
 
+            admin_create_activity(
+            request.user,
+            f"Created permission group '{group_name}' with {len(permission_objs)} permissions"
+            )
+
             return JsonResponse({'status': 'valid', 'message': 'Group has been added.'}, status=200)
         except:
             return JsonResponse({'status': 'error', 'message': 'Check details and try again!'}, status=400)
-
-
 class User_Permissions_DeleteGroup(View):
 
     def post(self, request, *args, **kwargs):
         try:
-            id = request.POST.get('group_id')
-            group_obj = Group.objects.get(pk=id)
+            group_id = request.POST.get('group_id')
+            group_obj = Group.objects.get(pk=group_id)
         except Group.DoesNotExist:
+            admin_failed_activity(
+                request.user,
+                f"Attempted to delete non-existing permission group ID {request.POST.get('group_id')}"
+            )
             raise Http404()
-
-        # check if group is assigned to any user then throw error
         if User.objects.filter(groups=group_obj).exists():
             return JsonResponse(
-                {'message': f"Cannot delete the group '{group_obj.name}' because it is assigned to users."}, status=400)
-
+                {'message': f"Cannot delete the group '{group_obj.name}' because it is assigned to users."},
+                status=400
+            )
         try:
-
+            group_name = group_obj.name
             group_obj.delete()
+            admin_delete_activity(
+                request.user,
+                f"Deleted permission group '{group_name}'"
+            )
             return JsonResponse({'message': 'success'}, status=200)
-        except:
-            pass
-        return JsonResponse({'status': 'error'}, status=400)
-
+        except Exception as e:
+            admin_failed_activity(
+                request.user,
+                f"Failed to delete permission group '{group_obj.name}'. Error: {str(e)}"
+            )
+            return JsonResponse({'status': 'error', 'message': 'Check details and try again!'}, status=400)
 
 class User_Permissions_EditGroup(StaffAccountRequiredMixin, View):
 
@@ -561,7 +604,7 @@ class User_Permissions_EditGroup(StaffAccountRequiredMixin, View):
                 skipped_permissions = ['add_order', 'add_rfqrequest', 'add_return',
                                        'add_ratingreview', 'change_ratingreview', 'delete_ratingreview', 'view_ratingrevie',
                                        'add_question',
-                               'add_vacationrequest', 'delete_vacationrequest']
+                                       'add_vacationrequest', 'delete_vacationrequest']
 
                 group_obj = get_object_or_404(Group, pk=id)
 
@@ -591,6 +634,10 @@ class User_Permissions_EditGroup(StaffAccountRequiredMixin, View):
                 return render(request, 'superuser/permissions/snippets/form/_form_permission_group_edit.html', context)
 
         except Exception as e:
+            admin_failed_activity(
+                request.user,
+                f"Failed to load edit form for permission group ID {kwargs.get('UID')}"
+            )
             return HttpResponse("Something went wrong! Contact Support", status=500, content_type="text/html")
 
 
@@ -608,6 +655,7 @@ class User_Permissions_EditGroup(StaffAccountRequiredMixin, View):
             return JsonResponse({'status': 'error', 'message': 'Check details and try again!'}, status=400)
 
         try:
+            old_group_name = group_obj.name  # store old name for logging
             group_obj.permissions.clear()
             group_obj.name = group_name
 
@@ -616,19 +664,29 @@ class User_Permissions_EditGroup(StaffAccountRequiredMixin, View):
                 for perm in post_data.getlist(f'{model}_permissions[]') if perm != 'all'
             ]
 
-            print(f"Gathered permissions: {permissions}")
-
             if len(permissions) < 1:
                 return JsonResponse({'status': 'error', 'message': 'At least 1 permission is required!'}, status=400)
 
             permission_objs = Permission.objects.filter(codename__in=permissions)
             group_obj.permissions.add(*permission_objs)
             group_obj.save()
+
+            # --- Log successful update ---
+            admin_update_activity(
+                request.user,
+                f"Updated permission group '{old_group_name}' to '{group_name}' with {len(permission_objs)} permissions"
+            )
+
             return JsonResponse({'status': 'valid', 'message': 'Group has been updated.'}, status=200)
 
         except Exception as e:
-
+            # --- Log failure ---
+            admin_failed_activity(
+                request.user,
+                f"Failed to update permission group '{group_obj.name}'"
+            )
             return JsonResponse({'status': 'error', 'message': 'Check details and try again!'}, status=400)
+
 
 
 # class ProductsListView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
@@ -814,6 +872,11 @@ class AddproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
             gallery_images = files.getlist('gallery_images')
             for img in gallery_images:
                 ProductImage.objects.create(product=product, image=img, is_main=False)
+            admin_create_activity(
+            request.user,
+            f"Created product '{product.name}' (ID: {product.id})"
+            )
+
 
             messages.success(request, "Product added successfully.")
             return redirect('superuser:products_list')
@@ -1154,6 +1217,10 @@ class EditproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
             # Debug: Verify saved values
             saved_product = Product.objects.get(pk=pk)
             print(f"After save - product.price: {saved_product.price}, product.offer_percentage: {saved_product.offer_percentage}, product.discount_price: {saved_product.discount_price}")
+            admin_update_activity(
+            request.user,
+            f"Updated product '{product.name}' (ID: {product.id})"
+            )
 
             messages.success(request, 'Product updated successfully!')
             return redirect('superuser:products_list')
@@ -1267,20 +1334,28 @@ class EditproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
             'webinar_duration': data.get('webinar_duration', ''),
             'webinar_venue': data.get('webinar_venue', ''),
         })
-    
-
-
 class DeleteProductView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
     def post(self, request, pk):
         try:
             product = get_object_or_404(Product, pk=pk)
+            product_name = product.name
             product.delete()
-            messages.success(request, "Product deleted successfully")
-        except Exception as e:
-            messages.error(request, "Failed to delete product.")
-        return redirect('superuser:products_list')  #
-    
 
+            admin_delete_activity(
+                request.user,
+                f"Deleted product '{product_name}' (ID: {pk})"
+            )
+
+            messages.success(request, "Product deleted successfully")
+
+        except Exception as e:
+            admin_failed_activity(
+                request.user,
+                f"Failed to delete product ID {pk}: {str(e)}"
+            )
+            messages.error(request, "Failed to delete product.")
+
+        return redirect('superuser:products_list')
 
 class CreateProductCategoryView(StaffAccountRequiredMixin, View):
     def post(self, request):
@@ -1423,7 +1498,7 @@ class OrderListingView( PermissionRequiredMixin, View):
         }
 
         return render(request, self.template_name, context)
-class UpdatePaymentStatusView( View):
+class UpdatePaymentStatusView(View):
     def post(self, request):
         order_id = request.POST.get("order_id")
         paid = request.POST.get("paid")
@@ -1431,27 +1506,44 @@ class UpdatePaymentStatusView( View):
         if paid not in ["True", "False"]:
             return JsonResponse({"success": False, "error": "Invalid status"})
 
-        order = get_object_or_404(Order, order_id=order_id)
-        if not order.items.filter(order_to=request.user).exists():
-            return JsonResponse({"success": False, "error": "Permission denied"})
+        try:
+            order = get_object_or_404(Order, order_id=order_id)
 
-        if not order.payment:
-            return JsonResponse({"success": False, "error": "Payment not found"})
+            if not order.items.filter(order_to=request.user).exists():
+                return JsonResponse({"success": False, "error": "Permission denied"})
 
-        order.payment.paid = True if paid == "True" else False
-        order.payment.save(update_fields=["paid"])
+            if not order.payment:
+                return JsonResponse({"success": False, "error": "Payment not found"})
 
-        return JsonResponse({
-            "success": True,
-            "paid": order.payment.paid
-        })
+            order.payment.paid = True if paid == "True" else False
+            order.payment.save(update_fields=["paid"])
+            admin_update_activity(
+                request.user,
+                f"Updated payment status for Order {order.order_id} to "
+                f"{'Paid' if order.payment.paid else 'Unpaid'}"
+            )
+
+            return JsonResponse({
+                "success": True,
+                "paid": order.payment.paid
+            })
+
+        except Exception as e:
+            admin_failed_activity(
+                request.user,
+                f"Failed to update payment status for Order {order_id}: {str(e)}"
+            )
+            return JsonResponse({"success": False, "error": "Something went wrong"}, status=500)
+
 class OrderListAndStatusView(View):
-    template_name = 'superuser/orders//orders.html'
+    template_name = 'superuser/orders/orders.html'
+
     def get(self, request):
         status = request.GET.get('status')
         orders = Order.objects.select_related('user', 'payment')
         if status:
             orders = orders.filter(status=status)
+
         context = {
             'orders': orders,
             'selected_status': status,
@@ -1465,34 +1557,62 @@ class OrderListAndStatusView(View):
     def post(self, request):
         order_id = request.POST.get('order_id')
         status = request.POST.get('status')
-        order = get_object_or_404(Order, order_id=order_id)
-        valid_statuses = dict(Order._meta.get_field('status').choices)
-        if status not in valid_statuses:
-            return JsonResponse({'success': False, 'error': 'Invalid status'})
-        order.status = status
-        if status == 'delivered':
-            order.delivered_at = timezone.now()
-        order.save()
 
-        return JsonResponse({'success': True})
+        try:
+            order = get_object_or_404(Order, order_id=order_id)
+            valid_statuses = dict(Order._meta.get_field('status').choices)
+
+            if status not in valid_statuses:
+                return JsonResponse({'success': False, 'error': 'Invalid status'})
+            old_status = order.status
+            order.status = status
+            if status == 'delivered':
+                order.delivered_at = timezone.now()
+            order.save()
+            admin_update_activity(
+                request.user,
+                f"Changed order status for Order {order.order_id} "
+                f"from '{old_status}' to '{status}'"
+            )
+
+            return JsonResponse({'success': True})
+
+        except Exception as e:
+            admin_failed_activity(
+                request.user,
+                f"Failed to change order status for Order {order_id}: {str(e)}"
+            )
+            return JsonResponse({'success': False, 'error': 'Something went wrong'}, status=500)
+
 class ChangeOrderStatusView(View):
     def post(self, request):
         order_id = request.POST.get('order_id')
         new_status = request.POST.get('status')
         if not order_id or not new_status:
             return JsonResponse({'success': False, 'message': 'Invalid data'}, status=400)
-        order = get_object_or_404(Order, order_id=order_id)
-        order.status = new_status
+        try:
+            order = get_object_or_404(Order, order_id=order_id)
+            old_status = order.status
+            order.status = new_status
+            if new_status == 'delivered':
+                order.delivered_at = timezone.now()
+            order.save()
+            admin_update_activity(
+                request.user,
+                f"Updated order status for Order {order.order_id} "
+                f"from '{old_status}' to '{new_status}'"
+            )
+            return JsonResponse({
+                'success': True,
+                'new_status': new_status
+            })
+        except Exception as e:
+            admin_failed_activity(
+                request.user,
+                f"Failed to update order status for Order {order_id}: {str(e)}"
+            )
+            return JsonResponse({'success': False, 'message': 'Something went wrong'}, status=500)
 
-        if new_status == 'delivered':
-            order.delivered_at = timezone.now()
-
-        order.save()
-
-        return JsonResponse({
-            'success': True,
-            'new_status': new_status
-        })
 class OrderDetailsView(View):
     def get(self, request, order_id):
         supplier = request.user
@@ -1671,8 +1791,6 @@ class BannerListView(LoginRequiredMixin, TemplateView):
         context['order'] = order
 
         return context
-
-
 class BannerCreateView(LoginRequiredMixin, View):
     def get(self, request):
         form = BannerForm()
@@ -1680,9 +1798,18 @@ class BannerCreateView(LoginRequiredMixin, View):
 
     def post(self, request):
         form = BannerForm(request.POST, request.FILES)
+
         if form.is_valid():
-            form.save()
+            banner = form.save()
+
+            admin_log_activity(
+                request.user,
+                f"Created banner ID {banner.id}",
+                AdminActivityLog.ActionType.CREATED
+            )
+
             return redirect('superuser:banner_list')
+
         return render(request, 'superuser/banner_upload.html', {'form': form})
 
 
@@ -1690,15 +1817,31 @@ class BannerUpdateView(LoginRequiredMixin, View):
     def get(self, request, pk):
         banner = get_object_or_404(Banner, pk=pk)
         form = BannerForm(instance=banner)
-        return render(request, 'superuser/banner_edit.html', {'form': form, 'object': banner})
+        return render(request, 'superuser/banner_edit.html', {
+            'form': form,
+            'object': banner
+        })
 
     def post(self, request, pk):
         banner = get_object_or_404(Banner, pk=pk)
         form = BannerForm(request.POST, request.FILES, instance=banner)
+
         if form.is_valid():
-            form.save()
+            banner = form.save()
+
+            admin_log_activity(
+                request.user,
+                f"Updated banner ID {banner.id}",
+                AdminActivityLog.ActionType.UPDATED
+            )
+
             return redirect('superuser:banner_list')
-        return render(request, 'superuser/banner_edit.html', {'form': form, 'object': banner})
+
+        return render(request, 'superuser/banner_edit.html', {
+            'form': form,
+            'object': banner
+        })
+
 
 
 class AdminRFQListView(LoginRequiredMixin, ListView):
@@ -2053,23 +2196,35 @@ class AdminReturnsView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView
             'user_permissions_list': self.request.user.get_all_permissions(),
         })
         return context
-
-
 class AdminReturnUpdateStatusView(LoginRequiredMixin, PermissionRequiredMixin, View):
     permission_required = 'is_staff'
 
     def post(self, request, return_serial, *args, **kwargs):
         return_instance = get_object_or_404(Return, return_serial=return_serial)
         new_status = request.POST.get('return_status')
-
-        if new_status in dict(return_instance.RETURN_STATUS_CHOICES):
-            return_instance.return_status = new_status
-            return_instance.save()
-            messages.success(request, f"Return {return_serial} status updated to {new_status}.")
-        else:
+        valid_statuses = dict(return_instance.RETURN_STATUS_CHOICES)
+        if new_status not in valid_statuses:
             messages.error(request, "Invalid status selected.")
+            return redirect('superuser:admin_returns')
+        old_status = return_instance.return_status
+        if old_status == new_status:
+            messages.info(request, "Return status is already up to date.")
+            return redirect('superuser:admin_returns')
+        return_instance.return_status = new_status
+        return_instance.save(update_fields=['return_status'])
+        admin_update_activity(
+            request.user,
+            f"Updated return status for Return {return_serial} "
+            f"from '{old_status}' to '{new_status}'"
+        )
+
+        messages.success(
+            request,
+            f"Return {return_serial} status updated to {new_status}."
+        )
 
         return redirect('superuser:admin_returns')
+
 
 
 
@@ -2276,8 +2431,9 @@ class NotificationCreateView(CreateView):
         user_ids = request.POST.getlist("recipients")
 
         notifications_to_create = []
+        total_recipients = 0
 
-        # 1️⃣ Specific User(s)
+        # 1️Specific User(s)
         if send_to == "single" and user_ids:
             users = User.objects.filter(id__in=user_ids)
             for user in users:
@@ -2287,21 +2443,23 @@ class NotificationCreateView(CreateView):
                     title=title,
                     message=message,
                 ))
+            total_recipients = users.count()
 
-        # 2️⃣ All Buyers (Retail + Wholesale)
+        # 2️ All Buyers
         elif send_to == "buyer":
             retail_users = User.objects.filter(retailprofile__isnull=False)
             wholesale_users = User.objects.filter(wholesalebuyerprofile__isnull=False)
-            all_buyers = list(chain(retail_users, wholesale_users))  # ✅ use chain, not union
-            for user in set(all_buyers):  # remove duplicates
+            all_buyers = set(chain(retail_users, wholesale_users))
+            for user in all_buyers:
                 notifications_to_create.append(Notification(
                     recipient=user,
                     send_to="buyer",
                     title=title,
                     message=message,
                 ))
+            total_recipients = len(all_buyers)
 
-        # 3️⃣ All Suppliers
+        # 3️All Suppliers
         elif send_to == "supplier":
             supplier_users = User.objects.filter(supplierprofile__isnull=False)
             for user in supplier_users:
@@ -2311,24 +2469,31 @@ class NotificationCreateView(CreateView):
                     title=title,
                     message=message,
                 ))
+            total_recipients = supplier_users.count()
 
-        # 4️⃣ All Users (Buyers + Suppliers)
+        # 4️All Users
         elif send_to == "all":
             retail_users = User.objects.filter(retailprofile__isnull=False)
             wholesale_users = User.objects.filter(wholesalebuyerprofile__isnull=False)
             supplier_users = User.objects.filter(supplierprofile__isnull=False)
-            all_users = list(chain(retail_users, wholesale_users, supplier_users))  # ✅ safe combine
-            for user in set(all_users):
+            all_users = set(chain(retail_users, wholesale_users, supplier_users))
+            for user in all_users:
                 notifications_to_create.append(Notification(
                     recipient=user,
                     send_to="all",
                     title=title,
                     message=message,
                 ))
+            total_recipients = len(all_users)
 
-        # ✅ Bulk create
         if notifications_to_create:
             Notification.objects.bulk_create(notifications_to_create)
+
+            admin_log_activity(
+                request.user,
+                f"Sent notification '{title}' to {total_recipients} user(s) [{send_to}]",
+                AdminActivityLog.ActionType.CREATED
+            )
 
         messages.success(request, "Notification(s) sent successfully!")
         return redirect(self.success_url)
@@ -2341,6 +2506,14 @@ class EditNotificationView(UpdateView):
     success_url = reverse_lazy('superuser:notifications_list')
 
     def form_valid(self, form):
+        notification = form.save()
+
+        admin_log_activity(
+            self.request.user,
+            f"Updated notification ID {notification.id}",
+            AdminActivityLog.ActionType.UPDATED
+        )
+
         messages.success(self.request, "Notification updated successfully.")
         return super().form_valid(form)
 
@@ -2348,9 +2521,18 @@ class EditNotificationView(UpdateView):
 class DeleteNotificationView(View):
     def post(self, request, pk):
         notification = get_object_or_404(Notification, pk=pk)
+        notification_title = notification.title
         notification.delete()
+
+        admin_log_activity(
+            request.user,
+            f"Deleted notification '{notification_title}' (ID {pk})",
+            AdminActivityLog.ActionType.DELETED
+        )
+
         messages.success(request, "Notification deleted successfully.")
         return redirect('superuser:notifications_list')
+
 
 
 # category get and post AJAX method
@@ -2431,9 +2613,6 @@ class AJAXCreateLastCategory(View):
             "name": lastcat.name,
             "sub_category_id": lastcat.sub_category_id,
         })
-
-
-
 class AdminQuestionView(TemplateView):
     template_name = 'superuser/question_list.html'
     paginate_by = 10
@@ -2491,7 +2670,6 @@ class AdminQuestionView(TemplateView):
 
         return context
 
-
     def post(self, request, *args, **kwargs):
         question_id = request.POST.get('question_id')
         reply_text = request.POST.get('reply_text')
@@ -2507,10 +2685,19 @@ class AdminQuestionView(TemplateView):
             question.replied_at = timezone.now()
             question.save()
             messages.success(request, "Reply sent successfully.")
+            admin_update_activity(
+                user=request.user,
+                description=f"Replied to question (ID: {question_id}) on product: {question.product.name}"
+            )
 
         elif action_type == "delete":
+            product_name = question.product.name
             question.delete()
             messages.success(request, "Question deleted successfully.")
+            admin_delete_activity(
+                user=request.user,
+                description=f"Deleted question (ID: {question_id}) from product: {product_name}"
+            )
 
         return redirect('superuser:question_list')
 
@@ -2628,8 +2815,6 @@ class CategoryListView(View):
 
     def post(self, request):
         return JsonResponse({'status': 'error', 'message': 'Method not allowed'}, status=405)
-
-
 class CategoryCreateView(View):
     def get(self, request):
         return render(request, 'superuser/categories/add_category_modal.html')
@@ -2643,11 +2828,16 @@ class CategoryCreateView(View):
 
         try:
             category = ProductCategory.objects.create(name=name, image=image)
+
+            admin_log_activity(
+                request.user,
+                f"Created category '{category.name}'",
+                AdminActivityLog.ActionType.CREATED
+            )
+
             return JsonResponse({'status': 'success', 'message': 'Category added successfully', 'id': category.id})
         except ValidationError as e:
             return JsonResponse({'status': 'error', 'message': str(e)})
-        
-
 class CategoryEditView(View):
     def post(self, request):
         category_id = request.POST.get('id')
@@ -2659,27 +2849,42 @@ class CategoryEditView(View):
 
         try:
             category = ProductCategory.objects.get(id=category_id)
+            old_name = category.name
+
             category.name = name
             if image:
                 category.image = image
             category.save()
+
+            admin_log_activity(
+                request.user,
+                f"Updated category '{old_name}' to '{category.name}'",
+                AdminActivityLog.ActionType.UPDATED
+            )
+
             return JsonResponse({'status': 'success', 'message': 'Category updated successfully', 'id': category.id})
         except ProductCategory.DoesNotExist:
             return JsonResponse({'status': 'error', 'message': 'Category not found'})
         except ValidationError as e:
             return JsonResponse({'status': 'error', 'message': str(e)})
-        
-
 class CategoryDeleteView(View):
     def post(self, request):
         category_id = request.POST.get('id')
         try:
             category = ProductCategory.objects.get(id=category_id)
-            category_name = category.name 
+            category_name = category.name
             category.delete()
+
+            admin_log_activity(
+                request.user,
+                f"Deleted category '{category_name}'",
+                AdminActivityLog.ActionType.DELETED
+            )
+
             return JsonResponse({'status': 'success', 'message': f'Category "{category_name}" deleted successfully'})
         except ProductCategory.DoesNotExist:
             return JsonResponse({'status': 'error', 'message': 'Category not found'})
+
 
 
 
@@ -2894,8 +3099,6 @@ class CategorySubListView(View):
             }
 
         return render(request, "superuser/categories/sub_categories.html", context)
-
-
 class SubCategoryCreateView(View):
     def get(self, request):
         categories = ProductCategory.objects.exclude(
@@ -2906,7 +3109,7 @@ class SubCategoryCreateView(View):
     def post(self, request):
         name = request.POST.get('name')
         category_id = request.POST.get('category')
-        image = request.FILES.get('image') 
+        image = request.FILES.get('image')
 
         if not name or not category_id:
             return JsonResponse({'status': 'error', 'message': 'Subcategory name and category are required'})
@@ -2914,12 +3117,19 @@ class SubCategoryCreateView(View):
         try:
             category = ProductCategory.objects.get(id=category_id)
             subcategory = ProductSubCategory.objects.create(
-                name=name, 
+                name=name,
                 category=category,
-                image=image 
+                image=image
             )
+
+            admin_log_activity(
+                request.user,
+                f"Created subcategory '{subcategory.name}' under category '{category.name}'",
+                AdminActivityLog.ActionType.CREATED
+            )
+
             return JsonResponse({
-                'status': 'success', 
+                'status': 'success',
                 'message': 'Subcategory added successfully',
                 'id': subcategory.id,
                 'name': subcategory.name,
@@ -2930,49 +3140,41 @@ class SubCategoryCreateView(View):
             return JsonResponse({'status': 'error', 'message': 'Category not found'})
         except ValidationError as e:
             return JsonResponse({'status': 'error', 'message': str(e)})
-
 class SubCategoryEditView(View):
-    def get(self, request, subcategory_id):
-        try:
-            subcategory = ProductSubCategory.objects.get(id=subcategory_id)
-            categories = ProductCategory.objects.exclude(
-                Q(name__iexact="event") | Q(name__iexact="webinar") | Q(name__iexact="conference")
-            )
-            return render(request, 'superuser/categories/edit_subcategory_modal.html', {
-                'subcategory': subcategory,
-                'categories': categories
-            })
-        except ProductSubCategory.DoesNotExist:
-            return JsonResponse({'status': 'error', 'message': 'Subcategory not found'})
-
     def post(self, request):
         subcategory_id = request.POST.get('id')
         name = request.POST.get('name')
         category_id = request.POST.get('category')
-        image = request.FILES.get('image')  
+        image = request.FILES.get('image')
 
         if not name or not category_id:
             return JsonResponse({'status': 'error', 'message': 'Subcategory name and category are required'})
 
         try:
             subcategory = ProductSubCategory.objects.get(id=subcategory_id)
+            old_name = subcategory.name
             category = ProductCategory.objects.get(id=category_id)
+
             if image and subcategory.image:
                 subcategory.image.delete(save=False)
-            
+
             subcategory.name = name
             subcategory.category = category
             if image:
                 subcategory.image = image
-            
+
             subcategory.save()
+
+            admin_log_activity(
+                request.user,
+                f"Updated subcategory '{old_name}' to '{subcategory.name}' under category '{category.name}'",
+                AdminActivityLog.ActionType.UPDATED
+            )
+
             return JsonResponse({
-                'status': 'success', 
+                'status': 'success',
                 'message': 'Subcategory updated successfully',
-                'id': subcategory.id,
-                'name': subcategory.name,
-                'category_id': category.id,
-                'image_url': subcategory.image.url if subcategory.image else None
+                'id': subcategory.id
             })
         except ProductSubCategory.DoesNotExist:
             return JsonResponse({'status': 'error', 'message': 'Subcategory not found'})
@@ -2987,15 +3189,22 @@ class SubCategoryDeleteView(View):
         try:
             subcategory = ProductSubCategory.objects.get(id=subcategory_id)
             subcategory_name = subcategory.name
-            
-            # Delete image if exists
+
             if subcategory.image:
                 subcategory.image.delete(save=False)
-            
+
             subcategory.delete()
+
+            admin_log_activity(
+                request.user,
+                f"Deleted subcategory '{subcategory_name}'",
+                AdminActivityLog.ActionType.DELETED
+            )
+
             return JsonResponse({'status': 'success', 'message': f'Subcategory "{subcategory_name}" deleted successfully'})
         except ProductSubCategory.DoesNotExist:
             return JsonResponse({'status': 'error', 'message': 'Subcategory not found'})
+
 
 # class SubCategoryLastListView(View):
 #     def get(self, request, subcategory_id=None):
@@ -3096,11 +3305,19 @@ class LastCategoryCreateView(View):
 
         try:
             subcategory = ProductSubCategory.objects.get(id=subcategory_id)
+
             last_category = ProductLastCategory.objects.create(
                 name=name,
                 sub_category=subcategory,
                 image=image
             )
+
+            admin_log_activity(
+                request.user,
+                f"Created last category '{last_category.name}' under subcategory '{subcategory.name}'",
+                AdminActivityLog.ActionType.CREATED
+            )
+
             return JsonResponse({
                 'status': 'success',
                 'message': 'Last category added successfully',
@@ -3113,7 +3330,6 @@ class LastCategoryCreateView(View):
             return JsonResponse({'status': 'error', 'message': 'Subcategory not found'})
         except ValidationError as e:
             return JsonResponse({'status': 'error', 'message': str(e)})
-
 class LastCategoryEditView(View):
     def get(self, request, lastcategory_id):
         try:
@@ -3137,16 +3353,25 @@ class LastCategoryEditView(View):
 
         try:
             last_category = ProductLastCategory.objects.get(id=lastcategory_id)
+            old_name = last_category.name
             subcategory = ProductSubCategory.objects.get(id=subcategory_id)
+
             if image and last_category.image:
                 last_category.image.delete(save=False)
-            
+
             last_category.name = name
             last_category.sub_category = subcategory
             if image:
                 last_category.image = image
-            
+
             last_category.save()
+
+            admin_log_activity(
+                request.user,
+                f"Updated last category '{old_name}' to '{last_category.name}' under subcategory '{subcategory.name}'",
+                AdminActivityLog.ActionType.UPDATED
+            )
+
             return JsonResponse({
                 'status': 'success',
                 'message': 'Last category updated successfully',
@@ -3161,24 +3386,31 @@ class LastCategoryEditView(View):
             return JsonResponse({'status': 'error', 'message': 'Subcategory not found'})
         except ValidationError as e:
             return JsonResponse({'status': 'error', 'message': str(e)})
-
 class LastCategoryDeleteView(View):
     def post(self, request):
         lastcategory_id = request.POST.get('id')
         try:
             last_category = ProductLastCategory.objects.get(id=lastcategory_id)
             last_category_name = last_category.name
-            
+
             if last_category.image:
                 last_category.image.delete(save=False)
-            
+
             last_category.delete()
+
+            admin_log_activity(
+                request.user,
+                f"Deleted last category '{last_category_name}'",
+                AdminActivityLog.ActionType.DELETED
+            )
+
             return JsonResponse({
                 'status': 'success',
                 'message': f'Last category "{last_category_name}" deleted successfully'
             })
         except ProductLastCategory.DoesNotExist:
             return JsonResponse({'status': 'error', 'message': 'Last category not found'})
+
         
 
 class SupplierCommissionListView(ListView):
@@ -3254,7 +3486,6 @@ class AdminVacationModeView(View):
         else: 
             queryset = queryset.order_by("-created_at")
             
-
         # ---------------- PAGINATION ----------------
         paginator = Paginator(queryset, 10)
         page_number = request.GET.get("page")
@@ -3265,13 +3496,10 @@ class AdminVacationModeView(View):
             "page_obj": page_obj,
         })
         
-
     def post(self, request):
         request_id = request.POST.get('request_id')
         action = request.POST.get('action')
         vacation_request = get_object_or_404(VacationRequest, id=request_id)
-
-        # Only allow update if status is Pending
         if vacation_request.status != 'Pending':
             return JsonResponse({
                 'success': False,
@@ -3280,8 +3508,18 @@ class AdminVacationModeView(View):
 
         if action == 'approve':
             vacation_request.status = 'Approved'
+            admin_update_activity(
+                user=request.user,
+                description=f"Approved vacation request (ID: {request_id}) for supplier: {vacation_request.supplier.username}"
+            )
+            
         elif action == 'reject':
             vacation_request.status = 'Rejected'
+            admin_update_activity(
+                user=request.user,
+                description=f"Rejected vacation request (ID: {request_id}) for supplier: {vacation_request.supplier.username}"
+            )
+            
         else:
             return JsonResponse({
                 'success': False,
@@ -3476,7 +3714,6 @@ class EditPromotionView(TemplateView):
             end_str = end_str.strip()
 
             def format_datetime(dt_str):
-                from datetime import datetime
                 try:
                     dt = datetime.strptime(dt_str, "%d %b %Y")
                     return dt.strftime("%Y-%m-%dT00:00")
@@ -3507,7 +3744,7 @@ class EditPromotionView(TemplateView):
             get = request.POST.get('get')
             start = request.POST.get('start_datetime')
             end = request.POST.get('end_datetime')
-            from datetime import datetime
+
             start_dt = datetime.strptime(start, "%Y-%m-%dT%H:%M")
             end_dt = datetime.strptime(end, "%Y-%m-%dT%H:%M")
             promotion_period = f"{start_dt.strftime('%d %b %Y')} - {end_dt.strftime('%d %b %Y')}"
@@ -3521,14 +3758,26 @@ class EditPromotionView(TemplateView):
             promo.supplier.set(supplier_ids)
             promo.product.set(product_ids)
 
+            admin_log_activity(
+                request.user,
+                f"Updated Buy {buy} Get {get} promotion (ID: {promo.id})",
+                AdminActivityLog.ActionType.UPDATED
+            )
             return JsonResponse({'success': True})
+
         except Exception as e:
             return JsonResponse({'success': False, 'msg': str(e)})
-
-
 def delete_promotion(request, pk):
     try:
-        BuyXGetYPromotion.objects.get(pk=pk).delete()
+        promo = BuyXGetYPromotion.objects.get(pk=pk)
+        promo_id = promo.id
+        promo.delete()
+
+        admin_log_activity(
+            request.user,
+            f"Deleted promotion (ID: {promo_id})",
+            AdminActivityLog.ActionType.DELETED
+        )
         return JsonResponse({'success': True})
     except:
         return JsonResponse({'success': False})
@@ -3615,6 +3864,10 @@ class AddGiftPromotionView(TemplateView):
             promo.product.set(product_ids)
             promo.giftproduct.set(giftproduct_ids)
             promo.save()
+            admin_create_activity(
+                user=request.user,
+                description=f"Created Buy {buy} Gift {gift} promotion for {product_type}"
+            )
 
             return JsonResponse({'success': True})
         except Exception as e:
@@ -3673,17 +3926,28 @@ class EditGiftPromotionView(TemplateView):
             promo.promotion_period = f"{start_dt.strftime('%d %b %Y')} - {end_dt.strftime('%d %b %Y')}"
 
             promo.save()
+            admin_update_activity(
+                user=request.user,
+                description=f"Updated Buy {promo.buy} Gift {promo.gift} promotion (ID: {pk})"
+            )
+
             return JsonResponse({'success': True})
         except Exception as e:
             return JsonResponse({'success': False, 'msg': str(e)})
-
-
 def delete_gift_promotion(request, pk):
     try:
-        BuyXGiftYPromotion.objects.get(pk=pk).delete()
+        promo = BuyXGiftYPromotion.objects.get(pk=pk)
+        promo_info = f"Buy {promo.buy} Gift {promo.gift} promotion"
+        promo.delete()
+        admin_delete_activity(
+            user=request.user,
+            description=f"Deleted {promo_info} (ID: {pk})"
+        )
+
         return JsonResponse({'success': True})
     except Exception:
         return JsonResponse({'success': False})
+
 class BasketPromotionView(TemplateView):
     template_name = 'superuser/Basketpromotion.html'
 
@@ -3723,7 +3987,6 @@ class BasketPromotionView(TemplateView):
         })
 
         return context
-
 class AddBasketPromotionView(View):
     def post(self, request):
         try:
@@ -3732,17 +3995,20 @@ class AddBasketPromotionView(View):
             time_limit = request.POST.get('time_limit')
             description_en = request.POST.get('description_en')
             main_image = request.FILES.get('main_image')
+
             start = request.POST.get('start_datetime')
             end = request.POST.get('end_datetime')
             start_dt = datetime.strptime(start, "%Y-%m-%dT%H:%M")
             end_dt = datetime.strptime(end, "%Y-%m-%dT%H:%M")
             promotion_period = f"{start_dt.strftime('%d %b %Y')} - {end_dt.strftime('%d %b %Y')}"
+
             if hasattr(request.user, 'supplierprofile'):
                 supplier_ids = [request.user.supplierprofile.id]
             else:
                 supplier_ids = request.POST.getlist('supplier')
 
             product_ids = request.POST.getlist('product')
+
             promo = BasketPromotion.objects.create(
                 product_type=product_type,
                 promotion_period=promotion_period,
@@ -3751,9 +4017,16 @@ class AddBasketPromotionView(View):
                 description_en=description_en,
                 main_image=main_image,
             )
+
             promo.supplier.set(supplier_ids)
             promo.product.set(product_ids)
             promo.save()
+
+            admin_log_activity(
+                request.user,
+                f"Created basket promotion '{title_en}' (ID: {promo.id})",
+                AdminActivityLog.ActionType.CREATED
+            )
 
             return JsonResponse({'success': True})
 
@@ -3767,7 +4040,9 @@ class EditBasketPromotionView(View):
 
             def parse_date(date_str):
                 try:
-                    return datetime.strptime(date_str.strip(), "%d %b %Y").strftime("%Y-%m-%dT%H:%M")
+                    return datetime.strptime(
+                        date_str.strip(), "%d %b %Y"
+                    ).strftime("%Y-%m-%dT%H:%M")
                 except:
                     return ""
 
@@ -3802,12 +4077,14 @@ class EditBasketPromotionView(View):
                 if promo.main_image:
                     promo.main_image.delete(save=False)
                 promo.main_image = request.FILES['main_image']
+
             if hasattr(request.user, 'supplierprofile'):
                 promo.supplier.set([request.user.supplierprofile.id])
             else:
                 promo.supplier.set(request.POST.getlist('supplier'))
 
             promo.product.set(request.POST.getlist('product'))
+
             start = request.POST.get('start_datetime')
             end = request.POST.get('end_datetime')
             start_dt = datetime.strptime(start, "%Y-%m-%dT%H:%M")
@@ -3815,6 +4092,13 @@ class EditBasketPromotionView(View):
             promo.promotion_period = f"{start_dt.strftime('%d %b %Y')} - {end_dt.strftime('%d %b %Y')}"
 
             promo.save()
+
+            admin_log_activity(
+                request.user,
+                f"Updated basket promotion '{promo.title_en}' (ID: {promo.id})",
+                AdminActivityLog.ActionType.UPDATED
+            )
+
             return JsonResponse({'success': True})
 
         except Exception as e:
@@ -3822,23 +4106,39 @@ class EditBasketPromotionView(View):
 def delete_basket_promotion(request, pk):
     try:
         promo = BasketPromotion.objects.get(pk=pk)
+        promo_title = promo.title_en
+        promo_id = promo.id
+
         if promo.main_image:
-            promo.main_image.delete(save=False)  
+            promo.main_image.delete(save=False)
+
         promo.delete()
+
+        admin_log_activity(
+            request.user,
+            f"Deleted basket promotion '{promo_title}' (ID: {promo_id})",
+            AdminActivityLog.ActionType.DELETED
+        )
         return JsonResponse({'success': True})
+
     except BasketPromotion.DoesNotExist:
         return JsonResponse({'success': False, 'msg': 'Not found'})
     except Exception as e:
         return JsonResponse({'success': False, 'msg': str(e)})
+
 class CouponsView(TemplateView):
     template_name = "superuser/coupons.html"
+
     def dispatch(self, request, *args, **kwargs):
         if not hasattr(request.user, 'supplierprofile'):
             return redirect('superuser:superuser')
         return super().dispatch(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
         coupons_qs = Coupon.objects.select_related("created_by").order_by("-id")
+
         search_by = self.request.GET.get("search_by", "").strip()
         if search_by:
             coupons_qs = coupons_qs.filter(
@@ -3846,46 +4146,33 @@ class CouponsView(TemplateView):
                 Q(coupon_type__icontains=search_by) |
                 Q(discount_type__icontains=search_by)
             )
+
         created_date = self.request.GET.get("created_date", "").strip()
         if created_date:
             try:
                 start_str, end_str = created_date.split(" - ")
-
-                start_date = timezone.make_aware(
-                    datetime.strptime(start_str, "%m/%d/%Y")
+                start_date = timezone.make_aware(datetime.strptime(start_str, "%m/%d/%Y"))
+                end_date = timezone.make_aware(datetime.strptime(end_str, "%m/%d/%Y")).replace(
+                    hour=23, minute=59, second=59
                 )
-
-                end_date = timezone.make_aware(
-                    datetime.strptime(end_str, "%m/%d/%Y")
-                ).replace(hour=23, minute=59, second=59)
-
-                coupons_qs = coupons_qs.filter(
-                    created_at__range=(start_date, end_date)
-                )
+                coupons_qs = coupons_qs.filter(created_at__range=(start_date, end_date))
             except ValueError:
-                pass  
+                pass
 
-        # ---------------- PAGINATION ----------------
         paginator = Paginator(coupons_qs, 10)
         page_number = self.request.GET.get("page", 1)
         coupons = paginator.get_page(page_number)
 
-        # ---------------- PRODUCTS ----------------
         supplier_products = Product.objects.filter(
             created_by=self.request.user
         ).select_related("category", "brand")
 
-        # ---------------- CLIENTS ----------------
         buyer_ids = OrderItem.objects.filter(
             product__created_by=self.request.user
         ).values_list("order__user_id", flat=True).distinct()
 
-        clients = (
-            User.objects.filter(id__in=buyer_ids)
-            if buyer_ids else User.objects.none()
-        )
+        clients = User.objects.filter(id__in=buyer_ids) if buyer_ids else User.objects.none()
 
-        # ---------------- CONTEXT ----------------
         context.update({
             "coupons": coupons,
             "page_obj": coupons,
@@ -3896,8 +4183,8 @@ class CouponsView(TemplateView):
             "show_advance_search_link": True,
             "created_date": created_date,
         })
-
         return context
+
     def post(self, request, *args, **kwargs):
         try:
             code = request.POST.get("code", "").strip().upper()
@@ -3907,97 +4194,57 @@ class CouponsView(TemplateView):
                     {"status": "error", "message": "Coupon code already exists!"},
                     status=400
                 )
-            start_datetime_str = request.POST.get("start_datetime", "").strip()
-            end_datetime_str = request.POST.get("end_datetime", "").strip()
-
-            if not start_datetime_str or not end_datetime_str:
-                return JsonResponse(
-                    {"status": "error", "message": "Start and End datetime required"},
-                    status=400
-                )
 
             start_datetime = timezone.make_aware(
-                datetime.strptime(start_datetime_str, "%Y-%m-%dT%H:%M")
+                datetime.strptime(request.POST.get("start_datetime"), "%Y-%m-%dT%H:%M")
             )
             end_datetime = timezone.make_aware(
-                datetime.strptime(end_datetime_str, "%Y-%m-%dT%H:%M")
+                datetime.strptime(request.POST.get("end_datetime"), "%Y-%m-%dT%H:%M")
             )
+
             coupon = Coupon.objects.create(
                 code=code,
                 coupon_type=request.POST.get("coupon_type"),
                 discount_type=request.POST.get("discount_type"),
                 discount=Decimal(request.POST.get("discount", "0")),
                 max_discount=Decimal(request.POST.get("max_discount", "0")),
-                minimum_purchase_amount=Decimal(
-                    request.POST.get("minimum_purchase_amount", "0")
-                ),
+                minimum_purchase_amount=Decimal(request.POST.get("minimum_purchase_amount", "0")),
                 count_of_use=int(request.POST.get("count_of_use", 1)),
-                filter_by_orders_count=int(
-                    request.POST.get("filter_by_orders_count", 0)
-                ),
-                filter_by_orders_amount=Decimal(
-                    request.POST.get("filter_by_orders_amount", "0")
-                ),
+                filter_by_orders_count=int(request.POST.get("filter_by_orders_count", 0)),
+                filter_by_orders_amount=Decimal(request.POST.get("filter_by_orders_amount", "0")),
                 start_datetime=start_datetime,
                 end_datetime=end_datetime,
-                can_be_used_with_promotions=(
-                    request.POST.get("can_be_used_with_promotions") == "true"
-                ),
+                can_be_used_with_promotions=request.POST.get("can_be_used_with_promotions") == "true",
                 created_by=request.user,
             )
-            product_ids = request.POST.getlist("product_ids[]")
-            client_ids = request.POST.getlist("client_ids[]")
 
-            if product_ids:
-                coupon.products.set(
-                    Product.objects.filter(
-                        id__in=product_ids,
-                        created_by=request.user
-                    )
+            coupon.products.set(
+                Product.objects.filter(
+                    id__in=request.POST.getlist("product_ids[]"),
+                    created_by=request.user
                 )
+            )
+            coupon.client.set(User.objects.filter(id__in=request.POST.getlist("client_ids[]")))
 
-            if client_ids:
-                coupon.client.set(User.objects.filter(id__in=client_ids))
-
-            return JsonResponse(
-                {"status": "success", "message": "Coupon created successfully!"}
+            admin_log_activity(
+                request.user,
+                f"Created coupon '{coupon.code}'",
+                AdminActivityLog.ActionType.CREATED
             )
 
-        except ValueError as e:
-            return JsonResponse(
-                {"status": "error", "message": f"Invalid value: {str(e)}"},
-                status=400
-            )
+            return JsonResponse({"status": "success", "message": "Coupon created successfully!"})
+
         except Exception as e:
-            return JsonResponse(
-                {"status": "error", "message": str(e)},
-                status=500
-            )
+            return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
 
 def edit_coupon(request):
     if request.method != 'POST':
         return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
 
-    coupon_id = request.POST.get('coupon_id')
-    coupon = get_object_or_404(Coupon, id=coupon_id)
+    coupon = get_object_or_404(Coupon, id=request.POST.get('coupon_id'))
 
     try:
-        start_datetime_str = request.POST.get("start_datetime", "").strip()
-        end_datetime_str = request.POST.get("end_datetime", "").strip()
-        
-        if not start_datetime_str or not end_datetime_str:
-            return JsonResponse(
-                {"status": "error", "message": "Start date/time and end date/time are required"},
-                status=400
-            )
-        start_datetime = timezone.make_aware(
-            datetime.strptime(start_datetime_str, "%Y-%m-%dT%H:%M")
-        )
-        end_datetime = timezone.make_aware(
-            datetime.strptime(end_datetime_str, "%Y-%m-%dT%H:%M")
-        )
-        
         coupon.code = request.POST.get('code').strip().upper()
         coupon.coupon_type = request.POST.get('coupon_type')
         coupon.discount_type = request.POST.get('discount_type')
@@ -4007,32 +4254,51 @@ def edit_coupon(request):
         coupon.count_of_use = int(request.POST.get('count_of_use', 1))
         coupon.filter_by_orders_count = int(request.POST.get('filter_by_orders_count', 0))
         coupon.filter_by_orders_amount = Decimal(request.POST.get('filter_by_orders_amount', '0'))
-        coupon.start_datetime = start_datetime
-        coupon.end_datetime = end_datetime
+        coupon.start_datetime = timezone.make_aware(
+            datetime.strptime(request.POST.get("start_datetime"), "%Y-%m-%dT%H:%M")
+        )
+        coupon.end_datetime = timezone.make_aware(
+            datetime.strptime(request.POST.get("end_datetime"), "%Y-%m-%dT%H:%M")
+        )
         coupon.can_be_used_with_promotions = request.POST.get('can_be_used_with_promotions') == 'true'
         coupon.save()
 
-        product_ids = request.POST.getlist('product_ids[]')
-        client_ids = request.POST.getlist('client_ids[]')
-        valid_products = Product.objects.filter(created_by=request.user, id__in=product_ids)
-        coupon.products.set(valid_products)
+        coupon.products.set(
+            Product.objects.filter(
+                created_by=request.user,
+                id__in=request.POST.getlist('product_ids[]')
+            )
+        )
+        coupon.client.set(User.objects.filter(id__in=request.POST.getlist('client_ids[]')))
 
-        coupon.client.set(User.objects.filter(id__in=client_ids))
+        admin_log_activity(
+            request.user,
+            f"Updated coupon '{coupon.code}'",
+            AdminActivityLog.ActionType.UPDATED
+        )
 
         return JsonResponse({'status': 'success', 'message': 'Coupon updated successfully!'})
-    except ValueError as e:
-        return JsonResponse({'status': 'error', 'message': f'Invalid datetime format: {str(e)}'}, status=400)
+
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 
 def delete_coupon(request):
     if request.method == 'POST':
-        coupon_id = request.POST.get('coupon_id')
-        coupon = get_object_or_404(Coupon, id=coupon_id)
+        coupon = get_object_or_404(Coupon, id=request.POST.get('coupon_id'))
+        coupon_code = coupon.code
         coupon.delete()
+
+        admin_log_activity(
+            request.user,
+            f"Deleted coupon '{coupon_code}'",
+            AdminActivityLog.ActionType.DELETED
+        )
+
         return JsonResponse({'status': 'success', 'message': 'Coupon deleted successfully!'})
+
     return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
+
 
 
 def coupon_details(request, coupon_id):
@@ -4103,11 +4369,16 @@ class BankView(TemplateView):
 class AddBankView(View):
     def post(self, request):
         name = request.POST.get("name")
-        
+
         if Bank.objects.filter(name__iexact=name).exists():
             return JsonResponse({"success": False, "msg": "Bank name already exists."})
-        
-        Bank.objects.create(name=name)
+
+        bank = Bank.objects.create(name=name)
+        admin_create_activity(
+            request.user,
+            f"Created bank: {bank.name}"
+        )
+
         return JsonResponse({"success": True})
 
 
@@ -4124,19 +4395,39 @@ class GetBankView(View):
 class EditBankView(View):
     def post(self, request, pk):
         bank = get_object_or_404(Bank, pk=pk)
+        old_name = bank.name
         name = request.POST.get("name")
-        
+
         if Bank.objects.filter(name__iexact=name).exclude(pk=pk).exists():
-            return JsonResponse({"success": False, "msg": "Bank name already exists."})
-        
+            return JsonResponse({
+                "success": False,
+                "msg": "Bank name already exists."
+            })
+
         bank.name = name
         bank.save()
+        admin_log_activity(
+            request.user,
+            f"Updated bank name from '{old_name}' to '{name}' (ID: {bank.id})",
+            AdminActivityLog.ActionType.UPDATED
+        )
+
         return JsonResponse({"success": True})
+
 class DeleteBankView(View):
     def post(self, request, pk):
         bank = get_object_or_404(Bank, pk=pk)
+        bank_name = bank.name
         bank.delete()
+
+        # 🔹 Admin log
+        admin_delete_activity(
+            request.user,
+            f"Deleted bank: {bank_name}"
+        )
+
         return JsonResponse({"success": True})
+
 class OriginCountryView(TemplateView):
     template_name = "superuser/origincountry.html"
 
@@ -4178,8 +4469,6 @@ class OriginCountryView(TemplateView):
         context["created_date"] = created_date or ""
 
         return context
-
-
 def add_origin_country(request):
     if request.method == "POST":
         name = request.POST.get("name")
@@ -4187,15 +4476,18 @@ def add_origin_country(request):
         if Country.objects.filter(name__iexact=name).exists():
             return JsonResponse({"success": False, "msg": "Country already exists"})
 
-        Country.objects.create(name=name)
+        country = Country.objects.create(name=name)
+        admin_create_activity(
+            request.user,
+            f"Added origin country: {country.name}"
+        )
+
         return JsonResponse({"success": True, "msg": "Country added successfully"})
 def edit_origin_country(request, pk):
-    try:
-        country = Country.objects.get(pk=pk)
-    except Country.DoesNotExist:
-        return JsonResponse({"success": False, "msg": "Country not found"})
+    country = get_object_or_404(Country, pk=pk)
 
     if request.method == "POST":
+        old_name = country.name
         name = request.POST.get("name")
 
         if Country.objects.filter(name__iexact=name).exclude(id=pk).exists():
@@ -4203,16 +4495,23 @@ def edit_origin_country(request, pk):
 
         country.name = name
         country.save()
+        admin_update_activity(
+            request.user,
+            f"Updated origin country from '{old_name}' to '{name}'"
+        )
+
         return JsonResponse({"success": True, "msg": "Updated successfully"})
 
     return JsonResponse({"success": True, "data": {"name": country.name}})
 def delete_origin_country(request, pk):
-    try:
-        country = Country.objects.get(pk=pk)
-    except Country.DoesNotExist:
-        return JsonResponse({"success": False, "msg": "Country not found"})
-
+    country = get_object_or_404(Country, pk=pk)
+    country_name = country.name
     country.delete()
+    admin_delete_activity(
+        request.user,
+        f"Deleted origin country: {country_name}"
+    )
+
     return JsonResponse({"success": True, "msg": "Deleted successfully"})
 class CountryView(ListView):
     model = OriginCountry
@@ -4275,35 +4574,31 @@ class CountryView(ListView):
         context["current_filters"] = self.request.GET.dict()
 
         return context
-
 class CountryAddView(View):
     def post(self, request):
         name_en = request.POST.get("name_en")
-        iso = request.POST.get("iso")
-        phone_prefix = request.POST.get("phone_prefix")
-        order = request.POST.get("order")
-        currency = request.POST.get("currency")
-        is_default = request.POST.get("is_default") == "on"
 
         if OriginCountry.objects.filter(name_en=name_en).exists():
             return JsonResponse({"success": False, "msg": "Country already exists!"})
 
-        OriginCountry.objects.create(
+        country = OriginCountry.objects.create(
             name_en=name_en,
-            iso=iso,
-            phone_prefix=phone_prefix,
-            order=order,
-            currency=currency,
-            is_default=is_default
+            iso=request.POST.get("iso"),
+            phone_prefix=request.POST.get("phone_prefix"),
+            order=request.POST.get("order"),
+            currency=request.POST.get("currency"),
+            is_default=request.POST.get("is_default") == "on"
+        )
+        admin_create_activity(
+            request.user,
+            f"Created country: {country.name_en}"
         )
 
         return JsonResponse({"success": True, "msg": "Country added successfully!"})
 class CountryEditView(View):
     def post(self, request, cid):
-        try:
-            country = OriginCountry.objects.get(id=cid)
-        except OriginCountry.DoesNotExist:
-            return JsonResponse({"success": False, "msg": "Country not found!"})
+        country = get_object_or_404(OriginCountry, id=cid)
+        old_name = country.name_en
 
         country.name_en = request.POST.get("name_en")
         country.iso = request.POST.get("iso")
@@ -4311,17 +4606,25 @@ class CountryEditView(View):
         country.order = request.POST.get("order")
         country.currency = request.POST.get("currency")
         country.is_default = request.POST.get("is_default") == "on"
-
         country.save()
-        return JsonResponse({"success": True, "msg": "Country updated!"})
+        admin_update_activity(
+            request.user,
+            f"Updated country from '{old_name}' to '{country.name_en}'"
+        )
 
+        return JsonResponse({"success": True, "msg": "Country updated!"})
 class CountryDeleteView(View):
     def post(self, request, cid):
-        try:
-            OriginCountry.objects.get(id=cid).delete()
-            return JsonResponse({"success": True, "msg": "Country deleted!"})
-        except OriginCountry.DoesNotExist:
-            return JsonResponse({"success": False, "msg": "Country not found!"})
+        country = get_object_or_404(OriginCountry, id=cid)
+        name = country.name_en
+        country.delete()
+        admin_delete_activity(
+            request.user,
+            f"Deleted country: {name}"
+        )
+
+        return JsonResponse({"success": True, "msg": "Country deleted!"})
+
 
 def get_country_list():
     try:
@@ -4376,8 +4679,6 @@ class RegionView(TemplateView):
         context["countries"] = get_country_list()
 
         return context
-
-
 class RegionAddView(View):
     def post(self, request):
         name = request.POST.get("name")
@@ -4386,30 +4687,44 @@ class RegionAddView(View):
         if Region.objects.filter(name_en=name).exists():
             return JsonResponse({"success": False, "msg": "Region already exists!"})
 
-        Region.objects.create(name_en=name, country=country)
+        region = Region.objects.create(name_en=name, country=country)
+        admin_create_activity(
+            request.user,
+            f"Created region: {region.name_en} ({region.country})"
+        )
 
         return JsonResponse({"success": True, "msg": "Region added"})
 class RegionEditView(View):
     def post(self, request, pk):
         region = get_object_or_404(Region, pk=pk)
+        old_name = region.name_en
 
         name = request.POST.get("name")
         country = request.POST.get("country")
+
         if Region.objects.exclude(id=pk).filter(name_en=name).exists():
             return JsonResponse({"success": False, "msg": "Region name already exists!"})
 
         region.name_en = name
         region.country = country
         region.save()
+        admin_update_activity(
+            request.user,
+            f"Updated region from '{old_name}' to '{name}'"
+        )
 
         return JsonResponse({"success": True, "msg": "Region updated"})
 class RegionDeleteView(View):
     def post(self, request, pk):
         region = get_object_or_404(Region, pk=pk)
+        region_name = region.name_en
         region.delete()
-        return JsonResponse({"success": True, "msg": "Region deleted"})
-from datetime import datetime
+        admin_delete_activity(
+            request.user,
+            f"Deleted region: {region_name}"
+        )
 
+        return JsonResponse({"success": True, "msg": "Region deleted"})
 class CityListView(ListView):
     model = City
     template_name = "superuser/cities.html"
@@ -4451,8 +4766,6 @@ class CityListView(ListView):
         ctx = super().get_context_data(**kwargs)
         ctx["regions"] = Regioncities.objects.all()
         return ctx
-
-
 class CityCreateView(View):
     def post(self, request):
         name = request.POST.get("name")
@@ -4462,10 +4775,13 @@ class CityCreateView(View):
             return JsonResponse({"success": False, "msg": "Name and region are required"})
 
         region = Regioncities.objects.get(id=region_id)
-        City.objects.create(name=name, region=region)
+        city = City.objects.create(name=name, region=region)
+        admin_create_activity(
+            request.user,
+            f"Created city: {city.name} (Region: {region.name_en})"
+        )
+
         return JsonResponse({"success": True})
-
-
 class CityUpdateView(View):
     def post(self, request, pk):
         try:
@@ -4473,25 +4789,38 @@ class CityUpdateView(View):
         except City.DoesNotExist:
             return JsonResponse({"success": False, "msg": "City not found"})
 
+        old_name = city.name
         name = request.POST.get("name")
         region_id = request.POST.get("region")
 
         if not name or not region_id:
             return JsonResponse({"success": False, "msg": "Name and region are required"})
 
+        region = Regioncities.objects.get(id=region_id)
         city.name = name
-        city.region = Regioncities.objects.get(id=region_id)
+        city.region = region
         city.save()
+        admin_update_activity(
+            request.user,
+            f"Updated city from '{old_name}' to '{name}'"
+        )
+
         return JsonResponse({"success": True})
-
-
 class CityDeleteView(View):
     def post(self, request, pk):
         try:
-            City.objects.get(id=pk).delete()
+            city = City.objects.get(id=pk)
+            city_name = city.name
+            city.delete()
+            admin_delete_activity(
+                request.user,
+                f"Deleted city: {city_name}"
+            )
+
             return JsonResponse({"success": True})
         except:
             return JsonResponse({"success": False, "msg": "Delete failed"})
+
 class CurrencyView(ListView):
     model = Currency
     template_name = "superuser/currency.html"
@@ -4524,8 +4853,6 @@ class CurrencyView(ListView):
 
         return qs
 
-
-
 def add_currency(request):
     if request.method == 'POST':
         cid = request.POST.get('cid')
@@ -4538,6 +4865,8 @@ def add_currency(request):
 
         if cid:
             currency = get_object_or_404(Currency, id=cid)
+            old_name = currency.name_en
+
             currency.name_en = name
             currency.code_en = code
             currency.rate = rate
@@ -4545,8 +4874,12 @@ def add_currency(request):
             currency.status = status
             currency.set_as_default = default
             currency.save()
+            admin_update_activity(
+                request.user,
+                f"Updated currency from '{old_name}' to '{name}'"
+            )
         else:
-            Currency.objects.create(
+            currency = Currency.objects.create(
                 name_en=name,
                 code_en=code,
                 rate=rate,
@@ -4554,18 +4887,30 @@ def add_currency(request):
                 status=status,
                 set_as_default=default
             )
+            admin_create_activity(
+                request.user,
+                f"Created currency: {currency.name_en}"
+            )
 
         return JsonResponse({"success": True})
 
     return JsonResponse({"success": False, "msg": "Invalid request"})
+
 
 
 def delete_currency(request, pk):
     if request.method == 'POST':
         currency = get_object_or_404(Currency, id=pk)
+        name = currency.name_en
         currency.delete()
+        admin_delete_activity(
+            request.user,
+            f"Deleted currency: {name}"
+        )
+
         return JsonResponse({"success": True})
     return JsonResponse({"success": False, "msg": "Invalid request"})
+
 class ReturnReasonView(TemplateView):
     template_name = "superuser/returnresponse.html"
 
@@ -4608,15 +4953,22 @@ def add_return_reason(request):
         if reason_en == "":
             return JsonResponse({"success": False, "msg": "Reason is required."})
 
-        ReturnReason.objects.create(reason_en=reason_en)
+        reason = ReturnReason.objects.create(reason_en=reason_en)
+        admin_create_activity(
+            request.user,
+            f"Added return reason: {reason.reason_en}"
+        )
+
         return JsonResponse({"success": True})
 
     return JsonResponse({"success": False, "msg": "Invalid request."})
+
 
 def edit_return_reason(request, pk):
     reason = get_object_or_404(ReturnReason, pk=pk)
 
     if request.method == "POST":
+        old_reason = reason.reason_en
         reason_en = request.POST.get("reason_en", "").strip()
 
         if reason_en == "":
@@ -4624,19 +4976,29 @@ def edit_return_reason(request, pk):
 
         reason.reason_en = reason_en
         reason.save()
+        admin_update_activity(
+            request.user,
+            f"Updated return reason from '{old_reason}' to '{reason_en}'"
+        )
+
         return JsonResponse({"success": True})
 
     return JsonResponse({"success": False, "msg": "Invalid request."})
-
-
 def delete_return_reason(request, pk):
     reason = get_object_or_404(ReturnReason, pk=pk)
 
     if request.method == "POST":
+        reason_text = reason.reason_en
         reason.delete()
+        admin_delete_activity(
+            request.user,
+            f"Deleted return reason: {reason_text}"
+        )
+
         return JsonResponse({"success": True})
 
     return JsonResponse({"success": False, "msg": "Invalid request."})
+
 class DepartmentView(TemplateView):
     template_name = "superuser/department.html"
 
@@ -4676,8 +5038,6 @@ class DepartmentView(TemplateView):
         ctx['page_obj'] = page_obj
         ctx['request'] = self.request 
         return ctx
-
-
 def add_department(request):
     if request.method == "POST":
         name = request.POST.get("name")
@@ -4688,40 +5048,57 @@ def add_department(request):
         if Department.objects.filter(name_en=name).exists():
             return JsonResponse({"success": False, "msg": "Department already exists."})
 
-        Department.objects.create(name_en=name)
+        dep = Department.objects.create(name_en=name)
+        admin_create_activity(
+            request.user,
+            f"Created department: {dep.name_en}"
+        )
+
         return JsonResponse({"success": True})
 
     return JsonResponse({"success": False, "msg": "Invalid request!"})
-
 def edit_department(request, pk):
     if request.method == "POST":
         name = request.POST.get("name")
 
         if not name or name.strip() == "":
             return JsonResponse({"success": False, "msg": "Department Name is required."})
+
         if Department.objects.filter(name_en=name).exclude(id=pk).exists():
             return JsonResponse({"success": False, "msg": "Department already exists."})
 
         try:
             dep = Department.objects.get(id=pk)
+            old_name = dep.name_en
             dep.name_en = name
             dep.save()
+            admin_update_activity(
+                request.user,
+                f"Updated department from '{old_name}' to '{name}'"
+            )
+
             return JsonResponse({"success": True})
         except Department.DoesNotExist:
             return JsonResponse({"success": False, "msg": "Department not found!"})
 
     return JsonResponse({"success": False, "msg": "Invalid request!"})
-
 def delete_department(request, pk):
     if request.method == "POST":
         try:
             dep = Department.objects.get(id=pk)
+            name = dep.name_en
             dep.delete()
+            admin_delete_activity(
+                request.user,
+                f"Deleted department: {name}"
+            )
+
             return JsonResponse({"success": True})
         except Department.DoesNotExist:
             return JsonResponse({"success": False, "msg": "Department not found!"})
 
     return JsonResponse({"success": False, "msg": "Invalid request!"})
+
 class AddressTypeView(TemplateView):
     template_name = "superuser/addresstype.html"
 
@@ -4768,15 +5145,15 @@ def add_address_type(request):
 
         if not name:
             return JsonResponse({"success": False, "msg": "Name is required."})
-
         if AddressType.objects.filter(name_en__iexact=name).exists():
             return JsonResponse({"success": False, "msg": "This Address Type already exists."})
-
-        AddressType.objects.create(name_en=name, client_type=client_type)
+        obj = AddressType.objects.create(name_en=name, client_type=client_type)
+        admin_create_activity(
+            request.user,
+            f"Created address type: {obj.name_en}"
+        )
         return JsonResponse({"success": True})
-
     return JsonResponse({"success": False, "msg": "Invalid request"})
-
 def edit_address_type(request, pk):
     if request.method == "POST":
         try:
@@ -4784,8 +5161,10 @@ def edit_address_type(request, pk):
         except AddressType.DoesNotExist:
             return JsonResponse({"success": False, "msg": "Address Type not found."})
 
+        old_name = obj.name_en
         name = request.POST.get("name_en", "").strip()
         client_type = request.POST.get("client_type")
+
         if not name:
             return JsonResponse({"success": False, "msg": "Name is required."})
 
@@ -4793,22 +5172,30 @@ def edit_address_type(request, pk):
             return JsonResponse({"success": False, "msg": "This name already exists."})
 
         obj.name_en = name
-        obj.client_type = client_type 
+        obj.client_type = client_type
         obj.save()
+        admin_update_activity(
+            request.user,
+            f"Updated address type from '{old_name}' to '{name}'"
+        )
         return JsonResponse({"success": True})
 
     return JsonResponse({"success": False, "msg": "Invalid request"})
-
 def delete_address_type(request, pk):
     if request.method == "POST":
         try:
             obj = AddressType.objects.get(id=pk)
+            name = obj.name_en
             obj.delete()
+            admin_delete_activity(
+                request.user,
+                f"Deleted address type: {name}"
+            )
             return JsonResponse({"success": True})
         except AddressType.DoesNotExist:
             return JsonResponse({"success": False, "msg": "Address Type not found."})
-
     return JsonResponse({"success": False, "msg": "Invalid request"})
+
 class SupplierTypeView(TemplateView):
     template_name = "superuser/suppliertype.html"
 
@@ -4859,34 +5246,34 @@ class SupplierTypeView(TemplateView):
         ctx['created_date'] = created_date or "" 
         ctx['sort_options'] = sort_mapping
         return ctx
-
-
-
 def add_supplier_type(request):
     if request.method == "POST":
         name = request.POST.get("name_en", "").strip()
         status = request.POST.get("status")
+
         if not name:
             return JsonResponse({"success": False, "msg": "Name is required."})
 
         if SupplierType.objects.filter(name_en__iexact=name).exists():
             return JsonResponse({"success": False, "msg": "This Supplier Type already exists."})
 
-        SupplierType.objects.create(name_en=name, status=status)
+        obj = SupplierType.objects.create(name_en=name, status=status)
+        admin_create_activity(
+            request.user,
+            f"Created supplier type: {obj.name_en}"
+        )
         return JsonResponse({"success": True})
 
     return JsonResponse({"success": False, "msg": "Invalid request"})
-
 def edit_supplier_type(request, pk):
     if request.method == "POST":
         try:
             obj = SupplierType.objects.get(id=pk)
         except SupplierType.DoesNotExist:
             return JsonResponse({"success": False, "msg": "Supplier Type not found."})
-
+        old_name = obj.name_en
         name = request.POST.get("name_en", "").strip()
         status = request.POST.get("status")
-
         if not name:
             return JsonResponse({"success": False, "msg": "Name is required."})
 
@@ -4896,21 +5283,28 @@ def edit_supplier_type(request, pk):
         obj.name_en = name
         obj.status = status
         obj.save()
+        admin_update_activity(
+            request.user,
+            f"Updated supplier type from '{old_name}' to '{name}'"
+        )
         return JsonResponse({"success": True})
 
     return JsonResponse({"success": False, "msg": "Invalid request"})
-
-
 def delete_supplier_type(request, pk):
     if request.method == "POST":
         try:
             obj = SupplierType.objects.get(id=pk)
+            name = obj.name_en
             obj.delete()
+            admin_delete_activity(
+                request.user,
+                f"Deleted supplier type: {name}"
+            )
             return JsonResponse({"success": True})
         except SupplierType.DoesNotExist:
             return JsonResponse({"success": False, "msg": "Supplier Type not found."})
-
     return JsonResponse({"success": False, "msg": "Invalid request"})
+
 class UnitView(View):
     def get(self, request):
         qs = Unit.objects.all()
@@ -4953,9 +5347,6 @@ class UnitView(View):
             "page_obj": page_obj,
             "request": request,
         })
-
-
-
 class AddUnitView(View):
     def post(self, request):
         name = request.POST.get('name')
@@ -4967,14 +5358,17 @@ class AddUnitView(View):
             return JsonResponse({'success': False, 'msg': 'Status is required.'})
         if Unit.objects.filter(name__iexact=name).exists():
             return JsonResponse({'success': False, 'msg': 'Unit with this name already exists.'})
+        unit = Unit.objects.create(name=name, status=status)
+        admin_create_activity(
+            request.user,
+            f"Created unit: {unit.name}"
+        )
 
-        Unit.objects.create(name=name, status=status)
         return JsonResponse({'success': True})
-
-
 class EditUnitView(View):
     def post(self, request, id):
         unit = get_object_or_404(Unit, id=id)
+        old_name = unit.name
         name = request.POST.get('name')
         status = request.POST.get('status')
 
@@ -4988,14 +5382,24 @@ class EditUnitView(View):
         unit.name = name
         unit.status = status
         unit.save()
+        admin_update_activity(
+            request.user,
+            f"Updated unit from '{old_name}' to '{name}'"
+        )
+
         return JsonResponse({'success': True})
-
-
 class DeleteUnitView(View):
     def post(self, request, id):
         unit = get_object_or_404(Unit, id=id)
+        name = unit.name
         unit.delete()
+        admin_delete_activity(
+            request.user,
+            f"Deleted unit: {name}"
+        )
+
         return JsonResponse({'success': True})
+
 class DeliveryTimeView(View):
     def get(self, request):
         qs = DeliveryTime.objects.all()
@@ -5045,7 +5449,13 @@ class DeliveryTimeAddView(View):
         if not status:
             return JsonResponse({'success': False, 'msg': 'Status is required.'})
 
-        DeliveryTime.objects.create(name=name, status=status)
+        delivery = DeliveryTime.objects.create(name=name, status=status)
+
+        admin_create_activity(
+            request.user,
+            f"Created Delivery Time: {delivery.name}"
+        )
+
         return JsonResponse({'success': True})
 class DeliveryTimeEditView(View):
     def post(self, request, pk):
@@ -5061,13 +5471,26 @@ class DeliveryTimeEditView(View):
         delivery.name = name
         delivery.status = status
         delivery.save()
-        return JsonResponse({'success': True})
 
+        admin_update_activity(
+            request.user,
+            f"Updated Delivery Time: {delivery.name}"
+        )
+
+        return JsonResponse({'success': True})
 class DeliveryTimeDeleteView(View):
     def post(self, request, pk):
         delivery = get_object_or_404(DeliveryTime, pk=pk)
+        name = delivery.name
         delivery.delete()
+
+        admin_delete_activity(
+            request.user,
+            f"Deleted Delivery Time: {name}"
+        )
+
         return JsonResponse({'success': True})
+
 class ReturnTimeView(View):
     def get(self, request):
         qs = ReturnTime.objects.all()
@@ -5110,38 +5533,60 @@ class ReturnTimeView(View):
             "page_obj": page_obj,
             "request": request,
         })
-
-
-
 class ReturnTimeAddView(View):
     def post(self, request):
         name = request.POST.get('name')
         value = request.POST.get('value')
         status = request.POST.get('status')
+
         if not name or not value or not status:
             return JsonResponse({'success': False, 'msg': 'All fields are required.'})
-        ReturnTime.objects.create(name=name, value=value, status=status)
-        return JsonResponse({'success': True})
 
+        return_time = ReturnTime.objects.create(
+            name=name, value=value, status=status
+        )
+
+        admin_create_activity(
+            request.user,
+            f"Created Return Time: {return_time.name}"
+        )
+
+        return JsonResponse({'success': True})
 class ReturnTimeEditView(View):
     def post(self, request, pk):
         return_time = get_object_or_404(ReturnTime, pk=pk)
+
         name = request.POST.get('name')
         value = request.POST.get('value')
         status = request.POST.get('status')
+
         if not name or not value or not status:
             return JsonResponse({'success': False, 'msg': 'All fields are required.'})
+
         return_time.name = name
         return_time.value = value
         return_time.status = status
         return_time.save()
-        return JsonResponse({'success': True})
 
+        admin_update_activity(
+            request.user,
+            f"Updated Return Time: {return_time.name}"
+        )
+
+        return JsonResponse({'success': True})
 class ReturnTimeDeleteView(View):
     def post(self, request, pk):
         return_time = get_object_or_404(ReturnTime, pk=pk)
+        name = return_time.name
         return_time.delete()
+
+        admin_delete_activity(
+            request.user,
+            f"Deleted Return Time: {name}"
+        )
+
         return JsonResponse({'success': True})
+
 class StandingTimeView(View):
     def get(self, request):
         qs = StandingTime.objects.all()
@@ -5184,39 +5629,60 @@ class StandingTimeView(View):
             "page_obj": page_obj,
             "request": request,
         })
-
-
-
-
 class StandigTimeAddView(View):
     def post(self, request):
         name = request.POST.get('name')
         value = request.POST.get('value')
         status = request.POST.get('status')
+
         if not name or not value or not status:
             return JsonResponse({'success': False, 'msg': 'All fields are required.'})
-        StandingTime.objects.create(name=name, value=value, status=status)
-        return JsonResponse({'success': True})
 
+        standing = StandingTime.objects.create(
+            name=name, value=value, status=status
+        )
+
+        admin_create_activity(
+            request.user,
+            f"Created Standing Time: {standing.name}"
+        )
+
+        return JsonResponse({'success': True})
 class StandingTimeEditView(View):
     def post(self, request, pk):
-        return_time = get_object_or_404(StandingTime, pk=pk)
+        standing = get_object_or_404(StandingTime, pk=pk)
+
         name = request.POST.get('name')
         value = request.POST.get('value')
         status = request.POST.get('status')
+
         if not name or not value or not status:
             return JsonResponse({'success': False, 'msg': 'All fields are required.'})
-        return_time.name = name
-        return_time.value = value
-        return_time.status = status
-        return_time.save()
-        return JsonResponse({'success': True})
 
+        standing.name = name
+        standing.value = value
+        standing.status = status
+        standing.save()
+
+        admin_update_activity(
+            request.user,
+            f"Updated Standing Time: {standing.name}"
+        )
+
+        return JsonResponse({'success': True})
 class StandingTimeDeleteView(View):
     def post(self, request, pk):
-        return_time = get_object_or_404(StandingTime, pk=pk)
-        return_time.delete()
+        standing = get_object_or_404(StandingTime, pk=pk)
+        name = standing.name
+        standing.delete()
+
+        admin_delete_activity(
+            request.user,
+            f"Deleted Standing Time: {name}"
+        )
+
         return JsonResponse({'success': True})
+
 class WarrantyView(View):
     def get(self, request):
         qs = Warranty.objects.all()
@@ -5275,6 +5741,10 @@ class AddWarrantyView(View):
             return JsonResponse({'success': False, 'msg': 'Warranty with this name already exists.'})
 
         Warranty.objects.create(name=name, status=status)
+        admin_create_activity(
+            request.user,
+            f"Created Warranty: {name}"
+        )
         return JsonResponse({'success': True})
 
 class EditWarrantyView(View):
@@ -5293,12 +5763,21 @@ class EditWarrantyView(View):
         warranty.name = name
         warranty.status = status
         warranty.save()
+        admin_create_activity(
+            request.user,
+            f"Update Warranty: {name}"
+        )
         return JsonResponse({'success': True})
 
 class DeleteWarrantyView(View):
     def post(self, request, pk):
         warranty = get_object_or_404(Warranty, pk=pk)
+        admin_create_activity(
+            request.user,
+            f"Delete Warannty: {warranty.name}"
+        )
         warranty.delete()
+        
         return JsonResponse({'success': True})
 class SplashScreenView(TemplateView):
     template_name = "superuser/SplashScreen.html"
@@ -5352,8 +5831,6 @@ class SplashScreenView(TemplateView):
         context["sort_by"] = sort_by
         context["created_date"] = created_date  
         return context
-
-
 class SplashScreenAddView(View):
     def post(self, request):
         screen_image = request.FILES.get('screen_image')
@@ -5374,7 +5851,7 @@ class SplashScreenAddView(View):
         if not screen_image:
             return JsonResponse({'success': False, 'field': 'image', 'msg': 'Screen Image is required.'})
 
-        SplashScreen.objects.create(
+        screen = SplashScreen.objects.create(
             screen_image=screen_image,
             screen_text=screen_text,
             screen_title=screen_title,
@@ -5382,10 +5859,17 @@ class SplashScreenAddView(View):
             screen_order=screen_order,
             screen_language=screen_language
         )
+
+        admin_create_activity(
+            request.user,
+            f"Created Splash Screen: {screen.screen_title}"
+        )
+
         return JsonResponse({'success': True})
 class SplashScreenEditView(View):
     def post(self, request, pk):
         screen = get_object_or_404(SplashScreen, pk=pk)
+
         screen_text = request.POST.get('screen_text')
         screen_title = request.POST.get('screen_title', '').strip()
         screen_body = request.POST.get('screen_body', '').strip()
@@ -5406,16 +5890,31 @@ class SplashScreenEditView(View):
         screen.screen_body = screen_body
         screen.screen_order = screen_order
         screen.screen_language = screen_language
+
         if request.FILES.get('screen_image'):
             screen.screen_image = request.FILES.get('screen_image')
-        screen.save()
-        return JsonResponse({'success': True})
 
+        screen.save()
+
+        admin_update_activity(
+            request.user,
+            f"Updated Splash Screen: {screen.screen_title}"
+        )
+
+        return JsonResponse({'success': True})
 class SplashScreenDeleteView(View):
     def post(self, request, pk):
         screen = get_object_or_404(SplashScreen, pk=pk)
+        title = screen.screen_title
         screen.delete()
+
+        admin_delete_activity(
+            request.user,
+            f"Deleted Splash Screen: {title}"
+        )
+
         return JsonResponse({'success': True})
+
 class StaticcontentsView(TemplateView):
     template_name = "superuser/Staticcontents.html"
 
@@ -5483,6 +5982,11 @@ class AddStaticcontentView(View):
             name_en=name_en,
             description_en=description_en
         )
+        admin_create_activity(
+            request.user,
+            f"Create a Static Contant: {name_en}"
+        )
+      
         return JsonResponse({"success": True})
 
 class EditStaticcontentView(View):
@@ -5499,13 +6003,26 @@ class EditStaticcontentView(View):
         content.name_en = name_en
         content.description_en = description_en
         content.save()
+        admin_create_activity(
+            request.user,
+            f"Edit Static Content: {name_en}"
+        )
+      
         return JsonResponse({"success": True})
 
 class DeleteStaticcontentView(View):
     def post(self, request, pk):
         content = get_object_or_404(Staticcontents, pk=pk)
+        title = getattr(content, "title", f"ID {content.pk}")
         content.delete()
+
+        admin_delete_activity(
+            request.user,
+            f"Deleted Static Content: {title}"
+        )
+
         return JsonResponse({"success": True})
+
 class SocialLinksView(TemplateView):
     template_name = "superuser/sociallink.html"
 
@@ -5558,8 +6075,6 @@ class SocialLinksView(TemplateView):
         })
 
         return context
-
-
 class AddSocialLinkView(View):
     def post(self, request):
         title = request.POST.get("title", "").strip()
@@ -5570,10 +6085,14 @@ class AddSocialLinkView(View):
         if not link:
             return JsonResponse({"success": False, "msg": "Link is required."})
 
-        SocialLinks.objects.create(title=title, link=link)
+        social = SocialLinks.objects.create(title=title, link=link)
+
+        admin_create_activity(
+            request.user,
+            f"Created Social Link: {social.title}"
+        )
+
         return JsonResponse({"success": True})
-
-
 class EditSocialLinkView(View):
     def post(self, request, pk):
         title = request.POST.get("title", "").strip()
@@ -5589,19 +6108,33 @@ class EditSocialLinkView(View):
             link_obj.title = title
             link_obj.link = link
             link_obj.save()
+
+            admin_update_activity(
+                request.user,
+                f"Updated Social Link: {link_obj.title}"
+            )
+
             return JsonResponse({"success": True})
+
         except SocialLinks.DoesNotExist:
             return JsonResponse({"success": False, "msg": "Record not found."})
-
-
 class DeleteSocialLinkView(View):
     def post(self, request, pk):
         try:
             link_obj = SocialLinks.objects.get(pk=pk)
+            title = link_obj.title
             link_obj.delete()
+
+            admin_delete_activity(
+                request.user,
+                f"Deleted Social Link: {title}"
+            )
+
             return JsonResponse({"success": True})
+
         except SocialLinks.DoesNotExist:
             return JsonResponse({"success": False, "msg": "Record not found."})
+
 class FaqView(TemplateView):
     template_name = "superuser/faq.html"
 
@@ -5658,9 +6191,6 @@ class FaqView(TemplateView):
         })
 
         return context
-
-
-
 class AddFaqView(View):
     def post(self, request):
         title = request.POST.get('title_en')
@@ -5670,9 +6200,17 @@ class AddFaqView(View):
             return JsonResponse({'success': False, 'msg': 'All fields are required.'})
 
         faq = FaqForm.objects.create(title_en=title, description_en=desc)
-        return JsonResponse({'success': True, 'msg': 'FAQ added successfully!', 'id': faq.id})
 
+        admin_create_activity(
+            request.user,
+            f"Created FAQ: {faq.title_en}"
+        )
 
+        return JsonResponse({
+            'success': True,
+            'msg': 'FAQ added successfully!',
+            'id': faq.id
+        })
 class EditFaqView(View):
     def post(self, request, pk):
         faq = get_object_or_404(FaqForm, pk=pk)
@@ -5685,14 +6223,29 @@ class EditFaqView(View):
         faq.title_en = title
         faq.description_en = desc
         faq.save()
+
+        admin_update_activity(
+            request.user,
+            f"Updated FAQ: {faq.title_en}"
+        )
+
         return JsonResponse({'success': True, 'msg': 'FAQ updated successfully!'})
-
-
 class DeleteFaqView(View):
     def post(self, request, pk):
         faq = get_object_or_404(FaqForm, pk=pk)
+        title = faq.title_en
         faq.delete()
-        return JsonResponse({'success': True, 'msg': 'FAQ deleted successfully!'})
+
+        admin_delete_activity(
+            request.user,
+            f"Deleted FAQ: {title}"
+        )
+
+        return JsonResponse({
+            'success': True,
+            'msg': 'FAQ deleted successfully!'
+        })
+
 class AdminListView(TemplateView):
     template_name = "superuser/adminlist.html"
 
@@ -5822,14 +6375,19 @@ class SiteMessagesView(TemplateView):
         })
 
         return context
-
-
-
 class ContactDeleteView(View):
     def post(self, request, pk):
         contact = get_object_or_404(Contact, pk=pk)
+        name = getattr(contact, "name", f"ID {contact.pk}")
         contact.delete()
+
+        admin_delete_activity(
+            request.user,
+            f"Deleted Contact: {name}"
+        )
+
         return JsonResponse({'success': True})
+
 
 from dashboard.forms import RetailProfileForm, WholesaleBuyerProfileForm, SupplierProfileForm
 from datetime import datetime, time
@@ -5892,7 +6450,6 @@ class DynamicInputListView(View):
             'sort_by': sort_by,
             'created_date': created_date
         })
-
 class DynamicInputAddView(View):
     def post(self, request):
         try:
@@ -5902,39 +6459,61 @@ class DynamicInputAddView(View):
             required = request.POST.get('required') == 'on'
             status = request.POST.get('status') == 'on'
 
-            DynamicInput.objects.create(
+            obj = DynamicInput.objects.create(
                 form_name=form_name,
                 field_type=field_type,
                 title_en=title_en,
                 required=required,
                 status=status
             )
+
+            admin_create_activity(
+                request.user,
+                f"Created Dynamic Input: {obj.title_en}"
+            )
+
             return JsonResponse({'success': True})
+
         except Exception as e:
             return JsonResponse({'success': False, 'msg': str(e)})
-
 class DynamicInputEditView(View):
     def post(self, request, pk):
         try:
             obj = get_object_or_404(DynamicInput, pk=pk)
+
             obj.form_name = request.POST.get('form_name')
             obj.field_type = request.POST.get('field_type')
             obj.title_en = request.POST.get('title_en')
             obj.required = request.POST.get('required') == 'on'
             obj.status = request.POST.get('status') == 'on'
             obj.save()
+
+            admin_update_activity(
+                request.user,
+                f"Updated Dynamic Input: {obj.title_en}"
+            )
+
             return JsonResponse({'success': True})
+
         except Exception as e:
             return JsonResponse({'success': False, 'msg': str(e)})
-
 class DynamicInputDeleteView(View):
     def post(self, request, pk):
         try:
             obj = get_object_or_404(DynamicInput, pk=pk)
+            title = obj.title_en
             obj.delete()
+
+            admin_delete_activity(
+                request.user,
+                f"Deleted Dynamic Input: {title}"
+            )
+
             return JsonResponse({'success': True})
+
         except Exception as e:
             return JsonResponse({'success': False, 'msg': str(e)})
+
 class FormControlsView(TemplateView):
     template_name = "superuser/FormControls.html"
 
@@ -6020,8 +6599,6 @@ class CatalogView(TemplateView):
             "sort_by": sort_by,
         })
         return context
-
-
 def add_catalog(request):
     if request.method == "POST":
         key = request.POST.get("key", "").strip()
@@ -6035,9 +6612,14 @@ def add_catalog(request):
         if Catalog.objects.filter(key=key).exists():
             return JsonResponse({"success": False, "msg": "Key must be unique."})
 
-        Catalog.objects.create(key=key, description=description)
-        return JsonResponse({"success": True})
+        catalog = Catalog.objects.create(key=key, description=description)
 
+        admin_create_activity(
+            request.user,
+            f"Created Catalog: {catalog.key}"
+        )
+
+        return JsonResponse({"success": True})
 def edit_catalog(request, pk):
     catalog = Catalog.objects.get(id=pk)
 
@@ -6057,11 +6639,25 @@ def edit_catalog(request, pk):
         catalog.description = description
         catalog.save()
 
-        return JsonResponse({"success": True})
+        admin_update_activity(
+            request.user,
+            f"Updated Catalog: {catalog.key}"
+        )
 
+        return JsonResponse({"success": True})
 def delete_catalog(request, pk):
+    catalog = Catalog.objects.filter(id=pk).first()
+    key = catalog.key if catalog else f"ID {pk}"
+
     Catalog.objects.filter(id=pk).delete()
+
+    admin_delete_activity(
+        request.user,
+        f"Deleted Catalog: {key}"
+    )
+
     return JsonResponse({"success": True})
+
 class ConfigurationView(TemplateView):
     template_name = "superuser/configuration.html"
 
@@ -6142,8 +6738,6 @@ class SMSConfigurationView(TemplateView):
             "sort_by": sort_by,
         })
         return context
-
-    
 def sms_edit(request, uid):
     if request.method == "POST":
         try:
@@ -6154,11 +6748,17 @@ def sms_edit(request, uid):
         sms.sms_sender = request.POST.get("sms_sender")
         sms.sms_auth_token = request.POST.get("sms_auth_token")
         sms.sms_account_sid = request.POST.get("sms_account_sid")
-
         sms.save()
+
+        admin_update_activity(
+            request.user,
+            f"Updated SMS Configuration (ID: {sms.id})"
+        )
+
         return JsonResponse({"success": True})
 
     return JsonResponse({"success": False})
+
 def sms_toggle_status(request, uid):
     if request.method == "POST":
         try:
@@ -6206,20 +6806,25 @@ class ThemeView(TemplateView):
             "sort_by": sort_by,
         })
         return context
-
-
-
-
 def edit_theme_value(request, pk):
     if request.method == "POST":
         try:
             theme = Theme.objects.get(pk=pk)
             theme.value = request.POST.get("value", "")
             theme.save()
+
+            admin_update_activity(
+                request.user,
+                f"Updated Theme: {theme.key if hasattr(theme, 'key') else theme.id}"
+            )
+
             return JsonResponse({"success": True})
+
         except Theme.DoesNotExist:
             return JsonResponse({"success": False, "error": "Theme not found"})
+
     return JsonResponse({"success": False, "error": "Invalid request"})
+
 class APIControlView(TemplateView):
     template_name = "superuser/apicontrol.html"
 
@@ -6300,17 +6905,23 @@ class SEOSettingsView(TemplateView):
             "sort_by": sort_by,
         })
         return context
-
-
 class SEOEditView(View):
     def post(self, request, pk):
         try:
             seo = SEOSettings.objects.get(id=pk)
             seo.value = request.POST.get("value", "")
             seo.save()
+
+            admin_update_activity(
+                request.user,
+                f"Updated SEO Setting: {seo.key if hasattr(seo, 'key') else seo.id}"
+            )
+
             return JsonResponse({"success": True})
+
         except SEOSettings.DoesNotExist:
             return JsonResponse({"success": False, "msg": "SEO setting not found"})
+
 class PaymentsettingsView(View):
     template_name = "superuser/paymentsettings.html"
 
@@ -6353,3 +6964,52 @@ class PaymentToggleStatus(View):
         setting.save()
         return JsonResponse({"success": True})
 
+class AdminLogsView(LoginRequiredMixin, TemplateView):
+    template_name = 'superuser/adminlogs.html'
+    login_url = 'dashboard:login'  # optional
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        logs_qs = AdminActivityLog.objects.filter(is_deleted=False)
+
+        # ---- SEARCH (Action / Description / User) ----
+        search_by = self.request.GET.get("search_by")
+        if search_by:
+            logs_qs = logs_qs.filter(
+                Q(description__icontains=search_by) |
+                Q(actions__icontains=search_by) |
+                Q(user__username__icontains=search_by)
+            )
+
+        # ---- DATE RANGE FILTER ----
+        created_date = self.request.GET.get("created_date")
+        if created_date:
+            try:
+                if " - " in created_date:
+                    start_str, end_str = created_date.split(" - ")
+                else:
+                    start_str = end_str = created_date
+
+                start_date = datetime.strptime(start_str.strip(), "%m/%d/%Y")
+                end_date = datetime.strptime(end_str.strip(), "%m/%d/%Y")
+                end_date = end_date.replace(hour=23, minute=59, second=59)
+
+                logs_qs = logs_qs.filter(created_at__range=(start_date, end_date))
+            except ValueError:
+                pass
+
+        # ---- PAGINATION ----
+        page_number = self.request.GET.get("page", 1)
+        per_page = self.request.GET.get("per_page", 10)
+        paginator = Paginator(logs_qs, per_page)
+        page_obj = paginator.get_page(page_number)
+
+        context.update({
+            "logs": page_obj.object_list,
+            "page_obj": page_obj,
+            "search_by": search_by,
+            "created_date": created_date,
+        })
+
+        return context

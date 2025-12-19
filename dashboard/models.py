@@ -2000,3 +2000,81 @@ class PaymentSettings(models.Model):
 
     def __str__(self):
         return f"{self.key} - {self.status}"
+    
+class UserActivityLog(models.Model):
+    class ActionType(models.TextChoices):
+        CREATED = "created", "Created"
+        DELETED = "deleted", "Deleted"
+        LOGGEDIN = "logged in", "Logged In"
+        LOGGEDOUT = "logged out", "Logged Out"
+        PASSWORDCHANGE = "password change", "Password Change"
+        FAILED = "failed", "Failed"
+        UPDATED = "updated", "Updated"
+        PURCHASE = "purchase", "Purchase"
+        REFUND = "payment refund", "Payment Refund"
+        CANCELED = "canceled subscription", "Canceled"
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='user_activity'
+    )
+    actions = models.CharField(
+        max_length=50,
+        choices=ActionType.choices,
+        blank=True,
+        null=True
+    )
+    description = models.TextField(blank=True, null=True)
+    amount = models.PositiveIntegerField(null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_deleted = models.BooleanField(default=False)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+
+    def delete(self, *args, **kwargs):
+        """Soft delete by marking as deleted and setting the deletion timestamp."""
+        self.is_deleted = True
+        self.deleted_at = timezone.now()
+        self.save()
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = verbose_name_plural = "User Activity Logs"
+
+
+class AdminActivityLog(models.Model):
+    class ActionType(models.TextChoices):
+        CREATED = "created", "Created"
+        DELETED = "deleted", "Deleted"
+        LOGGEDIN = "logged in", "Logged In"
+        LOGGEDOUT = "logged out", "Logged Out"
+        PASSWORDCHANGE = "password change", "Password Change"
+        FAILED = "failed", "Failed"
+        UPDATED = "updated", "Updated"
+        PURCHASE = "purchase", "Purchase"
+        REFUND = "payment refund", "Payment Refund"
+        CANCELED = "canceled subscription", "Canceled"
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="admin_activity_logs"   
+    )
+    actions = models.CharField(max_length=50, choices=ActionType.choices, blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
+    amount = models.PositiveIntegerField(null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_deleted = models.BooleanField(default=False)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+
+    def delete(self, *args, **kwargs):
+        self.is_deleted = True
+        self.deleted_at = timezone.now()
+        self.save()
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Admin Activity Log"
+        verbose_name_plural = "Admin Activity Logs"
