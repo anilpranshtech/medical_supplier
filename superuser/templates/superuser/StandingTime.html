@@ -7,6 +7,10 @@
 {% block content %}
 {% tag_user_permissions_list request.user as user_permissions_list %}
 
+<div id="successMessage" class="alert alert-success d-none" style="font-size:16px;">
+  <strong id="successText"></strong>
+</div>
+
 <div class="app-main flex-column flex-row-fluid" id="kt_app_main">
   <div class="d-flex flex-column flex-column-fluid">
     <div id="kt_app_content" class="app-content flex-column-fluid mx-5">
@@ -31,9 +35,6 @@
       </div>
   </div>
 </form>
-        <div id="successMessage" class="alert alert-success d-none" style="font-size:16px;">
-          <strong id="successText"></strong>
-        </div>
 
         <div class="card card-flush">
           <div class="card-header flex-wrap align-items-center py-5 gap-4">
@@ -45,15 +46,15 @@
             </div>
           </div>
 
-          <div class="card-body table-responsive">
+          <div class="card-body table-responsive" style="overflow: visible;">
             <table class="table table-row-dashed align-middle fs-6 gy-5" style="width: 100%; border-collapse: collapse;">
               <thead>
                 <tr class="text-gray-500 fw-bold fs-7 text-uppercase" style="text-align: center;">
-                  <th style="width: 25%; padding: 12px;">Standing Time Name</th>
-                  <th style="width: 25%; padding: 12px;">Value</th>
-                  <th style="width: 25%; padding: 12px;">Status</th>
-                  <th style="width: 25%; padding: 12px;">Created at</th>
-                  <th style="width: 25%; padding: 12px;">Actions</th>
+                  <th style="width: 20%; padding: 12px;">Standing Time Name</th>
+                  <th style="width: 20%; padding: 12px;">Value</th>
+                  <th style="width: 20%; padding: 12px;">Status</th>
+                  <th style="width: 20%; padding: 12px;">Created at</th>
+                  <th style="width: 20%; padding: 12px;">Actions</th>
                 </tr>
               </thead>
           

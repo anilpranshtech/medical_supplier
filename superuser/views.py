@@ -4166,17 +4166,26 @@ class CouponsView(TemplateView):
         supplier_products = Product.objects.filter(
             created_by=self.request.user
         ).select_related("category", "brand")
+        # ---------------- PRODUCTS ----------------
+        products = Product.objects.all().select_related("category", "brand")
 
         buyer_ids = OrderItem.objects.filter(
             product__created_by=self.request.user
         ).values_list("order__user_id", flat=True).distinct()
 
         clients = User.objects.filter(id__in=buyer_ids) if buyer_ids else User.objects.none()
+        # clients = (
+        #     User.objects.filter(id__in=buyer_ids)
+        #     if buyer_ids else User.objects.none()
+        # )
+        clients = (
+            User.objects.all()
+        )
 
         context.update({
             "coupons": coupons,
             "page_obj": coupons,
-            "products": supplier_products,
+            "products": products,
             "clients": clients,
             "search_placeholder_text": "Search Coupons",
             "search_help_text": "Choices: Code, Coupon Type, Discount Type",

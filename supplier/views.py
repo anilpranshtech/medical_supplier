@@ -3104,25 +3104,21 @@ class CouponsView(TemplateView):
         coupons = paginator.get_page(page_number)
 
         # ---------------- PRODUCTS ----------------
-        supplier_products = Product.objects.filter(
-            created_by=self.request.user
-        ).select_related("category", "brand")
-
+        products = Product.objects.all().select_related("category", "brand")
         # ---------------- CLIENTS ----------------
         buyer_ids = OrderItem.objects.filter(
             product__created_by=self.request.user
         ).values_list("order__user_id", flat=True).distinct()
 
         clients = (
-            User.objects.filter(id__in=buyer_ids)
-            if buyer_ids else User.objects.none()
+            User.objects.all()
         )
 
         # ---------------- CONTEXT ----------------
         context.update({
             "coupons": coupons,
             "page_obj": coupons,
-            "products": supplier_products,
+            "products": products,
             "clients": clients,
             "search_placeholder_text": "Search Coupons",
             "search_help_text": "Choices: Code, Coupon Type, Discount Type",
