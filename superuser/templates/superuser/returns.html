@@ -186,7 +186,7 @@
                     {% if "dashboard.change_return" in user_permissions_list %}
                       <div class="menu-item px-3">
                         <a href="#" class="menu-link px-3"
-                           data-bs-toggle="modal" data-bs-target="#updateReturnModal{{ return.id }}">
+                           data-bs-toggle="modal" data-bs-target="#updateReturnModal{{ return.return_serial  }}">
                           Update Status
                         </a>
                       </div>
@@ -207,7 +207,7 @@
                       {% if return.is_refunded %}
                       <div class="menu-item px-3">
                         <a href="#" class="menu-link px-3"
-                           data-bs-toggle="modal" data-bs-target="#refundDetailsModal{{ return.id }}">
+                           data-bs-toggle="modal" data-bs-target="#refundDetailsModal{{ return.return_serial  }}">
                           Refund Details
                         </a>
                       </div>
@@ -216,7 +216,7 @@
                     {% if "dashboard.view_return" in user_permissions_list %}
                       <div class="menu-item px-3">
                         <a href="#" class="menu-link px-3"
-                           data-bs-toggle="modal" data-bs-target="#viewReturnModal{{ return.id }}">
+                           data-bs-toggle="modal" data-bs-target="#viewReturnModal{{ return.return_serial}}">
                           View 
                         </a>
                       </div>
@@ -231,7 +231,7 @@
                     </div>
 
                     <!-- Modal for Update Status -->
-                    <div class="modal fade" id="updateReturnModal{{ return.id }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal fade" id="updateReturnModal{{ return.return_serial  }}" tabindex="-1" aria-hidden="true">
                       <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content">
                           <form method="POST" action="{% url 'superuser:admin_returns_update_status' return.return_serial %}">
@@ -261,11 +261,11 @@
                     </div>
 
               <!-- View Return Details Modal -->
-<div class="modal fade" id="viewReturnModal{{ return.id }}" tabindex="-1" aria-labelledby="viewReturnModalLabel{{ return.id }}" aria-hidden="true">
+<div class="modal fade" id="viewReturnModal{{ return.return_serial  }}" tabindex="-1" aria-labelledby="viewReturnModalLabel{{ return.return_serial  }}" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="viewReturnModalLabel{{ return.id }}">Return Request #{{ return.return_serial }}</h5>
+        <h5 class="modal-title" id="viewReturnModalLabel{{ return.return_serial  }}">Return Request #{{ return.return_serial }}</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body text-start">
@@ -497,11 +497,11 @@
                     </div>
 
                     <!-- Refund Details Modal -->
-                    <div class="modal fade" id="refundDetailsModal{{ return.id }}" tabindex="-1" aria-labelledby="refundDetailsModalLabel{{ return.id }}" aria-hidden="true">
+                    <div class="modal fade" id="refundDetailsModal{{ return.return_serial }}" tabindex="-1" aria-labelledby="refundDetailsModalLabel{{ return.return_serial  }}" aria-hidden="true">
                       <div class="modal-dialog modal-dialog-centered modal-lg">
                         <div class="modal-content">
                           <div class="modal-header">
-                            <h5 class="modal-title" id="refundDetailsModalLabel{{ return.id }}">Refund Details</h5>
+                            <h5 class="modal-title" id="refundDetailsModalLabel{{ return.return_serial  }}">Refund Details</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                           </div>
                           <div class="modal-body text-start">
@@ -574,11 +574,11 @@
                     </div>
 
                     <!-- Delete Modal -->
-                    <div class="modal fade" id="deleteReturnModal{{ return.id }}" tabindex="-1" aria-labelledby="deleteReturnModalLabel{{ return.id }}" aria-hidden="true">
+                    <div class="modal fade" id="deleteReturnModal{{ return.return_serial  }}" tabindex="-1" aria-labelledby="deleteReturnModalLabel{{ return.return_serial  }}" aria-hidden="true">
                       <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content">
                           <div class="modal-header">
-                            <h5 class="modal-title" id="deleteReturnModalLabel{{ return.id }}">Confirm Deletion</h5>
+                            <h5 class="modal-title" id="deleteReturnModalLabel{{ return.return_serial  }}">Confirm Deletion</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                           </div>
                           <div class="modal-body" style="text-align:left;">

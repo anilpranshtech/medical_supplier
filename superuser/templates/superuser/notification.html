@@ -364,6 +364,26 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 
+    const addModal = document.getElementById("addNotificationModal");
+    if (addModal) {
+        addModal.addEventListener("hidden.bs.modal", function () {
+            const form = addModal.querySelector("form");
+            form.reset();
+
+            // Hide specific users section
+            specificUserDiv.classList.add("d-none");
+
+            // Reset multi-select users
+            const recipientsSelect = form.querySelector('select[name="recipients"]');
+            if (recipientsSelect) {
+                Array.from(recipientsSelect.options).forEach(option => {
+                    option.selected = false;
+                });
+            }
+        });
+    }
+
+
     // Edit notification modal setup
     document.querySelectorAll('.edit-notification').forEach(button => {
         button.addEventListener('click', function() {
