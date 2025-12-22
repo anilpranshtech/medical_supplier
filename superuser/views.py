@@ -4762,12 +4762,12 @@ class CityListView(ListView):
         sort_map = {
             "asc_created": "created_at",
             "desc_created": "-created_at",
-            "asc_name": "name",
-            "desc_name": "-name",
         }
 
         if sort_by in sort_map:
             qs = qs.order_by(sort_map[sort_by])
+        else:
+            qs = qs.order_by("-created_at")
 
         return qs
 
@@ -5324,10 +5324,10 @@ class UnitView(View):
             qs = qs.filter(Q(name__icontains=search_by))
 
         # ---- SORT BY CREATED (Unified) ----
-        sort_by = request.GET.get("sort_by")
+        sort_by = self.request.GET.get("sort_by")
         if sort_by == "asc_created":
             qs = qs.order_by("created_at")
-        elif sort_by == "desc_created":
+        else: 
             qs = qs.order_by("-created_at")
 
         # ---- DATE RANGE ----
@@ -5422,7 +5422,7 @@ class DeliveryTimeView(View):
         sort_by = request.GET.get("sort_by")
         if sort_by == "asc_created":
             qs = qs.order_by("created_at")
-        elif sort_by == "desc_created":
+        else:
             qs = qs.order_by("-created_at")
 
         # ---- DATE RANGE ----
@@ -5516,7 +5516,7 @@ class ReturnTimeView(View):
         sort_by = request.GET.get("sort_by")
         if sort_by == "asc_created":
             qs = qs.order_by("created_at")
-        elif sort_by == "desc_created":
+        else:
             qs = qs.order_by("-created_at")
 
         # ---- DATE RANGE ----
@@ -5612,7 +5612,7 @@ class StandingTimeView(View):
         sort_by = request.GET.get("sort_by")
         if sort_by == "asc_created":
             qs = qs.order_by("created_at")
-        elif sort_by == "desc_created":
+        else:
             qs = qs.order_by("-created_at")
 
         # ---- DATE RANGE ----
@@ -5705,7 +5705,7 @@ class WarrantyView(View):
         sort_by = request.GET.get("sort_by")
         if sort_by == "asc_created":
             qs = qs.order_by("created_at")
-        elif sort_by == "desc_created":
+        else:
             qs = qs.order_by("-created_at")
 
         # ---- DATE RANGE ----

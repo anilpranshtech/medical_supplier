@@ -634,5 +634,18 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 });
+
+window.addEventListener('pageshow', function (event) {
+    if (event.persisted) {
+        fetch("{% url 'dashboard:remove_coupon' %}", {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": "{{ csrf_token }}"
+            }
+        }).then(() => {
+            location.reload();
+        });
+    }
+});
 </script>
 {% endblock content %}
