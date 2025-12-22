@@ -747,6 +747,20 @@ data-kt-menu-item-trigger="hover">
             <span class="text-sm">Subscription Plan</span>
         </a>
     </div>
+    <div class="kt-menu-item mt-3">
+        <a class="kt-menu-link flex items-center gap-2 px-4 py-2 text-2sm leading-none relative h-8.5 rounded-full border
+                   {% if request.resolver_match.url_name == 'user_logs' %}
+                       bg-secondary text-primary border-primary/10 bg-primary/10 [&_.kt-step-icon]:text-primary
+                   {% else %}
+                       border-border text-foreground hover:bg-secondary [&_.kt-step-icon]:text-muted-foreground
+                   {% endif %}"
+           href="{% url 'dashboard:user_logs' %}"
+           data-logged-in="{% if request.user.is_authenticated %}true{% else %}false{% endif %}"
+           id="subscription-plan-link">
+            <i class="ki-filled ki-scroll text-base"></i>
+            <span class="text-sm">User Logs</span>
+        </a>
+    </div>
 </div>
 </div>
 

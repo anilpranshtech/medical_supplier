@@ -48,9 +48,18 @@ from django.db.models import Avg
 from django.db.models import  ExpressionWrapper, DecimalField, Case, When
 from decimal import Decimal
 from django.db.models import Value
-
+from utils.userlogs import *
 import logging
 from .forms import *
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from utils.logs import user_login_activity as supplier_login_activity
+from utils.logs import user_failed_activity as supplier_failed_activity
+from dashboard.models import UserActivityLog
+
+# Retailer / Wholesaler logs
+from utils.userlogs import user_login_activity as buyer_login_activity
+from utils.userlogs import user_failed_activity as buyer_failed_activity
+
 logger = logging.getLogger(__name__)
 
 
@@ -322,7 +331,6 @@ class SupplierProductsView(TemplateView):
             context['products'] = []
 
         return context
-
 class CustomLoginView(FormView):
     form_class = EmailOnlyLoginForm
     template_name = 'dashboard/login.html'
@@ -335,48 +343,68 @@ class CustomLoginView(FormView):
 
         user = authenticate(username=email, password=password)
 
-        if user is not None:
-            # Role validation
-            if user_type == 'supplier':
-                if not hasattr(user, 'supplierprofile'):
-                    form.add_error(None, f"{email} is not registered as a supplier.")
-                    return self.form_invalid(form)
-            elif user_type == 'buyer':
-                if buyer_type == 'retailer' and not hasattr(user, 'retailprofile'):
-                    form.add_error(None, f"{email} is not registered as a retailer.")
-                    return self.form_invalid(form)
-                elif buyer_type == 'wholesaler' and not hasattr(user, 'wholesalebuyerprofile'):
-                    form.add_error(None, f"{email} is not registered as a wholesaler.")
-                    return self.form_invalid(form)
-
-            # Login and set role
-            login(self.request, user)
-            if user_type == 'supplier':
-                self.request.session['user_role'] = 'supplier'
-            else:
-                self.request.session['user_role'] = buyer_type
-
-            # Success message
-            messages.success(self.request, f"Welcome back, {email}!")
-
-            return redirect(self.get_success_url())
-        else:
+        # ❌ Invalid credentials
+        if user is None:
+            user_failed_activity(
+                user=None,
+                description=f"Failed login attempt for email: {email}"
+            )
             form.add_error(None, f"Invalid credentials for {email}.")
             return self.form_invalid(form)
+
+        # ❌ Role validation
+        if user_type == 'supplier':
+            if not hasattr(user, 'supplierprofile'):
+                user_failed_activity(
+                    user=user,
+                    description=f"Login failed: {email} attempted supplier login without supplier profile"
+                )
+                form.add_error(None, f"{email} is not registered as a supplier.")
+                return self.form_invalid(form)
+
+        elif user_type == 'buyer':
+            if buyer_type == 'retailer' and not hasattr(user, 'retailprofile'):
+                user_failed_activity(
+                    user=user,
+                    description=f"Login failed: {email} attempted retailer login without retail profile"
+                )
+                form.add_error(None, f"{email} is not registered as a retailer.")
+                return self.form_invalid(form)
+
+            elif buyer_type == 'wholesaler' and not hasattr(user, 'wholesalebuyerprofile'):
+                user_failed_activity(
+                    user=user,
+                    description=f"Login failed: {email} attempted wholesaler login without wholesaler profile"
+                )
+                form.add_error(None, f"{email} is not registered as a wholesaler.")
+                return self.form_invalid(form)
+
+        # ✅ Login success
+        login(self.request, user)
+
+        if user_type == 'supplier':
+            self.request.session['user_role'] = 'supplier'
+        else:
+            self.request.session['user_role'] = buyer_type
+
+        # ✅ Log successful login
+        user_login_activity(user)
+
+        messages.success(self.request, f"Welcome back, {email}!")
+        return redirect(self.get_success_url())
 
     def get_success_url(self):
         user = self.request.user
 
         if user.is_superuser or user.is_staff:
             return reverse_lazy('superuser:superuser')
-        if hasattr(user, 'supplierprofile'):
+        elif hasattr(user, 'supplierprofile'):
             return reverse_lazy('supplier:user_information')
         elif hasattr(user, 'retailprofile'):
             return reverse_lazy('dashboard:home')
         elif hasattr(user, 'wholesalebuyerprofile'):
             return reverse_lazy('dashboard:home')
 
-        # Default fallback
         return reverse_lazy('dashboard:home')
 
 
@@ -551,6 +579,13 @@ class RegistrationView(View):
                         license_number=data.get('license_number', ''),
                         email_confirmed=False  # must confirm by email
                     )
+                    from utils.logs import user_log_activity
+                    user_log_activity(
+                        user=user,
+                        description=f"Supplier account created for {user.email} with company {data.get('supplier_company_name', 'N/A')}",
+                        actions=UserActivityLog.ActionType.CREATED
+                    )
+
                     # confirm_link = f"{settings.SITE_URL}/confirm-email/{token}/"
                     confirm_link = request.build_absolute_uri(
                         reverse('dashboard:confirm_email', args=[token])
@@ -591,6 +626,12 @@ class RegistrationView(View):
                         country_code=country_code,
                         speciality=speciality,
                     )
+
+                    user_created_activity(
+                        user=user,
+                        description=f"Retailer account created for {user.email} at {data.get('workplace', 'N/A')}"
+                    )
+
                 elif user_type == 'wholesale' or buyer_type == 'wholesaler':
                     WholesaleBuyerProfile.objects.create(
                         user=user,
@@ -600,6 +641,11 @@ class RegistrationView(View):
                         department=data.get('department', ''),
                         purchase_capacity=int(data.get('purchase_capacity') or 0)
                     )
+                    user_created_activity(
+                        user=user,
+                        description=f"Wholesaler account created for {user.email} with company {data.get('company_name', 'N/A')}"
+                    )
+
                 else:
                     return JsonResponse({'success': False, 'errors': {'general': 'Invalid user type.'}}, status=400)
 
@@ -1521,39 +1567,67 @@ class WishlistToggleView(LoginRequiredMixin, View):
         try:
             product = Product.objects.get(id=product_id)
         except Product.DoesNotExist:
-            return JsonResponse({'status': 'error', 'message': 'Product not found'}, status=400)
-
-        wishlist_item, created = WishlistProduct.objects.get_or_create(user=request.user, product=product)
+            return JsonResponse(
+                {'status': 'error', 'message': 'Product not found'},
+                status=400
+            )
+        wishlist_item, created = WishlistProduct.objects.get_or_create(
+            user=request.user,
+            product=product
+        )
         if not created:
             wishlist_item.delete()
+            user_deleted_activity(
+                request.user,
+                f"Removed {product.name} from wishlist"
+            )
             return JsonResponse({'status': 'removed'})
+        user_created_activity(
+            request.user,
+            f"Added {product.name} to wishlist"
+        )
         return JsonResponse({'status': 'added'})
-
 
 class WishlistClearView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
+        count = WishlistProduct.objects.filter(user=request.user).count()
         WishlistProduct.objects.filter(user=request.user).delete()
+
+        if count:
+            user_deleted_activity(
+                request.user,
+                f"Cleared wishlist ({count} items removed)"
+            )
+
         return JsonResponse({'status': 'cleared'})
-
-
 class WishlistView(LoginRequiredMixin, TemplateView):
     template_name = 'userdashboard/view/wishlist.html'
     login_url = 'dashboard:login'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        wishlist_items = WishlistProduct.objects.filter(user=self.request.user).select_related('product')
+
+        wishlist_items = WishlistProduct.objects.filter(
+            user=self.request.user
+        ).select_related('product')
 
         for item in wishlist_items:
-            main_img = ProductImage.objects.filter(product=item.product, is_main=True).first()
+            main_img = ProductImage.objects.filter(
+                product=item.product,
+                is_main=True
+            ).first()
             item.product.main_image = main_img.image if main_img else None
 
         paginator = Paginator(wishlist_items, 5)
-        page_number = self.request.GET.get('page')
-        page_obj = paginator.get_page(page_number)
+        page_obj = paginator.get_page(self.request.GET.get('page'))
 
         context['wishlist_items'] = page_obj
         context['page_obj'] = page_obj
+        user_update_activity(
+            self.request.user,
+            "Viewed wishlist"
+        )
+
         return context
 
 
@@ -1581,67 +1655,53 @@ class ShoppingCartView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
-        cart_items = CartProduct.objects.filter(user=user).select_related('product')
 
+        cart_items = CartProduct.objects.filter(user=user).select_related('product')
         total = sum(item.get_total_price() for item in cart_items)
+
         discount_amount = Decimal('0.00')
         applied_coupon_data = None
         has_discount = False
+
         session_coupon = self.request.session.get('applied_coupon')
 
-        # Recalculate coupon dynamically
         if session_coupon:
             try:
                 coupon = Coupon.objects.get(code__iexact=session_coupon['code'])
 
-                if coupon.is_valid_now() and (not coupon.client.exists() or user in coupon.client.all()):
-                    eligible_product_ids = coupon.products.values_list('id', flat=True)
-                    if eligible_product_ids.exists():
-                        eligible_cart_items = cart_items.filter(product_id__in=eligible_product_ids)
-                    else:
-                        eligible_cart_items = cart_items
+                if coupon.is_valid_now():
+                    eligible_products = coupon.products.values_list('id', flat=True)
+                    eligible_items = (
+                        cart_items.filter(product_id__in=eligible_products)
+                        if eligible_products.exists()
+                        else cart_items
+                    )
 
-                    if eligible_cart_items.exists():
-                        eligible_total = sum(item.get_total_price() for item in eligible_cart_items)
+                    if eligible_items.exists():
+                        eligible_total = sum(item.get_total_price() for item in eligible_items)
+
                         if eligible_total >= coupon.minimum_purchase_amount:
-                            used_count = user.applied_coupons.filter(id=coupon.id).count()
-                            if used_count < coupon.count_of_use:
-                                discount_amount = coupon.calculate_discount(Decimal(eligible_total))
-                                applied_coupon_data = {
-                                    'code': coupon.code,
-                                    'discount_amount': str(discount_amount),
-                                }
-                                has_discount = discount_amount > Decimal('0.00')
-                            else:
-                                if 'applied_coupon' in self.request.session:
-                                    del self.request.session['applied_coupon']
+                            discount_amount = coupon.calculate_discount(Decimal(eligible_total))
+                            applied_coupon_data = {
+                                'code': coupon.code,
+                                'discount_amount': f"{discount_amount:.2f}",
+                            }
+                            has_discount = discount_amount > Decimal('0.00')
                         else:
-                            if 'applied_coupon' in self.request.session:
-                                del self.request.session['applied_coupon']
-                    else:
-                        if 'applied_coupon' in self.request.session:
-                            del self.request.session['applied_coupon']
-                else:
-                    if 'applied_coupon' in self.request.session:
-                        del self.request.session['applied_coupon']
-
+                            self.request.session.pop('applied_coupon', None)
             except Coupon.DoesNotExist:
-                if 'applied_coupon' in self.request.session:
-                    del self.request.session['applied_coupon']
+                self.request.session.pop('applied_coupon', None)
 
         final_total = total - discount_amount
 
-        # Pagination
         paginator = Paginator(cart_items, 5)
-        page_number = self.request.GET.get('page')
-        page_obj = paginator.get_page(page_number)
+        page_obj = paginator.get_page(self.request.GET.get('page'))
 
         context.update({
             'cart_items': page_obj,
-            'page_obj': page_obj,
-            'subtotal': "{:.2f}".format(total),
-            'discount_amount': "{:.2f}".format(discount_amount),
-            'final_total': "{:.2f}".format(final_total),
+            'subtotal': f"{total:.2f}",
+            'discount_amount': f"{discount_amount:.2f}",
+            'final_total': f"{final_total:.2f}",
             'applied_coupon': applied_coupon_data,
             'has_discount': has_discount,
         })
@@ -1732,71 +1792,151 @@ def remove_coupon(request):
         'status': 'error',
         'message': 'No coupon to remove.',
     })
-
+@require_POST
 @require_POST
 def add_to_cart(request):
     product_id = request.POST.get('product_id')
     quantity_change = int(request.POST.get('quantity', 1))
-
     try:
         product = get_object_or_404(Product, id=product_id)
+
+        # Check if product is out of stock
+        if product.is_out_of_stock():
+            return JsonResponse({
+                'status': 'error',
+                'message': 'This product is currently out of stock'
+            }, status=400)
+
         cart_item, created = CartProduct.objects.get_or_create(
             user=request.user,
             product=product,
             defaults={'quantity': 0}
         )
-
         new_quantity = cart_item.quantity + quantity_change
+        
+        # Check if requested quantity exceeds available stock
+        if new_quantity > product.available_stock():
+            return JsonResponse({
+                'status': 'error',
+                'message': f'Only {product.available_stock()} units available in stock'
+            }, status=400)
+        
         if new_quantity <= 0:
             cart_item.delete()
+            user_deleted_activity(
+                request.user,
+                f"Removed {product.name} from cart"
+            )
             return JsonResponse({'status': 'removed'})
+        
+        cart_item.quantity = new_quantity
+        cart_item.save()
+        
+        if created:
+            user_created_activity(
+                request.user,
+                f"Added {product.name} to cart (Qty: {new_quantity})"
+            )
         else:
-            cart_item.quantity = new_quantity
-            cart_item.save()
-            return JsonResponse({'status': 'success', 'quantity': cart_item.quantity})
+            user_update_activity(
+                request.user,
+                f"Updated {product.name} quantity to {new_quantity}"
+            )
+        return JsonResponse({'status': 'success', 'quantity': new_quantity})
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
 
 @require_POST
 def update_cart_item(request):
-    if not request.user.is_authenticated:
-        return JsonResponse({'status': 'error', 'message': 'Authentication required'}, status=401)
-
     product_id = request.POST.get('product_id')
     quantity = int(request.POST.get('quantity', 1))
-
     try:
-        cart_item = CartProduct.objects.get(user=request.user, product_id=product_id)
+        cart_item = CartProduct.objects.get(
+            user=request.user,
+            product_id=product_id
+        )
+        product = cart_item.product
+        product_name = product.name
+        
+        # Check if product is out of stock
+        if product.is_out_of_stock():
+            return JsonResponse({
+                'status': 'error',
+                'message': 'This product is currently out of stock'
+            }, status=400)
+        
         if quantity <= 0:
             cart_item.delete()
-            return JsonResponse({'status': 'removed', 'product_id': product_id})
-        else:
-            cart_item.quantity = quantity
-            cart_item.save()
-            return JsonResponse({'status': 'success', 'product_id': product_id, 'quantity': cart_item.quantity})
+            user_deleted_activity(
+                request.user,
+                f"Removed {product_name} from cart"
+            )
+            return JsonResponse({'status': 'removed'})
+        
+        # Check if requested quantity exceeds available stock
+        if quantity > product.available_stock():
+            return JsonResponse({
+                'status': 'error',
+                'message': f'Only {product.available_stock()} units available in stock'
+            }, status=400)
+        
+        cart_item.quantity = quantity
+        cart_item.save()
+
+        user_update_activity(
+            request.user,
+            f"Updated {product_name} quantity to {quantity}"
+        )
+        return JsonResponse({'status': 'success', 'quantity': quantity})
     except CartProduct.DoesNotExist:
-        if quantity > 0:
-            product = get_object_or_404(Product, id=product_id)
-            cart_item = CartProduct.objects.create(user=request.user, product=product, quantity=quantity)
-            return JsonResponse({'status': 'success', 'product_id': product_id, 'quantity': cart_item.quantity})
-        return JsonResponse({'status': 'error', 'message': 'Item not found'}, status=404)
+        product = get_object_or_404(Product, id=product_id)
+        
+        # Check if product is out of stock
+        if product.is_out_of_stock():
+            return JsonResponse({
+                'status': 'error',
+                'message': 'This product is currently out of stock'
+            }, status=400)
+        
+        # Check if requested quantity exceeds available stock
+        if quantity > product.available_stock():
+            return JsonResponse({
+                'status': 'error',
+                'message': f'Only {product.available_stock()} units available in stock'
+            }, status=400)
+
+        CartProduct.objects.create(
+            user=request.user,
+            product=product,
+            quantity=quantity
+        )
+        user_created_activity(
+            request.user,
+            f"Added {product.name} to cart (Qty: {quantity})"
+        )
+        return JsonResponse({'status': 'success', 'quantity': quantity})
+
 
 @require_POST
 def remove_from_cart(request):
     item_id = request.POST.get('item_id')
-
     try:
-        cart_item = get_object_or_404(CartProduct, product__id=item_id, user=request.user)
+        cart_item = get_object_or_404(
+            CartProduct,
+            product__id=item_id,
+            user=request.user
+        )
+        product_name = cart_item.product.name
         cart_item.delete()
+
+        user_deleted_activity(
+            request.user,
+            f"Removed {product_name} from cart"
+        )
         return JsonResponse({'status': 'success'})
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
-       
-
-
-
-
 class ShippingInfoView(LoginRequiredMixin, TemplateView):
     template_name = 'userdashboard/view/shipping_info.html'
     login_url = 'dashboard:login'
@@ -1878,8 +2018,6 @@ class ShippingInfoView(LoginRequiredMixin, TemplateView):
         context['order_summary']['coupon_code'] = coupon.code
 
         return context
-
-
 class AddAddressView(LoginRequiredMixin, FormView):
     form_class = AddressForm
     template_name = 'userdashboard/view/add_address.html'
@@ -1889,14 +2027,21 @@ class AddAddressView(LoginRequiredMixin, FormView):
         address = form.save(commit=False)
         address.user = self.request.user
         if address.is_default:
-            CustomerBillingAddress.objects.filter(user=self.request.user, is_default=True).update(is_default=False)
+            CustomerBillingAddress.objects.filter(
+                user=self.request.user,
+                is_default=True
+            ).update(is_default=False)
         address.save()
+        user_created_activity(
+            self.request.user,
+            "Added a new billing/shipping address"
+        )
         messages.success(self.request, "Address added successfully.")
         return super().form_valid(form)
-
     def form_invalid(self, form):
         messages.error(self.request, "Failed to add address. Please check the form.")
         return super().form_invalid(form)
+
 
 class ManageAddressView(LoginRequiredMixin, FormView):
     form_class = AddressForm
@@ -1909,6 +2054,10 @@ class ManageAddressView(LoginRequiredMixin, FormView):
                 user=self.request.user, is_default=True
             ).update(is_default=False)
         address.save()
+        user_created_activity(
+            self.request.user,
+            f"Added new address ID #{address.id}"
+        )
         return JsonResponse({
             "status": "success",
             "message": "Address added successfully."
@@ -1926,31 +2075,53 @@ class EditAddressView(LoginRequiredMixin, UpdateView):
     form_class = AddressForm
     template_name = 'userdashboard/view/edit_address.html'
     success_url = reverse_lazy('dashboard:shipping_info')
-
     def get_queryset(self):
-        return CustomerBillingAddress.objects.filter(user=self.request.user, is_deleted=False)
-
+        return CustomerBillingAddress.objects.filter(
+            user=self.request.user,
+            is_deleted=False
+        )
     def form_valid(self, form):
         address = form.save(commit=False)
+
         if address.is_default:
-            CustomerBillingAddress.objects.filter(user=self.request.user, is_default=True).exclude(id=address.id).update(is_default=False)
+            CustomerBillingAddress.objects.filter(
+                user=self.request.user,
+                is_default=True
+            ).exclude(id=address.id).update(is_default=False)
         address.save()
+        user_update_activity(
+            self.request.user,
+            f"Updated address ID #{address.id}"
+        )
+        user_update_activity(
+            self.request.user,
+            f"Updated address ID #{address.id}"
+        )
         messages.success(self.request, "Address updated successfully.")
         return super().form_valid(form)
-
     def form_invalid(self, form):
         messages.error(self.request, "Failed to update address. Please check the form.")
         return super().form_invalid(form)
-
-
 class RemoveAddressView(LoginRequiredMixin, View):
     def post(self, request, address_id):
-        address = get_object_or_404(CustomerBillingAddress, id=address_id, user=self.request.user, is_deleted=False)
+        address = get_object_or_404(
+            CustomerBillingAddress,
+            id=address_id,
+            user=request.user,
+            is_deleted=False
+        )
         address.is_deleted = True
         address.save()
+        user_deleted_activity(
+            request.user,
+            f"Removed address ID #{address.id}"
+        )
+        user_deleted_activity(
+            request.user,
+            f"Removed address ID #{address.id}"
+        )
         messages.success(self.request, "Address removed successfully.")
         return redirect('dashboard:shipping_info')
-
 
 class SetDefaultAddressView(LoginRequiredMixin, View):
     def post(self, request):
@@ -2155,7 +2326,8 @@ class PaymentMethodView(LoginRequiredMixin, View):
         context = self.get_context_data(request)
         total = context['order_summary']['total']
         amount_in_paise = int(total * 100)
-
+        
+       
         if amount_in_paise < 100:
             messages.error(request, "Your order total must be at least ₹1/$1. Please add items to your cart.")
             return redirect("dashboard:shopping_cart")
@@ -2197,6 +2369,7 @@ class PaymentMethodView(LoginRequiredMixin, View):
 
         payment_method = request.POST.get("payment_method")
         logger.info(f"Processing {payment_method} payment for user {user.id}, total: {total}")
+      
 
         try:
             with transaction.atomic():
@@ -2221,6 +2394,12 @@ class PaymentMethodView(LoginRequiredMixin, View):
                     )
 
                     order = create_orders_from_cart(user, payment_type="cod", payment_status="unpaid", payment=payment)
+                    user_purchase_activity(
+                        user,
+                        "Order placed using Cash on Delivery",
+                        amount=total
+                    )
+
                     messages.success(request, "Order Placed Successfully")
                     return redirect("dashboard:order_placed")
 
@@ -2287,6 +2466,12 @@ class PaymentMethodView(LoginRequiredMixin, View):
                     )
 
                     order = create_orders_from_cart(user, payment_type="stripe", payment_status="paid", payment=payment)
+                    user_purchase_activity(
+                        user,
+                        "Payment completed via Stripe",
+                        amount=total
+                    )
+
                     messages.success(request, "Payment Done Successfully.")
                     return redirect("dashboard:order_placed")
 
@@ -2329,6 +2514,11 @@ class PaymentMethodView(LoginRequiredMixin, View):
                     )
 
                     order = create_orders_from_cart(user, payment_type="razorpay", payment_status="paid", payment=payment)
+                    user_purchase_activity(
+                        user,
+                        "Payment completed via Razorpay",
+                        amount=total
+                    )
                     messages.success(request, "Payment Done Successfully.")
                     return redirect("dashboard:order_placed")
 
@@ -2355,6 +2545,11 @@ class PaymentMethodView(LoginRequiredMixin, View):
                     )
 
                     order = create_orders_from_cart(user, payment_type="bank_transfer", payment_status="unpaid", payment=payment)
+                    user_purchase_activity(
+                        user,
+                        "Order placed via Bank Transfer (Pending verification)",
+                        amount=total
+                    )
                     messages.success(request, "Order Placed Successfully. Awaiting admin verification.")
                     return redirect("dashboard:order_placed")
 
@@ -2647,26 +2842,28 @@ class MyReturnsView(LoginRequiredMixin, TemplateView):
             'start_date': self.request.GET.get('start_date', ''),
             'end_date': self.request.GET.get('end_date', ''),
         })
-
+     
         return context
-
-
 class SubmitReviewView(LoginRequiredMixin, View):
     def post(self, request, product_id):
         product = get_object_or_404(Product, id=product_id)
         rating = request.POST.get('rating')
         review = request.POST.get('review')
         photo = request.FILES.get('photo')
-
-        # Avoid duplicate
         if RatingReview.objects.filter(user=request.user, product=product).exists():
             messages.error(request, "You have already reviewed this product.")
+            user_failed_activity(
+                request.user,
+                f"Attempted duplicate review for product {product.name}"
+            )
             return redirect('dashboard:my_orders')
-
         if not rating:
             messages.error(request, "Rating is required.")
+            user_failed_activity(
+                request.user,
+                f"Failed to submit review for product {product.name} (rating missing)"
+            )
             return redirect('dashboard:my_orders')
-
         RatingReview.objects.create(
             product=product,
             user=request.user,
@@ -2674,9 +2871,12 @@ class SubmitReviewView(LoginRequiredMixin, View):
             review=review,
             photo=photo
         )
+        user_created_activity(
+            request.user,
+            f"Submitted review for product {product.name}"
+        )
         messages.success(request, "Your review has been submitted!")
         return redirect('dashboard:my_orders')
-
 
 class ReorderView(LoginRequiredMixin, View):
     login_url = 'dashboard:login'
@@ -2810,41 +3010,45 @@ class OrderReceiptView(LoginRequiredMixin, TemplateView):
 
         logger.info(f"Order receipt loaded for order {order.order_id} and user {user.id}")
         return context
-
-
 class DownloadReceiptView(LoginRequiredMixin, View):
     login_url = 'dashboard:login'
 
     def get(self, request, pk):
         user = request.user
-
-        # Prefetch main product images for OrderItems
         main_image_prefetch = Prefetch(
             'items__product__images',
             queryset=ProductImage.objects.filter(is_main=True),
             to_attr='main_image'
         )
-
-        # Fetch the specific order
         try:
-            order = Order.objects.filter(id=pk, user=user).select_related('payment').prefetch_related(main_image_prefetch).get()
+            order = (
+                Order.objects
+                .filter(id=pk, user=user)
+                .select_related('payment')
+                .prefetch_related(main_image_prefetch)
+                .get()
+            )
         except Order.DoesNotExist:
             logger.error(f"Order {pk} not found for user {user.id}")
             return HttpResponse("Order not found or unauthorized", status=404)
-
-        # Fetch related payment details
+       
         payment = order.payment
         payment_method = payment.payment_method if payment else order.items.first().payment_type.lower()
 
-        # Determine payment details
         payment_details = None
         if payment_method == "stripe":
             payment_details = StripePayment.objects.filter(
                 user=user,
                 created_at__range=(payment.created_at, payment.created_at + timedelta(minutes=5))
             ).order_by('-created_at').first()
+
             if payment_details and payment_details.stripe_customer_id:
-                billing_with_card = CustomerBillingAddress.objects.filter(user=user, is_old=True, is_deleted=False).first()
+                billing_with_card = CustomerBillingAddress.objects.filter(
+                    user=user,
+                    is_old=True,
+                    is_deleted=False
+                ).first()
+
                 if billing_with_card and billing_with_card.old_card:
                     try:
                         card_info = json.loads(billing_with_card.old_card.replace("'", "\""))
@@ -2853,26 +3057,32 @@ class DownloadReceiptView(LoginRequiredMixin, View):
                         payment_details.card_last4 = 'N/A'
                 else:
                     payment_details.card_last4 = 'N/A'
+
         elif payment_method == "razorpay":
             payment_details = RazorpayPayment.objects.filter(
                 user=user,
                 created_at__range=(payment.created_at, payment.created_at + timedelta(minutes=5))
             ).order_by('-created_at').first()
+
         elif payment_method == "cod":
             payment_details = CODPayment.objects.filter(
                 user=user,
                 created_at__range=(payment.created_at, payment.created_at + timedelta(minutes=5))
             ).order_by('-created_at').first()
+
         elif payment_method == "bank_transfer":
             payment_details = BankTransferPayment.objects.filter(
                 user=user,
                 created_at__range=(payment.created_at, payment.created_at + timedelta(minutes=5))
             ).order_by('-created_at').first()
-
-        # Prepare order item details
         items = []
         for order_item in order.items.all():
-            product_image = order_item.product.main_image[0] if order_item.product.main_image else None
+            product_image = (
+                order_item.product.main_image[0]
+                if order_item.product.main_image
+                else None
+            )
+
             items.append({
                 'product': order_item.product,
                 'quantity': order_item.quantity,
@@ -2880,11 +3090,11 @@ class DownloadReceiptView(LoginRequiredMixin, View):
                 'total_price': order_item.price * order_item.quantity,
                 'image_url': request.build_absolute_uri(product_image.image.url) if product_image else None,
             })
-
-        # Fetch billing address
-        billing = CustomerBillingAddress.objects.filter(user=user, is_default=True, is_deleted=False).first()
-
-        # Calculate order totals
+        billing = CustomerBillingAddress.objects.filter(
+            user=user,
+            is_default=True,
+            is_deleted=False
+        ).first()
         subtotal = sum(item.price * item.quantity for item in order.items.all()) or Decimal('0.00')
         shipping = order.shipping_fees or Decimal('0.00')
         vat = Decimal('0.00')
@@ -2902,23 +3112,34 @@ class DownloadReceiptView(LoginRequiredMixin, View):
             'order_total': total,
             'order_date': order.created_at,
             'billing': billing,
-            'estimated_delivery': order.created_at.date() + timedelta(days=max((item.product.delivery_time or 5) for item in order.items.all())),
+            'estimated_delivery': order.created_at.date() + timedelta(
+                days=max((item.product.delivery_time or 5) for item in order.items.all())
+            ),
             'payment_method': payment_method,
             'payment_details': payment_details,
             'currency_symbol': 'USD' if payment_method in ['stripe', 'cod'] else 'INR'
         }
-
-        html_string = render_to_string('userdashboard/view/order_receipt_pdf.html', context)
-
-        # Render PDF using xhtml2pdf
+        html_string = render_to_string(
+            'userdashboard/view/order_receipt_pdf.html',
+            context
+        )
         result = BytesIO()
         pdf = pisa.CreatePDF(src=html_string, dest=result)
         if pdf.err:
             logger.error(f"Failed to generate PDF for order {order.order_id}: {pdf.err}")
+           
+
             return HttpResponse('Error generating PDF', status=500)
+        user_update_activity(
+            user,
+            f"Downloaded receipt for order #{order.order_id}"
+        )
 
         response = HttpResponse(result.getvalue(), content_type='application/pdf')
-        response['Content-Disposition'] = f'attachment; filename="order_receipt_{order.order_id}.pdf"'
+        response['Content-Disposition'] = (
+            f'attachment; filename="order_receipt_{order.order_id}.pdf"'
+        )
+
         logger.info(f"Generated PDF receipt for order {order.order_id} and user {user.id}")
         return response
 
@@ -3044,6 +3265,11 @@ class UploadAvatarView(LoginRequiredMixin, View):
                 profile.save()
                 if request.headers.get("x-requested-with") == "XMLHttpRequest":
                     return JsonResponse({"status": "success", "message": "Avatar updated successfully."})
+                user_update_activity(
+                    request.user,
+                    "Updated profile avatar"
+                )
+
                 messages.success(request, "Avatar updated successfully.")
 
             elif 'avatar_remove' in request.POST:
@@ -3051,6 +3277,11 @@ class UploadAvatarView(LoginRequiredMixin, View):
                     profile.profile_picture.delete(save=True)
                 if request.headers.get("x-requested-with") == "XMLHttpRequest":
                     return JsonResponse({"status": "success", "message": "Avatar removed successfully."})
+                user_update_activity(
+                    request.user,
+                    "Removed profile avatar"
+                )
+
                 messages.success(request, "Avatar removed successfully.")
 
             return redirect('dashboard:user_profile')
@@ -3097,6 +3328,10 @@ class EditProfileView(LoginRequiredMixin, View):
             profile.speciality = speciality
 
         profile.save()
+        user_update_activity(
+            user,
+            "Updated profile details"
+        )
 
         return JsonResponse({
             'status': 'success',
@@ -3122,7 +3357,10 @@ class ChangePasswordView(LoginRequiredMixin, View):
         user.set_password(new)
         user.save()
         logout(request)
-
+        user_update_activity(
+            user,
+            "Changed account password"
+        )
         return JsonResponse({
             'status': 'success',
             'message': 'Password changed successfully. Please login again.'
@@ -3136,6 +3374,10 @@ class EditEmailView(LoginRequiredMixin, View):
         form = EmailForm(request.POST, instance=self.request.user)
         if form.is_valid():
             form.save()
+            user_failed_activity(
+            request.user,
+            "Failed to update email"
+        )
             return JsonResponse({'status': 'success', 'message': 'Email updated successfully.'})
         return JsonResponse({'status': 'error', 'message': 'Failed to update email. Please check the form.'})
 
@@ -3158,6 +3400,10 @@ class EditPhoneView(LoginRequiredMixin, View):
                     request.user.retailprofile.phone = phone_number
                     request.user.retailprofile.save()
                     print('----Phone Updated in retailprofile ----', phone_number)
+                    user_update_activity(
+                    request.user,
+                    f"Updated phone number to {phone_number}"
+                )
                     return JsonResponse({
                         'status': 'success',
                         'message': 'Phone number updated successfully'
@@ -3167,6 +3413,10 @@ class EditPhoneView(LoginRequiredMixin, View):
                     request.user.wholesalebuyerprofile.phone = phone_number
                     request.user.wholesalebuyerprofile.save()
                     print('----Phone Updated in wholesalebuyerprofile ----', phone_number)
+                    user_update_activity(
+                    request.user,
+                    f"Updated phone number to {phone_number}"
+                )
                     return JsonResponse({
                         'status': 'success',
                         'message': 'Phone number updated successfully'
@@ -3176,6 +3426,10 @@ class EditPhoneView(LoginRequiredMixin, View):
                     request.user.supplierprofile.phone = phone_number
                     request.user.supplierprofile.save()
                     print('----Phone Updated in supplierprofile ----', phone_number)
+                    user_update_activity(
+                    request.user,
+                    f"Updated phone number to {phone_number}"
+                )
                     return JsonResponse({
                         'status': 'success',
                         'message': 'Phone number updated successfully'
@@ -3186,6 +3440,10 @@ class EditPhoneView(LoginRequiredMixin, View):
                     profile.phone = phone_number
                     profile.save()
                     print('----Phone Updated in admin side ----', phone_number)
+                    user_update_activity(
+                    request.user,
+                    f"Updated phone number to {phone_number}"
+                )
                     return JsonResponse({
                         'status': 'success',
                         'message': 'Phone number updated successfully'
@@ -3354,13 +3612,17 @@ class SignInView(View):
         else:
             messages.error(request, 'Invalid email or password.')
             return redirect('dashboard:login')
-
-
 class LogoutView(View):
     def get(self, request):
+        user = request.user 
+
+        if user.is_authenticated:
+            user_logout_activity(user)
+
         logout(request)
         messages.success(request, "You have been logged out successfully.")
         return redirect('dashboard:home')
+
 
 
 class PaymentView(View):
@@ -3538,15 +3800,14 @@ class ApproveRoleRequestView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
         context['can_reject'] = self.object.status == 'approved'
         return context
 
-
 class RFQSubmissionView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         product_id = request.POST.get('product_id')
+
         try:
             product = Product.objects.get(id=product_id)
         except Product.DoesNotExist:
             return redirect('dashboard:home')
-
         rfq = RFQRequest.objects.create(
             requested_by=request.user,
             product=product,
@@ -3556,8 +3817,10 @@ class RFQSubmissionView(LoginRequiredMixin, View):
             expected_delivery_date=request.POST.get('expected_delivery_date') or None,
             status='received',
         )
-
-        # Send email confirmation
+        user_created_activity(
+            request.user,
+            f"Submitted RFQ for {product.name} (Qty: {rfq.quantity})"
+        )
         send_mail(
             subject='Quotation Request Received',
             message='Thank you for your quotation request. Our team will get back to you shortly.',
@@ -3565,12 +3828,15 @@ class RFQSubmissionView(LoginRequiredMixin, View):
             recipient_list=[request.user.email],
         )
         rfq.email_sent = True
-
         rfq.save()
+        user_update_activity(
+            request.user,
+            f"RFQ confirmation email sent for {product.name}"
+        )
         return redirect('dashboard:home')
-
     def get(self, request, *args, **kwargs):
         return redirect('dashboard:home')
+
 
 
 class UserQuotationView(LoginRequiredMixin, TemplateView):
@@ -3582,9 +3848,11 @@ class UserQuotationView(LoginRequiredMixin, TemplateView):
         user = self.request.user
         context['sent_quotations'] = RFQRequest.objects.filter(quoted_by=user)
         context['received_quotations'] = RFQRequest.objects.filter(requested_by=user)
+        user_update_activity(
+            user,
+            "Viewed RFQ quotations"
+        )
         return context
-
-
 class AddRFQCommentView(LoginRequiredMixin, View):
     def post(self, request, rfq_id):
         rfq = get_object_or_404(RFQRequest, id=rfq_id)
@@ -3602,10 +3870,15 @@ class AddRFQCommentView(LoginRequiredMixin, View):
             total_price=total_price or None,
             total_commission=total_commission or None,
             commented_by=request.user,
-            admin_reply=None 
+            admin_reply=None
+        )
+        user_created_activity(
+            request.user,
+            f"Added comment on RFQ #{rfq.id} for {rfq.product.name}"
         )
         messages.success(request, "Comment added successfully.")
         return redirect('dashboard:view_user_quotations')
+
 
 class RFQCommentsAPIView(LoginRequiredMixin, View):
     def get(self, request, rfq_id):
@@ -3877,22 +4150,30 @@ class CheckStripeSubscriptionView(LoginRequiredMixin, View):
                 "status": "error",
                 "message": str(e)
             }, status=500)
-
-
 class PostQuestionView(LoginRequiredMixin, View):
     def post(self, request):
         question_text = request.POST.get('question', '').strip()
         product_id = request.POST.get('product_id')
-
         if not question_text:
+            user_failed_activity(
+                request.user,
+                "Attempted to post an empty product question"
+            )
             messages.error(request, "Please type your question.")
-    
             if product_id:
                 return redirect('dashboard:product_detail', pk=product_id)
             return redirect('dashboard:home')
-
         product = get_object_or_404(Product, pk=product_id)
-        Question.objects.create(user=request.user, product=product, text=question_text)
+        Question.objects.create(
+            user=request.user,
+            product=product,
+            text=question_text
+        )
+        user_created_activity(
+            request.user,
+            f"Posted a question on product {product.name}"
+        )
+
         messages.success(request, "Your question has been posted.")
         return redirect('dashboard:product_detail', pk=product.id)
 
@@ -4005,6 +4286,10 @@ class RequestReturnView(LoginRequiredMixin, View):
             # ================================================
 
             option_text = "refund" if return_option == "return" else "replacement"
+            user_created_activity(
+                request.user,
+                f"Return request {return_serial} submitted for {order_item.product.name} ({option_text})"
+            )
             messages.success(
                 request,
                 f"Return request for {option_text} submitted successfully! "
@@ -4209,4 +4494,37 @@ class ContactUsView(FormView):
         context['contact_info'] = Contact.objects.filter(
             display_phone__isnull=False
         ).first()
+        return context
+class UserLogsView(LoginRequiredMixin, TemplateView):
+    template_name = "pages/userlogs.html"
+    paginate_by = 10  
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        all_logs = (
+            UserLogs.objects
+            .filter(is_deleted=False)
+            .select_related('user')
+            .order_by('-created_at')
+        )
+
+        paginator = Paginator(all_logs, self.paginate_by)
+        page_number = self.request.GET.get("page")
+
+        try:
+            page_obj = paginator.page(page_number)
+        except PageNotAnInteger:
+            page_obj = paginator.page(1)
+        except EmptyPage:
+            page_obj = paginator.page(paginator.num_pages)
+
+        context.update({
+            "user_logs": page_obj,         
+            "page_obj": page_obj,
+            "paginator": paginator,
+            "total_logs": all_logs.count(),
+            "action_types": UserLogs.ActionType.choices,
+        })
+
         return context

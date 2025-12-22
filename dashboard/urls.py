@@ -125,6 +125,9 @@ urlpatterns = [
     path('terms-conditions/', TermsConditionsView.as_view(), name="terms_conditions"),
     path('contact-us/', ContactUsView.as_view(), name='contact_us'),
 
+    #user logs
+    path('userlogs/',UserLogsView.as_view(), name = 'user_logs'),
+
     
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
