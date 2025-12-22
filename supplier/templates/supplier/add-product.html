@@ -203,7 +203,20 @@
                                             </select>
                                             <div class="text-muted fs-7">Set the product condition.</div>
                                         </div>
-
+<div class="mb-10 mt-4 fv-row">
+    <label class="form-label">Cash on Delivery</label>
+    <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" id="cash_on_delivery" 
+               name="cash_on_delivery" 
+               {% if cash_on_delivery|default_if_none:True %}checked{% endif %}>
+        <label class="form-check-label" for="cash_on_delivery">
+            Enable Cash on Delivery option
+        </label>
+    </div>
+    <div class="text-muted fs-8 mt-1">
+        If disabled, customers won't see COD as a payment option for this product.
+    </div>
+</div>
                                         <div class="mb-10 mt-4 fv-row">
                                             <label class="form-label">Is Returnable?</label>
                                             <div class="form-check form-switch">

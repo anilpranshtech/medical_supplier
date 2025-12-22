@@ -2283,6 +2283,9 @@ class PaymentMethodView(LoginRequiredMixin, View):
     def get_context_data(self, request):
         cart_items = CartProduct.objects.filter(user=request.user).select_related('product')
         subtotal = sum(item.get_total_price() for item in cart_items) or Decimal('0.00')
+        cod_allowed = all(
+            item.product.cash_on_delivery for item in cart_items
+        )
         shipping = Decimal('00.00')
         vat = Decimal('0.00')
         coupon_discount = Decimal('0.00')
@@ -2300,6 +2303,7 @@ class PaymentMethodView(LoginRequiredMixin, View):
 
         return {
             'cart_items': cart_items,
+            'cod_allowed': cod_allowed,
             'order_summary': {
                 'subtotal': subtotal,
                 'shipping': shipping,
@@ -2342,6 +2346,21 @@ class PaymentMethodView(LoginRequiredMixin, View):
         context = self.get_context_data(request)
         total = context['order_summary']['total']
         user = request.user
+        cart_items = CartProduct.objects.filter(
+            user=user
+        ).select_related('product')
+        cod_allowed = all(
+            item.product.cash_on_delivery for item in cart_items
+        )
+
+        payment_method = request.POST.get("payment_method")
+
+        if payment_method == "cod" and not cod_allowed:
+            messages.error(
+                request,
+                "Cash on Delivery is not available for one or more products in your cart."
+            )
+            return redirect("dashboard:payment_method")
         if not user or not user.is_authenticated:
             logger.error("Unauthenticated user attempted payment")
             messages.error(request, "You must be logged in to process payment.")

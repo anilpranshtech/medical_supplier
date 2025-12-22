@@ -339,6 +339,7 @@ class AddproductsView(LoginRequiredMixin,OnboardingRequiredMixin, View):
         show_rfq = button_type in ['both', 'rfq']
         both_selected = button_type == 'both'
         discount_option = data.get('discount_option')
+        cash_on_delivery = data.get('cash_on_delivery') == 'on'
 
         # Debugging: Log form data
         print("Form POST data:", dict(data))
@@ -440,6 +441,7 @@ class AddproductsView(LoginRequiredMixin,OnboardingRequiredMixin, View):
                 ask_admin_to_publish=ask_admin_to_publish,
                 is_active=(data.get('is_active') == 'True'),
                 show_add_to_cart=show_add_to_cart,
+                cash_on_delivery=cash_on_delivery,
                 show_rfq=show_rfq,
                 Both=both_selected,
                 created_by=request.user
@@ -619,6 +621,7 @@ class EditproductsView(LoginRequiredMixin, View):
             'brochure_url': brochure_url,
             'subcategories': subcategories,
             'lastcategories': lastcategories,
+            'cash_on_delivery': product.cash_on_delivery,
         }
         return render(request, self.template, context)
 
@@ -660,6 +663,7 @@ class EditproductsView(LoginRequiredMixin, View):
             product.expiration_days = self._parse_int(data.get('expiration_days'), min_value=0)
             product.tag = data.get('tag', 'none')
             product.is_active = data.get('is_active') == 'True'
+            product.cash_on_delivery = data.get('cash_on_delivery') == 'on'
 
             # Returnable toggle
             product.is_returnable = data.get('is_returnable') == 'on'

@@ -385,6 +385,11 @@ class Product(models.Model):
     condition = models.CharField(max_length=20, choices=[('new', 'New'), ('used', 'Used')], null=True, blank=True)
     tag = models.CharField(max_length=30, choices=[('recent', 'Recently Arrived'), ('popular', 'Most Wanted'),('limited', 'Limited Stock'), ('none', 'None')], default='none')
     warranty = models.CharField(max_length=20, choices=[('none', 'None'), ('1yr', '1 Year'), ('2yr', '2 Years')], default='none')
+    cash_on_delivery = models.BooleanField(
+        default=True, 
+        verbose_name="Cash on Delivery Available",
+        help_text="Enable Cash on Delivery option for this product"
+    )
 
     created_by = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
