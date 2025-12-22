@@ -1793,14 +1793,12 @@ def remove_coupon(request):
         'message': 'No coupon to remove.',
     })
 @require_POST
-@require_POST
+
 def add_to_cart(request):
     product_id = request.POST.get('product_id')
     quantity_change = int(request.POST.get('quantity', 1))
     try:
         product = get_object_or_404(Product, id=product_id)
-
-        # Check if product is out of stock
         if product.is_out_of_stock():
             return JsonResponse({
                 'status': 'error',
@@ -1813,8 +1811,6 @@ def add_to_cart(request):
             defaults={'quantity': 0}
         )
         new_quantity = cart_item.quantity + quantity_change
-        
-        # Check if requested quantity exceeds available stock
         if new_quantity > product.available_stock():
             return JsonResponse({
                 'status': 'error',
@@ -1858,8 +1854,6 @@ def update_cart_item(request):
         )
         product = cart_item.product
         product_name = product.name
-        
-        # Check if product is out of stock
         if product.is_out_of_stock():
             return JsonResponse({
                 'status': 'error',
@@ -1873,8 +1867,6 @@ def update_cart_item(request):
                 f"Removed {product_name} from cart"
             )
             return JsonResponse({'status': 'removed'})
-        
-        # Check if requested quantity exceeds available stock
         if quantity > product.available_stock():
             return JsonResponse({
                 'status': 'error',
@@ -1891,15 +1883,11 @@ def update_cart_item(request):
         return JsonResponse({'status': 'success', 'quantity': quantity})
     except CartProduct.DoesNotExist:
         product = get_object_or_404(Product, id=product_id)
-        
-        # Check if product is out of stock
         if product.is_out_of_stock():
             return JsonResponse({
                 'status': 'error',
                 'message': 'This product is currently out of stock'
             }, status=400)
-        
-        # Check if requested quantity exceeds available stock
         if quantity > product.available_stock():
             return JsonResponse({
                 'status': 'error',
