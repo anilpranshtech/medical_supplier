@@ -62,15 +62,7 @@
                 <tr>
                   <td style="padding: 12px; vertical-align: middle;">{{ city.name }}</td>
                   <td style="padding: 12px; vertical-align: middle;">
-                    {% if city %}
-                       {% for region in regions %}
-                        <option value="{{ region.id }}">
-                            {{ region.name }}
-                        </option>
-                    {% endfor %}
-                    {% else %}
-                      -
-                    {% endif %}
+                            {{ city.region.name }}
                   </td>
                   <td class="text-center">
                         <div class="badge badge-light fw-bold" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ city.created_at|date:'F d Y P' }}">

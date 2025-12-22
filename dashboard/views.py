@@ -1580,6 +1580,9 @@ class ShoppingCartView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        if self.request.session.get('applied_coupon'):
+            del self.request.session['applied_coupon']
+            self.request.session.modified = True
         user = self.request.user
         cart_items = CartProduct.objects.filter(user=user).select_related('product')
 
