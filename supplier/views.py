@@ -45,7 +45,16 @@ from django.shortcuts import get_object_or_404
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from xhtml2pdf import pisa
-from dashboard.forms import ContactForm    
+from dashboard.forms import ContactForm 
+from utils.logs import (
+    user_update_activity,
+    user_password_change_activity,
+    user_failed_activity,
+    user_log_activity,
+    user_update_activity,
+    user_failed_activity,
+    user_refund_activity
+)   
 
 
 logger = logging.getLogger(__name__)
@@ -455,13 +464,25 @@ class AddproductsView(LoginRequiredMixin,OnboardingRequiredMixin, View):
             gallery_images = files.getlist('gallery_images')
             for img in gallery_images:
                 ProductImage.objects.create(product=product, image=img, is_main=False)
-
+                
+            user_log_activity(
+            user=request.user,
+            actions=UserActivityLog.ActionType.CREATED,
+            description=f"Product created: {product.name} (ID: {product.id})"
+            )
             messages.success(request, "Product added successfully.")
             return redirect('supplier:products_list')
-
         except IntegrityError as e:
+            user_failed_activity(
+             user=request.user,
+             description=f"Failed to create product (IntegrityError): {e}"
+            )
             messages.error(request, f"Integrity error: {e}")
         except Exception as e:
+            user_failed_activity(
+             user=request.user,
+             description=f"Failed to create product: {e}"
+            )
             messages.error(request, f"Error: {e}")
 
         return self._render_form_with_context(request, data)
@@ -743,11 +764,19 @@ class EditproductsView(LoginRequiredMixin, View):
             # Debug: Verify saved values
             saved_product = Product.objects.get(pk=pk)
             print(f"After save - product.price: {saved_product.price}, product.offer_percentage: {saved_product.offer_percentage}, product.discount_price: {saved_product.discount_price}")
+            user_update_activity(
+                 user=request.user,
+                 description=f"Product updated: {product.name} (ID: {product.id})"
+            )
 
             messages.success(request, 'Product updated successfully!')
             return redirect('supplier:products_list')
 
         except Exception as e:
+            user_failed_activity(
+                  user=request.user,
+                 description=f"Failed to update product ID {pk}: {e}"
+            )
             print('Exception in edit product:', e)
             messages.error(request, f'Issue in Product update: {e}')
             return self._render_form_with_context(request, data, product)
@@ -845,9 +874,14 @@ class DeleteProductImageView(LoginRequiredMixin, View):
     def post(self, request, pk):
         image = get_object_or_404(ProductImage, pk=pk)
         product_id = image.product.id
+        user_log_activity(
+        user=request.user,
+        actions=UserActivityLog.ActionType.DELETED,
+        description=f"Deleted product image (Image ID: {pk}) for Product ID {product_id}"
+        )
         image.delete()
         return redirect('supplier:edit_product', pk=product_id)
-    
+
     def get(self, request, pk):
         return self.post(request, pk)
 
@@ -856,10 +890,19 @@ class DeleteProductView(LoginRequiredMixin, View):
     def post(self, request, pk):
         try:
             product = get_object_or_404(Product, pk=pk)
+            user_log_activity(
+            user=request.user,
+            actions=UserActivityLog.ActionType.DELETED,
+            description=f"Deleted product: {product.name} (ID: {product.id})"
+            )
             product.delete()
             messages.success(request, "Product deleted successfully")
             return JsonResponse({'success': True})
         except Exception as e:
+            user_failed_activity(
+            user=request.user,
+            description=f"Failed to delete product ID {pk}: {e}"
+            )
             messages.error(request, "Faild to delect product.")
             return JsonResponse({'success': False})
 
@@ -1448,41 +1491,61 @@ class UserOverView( OnboardingRequiredMixin,View):
         return render(request, 'supplier/overview.html')
 
 
-class AdminSettingView( View):
+
+
+
+class AdminSettingView(View):
+
     def get(self, request):
         return render(request, 'supplier/settings.html')
-
     def post(self, request):
+        user = request.user
         if 'fname' in request.POST:
             fname = request.POST.get('fname')
             lname = request.POST.get('lname')
             email = request.POST.get('aemail')
-           
-            user = request.user
+
             user.first_name = fname
             user.last_name = lname
             user.email = email
             user.save()
+            user_update_activity(
+                user=user,
+                description="User updated profile information (name/email)"
+            )
 
             messages.success(request, "Profile updated successfully!")
             return redirect('supplier:profile_setting')
-
         elif 'currentpassword' in request.POST:
             current = request.POST.get('currentpassword')
             new = request.POST.get('newpassword')
             confirm = request.POST.get('confirmpassword')
-            user = request.user
 
             if not check_password(current, user.password):
                 messages.error(request, "Current password is incorrect.")
+                user_failed_activity(
+                    user=user,
+                    description="Failed password change attempt (wrong current password)"
+                )
             elif new != confirm:
                 messages.error(request, "New passwords do not match.")
+
+                user_failed_activity(
+                    user=user,
+                    description="Failed password change attempt (password mismatch)"
+                )
             elif len(new) < 8:
                 messages.error(request, "Password must be at least 8 characters.")
+
+                user_failed_activity(
+                    user=user,
+                    description="Failed password change attempt (password too short)"
+                )
             else:
                 user.set_password(new)
                 user.save()
-                update_session_auth_hash(request, user) 
+                update_session_auth_hash(request, user)
+                user_password_change_activity(user)
                 messages.success(request, "Password updated successfully.")
 
             return redirect('supplier:profile_setting')
@@ -1718,13 +1781,22 @@ class LogoutView(View):
 class SupplierRFQListView(LoginRequiredMixin, ListView):
     template_name = 'supplier/rfq_list.html'
     context_object_name = 'rfqs'
-    paginate_by = 10   
+    paginate_by = 10
 
     def get_queryset(self):
         user = self.request.user
-        queryset = RFQRequest.objects.all() if user.is_superuser else RFQRequest.objects.filter(product__created_by=user)
+        user_log_activity(
+            user=user,
+            actions=UserActivityLog.ActionType.UPDATED,
+            description="Viewed RFQ list"
+        )
 
-        # Apply filters
+        queryset = (
+            RFQRequest.objects.all()
+            if user.is_superuser
+            else RFQRequest.objects.filter(product__created_by=user)
+        )
+
         search_query = self.request.GET.get('search', '')
         status_filter = self.request.GET.get('status_filter', '')
         quantity_filter = self.request.GET.get('quantity_filter', '')
@@ -1747,14 +1819,15 @@ class SupplierRFQListView(LoginRequiredMixin, ListView):
                 if quantity > 0:
                     queryset = queryset.filter(quantity__gte=quantity)
             except ValueError:
-                pass  
+                pass
 
         if created_at_from:
             try:
-                created_at_from = datetime.strptime(created_at_from, '%Y-%m-%d')
-                queryset = queryset.filter(created_at__gte=created_at_from)
+                queryset = queryset.filter(
+                    created_at__gte=datetime.strptime(created_at_from, '%Y-%m-%d')
+                )
             except ValueError:
-                pass  
+                pass
 
         if created_at_to:
             try:
@@ -1762,7 +1835,7 @@ class SupplierRFQListView(LoginRequiredMixin, ListView):
                 created_at_to = created_at_to.replace(hour=23, minute=59, second=59)
                 queryset = queryset.filter(created_at__lte=created_at_to)
             except ValueError:
-                pass  
+                pass
 
         return queryset
 
@@ -1770,13 +1843,21 @@ class SupplierRFQListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['status_choices'] = RFQRequest.STATUS_CHOICES
         return context
-
-
-class SupplierQuotationUpdateView(UpdateView):
+class SupplierQuotationUpdateView(LoginRequiredMixin, UpdateView):
     model = RFQRequest
     form_class = SupplierRFQQuotationForm
     template_name = 'supplier/rfq_quotation_form.html'
     success_url = reverse_lazy('supplier:rfq_list')
+
+    def get(self, request, *args, **kwargs):
+        response = super().get(request, *args, **kwargs)
+
+        user_log_activity(
+            user=request.user,
+            actions=UserActivityLog.ActionType.UPDATED,
+            description=f"Viewed RFQ quotation (RFQ ID {self.get_object().id})"
+        )
+        return response
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1785,50 +1866,53 @@ class SupplierQuotationUpdateView(UpdateView):
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
-
-        # === 1. ADD COMMENT ===
         if 'add_comment' in request.POST:
             comment_text = request.POST.get('comment', '').strip()
+
             if comment_text:
                 RFQComment.objects.create(
                     rfq=self.object,
                     comment=comment_text,
                     commented_by=request.user,
                 )
+
+                user_log_activity(
+                    user=request.user,
+                    actions=UserActivityLog.ActionType.CREATED,
+                    description=f"Added comment on RFQ ID {self.object.id}"
+                )
+
                 messages.success(request, "Comment added.")
             else:
                 messages.error(request, "Comment cannot be empty.")
-            return redirect('supplier:rfq_quote', pk=self.object.pk)
 
-        # === 2. ADD ADMIN REPLY ===
+            return redirect('supplier:rfq_quote', pk=self.object.pk)
         if 'add_reply' in request.POST:
             reply_to_id = request.POST.get('reply_to')
             reply_text = request.POST.get('admin_reply', '').strip()
 
-            if not reply_to_id or not reply_text:
-                messages.error(request, "Invalid reply.")
-                return redirect('supplier:rfq_quote', pk=self.object.pk)
-
             try:
                 comment = RFQComment.objects.get(id=reply_to_id, rfq=self.object)
-                if comment.admin_reply:
-                    messages.error(request, "Reply already exists.")
-                else:
-                    comment.admin_reply = reply_text
-                    comment.replied_at = timezone.now()
-                    comment.save()
-                    messages.success(request, "Reply saved.")
+                comment.admin_reply = reply_text
+                comment.replied_at = timezone.now()
+                comment.save()
+
+                user_log_activity(
+                    user=request.user,
+                    actions=UserActivityLog.ActionType.UPDATED,
+                    description=f"Replied to RFQ comment (RFQ ID {self.object.id})"
+                )
+
+                messages.success(request, "Reply saved.")
             except RFQComment.DoesNotExist:
                 messages.error(request, "Comment not found.")
-            return redirect('supplier:rfq_quote', pk=self.object.pk)
 
-        # === 3. SEND QUOTATION ===
+            return redirect('supplier:rfq_quote', pk=self.object.pk)
         if 'send_quotation' in request.POST:
             form = self.get_form()
             if form.is_valid():
                 return self.form_valid(form)
-            else:
-                return self.form_invalid(form)
+            return self.form_invalid(form)
 
         return redirect('supplier:rfq_quote', pk=self.object.pk)
 
@@ -1839,32 +1923,40 @@ class SupplierQuotationUpdateView(UpdateView):
         rfq.status = 'quoted'
         rfq.save()
 
+        user_log_activity(
+            user=self.request.user,
+            actions=UserActivityLog.ActionType.CREATED,
+            description=f"Quotation sent for RFQ ID {rfq.id}"
+        )
+
         self.send_quotation_email(rfq)
-        messages.success(self.request, "Quotation sent and email delivered.")
+        messages.success(self.request, "Quotation sent successfully.")
         return super().form_valid(form)
 
     def send_quotation_email(self, rfq):
-        subject = f"Quotation for RFQ #{rfq.id} - {rfq.product.name}"
-        recipient_email = rfq.requested_by.email
-        context = {
-            'rfq': rfq,
-            'supplier': rfq.quoted_by,
-            'comments': rfq.comments.all(),
-        }
-        message = render_to_string('supplier/rfq_quotation_sent.html', context)
+        subject = f"Quotation for RFQ #{rfq.id}"
+        message = render_to_string(
+            'supplier/rfq_quotation_sent.html',
+            {'rfq': rfq}
+        )
+
         email = EmailMessage(
             subject=subject,
             body=message,
             from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[recipient_email]
+            to=[rfq.requested_by.email],
         )
         email.content_subtype = 'html'
-        if rfq.quote_attached_file:
-            email.attach_file(rfq.quote_attached_file.path)
-        email.send(fail_silently=False)
 
-    def test_func(self):
-        return self.request.user.is_staff or self.request.user.is_superuser
+        try:
+            email.send()
+        except Exception:
+            user_failed_activity(
+                user=rfq.quoted_by,
+                description=f"Quotation email failed (RFQ ID {rfq.id})"
+            )
+            raise
+
 
 
 # from django.core.paginator import Paginator
@@ -2104,8 +2196,6 @@ class MostViewedProductsView(OnboardingRequiredMixin,View):
         }
 
         return render(request, "supplier/view_product.html", context)
-
-
 class QuestionView(OnboardingRequiredMixin, TemplateView):
     template_name = 'supplier/question.html'
     paginate_by = 10
@@ -2113,10 +2203,19 @@ class QuestionView(OnboardingRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        user_products = Product.objects.filter(created_by=self.request.user)
-        questions_qs = Question.objects.filter(product__in=user_products).select_related('user', 'product')
+        # 🔹 LOG: View questions page
+        user_log_activity(
+            user=self.request.user,
+            actions=UserActivityLog.ActionType.UPDATED,
+            description="Viewed product questions list"
+        )
 
-        # Search
+        user_products = Product.objects.filter(created_by=self.request.user)
+        questions_qs = Question.objects.filter(
+            product__in=user_products
+        ).select_related('user', 'product')
+
+        # ---------------- SEARCH ----------------
         search_by = self.request.GET.get('search_by')
         if search_by:
             questions_qs = questions_qs.filter(
@@ -2125,16 +2224,17 @@ class QuestionView(OnboardingRequiredMixin, TemplateView):
                 Q(product__name__icontains=search_by)
             )
 
-        # Sorting
+        # ---------------- SORTING ----------------
         sort_by = self.request.GET.get('sort_by')
         if sort_by == "asc_created":
             questions_qs = questions_qs.order_by('created_at')
         else:
             questions_qs = questions_qs.order_by('-created_at')
 
-        # Date range filter
-        created_date = self.request.GET.get('created_date') 
+        # ---------------- DATE RANGE ----------------
+        created_date = self.request.GET.get('created_date')
         start_date = end_date = None
+
         if created_date:
             dates = created_date.split(' - ')
             if len(dates) == 2:
@@ -2148,7 +2248,7 @@ class QuestionView(OnboardingRequiredMixin, TemplateView):
         if end_date:
             questions_qs = questions_qs.filter(created_at__date__lte=end_date)
 
-        # Pagination
+        # ---------------- PAGINATION ----------------
         paginator = Paginator(questions_qs, self.paginate_by)
         page_number = self.request.GET.get('page')
         page_obj = paginator.get_page(page_number)
@@ -2158,11 +2258,10 @@ class QuestionView(OnboardingRequiredMixin, TemplateView):
             'page_obj': page_obj,
             'search_by': search_by,
             'sort_by': sort_by,
-            'created_date': created_date,  
+            'created_date': created_date,
         })
 
         return context
-
 
     def post(self, request, *args, **kwargs):
         question_id = request.POST.get('question_id')
@@ -2171,23 +2270,39 @@ class QuestionView(OnboardingRequiredMixin, TemplateView):
 
         user_products = Product.objects.filter(created_by=request.user)
         question = get_object_or_404(
-            Question, id=question_id, product__in=user_products
+            Question,
+            id=question_id,
+            product__in=user_products
         )
 
+        # ---------------- REPLY ----------------
         if action_type == "reply":
             question.reply = reply_text
             question.replied_at = timezone.now()
             question.save()
+
+            # ✅ CREATED (reply sent)
+            user_log_activity(
+                user=request.user,
+                actions=UserActivityLog.ActionType.CREATED,
+                description=f"Sent reply to question ID {question.id} (Product: {question.product.name})"
+            )
+
             messages.success(request, "Reply sent successfully.")
 
+        # ---------------- DELETE ----------------
         elif action_type == "delete":
             question.delete()
+
+            user_log_activity(
+                user=request.user,
+                actions=UserActivityLog.ActionType.DELETED,
+                description=f"Deleted question ID {question.id} (Product: {question.product.name})"
+            )
+
             messages.success(request, "Question deleted successfully.")
 
         return redirect('supplier:question_list')
-
-
-
 
 class RatingView(OnboardingRequiredMixin,TemplateView):
     template_name = "supplier/rating.html"  
@@ -2708,78 +2823,122 @@ class SupplierStatusView(View):
 
 class AdminReturnUpdateStatusView(LoginRequiredMixin, View):
     permission_required = 'is_staff'
-
     def post(self, request, return_serial, *args, **kwargs):
         return_instance = get_object_or_404(Return, return_serial=return_serial)
         new_status = request.POST.get('return_status')
-
         if new_status in dict(return_instance.RETURN_STATUS_CHOICES):
+            old_status = return_instance.return_status
             return_instance.return_status = new_status
             return_instance.save()
-            messages.success(request, f"Return {return_serial} status updated to {new_status}.")
+            user_update_activity(
+                user=request.user,
+                description=(
+                    f"Return status updated for Return #{return_serial} "
+                    f"from '{old_status}' to '{new_status}'"
+                )
+            )
+            messages.success(
+                request,
+                f"Return {return_serial} status updated to {new_status}."
+            )
         else:
+            user_failed_activity(
+                user=request.user,
+                description=(
+                    f"Invalid return status '{new_status}' "
+                    f"for Return #{return_serial}"
+                )
+            )
             messages.error(request, "Invalid status selected.")
-
         return redirect('supplier:admin_returns')
-
-
 class AdminProcessRefundView(View):
+
     def post(self, request, *args, **kwargs):
         return_serial = request.POST.get("hidden_transaction_id")
-        refund_amount = float(request.POST.get("final_refund_amount") or request.POST.get("hidden_transaction_amount", 0))
+        refund_amount = float(
+            request.POST.get("final_refund_amount")
+            or request.POST.get("hidden_transaction_amount", 0)
+        )
         admin_note = request.POST.get("hidden_admin_note")
         user_note = request.POST.get("hidden_user_note")
-
-        return_instance = get_object_or_404(Return, return_serial=return_serial, return_status="approved")
+        return_instance = get_object_or_404(
+            Return,
+            return_serial=return_serial,
+            return_status="approved"
+        )
         payment = return_instance.order_item.order.payment
-
         if not payment:
+            user_failed_activity(
+                user=request.user,
+                description=f"Refund failed for Return #{return_serial}: Payment not found"
+            )
             messages.error(request, "Payment record not found.")
             return redirect("supplier:admin_returns")
 
-        success, msg, refund_id = process_refund(payment, return_serial, refund_amount, admin_note, user_note)
-
+        success, msg, refund_id = process_refund(
+            payment,
+            return_serial,
+            refund_amount,
+            admin_note,
+            user_note
+        )
         if success:
             return_instance.return_status = "return_completed"
             return_instance.is_refunded = True
             return_instance.refund_id = refund_id
             return_instance.updated_at = timezone.now()
             return_instance.save()
-
+            user_refund_activity(
+                user=request.user,
+                description=f"Refund processed for Return #{return_serial}",
+                amount=refund_amount
+            )
             messages.success(request, f"Refund successful: {msg}")
         else:
+            user_failed_activity(
+                user=request.user,
+                description=f"Refund failed for Return #{return_serial}: {msg}"
+            )
             messages.error(request, f"Refund failed: {msg}")
-
         return redirect("supplier:admin_returns")
+
 
 class ReturnDeleteView(LoginRequiredMixin, View):
     permission_required = 'is_staff'
-
     def post(self, request, return_serial, *args, **kwargs):
         try:
             return_instance = get_object_or_404(Return, return_serial=return_serial)
             user_email = return_instance.client.email
             username = return_instance.client.username
             order_id = return_instance.order_item.order.order_id
-
+            user_log_activity(
+                user=request.user,
+                actions=UserActivityLog.ActionType.DELETED,
+                description=(
+                    f"Return deleted by admin. "
+                    f"Return ID: {return_serial}, Order ID: {order_id}, "
+                    f"Customer: {username}"
+                )
+            )
             return_instance.delete()
-
             subject = f"Return {return_serial} Deleted"
             message = (
                 f"Hello {username},\n\n"
-                f"Your return request for order {order_id} (Return ID: {return_serial}) "
-                f"has been deleted by admin.\n\n"
+                f"Your return request for order {order_id} "
+                f"(Return ID: {return_serial}) has been deleted by admin.\n\n"
                 f"If you believe this is an error, please contact support.\n\n"
                 f"Thank you."
             )
             send_refund_notification(user_email, subject, message)
-
             messages.success(request, f"Return {return_serial} deleted successfully.")
             return redirect('supplier:admin_returns')
-
         except Exception as e:
+            user_failed_activity(
+                user=request.user,
+                description=f"Failed to delete Return {return_serial}: {str(e)}"
+            )
             messages.error(request, f"Error deleting return: {str(e)}")
-        return redirect('supplier:admin_returns')
+            return redirect('supplier:admin_returns')
 
 
 class AdminReturnsView(LoginRequiredMixin, TemplateView):
@@ -2875,6 +3034,35 @@ class ShippingDeleteView(View):
         shipping = get_object_or_404(ShippingMethod, pk=pk)
         shipping.delete()
         return JsonResponse({'status':'success','message':'Shipping deleted'})
+    
+class VacationRequestView(LoginRequiredMixin, View):
+    template_name = 'supplier/vacationrequest.html'
+
+    def get(self, request):
+        requests = VacationRequest.objects.filter(supplier=request.user).order_by('-created_at')
+        return render(request, self.template_name, {'requests': requests})
+
+    def post(self, request):
+        reason = request.POST.get('reason')
+        from_date = request.POST.get('from_date')
+        to_date = request.POST.get('to_date')
+        if not from_date or not to_date:
+            messages.error(request, "Please select both From and To dates.")
+            return redirect('supplier:vacation_request')
+        vacation_request = VacationRequest.objects.create(
+            supplier=request.user,
+            reason=reason,
+            from_date=from_date,
+            to_date=to_date,
+        )
+        user_log_activity(
+            user=request.user,
+            actions=UserActivityLog.ActionType.CREATED,
+            description=f"Created vacation request (ID: {vacation_request.id}, From: {from_date}, To: {to_date})"
+        )
+
+        messages.success(request, "Vacation request submitted successfully!")
+        return redirect('supplier:vacation_request')
 class CouponsView(TemplateView):
     template_name = "supplier/coupons.html"
     def dispatch(self, request, *args, **kwargs):
@@ -3001,6 +3189,11 @@ class CouponsView(TemplateView):
 
             if client_ids:
                 coupon.client.set(User.objects.filter(id__in=client_ids))
+            user_log_activity(
+                user=request.user,
+                actions=UserActivityLog.ActionType.CREATED,
+                description=f"Created coupon '{code}' (ID: {coupon.id}, Type: {coupon.coupon_type}, Discount: {coupon.discount})"
+            )
 
             return JsonResponse(
                 {"status": "success", "message": "Coupon created successfully!"}
@@ -3016,8 +3209,6 @@ class CouponsView(TemplateView):
                 {"status": "error", "message": str(e)},
                 status=500
             )
-
-
 def edit_coupon(request):
     if request.method != 'POST':
         return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
@@ -3041,6 +3232,8 @@ def edit_coupon(request):
             datetime.strptime(end_datetime_str, "%Y-%m-%dT%H:%M")
         )
         
+        old_code = coupon.code
+        
         coupon.code = request.POST.get('code').strip().upper()
         coupon.coupon_type = request.POST.get('coupon_type')
         coupon.discount_type = request.POST.get('discount_type')
@@ -3061,19 +3254,28 @@ def edit_coupon(request):
         coupon.products.set(valid_products)
 
         coupon.client.set(User.objects.filter(id__in=client_ids))
-
+        user_log_activity(
+            user=request.user,
+            actions=UserActivityLog.ActionType.UPDATED,
+            description=f"Updated coupon '{coupon.code}' (ID: {coupon.id}, Previous code: {old_code})"
+        )
         return JsonResponse({'status': 'success', 'message': 'Coupon updated successfully!'})
     except ValueError as e:
         return JsonResponse({'status': 'error', 'message': f'Invalid datetime format: {str(e)}'}, status=400)
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
-
-
 def delete_coupon(request):
     if request.method == 'POST':
         coupon_id = request.POST.get('coupon_id')
         coupon = get_object_or_404(Coupon, id=coupon_id)
+        coupon_code = coupon.code
         coupon.delete()
+        user_log_activity(
+            user=request.user,
+            actions=UserActivityLog.ActionType.DELETED,
+            description=f"Deleted coupon '{coupon_code}' (ID: {coupon_id})"
+        )
+        
         return JsonResponse({'status': 'success', 'message': 'Coupon deleted successfully!'})
     return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
 
@@ -3089,33 +3291,7 @@ def coupon_details(request, coupon_id):
         'products': product_ids,
         'clients': client_ids
     })
-class VacationRequestView(LoginRequiredMixin, View):
-    template_name = 'supplier/vacationrequest.html'
 
-    def get(self, request):
-        requests = VacationRequest.objects.filter(supplier=request.user).order_by('-created_at')
-        return render(request, self.template_name, {'requests': requests})
-
-    def post(self, request):
-        reason = request.POST.get('reason')
-        from_date = request.POST.get('from_date')
-        to_date = request.POST.get('to_date')
-
-        # Validate
-        if not from_date or not to_date:
-            messages.error(request, "Please select both From and To dates.")
-            return redirect('vacation_request')
-
-        # Create vacation request
-        VacationRequest.objects.create(
-            supplier=request.user,
-            reason=reason,
-            from_date=from_date,
-            to_date=to_date,
-        )
-
-        messages.success(request, "Vacation request submitted successfully!")
-        return redirect('supplier:vacation_request')
     
 class SupplierBuyXGetYPromotionView(TemplateView):
     template_name = 'supplier/Buyxgetypromotion.html'
@@ -3127,7 +3303,6 @@ class SupplierBuyXGetYPromotionView(TemplateView):
         context['suppliers'] = SupplierProfile.objects.all()
         context['products'] = Product.objects.all()
         return context
-
 class SupplierAddPromotionView(TemplateView):
     def post(self, request):
         product_type = request.POST.get('product_type')
@@ -3146,8 +3321,15 @@ class SupplierAddPromotionView(TemplateView):
         promo.supplier.set(supplier_ids)
         promo.product.set(product_ids)
         promo.save()
+        user_log_activity(
+            user=request.user,
+            actions=UserActivityLog.ActionType.CREATED,
+            description=f"Created Buy X Get Y promotion (ID: {promo.id}, Buy: {buy}, Get: {get}, Period: {promotion_period})"
+        )
 
         return JsonResponse({'success': True})
+
+
 class SupplierEditPromotionView(TemplateView):
     def get(self, request, pk):
         try:
@@ -3201,6 +3383,11 @@ class SupplierEditPromotionView(TemplateView):
 
             promo.supplier.set(supplier_ids)
             promo.product.set(product_ids)
+            user_log_activity(
+                user=request.user,
+                actions=UserActivityLog.ActionType.UPDATED,
+                description=f"Updated Buy X Get Y promotion (ID: {promo.id}, Buy: {buy}, Get: {get})"
+            )
 
             return JsonResponse({'success': True})
         except Exception as e:
@@ -3209,10 +3396,20 @@ class SupplierEditPromotionView(TemplateView):
 
 def supplier_delete_promotion(request, pk):
     try:
-        BuyXGetYPromotion.objects.get(pk=pk).delete()
+        promo = BuyXGetYPromotion.objects.get(pk=pk)
+        promo_info = f"Buy {promo.buy} Get {promo.get}"
+        promo.delete()
+        user_log_activity(
+            user=request.user,
+            actions=UserActivityLog.ActionType.DELETED,
+            description=f"Deleted Buy X Get Y promotion (ID: {pk}, {promo_info})"
+        )
+        
         return JsonResponse({'success': True})
     except:
         return JsonResponse({'success': False})
+
+
 class supplierBuyXGiftYPromotionView(TemplateView):
     template_name = 'supplier/Buyxgiftypromotion.html'
 
@@ -3262,6 +3459,11 @@ class supplierAddGiftPromotionView(TemplateView):
             promo.product.set(product_ids)
             promo.giftproduct.set(giftproduct_ids)
             promo.save()
+            user_log_activity(
+                user=request.user,
+                actions=UserActivityLog.ActionType.CREATED,
+                description=f"Created Buy X Gift Y promotion (ID: {promo.id}, Buy: {buy}, Gift: {gift}, Period: {promotion_period})"
+            )
 
             return JsonResponse({'success': True})
         except Exception as e:
@@ -3320,6 +3522,12 @@ class supplierEditGiftPromotionView(TemplateView):
             promo.promotion_period = f"{start_dt.strftime('%d %b %Y')} - {end_dt.strftime('%d %b %Y')}"
 
             promo.save()
+            user_log_activity(
+                user=request.user,
+                actions=UserActivityLog.ActionType.UPDATED,
+                description=f"Updated Buy X Gift Y promotion (ID: {promo.id}, Buy: {promo.buy}, Gift: {promo.gift})"
+            )
+            
             return JsonResponse({'success': True})
         except Exception as e:
             return JsonResponse({'success': False, 'msg': str(e)})
@@ -3327,10 +3535,20 @@ class supplierEditGiftPromotionView(TemplateView):
 
 def supplier_delete_gift_promotion(request, pk):
     try:
-        BuyXGiftYPromotion.objects.get(pk=pk).delete()
+        promo = BuyXGiftYPromotion.objects.get(pk=pk)
+        promo_info = f"Buy {promo.buy} Gift {promo.gift}"
+        promo.delete()
+        user_log_activity(
+            user=request.user,
+            actions=UserActivityLog.ActionType.DELETED,
+            description=f"Deleted Buy X Gift Y promotion (ID: {pk}, {promo_info})"
+        )
+        
         return JsonResponse({'success': True})
     except Exception:
         return JsonResponse({'success': False})
+
+
 class supplierBasketPromotionView(TemplateView):
     template_name = 'supplier/Basketpromotion.html'
 
@@ -3349,6 +3567,8 @@ class supplierBasketPromotionView(TemplateView):
             context['products'] = Product.objects.all()
 
         return context
+
+
 class supplierAddBasketPromotionView(View):
     def post(self, request):
         try:
@@ -3379,11 +3599,18 @@ class supplierAddBasketPromotionView(View):
             promo.supplier.set(supplier_ids)
             promo.product.set(product_ids)
             promo.save()
+            user_log_activity(
+                user=request.user,
+                actions=UserActivityLog.ActionType.CREATED,
+                description=f"Created basket promotion '{title_en}' (ID: {promo.id}, Period: {promotion_period})"
+            )
 
             return JsonResponse({'success': True})
 
         except Exception as e:
             return JsonResponse({'success': False, 'msg': str(e)})
+
+
 class supplierEditBasketPromotionView(View):
     def get(self, request, pk):
         try:
@@ -3440,16 +3667,31 @@ class supplierEditBasketPromotionView(View):
             promo.promotion_period = f"{start_dt.strftime('%d %b %Y')} - {end_dt.strftime('%d %b %Y')}"
 
             promo.save()
+            user_log_activity(
+                user=request.user,
+                actions=UserActivityLog.ActionType.UPDATED,
+                description=f"Updated basket promotion '{promo.title_en}' (ID: {promo.id})"
+            )
+            
             return JsonResponse({'success': True})
 
         except Exception as e:
             return JsonResponse({'success': False, 'msg': str(e)})
+
+
 def supplier_delete_basket_promotion(request, pk):
     try:
         promo = BasketPromotion.objects.get(pk=pk)
+        promo_title = promo.title_en
         if promo.main_image:
             promo.main_image.delete(save=False)  
         promo.delete()
+        user_log_activity(
+            user=request.user,
+            actions=UserActivityLog.ActionType.DELETED,
+            description=f"Deleted basket promotion '{promo_title}' (ID: {pk})"
+        )
+        
         return JsonResponse({'success': True})
     except BasketPromotion.DoesNotExist:
         return JsonResponse({'success': False, 'msg': 'Not found'})
@@ -3469,4 +3711,17 @@ class SupplierContactUsView(FormView):
         context['contact_info'] = Contact.objects.filter(
             display_phone__isnull=False
         ).first()
+        return context
+
+
+class SupplierLogsView(TemplateView):
+    template_name = 'supplier/supplierlogs.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['logs'] = UserActivityLog.objects.filter(
+            user=self.request.user,
+            is_deleted=False
+        )
+
         return context

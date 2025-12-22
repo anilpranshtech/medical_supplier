@@ -251,11 +251,11 @@
                     </div>
 
                          <!-- View Return Details Modal -->
-<div class="modal fade" id="viewReturnModal{{ return.return_serial }}" tabindex="-1" aria-labelledby="viewReturnModalLabel{{ return.return_serial }}" aria-hidden="true">
+<div class="modal fade" id="viewReturnModal{{ return.return_serial }}" tabindex="-1" aria-labelledby="viewReturnModalLabel{{ return.id }}" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="viewReturnModalLabel{{ return.return_serial }}">Return Request #{{ return.return_serial }}</h5>
+        <h5 class="modal-title" id="viewReturnModal{{ return.return_serial }}">Return Request #{{ return.return_serial }}</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body text-start">
@@ -486,7 +486,7 @@
                     </div>
 
                     <!-- Refund Details Modal -->
-                    <div class="modal fade" id="refundDetailsModal{{ return.return_serial }}" tabindex="-1" aria-labelledby="refundDetailsModalLabel{{ return.return_serial }}" aria-hidden="true">
+                    <div class="modal fade" id="refundDetailsModal{{ return.return_serial }}" tabindex="-1" aria-labelledby="refundDetailsModalLabel{{ return.id }}" aria-hidden="true">
                       <div class="modal-dialog modal-dialog-centered modal-lg">
                         <div class="modal-content">
                           <div class="modal-header">
@@ -563,7 +563,7 @@
                     </div>
 
                     <!-- Delete Modal -->
-                    <div class="modal fade" id="deleteReturnModal{{ return.return_serial }}" tabindex="-1" aria-labelledby="deleteReturnModalLabel{{ return.return_serial }}" aria-hidden="true">
+                    <div class="modal fade" id="deleteReturnModal{{ return.return_serial }}" tabindex="-1" aria-labelledby="deleteReturnModalLabel{{ return.id }}" aria-hidden="true">
                       <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content">
                           <div class="modal-header">

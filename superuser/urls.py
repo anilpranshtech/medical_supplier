@@ -283,7 +283,7 @@ urlpatterns = [
      path('payment-setting/', PaymentsettingsView.as_view(),name = 'payment_settings'),
      path("payment-setting/toggle/<int:pk>/", PaymentToggleStatus.as_view(), name="payment_toggle"),
 
-
+     path('admin-logs/', AdminLogsView.as_view(), name='admin_logs'),
 
 ]
 

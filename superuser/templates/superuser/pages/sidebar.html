@@ -36,6 +36,16 @@
                           </a>
                       </div>
                   </div>
+                  <div class="menu-sub menu-sub-accordion">
+                    <div class="menu-item {% if request.resolver_match.url_name == 'admin_logs' %} here show {% endif %}">
+                        <a class="menu-link" href="{% url 'superuser:admin_logs' %}">
+                           <span class="menu-bullet">
+                               <span class="bullet bullet-dot"></span>
+                           </span>
+                            <span class="menu-title">Admin Logs</span>
+                       </a>
+                   </div>
+               </div>
               </div>
           </div>
 

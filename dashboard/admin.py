@@ -15,8 +15,8 @@ class WholesaleBuyerProfileAdmin(admin.ModelAdmin):
 
 
 admin.site.register(SupplierProfile)
-
-
+admin.site.register(UserActivityLog)
+admin.site.register(AdminActivityLog)
 @admin.register(Product)
 class ProductProfileAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'description', 'price')
