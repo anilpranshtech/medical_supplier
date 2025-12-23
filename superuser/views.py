@@ -3790,13 +3790,17 @@ class BuyXGiftYPromotionView(TemplateView):
         user = self.request.user
 
         # ---------------- BASE QUERYSET ----------------
-        promotions_qs = BuyXGiftYPromotion.objects.all()
+        promotions_qs = BuyXGiftYPromotion.objects.prefetch_related(
+            'supplier', 'product', 'giftproduct'
+        )
 
         # Filter by supplier if user is a supplier
-        if hasattr(user, 'supplierprofile'):
-            promotions_qs = promotions_qs.filter(supplier=user.supplierprofile)
+        if hasattr(user, 'supplierprofile') and not user.is_superuser:
+            promotions_qs = promotions_qs.filter(
+                supplier__in=[user.supplierprofile]
+            )
             ctx['suppliers'] = [user.supplierprofile]
-            ctx['products'] = Product.objects.filter(created_by=user)
+            ctx['products'] = Product.objects.all()
         else:
             ctx['suppliers'] = SupplierProfile.objects.all()
             ctx['products'] = Product.objects.all()
@@ -3807,7 +3811,8 @@ class BuyXGiftYPromotionView(TemplateView):
             promotions_qs = promotions_qs.filter(
                 Q(product_type__icontains=search_by) |
                 Q(supplier__user__username__icontains=search_by) |
-                Q(product__name__icontains=search_by)
+                Q(product__name__icontains=search_by) |
+                Q(giftproduct__name__icontains=search_by)
             ).distinct()
 
         # ---------------- SORT FILTER ----------------
@@ -3956,9 +3961,9 @@ class BasketPromotionView(TemplateView):
         user = self.request.user
         promotions_qs = BasketPromotion.objects.all()
         if hasattr(user, 'supplierprofile'):
-            promotions_qs = promotions_qs.filter(supplier=user.supplierprofile)
+            promotions_qs = promotions_qs.all()
             context['suppliers'] = [user.supplierprofile]
-            context['products'] = Product.objects.filter(created_by=user)
+            context['products'] = Product.objects.all()
         else:
             context['suppliers'] = SupplierProfile.objects.all()
             context['products'] = Product.objects.all()

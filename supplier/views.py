@@ -3071,7 +3071,11 @@ class CouponsView(TemplateView):
         return super().dispatch(request, *args, **kwargs)
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        coupons_qs = Coupon.objects.select_related("created_by").order_by("-id")
+        if hasattr(self.request.user, 'supplierprofile'):
+            context['suppliers'] = [self.request.user.supplierprofile]
+        else:
+            context['suppliers'] = SupplierProfile.objects.all()
+        coupons_qs = Coupon.objects.filter(created_by=self.request.user).select_related("created_by").order_by("-id")
         search_by = self.request.GET.get("search_by", "").strip()
         if search_by:
             coupons_qs = coupons_qs.filter(
@@ -3295,14 +3299,25 @@ def coupon_details(request, coupon_id):
     
 class SupplierBuyXGetYPromotionView(TemplateView):
     template_name = 'supplier/Buyxgetypromotion.html'
-
+    
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['page_title'] = 'Buy X Get Y Promotion'
-        context['promotions'] = BuyXGetYPromotion.objects.all()
-        context['suppliers'] = SupplierProfile.objects.all()
-        context['products'] = Product.objects.all()
-        return context
+        ctx = super().get_context_data(**kwargs)
+        ctx['page_title'] = 'Buy X Get Y Promotion'
+        ctx['promotions'] = BuyXGetYPromotion.objects.all()
+
+        user = self.request.user
+
+        if hasattr(user, 'supplierprofile'):
+            ctx['suppliers'] = [user.supplierprofile]
+            ctx['products'] = Product.objects.filter(created_by=user)
+            ctx['promotions'] = BuyXGetYPromotion.objects.filter(supplier=user.supplierprofile)
+        else:
+            ctx['suppliers'] = SupplierProfile.objects.all()
+            ctx['products'] = Product.objects.all()
+            ctx['promotions'] = BuyXGetYPromotion.objects.all()
+
+        return ctx
+    
 class SupplierAddPromotionView(TemplateView):
     def post(self, request):
         product_type = request.POST.get('product_type')
@@ -3423,9 +3438,11 @@ class supplierBuyXGiftYPromotionView(TemplateView):
         if hasattr(user, 'supplierprofile'):
             ctx['suppliers'] = [user.supplierprofile]
             ctx['products'] = Product.objects.filter(created_by=user)
+            ctx['promotions'] = BuyXGiftYPromotion.objects.filter(supplier=user.supplierprofile)
         else:
             ctx['suppliers'] = SupplierProfile.objects.all()
             ctx['products'] = Product.objects.all()
+            ctx['promotions'] = BuyXGiftYPromotion.objects.all()
 
         return ctx
 
@@ -3558,13 +3575,14 @@ class supplierBasketPromotionView(TemplateView):
         context['promotions'] = BasketPromotion.objects.all().order_by('-created_at')
 
         user = self.request.user
-
-        if hasattr(user, 'supplierprofile'):
+        if hasattr(user, 'supplierprofile'):  
             context['suppliers'] = [user.supplierprofile]
             context['products'] = Product.objects.filter(created_by=user)
+            context['promotions'] = BasketPromotion.objects.filter(supplier=user.supplierprofile)
         else:
             context['suppliers'] = SupplierProfile.objects.all()
             context['products'] = Product.objects.all()
+            context['promotions'] = BasketPromotion.objects.all()
 
         return context
 

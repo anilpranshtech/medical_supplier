@@ -171,17 +171,11 @@
          <!-- Supplier field -->
 <div class="col-md-6">
   <label class="form-label fw-semibold">Supplier <span style="color: red;">*</span></label>
-  {% if request.user.supplierprofile %}
-    <input type="hidden" name="supplier" value="{{ suppliers.0.id }}">
-    <input type="text" class="form-control" value="{{ suppliers.0.user.username }}" disabled>
-  {% else %}
-    <select name="supplier" class="form-select select2" multiple required
-            data-placeholder="Select suppliers">
-      {% for s in suppliers %}
-        <option value="{{ s.id }}">{{ s.user.username }}</option>
-      {% endfor %}
-    </select>
-  {% endif %}
+  <select name="supplier" class="form-select select2" multiple required data-placeholder="Select suppliers">
+                {% for supplier in suppliers %}
+                  <option value="{{ supplier.id }}">{{ supplier.user.username }}</option>
+                {% endfor %}
+              </select>
 </div>
 
 <!-- Product field -->
