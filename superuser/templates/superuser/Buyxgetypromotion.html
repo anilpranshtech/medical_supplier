@@ -304,6 +304,59 @@ document.addEventListener("DOMContentLoaded", function () {
 
   let deleteId = null;
 
+
+  // ================= ADD PROMOTION SAVE =================
+document.getElementById('saveAddPromotionBtn').addEventListener('click', function () {
+
+    const form = document.getElementById('addPromotionForm');
+
+    // basic HTML validation
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+
+    const fd = new FormData(form);
+
+    // date validation
+    const start = new Date(fd.get('start_datetime'));
+    const end = new Date(fd.get('end_datetime'));
+
+    if (start >= end) {
+        showAlert('End date must be greater than start date', 'danger');
+        return;
+    }
+
+    // promotion period format (same as edit)
+    const fmt = d => d.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+    });
+
+    fd.append('promotion_period', `${fmt(start)} - ${fmt(end)}`);
+
+    fetch("{% url 'superuser:add_promotion' %}", {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: fd
+    })
+    .then(res => res.json())
+    .then(res => {
+        if (res.success) {
+            addModal.hide();
+            showAlert('Promotion added successfully!', 'success');
+            setTimeout(() => location.reload(), 1200);
+        } else {
+            showAlert(res.msg || 'Failed to add promotion', 'danger');
+        }
+    })
+    .catch(() => showAlert('Something went wrong', 'danger'));
+});
+
+
   // EDIT - Fixed URL using Django url tag
   document.querySelectorAll('.edit-promo-btn').forEach(btn => {
     btn.addEventListener('click', function () {
