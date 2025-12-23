@@ -1845,7 +1845,6 @@ def add_to_cart(request):
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
-
 @require_POST
 def update_cart_item(request):
     product_id = request.POST.get('product_id')
@@ -1966,6 +1965,14 @@ class ShippingInfoView(LoginRequiredMixin, TemplateView):
         context['display_payment_button'] = bool(addresses and default_address)
 
         cart_items = CartProduct.objects.filter(user=user).select_related('product')
+        min_qty_violations = []
+        for item in cart_items:
+            if item.product.min_order_qty > 0 and item.quantity < item.product.min_order_qty:
+                min_qty_violations.append({
+                    'product': item.product.name,
+                    'current': item.quantity,
+                    'required': item.product.min_order_qty
+                })
         subtotal = sum(item.get_total_price() for item in cart_items) or Decimal('0.00')
         shipping = Decimal('0.00')
         vat = Decimal('0.00')
@@ -2007,6 +2014,8 @@ class ShippingInfoView(LoginRequiredMixin, TemplateView):
         context['order_summary']['discount_amount'] = discount_amount
         context['order_summary']['total'] = new_total
         context['order_summary']['coupon_code'] = coupon.code
+        context['min_qty_violations'] = min_qty_violations
+        context['has_min_qty_violations'] = len(min_qty_violations) > 0
 
         return context
 class AddAddressView(LoginRequiredMixin, FormView):

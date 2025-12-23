@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'ckeditor',
     'ckeditor_uploader',
     'corsheaders',
+    'channels',
     
 ]
 
@@ -98,7 +99,9 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'djapp.wsgi.application'
+# WSGI_APPLICATION = 'djapp.wsgi.application'
+ASGI_APPLICATION = 'djapp.asgi.application'
+
 
 
 # Database
@@ -396,3 +399,9 @@ CORS_ALLOWED_ORIGINS = [
 CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOW_CREDENTIALS = True
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer'
+    }
+}

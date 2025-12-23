@@ -3729,3 +3729,29 @@ class SupplierLogsView(TemplateView):
         )
 
         return context
+from django.views.generic import TemplateView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import get_object_or_404
+from dashboard.models import ChatRoom, ChatMessage
+from django.contrib.auth.models import User
+
+class SupplierChatsView(LoginRequiredMixin, TemplateView):
+    template_name = 'supplier/supplierchats.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        admin_user = User.objects.filter(is_staff=True, is_active=True).first()
+        
+        if admin_user:
+            room, created = ChatRoom.objects.get_or_create(
+                supplier=user,
+                admin=admin_user
+            )
+            context['room'] = room
+            context['room_id'] = room.id
+        else:
+            context['room'] = None
+        
+        context['current_user'] = user
+        return context

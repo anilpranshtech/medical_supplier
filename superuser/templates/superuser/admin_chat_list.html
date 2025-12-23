@@ -1,0 +1,50 @@
+
+{% extends 'superuser/superuser_base.html' %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Supplier Chats</h3>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Supplier</th>
+                        <th>Last Message</th>
+                        <th>Last Updated</th>
+                        <th>Unread Messages</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for room in rooms %}
+                    <tr>
+                        <td>{{ room.supplier.username }}</td>
+                        <td>{{ room.messages.last.message|truncatechars:50|default:"No messages yet" }}</td>
+                        <td>{{ room.updated_at|timesince }} ago</td>
+                        <td>
+                            <span class="badge badge-danger">
+                                {{ room.unread_count }}
+                            </span>
+                            
+                        </td>
+                        <td>
+                            <a href="{% url 'superuser:admin_chats' %}?supplier_id={{ room.supplier.id }}" 
+                               class="btn btn-primary btn-sm">
+                                Open Chat
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center">No chat rooms available</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

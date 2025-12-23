@@ -320,7 +320,7 @@ class Event(models.Model):
 
 class Product(models.Model):
     id = models.AutoField(primary_key=True)
-    # Category hierarchy
+    # Category 
     category = models.ForeignKey(ProductCategory, on_delete=models.SET_NULL, null=True)
     sub_category = models.ForeignKey(ProductSubCategory, on_delete=models.SET_NULL, null=True)
     last_category = models.ForeignKey(ProductLastCategory, on_delete=models.SET_NULL, null=True)
@@ -333,7 +333,7 @@ class Product(models.Model):
     keywords = models.CharField(max_length=255, help_text="Comma-separated keywords", blank=True)
     script = models.TextField(blank=True,null=True)
 
-    # Countries sold in
+    # Countries 
     all_countries = models.BooleanField(default=False)
     selling_countries = models.CharField(max_length=1000, blank=True,help_text="Comma-separated country names (e.g., India, USA, UK)")
 
@@ -341,8 +341,6 @@ class Product(models.Model):
     # Uploads
     brochure = models.FileField(upload_to='product_brochures/', null=True, blank=True)
     event = models.ForeignKey(Event, on_delete=models.SET_NULL, null=True, blank=True)
-
-    # Images handled separately (see below)
 
     # B2B / Pricing
     supplier_sku = models.CharField(max_length=100, blank=True)
@@ -414,7 +412,6 @@ class Product(models.Model):
     
   
     def get_final_commission(self):
-        """Return product-specific commission or supplier default."""
         if self.commission_percentage > 0:
             return self.commission_percentage
         supplier_commission = SupplierCommission.objects.filter(supplier=self.created_by).first()
@@ -432,8 +429,6 @@ class Product(models.Model):
     class Meta:
         ordering = ['-created_at']
         verbose_name = verbose_name_plural = "Product"  
-    
-    
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="images")
     image = models.ImageField(upload_to='product_images/')
@@ -443,8 +438,6 @@ class ProductImage(models.Model):
     class Meta:
         ordering = ['-created_at']
         verbose_name = verbose_name_plural = "Product Image"
-
-
 class EventRegistration(models.Model):
     product = models.ForeignKey('Product', on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
@@ -456,8 +449,6 @@ class EventRegistration(models.Model):
 
     def __str__(self):
         return f"{self.full_name} - {self.product.name}"    
-
-
 class Order(models.Model):
     order_type = models.CharField(
     max_length=10,
@@ -2125,3 +2116,30 @@ class UserLogs(models.Model):
     class Meta:
         ordering = ["-created_at"]
         verbose_name = verbose_name_plural = "User Logs"
+
+class ChatRoom(models.Model):
+    supplier = models.ForeignKey(User, on_delete=models.CASCADE, related_name='supplier_rooms')
+    admin = models.ForeignKey(User, on_delete=models.CASCADE, related_name='admin_rooms', null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ['supplier', 'admin']
+        ordering = ['-updated_at']
+    
+    def __str__(self):
+        return f"Chat: {self.supplier.username} - {self.admin.username if self.admin else 'Admin'}"
+
+
+class ChatMessage(models.Model):
+    room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, related_name='messages')
+    sender = models.ForeignKey(User, on_delete=models.CASCADE)
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['created_at']
+    
+    def __str__(self):
+        return f"{self.sender.username}: {self.message[:50]}"

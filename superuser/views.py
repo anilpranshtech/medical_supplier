@@ -7044,3 +7044,56 @@ class UserLogsListView(TemplateView):
         context['paginator'] = paginator
 
         return context
+class AdminSupplierChats(TemplateView):
+    template_name = 'superuser/AdminSupplierchats.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        supplier_id = self.request.GET.get('supplier_id') or kwargs.get('supplier_id')
+
+        if supplier_id:
+            try:
+                supplier = User.objects.get(
+                    id=supplier_id,
+                    supplierprofile__isnull=False
+                )
+
+                admin_user = self.request.user
+
+                room, created = ChatRoom.objects.get_or_create(
+                    supplier=supplier,
+                    admin=admin_user
+                )
+
+                context.update({
+                    'room': room,
+                    'room_id': room.id,
+                    'supplier': supplier,
+                })
+
+            except User.DoesNotExist:
+                context['room'] = None
+
+        context['current_user'] = self.request.user
+        return context
+
+class AdminChatList(LoginRequiredMixin, ListView):
+    model = ChatRoom
+    template_name = 'superuser/admin_chat_list.html'
+    context_object_name = 'rooms'
+
+    def test_func(self):
+        return self.request.user.is_staff
+
+    def get_queryset(self):
+        rooms = ChatRoom.objects.filter(
+            admin=self.request.user
+        ).order_by('-updated_at')
+        for room in rooms:
+            room.unread_count = room.messages.filter(
+                is_read=False,
+                sender=room.supplier
+            ).count()
+
+        return rooms
