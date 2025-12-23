@@ -45,6 +45,7 @@ from superuser.forms import BannerForm
 from django.views import View
 from django.db.models import Avg, Count, Q, Sum, Value
 from django.db.models.functions import Coalesce
+from operator import attrgetter
 from datetime import datetime, timedelta
 from django.shortcuts import render
 from django.db.models import Count, Q
@@ -7025,5 +7026,26 @@ class AdminLogsView(LoginRequiredMixin, TemplateView):
             "search_by": search_by,
             "created_date": created_date,
         })
+
+        return context
+class UserLogsListView(TemplateView):
+    template_name = 'superuser/UserLogsList.html'
+    paginate_by = 10  
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user_logs = UserLogs.objects.filter(is_deleted=False)
+        activity_logs = UserActivityLog.objects.filter(is_deleted=False)
+        all_logs = sorted(
+            chain(user_logs, activity_logs),
+            key=attrgetter('created_at'),
+            reverse=True
+        )
+        page_number = self.request.GET.get('page', 1)
+        paginator = Paginator(all_logs, self.paginate_by)
+        page_obj = paginator.get_page(page_number)
+        context['logs'] = page_obj.object_list
+        context['page_obj'] = page_obj
+        context['paginator'] = paginator
 
         return context
