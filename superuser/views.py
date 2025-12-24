@@ -7087,6 +7087,7 @@ class AdminChatList(LoginRequiredMixin, ListView):
     model = ChatRoom
     template_name = 'superuser/admin_chat_list.html'
     context_object_name = 'rooms'
+    paginate_by = 10
 
     def test_func(self):
         return self.request.user.is_staff
