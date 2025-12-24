@@ -40,11 +40,19 @@
         height: 100%;
     }
 
-    .kt-slide {
+    {% comment %} .kt-slide {
         min-width: 100%;
         width: 100%;
         height: 100%;
+    } {% endcomment %}
+
+    .kt-slide {
+    flex: 0 0 100%;
+    width: 100%;
+    height: 100%;
+    display: block;
     }
+
 
     .kt-slide img {
         width: 100%;
@@ -475,6 +483,7 @@ button.kt-btn.kt-btn-outline.kt-btn-xs.flex.items-center.gap-1.open-rfq-modal, b
 
 .kt-dot.active {
     background-color: #bbb;
+    transform: scale(1.2);
 }
 .tab-button {
         padding: 8px 16px;
@@ -605,7 +614,7 @@ button.kt-btn.kt-btn-outline.kt-btn-xs.flex.items-center.gap-1.open-rfq-modal, b
     </style>
     
 <!-- Begin Medical Banner Slider -->
-<div class="kt-slider-container mt-7" style="max-width: var(--custom-container-width, 99%); height: fit-content">
+<div class="kt-slider-container mt-7" style="max-width: var(--custom-container-width, 99%);">
     <div class="kt-slider" id="slider">
         {% for banner in banners %}
             <a href="{{ banner.link|default:'#' }}" class="kt-slide">
@@ -1836,11 +1845,20 @@ button.kt-btn.kt-btn-outline.kt-btn-xs.flex.items-center.gap-1.open-rfq-modal, b
     const slider = document.getElementById('slider');
     const totalSlides = slider ? slider.children.length : 0;
 
+    const dots = document.querySelectorAll('.kt-dot');
+
+    function updateDots(index) {
+        dots.forEach(dot => dot.classList.remove('active'));
+        if (dots[index]) dots[index].classList.add('active');
+}
+
     function showSlide(index) {
-        if (!slider) return;
+        if (!slider || totalSlides === 0) return;
         currentSlide = (index + totalSlides) % totalSlides;
         slider.style.transform = `translateX(-${currentSlide * 100}%)`;
+        updateDots(currentSlide);
     }
+    updateDots(0);
 
     function nextSlide() {
         showSlide(currentSlide + 1);
@@ -1850,8 +1868,14 @@ button.kt-btn.kt-btn-outline.kt-btn-xs.flex.items-center.gap-1.open-rfq-modal, b
         showSlide(currentSlide - 1);
     }
 
-    if (slider) {
+    {% comment %} if (slider) {
         setInterval(nextSlide, 5000);
+    } {% endcomment %}
+    
+    let sliderInterval = null;
+
+    if (slider && !sliderInterval) {
+        sliderInterval = setInterval(nextSlide, 5000);
     }
 
     // Event Registration Modal Handlers
