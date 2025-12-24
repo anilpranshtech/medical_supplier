@@ -285,6 +285,9 @@ urlpatterns = [
      #Logs
      path('admin-logs/', AdminLogsView.as_view(), name='admin_logs'),
      path('userlogslist/',UserLogsListView.as_view(),name= 'user_logs_list'),
+     #Adminchats
+     path('adminchats/',AdminSupplierChats.as_view(),name= 'admin_chats'),
+     path('admin/chats/', AdminChatList.as_view(), name='admin_chat_list'),
 
 ]
 

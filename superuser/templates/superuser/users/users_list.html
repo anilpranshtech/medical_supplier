@@ -98,14 +98,16 @@ Users
                                             </td>
 
                                             <td class="text-center">
-                                                {% if user.retailprofile %}
-                                                   <span class="text-primary"> Retailer </span>
+                                                {% if user.is_superuser %}
+                                                    <span class="text-danger"> Superuser </span>
+                                                {% elif user.retailprofile %}
+                                                    <span class="text-primary"> Retailer </span>
                                                 {% elif user.wholesalebuyerprofile %}
-                                                   <span class="text-warning"> Wholesaler </span>
+                                                    <span class="text-warning"> Wholesaler </span>
                                                 {% elif user.supplierprofile %}
                                                     <span class="text-success"> Supplier </span>
                                                 {% else %}
-                                                    Superuser
+                                                    Unknown
                                                 {% endif %}
                                             </td>
 

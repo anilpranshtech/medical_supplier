@@ -382,7 +382,746 @@
     font-size: 0.875rem;
 }
 
+/* Related Products - Fixed Image Size */
+.related-products {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.related-products h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 1.5rem;
+}
+
+/* Grid Layout */
+.related-products .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+/* Product Card */
+.related-products .border {
+    border-radius: 0.75rem;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.related-products .border:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    border-color: #3b82f6;
+}
+
+/* FIXED IMAGE CONTAINER - ALL SAME SIZE */
+.related-products .w-full.h-48 {
+    height: 12rem !important; /* Fixed 192px height */
+    min-height: 12rem;
+    max-height: 12rem;
+    width: 100%;
+    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+/* FIXED IMAGE - ALL SAME SIZE */
+.related-products img.object-contain {
+    width: auto !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: 10rem !important; /* Fixed max height */
+    object-fit: contain !important;
+    margin: 0 auto;
+    display: block;
+}
+
+/* Ensure all images have same container size */
+.related-products a > img {
+    width: 100%;
+    height: 12rem;
+    object-fit: contain;
+    background: #f8fafc;
+}
+
+/* Remove any inconsistent image sizing */
+.related-products img[src*="default.png"] {
+    width: 80% !important;
+    height: 80% !important;
+    object-fit: contain !important;
+    opacity: 0.7;
+}
+
+/* Product Info - Consistent spacing */
+.related-products h3.text-base {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0.75rem 0 0.5rem;
+    line-height: 1.4;
+    height: 2.8rem;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+/* Price - Consistent styling */
+.related-products .flex.items-center.gap-2.mt-2 {
+    margin: 0.5rem 0;
+    min-height: 2rem;
+}
+
+.related-products .text-base.font-bold {
+    font-size: 1.125rem;
+    color: #111827;
+}
+
+.related-products .text-sm.font-medium {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+/* Description - Consistent height */
+.related-products p.text-sm {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin: 0.5rem 0 1rem;
+    line-height: 1.5;
+    height: 3rem;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+/* Action Buttons - Consistent height */
+.related-products .flex.items-center.gap-2.mt-3 {
+    margin-top: auto;
+    padding-top: 0.75rem;
+    border-top: 1px solid #f3f4f6;
+    min-height: 2.5rem;
+    align-items: center;
+}
+
+/* Buttons styling */
+.related-products .kt-btn-outline {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+    border-radius: 0.375rem;
+    border: 1px solid #d1d5db;
+    background: transparent;
+    color: #374151;
+    transition: all 0.2s;
+}
+
+.related-products .kt-btn-outline:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+}
+
+.related-products .kt-btn-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+}
+
+.related-products .kt-btn-xs {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+}
+
+/* Wishlist icon */
+.related-products .kt-wishlist-icon {
+    margin-left: auto;
+    font-size: 1.25rem;
+    color: #9ca3af;
+    transition: color 0.2s;
+}
+
+.related-products .kt-wishlist-icon:hover {
+    color: #ef4444;
+}
+
+.related-products .ki-solid.ki-heart.text-red-500 {
+    color: #ef4444 !important;
+}
+
+/* Cart quantity controls */
+.related-products .cart-quantity-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    background: #f3f4f6;
+    border-radius: 0.375rem;
+    border: 1px solid #e5e7eb;
+}
+
+.related-products .cart-quantity-controls button {
+    width: 1.5rem;
+    height: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.25rem;
+    background: white;
+    border: 1px solid #d1d5db;
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+
+.related-products .cart-quantity-controls span {
+    font-size: 0.875rem;
+    font-weight: 600;
+    min-width: 1.5rem;
+    text-align: center;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .related-products .grid {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+    
+    .related-products .w-full.h-48 {
+        height: 10rem !important;
+        min-height: 10rem;
+        max-height: 10rem;
+    }
+    
+    .related-products img.object-contain {
+        max-height: 8rem !important;
+    }
+}
+
+@media (max-width: 640px) {
+    .related-products .grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+    
+    .related-products .w-full.h-48 {
+        height: 9rem !important;
+        min-height: 9rem;
+        max-height: 9rem;
+    }
+    
+    .related-products img.object-contain {
+        max-height: 7rem !important;
+    }
+    
+    .related-products h3.text-base {
+        font-size: 0.875rem;
+        height: 2.4rem;
+    }
+    
+    .related-products .flex.items-center.gap-2.mt-3 {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+}
+
 </style>
+<style>
+    /* Out of Stock Styles */
+    .out-of-stock-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.85);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2;
+    }
+    
+    .out-of-stock-badge {
+        background: #dc2626;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+    }
+    
+    .product-image-container {
+        position: relative;
+    }
+    
+    .product-image-out-of-stock {
+        filter: grayscale(100%) opacity(0.5);
+    }
+    
+    .stock-status {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-top: 4px;
+    }
+    
+    .stock-in {
+        background: #dcfce7;
+        color: #166534;
+    }
+    
+    .stock-low {
+        background: #fef3c7;
+        color: #92400e;
+    }
+    
+    .stock-out {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+    
+    .btn-disabled {
+        opacity: 0.5;
+        cursor: not-allowed !important;
+        pointer-events: none;
+    }
+
+.image-section-container {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    position: relative;
+}
+
+.main-image-display {
+    min-height: 400px;
+    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.main-image-display img {
+    transition: transform 0.3s ease;
+    max-width: 100%;
+    max-height: 450px;
+    object-fit: contain;
+}
+
+.main-image-display img:hover {
+    transform: scale(1.02);
+}
+
+/* Thumbnails Container */
+.thumbnails-container {
+    margin-top: 1.5rem;
+    padding: 10px 0;
+}
+
+.thumbnails-scroll {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+.thumbnails-scroll::-webkit-scrollbar {
+    height: 6px;
+}
+
+.thumbnails-scroll::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+}
+
+.thumbnails-scroll::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+/* Thumbnail Items */
+.thumbnail-item {
+    flex: 0 0 calc(25% - 9px); /* 4 images per line */
+    min-width: 120px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.thumbnail-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+}
+
+.thumbnail-item.active {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3);
+}
+
+.thumbnail-item img {
+    width: 100%;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.thumbnail-item.active img {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+/* Navigation Buttons */
+.nav-button {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.95);
+    border: 2px solid #e5e7eb;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 10;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    font-size: 24px;
+    font-weight: bold;
+    color: #374151;
+}
+
+.nav-button:hover {
+    background: white;
+    border-color: #3b82f6;
+    color: #3b82f6;
+    transform: translateY(-50%) scale(1.1);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3);
+}
+
+.prev-button {
+    left: 20px;
+}
+
+.next-button {
+    right: 20px;
+}
+
+/* Image Counter */
+.image-counter {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: rgba(0, 0, 0, 0.75);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 5;
+    backdrop-filter: blur(4px);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .nav-button {
+        width: 42px;
+        height: 42px;
+        font-size: 20px;
+    }
+    
+    .thumbnail-item {
+        flex: 0 0 calc(33.33% - 8px); /* 3 images on mobile */
+        min-width: 100px;
+    }
+    
+    .image-counter {
+        top: 15px;
+        left: 15px;
+        padding: 5px 12px;
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 480px) {
+    .thumbnail-item {
+        flex: 0 0 calc(50% - 6px); /* 2 images on small mobile */
+        min-width: 90px;
+    }
+    
+    .nav-button {
+        width: 38px;
+        height: 38px;
+        font-size: 18px;
+    }
+}
+
+/* Related Products - Fixed Image Size */
+.related-products {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.related-products h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 1.5rem;
+}
+
+/* Grid Layout */
+.related-products .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+/* Product Card */
+.related-products .border {
+    border-radius: 0.75rem;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.related-products .border:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    border-color: #3b82f6;
+}
+
+/* FIXED IMAGE CONTAINER - ALL SAME SIZE */
+.related-products .w-full.h-48 {
+    height: 12rem !important; /* Fixed 192px height */
+    min-height: 12rem;
+    max-height: 12rem;
+    width: 100%;
+    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+/* FIXED IMAGE - ALL SAME SIZE */
+.related-products img.object-contain {
+    width: auto !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: 10rem !important; /* Fixed max height */
+    object-fit: contain !important;
+    margin: 0 auto;
+    display: block;
+}
+
+/* Ensure all images have same container size */
+.related-products a > img {
+    width: 100%;
+    height: 12rem;
+    object-fit: contain;
+    background: #f8fafc;
+}
+
+/* Remove any inconsistent image sizing */
+.related-products img[src*="default.png"] {
+    width: 80% !important;
+    height: 80% !important;
+    object-fit: contain !important;
+    opacity: 0.7;
+}
+
+/* Product Info - Consistent spacing */
+.related-products h3.text-base {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0.75rem 0 0.5rem;
+    line-height: 1.4;
+    height: 2.8rem;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+/* Price - Consistent styling */
+.related-products .flex.items-center.gap-2.mt-2 {
+    margin: 0.5rem 0;
+    min-height: 2rem;
+}
+
+.related-products .text-base.font-bold {
+    font-size: 1.125rem;
+    color: #111827;
+}
+
+.related-products .text-sm.font-medium {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+/* Description - Consistent height */
+.related-products p.text-sm {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin: 0.5rem 0 1rem;
+    line-height: 1.5;
+    height: 3rem;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+/* Action Buttons - Consistent height */
+.related-products .flex.items-center.gap-2.mt-3 {
+    margin-top: auto;
+    padding-top: 0.75rem;
+    border-top: 1px solid #f3f4f6;
+    min-height: 2.5rem;
+    align-items: center;
+}
+
+/* Buttons styling */
+.related-products .kt-btn-outline {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+    border-radius: 0.375rem;
+    border: 1px solid #d1d5db;
+    background: transparent;
+    color: #374151;
+    transition: all 0.2s;
+}
+
+.related-products .kt-btn-outline:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+}
+
+.related-products .kt-btn-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+}
+
+.related-products .kt-btn-xs {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+}
+
+/* Wishlist icon */
+.related-products .kt-wishlist-icon {
+    margin-left: auto;
+    font-size: 1.25rem;
+    color: #9ca3af;
+    transition: color 0.2s;
+}
+
+.related-products .kt-wishlist-icon:hover {
+    color: #ef4444;
+}
+
+.related-products .ki-solid.ki-heart.text-red-500 {
+    color: #ef4444 !important;
+}
+
+/* Cart quantity controls */
+.related-products .cart-quantity-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    background: #f3f4f6;
+    border-radius: 0.375rem;
+    border: 1px solid #e5e7eb;
+}
+
+.related-products .cart-quantity-controls button {
+    width: 1.5rem;
+    height: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.25rem;
+    background: white;
+    border: 1px solid #d1d5db;
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+
+.related-products .cart-quantity-controls span {
+    font-size: 0.875rem;
+    font-weight: 600;
+    min-width: 1.5rem;
+    text-align: center;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .related-products .grid {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+    
+    .related-products .w-full.h-48 {
+        height: 10rem !important;
+        min-height: 10rem;
+        max-height: 10rem;
+    }
+    
+    .related-products img.object-contain {
+        max-height: 8rem !important;
+    }
+}
+
+@media (max-width: 640px) {
+    .related-products .grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+    
+    .related-products .w-full.h-48 {
+        height: 9rem !important;
+        min-height: 9rem;
+        max-height: 9rem;
+    }
+    
+    .related-products img.object-contain {
+        max-height: 7rem !important;
+    }
+    
+    .related-products h3.text-base {
+        font-size: 0.875rem;
+        height: 2.4rem;
+    }
+    
+    .related-products .flex.items-center.gap-2.mt-3 {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+}
+    </style>
+    
+<!-- Begin Medical Banner Slider -->
 
 <div class="kt-container-fixed mt-1" style="max-width: var(--custom-container-width, 85%);">
     <div class="flex flex-col items-stretch gap-7 mt-5 py-5">
@@ -395,49 +1134,68 @@
         <!-- Product Grid - Two Column Layout -->
         <div class="product-detail-grid">
             <!-- Left Column: Images -->
-            <div class="image-section-container">
-                {% if product.main_image or other_images %}
-                    <!-- Main Image Slider -->
-                    <div class="swiper mainSwiper">
-                        <div class="swiper-wrapper">
-                            {% if product.main_image %}
-                            <div class="swiper-slide">
-                                <img src="{{ product.main_image }}" alt="{{ product.name }}" loading="lazy" />
-                            </div>
-                            {% endif %}
-                            {% for img in other_images %}
-                            <div class="swiper-slide">
-                                <img src="{{ img.image.url }}" alt="Product Image" loading="lazy" />
-                            </div>
-                            {% endfor %}
-                        </div>
-                        <!-- Navigation -->
-                        <div class="swiper-button-prev"></div>
-                        <div class="swiper-button-next"></div>
-                    </div>
-                    
-                    <!-- Thumbnails Slider -->
-                    <div class="swiper thumbSwiper">
-                        <div class="swiper-wrapper">
-                            {% if product.main_image %}
-                            <div class="swiper-slide cursor-pointer">
-                                <img src="{{ product.main_image }}" alt="Thumbnail" loading="lazy" />
-                            </div>
-                            {% endif %}
-                            {% for img in other_images %}
-                            <div class="swiper-slide cursor-pointer">
-                                <img src="{{ img.image.url }}" alt="Thumbnail" loading="lazy" />
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                {% else %}
-                    <div class="flex flex-col items-center justify-center h-[500px] bg-white dark:bg-gray-800 text-red-500">
-                        <img src="{% static 'default.png' %}" alt="Default Product Image" class="w-48 h-48 object-cover" loading="lazy" />
-                        <p class="mt-4">Image not available. Please check the URL or try again.</p>
-                    </div>
+<div class="image-section-container">
+    {% if product.main_image or other_images %}
+        <!-- Main Image Display -->
+        <div class="main-image-display bg-white border border-gray-200 rounded-xl p-4 md:p-6 flex items-center justify-center mb-6 relative">
+            
+            {% if product.main_image %}
+                <img id="mainProductImage" 
+                     src="{{ product.main_image }}" 
+                     alt="{{ product.name }}" 
+                     class="max-w-full max-h-[400px] md:max-h-[450px] object-contain" 
+                     loading="lazy" />
+            {% else %}
+                <img id="mainProductImage" 
+                     src="{% static 'default.png' %}" 
+                     alt="Default Product Image" 
+                     class="max-w-full max-h-[400px] md:max-h-[450px] object-contain" 
+                     loading="lazy" />
+            {% endif %}
+            
+            <!-- Navigation Arrows -->
+            <button id="prevImageBtn" class="nav-button prev-button" aria-label="Previous Image">
+                ‹
+            </button>
+            
+            <button id="nextImageBtn" class="nav-button next-button" aria-label="Next Image">
+                ›
+            </button>
+        </div>
+        
+        <!-- Thumbnails - 4 images per line -->
+        {% if other_images %}
+        <div class="thumbnails-container">
+            <div class="thumbnails-scroll" id="thumbnailContainer">
+                {% if product.main_image %}
+                <div class="thumbnail-item active" data-image="{{ product.main_image }}">
+                    <img src="{{ product.main_image }}" 
+                         alt="{{ product.name }}"
+                         class="border-2 border-blue-500" />
+                </div>
                 {% endif %}
+                
+                {% for img in other_images %}
+                <div class="thumbnail-item" data-image="{{ img.image.url }}">
+                    <img src="{{ img.image.url }}" 
+                         alt="Product Image {{ forloop.counter }}"
+                         class="border border-gray-300" />
+                </div>
+                {% endfor %}
             </div>
+        </div>
+        {% endif %}
+    {% else %}
+        <!-- No Image Available -->
+        <div class="no-image-placeholder flex flex-col items-center justify-center h-[400px] bg-gray-50 border border-gray-200 rounded-xl">
+            <img src="{% static 'default.png' %}" 
+                 alt="Default Product Image" 
+                 class="w-40 h-40 object-cover" 
+                 loading="lazy" />
+            <p class="mt-4 text-gray-500">Image not available</p>
+        </div>
+    {% endif %}
+</div>
 
             <!-- Right Column: Product Information -->
             <div class="info-section-container">
@@ -894,11 +1652,24 @@
                     {% for related_product in related_products %}
                     <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800 shadow-sm">
                         <a href="{% url 'dashboard:product_detail' related_product.id %}">
-                            {% if related_product.main_image %}
-                            <img src="{{ related_product.main_image }}" alt="{{ related_product.name }}" class="w-full h-48 object-contain rounded mb-3" loading="lazy" />
-                            {% else %}
-                            <img src="{% static 'default.png' %}" alt="Default Product Image" class="w-full h-48 object-contain rounded mb-3" loading="lazy" />
-                            {% endif %}
+                             <div class="relative mb-3">
+            {% if related_product.main_image %}
+            <img src="{{ related_product.main_image }}" alt="{{ related_product.name }}" class="w-full h-48 object-contain rounded product-image-container" loading="lazy" 
+                 {% if related_product.is_out_of_stock %}style="opacity: 0.6;"{% endif %} />
+            {% else %}
+            <img src="{% static 'default.png' %}" alt="Default Product Image" class="w-full h-48 object-contain rounded product-image-container" loading="lazy"
+                 {% if related_product.is_out_of_stock %}style="opacity: 0.6;"{% endif %} />
+            {% endif %}
+            
+            <!-- Out of Stock Overlay -->
+            {% if related_product.is_out_of_stock %}
+            <div class="out-of-stock-overlay absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded">
+                <div class="out-of-stock-badge bg-red-500 text-white px-3 py-1 rounded font-semibold">
+                    Out of Stock
+                </div>
+            </div>
+            {% endif %}
+        </div>
                             <h3 class="text-base font-semibold text-gray-650 dark:text-white truncate">{{ related_product.name }}</h3>
                             <div class="flex items-center gap-2 mt-2">
                                 {% if related_product.offer_active and related_product.offer_percentage and related_product.offer_percentage > 0 %}
@@ -910,12 +1681,17 @@
                             </div>
                             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 truncate">{{ related_product.description|default:'No description available' }}</p>
                             <div class="flex items-center gap-2 mt-3">
-                                <div class="cart-button-container" data-product-id="{{ product.id }}">
+                                <div class="cart-button-container" data-product-id="{{ related_product.id }}">
                                     {% if request.user.is_authenticated %}
-                                        {% if product.id in user_cart_ids %}
+                                         {% if related_product.is_out_of_stock %}
+                                            <!-- Out of Stock Button -->
+                                            <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 btn-disabled" disabled>
+                                                Out of Stock
+                                            </button>
+                                        {% elif related_product.id in user_cart_ids %}
                                             <div class="cart-quantity-controls flex items-center gap-2">
                                                 <button class="decrease-btn px-2 py-1 bg-gray-200 rounded text-sm">-</button>
-                                                <span class="quantity font-semibold">{{ user_cart_quantities|get_item:product.id }}</span>
+                                                <span class="quantity font-semibold">{{ user_cart_quantities|get_item:related_product.id }}</span>
                                                 <button class="increase-btn px-2 py-1 bg-gray-200 rounded text-sm">+</button>
                                             </div>
                                         {% else %}
@@ -924,12 +1700,19 @@
                                             </button>
                                         {% endif %}
                                     {% else %}
-                                        <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 show-login-modal">
-                                            Add <i class="ki-filled ki-handcart text-xs"></i>
-                                        </button>
-                                    {% endif %}
+                                        {% if related_product.is_out_of_stock %}
+                                                            <!-- Out of Stock Button for non-logged in users -->
+                                            <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 btn-disabled" disabled>
+                                                Out of Stock
+                                            </button>
+                                        {% else %}
+                                            <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 show-login-modal">
+                                                Add <i class="ki-filled ki-handcart text-xs"></i>
+                                            </button>
+                                        {% endif %}
+                                    {% endif %}        
                                 </div>
-                                {% if request.user.is_authenticated %}
+                                {% if request.user.is_authenticated and not related_product.is_out_of_stock %}
                                     {% if related_product.show_rfq or related_product.Both %}
                                         <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 open-rfq-modal"
                                                 data-product-id="{{ related_product.id }}"
@@ -1549,6 +2332,101 @@
     
         this.querySelector(".loader").style.display = "inline-block";
     });
+
+document.addEventListener('DOMContentLoaded', function() {
+    const mainImage = document.getElementById('mainProductImage');
+    const prevBtn = document.getElementById('prevImageBtn');
+    const nextBtn = document.getElementById('nextImageBtn');
+    
+    const thumbnailItems = document.querySelectorAll('.thumbnail-item');
+    let currentIndex = 0;
+    
+    // Function to update main image
+    function updateMainImage(index) {
+        if (thumbnailItems.length === 0) return;
+        
+        // Ensure index is within bounds
+        if (index < 0) index = thumbnailItems.length - 1;
+        if (index >= thumbnailItems.length) index = 0;
+        
+        currentIndex = index;
+        
+        // Remove active class from all thumbnails
+        thumbnailItems.forEach(thumb => {
+            thumb.classList.remove('active');
+            const thumbImg = thumb.querySelector('img');
+            thumbImg.classList.remove('border-2', 'border-blue-500', 'ring-2', 'ring-blue-500');
+            thumbImg.classList.add('border', 'border-gray-300');
+        });
+        
+        // Add active class to current thumbnail
+        const currentThumb = thumbnailItems[currentIndex];
+        if (currentThumb) {
+            currentThumb.classList.add('active');
+            const thumbImg = currentThumb.querySelector('img');
+            thumbImg.classList.remove('border', 'border-gray-300');
+            thumbImg.classList.add('border-2', 'border-blue-500', 'ring-2', 'ring-blue-500');
+            
+            // Change main image
+            const newImageSrc = currentThumb.getAttribute('data-image');
+            if (newImageSrc && mainImage.src !== newImageSrc) {
+                mainImage.src = newImageSrc;
+                mainImage.alt = thumbImg.alt;
+            }
+        }
+    }
+    
+    // Initialize thumbnails click functionality
+    thumbnailItems.forEach((item, index) => {
+        item.addEventListener('click', function() {
+            currentIndex = index;
+            updateMainImage(currentIndex);
+        });
+    });
+    
+    // Initialize with first image active
+    if (thumbnailItems.length > 0) {
+        updateMainImage(0);
+    }
+    
+    // Previous button functionality
+    if (prevBtn) {
+        prevBtn.addEventListener('click', function() {
+            updateMainImage(currentIndex - 1);
+        });
+    }
+    
+    // Next button functionality
+    if (nextBtn) {
+        nextBtn.addEventListener('click', function() {
+            updateMainImage(currentIndex + 1);
+        });
+    }
+    
+    // Keyboard navigation
+    document.addEventListener('keydown', function(e) {
+        if (thumbnailItems.length === 0) return;
+        
+        if (e.key === 'ArrowLeft') {
+            updateMainImage(currentIndex - 1);
+        } else if (e.key === 'ArrowRight') {
+            updateMainImage(currentIndex + 1);
+        }
+    });
+    
+    // Auto-scroll thumbnails if needed
+    function scrollToActiveThumbnail() {
+        const activeThumb = document.querySelector('.thumbnail-item.active');
+        if (activeThumb) {
+            activeThumb.scrollIntoView({
+                behavior: 'smooth',
+                block: 'nearest',
+                inline: 'center'
+            });
+        }
+    }
+});
+
     </script>
     
     

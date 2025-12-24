@@ -119,6 +119,21 @@
                 <option value="b2c">B2C</option>
               </select>
             </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Supplier <span style="color: red;">*</span></label>
+              {% if request.user.supplierprofile %}
+                <input type="hidden" name="supplier" value="{{ suppliers.0.id }}">
+                <input type="text" class="form-control" value="{{ suppliers.0.user.username }}" disabled>
+              {% else %}
+                <select name="supplier" class="form-select select2" multiple required
+                        data-placeholder="Select suppliers">
+                  {% for s in suppliers %}
+                    <option value="{{ s.id }}">{{ s.user.username }}</option>
+                  {% endfor %}
+                </select>
+              {% endif %}
+            </div>
           
             <div class="col-md-6">
               <label class="form-label fw-semibold">Product</label>
@@ -368,19 +383,36 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
   });
-  function validateForm(form) {
+function validateForm(form) {
     let valid = true;
+
     form.querySelectorAll('[required]').forEach(field => {
-      if (!field.value) valid = false;
-      if (field.tagName === 'SELECT' && field.multiple) {
-        if (!$('#' + field.id).val() || $('#' + field.id).val().length === 0) valid = false;
-      }
+
+        // normal input/select
+        if (!field.value) valid = false;
+
+        // select2 multiple check (ONLY if id exists)
+        if (field.tagName === 'SELECT' && field.multiple && field.id) {
+            const val = $('#' + field.id).val();
+            if (!val || val.length === 0) valid = false;
+        }
     });
+
     const start = form.querySelector('[name="start_datetime"]').value;
-    const end = form.querySelector('[name="end_datetime"]').value;
-    if (start && end && new Date(end) <= new Date(start)) valid = false;
+    const end   = form.querySelector('[name="end_datetime"]').value;
+
+    if (start && end && new Date(end) <= new Date(start)) {
+        showAlert('End date must be after start date', 'danger');
+        return false;
+    }
+
+    if (!valid) {
+        showAlert('Please fill all required fields', 'danger');
+    }
+
     return valid;
-  }
+}
+
 });
 </script>
 {% endblock %}

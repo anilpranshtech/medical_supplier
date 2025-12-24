@@ -270,8 +270,9 @@
                             </div>
                             <div class="flex flex-col gap-1.5">
                                 <label class="text-2sm font-semibold text-mono">Phone Number<span style="color:red;">*</span></label>
-                                <input type="number" name="phone"  class="kt-input" placeholder="Phone Number"
+                                <input type="number" id="phone" name="phone"  class="kt-input" placeholder="Phone Number" maxlength="10"
                                         required>
+                                        <small id="phoneError" style="color:red; display:none;">Please enter exactly 10 digits</small>
                             </div>
                             <div class="flex items-center gap-2">
                                 <input type="checkbox" name="is_default" id="is_default">
@@ -632,6 +633,30 @@ document.addEventListener('DOMContentLoaded', function() {
         loader.classList.remove('hidden'); 
         saveBtn.disabled = true;          
     });
+});
+
+const phoneInput = document.getElementById("phone");
+const phoneError = document.getElementById("phoneError");
+
+phoneInput.addEventListener("input", function () {
+    // only digits allowed
+    this.value = this.value.replace(/\D/g, "");
+
+    if (this.value.length < 10) {
+        phoneError.style.display = "block";
+        phoneError.innerText = "Enter minimum 10 digits";
+        this.style.borderColor = "red";
+    } 
+    else if (this.value.length > 10) {
+        phoneError.style.display = "block";
+        phoneError.innerText = "Enter exactly 10 digits";
+        this.style.borderColor = "red";
+        this.value = this.value.slice(0, 10); // extra digits cut
+    } 
+    else {
+        phoneError.style.display = "none";
+        this.style.borderColor = "#e5e7eb"; // normal border
+    }
 });
  
 

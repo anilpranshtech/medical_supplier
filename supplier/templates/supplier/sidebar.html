@@ -87,6 +87,14 @@ class="menu-item py-2 {% if request.resolver_match.url_name == 'user_information
                                 <span class="menu-title">Supplier Logs</span>
                            </a>
                        </div>
+                       <div class="menu-item {% if request.resolver_match.url_name == 'supplier_chats' %} here show {% endif %}">
+                        <a class="menu-link" href="{% url 'supplier:supplier_chats' %}">
+                           <span class="menu-bullet">
+                               <span class="bullet bullet-dot"></span>
+                           </span>
+                            <span class="menu-title">Supplier Chats</span>
+                       </a>
+                   </div>
                           </div>
                      </div>
                      </div>

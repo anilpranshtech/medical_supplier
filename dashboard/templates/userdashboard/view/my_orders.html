@@ -148,7 +148,7 @@
                 <div class="flex-1 min-w-[150px]">
                     <span class="text-xs text-gray-500">Total</span>
                     <div class="text-sm font-bold">
-                        {{ order.payment.payment_currency|default:"USD" }} {{ order.final_total|floatformat:2 }}
+                        ${{ order.payment.amount|floatformat:2|default:"0.00" }}
                     </div>
                 </div>
                 
@@ -200,8 +200,9 @@
                                 </div>
                             </div>
                             <div class="text-sm font-semibold text-right sm:text-left w-full sm:w-auto">
-                                {{ item.payment_currency|default:"USD" }} {{ item.quantity }} × {{ item.price|floatformat:2 }} =
-                                {{ item|order_item_total|format_currency:item.payment_currency|default:"USD" }}
+                                <!-- {{ item.payment_currency|default:"USD" }} {{ item.quantity }} × {{ item.price|floatformat:2 }} =
+                                {{ item|order_item_total|format_currency:item.payment_currency|default:"USD" }} -->
+                                {{ item.payment_currency|default:"USD" }} {{ item.quantity }}  = ${{ order.payment.amount|floatformat:2|default:"0.00" }} 
                             </div>
                         </div>
 

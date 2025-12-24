@@ -3791,13 +3791,17 @@ class BuyXGiftYPromotionView(TemplateView):
         user = self.request.user
 
         # ---------------- BASE QUERYSET ----------------
-        promotions_qs = BuyXGiftYPromotion.objects.all()
+        promotions_qs = BuyXGiftYPromotion.objects.prefetch_related(
+            'supplier', 'product', 'giftproduct'
+        )
 
         # Filter by supplier if user is a supplier
-        if hasattr(user, 'supplierprofile'):
-            promotions_qs = promotions_qs.filter(supplier=user.supplierprofile)
+        if hasattr(user, 'supplierprofile') and not user.is_superuser:
+            promotions_qs = promotions_qs.filter(
+                supplier__in=[user.supplierprofile]
+            )
             ctx['suppliers'] = [user.supplierprofile]
-            ctx['products'] = Product.objects.filter(created_by=user)
+            ctx['products'] = Product.objects.all()
         else:
             ctx['suppliers'] = SupplierProfile.objects.all()
             ctx['products'] = Product.objects.all()
@@ -3808,7 +3812,8 @@ class BuyXGiftYPromotionView(TemplateView):
             promotions_qs = promotions_qs.filter(
                 Q(product_type__icontains=search_by) |
                 Q(supplier__user__username__icontains=search_by) |
-                Q(product__name__icontains=search_by)
+                Q(product__name__icontains=search_by) |
+                Q(giftproduct__name__icontains=search_by)
             ).distinct()
 
         # ---------------- SORT FILTER ----------------
@@ -3957,9 +3962,9 @@ class BasketPromotionView(TemplateView):
         user = self.request.user
         promotions_qs = BasketPromotion.objects.all()
         if hasattr(user, 'supplierprofile'):
-            promotions_qs = promotions_qs.filter(supplier=user.supplierprofile)
+            promotions_qs = promotions_qs.all()
             context['suppliers'] = [user.supplierprofile]
-            context['products'] = Product.objects.filter(created_by=user)
+            context['products'] = Product.objects.all()
         else:
             context['suppliers'] = SupplierProfile.objects.all()
             context['products'] = Product.objects.all()
@@ -7044,3 +7049,57 @@ class UserLogsListView(TemplateView):
         context['paginator'] = paginator
 
         return context
+class AdminSupplierChats(TemplateView):
+    template_name = 'superuser/AdminSupplierchats.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        supplier_id = self.request.GET.get('supplier_id') or kwargs.get('supplier_id')
+
+        if supplier_id:
+            try:
+                supplier = User.objects.get(
+                    id=supplier_id,
+                    supplierprofile__isnull=False
+                )
+
+                admin_user = self.request.user
+
+                room, created = ChatRoom.objects.get_or_create(
+                    supplier=supplier,
+                    admin=admin_user
+                )
+
+                context.update({
+                    'room': room,
+                    'room_id': room.id,
+                    'supplier': supplier,
+                })
+
+            except User.DoesNotExist:
+                context['room'] = None
+
+        context['current_user'] = self.request.user
+        return context
+
+class AdminChatList(LoginRequiredMixin, ListView):
+    model = ChatRoom
+    template_name = 'superuser/admin_chat_list.html'
+    context_object_name = 'rooms'
+    paginate_by = 10
+
+    def test_func(self):
+        return self.request.user.is_staff
+
+    def get_queryset(self):
+        rooms = ChatRoom.objects.filter(
+            admin=self.request.user
+        ).order_by('-updated_at')
+        for room in rooms:
+            room.unread_count = room.messages.filter(
+                is_read=False,
+                sender=room.supplier
+            ).count()
+
+        return rooms
