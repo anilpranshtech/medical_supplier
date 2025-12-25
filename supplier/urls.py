@@ -93,6 +93,7 @@ urlpatterns = [
     path("get-cities/", GetCitiesView.as_view(), name="get_cities"),
     path('supplier/documents/', SupplierDocumentsView.as_view(), name='supplier_documents'),
     path('supplier/status/', SupplierStatusView.as_view(), name='supplier_status'),
+    path('track-onboarding-progress/', TrackOnboardingProgressView.as_view(), name='track_onboarding_progress'),
 
     #return 
     path('returns/update/<str:return_serial>/', AdminReturnUpdateStatusView.as_view(), name='admin_returns_update_status'),

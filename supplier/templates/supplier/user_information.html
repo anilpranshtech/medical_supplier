@@ -164,14 +164,14 @@ input.is-invalid, textarea.is-invalid, select.is-invalid {
     <!-- Sidebar -->
     <div class="card sidebar">
         <ul>
-            <li class="{% if step == 1 %}active{% endif %}">User Information</li>
-            <li class="{% if step == 2 %}active{% endif %}">Business Information</li>
-            <li class="{% if step == 3 %}active{% endif %}">Bank Details</li>
-            <li class="{% if step == 4 %}active{% endif %}">Selling Categories</li>
-            <li class="{% if step == 5 %}active{% endif %}">Supplier Description</li>
-            <li class="{% if step == 6 %}active{% endif %}">Pickup and Shipping</li>
-            <li class="{% if step == 7 %}active{% endif %}">Supplier Documents</li>
-            <li class="{% if step == 8 %}active{% endif %}">Status</li>
+            <li class="{% if step == 1 %}active{% endif %} stepSelector" current_step="1" current_url="{% url 'supplier:user_information' %}">User Information</li>
+            <li class="{% if step == 2 %}active{% endif %} stepSelector" current_step="2" current_url="{% url 'supplier:business_information' %}">Business Information</li>
+            <li class="{% if step == 3 %}active{% endif %} stepSelector" current_step="3" current_url="{% url 'supplier:bank_details' %}">Bank Details</li>
+            <li class="{% if step == 4 %}active{% endif %} stepSelector" current_step="4" current_url="{% url 'supplier:selling_categories' %}">Selling Categories</li>
+            <li class="{% if step == 5 %}active{% endif %} stepSelector" current_step="5" current_url="{% url 'supplier:supplier_description' %}">Supplier Description</li>
+            <li class="{% if step == 6 %}active{% endif %} stepSelector" current_step="6" current_url="{% url 'supplier:pickup_shipping' %}">Pickup and Shipping</li>
+            <li class="{% if step == 7 %}active{% endif %} stepSelector" current_step="7" current_url="{% url 'supplier:supplier_documents' %}">Supplier Documents</li>
+            <li class="{% if step == 8 %}active{% endif %} stepSelector" current_step="8" current_url="{% url 'supplier:supplier_status' %}">Status</li>
         </ul>
     </div>
 
@@ -662,6 +662,28 @@ window.addEventListener('pageshow', function(event) {
             saveBtn.dataset.loading = "false";
         }
     });
+
+   $(document).on('click', '.stepSelector', function () {
+    const step = $(this).attr('current_step');
+    const url = $(this).attr('current_url');
+    $.ajax({
+        url: "{% url 'supplier:track_onboarding_progress' %}",
+        type: "GET",
+        success: function (response) {
+            if (response.status == "success") {
+                if (parseInt(response.current_steps) >= parseInt(step)) {
+                    window.location.href = url;
+                } else {
+                    return false;
+                }
+            }
+        },
+        error: function (xhr) {
+            console.error("AJAX error:", xhr.responseText);
+        }
+    });
+});
+
     </script>
 
 {% endblock %}

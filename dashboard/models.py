@@ -254,7 +254,7 @@ class SupplierProfile(models.Model):
     current_status = models.CharField(max_length=10, choices=[('active','Active'),('inactive','Inactive')], default='active')
     request_for = models.CharField(max_length=10, choices=[('vacation','Vacation'),('close','Close'),('none','None')], default='none')
     equest_reason = models.TextField(blank=True, null=True)
-
+    steps_tracking = models.IntegerField(default=0)
     class Meta:
         verbose_name = "Supplier Profile"
         verbose_name_plural = "Supplier Profiles"

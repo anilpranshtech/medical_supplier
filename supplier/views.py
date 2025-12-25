@@ -2445,7 +2445,7 @@ class ProductRatingListView(TemplateView):
 
 
 
-class   SupplierReturnsView(LoginRequiredMixin, TemplateView):
+class SupplierReturnsView(LoginRequiredMixin, TemplateView):
 
     template_name = 'supplier/returns.html'
     login_url = 'dashboard:login'
@@ -2590,8 +2590,10 @@ class UserInformationView(FormView):
             "meta_keywords",
         ]:
             setattr(profile, field, form.cleaned_data[field])
+        if not profile.steps_tracking > 1: 
+            profile.steps_tracking = 1
         profile.save()
-
+    
         return super().form_valid(form)
     
     def get_context_data(self, **kwargs):
@@ -2632,6 +2634,8 @@ class BusinessInformationView(FormView):
         for file_field in file_fields:
             if self.request.FILES.get(file_field):
                 setattr(profile, file_field, self.request.FILES[file_field])
+        if not profile.steps_tracking > 2:
+            profile.steps_tracking = 2
 
         profile.save()
         return super().form_valid(form)
@@ -2671,6 +2675,9 @@ class BankDetailsView(TemplateView):
         form = BankDetailsForm(request.POST, request.FILES, instance=profile)
         if form.is_valid():
             form.save()
+            if not profile.steps_tracking > 3:
+                profile.steps_tracking = 3
+            profile.save()
             return redirect("supplier:selling_categories")  
         context = self.get_context_data()
         context["form"] = form
@@ -2693,6 +2700,8 @@ class SellingCategoriesView(TemplateView):
         profile = SupplierProfile.objects.get(user=request.user)
         form = SellingCategoriesForm(request.POST, instance=profile)
         if form.is_valid():
+            if not profile.steps_tracking > 4:
+                profile.steps_tracking = 4
             form.save()
             return redirect("supplier:supplier_description") 
         return self.render_to_response({
@@ -2718,6 +2727,8 @@ class SupplierDescriptionView(TemplateView):
         profile, _ = SupplierProfile.objects.get_or_create(user=request.user)
         form = SupplierDescriptionForm(request.POST, request.FILES, instance=profile)
         if form.is_valid():
+            if not profile.steps_tracking > 5:
+                profile.steps_tracking = 5
             form.save()
             return redirect("supplier:pickup_shipping") 
         return self.render_to_response({
@@ -2747,6 +2758,8 @@ class PickupShippingView(TemplateView):
         form = PickupandShipping(request.POST, instance=profile)
 
         if form.is_valid():
+            if not profile.steps_tracking > 6:
+                profile.steps_tracking = 6
             form.save()
             return redirect("supplier:supplier_documents")
 
@@ -2786,6 +2799,8 @@ class SupplierDocumentsView(TemplateView):
         form = SupplierDocumentsForm(request.POST, request.FILES, instance=supplier_profile)
         
         if form.is_valid():
+            if not supplier_profile.steps_tracking > 7:
+                supplier_profile.steps_tracking = 7
             form.save()
             return redirect("supplier:supplier_status") 
 
@@ -2814,6 +2829,8 @@ class SupplierStatusView(View):
         if form.is_valid():
             profile = form.save(commit=False)
             profile.onboarding_complete = True 
+            if not profile.steps_tracking > 8:
+                profile.steps_tracking = 8 
             form.save()
             return redirect('supplier:supplier')  
         context = {
@@ -3773,3 +3790,11 @@ class SupplierChatsView(LoginRequiredMixin, TemplateView):
         
         context['current_user'] = user
         return context
+
+
+class TrackOnboardingProgressView(View):
+    def get(self, request):
+        supplier_profile = get_object_or_404(SupplierProfile, user=request.user)
+        current_steps = supplier_profile.steps_tracking 
+        print("Current Steps:", current_steps)
+        return JsonResponse({'status':'success','current_steps':current_steps})
