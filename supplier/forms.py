@@ -164,13 +164,8 @@ class BankDetailsForm(forms.ModelForm):
             "swift_code",
         ]
         widgets = {
-            "iban_certificate": forms.FileInput(attrs={"class": "form-control"}),  # 👈 override here
+            "iban_certificate": forms.FileInput(attrs={"class": "form-control"}), 
         }
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for field_name, field in self.fields.items():
-            field.widget.attrs.update({"class": "form-control"})
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
