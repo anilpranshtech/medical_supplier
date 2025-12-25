@@ -1,0 +1,64 @@
+{% extends "supplier/base.html" %}
+
+{% block content %}
+
+<div class="app-main flex-column flex-row-fluid">
+    <div class="card mb-5">
+        <div class="card-body">
+            <h3 class="fw-bold mb-0">My Chats</h3>
+        </div>
+    </div>
+
+    <div class="card card-flush">
+        <div class="card-body table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Admin</th>
+                        <th>Last Message</th>
+                        <th>Last Updated</th>
+                        <th>Unread</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for room in rooms %}
+                    <tr>
+                        <td>{{ room.admin.username }}</td>
+
+                        <td>
+                            {{ room.messages.last.message|default:"No messages yet"|truncatechars:50 }}
+                        </td>
+
+                        <td>{{ room.updated_at|timesince }} ago</td>
+
+                        <td>
+                            {% if room.unread_count > 0 %}
+                                <span class="badge badge-danger">{{ room.unread_count }}</span>
+                            {% else %}
+                                <span class="badge badge-light">0</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <a href="{% url 'supplier:supplier_chats' %}?admin_id={{ room.admin.id }}"
+   class="btn btn-primary btn-sm">
+    Open Chat
+</a>
+
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center">
+                            No chats available
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
