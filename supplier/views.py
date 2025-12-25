@@ -3764,16 +3764,10 @@ class SupplierLogsView(TemplateView):
         )
 
         return context
-from django.views.generic import TemplateView
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.shortcuts import get_object_or_404
-from dashboard.models import ChatRoom, ChatMessage
-from django.contrib.auth.models import User
-
 class SupplierChatsView(LoginRequiredMixin, TemplateView):
     template_name = 'supplier/supplierchats.html'
     
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs):   
         context = super().get_context_data(**kwargs)
         user = self.request.user
         admin_user = User.objects.filter(is_staff=True, is_active=True).first()
@@ -3798,3 +3792,22 @@ class TrackOnboardingProgressView(View):
         current_steps = supplier_profile.steps_tracking 
         print("Current Steps:", current_steps)
         return JsonResponse({'status':'success','current_steps':current_steps})
+    
+class SupplierChatsListView(LoginRequiredMixin, ListView):
+    model = ChatRoom
+    template_name = 'supplier/supplier_chat_list.html'
+    context_object_name = 'rooms'
+    paginate_by = 10
+
+    def get_queryset(self):
+        rooms = ChatRoom.objects.filter(
+            supplier=self.request.user,
+            admin__isnull=False
+        ).select_related('admin').order_by('-updated_at')
+        for room in rooms:
+            room.unread_count = room.messages.filter(
+                is_read=False,
+                sender=room.admin
+            ).count()
+
+        return rooms
