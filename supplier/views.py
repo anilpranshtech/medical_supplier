@@ -3800,17 +3800,26 @@ class SupplierChatsListView(LoginRequiredMixin, ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        rooms = ChatRoom.objects.filter(
-            supplier=self.request.user,
-            admin__isnull=False
-        ).select_related('admin').order_by('-updated_at')
-        for room in rooms:
-            room.unread_count = room.messages.filter(
-                is_read=False,
-                sender=room.admin
-            ).count()
+        return (
+            ChatRoom.objects
+            .filter(
+                supplier=self.request.user,
+                chat_type='buyer_supplier',
+                buyer__isnull=False
+            )
+            .select_related('buyer', 'product')
+            .annotate(
+                unread_count=Count(
+                    'messages',
+                    filter=Q(
+                        messages__is_read=False,
+                        messages__sender__buyer_rooms__supplier=self.request.user
+                    )
+                )
+            )
+            .order_by('-updated_at')
+        )
 
-        return rooms
 
 
 class SupplierBuyerChatView(LoginRequiredMixin, TemplateView):

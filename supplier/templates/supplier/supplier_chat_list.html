@@ -1,14 +1,14 @@
 {% extends "supplier/base.html" %}
-
+ 
 {% block content %}
-
+ 
 <div class="app-main flex-column flex-row-fluid">
     <div class="card mb-5">
         <div class="card-body">
             <h3 class="fw-bold mb-0">My Chats</h3>
         </div>
     </div>
-
+ 
     <div class="card card-flush">
         <div class="card-body table-responsive">
             <table class="table table-hover">
@@ -26,14 +26,16 @@
                     {% for room in rooms %}
                         {% if room.chat_type == 'buyer_supplier' %}
                         <tr>
-                            <td>{{ room.chat_partner }}</td>
-
-                            <td>{{ room.product_name|truncatechars:30 }}</td>
-
+                          <td>{{ room.buyer.username }}</td>
+ 
+                           <td>
+    {{ room.product.name|default:"N/A"|truncatechars:30 }}
+</td>
+ 
                             <td>{{ room.messages.last.message|default:"No messages yet"|truncatechars:50 }}</td>
-
+ 
                             <td>{{ room.updated_at|timesince }} ago</td>
-
+ 
                             <td>
                                 {% if room.unread_count > 0 %}
                                     <span class="badge badge-danger">{{ room.unread_count }}</span>
@@ -41,7 +43,7 @@
                                     <span class="badge badge-light">0</span>
                                 {% endif %}
                             </td>
-
+ 
                             <td>
                                 <a href="{% url 'supplier:supplier_buyer_chat' room.id %}"
                                    class="btn btn-primary btn-sm">
@@ -61,6 +63,7 @@
             </table>
         </div>
     </div>
-
+ 
 </div>
 {% endblock %}
+ 
