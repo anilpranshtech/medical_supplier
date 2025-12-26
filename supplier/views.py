@@ -1765,7 +1765,7 @@ class DeleteNotificationView(LoginRequiredMixin, View):
 class LogoutView(View):
     def get(self, request):
         logout(request)
-        return redirect('supplier:admin_login') 
+        return redirect('dashboard:login') 
 
 #
 # class RFQListView(LoginRequiredMixin, SupplierPermissionMixin, OnboardingRequiredMixin,ListView):
@@ -3805,6 +3805,13 @@ class SupplierChatsView(LoginRequiredMixin, TemplateView):
         return context
 
 
+class TrackOnboardingProgressView(View):
+    def get(self, request):
+        supplier_profile = get_object_or_404(SupplierProfile, user=request.user)
+        current_steps = supplier_profile.steps_tracking 
+        print("Current Steps:", current_steps)
+        return JsonResponse({'status':'success','current_steps':current_steps})
+    
 class SupplierChatsListView(LoginRequiredMixin, ListView):
     model = ChatRoom
     template_name = 'supplier/supplier_chat_list.html'

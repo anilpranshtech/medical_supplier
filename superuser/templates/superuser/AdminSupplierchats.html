@@ -338,37 +338,21 @@
         sendMessageToSocket(message);
     }
     function sendMessageToSocket(message) {
-        try {
-            chatSocket.send(JSON.stringify({
-                'message': message
-            }));
-            messageInput.value = '';
-            autoResize();
-            showSendingIndicator(message);
-            
-        } catch (error) {
-            console.error('Error sending message:', error);
-            showConnectionStatus('Failed to send message. Please try again.', true);
-        }
+    try {
+        chatSocket.send(JSON.stringify({
+            'message': message
+        }));
+
+        messageInput.value = '';
+        autoResize();
+
+    } catch (error) {
+        console.error('Error sending message:', error);
+        showConnectionStatus('Failed to send message. Please try again.', true);
     }
-    function showSendingIndicator(message) {
-        const tempId = 'temp_' + Date.now();
-        const tempMessage = {
-            message: message,
-            sender: currentUsername,
-            sender_id: currentUserId,
-            created_at: 'Sending...',
-            is_temp: true
-        };
-        
-        appendMessage(tempMessage);
-        setTimeout(() => {
-            const tempElement = document.getElementById(tempId);
-            if (tempElement) {
-                tempElement.remove();
-            }
-        }, 5000);
-    }
+}
+
+
     function appendMessage(data) {
         const messageDiv = document.createElement('div');
         const messageId = data.is_temp ? 'temp_' + Date.now() : 'msg_' + Date.now();
