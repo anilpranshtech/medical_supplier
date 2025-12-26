@@ -13,4 +13,4 @@ def get_item(dictionary, key):
             return dictionary.get(key)
         return None
     except Exception:
-        return None
+        return None 

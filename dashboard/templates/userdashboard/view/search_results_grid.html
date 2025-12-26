@@ -1,5 +1,6 @@
 {% extends "pages/base.html" %}
 {% load static %}
+{% load custom_filters %}
 {% block content %}
 <style>
   .kt-wishlist-icon.active i.ki-filled.ki-heart {
@@ -355,7 +356,6 @@
     
 </style>
 <style>
-    /* Out of Stock Styles */
     .out-of-stock-overlay {
         position: absolute;
         top: 0;
@@ -418,6 +418,97 @@
         cursor: not-allowed !important;
         pointer-events: none;
     }
+      /* Container for the cart button */
+.cart-button-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+<!--    margin-top: 10px;-->
+}
+
+
+.add-to-cart-btn,
+.show-login-modal {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 12px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #000000;
+    background-color: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+button.kt-btn.kt-btn-outline.kt-btn-xs.flex.items-center.gap-1.open-rfq-modal, button.kt-btn.kt-btn-outline.kt-btn-xs.open-rfq-modal  {
+    color: #000000;
+}
+.add-to-cart-btn i,
+.show-login-modal i {
+    font-size: 0.75rem;
+}
+
+
+.add-to-cart-btn:hover,
+.show-login-modal:hover {
+    background-color: #e5e7eb;
+    border-color: #9ca3af;
+}
+
+
+.cart-quantity-controls {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.cart-quantity-controls button {
+    width: 28px;
+    height: 28px;
+    background-color: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease-in-out;
+}
+
+.cart-quantity-controls button:hover {
+    background-color: #e5e7eb;
+    border-color: #9ca3af;
+}
+
+
+.cart-quantity-controls .quantity {
+    min-width: 20px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+
+@media (max-width: 640px) {
+    .add-to-cart-btn,
+    .show-login-modal {
+        padding: 4px 10px;
+        font-size: 0.75rem;
+    }
+    .cart-quantity-controls button {
+        width: 24px;
+        height: 24px;
+        font-size: 0.75rem;
+    }
+    .cart-quantity-controls .quantity {
+        font-size: 0.75rem;
+        min-width: 18px;
+    }
+}
     </style>
     
 <!-- Begin Medical Banner Slider -->
@@ -679,9 +770,9 @@
                                             Out of Stock
                                         </button>
                                     {% elif product.id in user_cart_ids %}
-                                        <div class="cart-quantity-controls flex items-center gap-2">
+                                        <div class="cart-quantity-controls flex items-center gap-2">    
                                             <button class="decrease-btn px-2 py-1 bg-gray-200 rounded text-sm">-</button>
-                                            {% comment %} <span class="quantity font-semibold">{{ user_cart_quantities|get_item:product.id }}</span> {% endcomment %}
+                                          <span class="quantity font-semibold">{{ user_cart_quantities|get_item:product.id }}</span> 
                                             <button class="increase-btn px-2 py-1 bg-gray-200 rounded text-sm" 
                                                     data-max-stock="{{ product.available_stock }}">+</button>
                                         </div>

@@ -379,7 +379,7 @@ class CustomLoginView(FormView):
                 form.add_error(None, f"{email} is not registered as a wholesaler.")
                 return self.form_invalid(form)
 
-        # ✅ Login success
+        # Login success
         login(self.request, user)
 
         if user_type == 'supplier':
@@ -387,7 +387,7 @@ class CustomLoginView(FormView):
         else:
             self.request.session['user_role'] = buyer_type
 
-        # ✅ Log successful login
+        # Log successful login
         user_login_activity(user)
 
         messages.success(self.request, f"Welcome back, {email}!")
@@ -451,14 +451,7 @@ class RequestRoleView(LoginRequiredMixin, View):
     
 #-------------------------------------------------------------------------------------------------------------------------------------------------
 from django.urls import reverse
-def generate_token():
-        return uuid.uuid4().hex
-        
-from django.core.mail import send_mail
-from django.template.loader import render_to_string
-from django.utils.html import strip_tags
-from django.conf import settings
-from django.contrib.auth import get_user_model
+
 
 
 class RegistrationView(View):
@@ -1063,16 +1056,21 @@ class SearchResultsGridView(TemplateView):
             context['products'] = []
 
         if self.request.user.is_authenticated:
-            cart_ids = CartProduct.objects.filter(user=self.request.user).values_list('product_id', flat=True)
-            wishlist_ids = WishlistProduct.objects.filter(user=self.request.user).values_list('product_id', flat=True)
-            context['user_cart_ids'] = list(cart_ids)
-            context['user_wishlist_ids'] = list(wishlist_ids)
+            cart_products = CartProduct.objects.filter(user=self.request.user)
+            context['user_cart_ids'] = list(cart_products.values_list('product_id', flat=True))
+            context['user_cart_quantities'] = {cp.product_id: cp.quantity for cp in cart_products}
+
+            context['user_wishlist_ids'] = list(
+                WishlistProduct.objects.filter(user=self.request.user).values_list('product_id', flat=True)
+            )
             context['user_registered_event_ids'] = list(
-                EventRegistration.objects.filter(user=self.request.user).values_list('product_id', flat=True))
+                EventRegistration.objects.filter(user=self.request.user).values_list('product_id', flat=True)
+            )
         else:
             context['user_cart_ids'] = []
             context['user_wishlist_ids'] = []
             context['user_registered_event_ids'] = []
+            
         context['show_ratings'] = True
         logger.debug(f"Final context: {context.keys()}")
         logger.debug(f"Sample product rating: {context.get('products', [])[:1]}")
@@ -1328,13 +1326,6 @@ class SearchResultsListView(TemplateView):
 
         return context
 
-
-# views.py - Updated ProductDetailsView
-
-from django.views.generic import TemplateView
-from django.core.paginator import Paginator
-from django.db.models import Avg
-
 class ProductDetailsView(TemplateView):
     template_name = 'userdashboard/view/product_details.html'
 
@@ -1351,8 +1342,6 @@ class ProductDetailsView(TemplateView):
                 main_img = ProductImage.objects.filter(product=product, is_main=True).first()
                 product.main_image = main_img.image.url if main_img else None
                 other_images = ProductImage.objects.filter(product=product).exclude(id=main_img.id if main_img else None)
-
-                # Reviews with pagination
                 reviews_qs = RatingReview.objects.filter(product=product).order_by('-created_at')
                 reviews_page_number = self.request.GET.get('rpage', 1)
                 reviews_paginator = Paginator(reviews_qs, 3) 
@@ -1379,10 +1368,17 @@ class ProductDetailsView(TemplateView):
                     for related_product in related_products:
                         main_img = ProductImage.objects.filter(product=related_product, is_main=True).first()
                         related_product.main_image = main_img.image.url if main_img else None
-
-                # User-specific data
                 user = self.request.user
-                if user.is_authenticated:
+                chat_room_id = None
+                supplier = product.created_by
+                if user.is_authenticated and supplier:
+                    room, created = ChatRoom.objects.get_or_create(
+                        buyer=user,
+                        supplier= supplier,
+                        product=product,
+                        chat_type='buyer_supplier'
+                    )
+                    chat_room_id = room.id
                     user_cart_ids = list(CartProduct.objects.filter(user=user).values_list('product_id', flat=True))
                     user_cart_quantities = {
                         item.product.id: item.quantity
@@ -1421,6 +1417,7 @@ class ProductDetailsView(TemplateView):
                     "questions": questions_page, 
                     'stock_status': stock_status,
                     'related_products': related_products,  
+                    'chat_room_id': chat_room_id,
                 })
 
             except Product.DoesNotExist:
@@ -1428,8 +1425,11 @@ class ProductDetailsView(TemplateView):
                 context['other_images'] = []
                 context['event'] = None
                 context['related_products'] = [] 
+                context['chat_room_id'] = None
+
 
         return context
+
 
 class EventRegistrationView(View):
     def post(self, request):
@@ -2227,30 +2227,14 @@ def create_orders_from_cart(user, payment_type, payment_status, payment):
             )
 
             logger.info(f"Created Order {order.order_id} (ID: {order.id}) for user {user.id} with payment {payment.id}")
-
-            # --------------------------
-            # STOCK REDUCTION HERE 🔥
-            # --------------------------
             for item in cart_items:
                 product = item.product
-
-                # 1. CHECK STOCK
                 if product.stock_quantity < item.quantity:
                     raise ValueError(f"Not enough stock for {product.name}")
-
-                # 2. REDUCE STOCK
                 product.stock_quantity -= item.quantity
-
-                # 3. LOW STOCK TAG UPDATE
                 if product.stock_quantity <= product.low_stock_alert:
                     product.tag = "limited"
-
-                # 4. SAVE PRODUCT
                 product.save()
-
-                # --------------------------
-                # CREATE ORDER ITEM
-                # --------------------------
                 OrderItem.objects.create(
                     order=order,
                     order_by=user,
@@ -2269,8 +2253,6 @@ def create_orders_from_cart(user, payment_type, payment_status, payment):
                     f"Created OrderItem for product {product.id} (qty: {item.quantity}) in Order {order.order_id} "
                     f"and updated stock to {product.stock_quantity}"
                 )
-
-            # CLEAR CART
             cart_items.delete()
             logger.info(f"Cleared cart for user {user.id}")
             print('created order ----------------------')
@@ -2649,20 +2631,14 @@ class OrderPlacedView(LoginRequiredMixin, TemplateView):
             else:
                 context['error'] = "No order found for this payment."
                 return context
-
-        # 🧾 Order summary calculations
         subtotal = sum(item.price * item.quantity for item in order.items.all()) or Decimal('0.00')
         shipping = order.shipping_fees or Decimal('00.00')
         vat = Decimal('0.00')
-
-        # ✅ Apply coupon only if user actually applied one
         coupon_discount = Decimal('0.00')
         if 'applied_coupon' in self.request.session:
             coupon_data = self.request.session.get('applied_coupon', {})
             if coupon_data and 'discount_amount' in coupon_data:
                 coupon_discount = Decimal(str(coupon_data['discount_amount']))
-
-        # ✅ Calculate total safely
         total = subtotal - coupon_discount + shipping + vat
 
         # Estimated delivery
@@ -4426,10 +4402,6 @@ class DeleteNotificationView(LoginRequiredMixin, View):
         notification.delete() 
         return JsonResponse({'status': 'success'})
 
-
-
-
-
 class CategoryProductListView(TemplateView):
     template_name = "userdashboard/view/category_products_list.html"
 
@@ -4546,4 +4518,28 @@ class UserLogsView(LoginRequiredMixin, TemplateView):
             "action_types": UserLogs.ActionType.choices,
         })
 
+        return context
+
+class SupplierBuyerChatView(LoginRequiredMixin, TemplateView):
+    template_name = 'supplier/supplier_buyer_chat.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        room_id = self.kwargs.get('room_id')
+        user = self.request.user
+        
+        try:
+            room = ChatRoom.objects.get(
+                id=room_id,
+                supplier=user,
+                chat_type='buyer_supplier'
+            )
+            context['room'] = room
+            context['room_id'] = room.id
+            context['chat_with'] = room.buyer.username if room.buyer else 'Buyer'
+            context['product'] = room.product
+        except ChatRoom.DoesNotExist:
+            context['room'] = None
+        
+        context['current_user'] = user
         return context

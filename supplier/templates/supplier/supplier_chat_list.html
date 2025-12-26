@@ -14,7 +14,8 @@
             <table class="table table-hover">
                 <thead>
                     <tr>
-                        <th>Admin</th>
+                        <th>Chat With</th>
+                        <th>Product</th>
                         <th>Last Message</th>
                         <th>Last Updated</th>
                         <th>Unread</th>
@@ -23,34 +24,35 @@
                 </thead>
                 <tbody>
                     {% for room in rooms %}
-                    <tr>
-                        <td>{{ room.admin.username }}</td>
+                        {% if room.chat_type == 'buyer_supplier' %}
+                        <tr>
+                            <td>{{ room.chat_partner }}</td>
 
-                        <td>
-                            {{ room.messages.last.message|default:"No messages yet"|truncatechars:50 }}
-                        </td>
+                            <td>{{ room.product_name|truncatechars:30 }}</td>
 
-                        <td>{{ room.updated_at|timesince }} ago</td>
+                            <td>{{ room.messages.last.message|default:"No messages yet"|truncatechars:50 }}</td>
 
-                        <td>
-                            {% if room.unread_count > 0 %}
-                                <span class="badge badge-danger">{{ room.unread_count }}</span>
-                            {% else %}
-                                <span class="badge badge-light">0</span>
-                            {% endif %}
-                        </td>
+                            <td>{{ room.updated_at|timesince }} ago</td>
 
-                        <td>
-                            <a href="{% url 'supplier:supplier_chats' %}?admin_id={{ room.admin.id }}"
-   class="btn btn-primary btn-sm">
-    Open Chat
-</a>
+                            <td>
+                                {% if room.unread_count > 0 %}
+                                    <span class="badge badge-danger">{{ room.unread_count }}</span>
+                                {% else %}
+                                    <span class="badge badge-light">0</span>
+                                {% endif %}
+                            </td>
 
-                        </td>
-                    </tr>
+                            <td>
+                                <a href="{% url 'supplier:supplier_buyer_chat' room.id %}"
+                                   class="btn btn-primary btn-sm">
+                                    Open Chat
+                                </a>
+                            </td>
+                        </tr>
+                        {% endif %}
                     {% empty %}
                     <tr>
-                        <td colspan="5" class="text-center">
+                        <td colspan="6" class="text-center">
                             No chats available
                         </td>
                     </tr>

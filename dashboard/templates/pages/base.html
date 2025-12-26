@@ -42,6 +42,7 @@
       }
     </style>
 
+    
     <script async src="https://www.googletagmanager.com/gta
 g/js?id=G-52YZ3XGZJ6"></script>
     <script>
@@ -115,10 +116,127 @@ g/js?id=G-52YZ3XGZJ6"></script>
         </div>
     </div>
 </div>
-<!-- Scroll to Top Button -->
-<div id="kt_scrolltop" style="display: none; position: fixed; bottom: 20px; right: 20px; width: 40px; height: 40px; background-color: #dc3545; border-radius: 50%; z-index: 1050; cursor: pointer; display: flex; align-items: center; justify-content: center;">
-    <i class="bi bi-arrow-up text-white" style="font-size: 24px;"></i>
+<!-- Floating Chat Button -->
+<div id="kt_floating_btn"style="display:none;position:fixed;
+        bottom:20px;
+        right:20px;
+        width:50px;
+        height:50px;
+        background:#dc3545;
+        border-radius:50%;
+        z-index:1050;
+        cursor:pointer;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        transition: transform 0.2s ease;
+     "
+     onmouseover="this.style.transform='scale(1.1)'"
+     onmouseout="this.style.transform='scale(1)'"
+>
+    {% if request.resolver_match.url_name == 'product_detail' and chat_room_id %}
+        <i class="bi bi-chat-dots-fill text-white fs-4"></i>
+    {% else %}
+        <i class="bi bi-arrow-up text-white fs-4"></i>
+    {% endif %}
 </div>
+
+<!-- Chat Popup Box -->
+<div id="chatBox"
+     style="
+        position:fixed;
+        bottom:80px;
+        right:20px;
+        width:320px;
+        height:420px;
+        background:#fff;
+        border-radius:12px;
+        box-shadow:0 10px 30px rgba(0,0,0,0.15);
+        display:none;
+        flex-direction:column;
+        z-index:2000;
+        overflow:hidden;
+        font-family:Arial, sans-serif;
+        transition: all 0.3s ease;
+     "
+>
+    <!-- Header -->
+    <div style="
+            background:#dc3545;
+            color:#fff;
+            padding:12px 15px;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            font-weight:600;
+            font-size:16px;
+        ">
+        <span>Chat with Supplier</span>
+        <button id="closeChat"
+                style="
+                    background:none;
+                    border:none;
+                    color:#fff;
+                    font-size:20px;
+                    cursor:pointer;
+                "
+        >&times;</button>
+    </div>
+
+    <!-- Chat Body -->
+    <div class="chat-body" style="
+            flex:1;
+            padding:12px;
+            overflow-y:auto;
+            background:#f8f9fa;
+            display:flex;
+            flex-direction:column;
+            gap:8px;
+        ">
+        <!-- Messages will be injected here dynamically -->
+    </div>
+
+    <!-- Input Box -->
+    <div style="
+            display:flex;
+            border-top:1px solid #ddd;
+            padding:10px;
+            background:#fff;
+        ">
+        <input type="text"
+               id="chatInput"
+               placeholder="Type your message..."
+               style="
+                    flex:1;
+                    border:1px solid #ddd;
+                    border-radius:20px;
+                    padding:8px 12px;
+                    outline:none;
+                    font-size:14px;
+                "
+        />
+        <button id="sendBtn"
+                style="
+                    background:#dc3545;
+                    border:none;
+                    color:#fff;
+                    border-radius:50%;
+                    width:38px;
+                    height:38px;
+                    margin-left:8px;
+                    cursor:pointer;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                "
+        >
+            <i class="bi bi-send-fill"></i>
+        </button>
+    </div>
+</div>
+
+
 <!-- Include Footer -->
 {% include 'pages/footer.html' %}
 <!-- Scripts -->
@@ -131,23 +249,147 @@ g/js?id=G-52YZ3XGZJ6"></script>
 <!-- Scroll to Top Logic -->
 <script>
     (function () {
-        const scrollTop = document.getElementById("kt_scrolltop");
-        if (!scrollTop) {
-            console.error("Scroll to top button not found.");
-            return;
-        }
-
+        const btn = document.getElementById("kt_floating_btn");
+        const chatBox = document.getElementById("chatBox");
+        const closeChat = document.getElementById("closeChat");
+    
+        const isProductDetail = "{{ request.resolver_match.url_name }}" === "product_detail";
+        const chatRoomId = "{{ chat_room_id|default:'' }}";
+    
+        if (!btn) return;
+    
         window.addEventListener("scroll", function () {
-            scrollTop.style.display = window.scrollY > 300 ? "flex" : "none";
+            btn.style.display = window.scrollY > 300 ? "flex" : "none";
         });
-
-        scrollTop.addEventListener("click", function (e) {
+    
+        let chatSocket = null;
+        let currentUserId = {{ user.id|default:0 }};
+    
+        btn.addEventListener("click", function (e) {
             e.preventDefault();
-            window.scrollTo({ top: 0, behavior: "smooth" });
+    
+            if (isProductDetail && chatRoomId) {
+                chatBox.style.display = "flex";
+    
+                if (!chatSocket || chatSocket.readyState === WebSocket.CLOSED) {
+                    const ws_scheme = window.location.protocol === "https:" ? "wss" : "ws";
+                    chatSocket = new WebSocket(
+                        ws_scheme + '://' + window.location.host + '/ws/chat/' + chatRoomId + '/'
+                    );
+    
+                    const chatBody = chatBox.querySelector(".chat-body");
+                    const chatInput = document.getElementById("chatInput");
+                    const sendBtn = document.getElementById("sendBtn");
+    
+                    chatSocket.onopen = function() {
+                        console.log('WebSocket connected');
+                    };
+    
+                    chatSocket.onmessage = function(e) {
+                        const data = JSON.parse(e.data);
+                        
+                        if (data.type === 'chat_history') {
+                            chatBody.innerHTML = '';
+                            data.messages.forEach(msg => {
+                                appendMessage(msg);
+                            });
+                        } else if (data.type === 'message') {
+                            appendMessage(data);
+                        }
+                    };
+    
+                    chatSocket.onerror = function(error) {
+                        console.error('WebSocket error:', error);
+                    };
+    
+                    chatSocket.onclose = function() {
+                        console.log('WebSocket closed');
+                    };
+    
+                    function appendMessage(data) {
+                        const msgDiv = document.createElement('div');
+                        const isCurrentUser = data.sender_id === currentUserId;
+                        const isSystem = data.is_system || false;
+                        
+                        msgDiv.style.marginBottom = '10px';
+                        msgDiv.style.padding = '8px 12px';
+                        msgDiv.style.borderRadius = '10px';
+                        msgDiv.style.maxWidth = '80%';
+                        msgDiv.style.wordWrap = 'break-word';
+                        
+                        if (isSystem) {
+                            msgDiv.style.background = '#f0f0f0';
+                            msgDiv.style.color = '#666';
+                            msgDiv.style.fontSize = '12px';
+                            msgDiv.style.textAlign = 'center';
+                            msgDiv.style.margin = '10px auto';
+                            msgDiv.textContent = data.message;
+                        } else {
+                            if (isCurrentUser) {
+                                msgDiv.style.background = '#dc3545';
+                                msgDiv.style.color = '#fff';
+                                msgDiv.style.alignSelf = 'flex-end';
+                                msgDiv.style.marginLeft = 'auto';
+                            } else {
+                                msgDiv.style.background = '#e9ecef';
+                                msgDiv.style.color = '#000';
+                                msgDiv.style.alignSelf = 'flex-start';
+                            }
+                            
+                            const senderSpan = document.createElement('div');
+                            senderSpan.style.fontSize = '11px';
+                            senderSpan.style.fontWeight = 'bold';
+                            senderSpan.style.marginBottom = '4px';
+                            senderSpan.textContent = data.sender;
+                            
+                            const messageSpan = document.createElement('div');
+                            messageSpan.textContent = data.message;
+                            
+                            const timeSpan = document.createElement('div');
+                            timeSpan.style.fontSize = '10px';
+                            timeSpan.style.marginTop = '4px';
+                            timeSpan.style.opacity = '0.7';
+                            timeSpan.textContent = data.created_at;
+                            
+                            msgDiv.appendChild(senderSpan);
+                            msgDiv.appendChild(messageSpan);
+                            msgDiv.appendChild(timeSpan);
+                        }
+                        
+                        chatBody.appendChild(msgDiv);
+                        chatBody.scrollTop = chatBody.scrollHeight;
+                    }
+    
+                    function sendMessage() {
+                        const message = chatInput.value.trim();
+                        if (!message || !chatSocket || chatSocket.readyState !== WebSocket.OPEN) return;
+                        
+                        chatSocket.send(JSON.stringify({ message: message }));
+                        chatInput.value = '';
+                    }
+    
+                    sendBtn.onclick = sendMessage;
+                    chatInput.addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter') {
+                            sendMessage();
+                        }
+                    });
+                }
+            } else {
+                window.scrollTo({ top: 0, behavior: "smooth" });
+            }
         });
-
-        scrollTop.style.display = window.scrollY > 300 ? "flex" : "none";
+    
+        closeChat.addEventListener("click", function () {
+            chatBox.style.display = "none";
+            if (chatSocket) {
+                chatSocket.close();
+                chatSocket = null;
+            }
+        });
     })();
 </script>
+    
+    
 </body>
 </html>

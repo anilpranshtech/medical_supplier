@@ -2118,19 +2118,30 @@ class UserLogs(models.Model):
         verbose_name = verbose_name_plural = "User Logs"
 
 class ChatRoom(models.Model):
+    CHAT_TYPE_CHOICES = [
+        ('supplier_admin', 'Supplier-Admin'),
+        ('buyer_supplier', 'Buyer-Supplier'),
+    ]
+    
     supplier = models.ForeignKey(User, on_delete=models.CASCADE, related_name='supplier_rooms')
+    buyer = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='buyer_rooms',
+        null=True, blank=True
+    )  
     admin = models.ForeignKey(User, on_delete=models.CASCADE, related_name='admin_rooms', null=True, blank=True)
+    product = models.ForeignKey('Product', on_delete=models.CASCADE, related_name='chat_rooms', null=True, blank=True)
+    chat_type = models.CharField(max_length=20, choices=CHAT_TYPE_CHOICES, default='supplier_admin')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
-        unique_together = ['supplier', 'admin']
         ordering = ['-updated_at']
     
     def __str__(self):
-        return f"Chat: {self.supplier.username} - {self.admin.username if self.admin else 'Admin'}"
-
-
+        if self.chat_type == 'buyer_supplier':
+            return f"Chat: {self.buyer.username if self.buyer else 'Buyer'} - {self.supplier.username} (Product: {self.product.name if self.product else 'N/A'})"
+        else:
+            return f"Chat: {self.supplier.username} - {self.admin.username if self.admin else 'Admin'}"
 class ChatMessage(models.Model):
     room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, related_name='messages')
     sender = models.ForeignKey(User, on_delete=models.CASCADE)

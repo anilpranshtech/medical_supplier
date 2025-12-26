@@ -1,4 +1,3 @@
-
 import json
 import asyncio
 from channels.generic.websocket import AsyncWebsocketConsumer
@@ -11,14 +10,17 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.room_id = self.scope['url_route']['kwargs']['room_id']
         self.room_group_name = f'chat_{self.room_id}'
+        
         if not self.scope["user"].is_authenticated:
             await self.close()
             return
+            
         has_permission = await self.check_permission()
         if not has_permission:
             await self.close()
             return
-        await self.channel_layer.group_add(
+            
+        await self.channel_layer.group_add( 
             self.room_group_name,
             self.channel_name
         )
@@ -26,6 +28,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.accept()
         await self.send_chat_history()
         await self.mark_messages_as_read()
+        
         await self.channel_layer.group_send(
             self.room_group_name,
             {
@@ -63,6 +66,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             
             if not message:
                 return
+                
             saved_message = await self.save_message(message)
             
             if saved_message:
@@ -84,7 +88,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             print(f"Error in receive: {e}")
 
     async def chat_message(self, event):
-        """Receive message from room group and send to WebSocket"""
         await self.send(text_data=json.dumps({
             'type': 'message',
             'message': event['message'],
@@ -95,7 +98,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
         }))
 
     async def send_chat_history(self):
-        """Send chat history to newly connected user"""
         messages = await self.get_chat_history()
         
         if messages:
@@ -106,17 +108,22 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def check_permission(self):
-        """Check if user has permission to access this chat room"""
         try:
             room = ChatRoom.objects.get(id=self.room_id)
             user = self.scope["user"]
-            return user == room.supplier or user == room.admin
+            
+            # Check based on chat type
+            if room.chat_type == 'buyer_supplier':
+                return user == room.supplier or user == room.buyer
+            elif room.chat_type == 'supplier_admin':
+                return user == room.supplier or user == room.admin
+            
+            return False
         except ChatRoom.DoesNotExist:
             return False
 
     @database_sync_to_async
     def save_message(self, message_text):
-        """Save message to database"""
         try:
             room = ChatRoom.objects.get(id=self.room_id)
             sender = self.scope["user"]
@@ -140,7 +147,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def get_chat_history(self):
-        """Retrieve chat history for this room"""
         try:
             messages = ChatMessage.objects.filter(room_id=self.room_id).order_by('created_at')
             
@@ -160,18 +166,16 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def mark_messages_as_read(self):
-        """Mark unread messages as read for this user"""
         try:
             room = ChatRoom.objects.get(id=self.room_id)
             user = self.scope["user"]
+            
             unread_messages = ChatMessage.objects.filter(
                 room=room,
                 is_read=False
             ).exclude(sender=user)
             
-            for message in unread_messages:
-                message.is_read = True
-                message.save()
+            unread_messages.update(is_read=True)
             
             return True
         except Exception as e:

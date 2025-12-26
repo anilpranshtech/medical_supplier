@@ -127,7 +127,9 @@ urlpatterns = [
 
     #user logs
     path('userlogs/',UserLogsView.as_view(), name = 'user_logs'),
-
+    path('chats/buyer/<int:room_id>/', SupplierBuyerChatView.as_view(), name='supplier_buyer_chat'),
+    
+    
     
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

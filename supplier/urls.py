@@ -128,8 +128,10 @@ urlpatterns = [
 
     path('suppliercontact-us/', SupplierContactUsView.as_view(), name='contact_us'),
     path('supplier-logs/', SupplierLogsView.as_view(), name='supplier_logs'),
+    #supplier chats
     path('supplierchats/', SupplierChatsView.as_view(), name='supplier_chats'),
     path('supplierchatlist/',SupplierChatsListView.as_view(),name= "supplier_chat_list"),
+    path('buyer-chat/<int:room_id>/', SupplierBuyerChatView.as_view(), name='supplier_buyer_chat'),
     
 ]
 

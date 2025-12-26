@@ -3753,20 +3753,41 @@ class SupplierChatsView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):   
         context = super().get_context_data(**kwargs)
         user = self.request.user
-        admin_user = User.objects.filter(is_staff=True, is_active=True).first()
+        admin_id = self.request.GET.get('admin_id')
         
-        if admin_user:
-            room, created = ChatRoom.objects.get_or_create(
-                supplier=user,
-                admin=admin_user
-            )
-            context['room'] = room
-            context['room_id'] = room.id
+        if admin_id:
+            # Admin chat
+            try:
+                admin_user = User.objects.get(id=admin_id, is_staff=True, is_active=True)
+                room, created = ChatRoom.objects.get_or_create(
+                    supplier=user,
+                    admin=admin_user,
+                    chat_type='supplier_admin'
+                )
+                context['room'] = room
+                context['room_id'] = room.id
+                context['chat_with'] = admin_user.username
+            except User.DoesNotExist:
+                context['room'] = None
         else:
-            context['room'] = None
+            # Try to get default admin
+            admin_user = User.objects.filter(is_staff=True, is_active=True).first()
+            if admin_user:
+                room, created = ChatRoom.objects.get_or_create(
+                    supplier=user,
+                    admin=admin_user,
+                    chat_type='supplier_admin'
+                )
+                context['room'] = room
+                context['room_id'] = room.id
+                context['chat_with'] = admin_user.username
+            else:
+                context['room'] = None
         
         context['current_user'] = user
         return context
+
+
 class SupplierChatsListView(LoginRequiredMixin, ListView):
     model = ChatRoom
     template_name = 'supplier/supplier_chat_list.html'
@@ -3774,14 +3795,46 @@ class SupplierChatsListView(LoginRequiredMixin, ListView):
     paginate_by = 10
 
     def get_queryset(self):
+        user = self.request.user
         rooms = ChatRoom.objects.filter(
-            supplier=self.request.user,
-            admin__isnull=False
-        ).select_related('admin').order_by('-updated_at')
+            supplier=user
+        ).select_related('admin', 'buyer', 'product').order_by('-updated_at')
+        
         for room in rooms:
-            room.unread_count = room.messages.filter(
-                is_read=False,
-                sender=room.admin
-            ).count()
+            if room.chat_type == 'supplier_admin':
+                room.unread_count = room.messages.filter(
+                    is_read=False,
+                    sender=room.admin
+                ).count()
+                room.chat_partner = room.admin.username if room.admin else 'Admin'
+            else: 
+                room.unread_count = room.messages.filter(
+                    is_read=False,
+                    sender=room.buyer
+                ).count()
+                room.chat_partner = room.buyer.username if room.buyer else 'Buyer'
+                room.product_name = room.product.name if room.product else 'N/A'
 
         return rooms
+class SupplierBuyerChatView(LoginRequiredMixin, TemplateView):
+    template_name = 'supplier/supplierchats.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        room = get_object_or_404(
+            ChatRoom,
+            id=self.kwargs['room_id'],
+            supplier=self.request.user,
+            chat_type='buyer_supplier'
+        )
+        room.messages.filter(
+            sender=room.buyer,
+            is_read=False
+        ).update(is_read=True)
+        context['room'] = room
+        context['room_id'] = room.id
+        context['current_user'] = self.request.user
+        context['chat_partner'] = room.buyer
+        context['product'] = room.product
+        return context
