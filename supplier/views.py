@@ -1765,7 +1765,7 @@ class DeleteNotificationView(LoginRequiredMixin, View):
 class LogoutView(View):
     def get(self, request):
         logout(request)
-        return redirect('supplier:admin_login') 
+        return redirect('dashboard:login') 
 
 #
 # class RFQListView(LoginRequiredMixin, SupplierPermissionMixin, OnboardingRequiredMixin,ListView):
