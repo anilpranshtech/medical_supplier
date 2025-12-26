@@ -112,7 +112,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             room = ChatRoom.objects.get(id=self.room_id)
             user = self.scope["user"]
             
-            # Check based on chat type
+            # Check based on chat types
             if room.chat_type == 'buyer_supplier':
                 return user == room.supplier or user == room.buyer
             elif room.chat_type == 'supplier_admin':
