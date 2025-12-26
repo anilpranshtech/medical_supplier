@@ -418,8 +418,8 @@ class Product(models.Model):
         return supplier_commission.commission_b2c if supplier_commission else 0
     
     def is_out_of_stock(self):
-        return self.stock_quantity <= 0
-
+        return self.stock_quantity < self.min_order_qty
+ 
     def available_stock(self):
         return max(self.stock_quantity, 0)
 
