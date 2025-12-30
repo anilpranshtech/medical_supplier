@@ -137,10 +137,12 @@ RFQ Lists
 
                                         {% if "dashboard.delete_rfqrequest" in user_permissions_list %}
                                         <div class="menu-item px-3">
-                                            <a href="javascript:void(0);" class="menu-link w-100 justify-content-center px-3 delete-rfq-btn "
- data-id="{{ rfq.id }}">
-                                                Delete
-                                            </a>
+                                            <a href="javascript:void(0);" 
+   class="menu-link delete-rfq-btn"
+   data-url="{% url 'superuser:rfq_delete' rfq.id %}">
+   Delete
+</a>
+
                                         </div>
                                         {% endif %}
                                     </div>
@@ -169,36 +171,34 @@ RFQ Lists
 {% block page_only_scripts %}
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        // Initialize Select2 for dropdowns
         if (typeof $ !== 'undefined' && $.fn.select2) {
             $('[data-control="select2"]').select2({
                 minimumResultsForSearch: Infinity
             });
         }
 
-        // Handle delete button
         document.querySelectorAll(".delete-rfq-btn").forEach(button => {
-            button.addEventListener("click", function () {
-                const rfqId = this.getAttribute("data-id");
-                if (confirm("Are you sure you want to delete RFQ #" + rfqId + "?")) {
-                    fetch(`/superuser/rfq/delete/${rfqId}/`, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRFToken': '{{ csrf_token }}',
-                            'Content-Type': 'application/json'
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            window.location.reload();
-                        } else {
-                            alert('Failed to delete RFQ.');
-                        }
-                    });
+    button.addEventListener("click", function () {
+        const url = this.getAttribute("data-url");
+        if (confirm("Are you sure you want to delete this RFQ?")) {
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert("Failed to delete RFQ.");
                 }
             });
-        });
+        }
+    });
+});
+
     });
 </script>
 {% include "filter/filter_created_date_range_picker_js.html" %}

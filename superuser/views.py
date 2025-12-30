@@ -1503,39 +1503,41 @@ class UpdatePaymentStatusView(View):
     def post(self, request):
         order_id = request.POST.get("order_id")
         paid = request.POST.get("paid")
-
         if paid not in ["True", "False"]:
             return JsonResponse({"success": False, "error": "Invalid status"})
-
         try:
             order = get_object_or_404(Order, order_id=order_id)
-
-            if not order.items.filter(order_to=request.user).exists():
-                return JsonResponse({"success": False, "error": "Permission denied"})
-
+            if not request.user.is_superuser:
+                if not order.items.filter(order_to=request.user).exists():
+                    return JsonResponse({
+                        "success": False,
+                        "error": "Permission denied"
+                    })
             if not order.payment:
-                return JsonResponse({"success": False, "error": "Payment not found"})
-
-            order.payment.paid = True if paid == "True" else False
+                return JsonResponse({
+                    "success": False,
+                    "error": "Payment not found"
+                })
+            order.payment.paid = (paid == "True")
             order.payment.save(update_fields=["paid"])
             admin_update_activity(
                 request.user,
                 f"Updated payment status for Order {order.order_id} to "
                 f"{'Paid' if order.payment.paid else 'Unpaid'}"
             )
-
             return JsonResponse({
                 "success": True,
                 "paid": order.payment.paid
             })
-
         except Exception as e:
             admin_failed_activity(
                 request.user,
                 f"Failed to update payment status for Order {order_id}: {str(e)}"
             )
-            return JsonResponse({"success": False, "error": "Something went wrong"}, status=500)
-
+            return JsonResponse({
+                "success": False,
+                "error": "Something went wrong"
+            }, status=500)
 class OrderListAndStatusView(View):
     template_name = 'superuser/orders/orders.html'
 
@@ -1616,11 +1618,9 @@ class ChangeOrderStatusView(View):
 
 class OrderDetailsView(View):
     def get(self, request, order_id):
-        supplier = request.user
-
+        user = request.user
         order = get_object_or_404(
-            Order.objects.filter(items__order_to=supplier)
-            .distinct()
+            Order.objects
             .select_related('user', 'payment')
             .prefetch_related(
                 Prefetch(
@@ -1632,18 +1632,17 @@ class OrderDetailsView(View):
                                 'product__images',
                                 queryset=ProductImage.objects.filter(is_main=True),
                                 to_attr='main_image'
-                            )
-                        )
-                )
-            ),
-            order_id=order_id
-        )
+                            ) ) )),order_id=order_id )
+        if user.is_superuser:
+            order_items = order.items.all()
+        else:
+            order_items = order.items.filter(order_to=user)
 
-        order_items = order.items.filter(order_to=supplier)
-        if not order_items.exists():
-            messages.error(request, "You do not have permission to view this order.")
-            return redirect('superuser:order_listing')
+            if not order_items.exists():
+                messages.error(request, "You do not have permission to view this order.")
+                return redirect('superuser:order_listing')
         subtotal = float(order.payment.amount) if order.payment else 0.0
+
         commission = order_items.aggregate(
             total=Sum(
                 (F('price') * F('product__commission_percentage') / 100) * F('quantity')
@@ -1663,11 +1662,7 @@ class OrderDetailsView(View):
             'user': order.user,
         }
 
-        logger.info(f"Supplier {supplier.id} viewed order {order.order_id}")
         return render(request, 'superuser/orders/order_details.html', context)
-
-
-
 class OrderDeleteView(StaffAccountRequiredMixin, View):
     def post(self, request, pk):
         order = get_object_or_404(Order, pk=pk)
@@ -1842,8 +1837,13 @@ class BannerUpdateView(LoginRequiredMixin, View):
             'form': form,
             'object': banner
         })
+class BannerDeleteView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    permission_required = "supplier.delete_banner"
 
-
+    def post(self, request, pk):
+        banner = get_object_or_404(Banner, pk=pk)
+        banner.delete()
+        return JsonResponse({"success": True})
 
 class AdminRFQListView(LoginRequiredMixin, ListView):
     template_name = 'superuser/rfq_list.html'
@@ -1900,9 +1900,7 @@ class AdminRFQListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['status_choices'] = RFQRequest.STATUS_CHOICES
         return context
-
-
-class AdminQuotationUpdateView(UpdateView):
+class AdminQuotationUpdateView(LoginRequiredMixin,UpdateView):
     model = RFQRequest
     form_class = SuperuserRFQQuotationForm
     template_name = 'superuser/rfq_quotation_form.html'
@@ -1915,8 +1913,6 @@ class AdminQuotationUpdateView(UpdateView):
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
-
-        # === 1. ADD COMMENT ===
         if 'add_comment' in request.POST:
             comment_text = request.POST.get('comment', '').strip()
             if comment_text:
@@ -1929,15 +1925,9 @@ class AdminQuotationUpdateView(UpdateView):
             else:
                 messages.error(request, "Comment cannot be empty.")
             return redirect('superuser:rfq_quote', pk=self.object.pk)
-
-        # === 2. ADD ADMIN REPLY ===
         if 'add_reply' in request.POST:
             reply_to_id = request.POST.get('reply_to')
             reply_text = request.POST.get('admin_reply', '').strip()
-
-            if not reply_to_id or not reply_text:
-                messages.error(request, "Invalid reply.")
-                return redirect('superuser:rfq_quote', pk=self.object.pk)
 
             try:
                 comment = RFQComment.objects.get(id=reply_to_id, rfq=self.object)
@@ -1947,20 +1937,12 @@ class AdminQuotationUpdateView(UpdateView):
                     comment.admin_reply = reply_text
                     comment.replied_at = timezone.now()
                     comment.save()
-                    messages.success(request, "Reply saved.")
+                    messages.success(request, "Reply sent.")
             except RFQComment.DoesNotExist:
                 messages.error(request, "Comment not found.")
+
             return redirect('superuser:rfq_quote', pk=self.object.pk)
-
-        # === 3. SEND QUOTATION ===
-        if 'send_quotation' in request.POST:
-            form = self.get_form()
-            if form.is_valid():
-                return self.form_valid(form)
-            else:
-                return self.form_invalid(form)
-
-        return redirect('superuser:rfq_quote', pk=self.object.pk)
+        return super().post(request, *args, **kwargs)
 
     def form_valid(self, form):
         rfq = form.save(commit=False)
@@ -1968,34 +1950,55 @@ class AdminQuotationUpdateView(UpdateView):
         rfq.quote_sent_at = timezone.now()
         rfq.status = 'quoted'
         rfq.save()
+        form.save_m2m()
 
         self.send_quotation_email(rfq)
-        messages.success(self.request, "Quotation sent and email delivered.")
+
+        messages.success(self.request, "Quotation sent successfully.")
         return super().form_valid(form)
 
     def send_quotation_email(self, rfq):
-        subject = f"Quotation for RFQ #{rfq.id} - {rfq.product.name}"
-        recipient_email = rfq.requested_by.email
-        context = {
-            'rfq': rfq,
-            'supplier': rfq.quoted_by,
-            'comments': rfq.comments.all(),
-        }
-        message = render_to_string('superuser/rfq_quotation_sent.html', context)
-        email = EmailMessage(
-            subject=subject,
-            body=message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[recipient_email]
-        )
-        email.content_subtype = 'html'
-        if rfq.quote_attached_file:
-            email.attach_file(rfq.quote_attached_file.path)
-        email.send(fail_silently=False)
+        try:
+            subject = f"Quotation for RFQ #{rfq.id} - {rfq.product.name}"
+            recipient_email = rfq.requested_by.email
+
+            context = {
+                'rfq': rfq,
+                'supplier': rfq.quoted_by,
+                'comments': rfq.comments.all(),
+            }
+
+            message = render_to_string(
+                'superuser/rfq_quotation_sent.html', context
+            )
+
+            email = EmailMessage(
+                subject=subject,
+                body=message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[recipient_email],
+            )
+            email.content_subtype = 'html'
+
+            if rfq.quote_attached_file and rfq.quote_attached_file.path:
+                email.attach_file(rfq.quote_attached_file.path)
+
+            email.send()
+
+        except Exception as e:
+            logger.exception("RFQ quotation email failed")
+            messages.error(self.request, "Quotation saved but email failed.")
 
     def test_func(self):
         return self.request.user.is_staff or self.request.user.is_superuser
-
+class RFQDeleteView(View):
+    def post(self, request, pk):
+        rfq = get_object_or_404(RFQRequest, pk=pk)
+        try:
+            rfq.delete()
+            return JsonResponse({'success': True})
+        except:
+            return JsonResponse({'success': False})
 
 class RatingView(TemplateView):
     template_name = "superuser/rating.html"  

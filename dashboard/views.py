@@ -462,7 +462,6 @@ class RegistrationView(View):
         context = {
             'form_data': {},
             'nationalities': Country.objects.all().order_by('name'),
-            # 'residencies': Residency.objects.all(),
             'country_codes': CountryCode.objects.all(),
             'specialities': Speciality.objects.all(),
         }
@@ -523,7 +522,9 @@ class RegistrationView(View):
 
         try:
             PendingSignup.objects.create(token=token, data=json.dumps(data))
+            logger.info(f"Pending signup created for email: {email}")
         except Exception as e:
+            logger.error(f"Error creating pending signup: {str(e)}")
             return JsonResponse({'success': False, 'errors': {'general': f'Error saving pending signup: {str(e)}'}}, status=500)
 
         return JsonResponse({'success': True, 'token': token})
@@ -535,20 +536,24 @@ class RegistrationView(View):
         try:
             pending = PendingSignup.objects.get(token=token)
         except PendingSignup.DoesNotExist:
+            logger.warning(f"Invalid token attempted: {token}")
             return JsonResponse({'success': False, 'errors': {'general': 'Invalid or expired token.'}}, status=400)
 
         if pending.is_expired():
             pending.delete()
+            logger.info(f"Expired token deleted: {token}")
             return JsonResponse({'success': False, 'errors': {'general': 'Token expired.'}}, status=400)
 
         try:
             data = json.loads(pending.data)
-        except Exception:
+        except Exception as e:
+            logger.error(f"Corrupted signup data for token {token}: {str(e)}")
             return JsonResponse({'success': False, 'errors': {'general': 'Corrupted signup data.'}}, status=500)
 
         phone = data.get('phone')
         result = verify_mobile_otp(VERIFY_URL, TEXTDRIP_OTP_TOKEN, phone, otp)
         if not (result.get("success") or result.get("status") is True):
+            logger.warning(f"OTP verification failed for phone: {phone}")
             return JsonResponse({'success': False, 'errors': {'otp': result.get("message", "OTP verification failed.")}}, status=400)
 
         try:
@@ -560,6 +565,7 @@ class RegistrationView(View):
                     first_name=data['first_name'],
                     last_name=data['last_name']
                 )
+                logger.info(f"User created: {user.email}")
 
                 user_type = data.get('user_type')
                 buyer_type = data.get('buyer_type')
@@ -570,8 +576,10 @@ class RegistrationView(View):
                         phone=phone,
                         company_name=data.get('supplier_company_name', ''),
                         license_number=data.get('license_number', ''),
-                        email_confirmed=False  # must confirm by email
+                        email_confirmed=False
                     )
+                    logger.info(f"Supplier profile created for: {user.email}")
+                    
                     from utils.logs import user_log_activity
                     user_log_activity(
                         user=user,
@@ -579,22 +587,38 @@ class RegistrationView(View):
                         actions=UserActivityLog.ActionType.CREATED
                     )
 
-                    # confirm_link = f"{settings.SITE_URL}/confirm-email/{token}/"
+                    # Build confirmation link
                     confirm_link = request.build_absolute_uri(
                         reverse('dashboard:confirm_email', args=[token])
                     )
-                    html_message = render_to_string('dashboard/confirmation_email.html', {
-                        'user_name': f"{data['first_name']} {data['last_name']}",
-                        'confirm_link': confirm_link
-                    })
-                    send_mail(
-                        'Confirm Your Account - Medical Supplierz',
-                        strip_tags(html_message),
-                        settings.DEFAULT_FROM_EMAIL,
-                        [data['email']],
-                        html_message=html_message,
-                    )
-                    # keep PendingSignup until email confirmed
+                    
+                    # Render email template
+                    try:
+                        html_message = render_to_string('dashboard/confirmation_email.html', {
+                            'user_name': f"{data['first_name']} {data['last_name']}",
+                            'confirm_link': confirm_link
+                        })
+                    except Exception as template_error:
+                        logger.error(f"Email template rendering failed: {str(template_error)}")
+                        html_message = f"Please confirm your email by clicking: {confirm_link}"
+                    
+                    # Send confirmation email
+                    try:
+                        send_mail(
+                            subject='Confirm Your Account - Medical Supplierz',
+                            message=strip_tags(html_message),
+                            from_email=settings.DEFAULT_FROM_EMAIL,
+                            recipient_list=[data['email']],
+                            html_message=html_message,
+                            fail_silently=False,
+                        )
+                        logger.info(f"✓ Confirmation email sent successfully to: {data['email']}")
+                    except Exception as email_error:
+                        logger.error(f"✗ Failed to send confirmation email to {data['email']}: {str(email_error)}")
+                        # Don't fail the registration, but log the error
+                        # You might want to add a retry mechanism or notification here
+                    
+                    # Keep PendingSignup until email confirmed
                     return render(request, 'dashboard/register_success.html', {
                         'token': token,
                         'email': data['email']
@@ -604,21 +628,21 @@ class RegistrationView(View):
                     nationality = Country.objects.filter(id=data.get('nationality')).first()
                     state = State.objects.filter(id=data.get('state')).first() if data.get('state') else None
                     city = City.objects.filter(id=data.get('city')).first() if data.get('city') else None
-                    # residency = Residency.objects.filter(id=data.get('residency')).first()
                     country_code = CountryCode.objects.filter(id=data.get('country_code')).first()
                     speciality = Speciality.objects.filter(id=data.get('speciality')).first()
+                    
                     RetailProfile.objects.create(
                         user=user,
                         phone=phone,
                         current_position=data.get('current_position', ''),
                         workplace=data.get('workplace', ''),
                         nationality=nationality,
-                        state=state,         
+                        state=state,
                         city=city,
-                        # residency=residency,
                         country_code=country_code,
                         speciality=speciality,
                     )
+                    logger.info(f"Retail profile created for: {user.email}")
 
                     user_created_activity(
                         user=user,
@@ -634,17 +658,23 @@ class RegistrationView(View):
                         department=data.get('department', ''),
                         purchase_capacity=int(data.get('purchase_capacity') or 0)
                     )
+                    logger.info(f"Wholesale profile created for: {user.email}")
+                    
                     user_created_activity(
                         user=user,
                         description=f"Wholesaler account created for {user.email} with company {data.get('company_name', 'N/A')}"
                     )
 
                 else:
+                    logger.warning(f"Invalid user type attempted: {user_type}/{buyer_type}")
                     return JsonResponse({'success': False, 'errors': {'general': 'Invalid user type.'}}, status=400)
 
+                # Delete pending signup for non-supplier users
                 pending.delete()
                 return JsonResponse({'success': True, 'redirect': '/login/'})
+                
         except Exception as e:
+            logger.error(f"Error creating account: {str(e)}", exc_info=True)
             return JsonResponse({'success': False, 'errors': {'general': f'Error creating account: {str(e)}'}}, status=500)
 
 def get_states(request, country_id):
@@ -1646,32 +1676,94 @@ class WishlistProductListView(LoginRequiredMixin, View):
             for item in wishlist_items
         ]
         return JsonResponse(data, safe=False)
-
-
 class ShoppingCartView(LoginRequiredMixin, TemplateView):
     template_name = 'userdashboard/view/shopping_cart.html'
     login_url = 'dashboard:login'
+
+    def get_active_buyxgety_promotions(self, product_ids):
+        now = timezone.now().date()
+        active_promotions = []
+        promotions = BuyXGetYPromotion.objects.filter(
+            product__id__in=product_ids,
+            status='Active'
+        ).prefetch_related('product', 'supplier').distinct()
+        for promo in promotions:
+            try:
+                period = promo.promotion_period.split(" - ")
+                if len(period) == 2:
+                    start_date = timezone.datetime.strptime(period[0], "%d %b %Y").date()
+                    end_date = timezone.datetime.strptime(period[1], "%d %b %Y").date()
+                    
+                    if start_date <= now <= end_date:
+                        active_promotions.append(promo)
+            except Exception as e:
+                continue
+        return active_promotions
+    def calculate_buyxgety_benefits(self, cart_items):
+        product_ids = [item.product.id for item in cart_items]
+        active_promotions = self.get_active_buyxgety_promotions(product_ids)
+        
+        if not active_promotions:
+            return [], Decimal('0.00')
+        product_quantities = defaultdict(int)
+        product_items = {}
+        product_prices = {}
+        
+        for item in cart_items:
+            product_quantities[item.product.id] += item.quantity
+            product_items[item.product.id] = item
+            if item.product.offer_active and item.product.offer_percentage:
+                product_prices[item.product.id] = item.product.discounted_price()
+            else:
+                product_prices[item.product.id] = item.product.price
+        free_items_info = []
+        total_discount = Decimal('0.00')
+        for promotion in active_promotions:
+            promo_products = promotion.product.all()
+            for product in promo_products:
+                if product.id in product_quantities:
+                    quantity = product_quantities[product.id]
+                    sets_qualified = quantity // promotion.buy
+                    free_quantity = sets_qualified * promotion.get
+                    
+                    if free_quantity > 0:
+                        free_item_price = product_prices[product.id]
+                        discount_value = free_item_price * free_quantity
+                        total_discount += discount_value
+                        free_items_info.append({
+                            'product_name': product.name,
+                            'product_id': product.id,
+                            'product_image': product.get_main_image(),
+                            'promotion_id': promotion.id,
+                            'buy_quantity': promotion.buy,
+                            'get_quantity': promotion.get,
+                            'purchased_quantity': quantity,
+                            'free_quantity': free_quantity,
+                            'sets_qualified': sets_qualified,
+                            'discount_value': f"{discount_value:.2f}",
+                            'free_item_price': f"{free_item_price:.2f}",
+                            'promotion_description': f"Buy {promotion.buy} Get {promotion.get} Free"
+                        })
+        return free_items_info, total_discount
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         if self.request.session.get('applied_coupon'):
             del self.request.session['applied_coupon']
             self.request.session.modified = True
+        
         user = self.request.user
-
         cart_items = CartProduct.objects.filter(user=user).select_related('product')
-        total = sum(item.get_total_price() for item in cart_items)
-
-        discount_amount = Decimal('0.00')
+        subtotal = sum(item.get_total_price() for item in cart_items)
+        coupon_discount = Decimal('0.00')
+        buyxgety_discount = Decimal('0.00')
         applied_coupon_data = None
-        has_discount = False
-
+        has_coupon_discount = False
+        free_items_info, buyxgety_discount = self.calculate_buyxgety_benefits(cart_items)
         session_coupon = self.request.session.get('applied_coupon')
-
         if session_coupon:
             try:
                 coupon = Coupon.objects.get(code__iexact=session_coupon['code'])
-
                 if coupon.is_valid_now():
                     eligible_products = coupon.products.values_list('id', flat=True)
                     eligible_items = (
@@ -1679,38 +1771,43 @@ class ShoppingCartView(LoginRequiredMixin, TemplateView):
                         if eligible_products.exists()
                         else cart_items
                     )
-
+                    
                     if eligible_items.exists():
                         eligible_total = sum(item.get_total_price() for item in eligible_items)
-
+                        
                         if eligible_total >= coupon.minimum_purchase_amount:
-                            discount_amount = coupon.calculate_discount(Decimal(eligible_total))
+                            coupon_discount = coupon.calculate_discount(Decimal(eligible_total))
                             applied_coupon_data = {
                                 'code': coupon.code,
-                                'discount_amount': f"{discount_amount:.2f}",
+                                'discount_amount': f"{coupon_discount:.2f}",
                             }
-                            has_discount = discount_amount > Decimal('0.00')
+                            has_coupon_discount = coupon_discount > Decimal('0.00')
                         else:
                             self.request.session.pop('applied_coupon', None)
-            except Coupon.DoesNotExist:
+            except Exception:
                 self.request.session.pop('applied_coupon', None)
-
-        final_total = total - discount_amount
-
+        total_discount = coupon_discount + buyxgety_discount
+        final_total = max(subtotal - total_discount, Decimal('0.00'))
+        
+        # Pagination
         paginator = Paginator(cart_items, 5)
         page_obj = paginator.get_page(self.request.GET.get('page'))
-
         context.update({
             'cart_items': page_obj,
-            'subtotal': f"{total:.2f}",
-            'discount_amount': f"{discount_amount:.2f}",
+            'subtotal': f"{subtotal:.2f}",
+            'discount_amount': f"{coupon_discount:.2f}",  
+            'coupon_discount': f"{coupon_discount:.2f}",
+            'buyxgety_discount': f"{buyxgety_discount:.2f}",
+            'total_discount': f"{total_discount:.2f}",
             'final_total': f"{final_total:.2f}",
             'applied_coupon': applied_coupon_data,
-            'has_discount': has_discount,
+            'has_discount': total_discount > Decimal('0.00'),
+            'has_coupon_discount': has_coupon_discount,
+            'free_items': free_items_info,
+            'has_buyxgety_promotion': len(free_items_info) > 0,
         })
-
+        
         return context
-
 @require_POST
 def apply_coupon(request):
     code = request.POST.get('coupon_code', '').strip()
@@ -1931,11 +2028,78 @@ class ShippingInfoView(LoginRequiredMixin, TemplateView):
     template_name = 'userdashboard/view/shipping_info.html'
     login_url = 'dashboard:login'
 
+    def get_active_buyxgety_promotions(self, product_ids):
+        now = timezone.now().date()
+        active_promotions = []
+        promotions = BuyXGetYPromotion.objects.filter(
+            product__id__in=product_ids,
+            status='Active'
+        ).prefetch_related('product', 'supplier').distinct()
+        for promo in promotions:
+            try:
+                period = promo.promotion_period.split(" - ")
+                if len(period) == 2:
+                    start_date = timezone.datetime.strptime(period[0], "%d %b %Y").date()
+                    end_date = timezone.datetime.strptime(period[1], "%d %b %Y").date()
+                    
+                    if start_date <= now <= end_date:
+                        active_promotions.append(promo)
+            except Exception:
+                continue
+        return active_promotions
+    def calculate_buyxgety_benefits(self, cart_items):
+        product_ids = [item.product.id for item in cart_items]
+        active_promotions = self.get_active_buyxgety_promotions(product_ids)
+        
+        if not active_promotions:
+            return [], Decimal('0.00')
+        product_quantities = defaultdict(int)
+        product_items = {}
+        product_prices = {}
+        
+        for item in cart_items:
+            product_quantities[item.product.id] += item.quantity
+            product_items[item.product.id] = item
+            if item.product.offer_active and item.product.offer_percentage:
+                product_prices[item.product.id] = item.product.discounted_price()
+            else:
+                product_prices[item.product.id] = item.product.price
+        
+        free_items_info = []
+        total_discount = Decimal('0.00')
+        
+        for promotion in active_promotions:
+            promo_products = promotion.product.all()
+            
+            for product in promo_products:
+                if product.id in product_quantities:
+                    quantity = product_quantities[product.id]
+                    sets_qualified = quantity // promotion.buy
+                    free_quantity = sets_qualified * promotion.get
+                    
+                    if free_quantity > 0:
+                        free_item_price = product_prices[product.id]
+                        discount_value = free_item_price * free_quantity
+                        total_discount += discount_value
+                        
+                        free_items_info.append({
+                            'product_name': product.name,
+                            'product_id': product.id,
+                            'promotion_id': promotion.id,
+                            'buy_quantity': promotion.buy,
+                            'get_quantity': promotion.get,
+                            'purchased_quantity': quantity,
+                            'free_quantity': free_quantity,
+                            'discount_value': discount_value,
+                            'promotion_description': f"Buy {promotion.buy} Get {promotion.get} Free"
+                        })
+        
+        return free_items_info, total_discount
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
         context['user'] = user
-
         profile_type = None
         try:
             profile = RetailProfile.objects.get(user=user)
@@ -1963,7 +2127,6 @@ class ShippingInfoView(LoginRequiredMixin, TemplateView):
         context['addresses'] = addresses
         context['default_address'] = default_address
         context['display_payment_button'] = bool(addresses and default_address)
-
         cart_items = CartProduct.objects.filter(user=user).select_related('product')
         min_qty_violations = []
         for item in cart_items:
@@ -1976,46 +2139,50 @@ class ShippingInfoView(LoginRequiredMixin, TemplateView):
         subtotal = sum(item.get_total_price() for item in cart_items) or Decimal('0.00')
         shipping = Decimal('0.00')
         vat = Decimal('0.00')
-        total = subtotal + shipping + vat
-
-        context['cart_items'] = cart_items
+        coupon_discount = Decimal('0.00')
+        buyxgety_discount = Decimal('0.00')
+        coupon_code = None
+        free_items_info, buyxgety_discount = self.calculate_buyxgety_benefits(cart_items)
+        applied_coupon = self.request.session.get('applied_coupon')
+        if applied_coupon and cart_items.exists():
+            try:
+                coupon = Coupon.objects.get(code__iexact=applied_coupon.get('code'))
+                
+                if coupon.is_valid_now():
+                    previous_discount_total = Decimal(applied_coupon.get('new_total', '0.00'))
+                    current_subtotal = subtotal
+                    if current_subtotal + shipping + vat == previous_discount_total + Decimal(applied_coupon.get('discount_amount', '0.00')):
+                        coupon_discount = Decimal(applied_coupon.get('discount_amount', '0.00'))
+                        coupon_code = coupon.code
+                    else:
+                        self.request.session.pop('applied_coupon', None)
+                else:
+                    self.request.session.pop('applied_coupon', None)
+            except Coupon.DoesNotExist:
+                self.request.session.pop('applied_coupon', None)
+        elif applied_coupon and not cart_items.exists():
+            self.request.session.pop('applied_coupon', None)
+        total_discount = coupon_discount + buyxgety_discount
+        total = subtotal + shipping + vat - total_discount
         context['order_summary'] = {
             'subtotal': subtotal,
             'shipping': shipping,
             'vat': vat,
-            'total': total,
-            'discount_amount': Decimal('0.00'),
-            'coupon_code': None,
+            'total': max(total, Decimal('0.00')),
+            'discount_amount': coupon_discount,  
+            'coupon_discount': coupon_discount,
+            'buyxgety_discount': buyxgety_discount,
+            'total_discount': total_discount,
+            'coupon_code': coupon_code,
         }
-        applied_coupon = self.request.session.get('applied_coupon')
-
-        if not applied_coupon or not cart_items.exists():
-            self.request.session.pop('applied_coupon', None)
-            return context
-
-        try:
-            coupon = Coupon.objects.get(code__iexact=applied_coupon.get('code'))
-        except Coupon.DoesNotExist:
-
-            self.request.session.pop('applied_coupon', None)
-            return context
-        previous_discount_total = Decimal(applied_coupon.get('new_total', '0.00'))
-        current_subtotal = subtotal
-
-
-        if not coupon.is_valid_now() or current_subtotal + shipping + vat != previous_discount_total + Decimal(applied_coupon.get('discount_amount', '0.00')):
-
-            self.request.session.pop('applied_coupon', None)
-            return context
-
-        discount_amount = Decimal(applied_coupon.get('discount_amount', '0.00'))
-        new_total = total - discount_amount
-
-        context['order_summary']['discount_amount'] = discount_amount
-        context['order_summary']['total'] = new_total
-        context['order_summary']['coupon_code'] = coupon.code
+        
         context['min_qty_violations'] = min_qty_violations
         context['has_min_qty_violations'] = len(min_qty_violations) > 0
+        context['free_items'] = free_items_info
+        context['has_buyxgety_promotion'] = len(free_items_info) > 0
+        context['has_coupon_discount'] = coupon_discount > Decimal('0.00')
+        context['has_discount'] = total_discount > Decimal('0.00')
+        context['cart_items'] = cart_items
 
         return context
 class AddAddressView(LoginRequiredMixin, FormView):
@@ -2271,22 +2438,99 @@ class PaymentMethodView(LoginRequiredMixin, View):
     def get_stripe_key(self, request):
         return settings.STRIPE_PUBLISHABLE_KEY, settings.STRIPE_SECRET_KEY
 
+    def get_active_buyxgety_promotions(self, product_ids):
+        from dashboard.models import BuyXGetYPromotion
+        
+        now = timezone.now().date()
+        active_promotions = []
+        
+        promotions = BuyXGetYPromotion.objects.filter(
+            product__id__in=product_ids,
+            status='Active'
+        ).prefetch_related('product', 'supplier').distinct()
+        for promo in promotions:
+            try:
+                period = promo.promotion_period.split(" - ")
+                if len(period) == 2:
+                    start_date = timezone.datetime.strptime(period[0], "%d %b %Y").date()
+                    end_date = timezone.datetime.strptime(period[1], "%d %b %Y").date()
+                    
+                    if start_date <= now <= end_date:
+                        active_promotions.append(promo)
+            except Exception:
+                continue
+                
+        return active_promotions
+
+    def calculate_buyxgety_benefits(self, cart_items):
+        product_ids = [item.product.id for item in cart_items]
+        active_promotions = self.get_active_buyxgety_promotions(product_ids)
+        
+        if not active_promotions:
+            return [], Decimal('0.00')
+        
+        product_quantities = defaultdict(int)
+        product_items = {}
+        product_prices = {}
+        
+        for item in cart_items:
+            product_quantities[item.product.id] += item.quantity
+            product_items[item.product.id] = item
+            if item.product.offer_active and item.product.offer_percentage:
+                product_prices[item.product.id] = item.product.discounted_price()
+            else:
+                product_prices[item.product.id] = item.product.price
+        
+        free_items_info = []
+        total_discount = Decimal('0.00')
+        
+        for promotion in active_promotions:
+            promo_products = promotion.product.all()
+            
+            for product in promo_products:
+                if product.id in product_quantities:
+                    quantity = product_quantities[product.id]
+                    sets_qualified = quantity // promotion.buy
+                    free_quantity = sets_qualified * promotion.get
+                    
+                    if free_quantity > 0:
+                        free_item_price = product_prices[product.id]
+                        discount_value = free_item_price * free_quantity
+                        total_discount += discount_value
+                        
+                        free_items_info.append({
+                            'product_name': product.name,
+                            'product_id': product.id,
+                            'promotion_id': promotion.id,
+                            'buy_quantity': promotion.buy,
+                            'get_quantity': promotion.get,
+                            'purchased_quantity': quantity,
+                            'free_quantity': free_quantity,
+                            'discount_value': discount_value,
+                            'promotion_description': f"Buy {promotion.buy} Get {promotion.get} Free"
+                        })
+        
+        return free_items_info, total_discount
+
     def get_context_data(self, request):
         cart_items = CartProduct.objects.filter(user=request.user).select_related('product')
         subtotal = sum(item.get_total_price() for item in cart_items) or Decimal('0.00')
         cod_allowed = all(
             item.product.cash_on_delivery for item in cart_items
         )
-        shipping = Decimal('00.00')
+        shipping = Decimal('0.00')
         vat = Decimal('0.00')
         coupon_discount = Decimal('0.00')
+        buyxgety_discount = Decimal('0.00')
+        coupon_code = None
+        free_items_info, buyxgety_discount = self.calculate_buyxgety_benefits(cart_items)
         if 'applied_coupon' in request.session:
             coupon_data = request.session.get('applied_coupon', {})
             if coupon_data and 'discount_amount' in coupon_data:
                 coupon_discount = Decimal(str(coupon_data['discount_amount']))
-
-  
-        total = subtotal - coupon_discount + shipping + vat
+                coupon_code = coupon_data.get('code')
+        total_discount = coupon_discount + buyxgety_discount
+        total = subtotal + shipping + vat - total_discount
 
         billing = CustomerBillingAddress.objects.filter(
             user=request.user, is_default=True, is_deleted=False
@@ -2300,12 +2544,18 @@ class PaymentMethodView(LoginRequiredMixin, View):
                 'shipping': shipping,
                 'vat': vat,
                 'coupon_discount': coupon_discount,
-                'total': total
+                'buyxgety_discount': buyxgety_discount,
+                'total_discount': total_discount,
+                'total': max(total, Decimal('0.00')),
+                'coupon_code': coupon_code,
             },
+            'free_items': free_items_info,
+            'has_buyxgety_promotion': len(free_items_info) > 0,
+            'has_coupon_discount': coupon_discount > Decimal('0.00'),
+            'has_discount': total_discount > Decimal('0.00'),
             'billing': billing,
             'currency_symbol': 'USD'
         }
-
 
     def get(self, request):
         public_key, _ = self.get_stripe_key(request)
@@ -2313,7 +2563,6 @@ class PaymentMethodView(LoginRequiredMixin, View):
         total = context['order_summary']['total']
         amount_in_paise = int(total * 100)
         
-       
         if amount_in_paise < 100:
             messages.error(request, "Your order total must be at least ₹1/$1. Please add items to your cart.")
             return redirect("dashboard:shopping_cart")
@@ -2332,6 +2581,7 @@ class PaymentMethodView(LoginRequiredMixin, View):
             "razorpay_order_id": razorpay_order['id'],
         })
         return render(request, self.template_name, context)
+
 
     def post(self, request):
         context = self.get_context_data(request)
@@ -2565,6 +2815,7 @@ class PaymentMethodView(LoginRequiredMixin, View):
             return redirect("dashboard:payment_method")
 
 
+from collections import defaultdict
 class OrderPlacedView(LoginRequiredMixin, TemplateView):
     template_name = 'userdashboard/view/order_placed.html'
     login_url = 'dashboard:login'
@@ -2600,6 +2851,76 @@ class OrderPlacedView(LoginRequiredMixin, TemplateView):
         logger.info(f"Found order for payment {payment.id} and user {request.user.id}")
         return super().dispatch(request, *args, **kwargs)
 
+    def get_active_buyxgety_promotions(self, product_ids):
+        from dashboard.models import BuyXGetYPromotion
+        
+        now = timezone.now().date()
+        active_promotions = []
+        
+        promotions = BuyXGetYPromotion.objects.filter(
+            product__id__in=product_ids,
+            status='Active'
+        ).prefetch_related('product', 'supplier').distinct()
+        
+        for promo in promotions:
+            try:
+                period = promo.promotion_period.split(" - ")
+                if len(period) == 2:
+                    start_date = timezone.datetime.strptime(period[0], "%d %b %Y").date()
+                    end_date = timezone.datetime.strptime(period[1], "%d %b %Y").date()
+                    
+                    if start_date <= now <= end_date:
+                        active_promotions.append(promo)
+            except Exception:
+                continue
+                
+        return active_promotions
+
+    def calculate_buyxgety_benefits(self, order_items):
+        product_ids = [item.product.id for item in order_items]
+        active_promotions = self.get_active_buyxgety_promotions(product_ids)
+        
+        if not active_promotions:
+            return [], Decimal('0.00')
+        
+        product_quantities = defaultdict(int)
+        product_prices = {}
+        
+        for item in order_items:
+            product_quantities[item.product.id] += item.quantity
+            product_prices[item.product.id] = item.price
+        
+        free_items_info = []
+        total_discount = Decimal('0.00')
+        
+        for promotion in active_promotions:
+            promo_products = promotion.product.all()
+            
+            for product in promo_products:
+                if product.id in product_quantities:
+                    quantity = product_quantities[product.id]
+                    sets_qualified = quantity // promotion.buy
+                    free_quantity = sets_qualified * promotion.get
+                    
+                    if free_quantity > 0:
+                        free_item_price = product_prices[product.id]
+                        discount_value = free_item_price * free_quantity
+                        total_discount += discount_value
+                        
+                        free_items_info.append({
+                            'product_name': product.name,
+                            'product_id': product.id,
+                            'promotion_id': promotion.id,
+                            'buy_quantity': promotion.buy,
+                            'get_quantity': promotion.get,
+                            'purchased_quantity': quantity,
+                            'free_quantity': free_quantity,
+                            'discount_value': discount_value,
+                            'promotion_description': f"Buy {promotion.buy} Get {promotion.get} Free"
+                        })
+        
+        return free_items_info, total_discount
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
@@ -2631,21 +2952,24 @@ class OrderPlacedView(LoginRequiredMixin, TemplateView):
             else:
                 context['error'] = "No order found for this payment."
                 return context
-        subtotal = sum(item.price * item.quantity for item in order.items.all()) or Decimal('0.00')
-        shipping = order.shipping_fees or Decimal('00.00')
+
+        order_items = order.items.all()
+        subtotal = sum(item.price * item.quantity for item in order_items) or Decimal('0.00')
+        shipping = order.shipping_fees or Decimal('0.00')
         vat = Decimal('0.00')
         coupon_discount = Decimal('0.00')
+        buyxgety_discount = Decimal('0.00')
+        coupon_code = None
+        free_items_info, buyxgety_discount = self.calculate_buyxgety_benefits(order_items)
         if 'applied_coupon' in self.request.session:
             coupon_data = self.request.session.get('applied_coupon', {})
             if coupon_data and 'discount_amount' in coupon_data:
                 coupon_discount = Decimal(str(coupon_data['discount_amount']))
-        total = subtotal - coupon_discount + shipping + vat
-
-        # Estimated delivery
-        max_delivery_days = max(((item.product.delivery_time or 5) for item in order.items.all()), default=5)
+                coupon_code = coupon_data.get('code')
+        total_discount = coupon_discount + buyxgety_discount
+        total = subtotal + shipping + vat - total_discount
+        max_delivery_days = max(((item.product.delivery_time or 5) for item in order_items), default=5)
         estimated_delivery = timezone.now().date() + timedelta(days=max_delivery_days)
-
-        # Payment details
         time_window = payment.created_at + timedelta(minutes=10)
         payment_method = payment.payment_method
         payment_details = None
@@ -2676,19 +3000,24 @@ class OrderPlacedView(LoginRequiredMixin, TemplateView):
             is_default=True,
             is_deleted=False
         ).first()
-
-        # Update context
         context.update({
             'payment': payment,
             'order': order,
-            'order_items': order.items.all(),
+            'order_items': order_items,
             'order_summary': {
                 'subtotal': subtotal,
                 'shipping': shipping,
                 'vat': vat,
-                'coupon_discount': coupon_discount, 
-                'total': total
+                'coupon_discount': coupon_discount,
+                'buyxgety_discount': buyxgety_discount,
+                'total_discount': total_discount,
+                'total': max(total, Decimal('0.00')),
+                'coupon_code': coupon_code,
             },
+            'free_items': free_items_info,
+            'has_buyxgety_promotion': len(free_items_info) > 0,
+            'has_coupon_discount': coupon_discount > Decimal('0.00'),
+            'has_discount': total_discount > Decimal('0.00'),
             'order_id': order.order_id,
             'order_date': payment.created_at,
             'estimated_delivery': estimated_delivery,
@@ -2700,7 +3029,6 @@ class OrderPlacedView(LoginRequiredMixin, TemplateView):
 
         logger.info(f"Loaded order {order.order_id} for user {user.id} with payment {payment.id}, items: {order.items.count()}")
         return context
-
 
 
 class MyOrdersView(LoginRequiredMixin, TemplateView):

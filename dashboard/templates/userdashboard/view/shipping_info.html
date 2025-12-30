@@ -185,19 +185,41 @@
                                             ${{ order_summary.vat|floatformat:2 }}
                                         </span>
                                     </div>
-
-                                    {% if order_summary.coupon_code %}
-<div class="flex justify-between items-center px-5">
-    <span class="text-sm font-normal text-secondary-foreground">
-        Coupon ({{ order_summary.coupon_code }})
-    </span>
-    <span class="text-sm font-medium text-mono text-green-600">
-        -${{ order_summary.discount_amount|floatformat:2 }}
-    </span>
-</div>
-{% endif %}
-
-
+                            
+                                    {% if has_discount %}
+                                        {% if has_coupon_discount %}
+                                        <div class="flex justify-between items-center px-5">
+                                            <span class="text-sm font-normal text-secondary-foreground">
+                                                Coupon ({{ order_summary.coupon_code }})
+                                            </span>
+                                            <span class="text-sm font-medium text-mono text-green-600">
+                                                -${{ order_summary.coupon_discount|floatformat:2 }}
+                                            </span>
+                                        </div>
+                                        {% endif %}
+                                        
+                                        {% if has_buyxgety_promotion %}
+                                        <div class="flex justify-between items-center px-5">
+                                            <span class="text-sm font-normal text-secondary-foreground">
+                                                Buy X Get Y Discount
+                                            </span>
+                                            <span class="text-sm font-medium text-mono text-green-600">
+                                                -${{ order_summary.buyxgety_discount|floatformat:2 }}
+                                            </span>
+                                        </div>
+                                        {% endif %}
+                                        
+                                        {% if has_coupon_discount and has_buyxgety_promotion %}
+                                        <div class="flex justify-between items-center px-5 pt-2 border-t border-gray-200">
+                                            <span class="text-sm font-semibold text-secondary-foreground">
+                                                Total Discount
+                                            </span>
+                                            <span class="text-sm font-bold text-mono text-green-600">
+                                                -${{ order_summary.total_discount|floatformat:2 }}
+                                            </span>
+                                        </div>
+                                        {% endif %}
+                                    {% endif %}
                                 </div>
                                 <div class="kt-card-footer flex justify-between items-center px-5">
                                     <span class="text-sm font-normal text-secondary-foreground">

@@ -1268,28 +1268,51 @@ class UserDeleteView(View):
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)}, status=400)
 
+from superuser.filters import QS_orders_filters
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 
-class OrderListingView( OnboardingRequiredMixin,View):
+class OrderListingView(  View):
+    template_name = 'supplier/order-listing.html'
+    paginate_by = 25
+    required_permissions = ('dashboard.view_order',)
+
     def get(self, request):
-        status_filter = request.GET.get('status')
-        supplier = request.user
 
-        item_queryset = OrderItem.objects.filter(order_to=supplier).annotate(
-            item_total=F('price') * F('quantity')
+        # Collect all filters
+        filter_dict = {
+            "order_status": request.GET.get("order_status", "all"),
+            "payment_status": request.GET.get("payment_status", "all"),
+            "search_by": request.GET.get("search_by"),
+            "sort_by": request.GET.get("sort_by", "desc_created"),
+            "payment_type": request.GET.get("payment_type", "all"),
+            "created_date": request.GET.get("created_date", None),
+
+        }
+
+        base_queryset = QS_orders_filters(filter_dict)
+
+        item_queryset = OrderItem.objects.all().annotate(
+            item_total=F("price") * F("quantity")
         )
 
-   
-        orders = Order.objects.filter(
-            items__order_to=supplier
-        ).distinct().select_related('user', 'payment').prefetch_related(
-            Prefetch('items', queryset=item_queryset, to_attr='filtered_items')
+        orders_queryset = base_queryset.all().distinct().select_related(
+            "user", "payment"
+        ).prefetch_related(
+            Prefetch("items", queryset=item_queryset, to_attr="filtered_items")
         )
 
-     
-        if status_filter:
-            orders = orders.filter(status=status_filter)
+        # Apply pagination
+        page = request.GET.get("page", 1)
+        paginator = Paginator(orders_queryset, self.paginate_by)
 
-     
+        try:
+            orders = paginator.page(page)
+        except PageNotAnInteger:
+            orders = paginator.page(1)
+        except EmptyPage:
+            orders = paginator.page(paginator.num_pages)
+
+        # Totals and phone mapping
         order_totals = {}
         order_phones = {}
 
@@ -1299,59 +1322,63 @@ class OrderListingView( OnboardingRequiredMixin,View):
             for item in order.filtered_items:
                 total += float(item.item_total or 0)
                 if item.phone_number and phone_number == "---":
-                    phone_number = item.phone_number  
+                    phone_number = item.phone_number
             order_totals[order.pk] = total
             order_phones[order.pk] = phone_number
-
-      
-        total_orders = orders.count()
-        completed_orders = orders.filter(status='completed').count()
-        pending_orders = orders.filter(status='pending').count()
-        cancelled_orders = orders.filter(status='cancelled').count()
-
-
-        paginator = Paginator(orders, 15)  
-        page_number = request.GET.get("page")
-        page_obj = paginator.get_page(page_number)
+        supplier_orders = base_queryset.all().distinct()
+        total_orders = supplier_orders.count()
+        completed_orders = supplier_orders.filter(status='completed').count()
+        pending_orders = supplier_orders.filter(status='pending').count()
+        cancelled_orders = supplier_orders.filter(status='cancelled').count()
 
         context = {
-            'orders': page_obj,            
-            'order_totals': order_totals,  
-            'order_phones': order_phones,    
-            'total_orders': total_orders,
-            'completed_orders': completed_orders,
-            'pending_orders': pending_orders,
-            'cancelled_orders': cancelled_orders,
-            'selected_status': status_filter or '',
-            'page_obj': page_obj,           
-            'paginator': paginator,
-            'is_paginated': page_obj.has_other_pages(),
+            "orders": orders,
+            "page_obj":orders,
+            "order_totals": order_totals,
+            "order_phones": order_phones,
+            "total_orders": total_orders,
+            "completed_orders": completed_orders,
+            "pending_orders": pending_orders,
+            "cancelled_orders": cancelled_orders,
+            "selected_status": filter_dict["order_status"],
+            "selected_payment": filter_dict["payment_status"],
+            "selected_sort_by": filter_dict["sort_by"],
+            "search_by": filter_dict["search_by"],
         }
 
-        logger.info(f"Supplier {supplier.id} viewed order listing with status filter: {status_filter}")
-        return render(request, 'supplier/order-listing.html', context)
-class UpdatePaymentStatusView(LoginRequiredMixin, View):
+        return render(request, self.template_name, context)
+class UpdatePaymentStatusView(View):
     def post(self, request):
         order_id = request.POST.get("order_id")
         paid = request.POST.get("paid")
-
         if paid not in ["True", "False"]:
             return JsonResponse({"success": False, "error": "Invalid status"})
-
-        order = get_object_or_404(Order, order_id=order_id)
-        if not order.items.filter(order_to=request.user).exists():
-            return JsonResponse({"success": False, "error": "Permission denied"})
-
-        if not order.payment:
-            return JsonResponse({"success": False, "error": "Payment not found"})
-
-        order.payment.paid = True if paid == "True" else False
-        order.payment.save(update_fields=["paid"])
-
-        return JsonResponse({
-            "success": True,
-            "paid": order.payment.paid
-        })
+        try:
+            order = get_object_or_404(Order, order_id=order_id)
+            if not request.user.is_superuser:
+                if not order.items.filter(order_to=request.user).exists():
+                    return JsonResponse({
+                        "success": False,
+                        "error": "Permission denied"
+                    })
+            if not order.payment:
+                return JsonResponse({
+                    "success": False,
+                    "error": "Payment not found"
+                })
+            order.payment.paid = (paid == "True")
+            order.payment.save(update_fields=["paid"])
+           
+            return JsonResponse({
+                "success": True,
+                "paid": order.payment.paid
+            })
+        except Exception as e:
+            
+            return JsonResponse({
+                "success": False,
+                "error": "Something went wrong"
+            }, status=500)
 class OrderListAndStatusView(View):
     template_name = 'supplier/orders.html'
 
@@ -1414,11 +1441,9 @@ class ChangeOrderStatusView(View):
         })
 class OrderDetailsView(View):
     def get(self, request, order_id):
-        supplier = request.user
-
+        user = request.user
         order = get_object_or_404(
-            Order.objects.filter(items__order_to=supplier)
-            .distinct()
+            Order.objects
             .select_related('user', 'payment')
             .prefetch_related(
                 Prefetch(
@@ -1430,18 +1455,17 @@ class OrderDetailsView(View):
                                 'product__images',
                                 queryset=ProductImage.objects.filter(is_main=True),
                                 to_attr='main_image'
-                            )
-                        )
-                )
-            ),
-            order_id=order_id
-        )
+                            ) ) )),order_id=order_id )
+        if user.is_superuser:
+            order_items = order.items.all()
+        else:
+            order_items = order.items.filter(order_to=user)
 
-        order_items = order.items.filter(order_to=supplier)
-        if not order_items.exists():
-            messages.error(request, "You do not have permission to view this order.")
-            return redirect('supplier:order_listing')
+            if not order_items.exists():
+                messages.error(request, "You do not have permission to view this order.")
+                return redirect('superuser:order_listing')
         subtotal = float(order.payment.amount) if order.payment else 0.0
+
         commission = order_items.aggregate(
             total=Sum(
                 (F('price') * F('product__commission_percentage') / 100) * F('quantity')
@@ -1461,8 +1485,8 @@ class OrderDetailsView(View):
             'user': order.user,
         }
 
-        logger.info(f"Supplier {supplier.id} viewed order {order.order_id}")
         return render(request, 'supplier/order-details.html', context)
+
 
 # class OrderDeleteView(View):
 #     def post(self, request, order_id):
@@ -1493,11 +1517,6 @@ class UserProfileView( View):
 class UserOverView( OnboardingRequiredMixin,View):
     def get(self, request):
         return render(request, 'supplier/overview.html')
-
-
-
-
-
 class AdminSettingView(View):
 
     def get(self, request):
@@ -1847,21 +1866,14 @@ class SupplierRFQListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['status_choices'] = RFQRequest.STATUS_CHOICES
         return context
-class SupplierQuotationUpdateView(LoginRequiredMixin, UpdateView):
+
+from superuser.forms import SuperuserRFQQuotationForm
+
+class SupplierQuotationUpdateView(UserPassesTestMixin,UpdateView):
     model = RFQRequest
-    form_class = SupplierRFQQuotationForm
+    form_class = SuperuserRFQQuotationForm
     template_name = 'supplier/rfq_quotation_form.html'
     success_url = reverse_lazy('supplier:rfq_list')
-
-    def get(self, request, *args, **kwargs):
-        response = super().get(request, *args, **kwargs)
-
-        user_log_activity(
-            user=request.user,
-            actions=UserActivityLog.ActionType.UPDATED,
-            description=f"Viewed RFQ quotation (RFQ ID {self.get_object().id})"
-        )
-        return response
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1872,53 +1884,34 @@ class SupplierQuotationUpdateView(LoginRequiredMixin, UpdateView):
         self.object = self.get_object()
         if 'add_comment' in request.POST:
             comment_text = request.POST.get('comment', '').strip()
-
             if comment_text:
                 RFQComment.objects.create(
                     rfq=self.object,
                     comment=comment_text,
                     commented_by=request.user,
                 )
-
-                user_log_activity(
-                    user=request.user,
-                    actions=UserActivityLog.ActionType.CREATED,
-                    description=f"Added comment on RFQ ID {self.object.id}"
-                )
-
                 messages.success(request, "Comment added.")
             else:
                 messages.error(request, "Comment cannot be empty.")
-
-            return redirect('supplier:rfq_quote', pk=self.object.pk)
+            return redirect('superuser:rfq_quote', pk=self.object.pk)
         if 'add_reply' in request.POST:
             reply_to_id = request.POST.get('reply_to')
             reply_text = request.POST.get('admin_reply', '').strip()
 
             try:
                 comment = RFQComment.objects.get(id=reply_to_id, rfq=self.object)
-                comment.admin_reply = reply_text
-                comment.replied_at = timezone.now()
-                comment.save()
-
-                user_log_activity(
-                    user=request.user,
-                    actions=UserActivityLog.ActionType.UPDATED,
-                    description=f"Replied to RFQ comment (RFQ ID {self.object.id})"
-                )
-
-                messages.success(request, "Reply saved.")
+                if comment.admin_reply:
+                    messages.error(request, "Reply already exists.")
+                else:
+                    comment.admin_reply = reply_text
+                    comment.replied_at = timezone.now()
+                    comment.save()
+                    messages.success(request, "Reply sent.")
             except RFQComment.DoesNotExist:
                 messages.error(request, "Comment not found.")
 
             return redirect('supplier:rfq_quote', pk=self.object.pk)
-        if 'send_quotation' in request.POST:
-            form = self.get_form()
-            if form.is_valid():
-                return self.form_valid(form)
-            return self.form_invalid(form)
-
-        return redirect('supplier:rfq_quote', pk=self.object.pk)
+        return super().post(request, *args, **kwargs)
 
     def form_valid(self, form):
         rfq = form.save(commit=False)
@@ -1926,40 +1919,55 @@ class SupplierQuotationUpdateView(LoginRequiredMixin, UpdateView):
         rfq.quote_sent_at = timezone.now()
         rfq.status = 'quoted'
         rfq.save()
-
-        user_log_activity(
-            user=self.request.user,
-            actions=UserActivityLog.ActionType.CREATED,
-            description=f"Quotation sent for RFQ ID {rfq.id}"
-        )
+        form.save_m2m()
 
         self.send_quotation_email(rfq)
+
         messages.success(self.request, "Quotation sent successfully.")
         return super().form_valid(form)
 
     def send_quotation_email(self, rfq):
-        subject = f"Quotation for RFQ #{rfq.id}"
-        message = render_to_string(
-            'supplier/rfq_quotation_sent.html',
-            {'rfq': rfq}
-        )
-
-        email = EmailMessage(
-            subject=subject,
-            body=message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[rfq.requested_by.email],
-        )
-        email.content_subtype = 'html'
-
         try:
-            email.send()
-        except Exception:
-            user_failed_activity(
-                user=rfq.quoted_by,
-                description=f"Quotation email failed (RFQ ID {rfq.id})"
+            subject = f"Quotation for RFQ #{rfq.id} - {rfq.product.name}"
+            recipient_email = rfq.requested_by.email
+
+            context = {
+                'rfq': rfq,
+                'supplier': rfq.quoted_by,
+                'comments': rfq.comments.all(),
+            }
+
+            message = render_to_string(
+                'supplier/rfq_quotation_sent.html', context
             )
-            raise
+
+            email = EmailMessage(
+                subject=subject,
+                body=message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[recipient_email],
+            )
+            email.content_subtype = 'html'
+
+            if rfq.quote_attached_file and rfq.quote_attached_file.path:
+                email.attach_file(rfq.quote_attached_file.path)
+
+            email.send()
+
+        except Exception as e:
+            logger.exception("RFQ quotation email failed")
+            messages.error(self.request, "Quotation saved but email failed.")
+
+    def test_func(self):
+        return self.request.user.is_staff or self.request.user.is_superuser
+class RFQDeleteView(View):
+    def post(self, request, pk):
+        rfq = get_object_or_404(RFQRequest, pk=pk)
+        try:
+            rfq.delete()
+            return JsonResponse({'success': True})
+        except:
+            return JsonResponse({'success': False})
 
 
 

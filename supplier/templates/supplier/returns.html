@@ -1,6 +1,7 @@
 {% extends 'supplier/base.html' %}
 {% load static %}
 {% load custom_filters %}
+
 {% load tz %}
 
 {% block extra_css_start %}
@@ -42,7 +43,7 @@
         #kt_table_refund_details td,
         #kt_table_refund_details th {
             padding-top: 0.5rem;
-            padding-bottom: 0.5rem; 
+            padding-bottom: 0.5rem;
         }
         /* New styles for the view modal */
         .details-table {
@@ -134,7 +135,9 @@
                   <th>Order ID</th>
                   <th>Supplier</th>
                   <th>Request Date</th>
+                  {% if "dashboard.change_return" in user_permissions_list or "dashboard.delete_return" in user_permissions_list %}
                   <th>Actions</th>
+                  {% endif %}
                 </tr>
               </thead>
               <tbody class="fw-semibold text-gray-600 text-center">
@@ -155,7 +158,8 @@
                       <div class="badge badge-light-danger">{{ return.get_return_status_display }}</div>
                     {% endif %}
                   </td>
-                  <td>{{ return.order_item.payment_currency|default:"USD" }} {{ return.price|floatformat:2 }}</td>
+                  <td>{{ return.order_item.order.payment.amount|floatformat:2 }}</td>
+
                   <td>{{ return.order_item.order.order_id }}</td>
                   <td>{{ return.order_item.product.brand.supplier.username|default:"N/A" }}</td>
                   <td class="text-center">
@@ -165,6 +169,7 @@
                       {{ return.request_date|date:"d M, Y" }}
                     </div>
                   </td>
+
                   <td class="text-center">
                     <!-- Actions Dropdown -->
                     <a href="#" class="btn btn-sm btn-light btn-flex btn-center btn-active-light-primary"
@@ -177,14 +182,16 @@
                                 menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-150px py-4"
                          data-kt-menu="true">
                       <!-- Update Status -->
+                
                       <div class="menu-item px-3">
-                        <a href="#" class="menu-link px-3 "
-                           data-bs-toggle="modal" data-bs-target="#updateReturnModal{{ return.return_serial }}">
+                        <a href="#" class="menu-link px-3"
+                           data-bs-toggle="modal" data-bs-target="#updateReturnModal{{ return.return_serial  }}">
                           Update Status
                         </a>
                       </div>
+                
                       <!-- Refund Action -->
-                      {% if return.return_status == "approved" and not return.is_refunded %}
+<!--                   
                       <div class="menu-item px-3">
                         <a href="#" class="menu-link px-3 notes_model_selector"
                            data-bs-toggle="modal" data-bs-target="#refundModal1"
@@ -194,34 +201,36 @@
                           Process Refund
                         </a>
                       </div>
-                      {% endif %}
+                -->
                       <!-- Refund Details -->
-                      {% if return.is_refunded %}
+                      <!-- {% if return.is_refunded %}
                       <div class="menu-item px-3">
                         <a href="#" class="menu-link px-3"
-                           data-bs-toggle="modal" data-bs-target="#refundDetailsModal{{ return.return_serial }}">
+                           data-bs-toggle="modal" data-bs-target="#refundDetailsModal{{ return.return_serial  }}">
                           Refund Details
                         </a>
                       </div>
-                      {% endif %}
+                      {% endif %} -->
                       <!-- VIEW -->
+                
                       <div class="menu-item px-3">
                         <a href="#" class="menu-link px-3"
-                           data-bs-toggle="modal" data-bs-target="#viewReturnModal{{ return.return_serial }}">
+                           data-bs-toggle="modal" data-bs-target="#viewReturnModal{{ return.return_serial}}">
                           View 
                         </a>
                       </div>
+         
                       <!-- Delete Action -->
-                      <div class="menu-item px-3">
+                      <!-- <div class="menu-item px-3">
                         <a href="#" class="menu-link px-3"
-                           data-bs-toggle="modal" data-bs-target="#deleteReturnModal{{ return.return_serial }}">
+                           data-bs-toggle="modal" data-bs-target="#deleteReturnModal{{ return.id }}">
                           Delete
                         </a>
-                      </div>
+                      </div> -->
                     </div>
 
                     <!-- Modal for Update Status -->
-                    <div class="modal fade" id="updateReturnModal{{ return.return_serial }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal fade" id="updateReturnModal{{ return.return_serial  }}" tabindex="-1" aria-hidden="true">
                       <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content">
                           <form method="POST" action="{% url 'supplier:admin_returns_update_status' return.return_serial %}">
@@ -250,12 +259,12 @@
                       </div>
                     </div>
 
-                         <!-- View Return Details Modal -->
-<div class="modal fade" id="viewReturnModal{{ return.return_serial }}" tabindex="-1" aria-labelledby="viewReturnModalLabel{{ return.id }}" aria-hidden="true">
+              <!-- View Return Details Modal -->
+<div class="modal fade" id="viewReturnModal{{ return.return_serial  }}" tabindex="-1" aria-labelledby="viewReturnModalLabel{{ return.return_serial  }}" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="viewReturnModal{{ return.return_serial }}">Return Request #{{ return.return_serial }}</h5>
+        <h5 class="modal-title" id="viewReturnModalLabel{{ return.return_serial  }}">Return Request #{{ return.return_serial }}</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body text-start">
@@ -390,30 +399,30 @@
           <tbody>
             <tr>
               <td>{{ return.order_item.product.name }}</td>
-            
+          
               <!-- Unit Price -->
               <td>
-                {{ return.order_item.payment_currency|default:"USD" }}
-                {{ return.order_item.price|floatformat:2 }}
+                  {{ return.order_item.payment_currency|default:"USD" }}
+                  {{ return.order_item.order.payment.amount|floatformat:2 }}
               </td>
-            
+          
               <!-- Quantity -->
               <td>{{ return.order_item.quantity }}</td>
-            
-              <!-- Subtotal -->
+          
+              <!-- Subtotal = unit price * quantity -->
               <td>
                 {{ return.order_item.payment_currency|default:"USD" }}
-                {{ return.order_item.price|mul:return.order_item.quantity|floatformat:2 }}
-              </td>
-            
-              <!-- Supplier Share -->
+                {{ return.order_item.order.payment.amount|floatformat:2 }}
+            </td>
+          
+              <!-- Supplier Share (for now same amount) -->
               <td>
-                {{ return.order_item.payment_currency|default:"USD" }}
-                {{ return.price|floatformat:2 }}
+                  {{ return.order_item.payment_currency|default:"USD" }}
+                  {{ return.order_item.order.payment.amount|floatformat:2 }}
               </td>
-            </tr>
-            </tbody>
-            
+          </tr>
+          
+          </tbody>
         </table>
 
       </div>
@@ -423,6 +432,7 @@
     </div>
   </div>
 </div>
+
                     <!-- Refund Reason Modal -->
                     <div class="modal fade" id="refundModal1" tabindex="-1" aria-labelledby="refundModalLabel1" aria-hidden="true">
                       <div class="modal-dialog modal-dialog-centered">
@@ -486,11 +496,11 @@
                     </div>
 
                     <!-- Refund Details Modal -->
-                    <div class="modal fade" id="refundDetailsModal{{ return.return_serial }}" tabindex="-1" aria-labelledby="refundDetailsModalLabel{{ return.id }}" aria-hidden="true">
+                    <div class="modal fade" id="refundDetailsModal{{ return.return_serial }}" tabindex="-1" aria-labelledby="refundDetailsModalLabel{{ return.return_serial  }}" aria-hidden="true">
                       <div class="modal-dialog modal-dialog-centered modal-lg">
                         <div class="modal-content">
                           <div class="modal-header">
-                            <h5 class="modal-title" id="refundDetailsModalLabel{{ return.return_serial }}">Refund Details</h5>
+                            <h5 class="modal-title" id="refundDetailsModalLabel{{ return.return_serial  }}">Refund Details</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                           </div>
                           <div class="modal-body text-start">
@@ -563,11 +573,11 @@
                     </div>
 
                     <!-- Delete Modal -->
-                    <div class="modal fade" id="deleteReturnModal{{ return.return_serial }}" tabindex="-1" aria-labelledby="deleteReturnModalLabel{{ return.id }}" aria-hidden="true">
+                    <div class="modal fade" id="deleteReturnModal{{ return.return_serial  }}" tabindex="-1" aria-labelledby="deleteReturnModalLabel{{ return.return_serial  }}" aria-hidden="true">
                       <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content">
                           <div class="modal-header">
-                            <h5 class="modal-title" id="deleteReturnModalLabel{{ return.return_serial }}">Confirm Deletion</h5>
+                            <h5 class="modal-title" id="deleteReturnModalLabel{{ return.return_serial  }}">Confirm Deletion</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                           </div>
                           <div class="modal-body" style="text-align:left;">
@@ -577,13 +587,14 @@
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                             <form method="post" action="{% url 'supplier:admin_returns_delete' return.return_serial %}">
                               {% csrf_token %}
-                              <button type="submit" class="btn btn-danger  btn-with-loader">Delete</button>
+                              <button type="submit" class="btn btn-danger btn-with-loader">Delete</button>
                             </form>
                           </div>
                         </div>
                       </div>
                     </div>
                   </td>
+             
                 </tr>
                 {% empty %}
                 <tr>
