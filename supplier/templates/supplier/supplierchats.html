@@ -133,6 +133,53 @@
         font-style: italic;
         display: none;
     }
+    
+    .load-more-container {
+        text-align: center;
+        padding: 15px 20px;
+        background: #f8f9fa;
+        border-bottom: 1px solid #e4e6ef;
+    }
+    
+    .load-more-btn {
+        background: white;
+        color: #009ef7;
+        border: 1px solid #009ef7;
+        padding: 8px 20px;
+        border-radius: 5px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .load-more-btn:hover:not(:disabled) {
+        background: #009ef7;
+        color: white;
+    }
+    
+    .load-more-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    .load-more-btn .spinner {
+        display: none;
+        width: 14px;
+        height: 14px;
+        border: 2px solid #009ef7;
+        border-top-color: transparent;
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+        margin-right: 8px;
+    }
+    
+    .load-more-btn.loading .spinner {
+        display: inline-block;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
 </style>
 <style>
     .connection-status {
@@ -187,14 +234,20 @@
                         </div>
                         <div class="admin-details">
                             <h4>Health Equipment</h4>
-                           
                         </div>
                     </div>
                     
                     <div class="chat-container">
-                        <div class="chat-messages" id="chatMessages">
+                        <div class="load-more-container" id="loadMoreContainer" style="display: none;">
+                            <button class="load-more-btn" id="loadMoreBtn">
+                                <span class="spinner"></span>
+                                <span class="btn-text">Load More Messages</span>
+                            </button>
                         </div>
                         
+                        <div class="chat-messages" id="chatMessages">
+                        </div>
+                    
                         <div class="typing-indicator" id="typingIndicator">
                             Admin is typing...
                         </div>
@@ -242,10 +295,18 @@
     let reconnectAttempts = 0;
     const maxReconnectAttempts = 10;
     let isConnecting = false;
+    let loadedMessagesCount = 0;
+    let totalMessagesCount = 0;
+    let hasMoreMessages = false;
+    let isLoadingMore = false;
+    
     const chatMessages = document.getElementById('chatMessages');
     const messageInput = document.getElementById('messageInput');
     const sendButton = document.getElementById('sendButton');
     const typingIndicator = document.getElementById('typingIndicator');
+    const loadMoreContainer = document.getElementById('loadMoreContainer');
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    
     function showConnectionStatus(message, isError = false) {
         console.log(message);
         const statusDiv = document.getElementById('connectionStatus') || createStatusDiv();
@@ -275,6 +336,7 @@
         document.body.appendChild(div);
         return div;
     }
+    
     function connectWebSocket() {
         if (isConnecting || (chatSocket && chatSocket.readyState === WebSocket.OPEN)) {
             return;
@@ -282,21 +344,25 @@
         
         isConnecting = true;
         showConnectionStatus('Connecting to chat...');
+        
         if (chatSocket) {
             chatSocket.onclose = null;
             chatSocket.onerror = null;
             chatSocket.close();
         }
+        
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const wsUrl = `${protocol}//${window.location.host}/ws/chat/${roomId}/`;
         
         chatSocket = new WebSocket(wsUrl);
+        
         chatSocket.onopen = function(e) {
             console.log('WebSocket connection established successfully');
             showConnectionStatus('Connected to chat');
             isConnecting = false;
             reconnectAttempts = 0;
             chatMessages.innerHTML = '';
+            loadedMessagesCount = 0;
         };
         
         chatSocket.onmessage = function(e) {
@@ -304,11 +370,34 @@
                 const data = JSON.parse(e.data);
                 
                 if (data.type === 'chat_history') {
-                    console.log(`Loaded ${data.messages.length} previous messages`);
+                    console.log(`Loaded ${data.messages.length} initial messages`);
+                    loadedMessagesCount = data.messages.length;
+                    totalMessagesCount = data.total_count;
+                    hasMoreMessages = data.has_more;
+                    
                     data.messages.forEach(msg => {
                         appendMessage(msg);
                     });
+                    
+                    updateLoadMoreButton();
                     scrollToBottom();
+                    
+                } else if (data.type === 'load_more_response') {
+                    console.log(`Loaded ${data.messages.length} more messages`);
+                    const previousScrollHeight = chatMessages.scrollHeight;
+                    
+                    loadedMessagesCount += data.messages.length;
+                    totalMessagesCount = data.total_count;
+                    hasMoreMessages = data.has_more;
+                    data.messages.reverse().forEach(msg => {
+                        prependMessage(msg);
+                    });
+                    const newScrollHeight = chatMessages.scrollHeight;
+                    chatMessages.scrollTop = newScrollHeight - previousScrollHeight;
+                    
+                    updateLoadMoreButton();
+                    isLoadingMore = false;
+                    
                 } else if (data.type === 'message') {
                     appendMessage(data);
                     scrollToBottom();
@@ -345,6 +434,38 @@
             isConnecting = false;
         };
     }
+    
+    function updateLoadMoreButton() {
+        if (hasMoreMessages) {
+            loadMoreContainer.style.display = 'block';
+            loadMoreBtn.disabled = false;
+            loadMoreBtn.classList.remove('loading');
+            loadMoreBtn.querySelector('.btn-text').textContent = `Load More Messages (${totalMessagesCount - loadedMessagesCount} older)`;
+        } else {
+            loadMoreContainer.style.display = 'none';
+        }
+    }
+    
+    function loadMoreMessages() {
+        if (isLoadingMore || !hasMoreMessages) return;
+        
+        isLoadingMore = true;
+        loadMoreBtn.disabled = true;
+        loadMoreBtn.classList.add('loading');
+        loadMoreBtn.querySelector('.btn-text').textContent = 'Loading...';
+        
+        if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
+            chatSocket.send(JSON.stringify({
+                'type': 'load_more',
+                'offset': loadedMessagesCount
+            }));
+        } else {
+            isLoadingMore = false;
+            updateLoadMoreButton();
+            showConnectionStatus('Connection lost. Please reconnect.', true);
+        }
+    }
+    
     function playNotificationSound() {
         try {
             const audio = new Audio('/static/sounds/notification.mp3');
@@ -354,12 +475,14 @@
             console.log('Notification sound error:', e);
         }
     }
+    
     function sendMessage() {
         const message = messageInput.value.trim();
         
         if (message === '') {
             return;
         }
+        
         if (!chatSocket || chatSocket.readyState !== WebSocket.OPEN) {
             console.warn('WebSocket not connected. Attempting to reconnect...');
             showConnectionStatus('Not connected. Reconnecting...', true);
@@ -376,23 +499,33 @@
         
         sendMessageToSocket(message);
     }
+    
     function sendMessageToSocket(message) {
-    try {
-        chatSocket.send(JSON.stringify({
-            'message': message
-        }));
-
-        messageInput.value = '';
-        autoResize();
-
-    } catch (error) {
-        console.error('Error sending message:', error);
-        showConnectionStatus('Failed to send message. Please try again.', true);
+        try {
+            chatSocket.send(JSON.stringify({
+                'message': message
+            }));
+            
+            messageInput.value = '';
+            autoResize();
+            
+        } catch (error) {
+            console.error('Error sending message:', error);
+            showConnectionStatus('Failed to send message. Please try again.', true);
+        }
     }
-}
-
-   
+    
+    function prependMessage(data) {
+        const messageDiv = createMessageElement(data);
+        chatMessages.insertBefore(messageDiv, chatMessages.firstChild);
+    }
+    
     function appendMessage(data) {
+        const messageDiv = createMessageElement(data);
+        chatMessages.appendChild(messageDiv);
+    }
+    
+    function createMessageElement(data) {
         const messageDiv = document.createElement('div');
         const messageId = data.is_temp ? 'temp_' + Date.now() : 'msg_' + Date.now();
         messageDiv.id = messageId;
@@ -433,18 +566,24 @@
         contentDiv.appendChild(timeDiv);
         
         messageDiv.appendChild(contentDiv);
-        chatMessages.appendChild(messageDiv);
+        
+        return messageDiv;
     }
+    
     function scrollToBottom() {
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
+    
     function autoResize() {
         messageInput.style.height = 'auto';
         messageInput.style.height = Math.min(messageInput.scrollHeight, 120) + 'px';
     }
+    
     document.addEventListener('DOMContentLoaded', function() {
         connectWebSocket();
+        
         sendButton.addEventListener('click', sendMessage);
+        loadMoreBtn.addEventListener('click', loadMoreMessages);
         
         messageInput.addEventListener('keydown', function(e) {
             if (e.key === 'Enter' && !e.shiftKey) {
@@ -456,7 +595,9 @@
         messageInput.addEventListener('input', autoResize);
         messageInput.addEventListener('paste', function(e) {
         });
+        
         autoResize();
+        
         setInterval(() => {
             if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
                 try {
@@ -467,6 +608,7 @@
             }
         }, 30000);
     });
+    
     window.addEventListener('beforeunload', function() {
         if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
             chatSocket.close(1000, 'Page closed');

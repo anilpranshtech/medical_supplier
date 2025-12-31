@@ -2,7 +2,6 @@ import json
 import asyncio
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
-from django.contrib.auth.models import User
 from dashboard.models import ChatRoom, ChatMessage
 from django.utils import timezone
 
@@ -36,7 +35,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'message': f"{self.scope['user'].username} joined the chat",
                 'sender': 'System',
                 'sender_id': 0,
-                'created_at': timezone.now().strftime('%I:%M %p'),
+                'created_at': timezone.now().strftime('%b %d, %Y %I:%M %p'),
                 'is_system': True
             }
         )
@@ -54,7 +53,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     'message': f"{self.scope['user'].username} left the chat",
                     'sender': 'System',
                     'sender_id': 0,
-                    'created_at': timezone.now().strftime('%I:%M %p'),
+                    'created_at': timezone.now().strftime('%b %d, %Y %I:%M %p'),
                     'is_system': True
                 }
             )
@@ -62,6 +61,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         try:
             data = json.loads(text_data)
+            
+            # Handle load more request
+            if data.get('type') == 'load_more':
+                offset = data.get('offset', 0)
+                await self.send_more_messages(offset)
+                return
+            
             message = data.get('message', '').strip()
             
             if not message:
@@ -97,22 +103,34 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'is_system': event.get('is_system', False)
         }))
 
-    async def send_chat_history(self):
-        messages = await self.get_chat_history()
+    async def send_chat_history(self, limit=20):
+        """Send initial chat history (last 20 messages)"""
+        messages_data = await self.get_chat_history(limit=limit, offset=0)
         
-        if messages:
+        if messages_data:
             await self.send(text_data=json.dumps({
                 'type': 'chat_history',
-                'messages': messages
+                'messages': messages_data['messages'],
+                'has_more': messages_data['has_more'],
+                'total_count': messages_data['total_count']
             }))
+
+    async def send_more_messages(self, offset):
+        """Send older messages when load more is clicked"""
+        messages_data = await self.get_chat_history(limit=20, offset=offset)
+        
+        await self.send(text_data=json.dumps({
+            'type': 'load_more_response',
+            'messages': messages_data['messages'],
+            'has_more': messages_data['has_more'],
+            'total_count': messages_data['total_count']
+        }))
 
     @database_sync_to_async
     def check_permission(self):
         try:
             room = ChatRoom.objects.get(id=self.room_id)
             user = self.scope["user"]
-            
-            # Check based on chat types
             if room.chat_type == 'buyer_supplier':
                 return user == room.supplier or user == room.buyer
             elif room.chat_type == 'supplier_admin':
@@ -139,30 +157,45 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'message': message.message,
                 'sender': message.sender.username,
                 'sender_id': message.sender.id,
-                'created_at': message.created_at.strftime('%I:%M %p')
+                'created_at': message.created_at.strftime('%b %d, %Y %I:%M %p')
             }
         except Exception as e:
             print(f"Error saving message: {e}")
             return None
 
     @database_sync_to_async
-    def get_chat_history(self):
+    def get_chat_history(self, limit=20, offset=0):
+        """Get paginated chat history"""
         try:
-            messages = ChatMessage.objects.filter(room_id=self.room_id).order_by('created_at')
+            total_count = ChatMessage.objects.filter(room_id=self.room_id).count()
+            messages = ChatMessage.objects.filter(
+                room_id=self.room_id
+            ).order_by('-created_at')[offset:offset + limit]
+            messages = list(reversed(messages))
             
-            return [
-                {
-                    'message': msg.message,
-                    'sender': msg.sender.username,
-                    'sender_id': msg.sender.id,
-                    'created_at': msg.created_at.strftime('%I:%M %p'),
-                    'is_read': msg.is_read
-                }
-                for msg in messages
-            ]
+            has_more = (offset + limit) < total_count
+            
+            return {
+                'messages': [
+                    {
+                        'message': msg.message,
+                        'sender': msg.sender.username,
+                        'sender_id': msg.sender.id,
+                        'created_at': msg.created_at.strftime('%b %d, %Y %I:%M %p'),
+                        'is_read': msg.is_read
+                    }
+                    for msg in messages
+                ],
+                'has_more': has_more,
+                'total_count': total_count
+            }
         except Exception as e:
             print(f"Error getting chat history: {e}")
-            return []
+            return {
+                'messages': [],
+                'has_more': False,
+                'total_count': 0
+            }
 
     @database_sync_to_async
     def mark_messages_as_read(self):

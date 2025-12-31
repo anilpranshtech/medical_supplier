@@ -126,9 +126,8 @@ urlpatterns = [
     path('supplierbasketpromotion/add/', supplierAddBasketPromotionView.as_view(),name='add_basket_promotion'),
     path('supplierbasketpromotion/edit/<int:pk>/', supplierEditBasketPromotionView.as_view(), name='edit_basket_promotion'),
     path('supplierbasketpromotion/delete/<int:pk>/', supplier_delete_basket_promotion,name='delete_basket_promotion'),
-    
-
     path('suppliercontact-us/', SupplierContactUsView.as_view(), name='contact_us'),
+    #Logs
     path('supplier-logs/', SupplierLogsView.as_view(), name='supplier_logs'),
     #supplier chats
     path('supplierchats/', SupplierChatsView.as_view(), name='supplier_chats'),

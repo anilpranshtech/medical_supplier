@@ -40,6 +40,53 @@
         padding: 12px 16px !important;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
       }
+      .load-more-btn-popup {
+        background: #fff;
+        border: 1px solid #dc3545;
+        color: #dc3545;
+        padding: 6px 12px;
+        border-radius: 15px;
+        font-size: 12px;
+        cursor: pointer;
+        margin: 8px auto;
+        display: block;
+        transition: all 0.3s;
+      }
+      
+      .load-more-btn-popup:hover:not(:disabled) {
+        background: #dc3545;
+        color: #fff;
+      }
+      
+      .load-more-btn-popup:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      
+      .load-more-btn-popup .spinner {
+        display: none;
+        width: 12px;
+        height: 12px;
+        border: 2px solid #dc3545;
+        border-top-color: transparent;
+        border-radius: 50%;
+        animation: spin-popup 0.6s linear infinite;
+        margin-right: 6px;
+        vertical-align: middle;
+      }
+      
+      .load-more-btn-popup.loading .spinner {
+        display: inline-block;
+      }
+      
+      .load-more-btn-popup.loading {
+        background: #fff;
+        color: #dc3545;
+      }
+      
+      @keyframes spin-popup {
+        to { transform: rotate(360deg); }
+      }
     </style>
 
     
@@ -194,7 +241,11 @@ g/js?id=G-52YZ3XGZJ6"></script>
             flex-direction:column;
             gap:8px;
         ">
-        <!-- Messages will be injected here dynamically -->
+        <!-- Load More Button -->
+        <button class="load-more-btn-popup" id="loadMoreBtnPopup" style="display:none;">
+            <span class="spinner"></span>
+            <span class="btn-text">Load More</span>
+        </button>
     </div>
 
     <!-- Input Box -->
@@ -236,7 +287,6 @@ g/js?id=G-52YZ3XGZJ6"></script>
     </div>
 </div>
 
-
 <!-- Include Footer -->
 {% include 'pages/footer.html' %}
 <!-- Scripts -->
@@ -264,6 +314,10 @@ g/js?id=G-52YZ3XGZJ6"></script>
     
         let chatSocket = null;
         let currentUserId = {{ user.id|default:0 }};
+        let loadedMessagesCount = 0;
+        let totalMessagesCount = 0;
+        let hasMoreMessages = false;
+        let isLoadingMore = false;
     
         btn.addEventListener("click", function (e) {
             e.preventDefault();
@@ -280,21 +334,54 @@ g/js?id=G-52YZ3XGZJ6"></script>
                     const chatBody = chatBox.querySelector(".chat-body");
                     const chatInput = document.getElementById("chatInput");
                     const sendBtn = document.getElementById("sendBtn");
+                    const loadMoreBtn = document.getElementById("loadMoreBtnPopup");
     
                     chatSocket.onopen = function() {
                         console.log('WebSocket connected');
+                        loadedMessagesCount = 0;
                     };
     
                     chatSocket.onmessage = function(e) {
                         const data = JSON.parse(e.data);
                         
                         if (data.type === 'chat_history') {
-                            chatBody.innerHTML = '';
+                            // Clear only messages, keep load more button
+                            const messages = chatBody.querySelectorAll('.chat-message');
+                            messages.forEach(msg => msg.remove());
+                            
+                            loadedMessagesCount = data.messages.length;
+                            totalMessagesCount = data.total_count;
+                            hasMoreMessages = data.has_more;
+                            
                             data.messages.forEach(msg => {
                                 appendMessage(msg);
                             });
+                            
+                            updateLoadMoreButton();
+                            scrollToBottom();
+                            
+                        } else if (data.type === 'load_more_response') {
+                            const previousScrollHeight = chatBody.scrollHeight;
+                            
+                            loadedMessagesCount += data.messages.length;
+                            totalMessagesCount = data.total_count;
+                            hasMoreMessages = data.has_more;
+                            
+                            // Prepend older messages
+                            data.messages.reverse().forEach(msg => {
+                                prependMessage(msg);
+                            });
+                            
+                            // Maintain scroll position
+                            const newScrollHeight = chatBody.scrollHeight;
+                            chatBody.scrollTop = newScrollHeight - previousScrollHeight;
+                            
+                            updateLoadMoreButton();
+                            isLoadingMore = false;
+                            
                         } else if (data.type === 'message') {
                             appendMessage(data);
+                            scrollToBottom();
                         }
                     };
     
@@ -305,9 +392,57 @@ g/js?id=G-52YZ3XGZJ6"></script>
                     chatSocket.onclose = function() {
                         console.log('WebSocket closed');
                     };
+                    
+                    function updateLoadMoreButton() {
+                        if (hasMoreMessages) {
+                            loadMoreBtn.style.display = 'block';
+                            loadMoreBtn.disabled = false;
+                            loadMoreBtn.classList.remove('loading');
+                            loadMoreBtn.querySelector('.btn-text').textContent = `Load More (${totalMessagesCount - loadedMessagesCount})`;
+                        } else {
+                            loadMoreBtn.style.display = 'none';
+                        }
+                    }
+                    
+                    function loadMoreMessages() {
+                        if (isLoadingMore || !hasMoreMessages) return;
+                        
+                        isLoadingMore = true;
+                        loadMoreBtn.disabled = true;
+                        loadMoreBtn.classList.add('loading');
+                        loadMoreBtn.querySelector('.btn-text').textContent = 'Loading...';
+                        
+                        if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
+                            chatSocket.send(JSON.stringify({
+                                'type': 'load_more',
+                                'offset': loadedMessagesCount
+                            }));
+                        } else {
+                            isLoadingMore = false;
+                            updateLoadMoreButton();
+                        }
+                    }
+                    
+                    loadMoreBtn.onclick = loadMoreMessages;
+                    
+                    function prependMessage(data) {
+                        const msgDiv = createMessageElement(data);
+                        const firstMessage = chatBody.querySelector('.chat-message');
+                        if (firstMessage) {
+                            chatBody.insertBefore(msgDiv, firstMessage);
+                        } else {
+                            chatBody.appendChild(msgDiv);
+                        }
+                    }
     
                     function appendMessage(data) {
+                        const msgDiv = createMessageElement(data);
+                        chatBody.appendChild(msgDiv);
+                    }
+                    
+                    function createMessageElement(data) {
                         const msgDiv = document.createElement('div');
+                        msgDiv.className = 'chat-message';
                         const isCurrentUser = data.sender_id === currentUserId;
                         const isSystem = data.is_system || false;
                         
@@ -356,7 +491,10 @@ g/js?id=G-52YZ3XGZJ6"></script>
                             msgDiv.appendChild(timeSpan);
                         }
                         
-                        chatBody.appendChild(msgDiv);
+                        return msgDiv;
+                    }
+                    
+                    function scrollToBottom() {
                         chatBody.scrollTop = chatBody.scrollHeight;
                     }
     
@@ -389,7 +527,5 @@ g/js?id=G-52YZ3XGZJ6"></script>
         });
     })();
 </script>
-    
-    
 </body>
 </html>
