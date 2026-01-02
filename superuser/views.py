@@ -58,7 +58,6 @@ class HomeView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
     login_url = 'dashboard:login'
     redirect_field_name = None
 
-
     def get(self, request):
         if not request.user.is_authenticated:
             return redirect('dashboard:login')
@@ -91,6 +90,21 @@ class HomeView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
             'unpaid': unpaid_payments,
         }
 
+        total_amount = CODPayment.objects.aggregate(total=Sum('amount'))['total']
+        print("\n\n\nCOD TOTAL AMOUNT:", total_amount)
+
+        razor_pay_amount = RazorpayPayment.objects.aggregate(total=Sum('amount'))['total'] or 0
+        print("\n\nRazor", razor_pay_amount)
+
+        stripe_pay_amount = StripePayment.objects.aggregate(total=Sum('amount'))['total'] or 0
+        print("Stripe", stripe_pay_amount)
+
+        bank_pay_amount = BankTransferPayment.objects.aggregate(total=Sum('amount'))['total'] or 0
+        print("Bank", bank_pay_amount)
+
+        total_prepaid_amount = razor_pay_amount + stripe_pay_amount + bank_pay_amount
+        print("\n\n\n ================", total_prepaid_amount)
+
         return render(request, self.template_name, {
             'total_order_price': total_order_price,
             'total_products': total_products,
@@ -100,6 +114,8 @@ class HomeView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
             'total_orders': total_orders, 
             'total_event': total_event,
             'payment_data': payment_data, 
+            'cod_total_amount': total_amount,
+            'total_prepaid_amount': total_prepaid_amount,
         })
 
 
