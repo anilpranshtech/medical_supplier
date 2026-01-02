@@ -221,6 +221,11 @@
                         </div>
                     </div>
 
+
+
+
+
+
                     <div class="col-span-1">
                         <div class="space-y-5">
                             <div class="kt-card bg-accent/50">
@@ -247,15 +252,105 @@
                                             <span class="text-sm font-medium text-mono">$0.00</span>
                                         </div>
                                         
-                                        {% if has_discount %}
-                                        <div id="discount-row" class="flex justify-between items-center">
-                                            <span class="text-sm font-normal text-secondary-foreground">
-                                                Discount ({{ applied_coupon.code }})
-                                            </span>
-                                            <span class="text-sm font-medium text-mono text-green-600">
-                                                - ${{ discount_amount|default:"0.00" }}
-                                            </span>
+                                        {% if has_buyxgety_promotion %}
+                                        <div class="kt-container-fixed mb-5">
+                                            <div class="kt-card bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200">
+                                                <div class="kt-card-content p-5">
+                                                    <div class="flex items-start gap-3">
+                                                        <div class="flex-shrink-0">
+                                                            <i class="ki-filled ki-gift text-3xl text-green-600"></i>
+                                                        </div>
+                                                        <div class="flex-grow">
+                                                            <h3 class="text-lg font-semibold text-green-800 mb-2">
+                                                                🎉 Special Promotion Applied!
+                                                            </h3>
+                                                            <p class="text-sm text-green-700 mb-4">
+                                                                Congratulations! You've qualified for our Buy X Get Y promotions:
+                                                            </p>
+                                                            
+                                                            {% for free_item in free_items %}
+                                                            <div class="bg-white rounded-lg p-4 mb-3 border border-green-200 shadow-sm">
+                                                                <div class="flex items-center justify-between flex-wrap gap-3">
+                                                                    <div class="flex items-center gap-3 flex-grow">
+                                                                        {% if free_item.product_image %}
+                                                                        <img src="{{ free_item.product_image }}" 
+                                                                             alt="{{ free_item.product_name }}" 
+                                                                             class="w-16 h-16 object-cover rounded border border-gray-200">
+                                                                        {% endif %}
+                                                                        <div>
+                                                                            <p class="font-semibold text-gray-900">{{ free_item.product_name }}</p>
+                                                                            <div class="flex items-center gap-2 mt-1">
+                                                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                                                    {{ free_item.promotion_description }}
+                                                                                </span>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    
+                                                                    <div class="text-right">
+                                                                        <p class="text-sm text-gray-600">
+                                                                            You bought: <span class="font-semibold text-gray-900">{{ free_item.purchased_quantity }} items</span>
+                                                                        </p>
+                                                                        <p class="text-sm text-gray-600">
+                                                                            You qualified for: <span class="font-semibold text-gray-900">{{ free_item.sets_qualified }} set(s)</span>
+                                                                        </p>
+                                                                        <p class="text-lg font-bold text-green-600 mt-1">
+                                                                            {{ free_item.free_quantity }} FREE Item(s)
+                                                                        </p>
+                                                                        <p class="text-xs text-gray-500">
+                                                                            Savings: ${{ free_item.discount_value }}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            {% endfor %}
+                                                            
+                                                            <div class="mt-4 pt-4 border-t border-green-200">
+                                                                <p class="text-sm text-green-700 flex items-center gap-2">
+                                                                    <i class="ki-filled ki-information-2"></i>
+                                                                    <span>Free items will be automatically added to your order at checkout</span>
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
+                                        {% endif %}
+                                        
+                                        {% if has_discount %}
+                                            {% if has_coupon_discount %}
+                                            <div id="discount-row" class="flex justify-between items-center">
+                                                <span class="text-sm font-normal text-secondary-foreground">
+                                                    Coupon Discount ({{ applied_coupon.code }})
+                                                </span>
+                                                <span class="text-sm font-medium text-mono text-green-600">
+                                                    - ${{ coupon_discount|default:"0.00" }}
+                                                </span>
+                                            </div>
+                                            {% endif %}
+                                            
+                                            {% if has_buyxgety_promotion %}
+                                            <div class="flex justify-between items-center">
+                                                <span class="text-sm font-normal text-secondary-foreground">
+                                                    Buy X Get Y Discount
+                                                </span>
+                                                <span class="text-sm font-medium text-mono text-green-600">
+                                                    - ${{ buyxgety_discount|default:"0.00" }}
+                                                </span>
+                                            </div>
+                                            {% endif %}
+                                            
+                                            {% if has_coupon_discount and has_buyxgety_promotion %}
+                                            <div class="flex justify-between items-center pt-2 border-t border-gray-200">
+                                                <span class="text-sm font-semibold text-secondary-foreground">
+                                                    Total Discount
+                                                </span>
+                                                <span class="text-sm font-bold text-mono text-green-600">
+                                                    - ${{ total_discount|default:"0.00" }}
+                                                </span>
+                                            </div>
+                                            {% endif %}
                                         {% endif %}
                                     {% else %}
                                         <p class="text-muted text-sm text-center text-secondary-foreground py-6">
@@ -289,6 +384,10 @@
                             </div>
                         </div>
                     </div>
+
+
+
+                    
                 </div>
             </div>
         </main>

@@ -743,8 +743,6 @@ class ProductsListView(LoginRequiredMixin,StaffAccountRequiredMixin, PermissionR
         context = super().get_context_data(**kwargs)
         context['category'] = ProductCategory.objects.all()
         return context
-
-
 class AddproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
     template = 'superuser/products/add_product.html'
 
@@ -757,27 +755,44 @@ class AddproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
         }
         return render(request, self.template, context)
 
+    # FIXED: Method moved outside of post() to make it accessible
+    def _is_event_category(self, category):
+        """Check if category is event-related (case-insensitive partial match)"""
+        event_keywords = ['conference', 'event', 'webinar']
+        if category and hasattr(category, 'name') and category.name:
+            category_name_lower = category.name.lower()
+            # Check if any event keyword is in the category name
+            return any(keyword in category_name_lower for keyword in event_keywords)
+        return False
+
     def post(self, request):
         data = request.POST
         files = request.FILES
+        
+        # Get category early to check if it's an event
+        category_obj = self._get_object(ProductCategory, data.get('category'))
+        is_event = self._is_event_category(category_obj)
+        
         name = data.get('product_name')
         description = data.get('product_description')
         selling_countries = data.get('selling_countries')
-        base_price = self._parse_float(data.get('base_price'), min_value=1, max_value=999999)
+        
+        # Conditional fields based on event type
+        base_price = self._parse_float(data.get('base_price'), min_value=1, max_value=999999) if not is_event else 0
         discount_option = data.get('discount_option')
         offer_percentage = self._parse_float(data.get('offer_percentage'), min_value=0, max_value=100)
-        fixed_discounted_price = self._parse_float(data.get('discount_price'))  # Changed to match form field name
-        stock_quantity = self._parse_int(data.get('product_quantity'), min_value=0)
-        commission = self._parse_float(data.get('commission_percentage'), min_value=0, max_value=100)
-        pcs_per_unit = self._parse_int(data.get('pcs_per_unit'), min_value=1)
-        min_order_qty = self._parse_int(data.get('min_order_qty'), min_value=1)
-        low_stock_alert = self._parse_int(data.get('low_stock_alert'), min_value=0)
-        expiration_days = self._parse_int(data.get('expiration_days'), min_value=0)
-        return_time = self._parse_int(data.get('return_time_limit'), min_value=0)
-        delivery_time = self._parse_int(data.get('delivery_time'), min_value=0)
-        weight = self._parse_float(data.get('weight'), min_value=0)
-        manufacture_date = self._parse_date(data.get('manufacture_date'))
-        expiry_date = self._parse_date(data.get('expiry_date'))
+        fixed_discounted_price = self._parse_float(data.get('discount_price'))
+        stock_quantity = self._parse_int(data.get('product_quantity'), min_value=0) if not is_event else 0
+        commission = self._parse_float(data.get('commission_percentage'), min_value=0, max_value=100) if not is_event else 0
+        pcs_per_unit = self._parse_int(data.get('pcs_per_unit'), min_value=1) if not is_event else 1
+        min_order_qty = self._parse_int(data.get('min_order_qty'), min_value=1) if not is_event else 1
+        low_stock_alert = self._parse_int(data.get('low_stock_alert'), min_value=0) if not is_event else 0
+        expiration_days = self._parse_int(data.get('expiration_days'), min_value=0) if not is_event else 0
+        return_time = self._parse_int(data.get('return_time_limit'), min_value=0) if not is_event else 0
+        delivery_time = self._parse_int(data.get('delivery_time'), min_value=0) if not is_event else 0
+        weight = self._parse_float(data.get('weight'), min_value=0) if not is_event else 0
+        manufacture_date = self._parse_date(data.get('manufacture_date')) if not is_event else None
+        expiry_date = self._parse_date(data.get('expiry_date')) if not is_event else None
         offer_start = self._parse_date(data.get('offer_start'))
         offer_end = self._parse_date(data.get('offer_end'))
         button_type = data.get('button_type')
@@ -788,12 +803,13 @@ class AddproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
 
         # Calculate discount_price
         discount_price = None
-        if discount_option == '2' and base_price and offer_percentage:
-            discount_price = base_price * (1 - offer_percentage / 100)
-        elif discount_option == '3' and fixed_discounted_price:
-            discount_price = fixed_discounted_price
-        elif discount_option == '1':
-            discount_price = base_price
+        if not is_event:
+            if discount_option == '2' and base_price and offer_percentage:
+                discount_price = base_price * (1 - offer_percentage / 100)
+            elif discount_option == '3' and fixed_discounted_price:
+                discount_price = fixed_discounted_price
+            elif discount_option == '1':
+                discount_price = base_price
 
         # Validate supplier
         try:
@@ -801,6 +817,28 @@ class AddproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
         except SupplierProfile.DoesNotExist:
             messages.error(request, "Selected supplier does not exist.")
             return self._render_form_with_context(request, data)
+
+        # Validate required fields
+        if not name:
+            messages.error(request, "Product name is required.")
+            return self._render_form_with_context(request, data)
+
+        # Only validate price for non-events
+        if not is_event and not base_price:
+            messages.error(request, "Base price is required and must be between 1 and 999999.")
+            return self._render_form_with_context(request, data)
+
+        # Event-specific validation
+        if is_event:
+            registration_link = data.get('registration_link')
+            webinar_name = data.get('webinar_name')
+            webinar_date = data.get('webinar_date')
+            webinar_duration = data.get('webinar_duration')
+            webinar_venue = data.get('webinar_venue')
+            
+            if not all([registration_link, webinar_name, webinar_date, webinar_duration, webinar_venue]):
+                messages.error(request, "All event fields are required (Registration Link, Event Name, Date, Duration, Venue).")
+                return self._render_form_with_context(request, data)
 
         # Validate offer dates
         if offer_start and offer_end and offer_end < offer_start:
@@ -814,18 +852,15 @@ class AddproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
         # Handle brand creation
         brand_name = data.get('brand')
         brand = None
-        if brand_name:
+        if brand_name and not is_event:
             brand, _ = Brand.objects.get_or_create(
                 name=brand_name,
                 defaults={'supplier': sup_user.user}
             )
 
-        # Validate required fields
-        if not base_price:
-            messages.error(request, "Base price is required and must be between 1 and 999999.")
-            return self._render_form_with_context(request, data)
-
         try:
+            print(f"Creating product - is_event: {is_event}, price: {base_price if not is_event else 0}")
+            
             product = Product.objects.create(
                 name=name or '',
                 description=description or '',
@@ -833,29 +868,29 @@ class AddproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
                 discount_price=discount_price,
                 stock_quantity=stock_quantity or 0,
                 brand=brand,
-                category=self._get_object(ProductCategory, data.get('category')),
+                category=category_obj,
                 sub_category=self._get_object(ProductSubCategory, data.get('sub_category')),
                 last_category=self._get_object(ProductLastCategory, data.get('last_category')),
-                product_from=data.get('product_from'),
-                warranty=data.get('warranty'),
-                condition=data.get('condition'),
+                product_from=data.get('product_from') if not is_event else '',
+                warranty=data.get('warranty') if not is_event else 'none',
+                condition=data.get('condition') if not is_event else 'new',
                 manufacture_date=manufacture_date,
                 expiry_date=expiry_date,
                 weight=weight or 0,
-                selling_countries=selling_countries,
-                weight_unit=data.get('weight_unit'),
-                barcode=data.get('barcode'),
+                selling_countries=selling_countries or '',
+                weight_unit=data.get('weight_unit') if not is_event else 'kg',
+                barcode=data.get('barcode') if not is_event else '',
                 commission_percentage=commission or 0,
                 return_time_limit=return_time or 0,
                 delivery_time=delivery_time or 0,
-                keywords=data.get('keywords'),
-                brochure=files.get('brochure'),
-                supplier_sku=data.get('supplier_sku'),
+                keywords=data.get('keywords') or '',
+                brochure=files.get('brochure') if not is_event else None,
+                supplier_sku=data.get('supplier_sku') if not is_event else '',
                 pcs_per_unit=pcs_per_unit or 1,
                 min_order_qty=min_order_qty or 1,
                 low_stock_alert=low_stock_alert or 0,
                 expiration_days=expiration_days or 0,
-                tag=data.get('tag'),
+                tag=data.get('tag') if not is_event else 'none',
                 offer_percentage=offer_percentage or 0,
                 offer_start=offer_start,
                 offer_end=offer_end,
@@ -868,18 +903,19 @@ class AddproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
                 created_by=sup_user.user
             )
 
-            # Handle event for event categories
-            category_obj = self._get_object(ProductCategory, data.get('category'))
-            if self._is_event_category(category_obj):
+            # Create Event if category is event-related
+            if is_event:
+                print("Creating event object...")
                 event = Event.objects.create(
-                    conference_link=data.get('registration_link') or None,
-                    speaker_name=data.get('webinar_name') or None,
-                    conference_at=self._parse_date(data.get('webinar_date')) or None,
-                    duration=self._parse_duration(data.get('webinar_duration')) or None,
-                    venue=data.get('webinar_venue') or None,
+                    conference_link=data.get('registration_link') or '',
+                    speaker_name=data.get('webinar_name') or '',
+                    conference_at=self._parse_date(data.get('webinar_date')),
+                    duration=self._parse_duration(data.get('webinar_duration')),
+                    venue=data.get('webinar_venue') or '',
                 )
                 product.event = event
                 product.save()
+                print(f"Event created with ID: {event.id} and linked to product {product.id}")
 
             # Handle images
             main_image = files.get('main_image')
@@ -889,27 +925,26 @@ class AddproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
             gallery_images = files.getlist('gallery_images')
             for img in gallery_images:
                 ProductImage.objects.create(product=product, image=img, is_main=False)
+                
             admin_create_activity(
-            request.user,
-            f"Created product '{product.name}' (ID: {product.id})"
+                request.user,
+                f"Created {'event' if is_event else 'product'} '{product.name}' (ID: {product.id})"
             )
 
-
-            messages.success(request, "Product added successfully.")
+            success_msg = f"{'Event' if is_event else 'Product'} added successfully."
+            messages.success(request, success_msg)
             return redirect('superuser:products_list')
 
         except IntegrityError as e:
             messages.error(request, f"Integrity error: {e}")
+            print(f"IntegrityError: {e}")
         except Exception as e:
             messages.error(request, f"Error: {e}")
+            print(f"Exception: {e}")
+            import traceback
+            traceback.print_exc()
 
         return self._render_form_with_context(request, data)
-
-    def _is_event_category(self, category):
-        event_keywords = ['conference', 'event', 'webinar']
-        if category and category.name:
-            return category.name.lower() in event_keywords
-        return False
 
     def _parse_float(self, val, min_value=None, max_value=None):
         if not val:
@@ -970,7 +1005,6 @@ class AddproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
             'suppliers': SupplierProfile.objects.all(),
             **data.dict()
         })
-
 
 class EditproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
     template = 'superuser/products/edit_product.html'
@@ -1056,6 +1090,7 @@ class EditproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
             'webinar_date': webinar_date,
             'webinar_duration': webinar_duration,
             'webinar_venue': webinar_venue,
+            'is_active': 'True' if product.is_active else 'False',
         }
 
     def get(self, request, pk):
@@ -1078,43 +1113,77 @@ class EditproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
                 category = ProductCategory.objects.filter(pk=category_id).first()
                 is_webinar = category and category.name in ['Webinar', 'Conference', 'Event']
 
+            print(f"Category ID: {category_id}, Is Webinar: {is_webinar}")
+
             # Basic info
             product.name = data.get('product_name', '')
             if not product.name:
                 raise ValueError("Product name is required")
             product.description = data.get('product_description', '')
+            
+            # Handle base price based on category type
             base_price = self._parse_decimal(data.get('base_price'), min_value=Decimal('0.00') if is_webinar else Decimal('1.00'), max_value=Decimal('999999.00'))
-            product.stock_quantity = self._parse_int(data.get('product_quantity'), min_value=0)
-            product.product_from = data.get('product_from', '')
-            product.selling_countries = data.get('selling_countries', '')
-            product.warranty = data.get('warranty', 'none')
-            product.condition = data.get('condition', 'new')
-            product.weight = self._parse_decimal(data.get('weight'), min_value=0)
-            product.weight_unit = data.get('weight_unit', 'gm')
-            product.delivery_time = self._parse_int(data.get('delivery_time'), min_value=0)
-            product.commission_percentage = self._parse_decimal(data.get('commission_percentage'), min_value=0, max_value=100)
-            product.barcode = data.get('barcode', '')
-            product.keywords = data.get('keywords', '')
-            product.supplier_sku = data.get('supplier_sku', '')
-            product.pcs_per_unit = self._parse_int(data.get('pcs_per_unit'), min_value=1)
-            product.min_order_qty = self._parse_int(data.get('min_order_qty'), min_value=1)
-            product.low_stock_alert = self._parse_int(data.get('low_stock_alert'), min_value=0)
-            product.expiration_days = self._parse_int(data.get('expiration_days'), min_value=0)
-            product.tag = data.get('tag', 'none')
+            
+            # Only set these fields if NOT a webinar
+            if not is_webinar:
+                product.stock_quantity = self._parse_int(data.get('product_quantity'), min_value=0)
+                product.product_from = data.get('product_from', '')
+                product.selling_countries = data.get('selling_countries', '')
+                product.warranty = data.get('warranty', 'none')
+                product.condition = data.get('condition', 'new')
+                product.weight = self._parse_decimal(data.get('weight'), min_value=0)
+                product.weight_unit = data.get('weight_unit', 'gm')
+                product.delivery_time = self._parse_int(data.get('delivery_time'), min_value=0)
+                product.commission_percentage = self._parse_decimal(data.get('commission_percentage'), min_value=0, max_value=100)
+                product.barcode = data.get('barcode', '')
+                product.keywords = data.get('keywords', '')
+                product.supplier_sku = data.get('supplier_sku', '')
+                product.pcs_per_unit = self._parse_int(data.get('pcs_per_unit'), min_value=1)
+                product.min_order_qty = self._parse_int(data.get('min_order_qty'), min_value=1)
+                product.low_stock_alert = self._parse_int(data.get('low_stock_alert'), min_value=0)
+                product.expiration_days = self._parse_int(data.get('expiration_days'), min_value=0)
+                product.tag = data.get('tag', 'none')
+                
+                # Returnable toggle
+                product.is_returnable = data.get('is_returnable') == 'on'
+                product.return_time_limit = self._parse_int(data.get('return_time_limit'), min_value=0) if product.is_returnable else 0
+                
+                # Dates
+                product.manufacture_date = self._parse_date(data.get('manufacture_date'))
+                product.expiry_date = self._parse_date(data.get('expiry_date'))
+                product.offer_start = self._parse_date(data.get('offer_start')) if data.get('offer_start') else None
+                product.offer_end = self._parse_date(data.get('offer_end')) if data.get('offer_end') else None
+                
+                # Offer status
+                product.offer_active = data.get('offer_active') == 'on'
+            else:
+                # For webinar products, set default/null values for non-applicable fields
+                product.stock_quantity = 9999  # Set high stock for webinars
+                product.product_from = 'N/A'
+                product.selling_countries = 'Global'
+                product.warranty = 'none'
+                product.condition = 'new'
+                product.weight = 0
+                product.weight_unit = 'gm'
+                product.delivery_time = 0
+                product.commission_percentage = 0
+                product.barcode = ''
+                product.keywords = data.get('keywords', '')  # Keep keywords for webinars too
+                product.supplier_sku = 'N/A'
+                product.pcs_per_unit = 1
+                product.min_order_qty = 1
+                product.low_stock_alert = 0
+                product.expiration_days = 0
+                product.tag = 'none'
+                product.is_returnable = False
+                product.return_time_limit = 0
+                product.manufacture_date = None
+                product.expiry_date = None
+                product.offer_start = None
+                product.offer_end = None
+                product.offer_active = False
+
             product.is_active = data.get('is_active') == 'True'
-
-            # Returnable toggle
-            product.is_returnable = data.get('is_returnable') == 'on'
-            product.return_time_limit = self._parse_int(data.get('return_time_limit'), min_value=0) if product.is_returnable else 0
-
-            # Dates
-            product.manufacture_date = self._parse_date(data.get('manufacture_date'))
-            product.expiry_date = self._parse_date(data.get('expiry_date'))
-            product.offer_start = self._parse_date(data.get('offer_start')) if data.get('offer_start') else None
-            product.offer_end = self._parse_date(data.get('offer_end')) if data.get('offer_end') else None
-
-            # Offer status
-            product.offer_active = data.get('offer_active') == 'on'
 
             # Discount handling
             discount_option = data.get('discount_option')
@@ -1130,11 +1199,11 @@ class EditproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
                 messages.error(request, "Base price is required and must be between 1 and 999999 for non-webinar products.")
                 return self._render_form_with_context(request, data, product)
 
-            if discount_option == '2' and (offer_percentage is None or offer_percentage <= 0):
+            if not is_webinar and discount_option == '2' and (offer_percentage is None or offer_percentage <= 0):
                 messages.error(request, "Please select a discount percentage greater than 0 for percentage discounts.")
                 return self._render_form_with_context(request, data, product)
 
-            if discount_option == '3' and (discounted_price is None or discounted_price <= 0):
+            if not is_webinar and discount_option == '3' and (discounted_price is None or discounted_price <= 0):
                 messages.error(request, "Please enter a valid fixed discounted price (greater than 0).")
                 return self._render_form_with_context(request, data, product)
 
@@ -1174,7 +1243,7 @@ class EditproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
             # Brand
             brand_name = data.get('brand')
             if brand_name:
-                brand_obj, _ = Brand.objects.get_or_create(name=brand_name)
+                brand_obj, _ = Brand.objects.get_or_create(name=brand_name, defaults={'supplier': request.user})
                 product.brand = brand_obj
             else:
                 product.brand = None
@@ -1192,22 +1261,51 @@ class EditproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
             if 'brochure' in files:
                 product.brochure = files['brochure']
 
-            # Event details
+            # Event details - FIXED SECTION
             if is_webinar:
-                registration_link = data.get('registration_link')
-                speaker_name = data.get('webinar_name')
-                conference_at_str = data.get('webinar_date')
-                duration_str = data.get('webinar_duration')
-                venue = data.get('webinar_venue')
+                registration_link = data.get('registration_link', '').strip()
+                speaker_name = data.get('webinar_name', '').strip()
+                conference_at_str = data.get('webinar_date', '').strip()
+                duration_str = data.get('webinar_duration', '').strip()
+                venue = data.get('webinar_venue', '').strip()
 
+                print(f"Event data - Link: {registration_link}, Name: {speaker_name}, Date: {conference_at_str}, Duration: {duration_str}, Venue: {venue}")
+
+                # Validate all event fields are present
                 if not all([registration_link, speaker_name, conference_at_str, duration_str, venue]):
-                    raise ValueError("All event fields are required for Webinar/Conference/Event")
+                    missing_fields = []
+                    if not registration_link:
+                        missing_fields.append("Registration Link")
+                    if not speaker_name:
+                        missing_fields.append("Event Name")
+                    if not conference_at_str:
+                        missing_fields.append("Date")
+                    if not duration_str:
+                        missing_fields.append("Duration")
+                    if not venue:
+                        missing_fields.append("Venue")
+                    
+                    error_msg = f"Missing required event fields: {', '.join(missing_fields)}"
+                    messages.error(request, error_msg)
+                    return self._render_form_with_context(request, data, product)
 
-                event = product.event if product.event else Event()
+                # Get or create event
+                if product.event:
+                    event = product.event
+                else:
+                    event = Event()
+
                 event.conference_link = registration_link
                 event.speaker_name = speaker_name
-                event.conference_at = datetime.strptime(conference_at_str, '%Y-%m-%dT%H:%M')
+                
+                # Parse datetime
+                try:
+                    event.conference_at = datetime.strptime(conference_at_str, '%Y-%m-%dT%H:%M')
+                except ValueError as e:
+                    messages.error(request, f"Invalid date format: {str(e)}")
+                    return self._render_form_with_context(request, data, product)
 
+                # Parse duration
                 try:
                     parts = duration_str.split(':')
                     if len(parts) == 3:
@@ -1218,25 +1316,36 @@ class EditproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
                     elif len(parts) == 1:
                         h, m, s = 0, int(parts[0]), 0
                     else:
-                        raise ValueError
+                        raise ValueError("Invalid duration format")
                     event.duration = timedelta(hours=h, minutes=m, seconds=s)
                 except ValueError:
-                    raise ValueError("Invalid duration format. Use HH:MM[:SS] or just MM")
+                    messages.error(request, "Invalid duration format. Use HH:MM:SS, HH:MM, or just MM")
+                    return self._render_form_with_context(request, data, product)
 
                 event.venue = venue
                 event.save()
                 product.event = event
+                
+                print(f"Event saved successfully - ID: {event.id}")
             else:
-                product.event = None
+                # If not a webinar, clear the event
+                if product.event:
+                    old_event = product.event
+                    product.event = None
+                    # Optionally delete the old event if no other products reference it
+                    # old_event.delete()
 
             product.save()
 
             # Debug: Verify saved values
             saved_product = Product.objects.get(pk=pk)
             print(f"After save - product.price: {saved_product.price}, product.offer_percentage: {saved_product.offer_percentage}, product.discount_price: {saved_product.discount_price}")
+            if is_webinar and saved_product.event:
+                print(f"After save - Event ID: {saved_product.event.id}, Name: {saved_product.event.speaker_name}")
+            
             admin_update_activity(
-            request.user,
-            f"Updated product '{product.name}' (ID: {product.id})"
+                request.user,
+                f"Updated product '{product.name}' (ID: {product.id})"
             )
 
             messages.success(request, 'Product updated successfully!')
@@ -1244,6 +1353,8 @@ class EditproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
 
         except Exception as e:
             print(f'Exception in edit product: {str(e)}')
+            import traceback
+            traceback.print_exc()
             messages.error(request, f'Issue in Product update: {str(e)}')
             return self._render_form_with_context(request, data, product)
 
@@ -1350,6 +1461,7 @@ class EditproductsView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
             'webinar_date': data.get('webinar_date', ''),
             'webinar_duration': data.get('webinar_duration', ''),
             'webinar_venue': data.get('webinar_venue', ''),
+            'is_active': data.get('is_active', 'True' if product.is_active else 'False'),
         })
 class DeleteProductView(LoginRequiredMixin, StaffAccountRequiredMixin, View):
     def post(self, request, pk):
@@ -1519,39 +1631,41 @@ class UpdatePaymentStatusView(View):
     def post(self, request):
         order_id = request.POST.get("order_id")
         paid = request.POST.get("paid")
-
         if paid not in ["True", "False"]:
             return JsonResponse({"success": False, "error": "Invalid status"})
-
         try:
             order = get_object_or_404(Order, order_id=order_id)
-
-            if not order.items.filter(order_to=request.user).exists():
-                return JsonResponse({"success": False, "error": "Permission denied"})
-
+            if not request.user.is_superuser:
+                if not order.items.filter(order_to=request.user).exists():
+                    return JsonResponse({
+                        "success": False,
+                        "error": "Permission denied"
+                    })
             if not order.payment:
-                return JsonResponse({"success": False, "error": "Payment not found"})
-
-            order.payment.paid = True if paid == "True" else False
+                return JsonResponse({
+                    "success": False,
+                    "error": "Payment not found"
+                })
+            order.payment.paid = (paid == "True")
             order.payment.save(update_fields=["paid"])
             admin_update_activity(
                 request.user,
                 f"Updated payment status for Order {order.order_id} to "
                 f"{'Paid' if order.payment.paid else 'Unpaid'}"
             )
-
             return JsonResponse({
                 "success": True,
                 "paid": order.payment.paid
             })
-
         except Exception as e:
             admin_failed_activity(
                 request.user,
                 f"Failed to update payment status for Order {order_id}: {str(e)}"
             )
-            return JsonResponse({"success": False, "error": "Something went wrong"}, status=500)
-
+            return JsonResponse({
+                "success": False,
+                "error": "Something went wrong"
+            }, status=500)
 class OrderListAndStatusView(View):
     template_name = 'superuser/orders/orders.html'
 
@@ -1632,11 +1746,9 @@ class ChangeOrderStatusView(View):
 
 class OrderDetailsView(View):
     def get(self, request, order_id):
-        supplier = request.user
-
+        user = request.user
         order = get_object_or_404(
-            Order.objects.filter(items__order_to=supplier)
-            .distinct()
+            Order.objects
             .select_related('user', 'payment')
             .prefetch_related(
                 Prefetch(
@@ -1648,18 +1760,17 @@ class OrderDetailsView(View):
                                 'product__images',
                                 queryset=ProductImage.objects.filter(is_main=True),
                                 to_attr='main_image'
-                            )
-                        )
-                )
-            ),
-            order_id=order_id
-        )
+                            ) ) )),order_id=order_id )
+        if user.is_superuser:
+            order_items = order.items.all()
+        else:
+            order_items = order.items.filter(order_to=user)
 
-        order_items = order.items.filter(order_to=supplier)
-        if not order_items.exists():
-            messages.error(request, "You do not have permission to view this order.")
-            return redirect('superuser:order_listing')
+            if not order_items.exists():
+                messages.error(request, "You do not have permission to view this order.")
+                return redirect('superuser:order_listing')
         subtotal = float(order.payment.amount) if order.payment else 0.0
+
         commission = order_items.aggregate(
             total=Sum(
                 (F('price') * F('product__commission_percentage') / 100) * F('quantity')
@@ -1679,11 +1790,7 @@ class OrderDetailsView(View):
             'user': order.user,
         }
 
-        logger.info(f"Supplier {supplier.id} viewed order {order.order_id}")
         return render(request, 'superuser/orders/order_details.html', context)
-
-
-
 class OrderDeleteView(StaffAccountRequiredMixin, View):
     def post(self, request, pk):
         order = get_object_or_404(Order, pk=pk)
@@ -1858,8 +1965,13 @@ class BannerUpdateView(LoginRequiredMixin, View):
             'form': form,
             'object': banner
         })
+class BannerDeleteView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    permission_required = "supplier.delete_banner"
 
-
+    def post(self, request, pk):
+        banner = get_object_or_404(Banner, pk=pk)
+        banner.delete()
+        return JsonResponse({"success": True})
 
 class AdminRFQListView(LoginRequiredMixin, ListView):
     template_name = 'superuser/rfq_list.html'
@@ -1916,9 +2028,7 @@ class AdminRFQListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['status_choices'] = RFQRequest.STATUS_CHOICES
         return context
-
-
-class AdminQuotationUpdateView(UpdateView):
+class AdminQuotationUpdateView(LoginRequiredMixin,UpdateView):
     model = RFQRequest
     form_class = SuperuserRFQQuotationForm
     template_name = 'superuser/rfq_quotation_form.html'
@@ -1931,8 +2041,6 @@ class AdminQuotationUpdateView(UpdateView):
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
-
-        # === 1. ADD COMMENT ===
         if 'add_comment' in request.POST:
             comment_text = request.POST.get('comment', '').strip()
             if comment_text:
@@ -1945,15 +2053,9 @@ class AdminQuotationUpdateView(UpdateView):
             else:
                 messages.error(request, "Comment cannot be empty.")
             return redirect('superuser:rfq_quote', pk=self.object.pk)
-
-        # === 2. ADD ADMIN REPLY ===
         if 'add_reply' in request.POST:
             reply_to_id = request.POST.get('reply_to')
             reply_text = request.POST.get('admin_reply', '').strip()
-
-            if not reply_to_id or not reply_text:
-                messages.error(request, "Invalid reply.")
-                return redirect('superuser:rfq_quote', pk=self.object.pk)
 
             try:
                 comment = RFQComment.objects.get(id=reply_to_id, rfq=self.object)
@@ -1963,20 +2065,12 @@ class AdminQuotationUpdateView(UpdateView):
                     comment.admin_reply = reply_text
                     comment.replied_at = timezone.now()
                     comment.save()
-                    messages.success(request, "Reply saved.")
+                    messages.success(request, "Reply sent.")
             except RFQComment.DoesNotExist:
                 messages.error(request, "Comment not found.")
+
             return redirect('superuser:rfq_quote', pk=self.object.pk)
-
-        # === 3. SEND QUOTATION ===
-        if 'send_quotation' in request.POST:
-            form = self.get_form()
-            if form.is_valid():
-                return self.form_valid(form)
-            else:
-                return self.form_invalid(form)
-
-        return redirect('superuser:rfq_quote', pk=self.object.pk)
+        return super().post(request, *args, **kwargs)
 
     def form_valid(self, form):
         rfq = form.save(commit=False)
@@ -1984,34 +2078,55 @@ class AdminQuotationUpdateView(UpdateView):
         rfq.quote_sent_at = timezone.now()
         rfq.status = 'quoted'
         rfq.save()
+        form.save_m2m()
 
         self.send_quotation_email(rfq)
-        messages.success(self.request, "Quotation sent and email delivered.")
+
+        messages.success(self.request, "Quotation sent successfully.")
         return super().form_valid(form)
 
     def send_quotation_email(self, rfq):
-        subject = f"Quotation for RFQ #{rfq.id} - {rfq.product.name}"
-        recipient_email = rfq.requested_by.email
-        context = {
-            'rfq': rfq,
-            'supplier': rfq.quoted_by,
-            'comments': rfq.comments.all(),
-        }
-        message = render_to_string('superuser/rfq_quotation_sent.html', context)
-        email = EmailMessage(
-            subject=subject,
-            body=message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[recipient_email]
-        )
-        email.content_subtype = 'html'
-        if rfq.quote_attached_file:
-            email.attach_file(rfq.quote_attached_file.path)
-        email.send(fail_silently=False)
+        try:
+            subject = f"Quotation for RFQ #{rfq.id} - {rfq.product.name}"
+            recipient_email = rfq.requested_by.email
+
+            context = {
+                'rfq': rfq,
+                'supplier': rfq.quoted_by,
+                'comments': rfq.comments.all(),
+            }
+
+            message = render_to_string(
+                'superuser/rfq_quotation_sent.html', context
+            )
+
+            email = EmailMessage(
+                subject=subject,
+                body=message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[recipient_email],
+            )
+            email.content_subtype = 'html'
+
+            if rfq.quote_attached_file and rfq.quote_attached_file.path:
+                email.attach_file(rfq.quote_attached_file.path)
+
+            email.send()
+
+        except Exception as e:
+            logger.exception("RFQ quotation email failed")
+            messages.error(self.request, "Quotation saved but email failed.")
 
     def test_func(self):
         return self.request.user.is_staff or self.request.user.is_superuser
-
+class RFQDeleteView(View):
+    def post(self, request, pk):
+        rfq = get_object_or_404(RFQRequest, pk=pk)
+        try:
+            rfq.delete()
+            return JsonResponse({'success': True})
+        except:
+            return JsonResponse({'success': False})
 
 class RatingView(TemplateView):
     template_name = "superuser/rating.html"  

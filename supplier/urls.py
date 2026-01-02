@@ -58,8 +58,9 @@ urlpatterns = [
     #RFQ Request for Quotation
     path('rfq/', SupplierRFQListView.as_view(), name='rfq_list'),
     path('rfq/<int:pk>/quote/', SupplierQuotationUpdateView.as_view(), name='rfq_quote'),
-   
+    path('rfq/delete/<int:pk>/', RFQDeleteView.as_view(), name='rfq_delete'),
 
+ 
     #Banner Upload
     # path('banner-list/', BannerListView.as_view(), name='banner_list'),
     # path('banner-upload/', BannerCreateView.as_view(), name='banner_upload'),
@@ -125,9 +126,8 @@ urlpatterns = [
     path('supplierbasketpromotion/add/', supplierAddBasketPromotionView.as_view(),name='add_basket_promotion'),
     path('supplierbasketpromotion/edit/<int:pk>/', supplierEditBasketPromotionView.as_view(), name='edit_basket_promotion'),
     path('supplierbasketpromotion/delete/<int:pk>/', supplier_delete_basket_promotion,name='delete_basket_promotion'),
-    
-
     path('suppliercontact-us/', SupplierContactUsView.as_view(), name='contact_us'),
+    #Logs
     path('supplier-logs/', SupplierLogsView.as_view(), name='supplier_logs'),
     #supplier chats
     path('supplierchats/', SupplierChatsView.as_view(), name='supplier_chats'),

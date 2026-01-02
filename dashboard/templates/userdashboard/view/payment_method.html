@@ -210,7 +210,7 @@
                         </div>
                     </div>
 
-            <!-- Order Summary -->
+<!-- Order Summary -->
 <div class="lg:col-span-1" id="order-summary-box">
     <div class="kt-card bg-accent/50">
         <div class="kt-card-header px-5">
@@ -257,14 +257,39 @@
                 <span class="text-sm font-medium text-mono">{{ currency_symbol }}{{ order_summary.vat|floatformat:2 }}</span>
             </div>
             
-            {# Show discount only if there's a coupon applied #}
-            {% if order_summary.coupon_discount > 0 %}
-            <div class="flex justify-between items-center px-5">
-                <span class="text-sm font-normal text-secondary-foreground">Discount</span>
-                <span class="text-sm font-medium text-mono text-green-600">
-                    -{{ order_summary.coupon_discount|floatformat:2 }}
-                </span>
-            </div>
+            {% if has_discount %}
+                {% if has_coupon_discount %}
+                <div class="flex justify-between items-center px-5">
+                    <span class="text-sm font-normal text-secondary-foreground">
+                        Coupon ({{ order_summary.coupon_code }})
+                    </span>
+                    <span class="text-sm font-medium text-mono text-green-600">
+                        -{{ currency_symbol }}{{ order_summary.coupon_discount|floatformat:2 }}
+                    </span>
+                </div>
+                {% endif %}
+                
+                {% if has_buyxgety_promotion %}
+                <div class="flex justify-between items-center px-5">
+                    <span class="text-sm font-normal text-secondary-foreground">
+                        Buy X Get Y Discount
+                    </span>
+                    <span class="text-sm font-medium text-mono text-green-600">
+                        -{{ currency_symbol }}{{ order_summary.buyxgety_discount|floatformat:2 }}
+                    </span>
+                </div>
+                {% endif %}
+                
+                {% if has_coupon_discount and has_buyxgety_promotion %}
+                <div class="flex justify-between items-center px-5 pt-2 border-t border-gray-200">
+                    <span class="text-sm font-semibold text-secondary-foreground">
+                        Total Discount
+                    </span>
+                    <span class="text-sm font-bold text-mono text-green-600">
+                        -{{ currency_symbol }}{{ order_summary.total_discount|floatformat:2 }}
+                    </span>
+                </div>
+                {% endif %}
             {% endif %}
         </div>
         <div class="kt-card-footer flex justify-between items-center px-5">

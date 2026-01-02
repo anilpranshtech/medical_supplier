@@ -204,14 +204,14 @@
                       </div>
                       {% endif %}
                       <!-- Refund Details -->
-                      {% if return.is_refunded %}
+                      <!-- {% if return.is_refunded %}
                       <div class="menu-item px-3">
                         <a href="#" class="menu-link px-3"
                            data-bs-toggle="modal" data-bs-target="#refundDetailsModal{{ return.return_serial  }}">
                           Refund Details
                         </a>
                       </div>
-                      {% endif %}
+                      {% endif %} -->
                       <!-- VIEW -->
                     {% if "dashboard.view_return" in user_permissions_list %}
                       <div class="menu-item px-3">
@@ -412,9 +412,9 @@
           
               <!-- Subtotal = unit price * quantity -->
               <td>
-                  {{ return.order_item.payment_currency|default:"USD" }}
-                  {{ return.order_item.order.payment.amount|mul:return.order_item.quantity|floatformat:2 }}
-              </td>
+                {{ return.order_item.payment_currency|default:"USD" }}
+                {{ return.order_item.order.payment.amount|floatformat:2 }}
+            </td>
           
               <!-- Supplier Share (for now same amount) -->
               <td>

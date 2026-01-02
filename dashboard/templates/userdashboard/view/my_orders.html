@@ -200,10 +200,11 @@
                                 </div>
                             </div>
                             <div class="text-sm font-semibold text-right sm:text-left w-full sm:w-auto">
-                                <!-- {{ item.payment_currency|default:"USD" }} {{ item.quantity }} × {{ item.price|floatformat:2 }} =
-                                {{ item|order_item_total|format_currency:item.payment_currency|default:"USD" }} -->
-                                {{ item.payment_currency|default:"USD" }} {{ item.quantity }}  = ${{ order.payment.amount|floatformat:2|default:"0.00" }} 
+                                {{ item.payment_currency|default:"USD" }}
+                                {{ item.quantity }} =
+                                ${{ item.item_total|floatformat:2 }}
                             </div>
+                            
                         </div>
 
                         <!-- Review Section -->

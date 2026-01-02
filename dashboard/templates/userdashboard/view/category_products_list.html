@@ -341,10 +341,11 @@
     <!-- Products Grid -->
     <div id="products-grid" class="grid grid-cols-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-2">
         {% for product in products %}
-            <div class="kt-card product-card">
-                {% if product.offer_active and product.offer_percentage %}
-                <div class="discount-ribbon">save {{ product.offer_percentage|floatformat:0 }}%</div>
-                {% endif %}
+        <div class="kt-card product-card" data-category="{{ product.last_category.id|default:'none' }}">
+            {% if product.offer_active and product.offer_percentage %}
+            <div class="discount-ribbon">save {{ product.offer_percentage|floatformat:0 }}%</div>
+            {% endif %}
+            
                 
                 <div class="kt-card-content flex flex-col justify-between p-2 gap-3 h-full">
                     <div>
