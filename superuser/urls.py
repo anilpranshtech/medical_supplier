@@ -51,7 +51,7 @@ urlpatterns = [
     path('ajax-sub-category/get/', get_subcategories, name='AJAX_get_subcategory'),
     path('ajax-sub-category/create/', AJAXCreateSubCategory.as_view(), name='AJAX_create_subcategory'),
     path('ajax-last-category/create/', AJAXCreateLastCategory.as_view(), name='AJAX_create_lastcategory'),
-
+     
     # Orders Urls
     path('orderlist/', OrderListingView.as_view(), name='order_listing'),
     path('order-detail/<slug:order_id>/', OrderDetailsView.as_view(), name='order_detail'),
@@ -63,9 +63,13 @@ urlpatterns = [
     path('banner-list/', BannerListView.as_view(), name='banner_list'),
     path('banner-upload/', BannerCreateView.as_view(), name='banner_upload'),
     path('banner-edit/<int:pk>/', BannerUpdateView.as_view(), name='banner_edit'),
+    path( "banners/delete/<int:pk>/",BannerDeleteView.as_view(),name="banner_delete"),
 
+    #rfq
     path('rfq/', AdminRFQListView.as_view(), name='rfq_list'),
     path('rfq/<int:pk>/quote/', AdminQuotationUpdateView.as_view(), name='rfq_quote'),
+    path('rfq/delete/<int:pk>/', RFQDeleteView.as_view(), name='rfq_delete'),
+
     path('most-viewed-products/', AdminMostViewedProductsView.as_view(), name='view_product'),
    
      path('rating/', RatingView.as_view(), name='rating_list'),

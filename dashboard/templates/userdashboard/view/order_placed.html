@@ -132,85 +132,123 @@
                             </div>
                         </div>
 
-                        <!-- Right Side: Order Summary -->
-                        <div class="lg:col-span-1">
-                            <div class="kt-card bg-accent/50">
-                                <div class="kt-card-header px-5">
-                                    <h3 class="kt-card-title">Order Summary</h3>
-                                </div>
-                                <div class="kt-card-content px-0 py-5 space-y-2">
-                                    <!-- Billing Address -->
-                                    <div class="flex flex-col px-5">
-                                        <span class="text-sm font-medium text-mono mb-1.5">
-                                            {% if billing %}
-                                                Shipping to {{ billing.address_title|default:"Default Address" }}
-                                            {% else %}
-                                                <a href="{% url 'dashboard:shipping_info' %}" class="text-primary">Select a shipping address</a>
-                                            {% endif %}
-                                        </span>
-                                        <div class="flex flex-col gap-1 text-xs font-normal text-secondary-foreground">
-                                            {% if billing %}
-                                                <span>{{ billing.customer_name|default:user.get_full_name|default:"N/A" }}</span>
-                                                <span>{{ billing.customer_address1|default:"N/A" }}</span>
-                                                {% if billing.customer_address2 %}
-                                                    <span>{{ billing.customer_address2 }}</span>
-                                                {% endif %}
-                                                <span>{{ billing.customer_city|default:"N/A" }}, {{ billing.customer_state|default:"N/A" }} {{ billing.customer_postal_code|default:"N/A" }}</span>
-                                                <span>{{ billing.customer_country|default:"N/A" }}</span>
-                                                {% if billing.phone %}
-                                                    <span>Phone: {{ billing.phone }}</span>
-                                                {% endif %}
-                                            {% else %}
-                                                <span>No address selected. Please add one.</span>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                    <div class="border-b border-border mb-4 mt-5"></div>
-                                    <!-- Payment Details -->
-                                    <div class="flex flex-col px-5">
-                                        <span class="text-sm font-medium text-mono mb-1.5">Payment Details</span>
-                                        <div class="flex flex-col gap-1 text-xs font-normal text-secondary-foreground">
-                                            <span>Payment Method: {{ payment_method|title|default:"N/A" }}</span>
-                                            {% if payment_details %}
-                                                {% if payment_method == "stripe" %}
-                                                    <span>Card: •••• {{ payment_details.card_last4|default:"N/A" }}</span>
-                                                    <span>Charge ID: {{ payment_details.stripe_charge_id|default:"N/A" }}</span>
-                                                {% elif payment_method == "razorpay" %}
-                                                    <span>Payment ID: {{ payment_details.razorpay_payment_id|default:"N/A" }}</span>
-                                                    <span>Order ID: {{ payment_details.razorpay_order_id|default:"N/A" }}</span>
-                                                {% elif payment_method == "cod" %}
-                                                    <span>Tracking ID: {{ payment_details.cod_tracking_id|default:"Pending" }}</span>
-                                                    <span>Delivery Partner: {{ payment_details.delivery_partner.name|default:"N/A" }}</span>
-                                                {% elif payment_method == "bank_transfer" %}
-                                                {% endif %}
-                                            {% else %}
-                                                <span>No payment details available</span>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                    <div class="border-b border-border mb-4 mt-5"></div>
-                                    <!-- Price Details -->
-                                    <span class="text-sm font-medium block text-mono mb-3.5 px-5">Price Details</span>
-                                    <div class="flex justify-between items-center px-5">
-                                        <span class="text-sm font-normal text-secondary-foreground">Subtotal</span>
-                                        <span class="text-sm font-medium text-mono">{{ currency_symbol }} {{ order_summary.subtotal|floatformat:2|default:"0.00" }}</span>
-                                    </div>
-                                    <div class="flex justify-between items-center px-5">
-                                        <span class="text-sm font-normal text-secondary-foreground">Shipping</span>
-                                        <span class="text-sm font-medium text-mono">{{ currency_symbol }} {{ order_summary.shipping|floatformat:2|default:"0.00" }}</span>
-                                    </div>
-                                    <div class="flex justify-between items-center px-5">
-                                        <span class="text-sm font-normal text-secondary-foreground">VAT</span>
-                                        <span class="text-sm font-medium text-mono">{{ currency_symbol }} {{ order_summary.vat|floatformat:2|default:"0.00" }}</span>
-                                    </div>
-                                    <div class="border-b border-border mb-4 mt-5"></div>
-                                    <div class="flex justify-between items-center px-5">
-                                        <span class="text-sm font-normal text-secondary-foreground">Total</span>
-                                        <span class="text-base font-semibold text-mono">{{ currency_symbol }} {{ order_summary.total|floatformat:2|default:"0.00" }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+               <!-- Right Side: Order Summary -->
+<div class="lg:col-span-1">
+    <div class="kt-card bg-accent/50">
+        <div class="kt-card-header px-5">
+            <h3 class="kt-card-title">Order Summary</h3>
+        </div>
+        <div class="kt-card-content px-0 py-5 space-y-2">
+            <!-- Billing Address -->
+            <div class="flex flex-col px-5">
+                <span class="text-sm font-medium text-mono mb-1.5">
+                    {% if billing %}
+                        Shipping to {{ billing.address_title|default:"Default Address" }}
+                    {% else %}
+                        <a href="{% url 'dashboard:shipping_info' %}" class="text-primary">Select a shipping address</a>
+                    {% endif %}
+                </span>
+                <div class="flex flex-col gap-1 text-xs font-normal text-secondary-foreground">
+                    {% if billing %}
+                        <span>{{ billing.customer_name|default:user.get_full_name|default:"N/A" }}</span>
+                        <span>{{ billing.customer_address1|default:"N/A" }}</span>
+                        {% if billing.customer_address2 %}
+                            <span>{{ billing.customer_address2 }}</span>
+                        {% endif %}
+                        <span>{{ billing.customer_city|default:"N/A" }}, {{ billing.customer_state|default:"N/A" }} {{ billing.customer_postal_code|default:"N/A" }}</span>
+                        <span>{{ billing.customer_country|default:"N/A" }}</span>
+                        {% if billing.phone %}
+                            <span>Phone: {{ billing.phone }}</span>
+                        {% endif %}
+                    {% else %}
+                        <span>No address selected. Please add one.</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="border-b border-border mb-4 mt-5"></div>
+            
+            <!-- Payment Details -->
+            <div class="flex flex-col px-5">
+                <span class="text-sm font-medium text-mono mb-1.5">Payment Details</span>
+                <div class="flex flex-col gap-1 text-xs font-normal text-secondary-foreground">
+                    <span>Payment Method: {{ payment_method|title|default:"N/A" }}</span>
+                    {% if payment_details %}
+                        {% if payment_method == "stripe" %}
+                            <span>Card: •••• {{ payment_details.card_last4|default:"N/A" }}</span>
+                            <span>Charge ID: {{ payment_details.stripe_charge_id|default:"N/A" }}</span>
+                        {% elif payment_method == "razorpay" %}
+                            <span>Payment ID: {{ payment_details.razorpay_payment_id|default:"N/A" }}</span>
+                            <span>Order ID: {{ payment_details.razorpay_order_id|default:"N/A" }}</span>
+                        {% elif payment_method == "cod" %}
+                            <span>Tracking ID: {{ payment_details.cod_tracking_id|default:"Pending" }}</span>
+                            <span>Delivery Partner: {{ payment_details.delivery_partner.name|default:"N/A" }}</span>
+                        {% elif payment_method == "bank_transfer" %}
+                        {% endif %}
+                    {% else %}
+                        <span>No payment details available</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="border-b border-border mb-4 mt-5"></div>
+            
+            <!-- Price Details -->
+            <span class="text-sm font-medium block text-mono mb-3.5 px-5">Price Details</span>
+            <div class="flex justify-between items-center px-5">
+                <span class="text-sm font-normal text-secondary-foreground">Subtotal</span>
+                <span class="text-sm font-medium text-mono">{{ currency_symbol }} {{ order_summary.subtotal|floatformat:2|default:"0.00" }}</span>
+            </div>
+            <div class="flex justify-between items-center px-5">
+                <span class="text-sm font-normal text-secondary-foreground">Shipping</span>
+                <span class="text-sm font-medium text-mono">{{ currency_symbol }} {{ order_summary.shipping|floatformat:2|default:"0.00" }}</span>
+            </div>
+            <div class="flex justify-between items-center px-5">
+                <span class="text-sm font-normal text-secondary-foreground">VAT</span>
+                <span class="text-sm font-medium text-mono">{{ currency_symbol }} {{ order_summary.vat|floatformat:2|default:"0.00" }}</span>
+            </div>
+            
+            {% if has_discount %}
+                {% if has_coupon_discount %}
+                <div class="flex justify-between items-center px-5">
+                    <span class="text-sm font-normal text-secondary-foreground">
+                        Coupon ({{ order_summary.coupon_code }})
+                    </span>
+                    <span class="text-sm font-medium text-mono text-green-600">
+                        -{{ currency_symbol }}{{ order_summary.coupon_discount|floatformat:2 }}
+                    </span>
+                </div>
+                {% endif %}
+                
+                {% if has_buyxgety_promotion %}
+                <div class="flex justify-between items-center px-5">
+                    <span class="text-sm font-normal text-secondary-foreground">
+                        Buy X Get Y Discount
+                    </span>
+                    <span class="text-sm font-medium text-mono text-green-600">
+                        -{{ currency_symbol }}{{ order_summary.buyxgety_discount|floatformat:2 }}
+                    </span>
+                </div>
+                {% endif %}
+                
+                {% if has_coupon_discount and has_buyxgety_promotion %}
+                <div class="flex justify-between items-center px-5 pt-2 border-t border-gray-200">
+                    <span class="text-sm font-semibold text-secondary-foreground">
+                        Total Discount
+                    </span>
+                    <span class="text-sm font-bold text-mono text-green-600">
+                        -{{ currency_symbol }}{{ order_summary.total_discount|floatformat:2 }}
+                    </span>
+                </div>
+                {% endif %}
+            {% endif %}
+            
+            <div class="border-b border-border mb-4 mt-5"></div>
+            <div class="flex justify-between items-center px-5">
+                <span class="text-sm font-normal text-secondary-foreground">Total</span>
+                <span class="text-base font-semibold text-mono">{{ currency_symbol }} {{ order_summary.total|floatformat:2|default:"0.00" }}</span>
+            </div>
+        </div>
+    </div>
+</div>
                     </div>
                 {% endif %}
             </div>

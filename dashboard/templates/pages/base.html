@@ -40,7 +40,65 @@
         padding: 12px 16px !important;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
       }
-    </style>
+      .load-more-btn-popup {
+        background: #fff;
+        border: 1px solid #dc3545;
+        color: #dc3545;
+        padding: 6px 12px;
+        border-radius: 15px;
+        font-size: 12px;
+        cursor: pointer;
+        margin: 8px auto;
+        display: block;
+        transition: all 0.3s;
+      }
+      
+      .load-more-btn-popup:hover:not(:disabled) {
+        background: #dc3545;
+        color: #fff;
+      }
+      
+      .load-more-btn-popup:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      
+      .load-more-btn-popup .spinner {
+        display: none;
+        width: 12px;
+        height: 12px;
+        border: 2px solid #dc3545;
+        border-top-color: transparent;
+        border-radius: 50%;
+        animation: spin-popup 0.6s linear infinite;
+        margin-right: 6px;
+        vertical-align: middle;
+      }
+      
+      .load-more-btn-popup.loading .spinner {
+        display: inline-block;
+      }
+      
+      .load-more-btn-popup.loading {
+        background: #fff;
+        color: #dc3545;
+      }
+      
+      @keyframes spin-popup {
+        to { transform: rotate(360deg); }
+      }
+      #emojiPickerPopup {
+    position: absolute;
+    bottom: 60px;
+    left: 8px;
+    width: 280px;       
+   
+}
+#emojiPickerPopup em-emoji-picker {
+    width: 100% !important;
+    height: 260px !important;    
+   
+} </style>
 
     
     <script async src="https://www.googletagmanager.com/gta
@@ -194,48 +252,72 @@ g/js?id=G-52YZ3XGZJ6"></script>
             flex-direction:column;
             gap:8px;
         ">
-        <!-- Messages will be injected here dynamically -->
+        <!-- Load More Button -->
+        <button class="load-more-btn-popup" id="loadMoreBtnPopup" style="display:none;">
+            <span class="spinner"></span>
+            <span class="btn-text">Load More</span>
+        </button>
     </div>
 
     <!-- Input Box -->
     <div style="
-            display:flex;
-            border-top:1px solid #ddd;
-            padding:10px;
-            background:#fff;
+    display:flex;
+    border-top:1px solid #ddd;
+    padding:10px;
+    background:#fff;
+    position:relative;
+">
+
+<!-- Emoji Button -->
+<button id="emojiBtn"
+        style="
+            background:#f1f1f1;
+            border:none;
+            border-radius:50%;
+            width:38px;
+            height:38px;
+            margin-right:6px;
+            cursor:pointer;
+            font-size:18px;
         ">
-        <input type="text"
-               id="chatInput"
-               placeholder="Type your message..."
-               style="
-                    flex:1;
-                    border:1px solid #ddd;
-                    border-radius:20px;
-                    padding:8px 12px;
-                    outline:none;
-                    font-size:14px;
-                "
-        />
-        <button id="sendBtn"
-                style="
-                    background:#dc3545;
-                    border:none;
-                    color:#fff;
-                    border-radius:50%;
-                    width:38px;
-                    height:38px;
-                    margin-left:8px;
-                    cursor:pointer;
-                    display:flex;
-                    align-items:center;
-                    justify-content:center;
-                "
-        >
-            <i class="bi bi-send-fill"></i>
-        </button>
-    </div>
+    😊
+</button>
+
+<input type="text"
+       id="chatInput"
+       placeholder="Type your message..."
+       style="
+            flex:1;
+            border:1px solid #ddd;
+            border-radius:20px;
+            padding:8px 12px;
+            outline:none;
+            font-size:14px;
+       "
+/>
+
+<button id="sendBtn"
+        style="
+            background:#dc3545;
+            border:none;
+            color:#fff;
+            border-radius:50%;
+            width:38px;
+            height:38px;
+            margin-left:6px;
+            cursor:pointer;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+        ">
+    <i class="bi bi-send-fill"></i>
+</button>
+
+<!-- Emoji Picker -->
+<div id="emojiPickerPopup"></div>
 </div>
 
+</div>
 
 <!-- Include Footer -->
 {% include 'pages/footer.html' %}
@@ -246,6 +328,9 @@ g/js?id=G-52YZ3XGZJ6"></script>
 <script src="{% static 'metronic/tailwind/dist/assets/js/core.bundle.js' %}"></script>
 <script src="{% static 'metronic/tailwind/dist/assets/vendors/ktui/ktui.min.js' %}"></script>
 <script src="{% static 'metronic/tailwind/dist/assets/vendors/apexcharts/apexcharts.min.js' %}"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/emoji-mart@5.5.2/dist/emoji-mart.css">
+<script src="https://cdn.jsdelivr.net/npm/emoji-mart@5.5.2/dist/browser.js"></script>
+
 <!-- Scroll to Top Logic -->
 <script>
     (function () {
@@ -264,6 +349,10 @@ g/js?id=G-52YZ3XGZJ6"></script>
     
         let chatSocket = null;
         let currentUserId = {{ user.id|default:0 }};
+        let loadedMessagesCount = 0;
+        let totalMessagesCount = 0;
+        let hasMoreMessages = false;
+        let isLoadingMore = false;
     
         btn.addEventListener("click", function (e) {
             e.preventDefault();
@@ -280,21 +369,54 @@ g/js?id=G-52YZ3XGZJ6"></script>
                     const chatBody = chatBox.querySelector(".chat-body");
                     const chatInput = document.getElementById("chatInput");
                     const sendBtn = document.getElementById("sendBtn");
+                    const loadMoreBtn = document.getElementById("loadMoreBtnPopup");
     
                     chatSocket.onopen = function() {
                         console.log('WebSocket connected');
+                        loadedMessagesCount = 0;
                     };
     
                     chatSocket.onmessage = function(e) {
                         const data = JSON.parse(e.data);
                         
                         if (data.type === 'chat_history') {
-                            chatBody.innerHTML = '';
+                            // Clear only messages, keep load more button
+                            const messages = chatBody.querySelectorAll('.chat-message');
+                            messages.forEach(msg => msg.remove());
+                            
+                            loadedMessagesCount = data.messages.length;
+                            totalMessagesCount = data.total_count;
+                            hasMoreMessages = data.has_more;
+                            
                             data.messages.forEach(msg => {
                                 appendMessage(msg);
                             });
+                            
+                            updateLoadMoreButton();
+                            scrollToBottom();
+                            
+                        } else if (data.type === 'load_more_response') {
+                            const previousScrollHeight = chatBody.scrollHeight;
+                            
+                            loadedMessagesCount += data.messages.length;
+                            totalMessagesCount = data.total_count;
+                            hasMoreMessages = data.has_more;
+                            
+                            // Prepend older messages
+                            data.messages.reverse().forEach(msg => {
+                                prependMessage(msg);
+                            });
+                            
+                            // Maintain scroll position
+                            const newScrollHeight = chatBody.scrollHeight;
+                            chatBody.scrollTop = newScrollHeight - previousScrollHeight;
+                            
+                            updateLoadMoreButton();
+                            isLoadingMore = false;
+                            
                         } else if (data.type === 'message') {
                             appendMessage(data);
+                            scrollToBottom();
                         }
                     };
     
@@ -305,9 +427,57 @@ g/js?id=G-52YZ3XGZJ6"></script>
                     chatSocket.onclose = function() {
                         console.log('WebSocket closed');
                     };
+                    
+                    function updateLoadMoreButton() {
+                        if (hasMoreMessages) {
+                            loadMoreBtn.style.display = 'block';
+                            loadMoreBtn.disabled = false;
+                            loadMoreBtn.classList.remove('loading');
+                            loadMoreBtn.querySelector('.btn-text').textContent = `Load More (${totalMessagesCount - loadedMessagesCount})`;
+                        } else {
+                            loadMoreBtn.style.display = 'none';
+                        }
+                    }
+                    
+                    function loadMoreMessages() {
+                        if (isLoadingMore || !hasMoreMessages) return;
+                        
+                        isLoadingMore = true;
+                        loadMoreBtn.disabled = true;
+                        loadMoreBtn.classList.add('loading');
+                        loadMoreBtn.querySelector('.btn-text').textContent = 'Loading...';
+                        
+                        if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
+                            chatSocket.send(JSON.stringify({
+                                'type': 'load_more',
+                                'offset': loadedMessagesCount
+                            }));
+                        } else {
+                            isLoadingMore = false;
+                            updateLoadMoreButton();
+                        }
+                    }
+                    
+                    loadMoreBtn.onclick = loadMoreMessages;
+                    
+                    function prependMessage(data) {
+                        const msgDiv = createMessageElement(data);
+                        const firstMessage = chatBody.querySelector('.chat-message');
+                        if (firstMessage) {
+                            chatBody.insertBefore(msgDiv, firstMessage);
+                        } else {
+                            chatBody.appendChild(msgDiv);
+                        }
+                    }
     
                     function appendMessage(data) {
+                        const msgDiv = createMessageElement(data);
+                        chatBody.appendChild(msgDiv);
+                    }
+                    
+                    function createMessageElement(data) {
                         const msgDiv = document.createElement('div');
+                        msgDiv.className = 'chat-message';
                         const isCurrentUser = data.sender_id === currentUserId;
                         const isSystem = data.is_system || false;
                         
@@ -356,7 +526,10 @@ g/js?id=G-52YZ3XGZJ6"></script>
                             msgDiv.appendChild(timeSpan);
                         }
                         
-                        chatBody.appendChild(msgDiv);
+                        return msgDiv;
+                    }
+                    
+                    function scrollToBottom() {
                         chatBody.scrollTop = chatBody.scrollHeight;
                     }
     
@@ -388,8 +561,61 @@ g/js?id=G-52YZ3XGZJ6"></script>
             }
         });
     })();
+    //emoji picker
+    const emojiBtn = document.getElementById("emojiBtn");
+const emojiPickerPopup = document.getElementById("emojiPickerPopup");
+
+let emojiPicker = null;
+
+emojiBtn.addEventListener("click", function (e) {
+    e.stopPropagation();
+
+    if (emojiPicker) {
+        emojiPickerPopup.innerHTML = "";
+        emojiPicker = null;
+        return;
+    }
+    emojiPicker = new EmojiMart.Picker({
+    theme: "light",
+    previewPosition: "none",
+    skinTonePosition: "none",
+    perLine: 8,           
+    maxFrequentRows: 1,
+    searchPosition: "sticky",
+    onEmojiSelect: (emoji) => {
+        insertEmoji(emoji.native);
+    }
+});
+
+    emojiPickerPopup.appendChild(emojiPicker);
+});
+
+function insertEmoji(emoji) {
+    const start = chatInput.selectionStart;
+    const end = chatInput.selectionEnd;
+
+    chatInput.value =
+        chatInput.value.substring(0, start) +
+        emoji +
+        chatInput.value.substring(end);
+
+    chatInput.selectionStart =
+    chatInput.selectionEnd = start + emoji.length;
+
+    chatInput.focus();
+}
+document.addEventListener("click", function (e) {
+    if (
+        emojiPicker &&
+        !emojiPickerPopup.contains(e.target) &&
+        e.target !== emojiBtn
+    ) {
+        emojiPickerPopup.innerHTML = "";
+        emojiPicker = null;
+    }
+});
+
 </script>
-    
-    
+
 </body>
 </html>
