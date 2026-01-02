@@ -3,6 +3,7 @@ from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 from .views import *
+from medical_api.views import AddPaymentMethodView, DeletePaymentMethodView
 
 app_name = 'dashboard'
 
@@ -53,6 +54,8 @@ urlpatterns = [
     path('profile/remove-address/<int:address_id>/', views.RemoveAddressView.as_view(), name='remove_address'),
     path('profile/set-default-address/', views.SetDefaultAddressView.as_view(), name='set_default_address'),
     path('payment-method/', views.PaymentMethodView.as_view(), name='payment_method'),
+    path('add-payment-method/', AddPaymentMethodView.as_view(), name='add_payment_method'),
+    path('payment-method-delete/', DeletePaymentMethodView.as_view(), name='delete_payment_method'),
     path('order-placed/', views.OrderPlacedView.as_view(), name='order_placed'),
     path('my-orders/', views.MyOrdersView.as_view(), name='my_orders'),
     path('my-returns/', MyReturnsView.as_view(), name='my_returns'),

@@ -204,6 +204,10 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
 
+# Login URL for LoginRequiredMixin
+LOGIN_URL = 'dashboard:login'
+LOGIN_REDIRECT_URL = '/'
+
 # Email Settings
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

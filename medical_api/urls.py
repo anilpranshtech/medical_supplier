@@ -95,5 +95,9 @@ urlpatterns = [
 
     path("api/user/profile/", UserProfileAPIView.as_view(), name="user-profile"),
 
+    # ------------------- Payment Method --------------------
+    path('add-payment-method/', AddPaymentMethodView.as_view(), name='add_payment_method'),
+    path('payment-method-delete/', DeletePaymentMethodView.as_view(), name='delete_payment_method'),
+
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

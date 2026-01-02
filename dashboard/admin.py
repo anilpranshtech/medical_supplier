@@ -1,7 +1,22 @@
 from django.contrib import admin
 from stripe import PaymentMethod
 
-from dashboard.models import *
+from dashboard.models import (
+    RetailProfile, WholesaleBuyerProfile, SupplierProfile, UserActivityLog, AdminActivityLog,
+    Product, Contact, PendingSignup, ProductImage, EventRegistration, ProductCategory,
+    ProductSubCategory, Question, Notification, ProductLastCategory, Brand, Order, OrderItem,
+    CartProduct, WishlistProduct, RatingReview, DeliveryPartner, Payment, StripePayment,
+    RazorpayPayment, CODPayment, BankTransferPayment, CustomerBillingAddress, RoleRequest,
+    RFQRequest, DoctorProfile, Event, Nationality, Residency, CountryCode, Speciality,
+    SubscriptionPlan, PlatformPlan, Feature, UserSubscription, StripeSubscriptionMetadata,
+    Return, SupplierCommission, AdminUserProfile, Bank, Country, OriginCountry, Region,
+    State, City, Regioncities, Unit, DeliveryTime, APIControls, Catalog, SMSConfiguration,
+    Configuration, ReturnTime, StandingTime, PaymentSettings, Staticcontents, SocialLinks,
+    SEOSettings, FaqForm, Warranty, ReturnReason, Theme, AdminUser, Department, SupplierType,
+    DynamicInput, FormControl, SplashScreen, ShippingMethod, Coupon, BuyXGetYPromotion,
+    BuyXGiftYPromotion, BasketPromotion, VacationRequest, RFQComment, TopSupplier, UserLogs,
+    ChatMessage, ChatRoom, CustomerPayment, UserCardsAndSubscriptions, UserBillingAddress
+)
 
 
 @admin.register(RetailProfile)
@@ -148,7 +163,67 @@ class BankTransferPaymentAdmin(admin.ModelAdmin):
 
 @admin.register(CustomerBillingAddress)
 class CustomerBillingAddressAdmin(admin.ModelAdmin):
-    list_display = ('id','user', 'customer_name', 'is_default', 'is_deleted', 'created_at', 'updated_at')
+    list_display = ('id','user', 'customer_name', 'address_title', 'is_default', 'is_deleted', 'is_old', 'phone', 'created_at', 'updated_at')
+    list_filter = ('is_default', 'is_deleted', 'is_old', 'created_at', 'updated_at')
+    search_fields = ('user__username', 'user__email', 'customer_name', 'customer_city', 'customer_country', 'customer_postal_code', 'phone')
+    readonly_fields = ('created_at', 'updated_at')
+    fieldsets = (
+        ('User Information', {
+            'fields': ('user', 'address_title')
+        }),
+        ('Billing Address', {
+            'fields': ('customer_name', 'phone', 'customer_address1', 'customer_address2', 'customer_city', 
+                      'customer_state', 'customer_postal_code', 'customer_country', 'customer_country_code')
+        }),
+        ('Status', {
+            'fields': ('is_default', 'is_old', 'is_deleted', 'old_card')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at')
+        }),
+    )
+
+
+@admin.register(UserBillingAddress)
+class UserBillingAddressAdmin(admin.ModelAdmin):
+    list_display = ('id','user', 'customer_name', 'is_deleted', 'is_old', 'deleted_via_api', 'created_at', 'updated_at')
+    list_filter = ('is_deleted', 'is_old', 'deleted_via_api', 'created_at', 'updated_at')
+    search_fields = ('user__username', 'user__email', 'customer_name', 'customer_city', 'customer_country', 'customer_postal_code')
+    readonly_fields = ('created_at', 'updated_at', 'deleted_at')
+    fieldsets = (
+        ('User Information', {
+            'fields': ('user',)
+        }),
+        ('Billing Address', {
+            'fields': ('customer_name', 'customer_address1', 'customer_address2', 'customer_city', 
+                      'customer_state', 'customer_postal_code', 'customer_country', 'customer_country_code')
+        }),
+        ('Status', {
+            'fields': ('is_old', 'is_deleted', 'old_card', 'deleted_at', 'deleted_via_api')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at')
+        }),
+    )
+
+
+@admin.register(UserCardsAndSubscriptions)
+class UserCardsAndSubscriptionsAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'stripe_customer_id', 'stripe_payment_method_id', 'subscription_status', 'active_subscription_price_id')
+    list_filter = ('subscription_status',)
+    search_fields = ('user__username', 'user__email', 'stripe_customer_id', 'stripe_payment_method_id', 'stripe_subscription_id', 'active_subscription_price_id')
+    readonly_fields = ()
+    fieldsets = (
+        ('User Information', {
+            'fields': ('user',)
+        }),
+        ('Stripe Information', {
+            'fields': ('stripe_customer_id', 'stripe_payment_method_id')
+        }),
+        ('Subscription Information', {
+            'fields': ('stripe_subscription_id', 'active_subscription_price_id', 'subscription_status')
+        }),
+    )
 
 
 @admin.register(RoleRequest)
@@ -347,3 +422,12 @@ admin.site.register(TopSupplier)
 admin.site.register(UserLogs)
 admin.site.register(ChatMessage)
 admin.site.register(ChatRoom)
+
+
+@admin.register(CustomerPayment)
+class CustomerPaymentAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'stripe_charge_id', 'amount', 'is_refunded', 'is_bonus', 'timestamp')
+    list_filter = ('is_refunded', 'is_bonus', 'is_autotop', 'is_subscription', 'timestamp')
+    search_fields = ('user__username', 'user__email', 'stripe_charge_id')
+    readonly_fields = ('timestamp',)
+    ordering = ('-timestamp',)
