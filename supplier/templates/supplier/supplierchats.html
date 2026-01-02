@@ -3,6 +3,7 @@
 {% block content %}
 
 <style>
+    
     .chat-container {
         height: calc(100vh - 250px);
         display: flex;
@@ -180,6 +181,13 @@
     @keyframes spin {
         to { transform: rotate(360deg); }
     }
+    #emojiPicker {
+    position: absolute;
+    bottom: 60px;
+    left: 0;
+    z-index: 3000;
+}
+
 </style>
 <style>
     .connection-status {
@@ -253,7 +261,12 @@
                         </div>
                         
                         <div class="chat-input-container">
-                            <div class="chat-input">
+                            <div class="chat-input position-relative">
+
+                                <button id="emojiBtn" class="btn btn-light px-3">
+                                    😊
+                                </button>
+                            
                                 <textarea 
                                     id="messageInput" 
                                     class="form-control" 
@@ -261,10 +274,15 @@
                                     rows="1"
                                     autocomplete="off"
                                 ></textarea>
+                            
                                 <button id="sendButton" class="btn btn-primary px-6">
                                     <i class="fas fa-paper-plane"></i>
                                 </button>
+                            
+                                <!-- Emoji Picker Container -->
+                                <div id="emojiPicker"></div>
                             </div>
+                            
                         </div>
                     </div>
                 </div>
@@ -286,10 +304,13 @@
 </div>
 
 {% if room %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/emoji-mart@5.5.2/dist/emoji-mart.css">
+<script src="https://cdn.jsdelivr.net/npm/emoji-mart@5.5.2/dist/browser.js"></script>
+
 <script>
     const roomId = '{{ room_id }}';
     const currentUserId = {{ current_user.id }};
-    const currentUsername = '{{ current_user.username }}';
+    const currentUsername = '{{ current_user.username }}';  
     
     let chatSocket = null;
     let reconnectAttempts = 0;
@@ -614,7 +635,57 @@
             chatSocket.close(1000, 'Page closed');
         }
     });
+    const emojiBtn = document.getElementById('emojiBtn');
+const emojiPickerContainer = document.getElementById('emojiPicker');
+let emojiPicker = null;
+emojiBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+
+    if (emojiPicker) {
+        emojiPickerContainer.innerHTML = '';
+        emojiPicker = null;
+        return;
+    }
+
+    emojiPicker = new EmojiMart.Picker({
+        theme: 'light',
+        previewPosition: 'none',
+        skinTonePosition: 'none',
+        onEmojiSelect: (emoji) => {
+            insertEmojiAtCursor(emoji.native);
+        }
+    });
+
+    emojiPickerContainer.appendChild(emojiPicker);
+});
+function insertEmojiAtCursor(emoji) {
+    const start = messageInput.selectionStart;
+    const end = messageInput.selectionEnd;
+
+    messageInput.value =
+        messageInput.value.substring(0, start) +
+        emoji +
+        messageInput.value.substring(end);
+
+    messageInput.selectionStart =
+    messageInput.selectionEnd = start + emoji.length;
+
+    messageInput.focus();
+    autoResize();
+}
+document.addEventListener('click', (e) => {
+    if (
+        emojiPicker &&
+        !emojiPickerContainer.contains(e.target) &&
+        e.target !== emojiBtn
+    ) {
+        emojiPickerContainer.innerHTML = '';
+        emojiPicker = null;
+    }
+});
+
 </script>
+
 {% endif %}
 
 {% endblock %}

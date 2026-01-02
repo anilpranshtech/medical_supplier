@@ -87,7 +87,18 @@
       @keyframes spin-popup {
         to { transform: rotate(360deg); }
       }
-    </style>
+      #emojiPickerPopup {
+    position: absolute;
+    bottom: 60px;
+    left: 8px;
+    width: 280px;       
+   
+}
+#emojiPickerPopup em-emoji-picker {
+    width: 100% !important;
+    height: 260px !important;    
+   
+} </style>
 
     
     <script async src="https://www.googletagmanager.com/gta
@@ -250,41 +261,62 @@ g/js?id=G-52YZ3XGZJ6"></script>
 
     <!-- Input Box -->
     <div style="
-            display:flex;
-            border-top:1px solid #ddd;
-            padding:10px;
-            background:#fff;
+    display:flex;
+    border-top:1px solid #ddd;
+    padding:10px;
+    background:#fff;
+    position:relative;
+">
+
+<!-- Emoji Button -->
+<button id="emojiBtn"
+        style="
+            background:#f1f1f1;
+            border:none;
+            border-radius:50%;
+            width:38px;
+            height:38px;
+            margin-right:6px;
+            cursor:pointer;
+            font-size:18px;
         ">
-        <input type="text"
-               id="chatInput"
-               placeholder="Type your message..."
-               style="
-                    flex:1;
-                    border:1px solid #ddd;
-                    border-radius:20px;
-                    padding:8px 12px;
-                    outline:none;
-                    font-size:14px;
-                "
-        />
-        <button id="sendBtn"
-                style="
-                    background:#dc3545;
-                    border:none;
-                    color:#fff;
-                    border-radius:50%;
-                    width:38px;
-                    height:38px;
-                    margin-left:8px;
-                    cursor:pointer;
-                    display:flex;
-                    align-items:center;
-                    justify-content:center;
-                "
-        >
-            <i class="bi bi-send-fill"></i>
-        </button>
-    </div>
+    😊
+</button>
+
+<input type="text"
+       id="chatInput"
+       placeholder="Type your message..."
+       style="
+            flex:1;
+            border:1px solid #ddd;
+            border-radius:20px;
+            padding:8px 12px;
+            outline:none;
+            font-size:14px;
+       "
+/>
+
+<button id="sendBtn"
+        style="
+            background:#dc3545;
+            border:none;
+            color:#fff;
+            border-radius:50%;
+            width:38px;
+            height:38px;
+            margin-left:6px;
+            cursor:pointer;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+        ">
+    <i class="bi bi-send-fill"></i>
+</button>
+
+<!-- Emoji Picker -->
+<div id="emojiPickerPopup"></div>
+</div>
+
 </div>
 
 <!-- Include Footer -->
@@ -296,6 +328,9 @@ g/js?id=G-52YZ3XGZJ6"></script>
 <script src="{% static 'metronic/tailwind/dist/assets/js/core.bundle.js' %}"></script>
 <script src="{% static 'metronic/tailwind/dist/assets/vendors/ktui/ktui.min.js' %}"></script>
 <script src="{% static 'metronic/tailwind/dist/assets/vendors/apexcharts/apexcharts.min.js' %}"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/emoji-mart@5.5.2/dist/emoji-mart.css">
+<script src="https://cdn.jsdelivr.net/npm/emoji-mart@5.5.2/dist/browser.js"></script>
+
 <!-- Scroll to Top Logic -->
 <script>
     (function () {
@@ -526,6 +561,61 @@ g/js?id=G-52YZ3XGZJ6"></script>
             }
         });
     })();
+    //emoji picker
+    const emojiBtn = document.getElementById("emojiBtn");
+const emojiPickerPopup = document.getElementById("emojiPickerPopup");
+
+let emojiPicker = null;
+
+emojiBtn.addEventListener("click", function (e) {
+    e.stopPropagation();
+
+    if (emojiPicker) {
+        emojiPickerPopup.innerHTML = "";
+        emojiPicker = null;
+        return;
+    }
+    emojiPicker = new EmojiMart.Picker({
+    theme: "light",
+    previewPosition: "none",
+    skinTonePosition: "none",
+    perLine: 8,           
+    maxFrequentRows: 1,
+    searchPosition: "sticky",
+    onEmojiSelect: (emoji) => {
+        insertEmoji(emoji.native);
+    }
+});
+
+    emojiPickerPopup.appendChild(emojiPicker);
+});
+
+function insertEmoji(emoji) {
+    const start = chatInput.selectionStart;
+    const end = chatInput.selectionEnd;
+
+    chatInput.value =
+        chatInput.value.substring(0, start) +
+        emoji +
+        chatInput.value.substring(end);
+
+    chatInput.selectionStart =
+    chatInput.selectionEnd = start + emoji.length;
+
+    chatInput.focus();
+}
+document.addEventListener("click", function (e) {
+    if (
+        emojiPicker &&
+        !emojiPickerPopup.contains(e.target) &&
+        e.target !== emojiBtn
+    ) {
+        emojiPickerPopup.innerHTML = "";
+        emojiPicker = null;
+    }
+});
+
 </script>
+
 </body>
 </html>

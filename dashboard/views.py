@@ -1374,7 +1374,7 @@ class ProductDetailsView(TemplateView):
                 other_images = ProductImage.objects.filter(product=product).exclude(id=main_img.id if main_img else None)
                 reviews_qs = RatingReview.objects.filter(product=product).order_by('-created_at')
                 reviews_page_number = self.request.GET.get('rpage', 1)
-                reviews_paginator = Paginator(reviews_qs, 3) 
+                reviews_paginator = Paginator(reviews_qs, 2) 
                 reviews_page = reviews_paginator.get_page(reviews_page_number)
                 
                 rating_counts = {i: reviews_qs.filter(rating=i).count() for i in range(1, 6)}
@@ -1430,7 +1430,7 @@ class ProductDetailsView(TemplateView):
                     .order_by('-created_at')
                 )
                 page = self.request.GET.get("qpage", 1)
-                paginator = Paginator(questions_qs, 5)
+                paginator = Paginator(questions_qs, 2)
                 questions_page = paginator.get_page(page)
 
                 context.update({
@@ -1457,6 +1457,59 @@ class ProductDetailsView(TemplateView):
                 context['related_products'] = [] 
                 context['chat_room_id'] = None
 
+
+        return context
+from django.views.generic import DetailView
+
+class ProductReviewRatingView(DetailView):
+    model = Product
+    template_name = 'userdashboard/view/productreviewrating.html'
+    context_object_name = 'product'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        product = self.object
+        main_img = ProductImage.objects.filter(
+            product=product, is_main=True
+        ).first()
+        product.main_image = main_img.image.url if main_img else None
+
+        other_images = ProductImage.objects.filter(product=product)
+        if main_img:
+            other_images = other_images.exclude(id=main_img.id)
+        reviews_qs = RatingReview.objects.filter(
+            product=product
+        ).order_by('-created_at')
+
+        review_page = self.request.GET.get('rpage', 1)
+        review_paginator = Paginator(reviews_qs, 10)
+        reviews = review_paginator.get_page(review_page)
+        rating_counts = {
+            i: reviews_qs.filter(rating=i).count() for i in range(1, 6)
+        }
+        total_reviews = reviews_qs.count()
+        average_rating = reviews_qs.aggregate(
+            avg=Avg('rating')
+        )['avg'] or 0
+        related_products = Product.objects.filter(
+            last_category=product.last_category
+        ).exclude(id=product.id).select_related(
+            'brand', 'last_category'
+        )[:4]
+
+        for related_product in related_products:
+            img = ProductImage.objects.filter(
+                product=related_product, is_main=True
+            ).first()
+            related_product.main_image = img.image.url if img else None
+        context.update({
+            'other_images': other_images,
+            'reviews': reviews,
+            'rating_counts': rating_counts,
+            'total_reviews': total_reviews,
+            'average_rating': round(average_rating, 1),
+            'related_products': related_products,
+        })
 
         return context
 
@@ -3092,7 +3145,14 @@ class MyOrdersView(LoginRequiredMixin, TemplateView):
         page_number = self.request.GET.get('page')
         page_obj = paginator.get_page(page_number)
         for order in page_obj.object_list:
-            subtotal = sum(item.price * item.quantity for item in order.items.all())
+            subtotal = Decimal('0.00')
+            for item in order.items.all():
+                item.item_total = item.price * item.quantity
+                subtotal += item.item_total
+                item.has_pending_returns = any(
+                    return_obj.return_status == 'pending'
+                    for return_obj in item.all_returns
+                )
             shipping = order.shipping_fees or Decimal('0.00')
             vat = Decimal('0.00')
             coupon_discount = Decimal('0.00')
@@ -3112,8 +3172,6 @@ class MyOrdersView(LoginRequiredMixin, TemplateView):
         context['order_status_choices'] = OrderItem.ORDER_STATUS_CHOICES
 
         return context
-
-
 class MyReturnsView(LoginRequiredMixin, TemplateView):
     template_name = 'userdashboard/view/my_returns.html'
     login_url = 'dashboard:login'
@@ -3206,15 +3264,11 @@ class ReorderView(LoginRequiredMixin, View):
 
     def post(self, request, order_id, *args, **kwargs):
         order = get_object_or_404(Order, id=order_id, user=request.user)
-
-        # Get all OrderItems for the order
         order_items = OrderItem.objects.filter(order=order)
         if not order_items.exists():
             logger.error(f"No items found for order {order_id} and user {request.user.id}")
             messages.error(request, "No items found in this order.")
             return redirect('dashboard:my_orders')
-
-        # Add each item to the cart
         for item in order_items:
             cart_item, created = CartProduct.objects.get_or_create(
                 user=request.user,

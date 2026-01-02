@@ -1116,103 +1116,136 @@ $(document).ready(function () {
         console.error('Required pricing elements not found');
     }
 
-    // Conditional logic for Webinar, Event, Conference
-    const categorySelect = document.querySelector('select[name="category"]');
-    const isReturnableToggle = document.getElementById("is_returnable");
-    const returnTimeLimitField = document.getElementById("hide_field_return_time_limit");
-    const webinarFields = document.getElementById("webinar_fields");
+ // Add this to replace the existing toggleFormFields function in your superuser template
 
-    const webinarCategories = ["Webinar", "Conference", "Event"];
+// ====== UPDATED: Conditional logic for Webinar, Event, Conference ======
+const categorySelect = document.querySelector('select[name="category"]');
+const isReturnableToggle = document.getElementById("is_returnable");
+const returnTimeLimitField = document.getElementById("hide_field_return_time_limit");
+const webinarFields = document.getElementById("webinar_fields");
 
-    const fieldsToHide = [
-        "hide_field_product_quantity", "hide_field_warranty", "hide_field_condition",
-        "hide_field_return_time_limit", "hide_field_manufacture_date", "hide_field_expiry_date",
-        "hide_field_barcode", "hide_field_price", "hide_field_weight_unit", "hide_field_weight",
-        "hide_field_delivery_time", "hide_field_commission_percentage", "hide_field_supplier_sku",
-        "hide_field_pcs_per_unit", "hide_field_min_order_qty", "hide_field_low_stock_alert",
-        "hide_field_button_type", "hide_field_expiration_days", "hide_field_tag",
-        "hide_field_offer_percentage", "hide_field_offer_start", "hide_field_offer_end",
-        "hide_field_offer_status", "hide_field_keywords", "hide_field_brochure"
-    ];
+// Event keywords to check (case-insensitive, partial match)
+const eventKeywords = ["webinar", "conference", "event"];
 
-    function toggleFormFields() {
-        const selectedText = categorySelect.options[categorySelect.selectedIndex]?.text.trim() || "";
-        const isWebinar = webinarCategories.includes(selectedText);
+const fieldsToHide = [
+    "hide_field_product_quantity", "hide_field_warranty", "hide_field_condition",
+    "hide_field_return_time_limit", "hide_field_manufacture_date", "hide_field_expiry_date",
+    "hide_field_barcode", "hide_field_price", "hide_field_weight_unit", "hide_field_weight",
+    "hide_field_delivery_time", "hide_field_commission_percentage", "hide_field_supplier_sku",
+    "hide_field_pcs_per_unit", "hide_field_min_order_qty", "hide_field_low_stock_alert",
+    "hide_field_button_type", "hide_field_expiration_days", "hide_field_tag",
+    "hide_field_offer_start", "hide_field_offer_end", "hide_field_offer_status",
+    "hide_field_keywords", "hide_field_brochure"
+];
 
-        // Toggle visibility and required status for fields
-        fieldsToHide.forEach(id => {
-            const field = document.getElementById(id);
-            if (field) {
-                field.style.display = isWebinar ? "none" : "";
+function isEventCategory(categoryText) {
+    if (!categoryText) return false;
+    const lowerText = categoryText.toLowerCase();
+    // Check if any event keyword is contained in the category name
+    return eventKeywords.some(keyword => lowerText.includes(keyword));
+}
+
+function toggleFormFields() {
+    const selectedText = categorySelect.options[categorySelect.selectedIndex]?.text.trim() || "";
+    const isWebinar = isEventCategory(selectedText);
+
+    console.log('Selected category:', selectedText, 'Is Event:', isWebinar);
+
+    // Hide or show product fields
+    fieldsToHide.forEach(id => {
+        const field = document.getElementById(id);
+        if (field) {
+            if (isWebinar) {
+                field.style.display = "none";
+                // Remove required from regular product fields
                 field.querySelectorAll("input, select, textarea").forEach(el => {
-                    if (isWebinar) {
-                        el.removeAttribute("required");
-                    } else {
-                        if (el.hasAttribute("data-originally-required")) {
-                            el.setAttribute("required", "required");
-                        }
+                    el.removeAttribute("required");
+                });
+            } else {
+                field.style.display = "";
+                // Restore required if it was originally required
+                field.querySelectorAll("input, select, textarea").forEach(el => {
+                    if (el.hasAttribute("data-originally-required")) {
+                        el.setAttribute("required", "required");
                     }
                 });
             }
+        }
+    });
+
+    // Ensure supplier field is always visible and required
+    const supplierField = document.getElementById("hide_field_supplier");
+    if (supplierField) {
+        supplierField.style.display = "";
+        supplierField.querySelectorAll("select").forEach(el => {
+            if (el.hasAttribute("data-originally-required")) {
+                el.setAttribute("required", "required");
+            }
         });
+    }
 
-        // Ensure supplier field is always visible and required
-        const supplierField = document.getElementById("hide_field_supplier");
-        if (supplierField) {
-            supplierField.style.display = "";
-            supplierField.querySelectorAll("select").forEach(el => {
-                if (el.hasAttribute("data-originally-required")) {
-                    el.setAttribute("required", "required");
-                }
-            });
-        }
-
-        // Toggle webinar fields
-        if (webinarFields) {
-            webinarFields.classList.toggle("d-none", !isWebinar);
+    // Show/hide webinar fields
+    if (webinarFields) {
+        if (isWebinar) {
+            webinarFields.classList.remove("d-none");
+            // Make event fields required
             webinarFields.querySelectorAll("input").forEach(el => {
-                if (isWebinar) {
-                    el.setAttribute("required", "required");
-                } else {
-                    el.removeAttribute("required");
-                }
+                el.setAttribute("required", "required");
             });
-        }
-
-        // Handle return time limit field
-        if (isReturnableToggle && returnTimeLimitField) {
-            returnTimeLimitField.style.display = isReturnableToggle.checked && !isWebinar ? "" : "none";
-            returnTimeLimitField.querySelectorAll("input").forEach(el => {
-                if (isReturnableToggle.checked && !isWebinar) {
-                    el.setAttribute("required", "required");
-                } else {
-                    el.removeAttribute("required");
-                }
+            console.log('Event fields shown and set to required');
+        } else {
+            webinarFields.classList.add("d-none");
+            // Remove required from event fields
+            webinarFields.querySelectorAll("input").forEach(el => {
+                el.removeAttribute("required");
             });
+            console.log('Event fields hidden and required removed');
         }
     }
 
-    // Store original required state for fields
-    fieldsToHide.concat(["hide_field_supplier"]).forEach(id => {
-        const field = document.getElementById(id);
-        if (field) {
-            field.querySelectorAll("input, select, textarea").forEach(el => {
-                if (el.hasAttribute("required")) {
-                    el.setAttribute("data-originally-required", "true");
-                }
-            });
+    // Handle return time limit field
+    if (isReturnableToggle && returnTimeLimitField) {
+        returnTimeLimitField.style.display = isReturnableToggle.checked && !isWebinar ? "" : "none";
+        returnTimeLimitField.querySelectorAll("input").forEach(el => {
+            if (isReturnableToggle.checked && !isWebinar) {
+                el.setAttribute("required", "required");
+            } else {
+                el.removeAttribute("required");
+            }
+        });
+    }
+
+    // Disable is_returnable toggle for webinars
+    if (isReturnableToggle) {
+        isReturnableToggle.disabled = isWebinar;
+        if (isWebinar) {
+            isReturnableToggle.checked = false;
         }
-    });
+    }
+}
 
-    // Store original help text for reset
-    document.querySelectorAll('.text-muted.fs-7').forEach(el => {
-        el.setAttribute('data-original-text', el.textContent);
-    });
+// Store original required state for fields
+fieldsToHide.concat(["hide_field_supplier"]).forEach(id => {
+    const field = document.getElementById(id);
+    if (field) {
+        field.querySelectorAll("input, select, textarea").forEach(el => {
+            if (el.hasAttribute("required")) {
+                el.setAttribute("data-originally-required", "true");
+            }
+        });
+    }
+});
 
-    if (categorySelect) categorySelect.addEventListener("change", toggleFormFields);
-    if (isReturnableToggle) isReturnableToggle.addEventListener("change", toggleFormFields);
+// Store original help text for reset
+document.querySelectorAll('.text-muted.fs-7').forEach(el => {
+    el.setAttribute('data-original-text', el.textContent);
+});
 
-    toggleFormFields();
+if (categorySelect) categorySelect.addEventListener("change", toggleFormFields);
+if (isReturnableToggle) isReturnableToggle.addEventListener("change", toggleFormFields);
+
+// Initial toggle on page load
+toggleFormFields();
 });
 
 // Input validations with red error text and red border

@@ -25,12 +25,15 @@ urlpatterns = [
     path('search-results-grid/', views.SearchResultsGridView.as_view(), name='search_results_grid'),
     path('search-results-list/', views.SearchResultsListView.as_view(), name='search_results_list'),
     path('search-suggestions/', views.SearchSuggestionsView.as_view(), name='search_suggestions'),
+    #productdetail
     path('product-detail/<int:pk>/', views.ProductDetailsView.as_view(), name='product_detail'),
+    path('productrating/<int:pk>/', views.ProductReviewRatingView.as_view(), name='product_review_rating'),
+    #event
     path('product/<int:pk>/registrations/', EventRegisteredDataView.as_view(), name='event_registered_data'),
     path('event/register/', EventRegistrationView.as_view(), name='event_registration'),
-    path('product-detail/', views.ProductDetailsView.as_view(), name='product_detail'),
+    # path('product-detail/', views.ProductDetailsView.as_view(), name='product_detail'),
    #cart
-     path('add-to-cart/', CartAddView.as_view(), name='add_to_cart'),
+    #  path('add-to-cart/', CartAddView.as_view(), name='add_to_cart'),
     # path('order-summary/', OrderSummaryView.as_view(), name='order_summary'),
     path('remove-from-cart/', RemoveFromCartView.as_view(), name='remove_from_cart'),
     path('clear_cart_items/', clearcart, name='clear_cart_items'),

@@ -772,6 +772,8 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/nouislider@15.7.0/dist/nouislider.min.js"></script>
 <script>
+// Replace the existing JavaScript section in your template with this updated version
+
 $(document).ready(function () {
     // Form submit loader
     $('#main-form').on('submit', function(e) {
@@ -1184,59 +1186,99 @@ $(document).ready(function () {
         console.error('Required pricing elements not found');
     }
 
-    // Conditional logic for Webinar, Event, Conference
+    // ====== UPDATED: Conditional logic for Webinar, Event, Conference ======
     const categorySelect = document.querySelector('select[name="category"]');
     const isReturnableToggle = document.getElementById("is_returnable");
     const returnTimeLimitField = document.getElementById("hide_field_return_time_limit");
     const webinarFields = document.getElementById("webinar_fields");
 
-    const webinarCategories = ["Webinar", "Conference", "Event"];
+    // Event keywords to check (case-insensitive, partial match)
+    const eventKeywords = ["webinar", "conference", "event"];
 
     const fieldsToHide = [
-        "hide_field_product_name", "hide_field_description", "hide_field_brand", "hide_field_product_from", "hide_field_selling_countries",
-        "hide_field_product_quantity", "hide_field_warranty", "hide_field_condition", "hide_field_return_time_limit",
-        "hide_field_is_returnable", "hide_field_manufacture_date", "hide_field_expiry_date", "hide_field_barcode", "hide_field_price",
-        "hide_field_weight_unit", "hide_field_weight", "hide_field_delivery_time", "hide_field_commission_percentage",
-        "hide_field_supplier_sku", "hide_field_pcs_per_unit", "hide_field_min_order_qty", "hide_field_low_stock_alert",
-        "hide_field_button_type", "hide_field_expiration_days", "hide_field_tag", "hide_field_offer_percentage",
-        "hide_field_offer_start", "hide_field_offer_end", "hide_field_offer_status", "hide_field_ask_admin_to_publish",
-        "hide_field_keywords", "hide_field_brochure", "hide_field_general_info", "hide_field_additional_info"
+        "hide_field_brand", "hide_field_product_from", "hide_field_selling_countries",
+        "hide_field_product_quantity", "hide_field_warranty", "hide_field_condition", 
+        "hide_field_return_time_limit", "hide_field_is_returnable", "hide_field_manufacture_date", 
+        "hide_field_expiry_date", "hide_field_barcode", "hide_field_price",
+        "hide_field_weight_unit", "hide_field_weight", "hide_field_delivery_time", 
+        "hide_field_commission_percentage", "hide_field_supplier_sku", "hide_field_pcs_per_unit", 
+        "hide_field_min_order_qty", "hide_field_low_stock_alert", "hide_field_button_type", 
+        "hide_field_expiration_days", "hide_field_tag", "hide_field_offer_start", 
+        "hide_field_offer_end", "hide_field_offer_status", "hide_field_ask_admin_to_publish",
+        "hide_field_keywords", "hide_field_brochure"
     ];
 
-    const generalInfoContainer = document.querySelector('.d-flex.flex-column.flex-row-fluid');
+    const generalInfoContainer = document.querySelector('.col-lg-6');
+
+    function isEventCategory(categoryText) {
+        if (!categoryText) return false;
+        const lowerText = categoryText.toLowerCase();
+        // Check if any event keyword is contained in the category name
+        return eventKeywords.some(keyword => lowerText.includes(keyword));
+    }
 
     function toggleFormFields() {
         const selectedText = categorySelect.options[categorySelect.selectedIndex]?.text.trim() || "";
-        const isWebinar = webinarCategories.includes(selectedText);
+        const isWebinar = isEventCategory(selectedText);
 
-        // Move webinarFields into general info container if webinar
+        console.log('Selected category:', selectedText, 'Is Event:', isWebinar);
+
+        // Show/hide webinar fields
         if (webinarFields) {
             if (isWebinar) {
                 webinarFields.classList.remove("d-none");
-                generalInfoContainer.insertBefore(webinarFields, generalInfoContainer.firstChild);
-                webinarFields.querySelectorAll("input").forEach(el => el.setAttribute("required", "required"));
+                // Make event fields required
+                webinarFields.querySelectorAll("input").forEach(el => {
+                    el.setAttribute("required", "required");
+                });
+                console.log('Event fields shown and set to required');
             } else {
                 webinarFields.classList.add("d-none");
-                webinarFields.querySelectorAll("input").forEach(el => el.removeAttribute("required"));
+                // Remove required from event fields
+                webinarFields.querySelectorAll("input").forEach(el => {
+                    el.removeAttribute("required");
+                });
+                console.log('Event fields hidden and required removed');
             }
         }
 
-        // Hide or show other fields
+        // Hide or show other product fields
         fieldsToHide.forEach(id => {
             const field = document.getElementById(id);
             if (field) {
-                field.style.display = isWebinar ? "none" : "";
-                field.querySelectorAll("input, select, textarea").forEach(el => {
-                    if (isWebinar) {
+                if (isWebinar) {
+                    field.style.display = "none";
+                    // Remove required from regular product fields
+                    field.querySelectorAll("input, select, textarea").forEach(el => {
                         el.removeAttribute("required");
-                    } else {
+                    });
+                } else {
+                    field.style.display = "";
+                    // Restore required if it was originally required
+                    field.querySelectorAll("input, select, textarea").forEach(el => {
                         if (el.hasAttribute("data-originally-required")) {
                             el.setAttribute("required", "required");
                         }
+                    });
+                }
+            }
+        });
+
+        // Handle description field separately (keep visible but not required for events)
+        const descriptionField = document.getElementById("hide_field_description");
+        if (descriptionField) {
+            if (isWebinar) {
+                descriptionField.querySelectorAll("textarea").forEach(el => {
+                    el.removeAttribute("required");
+                });
+            } else {
+                descriptionField.querySelectorAll("textarea").forEach(el => {
+                    if (el.hasAttribute("data-originally-required")) {
+                        el.setAttribute("required", "required");
                     }
                 });
             }
-        });
+        }
 
         // Handle return time limit separately
         if (isReturnableToggle && returnTimeLimitField) {
@@ -1260,15 +1302,8 @@ $(document).ready(function () {
     }
 
     // Store original required state for fields
-    fieldsToHide.forEach(id => {
-        const field = document.getElementById(id);
-        if (field) {
-            field.querySelectorAll("input, select, textarea").forEach(el => {
-                if (el.hasAttribute("required")) {
-                    el.setAttribute("data-originally-required", "true");
-                }
-            });
-        }
+    document.querySelectorAll('input[required], select[required], textarea[required]').forEach(el => {
+        el.setAttribute("data-originally-required", "true");
     });
 
     // Store original help text for reset
@@ -1279,6 +1314,7 @@ $(document).ready(function () {
     if (categorySelect) categorySelect.addEventListener("change", toggleFormFields);
     if (isReturnableToggle) isReturnableToggle.addEventListener("change", toggleFormFields);
 
+    // Initial toggle on page load
     toggleFormFields();
 });
 
@@ -1290,8 +1326,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const offerEnd = document.getElementById("offer_end");
     const keywords = document.getElementById("keywords");
     const productName = document.querySelector('input[name="product_name"]');
-    const productFrom = document.querySelector('input[name="product_from"]');
-    const sellingCountries = document.querySelector('input[name="selling_countries"]');
+    const productFrom = document.querySelector('select[name="product_from"]');
+    const sellingCountries = document.querySelector('select[name="selling_countries"]');
     const basePrice = document.getElementById("base_price");
     const discountPrice = document.getElementById("discount_price");
     const fixedPrice = document.getElementById("fixed_discounted_price");
@@ -1315,7 +1351,7 @@ document.addEventListener("DOMContentLoaded", function () {
             helpText.textContent = helpText.getAttribute('data-original-text') || 'Date of manufacture.';
         }
         // Trigger expiry date validation
-        if (expiryDate.value) {
+        if (expiryDate && expiryDate.value) {
             expiryDate.dispatchEvent(new Event('input'));
         }
     });
@@ -1323,7 +1359,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Expiry Date Validation
     expiryDate?.addEventListener("input", function () {
         const helpText = this.nextElementSibling;
-        if (manufactureDate.value && expiryDate.value <= manufactureDate.value) {
+        if (manufactureDate && manufactureDate.value && expiryDate.value <= manufactureDate.value) {
             expiryDate.setCustomValidity("Expiry Date must be later than Manufacture Date.");
             expiryDate.classList.add('is-invalid');
             helpText.classList.remove('text-muted');
@@ -1347,7 +1383,7 @@ document.addEventListener("DOMContentLoaded", function () {
             helpText.classList.remove('text-muted');
             helpText.classList.add('text-danger');
             helpText.textContent = 'Offer Start Date cannot be in the past.';
-        } else if (offerEnd.value && offerStart.value >= offerEnd.value) {
+        } else if (offerEnd && offerEnd.value && offerStart.value >= offerEnd.value) {
             offerStart.setCustomValidity("Offer Start Date must be earlier than Offer End Date.");
             offerStart.classList.add('is-invalid');
             helpText.classList.remove('text-muted');
@@ -1361,7 +1397,7 @@ document.addEventListener("DOMContentLoaded", function () {
             helpText.textContent = helpText.getAttribute('data-original-text') || 'Date when the offer starts.';
         }
         // Trigger offer end validation
-        if (offerEnd.value) {
+        if (offerEnd && offerEnd.value) {
             offerEnd.dispatchEvent(new Event('input'));
         }
     });
@@ -1369,7 +1405,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Offer End Validation
     offerEnd?.addEventListener("input", function () {
         const helpText = this.nextElementSibling;
-        if (offerStart.value && offerEnd.value <= offerStart.value) {
+        if (offerStart && offerStart.value && offerEnd.value <= offerStart.value) {
             offerEnd.setCustomValidity("Offer End Date must be later than Offer Start Date.");
             offerEnd.classList.add('is-invalid');
             helpText.classList.remove('text-muted');
@@ -1439,58 +1475,9 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // Product From Validation
-    productFrom?.addEventListener("input", function () {
-        const regex = /^[a-zA-Z\s]+$/;
-        const helpText = this.nextElementSibling;
-        if (productFrom.value.trim() === "") {
-            productFrom.setCustomValidity("Product From cannot be empty.");
-            productFrom.classList.add('is-invalid');
-            helpText.classList.remove('text-muted');
-            helpText.classList.add('text-danger');
-            helpText.textContent = 'Product From cannot be empty.';
-        } else if (!regex.test(productFrom.value)) {
-            productFrom.setCustomValidity("Product From can only contain letters and spaces.");
-            productFrom.classList.add('is-invalid');
-            helpText.classList.remove('text-muted');
-            helpText.classList.add('text-danger');
-            helpText.textContent = 'Product From can only contain letters and spaces.';
-        } else {
-            productFrom.setCustomValidity("");
-            productFrom.classList.remove('is-invalid');
-            helpText.classList.remove('text-danger');
-            helpText.classList.add('text-muted');
-            helpText.textContent = helpText.getAttribute('data-original-text') || 'Country of origin (only letters allowed).';
-        }
-    });
-
-    // Selling Countries Validation
-    sellingCountries?.addEventListener("input", function () {
-        const regex = /^[a-zA-Z\s]+(,[a-zA-Z\s]+)*$/;
-        const helpText = this.nextElementSibling;
-        if (sellingCountries.value.trim() === "") {
-            sellingCountries.setCustomValidity("Selling Countries cannot be empty.");
-            sellingCountries.classList.add('is-invalid');
-            helpText.classList.remove('text-muted');
-            helpText.classList.add('text-danger');
-            helpText.textContent = 'Selling Countries cannot be empty.';
-        } else if (!regex.test(sellingCountries.value)) {
-            sellingCountries.setCustomValidity("Only country names separated by commas are allowed (letters and spaces only).");
-            sellingCountries.classList.add('is-invalid');
-            helpText.classList.remove('text-muted');
-            helpText.classList.add('text-danger');
-            helpText.textContent = 'Only country names separated by commas are allowed (letters and spaces only).';
-        } else {
-            sellingCountries.setCustomValidity("");
-            sellingCountries.classList.remove('is-invalid');
-            helpText.classList.remove('text-danger');
-            helpText.classList.add('text-muted');
-            helpText.textContent = helpText.getAttribute('data-original-text') || 'Comma-separated country names (e.g., India, USA, UK).';
-        }
-    });
-
     // Base Price Validation
     function validateBasePrice() {
+        if (!basePrice) return;
         const helpText = basePrice.nextElementSibling;
         let value = basePrice.value.trim();
         const regex = /^\d+(\.\d{1,2})?$/;
@@ -1527,17 +1514,13 @@ document.addEventListener("DOMContentLoaded", function () {
             helpText.textContent = helpText.getAttribute('data-original-text') || 'Enter a valid product price (1 - 999999, up to 2 decimals).';
         }
     }
-    basePrice?.addEventListener("input", function () {
-        validateBasePrice();
-        validateDiscountPrice();
-        validateFixedPrice();
-    });
+    basePrice?.addEventListener("input", validateBasePrice);
 
     // Discount Price Validation
     function validateDiscountPrice() {
         if (!discountPrice) return;
         const helpText = discountPrice.nextElementSibling;
-        let base = parseFloat(basePrice.value) || 0;
+        let base = parseFloat(basePrice?.value) || 0;
         let discount = parseFloat(discountPrice.value) || 0;
 
         if (discount > base) {
@@ -1555,13 +1538,12 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
     discountPrice?.addEventListener("input", validateDiscountPrice);
-    basePrice?.addEventListener("input", validateDiscountPrice);
 
     // Fixed Price Validation
     function validateFixedPrice() {
         if (!fixedPrice) return;
         const helpText = fixedPrice.nextElementSibling;
-        let base = parseFloat(basePrice.value) || 0;
+        let base = parseFloat(basePrice?.value) || 0;
         let fixed = parseFloat(fixedPrice.value) || 0;
 
         if (fixed > base) {
@@ -1579,15 +1561,15 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
     fixedPrice?.addEventListener("input", validateFixedPrice);
-    basePrice?.addEventListener("input", validateFixedPrice);
 
     // Trigger initial validations for pre-filled fields
-    [productName, productFrom, sellingCountries, keywords, manufactureDate, expiryDate, offerStart, offerEnd, basePrice, discountPrice, fixedPrice].forEach(input => {
+    [productName, keywords, manufactureDate, expiryDate, offerStart, offerEnd, basePrice, discountPrice, fixedPrice].forEach(input => {
         if (input && input.value) {
             input.dispatchEvent(new Event('input'));
         }
     });
 });
+   
 </script>
 <script>
     document.addEventListener("DOMContentLoaded", async function () {

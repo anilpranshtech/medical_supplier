@@ -3,7 +3,6 @@
 {% load custom_filters %}
 {% load tz %}
 {% block content %}
-
 <style>
     #loginRequiredModal, #rfqModal, #imageModal, #eventRegistrationModal, #questionModal {
         z-index: 9999;
@@ -497,7 +496,6 @@
     height: 2.8rem;
     overflow: hidden;
     display: -webkit-box;
-    -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
 }
 
@@ -526,7 +524,6 @@
     height: 3rem;
     overflow: hidden;
     display: -webkit-box;
-    -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
 }
 
@@ -987,7 +984,6 @@
     height: 2.8rem;
     overflow: hidden;
     display: -webkit-box;
-    -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
 }
 
@@ -1016,7 +1012,6 @@
     height: 3rem;
     overflow: hidden;
     display: -webkit-box;
-    -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
 }
 
@@ -1158,89 +1153,8 @@
     scrollbar-width: none; 
     -ms-overflow-style: none; 
 }
-.questions-container {
-    margin-top: 1.5rem;
-}
-.questions-container h4 {
-    font-size: 18px;
-    font-weight: 600;
-    color: #000000;
-    margin-bottom: 1rem;
-}
-.question-item {
-    display: flex;
-    gap: 1rem;
-    padding: 1rem 0;
-    border-top: 1px solid #e5e7eb;
-}
-.question-item:first-child {
-    border-top: none;
-}
-.question-content {
-    flex: 1;
-}
-.answer-section {
-    margin-top: 0.75rem;
-    padding: 0.75rem;
-    background: #f0f9f7;
-    border-left: 4px solid #10b981;
-    border-radius: 0 4px 4px 0;
-}
-.answer-badge {
-    background: #10b981; 
-    color: white;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    font-weight: 600;
-    font-size: 14px;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
 
-.answer-content {
-    flex: 1;
-}
-.answer-content p {
-    margin: 0;
-    color: #065f46;
-    font-size: 14px;
-    line-height: 1.5;
-}
-.answer-header span {
-    font-weight: 600;
-    color: #065f46;
-}
-/* Pagination - same as reviews */
-.questions-pagination {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 1.5rem;
-    padding-top: 1rem;
-    border-top: 1px solid #e5e7eb;
-    font-size: 14px;
-}
 
-.questions-pagination a {
-    color: #3b82f6;
-    text-decoration: none;
-    padding: 0.25rem 0.75rem;
-    border-radius: 4px;
-    border: 1px solid #d1d5db;
-}
-
-.questions-pagination a:hover {
-    background: #f3f4f6;
-}
-
-.questions-pagination .disabled {
-    color: #9ca3af;
-    cursor: not-allowed;
-}
     </style>
     
 <!-- Begin Medical Banner Slider -->
@@ -1321,177 +1235,18 @@
 
             <!-- Right Column: Product Information -->
             <div class="info-section-container">
-                <!-- Description -->
-                <div>
-                    <h2 class="text-xl font-semibold text-gray-650 dark:text-white mb-3">Product Information</h2>
-                    <p class="text-gray-650 dark:text-gray-650 text-base leading-relaxed">
-                        {{ product.description|default:'No description available' }}
-                    </p>
-                </div>
+                
 
                 {% if product.category.name|lower != "conference" and product.category.name|lower != "webinar" and product.category.name|lower != "event" %}
                     <!-- Product Price and Offer -->
-                    <div>
-                        {% if product.offer_percentage and product.offer_active %}
-                        <span class="kt-badge kt-badge-destructive kt-badge-sm uppercase">
-                            save {{ product.offer_percentage|floatformat:0 }}%
-                        </span>
-                        {% endif %}
-                        <div class="flex items-center gap-4 mt-2">
-                            {% if product.offer_active and product.offer_percentage and product.offer_percentage > 0 %}
-                                <span class="text-base font-medium text-gray-500 line-through">
-                                    ${{ product.price|floatformat:2 }}
-                                </span>
-                                <span class="text-2xl font-bold text-gray-650 dark:text-white">
-                                    ${{ product.discounted_price|floatformat:2 }}
-                                </span>
-                            {% else %}
-                                <span class="text-2xl font-bold text-gray-650 dark:text-white">
-                                    ${{ product.price|floatformat:2 }}
-                                </span>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    <!-- Stock Status -->
-                    {% if stock_status %}
-                    <p class="text-red-500 font-semibold">{{ stock_status }}</p>
-                    {% endif %}
-
-                    <!-- Buttons for Products -->
-                    <div class="flex items-center gap-3">
-                        <div class="cart-button-container" data-product-id="{{ product.id }}">
-                            {% if request.user.is_authenticated %}
-                                {% if product.id in user_cart_ids %}
-                                    <div class="cart-quantity-controls flex items-center gap-2">
-                                        <button class="decrease-btn px-2 py-1 bg-gray-200 rounded text-sm">-</button>
-                                        <span class="quantity font-semibold">{{ user_cart_quantities|get_item:product.id }}</span>
-                                        <button class="increase-btn px-2 py-1 bg-gray-200 rounded text-sm">+</button>
-                                    </div>
-                                {% else %}  
-                                    <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 add-to-cart-btn">
-                                        <svg width="16" height="16" viewBox="0 0 18 18">
-                                            <path d="M15.32 2.405H4.887C3 2.405 2.46.805 2.46.805L2.257.21C2.208.085 2.083 0 1.946 0H.336C.1 0-.064.24.024.46l.644 1.945L3.11 9.767c.047.137.175.23.32.23h8.418l-.493 1.958H3.768l.002.003c-.017 0-.033-.003-.05-.003-1.06 0-1.92.86-1.92 1.92s.86 1.92 1.92 1.92c.99 0 1.805-.75 1.91-1.712l5.55.076c.12.922.91 1.636 1.867 1.636 1.04 0 1.885-.844 1.885-1.885 0-.866-.584-1.593-1.38-1.814l2.423-8.832c.12-.433-.206-.86-.655-.86"
-                                                  fill="#fff"/>
-                                        </svg>
-                                        Add 
-                                    </button>
-                                {% endif %}
-                            {% else %}
-                                <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 show-login-modal">
-                                    Add  <svg width="16" height="16" viewBox="0 0 18 18">
-                                        <path d="M15.32 2.405H4.887C3 2.405 2.46.805 2.46.805L2.257.21C2.208.085 2.083 0 1.946 0H.336C.1 0-.064.24.024.46l.644 1.945L3.11 9.767c.047.137.175.23.32.23h8.418l-.493 1.958H3.768l.002.003c-.017 0-.033-.003-.05-.003-1.06 0-1.92.86-1.92 1.92s.86 1.92 1.92 1.92c.99 0 1.805-.75 1.91-1.712l5.55.076c.12.922.91 1.636 1.867 1.636 1.04 0 1.885-.844 1.885-1.885 0-.866-.584-1.593-1.38-1.814l2.423-8.832c.12-.433-.206-.86-.655-.86"
-                                              fill="#fff"/>
-                                    </svg>
-                                </button>
-                            {% endif %}
-                        </div>
-                        {% if request.user.is_authenticated %}
-                            {% if product.show_rfq or product.Both %}
-                                <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 open-rfq-modal"
-                                        data-product-id="{{ product.id }}"
-                                        data-product-name="{{ product.name }}"
-                                        data-product-price="{{ product.discounted_price|default:product.price|floatformat:2 }}"
-                                        data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
-                                        data-quantity="1">
-                                        <svg width="50" height="50" viewBox="0 0 24 24">
-                                            <path d="M4 3h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2Z" fill="#fff"/>
-                                            <path d="M8 7h8M8 11h6" stroke="#2874f0" stroke-width="1.5" stroke-linecap="round"/>
-                                        </svg>
-                                    RFQ 
-                                </button>
-                            {% endif %}
-                        {% endif %}
-                        {% if request.user.is_authenticated %}
-                            <span class="kt-wishlist-icon cursor-pointer"
-                                  data-kt-wishlist-toggle="true"
-                                  data-product-id="{{ product.id|default:'0' }}"
-                                  title="{% if product.id in user_wishlist_ids %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}">
-                                <i class="ki-solid ki-heart {% if product.id in user_wishlist_ids %}text-red-500{% endif %}"></i>
-                            </span>
-                        {% else %}
-                            <span class="kt-wishlist-icon cursor-pointer show-login-modal"
-                                  title="Login to Add to Wishlist">
-                                <i class="ki-solid ki-heart"></i>
-                            </span>
-                        {% endif %}
-                    </div>
-<!-- Additional Information for Products -->
-<div class="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
-    <h2 class="text-xl font-semibold text-gray-650 dark:text-white mb-3">Additional Information</h2>
-    <div id="additional-info-content" class="text-sm text-gray-650 dark:text-gray-300 space-y-2 max-h-36 overflow-hidden transition-all duration-300">
-
-        {% if product.supplier_sku %}
-        <p class="flex justify-between"><span class="font-semibold">SKU:</span> {{ product.supplier_sku }}</p>
-        {% endif %}
-
-        {% if product.category %}
-        <p class="flex justify-between"><span class="font-semibold">Category:</span> {{ product.category.name }}</p>
-        {% endif %}
-
-        {% if product.brand %}
-        <p class="flex justify-between"><span class="font-semibold">Brand:</span> {{ product.brand.name }}</p>
-        {% endif %}
-
-        {% if product.product_from %}
-        <p class="flex justify-between"><span class="font-semibold">Product From:</span> {{ product.product_from }}</p>
-        {% endif %}
-
-        {% if product.get_condition_display %}
-        <p class="flex justify-between"><span class="font-semibold">Condition:</span> {{ product.get_condition_display }}</p>
-        {% endif %}
-
-        {% if product.get_warranty_display and product.get_warranty_display != "None" %}
-        <p class="flex justify-between">
-            <span class="font-semibold">Warranty:</span> {{ product.get_warranty_display }}
-        </p>
-    {% endif %}
-    
-    {% if product.get_tag_display and product.get_tag_display != "None" %}
-        <p class="flex justify-between">
-            <span class="font-semibold">Tag:</span> {{ product.get_tag_display }}
-        </p>
-    {% endif %}
-    
-
-        {% if product.manufacture_date %}
-        <p class="flex justify-between"><span class="font-semibold">Manufacture Date:</span> {{ product.manufacture_date|date:"d M, Y" }}</p>
-        {% endif %}
-
-        {% if product.expiration_days %}
-        <p class="flex justify-between"><span class="font-semibold">Expiration Days:</span> {{ product.expiration_days }}</p>
-        {% endif %}
-
-        {% if product.delivery_time %}
-        <p class="flex justify-between"><span class="font-semibold">Delivery Time:</span> {{ product.delivery_time }} Days</p>
-        {% endif %}
-
-        {% if product.return_time_limit %}
-        <p class="flex justify-between"><span class="font-semibold">Return Time Limit:</span> {{ product.return_time_limit }} Days</p>
-        {% endif %}
-
-        {% if product.stock_quantity %}
-        <p class="flex justify-between"><span class="font-semibold">Available Stock:</span> {{ product.stock_quantity }}</p>
-        {% endif %}
-
-        {% if product.weight %}
-        <p class="flex justify-between"><span class="font-semibold">Weight:</span> {{ product.weight }} {{ product.weight_unit }}</p>
-        {% endif %}
-
-    </div>
-    <button id="toggle-additional-info" class="text-blue-600 dark:text-blue-400 font-semibold mt-2 hover:underline focus:outline-none" aria-expanded="false">
-        See More
-    </button>
-</div>
-
-
+                   
                     <!-- Ratings and Reviews Section  -->
-                    <div class="right-column-ratings">
+                   
                         <!-- Ratings Section -->
                         <div class="ratings-section">
                             <div class="ratings-header">
                                 <h3 style="font-size: 18px; font-weight: 600; color: #000000;">
-                                    RATINGS <span style="color:  #000000;">☆</span>
+                                    RATINGS <span style="color: #000000;">☆</span>
                                 </h3>
                                
                             </div>
@@ -1501,7 +1256,7 @@
                                     <div style="font-size: 38px; font-weight: 500; color: #0b7663; line-height: 1;">
                                         {{ average_rating|default:"0.0" }}★
                                     </div>
-                                    <div style="font-size: 15px; color:  #000000; margin-top: 6px;">
+                                    <div style="font-size: 15px; color: #000000; margin-top: 6px;">
                                         {{ total_reviews }} Verified Buyer{{ total_reviews|pluralize }}
                                     </div>
                                 </div>
@@ -1547,140 +1302,73 @@
                     {{ review.review|default:"No comment provided." }}
                 </p>
                 
-                {% if review.photo %}
                 <img src="{{ review.photo.url }}" 
-                     alt="Review Photo" 
-                     class="w-24 h-auto rounded mt-2 shadow-sm cursor-pointer review-photo" 
-                     data-full-image="{{ review.photo.url }}" 
-                     data-review="{{ review.review|default:'No comment provided.' }}" 
-                     data-rating="{{ review.rating }}" 
-                     data-username="{{ review.user.username }}" 
-                     data-date="{{ review.created_at|date:'d M Y' }}" 
-                     loading="lazy" />
-                {% endif %}
+                alt="Review Photo" 
+                class="w-16 h-auto rounded mt-2 shadow-sm cursor-pointer review-photo" 
+                data-full-image="{{ review.photo.url }}" 
+                data-review="{{ review.review|default:'No comment provided.' }}" 
+                data-rating="{{ review.rating }}" 
+                data-username="{{ review.user.username }}" 
+                data-date="{{ review.created_at|date:'d M Y' }}" 
+                loading="lazy" />
+           
                 <small class="text-gray-500 dark:text-gray-400">
                     {{ review.user.username }} | {{ review.created_at|date:"d M Y" }}
                 </small>
             </div>
         </div>
         {% endfor %}
-        {% if total_reviews > 2 %}
-        <div class="mt-4 text-center">
-            <a href="{% url 'dashboard:product_review_rating' product.pk %}"
-       class="inline-block px-4 py-2 text-blue-600 hover:text-blue-800 font-medium">
-        Show All Reviews ({{ total_reviews }})
-    </a>
+        <!-- Pagination Controls -->
+        {% if reviews.has_other_pages %}
+        <div class="flex justify-center items-center gap-2 mt-6">
+            {% if reviews.has_previous %}
+            <a href="?rpage={{ reviews.previous_page_number }}#reviews-section" 
+               class="px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600 text-sm">
+                Previous
+            </a>
+            {% else %}
+            <span class="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded text-   gray-400 text-sm cursor-not-allowed">
+                Previous
+            </span>
+            {% endif %}
+
+            <div class="flex gap-1">
+                {% for num in reviews.paginator.page_range %}
+                    {% if reviews.number == num %}
+                    <span class="px-3 py-1 bg-teal-600 text-white rounded text-sm font-bold">
+                        {{ num }}
+                    </span>
+                    {% elif num > reviews.number|add:'-3' and num < reviews.number|add:'3' %}
+                    <a href="?rpage={{ num }}#reviews-section" 
+                       class="px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600 text-sm">
+                        {{ num }}
+                    </a>
+                    {% endif %}
+                {% endfor %}
+            </div>
+
+            {% if reviews.has_next %}
+            <a href="?rpage={{ reviews.next_page_number }}#reviews-section" 
+               class="px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600 text-sm">
+                Next
+            </a>
+            {% else %}
+            <span class="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded text-gray-400 text-sm cursor-not-allowed">
+                Next
+            </span>
+            {% endif %}
         </div>
+        
+        <!-- Page Info -->
+        <p class="text-center text-sm text-gray-500 dark:text-gray-400 mt-2">
+            Showing {{ reviews.start_index }} - {{ reviews.end_index }} of {{ total_reviews }} reviews
+        </p>
         {% endif %}
     </div>
     {% else %}
     <p class="text-gray-500 mt-4">No reviews yet for this product.</p>
     {% endif %}
 </div>
-<br>
-
-                        
-                        <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
-
-
-
-                           <!-- Questions & Answers Section -->
-<div class="mt-6">
-    <div class="flex items-center justify-between mb-4">
-        <h4 class="text-lg font-semibold text-black dark:text-white">
-            Questions & Answers
-        </h4>
-    
-        {% if request.user.is_authenticated %}
-            <button id="openQuestionModal"
-                    class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700">
-                Post Your Question
-            </button>
-        {% endif %}
-    </div>
-    <div class="questions-list">
-        {% if questions %}
-            {% for q in questions %}
-            <div class="question-item">
-                <div class="question-badge">Q</div>
-                <div class="question-content">
-                    <p>{{ q.text|linebreaksbr }}</p>
-                    <small>{{ q.user.username|default:"User" }} 
-                        {% if q.user_id == request.user.id %}
-                            <span class="you-badge">You</span>
-                        {% endif %}
-                        • {{ q.created_at|date:"d M Y" }}
-                    </small>
-                    
-                    <!-- Answer Section -->
-                    {% if q.reply %}
-                    <div class="answer-section">
-                        <div class="flex gap-4">
-                            <div class="answer-badge">A</div>
-                            <div class="answer-content">
-                                <div class="answer-header">
-                                    <span>Supplier</span>
-                                    {% if q.replied_at %}
-                                    <small>• {{ q.replied_at|date:"d M Y" }}</small>
-                                    {% endif %}
-                                </div>
-                                <p>{{ q.reply|linebreaksbr }}</p>
-                            </div>
-                        </div>
-                    </div>
-                    {% else %}
-                    <div class="mt-2">
-                        <p class="text-gray-500 italic text-sm">
-                            <i class="ki-solid ki-time text-gray-400 mr-1"></i>
-                            No answer yet from the supplier.
-                        </p>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-            {% endfor %}
-            
-            <!-- Pagination -->
-            {% if questions.has_other_pages %}
-            <div class="questions-pagination">
-                {% if questions.has_previous %}
-                <a href="?qpage={{ questions.previous_page_number }}" class="text-blue-600 hover:underline">
-                    Previous
-                </a>
-                {% else %}
-                <span class="text-gray-400">Previous</span>
-                {% endif %}
-                
-                <span class="text-gray-600">
-                    Page {{ questions.number }} of {{ questions.paginator.num_pages }}
-                </span>
-                
-                {% if questions.has_next %}
-                <a href="?qpage={{ questions.next_page_number }}" class="text-blue-600 hover:underline">
-                    Next
-                </a>
-                {% else %}
-                <span class="text-gray-400">Next</span>
-                {% endif %}
-            </div>
-            {% endif %}
-            
-        {% else %}
-            <div class="no-questions">
-                <p class="text-sm text-gray-500">
-                    No questions yet. Be the first to ask!
-                </p>
-                {% if not request.user.is_authenticated %}
-                <p class="text-sm mt-2">
-                    <a href="{% url 'dashboard:login' %}" class="text-blue-600 hover:underline">Login</a> to ask a question
-                </p>
-                {% endif %}
-            </div>
-        {% endif %}
-    </div>
-</div>
-
- </div>
 
 
 
@@ -2050,27 +1738,11 @@
     </form>
   </div>
 </div>
-
 <script>
-    // CSRF Token
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-    const csrftoken = getCookie('csrftoken');
-
-    // Smooth scroll to reviews section on page load if rpage parameter exists
-    document.addEventListener('DOMContentLoaded', function() {
+    // ============================
+    // Smooth scroll to reviews section on pagination
+    // ============================
+    document.addEventListener('DOMContentLoaded', function () {
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.has('rpage')) {
             const reviewsSection = document.getElementById('reviews-section');
@@ -2082,339 +1754,31 @@
         }
     });
 
-    // Swiper Initialization
-    document.addEventListener("DOMContentLoaded", function () {
-        const thumbSwiper = new Swiper(".thumbSwiper", {
-            spaceBetween: 8,
-            slidesPerView: 'auto',
-            freeMode: true,
-            watchSlidesProgress: true,
-        });
-
-        new Swiper(".mainSwiper", {
-            spaceBetween: 10,
-            loop: true,
-            navigation: {
-                nextEl: ".swiper-button-next",
-                prevEl: ".swiper-button-prev",
-            },
-            thumbs: {
-                swiper: thumbSwiper,
-            },
-        });
-    });
-
-    // Additional Information Toggle
-    document.addEventListener('DOMContentLoaded', function() {
-        const content = document.getElementById('additional-info-content');
-        const btn = document.getElementById('toggle-additional-info');
-        if (content && btn) {
-            const collapsedHeight = '145px';
-            content.style.maxHeight = collapsedHeight;
-
-            btn.addEventListener('click', function () {
-                const isCollapsed = content.style.maxHeight === collapsedHeight;
-                if (isCollapsed) {
-                    content.style.maxHeight = content.scrollHeight + 'px';
-                    btn.textContent = 'See Less';
-                } else {
-                    content.style.maxHeight = collapsedHeight;
-                    btn.textContent = 'See More';
-                }
-            });
-        }
-    });
-
-    // Event Details Toggle
-    document.addEventListener('DOMContentLoaded', function() {
-        const eventContent = document.getElementById('event-details-content');
-        const eventBtn = document.getElementById('toggle-event-details');
-        if (eventContent && eventBtn) {
-            const collapsedHeight = '145px';
-            eventContent.style.maxHeight = collapsedHeight;
-
-            eventBtn.addEventListener('click', function () {
-                const isCollapsed = eventContent.style.maxHeight === collapsedHeight;
-                if (isCollapsed) {
-                    eventContent.style.maxHeight = eventContent.scrollHeight + 'px';
-                    eventBtn.textContent = 'See Less';
-                } else {
-                    eventContent.style.maxHeight = collapsedHeight;
-                    eventBtn.textContent = 'See More';
-                }
-            });
-        }
-    });
-
-     // Add to Cart with Event Delegation
-     document.addEventListener("DOMContentLoaded", () => {
-        // Update UI for a specific product
-        const updateProductUI = (productId, quantity) => {
-            const containers = document.querySelectorAll(`.cart-button-container[data-product-id="${productId}"]`);
-            containers.forEach(container => {
-                if (!container) return;
-
-                if (quantity > 0) {
-                    container.innerHTML = `
-                        <div class="cart-quantity-controls flex items-center gap-2">
-                            <button class="decrease-btn px-2 py-1 bg-gray-200 rounded text-sm">-</button>
-                            <span class="quantity font-semibold">${quantity}</span>
-                            <button class="increase-btn px-2 py-1 bg-gray-200 rounded text-sm">+</button>
-                        </div>
-                    `;
-                } else {
-                    container.innerHTML = `
-                        <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 add-to-cart-btn">
-                            Add  <svg width="16" height="16" viewBox="0 0 18 18">
-                                            <path d="M15.32 2.405H4.887C3 2.405 2.46.805 2.46.805L2.257.21C2.208.085 2.083 0 1.946 0H.336C.1 0-.064.24.024.46l.644 1.945L3.11 9.767c.047.137.175.23.32.23h8.418l-.493 1.958H3.768l.002.003c-.017 0-.033-.003-.05-.003-1.06 0-1.92.86-1.92 1.92s.86 1.92 1.92 1.92c.99 0 1.805-.75 1.91-1.712l5.55.076c.12.922.91 1.636 1.867 1.636 1.04 0 1.885-.844 1.885-1.885 0-.866-.584-1.593-1.38-1.814l2.423-8.832c.12-.433-.206-.86-.655-.86"
-                                                  fill="#fff"/>
-                                        </svg>
-                        </button>
-                    `;
-                }
-            });
-        };
-
-        // Event delegation for cart buttons
-        document.addEventListener('click', (e) => {
-            // Handle Add to Cart button
-            if (e.target.closest('.add-to-cart-btn')) {
-                e.preventDefault();
-                const container = e.target.closest('.cart-button-container');
-                const productId = container.dataset.productId;
-                updateCart(productId, 1);
-            }
-
-            // Handle Increase button
-            else if (e.target.closest('.increase-btn')) {
-                e.preventDefault();
-                const container = e.target.closest('.cart-button-container');
-                const productId = container.dataset.productId;
-                const quantityEl = container.querySelector('.quantity');
-                const qty = parseInt(quantityEl.innerText);
-                updateCart(productId, qty + 1);
-            }
-
-            // Handle Decrease button
-            else if (e.target.closest('.decrease-btn')) {
-                e.preventDefault();
-                const container = e.target.closest('.cart-button-container');
-                const productId = container.dataset.productId;
-                const quantityEl = container.querySelector('.quantity');
-                const qty = parseInt(quantityEl.innerText);
-                updateCart(productId, qty - 1);
-            }
-
-            // Handle Login modal buttons
-            else if (e.target.closest('.show-login-modal')) {
-                e.preventDefault();
-                openLoginModal();
-            }
-        });
-
-        // Update cart via AJAX
-        const updateCart = (productId, quantity) => {
-            fetch("{% url 'dashboard:update_cart_item' %}", {
-                method: "POST",
-                headers: {
-                    "X-CSRFToken": csrftoken,
-                    "Content-Type": "application/x-www-form-urlencoded",
-                },
-                body: new URLSearchParams({
-                    product_id: productId,
-                    quantity: quantity,
-                }),
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === "success") {
-                    updateProductUI(productId, data.quantity);
-                } else if (data.status === "removed") {
-                    updateProductUI(productId, 0);
-                } else if (data.status === "error" && data.message === "Authentication required") {
-                    openLoginModal();
-                } else {
-                    console.error('Cart update failed:', data.message);
-                }
-            })
-            .catch(err => console.error("Cart update error:", err));
-        };
-    });
-
-    // Wishlist Toggle
-    document.querySelectorAll('.kt-wishlist-icon').forEach(button => {
-        button.addEventListener('click', () => {
-            const productId = button.dataset.productId || '0';
-            fetch("{% url 'dashboard:toggle_wishlist' %}", {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': csrftoken,
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: `product_id=${productId}`
-            })
-            .then(response => {
-                if (response.status === 403) {
-                    alert('Please login to use wishlist.');
-                    window.location.href = '/login/';
-                    return;
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data) {
-                    const icon = button.querySelector('i');
-                    icon.classList.toggle('text-red-500', data.status === 'added');
-                }
-            })
-            .catch(error => console.error('Wishlist toggle error:', error));
-        });
-    });
-
-    // Login Required Modal
-    function openLoginModal() {
-        const modal = document.getElementById('loginRequiredModal');
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-        document.body.style.overflow = 'hidden';
-    }
-
-    function closeLoginModal() {
-        const modal = document.getElementById('loginRequiredModal');
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-        document.body.style.overflow = '';
-    }
-
-    // RFQ Modal
-    function closeRFQModal() {
-        const modal = document.getElementById('rfqModal');
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-        document.body.style.overflow = '';
-    }
-
-    // Event Registration Modal
-    function closeEventRegistrationModal() {
-        const modal = document.getElementById('eventRegistrationModal');
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-        document.body.style.overflow = '';
-    }
-
-    // Question Modal
-    function openQuestionModal() {
-        const modal = document.getElementById('questionModal');
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-        document.body.style.overflow = 'hidden';
-    }
-
-    function closeQuestionModal() {
-        const modal = document.getElementById('questionModal');
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-        document.body.style.overflow = '';
-    }
-
+    // ============================
+    // Review Image Modal
+    // ============================
     document.addEventListener('DOMContentLoaded', function () {
-        // Login Modal Handlers
-        document.querySelectorAll('.show-login-modal').forEach(button => {
-            button.addEventListener('click', function (e) {
-                e.preventDefault();
-                openLoginModal();
-            });
-        });
-
-        // RFQ Modal Handlers
-        document.querySelectorAll('.open-rfq-modal').forEach(button => {
-            button.addEventListener('click', function (e) {
-                e.preventDefault();
-                const productId = button.getAttribute('data-product-id');
-                const productName = button.getAttribute('data-product-name');
-                const companyName = button.getAttribute('data-company-name');
-                const quantity = button.getAttribute('data-quantity');
-
-                document.getElementById('rfqProductId').value = productId;
-                document.getElementById('rfqProductName').value = productName;
-                document.getElementById('rfqCompanyName').value = companyName;
-                document.getElementById('rfqQuantity').value = quantity;
-
-                const modal = document.getElementById('rfqModal');
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-                document.body.style.overflow = 'hidden';
-            });
-        });
-        
-        //loader
-        document.getElementById('rfqSubmitBtn').addEventListener('click', function(e) {
-            const btn = e.currentTarget;
-            const loader = btn.querySelector('.loader');
-            // Show loader
-            loader.style.display = 'inline-block';
-        });
-        
-        // Event Registration Modal Handlers
-        document.querySelectorAll('.open-event-registration-modal').forEach(button => {
-            button.addEventListener('click', function (e) {
-                e.preventDefault();
-                const productId = button.getAttribute('data-product-id');
-                const eventName = button.getAttribute('data-event-name');
-
-                document.getElementById('eventProductId').value = productId;
-                document.getElementById('eventName').value = eventName;
-
-                const modal = document.getElementById('eventRegistrationModal');
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-                document.body.style.overflow = 'hidden';
-            });
-        });
-        
-        //loader
-        document.getElementById('eventRegistrationSubmitBtn').addEventListener('click', function(e) {
-            const btn = e.currentTarget;
-            const loader = btn.querySelector('.loader');
-            // Show loader
-            loader.style.display = 'inline-block';
-        });
-
-        // Question Modal Handlers
-        document.getElementById('openQuestionModal').addEventListener('click', function (e) {
-            e.preventDefault();
-            openQuestionModal();
-        });
-    });
-    
-    //loader
-    document.getElementById('questionSubmitBtn').addEventListener('click', function(e) {
-        const btn = e.currentTarget;
-        const loader = btn.querySelector('.loader');
-        // Show loader
-        loader.style.display = 'inline-block';
-    });
-
-    // Image Modal Functionality
-    document.addEventListener('DOMContentLoaded', () => {
         const reviewPhotos = document.querySelectorAll('.review-photo');
         const imageModal = document.getElementById('imageModal');
         const modalImage = document.getElementById('modalImage');
         const modalInfo = document.getElementById('modalInfo');
+        const closeBtn = document.querySelector('#imageModal .kt-btn-ghost');
 
         reviewPhotos.forEach(photo => {
-            photo.addEventListener('click', () => {
+            photo.addEventListener('click', function () {
                 modalImage.src = photo.getAttribute('data-full-image');
+
                 const review = photo.getAttribute('data-review');
                 const rating = photo.getAttribute('data-rating');
                 const username = photo.getAttribute('data-username');
                 const date = photo.getAttribute('data-date');
 
                 modalInfo.innerHTML = `
-                    <div class="rating">${rating}★</div>
-                    <p>${review}</p>
-                    <small>${username} | ${date}</small>
+                    <div class="rating font-semibold mb-1">${rating}★</div>
+                    <p class="text-sm">${review}</p>
+                    <small class="text-gray-500">${username} | ${date}</small>
                 `;
+
                 imageModal.classList.remove('hidden');
                 imageModal.classList.add('flex');
                 document.body.style.overflow = 'hidden';
@@ -2429,134 +1793,17 @@
             modalInfo.innerHTML = '';
         }
 
-        imageModal.addEventListener('click', (e) => {
+        if (closeBtn) {
+            closeBtn.addEventListener('click', closeImageModal);
+        }
+
+        imageModal.addEventListener('click', function (e) {
             if (e.target === imageModal) {
                 closeImageModal();
             }
         });
-
-        document.querySelector('#imageModal .kt-btn-ghost').addEventListener('click', closeImageModal);
     });
 </script>
-<script>
-    document.getElementById('questionSubmitBtn').addEventListener('click', function (e) {
-        const questionText = document.getElementById('questionText');
-        const errorMsg = document.getElementById('questionTextError');
-    
-        // If empty → show error → stop form submission → hide loader
-        if (!questionText.value.trim()) {
-            e.preventDefault();  
-            errorMsg.classList.remove("hidden");
-            questionText.classList.add("border-red-500");
-    
-            // IMPORTANT: hide loader if already started
-            this.querySelector(".loader").style.display = "none";
-    
-            return false;
-        }
-    
-        // If valid → hide error + show loader
-        errorMsg.classList.add("hidden");
-        questionText.classList.remove("border-red-500");
-    
-        this.querySelector(".loader").style.display = "inline-block";
-    });
 
-document.addEventListener('DOMContentLoaded', function() {
-    const mainImage = document.getElementById('mainProductImage');
-    const prevBtn = document.getElementById('prevImageBtn');
-    const nextBtn = document.getElementById('nextImageBtn');
-    
-    const thumbnailItems = document.querySelectorAll('.thumbnail-item');
-    let currentIndex = 0;
-    
-    // Function to update main image
-    function updateMainImage(index) {
-        if (thumbnailItems.length === 0) return;
-        
-        // Ensure index is within bounds
-        if (index < 0) index = thumbnailItems.length - 1;
-        if (index >= thumbnailItems.length) index = 0;
-        
-        currentIndex = index;
-        
-        // Remove active class from all thumbnails
-        thumbnailItems.forEach(thumb => {
-            thumb.classList.remove('active');
-            const thumbImg = thumb.querySelector('img');
-            thumbImg.classList.remove('border-2', 'border-blue-500', 'ring-2', 'ring-blue-500');
-            thumbImg.classList.add('border', 'border-gray-300');
-        });
-        
-        // Add active class to current thumbnail
-        const currentThumb = thumbnailItems[currentIndex];
-        if (currentThumb) {
-            currentThumb.classList.add('active');
-            const thumbImg = currentThumb.querySelector('img');
-            thumbImg.classList.remove('border', 'border-gray-300');
-            thumbImg.classList.add('border-2', 'border-blue-500', 'ring-2', 'ring-blue-500');
-            
-            // Change main image
-            const newImageSrc = currentThumb.getAttribute('data-image');
-            if (newImageSrc && mainImage.src !== newImageSrc) {
-                mainImage.src = newImageSrc;
-                mainImage.alt = thumbImg.alt;
-            }
-        }
-    }
-    
-    // Initialize thumbnails click functionality
-    thumbnailItems.forEach((item, index) => {
-        item.addEventListener('click', function() {
-            currentIndex = index;
-            updateMainImage(currentIndex);
-        });
-    });
-    
-    // Initialize with first image active
-    if (thumbnailItems.length > 0) {
-        updateMainImage(0);
-    }
-    
-    // Previous button functionality
-    if (prevBtn) {
-        prevBtn.addEventListener('click', function() {
-            updateMainImage(currentIndex - 1);
-        });
-    }
-    
-    // Next button functionality
-    if (nextBtn) {
-        nextBtn.addEventListener('click', function() {
-            updateMainImage(currentIndex + 1);
-        });
-    }
-    
-    // Keyboard navigation
-    document.addEventListener('keydown', function(e) {
-        if (thumbnailItems.length === 0) return;
-        
-        if (e.key === 'ArrowLeft') {
-            updateMainImage(currentIndex - 1);
-        } else if (e.key === 'ArrowRight') {
-            updateMainImage(currentIndex + 1);
-        }
-    });
-    
-    // Auto-scroll thumbnails if needed
-    function scrollToActiveThumbnail() {
-        const activeThumb = document.querySelector('.thumbnail-item.active');
-        if (activeThumb) {
-            activeThumb.scrollIntoView({
-                behavior: 'smooth',
-                block: 'nearest',
-                inline: 'center'
-            });
-        }
-    }
-});
-
-    </script>
-    
     
 {% endblock %}
