@@ -335,7 +335,7 @@
     padding: 8px 16px;
     font-size: 1.2rem;
     height: 45px;
-    min-width: 150px;
+    min-width: 100px;
 }
 
 .add-to-cart-btn:hover {
@@ -352,7 +352,7 @@
     padding: 8px 16px;
     font-size: 1.2rem;
     height: 45px;
-    min-width: 150px;
+    min-width: 100px;
 }
 .cart-quantity-controls {
     background-color: #f0f9f7;
@@ -1369,7 +1369,7 @@
                                         <button class="increase-btn px-2 py-1 bg-gray-200 rounded text-sm">+</button>
                                     </div>
                                 {% else %}  
-                                    <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 add-to-cart-btn">
+                                    <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 add-to-cart-btn" style="min-width: 150px;">
                                         <svg width="16" height="16" viewBox="0 0 18 18">
                                             <path d="M15.32 2.405H4.887C3 2.405 2.46.805 2.46.805L2.257.21C2.208.085 2.083 0 1.946 0H.336C.1 0-.064.24.024.46l.644 1.945L3.11 9.767c.047.137.175.23.32.23h8.418l-.493 1.958H3.768l.002.003c-.017 0-.033-.003-.05-.003-1.06 0-1.92.86-1.92 1.92s.86 1.92 1.92 1.92c.99 0 1.805-.75 1.91-1.712l5.55.076c.12.922.91 1.636 1.867 1.636 1.04 0 1.885-.844 1.885-1.885 0-.866-.584-1.593-1.38-1.814l2.423-8.832c.12-.433-.206-.86-.655-.86"
                                                   fill="#fff"/>
@@ -1388,7 +1388,7 @@
                         </div>
                         {% if request.user.is_authenticated %}
                             {% if product.show_rfq or product.Both %}
-                                <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 open-rfq-modal"
+                                <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 open-rfq-modal" style="min-width: 150px;"
                                         data-product-id="{{ product.id }}"
                                         data-product-name="{{ product.name }}"
                                         data-product-price="{{ product.discounted_price|default:product.price|floatformat:2 }}"
@@ -1639,8 +1639,8 @@
                 </div>
             </div>
             {% endfor %}
-            
-            <!-- Pagination -->
+
+            {% comment %} <!-- Pagination -->
             {% if questions.has_other_pages %}
             <div class="questions-pagination">
                 {% if questions.has_previous %}
@@ -1664,7 +1664,7 @@
                 {% endif %}
             </div>
             {% endif %}
-            
+             {% endcomment %}
         {% else %}
             <div class="no-questions">
                 <p class="text-sm text-gray-500">
@@ -1689,6 +1689,13 @@
 
                     </div>
                 {% endif %}
+                <div class="mt-4 text-center">
+                    <a href="{% url 'dashboard:product_question' product.id %}">
+                        <button id="toggle-additional-info" class="text-blue-600 dark:text-blue-400 font-semibold mt-2 hover:underline focus:outline-none" aria-expanded="false">
+                            Show More
+                        </button>
+                    </a>
+                </div>
 
                 <!-- Event Details Section (Displayed only for events) -->
                 {% if product.category.name|lower == "conference" or product.category.name|lower == "webinar" or product.category.name|lower == "event" %}

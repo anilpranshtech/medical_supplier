@@ -1513,6 +1513,109 @@ class ProductReviewRatingView(DetailView):
 
         return context
 
+class ProductQuestionsView(TemplateView):
+    template_name = 'userdashboard/view/product_questions.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        pk = self.kwargs.get('pk')
+
+        if pk:
+            try:
+                product = Product.objects.select_related(
+                    'category', 'sub_category', 'last_category', 'brand', 'event'
+                ).get(id=pk)
+
+                main_img = ProductImage.objects.filter(product=product, is_main=True).first()
+                product.main_image = main_img.image.url if main_img else None
+                other_images = ProductImage.objects.filter(product=product).exclude(id=main_img.id if main_img else None)
+                reviews_qs = RatingReview.objects.filter(product=product).order_by('-created_at')
+                reviews_page_number = self.request.GET.get('rpage', 1)
+                reviews_paginator = Paginator(reviews_qs, 2) 
+                reviews_page = reviews_paginator.get_page(reviews_page_number)
+                
+                # rating_counts = {i: reviews_qs.filter(rating=i).count() for i in range(1, 6)}
+                # total_reviews = reviews_qs.count()
+                # avg_rating = reviews_qs.aggregate(avg=Avg('rating'))['avg'] or 0
+
+                # stock_status = ""
+                # if product.stock_quantity == 0:
+                #     stock_status = "Out of Stock"
+                # elif product.stock_quantity < 5:
+                #     stock_status = f"Hurry, only {product.stock_quantity} available"
+                # elif product.stock_quantity < 10:
+                #     stock_status = "Only a few available"
+
+                related_products = []
+                if product.category and product.category.name.lower() not in ['event', 'webinar', 'conference']:
+                    related_products = Product.objects.filter(
+                        last_category=product.last_category
+                    ).exclude(id=product.id).select_related('brand', 'last_category')[:4] 
+
+                    for related_product in related_products:
+                        main_img = ProductImage.objects.filter(product=related_product, is_main=True).first()
+                        related_product.main_image = main_img.image.url if main_img else None
+                user = self.request.user
+                chat_room_id = None
+                supplier = product.created_by
+                if user.is_authenticated and supplier:
+                    room, created = ChatRoom.objects.get_or_create(
+                        buyer=user,
+                        supplier= supplier,
+                        product=product,
+                        chat_type='buyer_supplier'
+                    )
+                    chat_room_id = room.id
+                    user_cart_ids = list(CartProduct.objects.filter(user=user).values_list('product_id', flat=True))
+                    user_cart_quantities = {
+                        item.product.id: item.quantity
+                        for item in CartProduct.objects.filter(user=user)
+                    }
+                    user_wishlist_ids = list(WishlistProduct.objects.filter(user=user).values_list('product_id', flat=True))
+                else:
+                    user_cart_ids = []
+                    user_cart_quantities = {}
+                    user_wishlist_ids = []
+                
+                event = product.event if hasattr(product, 'event') and product.event else None
+
+                # Questions pagination
+                questions_qs = (
+                    Question.objects
+                    .select_related('user')
+                    .filter(product=product)
+                    .order_by('-created_at')
+                )
+                page = self.request.GET.get("qpage", 1)
+                paginator = Paginator(questions_qs, 10)
+                questions_page = paginator.get_page(page)
+
+                context.update({
+                    'product': product,
+                    'other_images': other_images,
+                    'reviews': reviews_page, 
+                    # 'rating_counts': rating_counts,
+                    # 'total_reviews': total_reviews,
+                    # 'average_rating': round(avg_rating, 1),
+                    'user_cart_ids': user_cart_ids,
+                    'user_cart_quantities': user_cart_quantities, 
+                    'user_wishlist_ids': user_wishlist_ids,
+                    'event': event,
+                    "questions": questions_page, 
+                    # 'stock_status': stock_status,
+                    'related_products': related_products,  
+                    'chat_room_id': chat_room_id,
+                })
+
+            except Product.DoesNotExist:
+                context['product'] = None
+                context['other_images'] = []
+                context['event'] = None
+                context['related_products'] = [] 
+                context['chat_room_id'] = None
+
+
+        return context
 
 class EventRegistrationView(View):
     def post(self, request):

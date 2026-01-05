@@ -27,6 +27,8 @@ urlpatterns = [
     path('search-suggestions/', views.SearchSuggestionsView.as_view(), name='search_suggestions'),
     #productdetail
     path('product-detail/<int:pk>/', views.ProductDetailsView.as_view(), name='product_detail'),
+    path('product-questions/<int:pk>/', views.ProductQuestionsView.as_view(), name='product_question'),
+
     path('productrating/<int:pk>/', views.ProductReviewRatingView.as_view(), name='product_review_rating'),
     #event
     path('product/<int:pk>/registrations/', EventRegisteredDataView.as_view(), name='event_registered_data'),

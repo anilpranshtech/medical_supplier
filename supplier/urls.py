@@ -35,7 +35,7 @@ urlpatterns = [
     path('cart/products', CartProductsView.as_view(), name='cart_product_list'),
     path("cart/update-quantity/", UpdateCartQuantityView.as_view(), name="update_cart_quantity"),
     path("cart/delete-item/", DeleteCartItemView.as_view(), name="delete_cart_item"),
-    path('supplier/login/', AdminloginView.as_view(), name='admin_login'),
+    # path('supplier/login/', AdminloginView.as_view(), name='admin_login'),
     path('logout/', LogoutView.as_view(), name='admin_logout'),
     
     # user profile
