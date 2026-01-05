@@ -217,7 +217,7 @@
                                 <div id="couponMessage"></div>
                             </div>
                             <div class="modal-footer">
-                                <button type="button" id="saveCoupon" class="btn btn-primary btn-with-loader">Save</button>
+                                <button type="button" id="saveCoupon" class="btn btn-primary ">Save</button>
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                             </div>
                         </div>
@@ -312,7 +312,7 @@
                                 <div id="editCouponMessage"></div>
                             </div>
                             <div class="modal-footer">
-                                <button type="button" id="updateCoupon" class="btn btn-primary btn-with-loader">Update</button>
+                                <button type="button" id="updateCoupon" class="btn btn-primary ">Update</button>
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                             </div>
                         </div>
@@ -347,11 +347,9 @@
 
 {% block page_only_scripts %}
 {% include "superuser/pages/filters/filter_created_date_range_picker_js.html" %}
-<script src="{% static 'js/buttonLoader.js' %}"></script>
 
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
 <script>
     document.addEventListener("DOMContentLoaded", function(){
         $('.select2').select2({width: '100%', placeholder: "Search and select", allowClear: false});
@@ -409,44 +407,40 @@
                 errorFound = true; 
             }
     
-         // DateTime validation
-const startDateTimeInput = form.querySelector('[name="start_datetime"]');
-const endDateTimeInput = form.querySelector('[name="end_datetime"]');
+            // DateTime validation
+            const startDateTimeInput = form.querySelector('[name="start_datetime"]');
+            const endDateTimeInput = form.querySelector('[name="end_datetime"]');
 
-const startDateTime = startDateTimeInput?.value;
-const endDateTime = endDateTimeInput?.value;
+            const startDateTime = startDateTimeInput?.value;
+            const endDateTime = endDateTimeInput?.value;
 
-const now = new Date();
-now.setSeconds(0, 0); // normalize seconds for comparison
+            const now = new Date();
+            now.setSeconds(0, 0);
 
-if (startDateTime) {
-    const start = new Date(startDateTime);
+            if (startDateTime) {
+                const start = new Date(startDateTime);
+                if (start < now) {
+                    showError(startDateTimeInput, "Start Date & Time cannot be in the past.");
+                    errorFound = true;
+                }
+            }
 
-    if (start < now) {
-        showError(startDateTimeInput, "Start Date & Time cannot be in the past.");
-        errorFound = true;
-    }
-}
+            if (endDateTime) {
+                const end = new Date(endDateTime);
+                if (end < now) {
+                    showError(endDateTimeInput, "End Date & Time cannot be in the past.");
+                    errorFound = true;
+                }
+            }
 
-if (endDateTime) {
-    const end = new Date(endDateTime);
-
-    if (end < now) {
-        showError(endDateTimeInput, "End Date & Time cannot be in the past.");
-        errorFound = true;
-    }
-}
-
-if (startDateTime && endDateTime) {
-    const start = new Date(startDateTime);
-    const end = new Date(endDateTime);
-
-    if (end <= start) {
-        showError(endDateTimeInput, "End Date & Time must be after Start Date & Time.");
-        errorFound = true;
-    }
-}
-
+            if (startDateTime && endDateTime) {
+                const start = new Date(startDateTime);
+                const end = new Date(endDateTime);
+                if (end <= start) {
+                    showError(endDateTimeInput, "End Date & Time must be after Start Date & Time.");
+                    errorFound = true;
+                }
+            }
     
             // Select2 validation
             const productSelect = form.querySelector('[name="product_ids[]"]');
@@ -463,13 +457,29 @@ if (startDateTime && endDateTime) {
     
             return !errorFound;
         }
+        
+        // Show loader on button
+        function showLoader(button) {
+            button.disabled = true;
+            button.dataset.originalText = button.innerHTML;
+            button.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Loading...';
+        }
+        
+        // Hide loader on button
+        function hideLoader(button) {
+            button.disabled = false;
+            if (button.dataset.originalText) {
+                button.innerHTML = button.dataset.originalText;
+            }
+        }
     
         // Generic form submit handler
-        function handleSubmit(formId, url, targetMsgId=null) {
+        function handleSubmit(formId, url, buttonId, targetMsgId=null) {
             const form = document.getElementById(formId);
+            const button = document.getElementById(buttonId);
             const targetMsg = targetMsgId ? document.getElementById(targetMsgId) : document.getElementById('couponMessage');
-            
             if (!validateCouponForm(form)) return;
+            showLoader(button);
     
             const data = new FormData(form);
             fetch(url, {
@@ -479,6 +489,7 @@ if (startDateTime && endDateTime) {
             })
             .then(response => response.json())
             .then(data => {
+                hideLoader(button);
                 if (data.status === 'success') {
                     if (targetMsg) targetMsg.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
                     setTimeout(() => location.reload(), 1000);
@@ -487,12 +498,13 @@ if (startDateTime && endDateTime) {
                 }
             })
             .catch(error => {
+                hideLoader(button);
                 if (targetMsg) targetMsg.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
             });
         }
         
         document.getElementById('saveCoupon').addEventListener('click', function(){
-            handleSubmit('couponForm', "{% url 'superuser:coupons' %}");
+            handleSubmit('couponForm', "{% url 'superuser:coupons' %}", 'saveCoupon');
         });
         
         document.querySelectorAll('.editCouponBtn').forEach(btn => {
@@ -543,7 +555,7 @@ if (startDateTime && endDateTime) {
         });
     
         document.getElementById('updateCoupon').addEventListener('click', function(){
-            handleSubmit('editCouponForm', "{% url 'supplier:edit_coupon' %}", 'editCouponMessage');
+            handleSubmit('editCouponForm', "{% url 'supplier:edit_coupon' %}", 'updateCoupon', 'editCouponMessage');
         });
     
         document.querySelectorAll('.deleteCouponBtn').forEach(btn => {
@@ -559,6 +571,9 @@ if (startDateTime && endDateTime) {
         document.getElementById('confirmDeleteCoupon').addEventListener('click', function(){
             const couponId = document.getElementById('delete_coupon_id').value;
             const msgBox = document.getElementById('deleteCouponMessage');
+            const button = this;
+            
+            showLoader(button);
     
             fetch("{% url 'superuser:delete_coupon' %}", {
                 method: 'POST',
@@ -570,6 +585,7 @@ if (startDateTime && endDateTime) {
             })
             .then(response => response.json())
             .then(data => {
+                hideLoader(button);
                 if (data.status === 'success') {
                     msgBox.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
                     setTimeout(() => location.reload(), 1000);
@@ -578,6 +594,7 @@ if (startDateTime && endDateTime) {
                 }
             })
             .catch(error => {
+                hideLoader(button);
                 msgBox.innerHTML = `<div class="alert alert-danger">Error deleting coupon: ${error.message}</div>`;
             });
         });

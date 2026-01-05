@@ -15,7 +15,7 @@ from dashboard.models import (
     SEOSettings, FaqForm, Warranty, ReturnReason, Theme, AdminUser, Department, SupplierType,
     DynamicInput, FormControl, SplashScreen, ShippingMethod, Coupon, BuyXGetYPromotion,
     BuyXGiftYPromotion, BasketPromotion, VacationRequest, RFQComment, TopSupplier, UserLogs,
-    ChatMessage, ChatRoom, CustomerPayment, UserCardsAndSubscriptions, UserBillingAddress
+    ChatMessage, ChatRoom, CustomerPayment, UserCardsAndSubscriptions, UserBillingAddress,StripeSubscriptions
 )
 
 
@@ -207,23 +207,23 @@ class UserBillingAddressAdmin(admin.ModelAdmin):
     )
 
 
-@admin.register(UserCardsAndSubscriptions)
-class UserCardsAndSubscriptionsAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'stripe_customer_id', 'stripe_payment_method_id', 'subscription_status', 'active_subscription_price_id')
-    list_filter = ('subscription_status',)
-    search_fields = ('user__username', 'user__email', 'stripe_customer_id', 'stripe_payment_method_id', 'stripe_subscription_id', 'active_subscription_price_id')
-    readonly_fields = ()
-    fieldsets = (
-        ('User Information', {
-            'fields': ('user',)
-        }),
-        ('Stripe Information', {
-            'fields': ('stripe_customer_id', 'stripe_payment_method_id')
-        }),
-        ('Subscription Information', {
-            'fields': ('stripe_subscription_id', 'active_subscription_price_id', 'subscription_status')
-        }),
-    )
+# @admin.register(UserCardsAndSubscriptions)
+# class UserCardsAndSubscriptionsAdmin(admin.ModelAdmin):
+#     list_display = ('id', 'user', 'stripe_customer_id', 'stripe_payment_method_id', 'subscription_status', 'active_subscription_price_id')
+#     list_filter = ('subscription_status',)
+#     search_fields = ('user__username', 'user__email', 'stripe_customer_id', 'stripe_payment_method_id', 'stripe_subscription_id', 'active_subscription_price_id')
+#     readonly_fields = ()
+#     fieldsets = (
+#         ('User Information', {
+#             'fields': ('user',)
+#         }),
+#         ('Stripe Information', {
+#             'fields': ('stripe_customer_id', 'stripe_payment_method_id')
+#         }),
+#         ('Subscription Information', {
+#             'fields': ('stripe_subscription_id', 'active_subscription_price_id', 'subscription_status')
+#         }),
+#     )
 
 
 @admin.register(RoleRequest)
@@ -422,7 +422,7 @@ admin.site.register(TopSupplier)
 admin.site.register(UserLogs)
 admin.site.register(ChatMessage)
 admin.site.register(ChatRoom)
-
+admin.site.register(StripeSubscriptions)
 
 @admin.register(CustomerPayment)
 class CustomerPaymentAdmin(admin.ModelAdmin):
@@ -431,3 +431,23 @@ class CustomerPaymentAdmin(admin.ModelAdmin):
     search_fields = ('user__username', 'user__email', 'stripe_charge_id')
     readonly_fields = ('timestamp',)
     ordering = ('-timestamp',)
+@admin.register(UserCardsAndSubscriptions)
+class UserCardsAndSubscriptionsAdmin(admin.ModelAdmin):
+    list_display = [
+        'user', 'subscription_status', 'active_subscription_price_id',
+        'subscriptions_credits_number_checks', 'subscriptions_period_end'
+    ]
+    list_filter = ['subscription_status', 'is_custom_subscription', 'plan_duration']
+    search_fields = [
+        'user__username', 'user__email', 
+        'stripe_customer_id', 'stripe_subscription_id'
+    ]
+    readonly_fields = ['created_at', 'updated_at']
+    autocomplete_fields = ['user']
+    
+    fieldsets = (
+        ('User Information', {'fields': ('user',)}),
+        ('Stripe IDs', {'fields': ( 'stripe_customer_id', 'stripe_payment_method_id','stripe_subscription_id','active_subscription_price_id')}),
+        ('Subscription Details', {'fields': ('subscription_status','plan_duration','is_custom_subscription','subscriptions_period_start','subscriptions_period_end')}),
+        ('Credits', {'fields': ('subscriptions_credits_number_checks','subscriptions_offer_credits_number_checks', 'last_credit_reset_date')}),
+        ('Timestamps', {'fields': ('created_at', 'updated_at'),'classes': ('collapse',)}),)

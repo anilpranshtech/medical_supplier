@@ -203,7 +203,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" id="saveAddPromotionBtn" class="btn btn-primary btn-with-loader">Save</button>
+        <button type="button" id="saveAddPromotionBtn" class="btn btn-primary ">Save</button>
       </div>
     </div>
   </div>
@@ -283,7 +283,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" id="saveEditPromotionBtn" class="btn btn-primary btn-with-loader">Save</button>
+        <button type="button" id="saveEditPromotionBtn" class="btn btn-primary ">Save</button>
       </div>
     </div>
   </div>
@@ -312,213 +312,327 @@
 
 {% block page_only_scripts %}
 {% include "superuser/pages/filters/filter_created_date_range_picker_js.html" %}
-<script src="{% static 'js/buttonLoader.js' %}"></script>
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-  const addModal  = new bootstrap.Modal(document.getElementById('promotionAddModal'));
-  const editModal = new bootstrap.Modal(document.getElementById('promotionEditModal'));
-  const delModal  = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
-  const alertBox  = document.getElementById('alertBox');
-
-  function showAlert(msg, type = 'success') {
-    alertBox.textContent = msg;
-    alertBox.className = `alert alert-${type} mt-3`;
-    alertBox.classList.remove('d-none');
-    setTimeout(() => alertBox.classList.add('d-none'), 3000);
-  }
-
-  function showFieldError(input, msg) {
-    clearFieldError(input);
-    const el = document.createElement('div');
-    el.className = 'text-danger mt-1 small';
-    el.textContent = msg;
-    input.closest('.col-md-6, .col-md-12').appendChild(el);
-  }
-  function clearFieldError(input) {
-    const parent = input.closest('.col-md-6, .col-md-12');
-    if (!parent) return;
-    parent.querySelectorAll('.text-danger.small').forEach(e => e.remove());
-  }
-
-  $('.select2').select2({ width: '100%', allowClear: true });
-
-  // Open Add Modal
-  document.getElementById('addPromotionBtn').addEventListener('click', () => {
-    document.getElementById('addPromotionForm').reset();
-    $('.select2').val(null).trigger('change');
-    addModal.show();
-  });
-
-  // Date Validation
-  function validateDates(start, end) {
-    const now = new Date();
-    const s = new Date(start.value);
-    const e = new Date(end.value);
-    let ok = true;
-    clearFieldError(start); clearFieldError(end);
-    if (!start.value) { showFieldError(start, 'Start date is required'); ok = false; }
-    if (!end.value)   { showFieldError(end,   'End date is required');   ok = false; }
-    if (s < now)      { showFieldError(start, 'Start cannot be in the past'); ok = false; }
-    if (e < now)      { showFieldError(end,   'End cannot be in the past');   ok = false; }
-    if (e <= s)       { showFieldError(end,   'End must be after start');     ok = false; }
-    return ok;
-  }
-
-  function validateForm(form) {
-    let valid = true;
-    form.querySelectorAll('.text-danger').forEach(el => el.remove());
-
-    const productType = form.querySelector('[name="product_type"]');
-    const title       = form.querySelector('[name="title_en"]');
-    const timeLimit   = form.querySelector('[name="time_limit"]');
-    const desc        = form.querySelector('[name="description_en"]');
-    const supplier    = $(form).find('[name="supplier"]');
-    const product     = $(form).find('[name="product"]');
-    const start       = form.querySelector('[name="start_datetime"]');
-    const end         = form.querySelector('[name="end_datetime"]');
-
-    if (!productType.value) { showFieldError(productType, 'Select product type'); valid = false; }
-    if (!title.value.trim()) { showFieldError(title, 'Title is required'); valid = false; }
-    if (!timeLimit.value.trim()) { showFieldError(timeLimit, 'Time limit is required'); valid = false; }
-    if (!desc.value.trim()) { showFieldError(desc, 'Description is required'); valid = false; }
-
-    if (!supplier.val() || supplier.val().length === 0) {
-      const el = supplier.next('.select2');
-      if (el.length) el.after('<div class="text-danger mt-1 small">Select at least one supplier</div>');
-      valid = false;
+  document.addEventListener("DOMContentLoaded", function () {
+    const addModal  = new bootstrap.Modal(document.getElementById('promotionAddModal'));
+    const editModal = new bootstrap.Modal(document.getElementById('promotionEditModal'));
+    const delModal  = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+    const alertBox  = document.getElementById('alertBox');
+  
+    function showAlert(msg, type = 'success') {
+      alertBox.textContent = msg;
+      alertBox.className = `alert alert-${type} mt-3`;
+      alertBox.classList.remove('d-none');
+      setTimeout(() => alertBox.classList.add('d-none'), 3000);
     }
-    if (!product.val() || product.val().length === 0) {
-      const el = product.next('.select2');
-      if (el.length) el.after('<div class="text-danger mt-1 small">Select at least one product</div>');
-      valid = false;
+  
+    // Show loader on button
+    function showLoader(button) {
+      button.disabled = true;
+      button.dataset.originalText = button.innerHTML;
+      button.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Loading...';
     }
-
-    if (!validateDates(start, end)) valid = false;
-
-    return valid;
-  }
-
-  // ADD Promotion
-  document.getElementById('saveAddPromotionBtn').addEventListener('click', () => {
-    const form = document.getElementById('addPromotionForm');
-    if (!validateForm(form)) return;
-
-    const fd = new FormData(form);
-    const fmt = d => d.toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'});
-    fd.append('promotion_period', `${fmt(new Date(fd.get('start_datetime')))} - ${fmt(new Date(fd.get('end_datetime')))}`);
-
-    fetch("{% url 'superuser:add_basket_promotion' %}", {
-      method: 'POST',
-      headers: { 'X-CSRFToken': '{{ csrf_token }}' },
-      body: fd
-    })
-    .then(r => r.json())
-    .then(res => {
-      if (res.success) {
-        addModal.hide();
-        showAlert('Promotion added successfully!', 'success');
-        setTimeout(() => location.reload(), 1200);
-      } else {
-        showAlert(res.msg || 'Failed to save', 'danger');
+  
+    // Hide loader on button
+    function hideLoader(button) {
+      button.disabled = false;
+      if (button.dataset.originalText) {
+        button.innerHTML = button.dataset.originalText;
       }
-    })
-    .catch(() => showAlert('Network error', 'danger'));
-  });
-
-  // EDIT Promotion
-  document.querySelectorAll('.edit-promo-btn').forEach(btn => {
-    btn.addEventListener('click', function () {
-      const id = this.dataset.id;
-      document.getElementById('promoIdField').value = id;
-
-      fetch("{% url 'superuser:edit_basket_promotion' 0 %}".replace('0', id))
-        .then(r => r.json())
-        .then(res => {
-          if (!res.success) return showAlert(res.msg || 'Failed to load', 'danger');
-          const d = res.data;
-
-          $('#productType').val(d.product_type);
-          $('#titleInput').val(d.title_en);
-          $('#timeLimitInput').val(d.time_limit);
-          $('#descInput').val(d.description_en);
-          $('#startInput').val(d.start_datetime);
-          $('#endInput').val(d.end_datetime);
-          $('#supplierSelect').val(d.supplier).trigger('change');
-          $('#productSelect').val(d.product).trigger('change');
-
-          const imgDiv = document.getElementById('currentImage');
-          if (d.main_image_url) {
-            imgDiv.innerHTML = `<img src="${d.main_image_url}" class="img-fluid rounded mt-2" style="max-height:120px;">`;
-          } else {
-            imgDiv.innerHTML = '<small class="text-muted">No image uploaded</small>';
+    }
+  
+    function showFieldError(input, msg) {
+      clearFieldError(input);
+      const el = document.createElement('div');
+      el.className = 'text-danger mt-1 small';
+      el.textContent = msg;
+      input.closest('.col-md-6, .col-md-12').appendChild(el);
+    }
+  
+    function clearFieldError(input) {
+      const parent = input.closest('.col-md-6, .col-md-12');
+      if (!parent) return;
+      parent.querySelectorAll('.text-danger.small').forEach(e => e.remove());
+    }
+  
+    function clearAllErrors(form) {
+      form.querySelectorAll('.text-danger.small').forEach(e => e.remove());
+    }
+  
+    $('.select2').select2({ width: '100%', allowClear: true });
+  
+    // Open Add Modal
+    document.getElementById('addPromotionBtn').addEventListener('click', () => {
+      const form = document.getElementById('addPromotionForm');
+      form.reset();
+      $('.select2').val(null).trigger('change');
+      clearAllErrors(form);
+      addModal.show();
+    });
+  
+    // Date Validation
+    function validateDates(start, end) {
+      const now = new Date();
+      now.setSeconds(0, 0);
+      const s = new Date(start.value);
+      const e = new Date(end.value);
+      let ok = true;
+      clearFieldError(start); 
+      clearFieldError(end);
+  
+      if (!start.value) { 
+        showFieldError(start, 'Start Date & Time is required'); 
+        ok = false; 
+      } else if (s < now) { 
+        showFieldError(start, 'Start Date & Time cannot be in the past'); 
+        ok = false; 
+      }
+  
+      if (!end.value) { 
+        showFieldError(end, 'End Date & Time is required'); 
+        ok = false; 
+      } else if (e < now) { 
+        showFieldError(end, 'End Date & Time cannot be in the past'); 
+        ok = false; 
+      }
+  
+      if (start.value && end.value && e <= s) { 
+        showFieldError(end, 'End Date & Time must be after Start Date & Time'); 
+        ok = false; 
+      }
+  
+      return ok;
+    }
+  
+    function validateForm(form) {
+      let valid = true;
+      clearAllErrors(form);
+  
+      const productType = form.querySelector('[name="product_type"]');
+      const title       = form.querySelector('[name="title_en"]');
+      const timeLimit   = form.querySelector('[name="time_limit"]');
+      const desc        = form.querySelector('[name="description_en"]');
+      const supplier    = $(form).find('[name="supplier"]');
+      const product     = $(form).find('[name="product"]');
+      const start       = form.querySelector('[name="start_datetime"]');
+      const end         = form.querySelector('[name="end_datetime"]');
+  
+      // Product Type validation
+      if (!productType.value) { 
+        showFieldError(productType, 'Product Type is required'); 
+        valid = false; 
+      }
+  
+      // Title validation
+      if (!title.value.trim()) { 
+        showFieldError(title, 'Title is required'); 
+        valid = false; 
+      }
+  
+      // Time Limit validation
+      if (!timeLimit.value.trim()) { 
+        showFieldError(timeLimit, 'Time Limit is required'); 
+        valid = false; 
+      }
+  
+      // Description validation
+      if (!desc.value.trim()) { 
+        showFieldError(desc, 'Description is required'); 
+        valid = false; 
+      }
+      const supplierHidden = form.querySelector('[name="supplier"][type="hidden"]');
+      if (!supplierHidden) {
+        if (!supplier.val() || supplier.val().length === 0) {
+          const el = supplier.next('.select2');
+          if (el.length) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'text-danger mt-1 small';
+            errorDiv.textContent = 'Select at least one supplier';
+            el.after(errorDiv);
           }
-
-          editModal.show();
-        })
-        .catch(() => showAlert('Error loading promotion', 'danger'));
+          valid = false;
+        }
+      }
+  
+      // Product validation
+      if (!product.val() || product.val().length === 0) {
+        const el = product.next('.select2');
+        if (el.length) {
+          const errorDiv = document.createElement('div');
+          errorDiv.className = 'text-danger mt-1 small';
+          errorDiv.textContent = 'Select at least one product';
+          el.after(errorDiv);
+        }
+        valid = false;
+      }
+  
+      // Date validation
+      if (!validateDates(start, end)) {
+        valid = false;
+      }
+  
+      return valid;
+    }
+  
+    // ADD Promotion
+    document.getElementById('saveAddPromotionBtn').addEventListener('click', function() {
+      const form = document.getElementById('addPromotionForm');
+      const button = this;
+      if (!validateForm(form)) return;
+      showLoader(button);
+  
+      const fd = new FormData(form);
+      const fmt = d => d.toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'});
+      fd.append('promotion_period', `${fmt(new Date(fd.get('start_datetime')))} - ${fmt(new Date(fd.get('end_datetime')))}`);
+  
+      fetch("{% url 'superuser:add_basket_promotion' %}", {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+        body: fd
+      })
+      .then(r => r.json())
+      .then(res => {
+        hideLoader(button);
+        if (res.success) {
+          addModal.hide();
+          showAlert('Promotion added successfully!', 'success');
+          setTimeout(() => location.reload(), 1200);
+        } else {
+          showAlert(res.msg || 'Failed to save promotion', 'danger');
+        }
+      })
+      .catch(() => {
+        hideLoader(button);
+        showAlert('Network error occurred', 'danger');
+      });
+    });
+  
+    // EDIT Promotion
+    document.querySelectorAll('.edit-promo-btn').forEach(btn => {
+      btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        const id = this.dataset.id;
+        const button = this;
+        
+        // Show loader on edit button
+        showLoader(button);
+  
+        const form = document.getElementById('editPromotionForm');
+        clearAllErrors(form);
+        document.getElementById('promoIdField').value = id;
+  
+        fetch("{% url 'superuser:edit_basket_promotion' 0 %}".replace('0', id))
+          .then(r => r.json())
+          .then(res => {
+            hideLoader(button);
+            if (!res.success) {
+              showAlert(res.msg || 'Failed to load promotion', 'danger');
+              return;
+            }
+            const d = res.data;
+  
+            $('#productType').val(d.product_type);
+            $('#titleInput').val(d.title_en);
+            $('#timeLimitInput').val(d.time_limit);
+            $('#descInput').val(d.description_en);
+            $('#startInput').val(d.start_datetime);
+            $('#endInput').val(d.end_datetime);
+            if (document.getElementById('supplierSelect')) {
+              $('#supplierSelect').val(d.supplier).trigger('change');
+            }
+  
+            $('#productSelect').val(d.product).trigger('change');
+  
+            const imgDiv = document.getElementById('currentImage');
+            if (d.main_image_url) {
+              imgDiv.innerHTML = `<img src="${d.main_image_url}" class="img-fluid rounded mt-2" style="max-height:120px;">`;
+            } else {
+              imgDiv.innerHTML = '<small class="text-muted">No image uploaded</small>';
+            }
+  
+            editModal.show();
+          })
+          .catch(() => {
+            hideLoader(button);
+            showAlert('Error loading promotion data', 'danger');
+          });
+      });
+    });
+  
+    // SAVE EDIT
+    document.getElementById('saveEditPromotionBtn').addEventListener('click', function() {
+      const form = document.getElementById('editPromotionForm');
+      const button = this;
+      const id = document.getElementById('promoIdField').value;
+      if (!validateForm(form)) return;
+      showLoader(button);
+  
+      const fd = new FormData(form);
+      const fmt = d => d.toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'});
+      fd.append('promotion_period', `${fmt(new Date(fd.get('start_datetime')))} - ${fmt(new Date(fd.get('end_datetime')))}`);
+  
+      fetch("{% url 'superuser:edit_basket_promotion' 0 %}".replace('0', id), {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+        body: fd
+      })
+      .then(r => r.json())
+      .then(res => {
+        hideLoader(button);
+        if (res.success) {
+          editModal.hide();
+          showAlert('Promotion updated successfully!', 'success');
+          setTimeout(() => location.reload(), 1200);
+        } else {
+          showAlert(res.msg || 'Update failed', 'danger');
+        }
+      })
+      .catch(() => {
+        hideLoader(button);
+        showAlert('Network error occurred', 'danger');
+      });
+    });
+  
+    // DELETE Promotion
+    let deleteId = null;
+    document.querySelectorAll('.delete-promo-btn').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.preventDefault();
+        deleteId = btn.dataset.id;
+        delModal.show();
+      });
+    });
+  
+    document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+      if (!deleteId) return;
+  
+      const button = this;
+      showLoader(button);
+  
+      fetch("{% url 'superuser:delete_basket_promotion' 0 %}".replace('0', deleteId), {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+      })
+      .then(r => r.json())
+      .then(res => {
+        hideLoader(button);
+        delModal.hide();
+        if (res.success) {
+          showAlert('Promotion deleted successfully!', 'danger');
+          setTimeout(() => location.reload(), 1000);
+        } else {
+          showAlert('Delete failed', 'danger');
+        }
+      })
+      .catch(() => {
+        hideLoader(button);
+        delModal.hide();
+        showAlert('Network error occurred', 'danger');
+      });
     });
   });
-
-  // SAVE EDIT
-  document.getElementById('saveEditPromotionBtn').addEventListener('click', () => {
-    const form = document.getElementById('editPromotionForm');
-    const id = document.getElementById('promoIdField').value;
-    if (!validateForm(form)) return;
-
-    const fd = new FormData(form);
-    const fmt = d => d.toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'});
-    fd.append('promotion_period', `${fmt(new Date(fd.get('start_datetime')))} - ${fmt(new Date(fd.get('end_datetime')))}`);
-
-    fetch("{% url 'superuser:edit_basket_promotion' 0 %}".replace('0', id), {
-      method: 'POST',
-      headers: { 'X-CSRFToken': '{{ csrf_token }}' },
-      body: fd
-    })
-    .then(r => r.json())
-    .then(res => {
-      if (res.success) {
-        editModal.hide();
-        showAlert('Promotion updated successfully!', 'success');
-        setTimeout(() => location.reload(), 1200);
-      } else {
-        showAlert(res.msg || 'Update failed', 'danger');
-      }
-    })
-    .catch(() => showAlert('Network error', 'danger'));
-  });
-
-  // DELETE Promotion
-  let deleteId = null;
-  document.querySelectorAll('.delete-promo-btn').forEach(btn => {
-    btn.addEventListener('click', e => {
-      e.preventDefault();
-      deleteId = btn.dataset.id;
-      delModal.show();
-    });
-  });
-
-  document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
-    if (!deleteId) return;
-
-    fetch("{% url 'superuser:delete_basket_promotion' 0 %}".replace('0', deleteId), {
-      method: 'POST',
-      headers: { 'X-CSRFToken': '{{ csrf_token }}' }
-    })
-    .then(r => r.json())
-    .then(res => {
-      delModal.hide();  
-      if (res.success) {
-        showAlert('Promotion deleted!', 'danger');
-        setTimeout(() => location.reload(), 1000);
-      } else {
-        showAlert('Delete failed', 'danger');
-      }
-    })
-    .catch(() => showAlert('Network error', 'danger'));
-  });
-});
-</script>
+  </script>
 {% endblock %}

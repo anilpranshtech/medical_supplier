@@ -1474,40 +1474,28 @@ class BuyXGetYPromotion(models.Model):
     product_type = models.CharField(max_length=10,choices=PRODUCT_TYPE_CHOICES)
     supplier = models.ManyToManyField('SupplierProfile', related_name='buyxgety_promotions')
     product = models.ManyToManyField('Product', related_name='buyxgety_products')
-    
     buy = models.IntegerField()
     get = models.IntegerField()
-
     promotion_period = models.CharField( max_length=100, help_text="Promotion period (e.g., 01 Nov 2025 - 30 Nov 2025)")
     created_at = models.DateTimeField(auto_now_add=True) 
-    status = models.CharField(
-        max_length=10,
-        choices=[('Active', 'Active'), ('Inactive', 'Inactive')],
-        default='Inactive'
-    )
-    
-
+    status = models.CharField(max_length=10, choices=[('Active', 'Active'), ('Inactive', 'Inactive')], default='Inactive')
     def __str__(self):
         suppliers = ", ".join(s.user.username for s in self.supplier.all())
         products = ", ".join(p.name for p in self.product.all())
         return f"{self.product_type.upper()} | Suppliers: {suppliers} | Products: {products} | Buy {self.buy} Get {self.get}"
     def save(self, *args, **kwargs):
         try:
-         
             period = self.promotion_period.split(" - ")
             if len(period) == 2:
                 start_date = timezone.datetime.strptime(period[0], "%d %b %Y").date()
                 end_date = timezone.datetime.strptime(period[1], "%d %b %Y").date()
                 now = timezone.now().date()
-
                 if start_date <= now <= end_date:
                     self.status = 'Active'
                 else:
                     self.status = 'Inactive'
         except Exception as e:
-
             self.status = 'Inactive'
-
         super().save(*args, **kwargs)
 class BuyXGiftYPromotion(models.Model):
     product_type = models.CharField(max_length=10, choices=PRODUCT_TYPE_CHOICES)
@@ -2169,6 +2157,14 @@ class UserCardsAndSubscriptions(models.Model):
     subscription_status = models.CharField(max_length=50, blank=True, null=True)
     subscriptions_period_start = models.DateTimeField(blank=True, null=True)
     subscriptions_period_end = models.DateTimeField(blank=True, null=True)
+    
+
+    subscriptions_credits_number_checks = models.IntegerField(default=0, help_text="Current subscription credits")
+    subscriptions_offer_credits_number_checks = models.IntegerField(default=0, help_text="Bonus offer credits")
+    plan_duration = models.CharField(max_length=10, blank=True, null=True)
+    is_custom_subscription = models.BooleanField(default=False)
+    last_credit_reset_date = models.DateTimeField(blank=True, null=True)
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -2251,9 +2247,32 @@ class CustomerPayment(models.Model):
         # ordering = ["-timestamp"]
         verbose_name = verbose_name_plural ="Customer Payment"
         db_table = "dashboard_customer_payment"
-
+class StripeSubscriptions(models.Model):
+    """Main subscription plans available to users"""
     
+    class PlanDuration(models.TextChoices):
+        MONTH = 'month', 'Monthly'
+        YEAR = 'year', 'Yearly'
     
+    name = models.CharField(max_length=255, help_text="Plan name (e.g., Basic, Pro, Enterprise)")
+    price_id = models.CharField(max_length=255, unique=True, help_text="Stripe Price ID")
+    product_id = models.CharField(max_length=255, blank=True, null=True, help_text="Stripe Product ID")
+    price = models.DecimalField(max_digits=10, decimal_places=2, help_text="Price in dollars")
+    plan_duration = models.CharField(max_length=10, choices=PlanDuration.choices, default=PlanDuration.MONTH)
+    is_active = models.BooleanField(default=True)
+    description = models.TextField(blank=True, null=True)
+    features = models.JSONField(default=list, blank=True, help_text="List of features")
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['price']
+        verbose_name = "Stripe Subscription Plan"
+        verbose_name_plural = "Stripe Subscription Plans"
+    
+    def __str__(self):
+        return f"{self.name} - ${self.price}/{self.plan_duration}"
       
 
     

@@ -393,281 +393,354 @@
         </main>
     </div>
 </div>
-
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('[id^="cart-item-"]').forEach(item => {
-        const priceElement = item.querySelector('.text-sm.font-semibold.text-mono span');
-        const originalPrice = parseFloat(priceElement.textContent.replace('$', '')) / parseInt(item.querySelector('.quantity').textContent);
-        priceElement.dataset.basePrice = originalPrice;
-    });
-
-    function checkMinimumQuantities() {
-        let hasViolation = false;
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize base prices for each cart item
         document.querySelectorAll('[id^="cart-item-"]').forEach(item => {
-            const minQty = parseInt(item.dataset.minQty) || 0;
-            const currentQty = parseInt(item.querySelector('.quantity').textContent);
-            if (minQty > 0 && currentQty < minQty) {
-                hasViolation = true;
-            }
-        });
-        return hasViolation;
-    }
-
-    function updateShippingButton() {
-        const shippingBtn = document.getElementById("shipping-info-btn");
-        if (!shippingBtn) return;
-
-        const hasItems = document.querySelectorAll('[id^="cart-item-"]').length > 0;
-        const hasMinQtyViolation = checkMinimumQuantities();
-
-        if (!hasItems || hasMinQtyViolation) {
-            shippingBtn.disabled = true;
-            shippingBtn.style.opacity = "0.5";
-            shippingBtn.style.cursor = "not-allowed";
-            shippingBtn.onclick = function(e) {
-                e.preventDefault();
-                if (hasMinQtyViolation) {
-                    alert('Please meet the minimum order quantity for all products before proceeding.');
-                }
-            };
-        } else {
-            shippingBtn.disabled = false;
-            shippingBtn.style.opacity = "1";
-            shippingBtn.style.cursor = "pointer";
-            shippingBtn.onclick = function() {
-                window.location.href = "{% url 'dashboard:shipping_info' %}";
-            };
-        }
-    }
-
-    function updateAllPrices() {
-        let subtotal = 0;
-        document.querySelectorAll('[id^="cart-item-"]').forEach(item => {
-            const quantity = parseInt(item.querySelector('.quantity').textContent);
             const priceElement = item.querySelector('.text-sm.font-semibold.text-mono span');
-            const basePrice = parseFloat(priceElement.dataset.basePrice);
-            const itemTotal = basePrice * quantity;
-            priceElement.textContent = `$${itemTotal.toFixed(2)}`;
-            subtotal += itemTotal;
+            const originalPrice = parseFloat(priceElement.textContent.replace('$', '')) / parseInt(item.querySelector('.quantity').textContent);
+            priceElement.dataset.basePrice = originalPrice;
         });
-
-        document.querySelectorAll('.kt-card-content .flex.justify-between.items-center').forEach(el => {
-            if (el.textContent.includes('Subtotal')) {
-                el.querySelector('.text-sm.font-medium.text-mono').textContent = `$${subtotal.toFixed(2)}`;
-            }
-        });
-
-        const totalEl = document.querySelector('.kt-card-footer .text-base.font-semibold.text-mono');
-        if (totalEl) {
-            totalEl.textContent = `$${subtotal.toFixed(2)}`;
+    
+        // Check minimum quantity requirements
+        function checkMinimumQuantities() {
+            let hasViolation = false;
+            document.querySelectorAll('[id^="cart-item-"]').forEach(item => {
+                const minQty = parseInt(item.dataset.minQty) || 0;
+                const currentQty = parseInt(item.querySelector('.quantity').textContent);
+                if (minQty > 0 && currentQty < minQty) {
+                    hasViolation = true;
+                }
+            });
+            return hasViolation;
         }
-
-        updateShippingButton();
-    }
-
-    function removeItemFromCart(productId, itemElement) {
-        fetch("{% url 'dashboard:remove_from_cart' %}", {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': '{{ csrf_token }}',
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: `item_id=${productId}`
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                itemElement.remove();
-                updateAllPrices();
-                checkEmptyCart();
+    
+        // Update shipping button state
+        function updateShippingButton() {
+            const shippingBtn = document.getElementById("shipping-info-btn");
+            if (!shippingBtn) return;
+    
+            const hasItems = document.querySelectorAll('[id^="cart-item-"]').length > 0;
+            const hasMinQtyViolation = checkMinimumQuantities();
+    
+            if (!hasItems || hasMinQtyViolation) {
+                shippingBtn.disabled = true;
+                shippingBtn.style.opacity = "0.5";
+                shippingBtn.style.cursor = "not-allowed";
+                shippingBtn.onclick = function(e) {
+                    e.preventDefault();
+                    if (hasMinQtyViolation) {
+                        alert('Please meet the minimum order quantity for all products before proceeding.');
+                    }
+                };
+            } else {
+                shippingBtn.disabled = false;
+                shippingBtn.style.opacity = "1";
+                shippingBtn.style.cursor = "pointer";
+                shippingBtn.onclick = function() {
+                    window.location.href = "{% url 'dashboard:shipping_info' %}";
+                };
             }
-        })
-        .catch(error => console.error('Error:', error));
-    }
-
-    document.querySelectorAll('.increase-btn, .decrease-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const productId = this.dataset.productId;
-            const isIncrease = this.classList.contains('increase-btn');
-            const quantityElement = this.parentElement.querySelector('.quantity');
-            let newQuantity = parseInt(quantityElement.textContent) + (isIncrease ? 1 : -1);
-
-            if (newQuantity <= 0) {
-                const itemElement = document.getElementById(`cart-item-${productId}`);
-                removeItemFromCart(productId, itemElement);
-                return;
-            }
-
-            fetch("{% url 'dashboard:add_to_cart' %}", {
+        }
+    
+        // Update all price displays (simplified - will be reloaded from server)
+        function updateAllPrices() {
+            updateShippingButton();
+        }
+    
+        // Remove item from cart
+        function removeItemFromCart(productId, itemElement) {
+            fetch("{% url 'dashboard:remove_from_cart' %}", {
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': '{{ csrf_token }}',
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: `product_id=${productId}&quantity=${isIncrease ? 1 : -1}`
+                body: `item_id=${productId}`
             })
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'success') {
-                    quantityElement.textContent = newQuantity;
-                    updateAllPrices();
-                    location.reload();
-                } else if (data.status === 'removed') {
-                    document.getElementById(`cart-item-${productId}`).remove();
+                    itemElement.remove();
                     updateAllPrices();
                     checkEmptyCart();
+                    // Reload to update all discount calculations
+                    location.reload();
                 }
             })
             .catch(error => console.error('Error:', error));
-        });
-    });
-
-    document.querySelectorAll('.remove-from-cart').forEach(button => {
-        button.addEventListener('click', function() {
-            const itemId = this.dataset.itemId;
-            const itemElement = document.getElementById(`cart-item-${itemId}`);
-            removeItemFromCart(itemId, itemElement);
-        });
-    });
-
-    function checkEmptyCart() {
-        const cartItems = document.querySelectorAll('[id^="cart-item-"]');
-        if (cartItems.length === 0) {
-            const emptyMessage = document.createElement('p');
-            emptyMessage.className = 'text-muted text-sm font-normal text-center text-secondary-foreground mx-5 mt-5';
-            emptyMessage.textContent = 'No products available in Cart';
-            document.querySelector('.kt-card-content').appendChild(emptyMessage);
         }
-        updateShippingButton();
-    }
-
-    updateShippingButton();
-    checkEmptyCart();
-});
-
-document.addEventListener('DOMContentLoaded', function() {
-    const applyBtn = document.getElementById('apply-coupon-btn');
-    const couponInput = document.getElementById('coupon-code');
-    const messageBox = document.getElementById('coupon-message');
     
-    if (applyBtn) {
-        applyBtn.addEventListener('click', function() {
-            const code = couponInput.value.trim();
-            const isRemoving = applyBtn.textContent.trim() === 'Remove';
-            
-            if (isRemoving) {
-                removeCoupon();
-                return;
-            }
-            
-            if (!code) {
-                showMessage("Please enter a coupon code.", 'error');
-                return;
-            }
-            applyCoupon(code);
+        // Handle quantity changes
+        document.querySelectorAll('.increase-btn, .decrease-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const productId = this.dataset.productId;
+                const isIncrease = this.classList.contains('increase-btn');
+                const quantityElement = this.parentElement.querySelector('.quantity');
+                let newQuantity = parseInt(quantityElement.textContent) + (isIncrease ? 1 : -1);
+    
+                if (newQuantity <= 0) {
+                    const itemElement = document.getElementById(`cart-item-${productId}`);
+                    removeItemFromCart(productId, itemElement);
+                    return;
+                }
+    
+                fetch("{% url 'dashboard:add_to_cart' %}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `product_id=${productId}&quantity=${isIncrease ? 1 : -1}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        quantityElement.textContent = newQuantity;
+                        updateAllPrices();
+                        // Reload to update Buy X Get Y calculations and totals
+                        location.reload();
+                    } else if (data.status === 'removed') {
+                        document.getElementById(`cart-item-${productId}`).remove();
+                        updateAllPrices();
+                        checkEmptyCart();
+                        location.reload();
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            });
         });
-        
-        function applyCoupon(code) {
-            applyBtn.disabled = true;
-            messageBox.classList.add('hidden');
-
-            fetch("{% url 'dashboard:apply_coupon' %}", {
-                method: "POST",
-                headers: {
-                    "X-CSRFToken": "{{ csrf_token }}",
-                    "Content-Type": "application/x-www-form-urlencoded"
-                },
-                body: "coupon_code=" + encodeURIComponent(code)
-            })
-            .then(response => response.json())
-            .then(data => {
-                applyBtn.disabled = false;
-                if (data.status === "success") {
-                    showMessage(data.message, 'success');
-                    applyBtn.textContent = 'Remove';
-                    applyBtn.classList.remove('kt-btn-primary');
-                    applyBtn.classList.add('kt-btn-danger');
-                    couponInput.disabled = true;
-                    couponInput.value = data.coupon_code;
-                    updateCartTotals(data);
-                    showDiscountRow(data);
-                } else {
-                    showMessage(data.message, 'error');
-                }
-            })
-            .catch(error => {
-                applyBtn.disabled = false;
-                showMessage("Something went wrong. Try again.", 'error');
+    
+        // Handle remove item button clicks
+        document.querySelectorAll('.remove-from-cart').forEach(button => {
+            button.addEventListener('click', function() {
+                const itemId = this.dataset.itemId;
+                const itemElement = document.getElementById(`cart-item-${itemId}`);
+                removeItemFromCart(itemId, itemElement);
             });
+        });
+    
+        // Check if cart is empty
+        function checkEmptyCart() {
+            const cartItems = document.querySelectorAll('[id^="cart-item-"]');
+            if (cartItems.length === 0) {
+                const emptyMessage = document.createElement('p');
+                emptyMessage.className = 'text-muted text-sm font-normal text-center text-secondary-foreground mx-5 mt-5';
+                emptyMessage.textContent = 'No products available in Cart';
+                document.querySelector('.kt-card-content').appendChild(emptyMessage);
+            }
+            updateShippingButton();
         }
+    
+        // Coupon management
+        const applyBtn = document.getElementById('apply-coupon-btn');
+        const couponInput = document.getElementById('coupon-code');
+        const messageBox = document.getElementById('coupon-message');
         
-        function removeCoupon() {
-            if (!confirm("Are you sure you want to remove this coupon?")) return;
+        if (applyBtn) {
+            applyBtn.addEventListener('click', function() {
+                const code = couponInput.value.trim();
+                const isRemoving = applyBtn.textContent.trim() === 'Remove';
+                
+                if (isRemoving) {
+                    removeCoupon();
+                    return;
+                }
+                
+                if (!code) {
+                    showMessage("Please enter a coupon code.", 'error');
+                    return;
+                }
+                applyCoupon(code);
+            });
             
-            applyBtn.disabled = true;
-            fetch("{% url 'dashboard:remove_coupon' %}", {
-                method: "POST",
-                headers: {
-                    "X-CSRFToken": "{{ csrf_token }}",
-                    "Content-Type": "application/x-www-form-urlencoded"
+            function applyCoupon(code) {
+                applyBtn.disabled = true;
+                messageBox.classList.add('hidden');
+    
+                fetch("{% url 'dashboard:apply_coupon' %}", {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": "{{ csrf_token }}",
+                        "Content-Type": "application/x-www-form-urlencoded"
+                    },
+                    body: "coupon_code=" + encodeURIComponent(code)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    applyBtn.disabled = false;
+                    if (data.status === "success") {
+                        showMessage(data.message, 'success');
+                        applyBtn.textContent = 'Remove';
+                        applyBtn.classList.remove('kt-btn-primary');
+                        applyBtn.classList.add('kt-btn-danger');
+                        couponInput.disabled = true;
+                        couponInput.value = data.coupon_code;
+                        
+                        // Update cart totals with server response
+                        updateCartTotals(data);
+                        showDiscountRow(data);
+                        
+                        // Update Buy X Get Y discount display if present
+                        if (data.buyxgety_discount) {
+                            updateBuyXGetYDiscount(data.buyxgety_discount);
+                        }
+                        
+                        // Update total discount display
+                        if (data.total_discount) {
+                            updateTotalDiscount(data.total_discount);
+                        }
+                        
+                        // Reload to show updated Buy X Get Y promotions
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showMessage(data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    applyBtn.disabled = false;
+                    showMessage("Something went wrong. Try again.", 'error');
+                });
+            }
+            
+            function removeCoupon() {
+                if (!confirm("Are you sure you want to remove this coupon?")) return;
+                
+                applyBtn.disabled = true;
+                fetch("{% url 'dashboard:remove_coupon' %}", {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": "{{ csrf_token }}",
+                        "Content-Type": "application/x-www-form-urlencoded"
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    applyBtn.disabled = false;
+                    if (data.status === "success") {
+                        showMessage(data.message, 'success');
+                        applyBtn.textContent = 'Apply';
+                        applyBtn.classList.remove('kt-btn-danger');
+                        applyBtn.classList.add('kt-btn-primary');
+                        couponInput.disabled = false;
+                        couponInput.value = '';
+                        
+                        // Hide coupon discount row
+                        hideDiscountRow();
+                        
+                        // Update all cart totals with server response
+                        updateCartTotals(data);
+                        
+                        // Update Buy X Get Y discount display if present
+                        if (data.buyxgety_discount) {
+                            updateBuyXGetYDiscount(data.buyxgety_discount);
+                        }
+                        
+                        // Reload to show updated totals without coupon
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showMessage(data.message || "Failed to remove coupon.", 'error');
+                    }
+                })
+                .catch(error => {
+                    applyBtn.disabled = false;
+                    showMessage("Error removing coupon.", 'error');
+                });
+            }
+            
+            function updateCartTotals(data) {
+                // Update subtotal
+                const subtotalEl = document.querySelector('.kt-card-content .flex.justify-between.items-center:nth-child(2) .text-sm.font-medium.text-mono');
+                if (subtotalEl && data.subtotal) {
+                    subtotalEl.textContent = `$${data.subtotal}`;
                 }
-            })
-            .then(response => response.json())
-            .then(data => {
-                applyBtn.disabled = false;
-                if (data.status === "success") {
-                    showMessage(data.message, 'success');
-                    applyBtn.textContent = 'Apply';
-                    applyBtn.classList.remove('kt-btn-danger');
-                    applyBtn.classList.add('kt-btn-primary');
-                    couponInput.disabled = false;
-                    couponInput.value = '';
-                    hideDiscountRow();
-                    updateCartTotals(data);
+                
+                // Update final total
+                const totalEl = document.querySelector('.kt-card-footer .text-base.font-semibold.text-mono');
+                if (totalEl && data.new_total) {
+                    totalEl.textContent = `$${data.new_total}`;
+                }
+            }
+            
+            function updateBuyXGetYDiscount(amount) {
+                let buyxgetyRow = document.querySelector('.buyxgety-discount-row');
+                if (!buyxgetyRow) {
+                    // Create Buy X Get Y discount row if it doesn't exist
+                    const discountSection = document.querySelector('.kt-card-content');
+                    if (discountSection) {
+                        buyxgetyRow = document.createElement('div');
+                        buyxgetyRow.className = 'flex justify-between items-center buyxgety-discount-row';
+                        buyxgetyRow.innerHTML = `
+                            <span class="text-sm font-normal text-secondary-foreground">Buy X Get Y Discount</span>
+                            <span class="text-sm font-medium text-mono text-green-600">- $${amount}</span>
+                        `;
+                        // Insert after VAT row
+                        const vatRow = document.querySelector('.kt-card-content .flex.justify-between.items-center:nth-child(4)');
+                        if (vatRow) {
+                            vatRow.parentNode.insertBefore(buyxgetyRow, vatRow.nextSibling);
+                        }
+                    }
                 } else {
-                    showMessage(data.message || "Failed to remove coupon.", 'error');
+                    // Update existing Buy X Get Y discount row
+                    buyxgetyRow.querySelector('.text-green-600').textContent = `- $${amount}`;
                 }
-            })
-            .catch(error => {
-                applyBtn.disabled = false;
-                showMessage("Error removing coupon.", 'error');
-            });
-        }
-        
-        function updateCartTotals(data) {
-            const totalEl = document.querySelector('.kt-card-footer .text-base.font-semibold.text-mono');
-            const subtotalEl = document.querySelector('.kt-card-content .flex.justify-between.items-center:nth-child(2) .text-sm.font-medium.text-mono');
-            if (totalEl && data.new_total) totalEl.textContent = `$${data.new_total}`;
-            if (subtotalEl && data.subtotal) subtotalEl.textContent = `$${data.subtotal}`;
-        }
-        
-        function showDiscountRow(data) {
-            let discountRow = document.getElementById('discount-row');
-            if (!discountRow) {
-                discountRow = document.createElement('div');
-                discountRow.id = 'discount-row';
-                discountRow.className = 'flex justify-between items-center';
-                discountRow.innerHTML = `
-                    <span class="text-sm font-normal text-secondary-foreground">Discount (${data.coupon_code})</span>
-                    <span class="text-sm font-medium text-mono text-green-600">- $${data.discount_amount}</span>
-                `;
-                const vatRow = document.querySelector('.kt-card-content .flex.justify-between.items-center:nth-child(4)');
-                if (vatRow) vatRow.parentNode.insertBefore(discountRow, vatRow.nextSibling);
+            }
+            
+            function updateTotalDiscount(amount) {
+                let totalDiscountRow = document.querySelector('.total-discount-row');
+                if (!totalDiscountRow) {
+                    // Create total discount row if it doesn't exist
+                    const discountSection = document.querySelector('.kt-card-content');
+                    if (discountSection) {
+                        totalDiscountRow = document.createElement('div');
+                        totalDiscountRow.className = 'flex justify-between items-center total-discount-row pt-2 border-t border-gray-200';
+                        totalDiscountRow.innerHTML = `
+                            <span class="text-sm font-semibold text-secondary-foreground">Total Discount</span>
+                            <span class="text-sm font-bold text-mono text-green-600">- $${amount}</span>
+                        `;
+                        // Insert at the end of discount section
+                        discountSection.appendChild(totalDiscountRow);
+                    }
+                } else {
+                    // Update existing total discount row
+                    totalDiscountRow.querySelector('.text-green-600').textContent = `- $${amount}`;
+                }
+            }
+            
+            function showDiscountRow(data) {
+                let discountRow = document.getElementById('discount-row');
+                if (!discountRow) {
+                    discountRow = document.createElement('div');
+                    discountRow.id = 'discount-row';
+                    discountRow.className = 'flex justify-between items-center';
+                    discountRow.innerHTML = `
+                        <span class="text-sm font-normal text-secondary-foreground">Coupon Discount (${data.coupon_code})</span>
+                        <span class="text-sm font-medium text-mono text-green-600">- $${data.discount_amount}</span>
+                    `;
+                    const vatRow = document.querySelector('.kt-card-content .flex.justify-between.items-center:nth-child(4)');
+                    if (vatRow) vatRow.parentNode.insertBefore(discountRow, vatRow.nextSibling);
+                }
+            }
+            
+            function hideDiscountRow() {
+                const discountRow = document.getElementById('discount-row');
+                if (discountRow) discountRow.remove();
+                
+                // Also remove total discount row if it exists
+                const totalDiscountRow = document.querySelector('.total-discount-row');
+                if (totalDiscountRow) totalDiscountRow.remove();
+            }
+            
+            function showMessage(text, type) {
+                messageBox.textContent = text;
+                messageBox.classList.remove('hidden', 'text-green-600', 'text-red-600');
+                messageBox.classList.add(type === 'success' ? 'text-green-600' : 'text-red-600');
             }
         }
-        
-        function hideDiscountRow() {
-            const discountRow = document.getElementById('discount-row');
-            if (discountRow) discountRow.remove();
-        }
-        
-        function showMessage(text, type) {
-            messageBox.textContent = text;
-            messageBox.classList.remove('hidden', 'text-green-600', 'text-red-600');
-            messageBox.classList.add(type === 'success' ? 'text-green-600' : 'text-red-600');
-        }
-    }
-});
-</script>
+    
+        // Initialize
+        updateShippingButton();
+        checkEmptyCart();
+    });
+    </script>
 {% endblock content %}
