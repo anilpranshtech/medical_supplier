@@ -2167,6 +2167,8 @@ class UserCardsAndSubscriptions(models.Model):
     stripe_subscription_id = models.CharField(max_length=500, blank=True, null=True)    
     active_subscription_price_id = models.CharField(max_length=255, blank=True, null=True)
     subscription_status = models.CharField(max_length=50, blank=True, null=True)
+    subscriptions_period_start = models.DateTimeField(blank=True, null=True)
+    subscriptions_period_end = models.DateTimeField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
