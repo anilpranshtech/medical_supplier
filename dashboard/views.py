@@ -1855,12 +1855,14 @@ class ShoppingCartView(LoginRequiredMixin, TemplateView):
             except Exception as e:
                 continue
         return active_promotions
+
     def calculate_buyxgety_benefits(self, cart_items):
         product_ids = [item.product.id for item in cart_items]
         active_promotions = self.get_active_buyxgety_promotions(product_ids)
         
         if not active_promotions:
             return [], Decimal('0.00')
+        
         product_quantities = defaultdict(int)
         product_items = {}
         product_prices = {}
@@ -1872,8 +1874,10 @@ class ShoppingCartView(LoginRequiredMixin, TemplateView):
                 product_prices[item.product.id] = item.product.discounted_price()
             else:
                 product_prices[item.product.id] = item.product.price
+        
         free_items_info = []
         total_discount = Decimal('0.00')
+        
         for promotion in active_promotions:
             promo_products = promotion.product.all()
             for product in promo_products:
@@ -1900,37 +1904,33 @@ class ShoppingCartView(LoginRequiredMixin, TemplateView):
                             'free_item_price': f"{free_item_price:.2f}",
                             'promotion_description': f"Buy {promotion.buy} Get {promotion.get} Free"
                         })
+        
         return free_items_info, total_discount
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        if self.request.session.get('applied_coupon'):
-            del self.request.session['applied_coupon']
-            self.request.session.modified = True
         
         user = self.request.user
         cart_items = CartProduct.objects.filter(user=user).select_related('product')
         subtotal = sum(item.get_total_price() for item in cart_items)
+        free_items_info, buyxgety_discount = self.calculate_buyxgety_benefits(cart_items)
+        
         coupon_discount = Decimal('0.00')
-        buyxgety_discount = Decimal('0.00')
         applied_coupon_data = None
         has_coupon_discount = False
-        free_items_info, buyxgety_discount = self.calculate_buyxgety_benefits(cart_items)
         session_coupon = self.request.session.get('applied_coupon')
         if session_coupon:
             try:
                 coupon = Coupon.objects.get(code__iexact=session_coupon['code'])
                 if coupon.is_valid_now():
                     eligible_products = coupon.products.values_list('id', flat=True)
-                    eligible_items = (
-                        cart_items.filter(product_id__in=eligible_products)
-                        if eligible_products.exists()
-                        else cart_items
-                    )
+                    if eligible_products.exists():
+                        eligible_items = cart_items.filter(product_id__in=eligible_products)
+                    else:
+                        eligible_items = cart_items
                     
                     if eligible_items.exists():
                         eligible_total = sum(item.get_total_price() for item in eligible_items)
-                        
                         if eligible_total >= coupon.minimum_purchase_amount:
                             coupon_discount = coupon.calculate_discount(Decimal(eligible_total))
                             applied_coupon_data = {
@@ -1939,19 +1939,18 @@ class ShoppingCartView(LoginRequiredMixin, TemplateView):
                             }
                             has_coupon_discount = coupon_discount > Decimal('0.00')
                         else:
-                            self.request.session.pop('applied_coupon', None)
+                            if 'applied_coupon' in self.request.session:
+                                del self.request.session['applied_coupon']
             except Exception:
-                self.request.session.pop('applied_coupon', None)
+                if 'applied_coupon' in self.request.session:
+                    del self.request.session['applied_coupon']
         total_discount = coupon_discount + buyxgety_discount
         final_total = max(subtotal - total_discount, Decimal('0.00'))
-        
-        # Pagination
         paginator = Paginator(cart_items, 5)
         page_obj = paginator.get_page(self.request.GET.get('page'))
         context.update({
             'cart_items': page_obj,
             'subtotal': f"{subtotal:.2f}",
-            'discount_amount': f"{coupon_discount:.2f}",  
             'coupon_discount': f"{coupon_discount:.2f}",
             'buyxgety_discount': f"{buyxgety_discount:.2f}",
             'total_discount': f"{total_discount:.2f}",
@@ -1971,61 +1970,72 @@ def apply_coupon(request):
     cart_items = CartProduct.objects.filter(user=user)
     if not cart_items.exists():
         return JsonResponse({'status': 'error', 'message': 'Your cart is empty.'})
-
-    total = sum(item.get_total_price() for item in cart_items)
+    subtotal = sum(item.get_total_price() for item in cart_items)
+    
     try:
         coupon = Coupon.objects.get(code__iexact=code)
     except Coupon.DoesNotExist:
         return JsonResponse({'status': 'error', 'message': 'Invalid coupon code.'})
     if not coupon.is_valid_now():
         return JsonResponse({'status': 'error', 'message': 'This coupon has expired.'})
-
     if coupon.client.exists() and user not in coupon.client.all():
         return JsonResponse({'status': 'error', 'message': 'You are not eligible for this coupon.'})
-
     eligible_product_ids = coupon.products.values_list('id', flat=True)
-
     if eligible_product_ids.exists():
         eligible_cart_items = cart_items.filter(product_id__in=eligible_product_ids)
         if not eligible_cart_items.exists():
-            return JsonResponse({'status': 'error', 'message': 'This coupon does not apply to selected products in your cart.'})
+            return JsonResponse({
+                'status': 'error', 
+                'message': 'This coupon does not apply to selected products in your cart.'
+            })
     else:
         eligible_cart_items = cart_items 
-
     eligible_total = sum(item.get_total_price() for item in eligible_cart_items)
-
     if eligible_total < coupon.minimum_purchase_amount:
         return JsonResponse({
             'status': 'error',
             'message': f'Minimum purchase of ${coupon.minimum_purchase_amount:.2f} required to use this coupon.'
         })
-
     used_count = user.applied_coupons.filter(id=coupon.id).count()
     if used_count >= coupon.count_of_use:
-        return JsonResponse({'status': 'error', 'message': 'You have reached the coupon usage limit.'})
-
-    if coupon.filter_by_orders_amount and total < coupon.filter_by_orders_amount:
-        return JsonResponse({'status': 'error', 'message': 'Your order does not meet the minimum required amount.'})
-    discount_amount = coupon.calculate_discount(Decimal(eligible_total))
-    new_total = total - discount_amount
-
+        return JsonResponse({
+            'status': 'error', 
+            'message': 'You have reached the coupon usage limit.'
+        })
+    if coupon.filter_by_orders_amount and subtotal < coupon.filter_by_orders_amount:
+        return JsonResponse({
+            'status': 'error', 
+            'message': 'Your order does not meet the minimum required amount.'
+        })
+    coupon_discount = coupon.calculate_discount(Decimal(eligible_total))
     request.session['applied_coupon'] = {
         'code': coupon.code,
-        'discount_amount': str(discount_amount),
-        'new_total': str(new_total),
+        'discount_amount': str(coupon_discount),
     }
     coupon.client.add(user)
+    from collections import defaultdict
+    product_ids = [item.product.id for item in cart_items]
+    buyxgety_discount = Decimal('0.00')
+    view = ShoppingCartView()
+    _, buyxgety_discount = view.calculate_buyxgety_benefits(cart_items)
+    
+    total_discount = coupon_discount + buyxgety_discount
+    new_total = max(subtotal - total_discount, Decimal('0.00'))
 
     return JsonResponse({
         'status': 'success',
-        'message': f'Coupon applied successfully! You saved ${discount_amount:.2f}.',
-        'discount_amount': f'{discount_amount:.2f}',
-        'new_total': f'{new_total:.2f}',
+        'message': f'Coupon applied successfully! You saved ${coupon_discount:.2f}.',
+        'discount_amount': f'{coupon_discount:.2f}',
         'coupon_code': coupon.code,
+        'subtotal': f'{subtotal:.2f}',
+        'new_total': f'{new_total:.2f}',
+        'buyxgety_discount': f'{buyxgety_discount:.2f}',
+        'total_discount': f'{total_discount:.2f}'
     })
 @require_POST
 def remove_coupon(request):
     user = request.user
+    
     if 'applied_coupon' in request.session:
         coupon_code = request.session['applied_coupon'].get('code')
         del request.session['applied_coupon']
@@ -2036,18 +2046,23 @@ def remove_coupon(request):
             pass
         cart_items = CartProduct.objects.filter(user=user)
         subtotal = sum(item.get_total_price() for item in cart_items) if cart_items.exists() else Decimal('0.00')
+        view = ShoppingCartView()
+        _, buyxgety_discount = view.calculate_buyxgety_benefits(cart_items)
+        final_total = max(subtotal - buyxgety_discount, Decimal('0.00'))
         
         return JsonResponse({
             'status': 'success',
             'message': 'Coupon removed successfully.',
             'subtotal': f'{subtotal:.2f}',
-            'new_total': f'{subtotal:.2f}',
+            'new_total': f'{final_total:.2f}',
+            'buyxgety_discount': f'{buyxgety_discount:.2f}'
         })
     
     return JsonResponse({
         'status': 'error',
         'message': 'No coupon to remove.',
     })
+
 @require_POST
 
 def add_to_cart(request):
@@ -5028,3 +5043,279 @@ class SupplierBuyerChatView(LoginRequiredMixin, TemplateView):
         
         context['current_user'] = user
         return context
+    
+class CreateSubscriptionView(LoginRequiredMixin, View):
+    template_name = "userdashboard/view//subscription_plans.html"
+    def get(self, request, *args, **kwargs):
+        today = timezone.now()
+        user_profile, created = UserCardsAndSubscriptions.objects.get_or_create(
+            user=request.user
+        )
+        if user_profile.stripe_customer_id:
+            try:
+                payment_methods = stripe.PaymentMethod.list(
+                    customer=user_profile.stripe_customer_id,
+                    type="card"
+                )
+                if not payment_methods["data"]:
+                    messages.error(request, 'Please add a payment method to subscribe.')
+                    return redirect('dashboard:add_payment_method')
+            except stripe.error.StripeError as e:
+                messages.error(request, 'Error checking payment methods.')
+                return redirect('dashboard:add_payment_method')
+        else:
+            messages.error(request, 'Please add a payment method first.')
+            return redirect('dashboard:add_payment_method')
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return self.handle_ajax_request(request)
+        monthly = StripeSubscriptions.objects.filter(
+            plan_duration=StripeSubscriptions.PlanDuration.MONTH,
+            is_active=True
+        ).order_by('price')
+        
+        yearly = StripeSubscriptions.objects.filter(
+            plan_duration=StripeSubscriptions.PlanDuration.YEAR,
+            is_active=True
+        ).order_by('price')
+        monthly_plans_data = self._prepare_plans_without_offers(monthly)
+        yearly_plans_data = self._prepare_plans_without_offers(yearly)
+        is_canceling = False
+        if user_profile.stripe_subscription_id:
+            try:
+                subscription = stripe.Subscription.retrieve(user_profile.stripe_subscription_id)
+                is_canceling = subscription.cancel_at_period_end
+            except stripe.error.StripeError:
+                pass
+        
+        context = {
+            'monthly': monthly_plans_data,
+            'yearly': yearly_plans_data,
+            'user_active_price_id': user_profile.active_subscription_price_id,
+            'is_canceling': is_canceling,
+        }
+        
+        return render(request, self.template_name, context)
+    
+    def _prepare_plans_without_offers(self, plans):
+        plans_data = []
+        
+        for plan in plans:
+            plans_data.append({
+                'plan': plan,
+                'price': plan.price,
+                'duration': plan.plan_duration,
+                'features': plan.features,
+            })
+        
+        return plans_data
+    
+    def handle_ajax_request(self, request):
+        user = request.user
+        price_id = request.GET.get('price_id')
+        try:
+            user_profile = UserCardsAndSubscriptions.objects.get(user=user)
+        except UserCardsAndSubscriptions.DoesNotExist:
+            return JsonResponse({
+                "status": "error",
+                "message": "User profile not found."
+            })
+        customer_id = user_profile.stripe_customer_id
+        if not customer_id:
+            return JsonResponse({
+                "status": "error",
+                "message": "No customer ID found."
+            })
+        try:
+            existing_subscriptions = stripe.Subscription.list(
+                customer=customer_id, 
+                status='active'
+            )
+        except stripe.error.StripeError as e:
+            return JsonResponse({
+                "status": "error",
+                "message": f"Stripe error: {str(e)}"
+            })
+        try:
+            new_plan = StripeSubscriptions.objects.get(price_id=price_id)
+        except StripeSubscriptions.DoesNotExist:
+            return JsonResponse({
+                "status": "error",
+                "message": "Invalid plan selected."
+            })
+        
+        new_amount = float(new_plan.price) * 100  
+        if (user_profile.active_subscription_price_id and 
+            user_profile.subscription_status == 'active' and 
+            user_profile.active_subscription_price_id == price_id):
+            return JsonResponse({
+                "status": "blocked",
+                "message": "You already have this plan active."
+            })
+        active_subscriptions = []
+        is_downgrade = False
+        is_upgrade = False
+        
+        for subscription in existing_subscriptions.auto_paging_iter():
+            active_price_id = subscription['items']['data'][0]['price']['id']
+            
+            try:
+                active_price_obj = stripe.Price.retrieve(active_price_id)
+                active_amount = active_price_obj.unit_amount or 0
+                try:
+                    current_plan = StripeSubscriptions.objects.get(price_id=active_price_id)
+                except StripeSubscriptions.DoesNotExist:
+                    current_plan = None
+                
+                current_credits = current_plan.total_credits if current_plan else 0
+                if new_amount < active_amount:
+                    is_downgrade = True
+                else:
+                    is_upgrade = True
+                active_product = stripe.Product.retrieve(active_price_obj.product)
+                active_plan_name = active_product.name
+                
+                active_subscriptions.append({
+                    "subscription_id": subscription.id,
+                    "plan_name": active_plan_name,
+                    "price": active_amount / 100,
+                })
+                
+            except stripe.error.StripeError:
+                continue
+        if is_downgrade and not is_upgrade:
+            return JsonResponse({
+                "status": "downgrade_queued",
+                "message": "This is a downgrade. It will activate after your current plan ends.",
+                "active_subscriptions": active_subscriptions
+            })
+        
+        if active_subscriptions:
+            return JsonResponse({
+                "status": "has_active",
+                "message": "You have active subscriptions that will be canceled and prorated.",
+                "active_subscriptions": active_subscriptions
+            })
+        
+        return JsonResponse({
+            "status": "ok",
+            "message": "You can proceed with this subscription."
+        })
+    
+    def post(self, request, *args, **kwargs):
+        user = request.user
+        price_id = request.POST.get('price_id')
+        
+        try:
+            user_profile = UserCardsAndSubscriptions.objects.get(user=user)
+        except UserCardsAndSubscriptions.DoesNotExist:
+            messages.error(request, "User profile not found.")
+            return redirect("dashboard:subscription_plans")
+        
+        customer_id = user_profile.stripe_customer_id
+        
+        try:
+            new_plan = StripeSubscriptions.objects.get(price_id=price_id)
+            existing_subscriptions = stripe.Subscription.list(
+                customer=customer_id, 
+                status='active'
+            )
+            
+            if existing_subscriptions.data:
+                subscription = existing_subscriptions.data[0]
+                subscription_id = subscription.id
+                active_item_id = subscription['items']['data'][0].id
+                active_price_id = subscription['items']['data'][0]['price']['id']
+                
+                active_price_obj = stripe.Price.retrieve(active_price_id)
+                new_price_obj = stripe.Price.retrieve(price_id)
+                
+                active_amount = active_price_obj.unit_amount or 0
+                new_amount = new_price_obj.unit_amount or 0
+                
+                if new_amount >= active_amount:
+                    stripe.Subscription.modify(
+                        subscription_id,
+                        cancel_at_period_end=False,
+                        proration_behavior='create_prorations',
+                        billing_cycle_anchor='now',
+                        items=[{'id': active_item_id, 'price': price_id}],
+                    )
+                    messages.success(request, f"Upgraded to ${new_amount/100} plan. Prorated amount charged.")
+                else:
+                    stripe.Subscription.modify(
+                        subscription_id,
+                        cancel_at_period_end=True
+                    )
+                    
+                    subscription = stripe.Subscription.retrieve(subscription_id)
+                    start_timestamp = subscription.cancel_at
+                    stripe.SubscriptionSchedule.create(
+                        customer=subscription.customer,
+                        start_date=start_timestamp,
+                        end_behavior="release",
+                        phases=[{
+                            "items": [{"price": price_id}],
+                            "iterations": None
+                        }]
+                    )
+                    messages.success(request, f"Downgrade scheduled for end of billing period.")
+            else:
+                stripe.Subscription.create(
+                    customer=customer_id,
+                    items=[{"price": price_id}],
+                    expand=["latest_invoice.payment_intent"],
+                )
+                messages.success(request, "Subscription created successfully!")
+            
+            return redirect("dashboard:subscription_plans")
+            
+        except StripeSubscriptions.DoesNotExist:
+            messages.error(request, "Invalid plan selected.")
+            return redirect("dashboard:subscription_plans")
+        except stripe.error.StripeError as e:
+            messages.error(request, f"Stripe error: {str(e)}")
+            return redirect("dashboard:subscription_plans")
+        except Exception as e:
+            messages.error(request, f"Error: {str(e)}")
+            return redirect("dashboard:subscription_plans")
+class CancelSubscriptionView(LoginRequiredMixin, View):
+    
+    def post(self, request, *args, **kwargs):
+        try:
+            user = request.user
+            user_profile = UserCardsAndSubscriptions.objects.get(user=user)
+            
+            if not user_profile.stripe_subscription_id:
+                messages.error(request, "No active subscription found.")
+                return redirect("dashboard:subscription_plans")
+            subscription = stripe.Subscription.retrieve(user_profile.stripe_subscription_id)
+            
+            if subscription.status in ["canceled", "incomplete_expired"]:
+                messages.error(request, "Subscription is already canceled.")
+                return redirect("dashboard:subscription_plans")
+            
+            if subscription.cancel_at_period_end:
+                messages.info(request, "Subscription is already scheduled to cancel.")
+                return redirect("dashboard:subscription_plans")
+            if subscription.status == "active":
+                if getattr(subscription, "schedule", None):
+                    stripe.SubscriptionSchedule.modify(
+                        subscription.schedule,
+                        end_behavior="cancel"
+                    )
+                else:
+                    stripe.Subscription.modify(
+                        subscription.id,
+                        cancel_at_period_end=True
+                    )
+                messages.success(request, "Subscription will be canceled at the end of the billing period.")
+                return redirect("dashboard:subscription_plans")
+            
+        except UserCardsAndSubscriptions.DoesNotExist:
+            messages.error(request, "User profile not found.")
+        except stripe.error.StripeError as e:
+            messages.error(request, f"Stripe error: {str(e)}")
+        except Exception as e:
+            messages.error(request, f"Error: {str(e)}")
+        
+        return redirect("dashboard:subscription_plans")

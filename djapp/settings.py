@@ -59,7 +59,6 @@ INSTALLED_APPS = [
     'ckeditor_uploader',
     'corsheaders',
     'channels',
-    
 ]
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
@@ -192,6 +191,7 @@ STRIPE_PUBLISHABLE_KEY = os.environ.get('STRIPE_PUBLISHABLE_KEY_TEST')
 STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY_TEST')
 STRIPE_TEST_PUBLIC_KEY = os.environ.get('STRIPE_PUBLISHABLE_KEY_TEST')
 STRIPE_TEST_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY_TEST')
+STRIPE_ENDPOINT_SECRET = os.environ.get('STRIPE_ENDPOINT_SECRET_TEST')
 
 
 # reCAPTCHA
@@ -203,6 +203,10 @@ AUTHENTICATION_BACKENDS = [
     'medical_api.authentication.EmailBackend',
     'django.contrib.auth.backends.ModelBackend',
 ]
+
+# Login URL for LoginRequiredMixin
+LOGIN_URL = 'dashboard:login'
+LOGIN_REDIRECT_URL = '/'
 
 # Email Settings
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
@@ -404,4 +408,25 @@ CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels.layers.InMemoryChannelLayer'
     }
+}
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': 'stripe_webhooks.log',
+        },
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'subscriptions.webhooks': {
+            'handlers': ['file', 'console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
 }

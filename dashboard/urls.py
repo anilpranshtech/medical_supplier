@@ -3,7 +3,8 @@ from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 from .views import *
-
+from medical_api.views import AddPaymentMethodView, DeletePaymentMethodView
+from .webhooks import StripeWebhookView
 app_name = 'dashboard'
 
 urlpatterns = [
@@ -58,6 +59,8 @@ urlpatterns = [
     path('profile/remove-address/<int:address_id>/', views.RemoveAddressView.as_view(), name='remove_address'),
     path('profile/set-default-address/', views.SetDefaultAddressView.as_view(), name='set_default_address'),
     path('payment-method/', views.PaymentMethodView.as_view(), name='payment_method'),
+    path('add-payment-method/', AddPaymentMethodView.as_view(), name='add_payment_method'),
+    path('payment-method-delete/', DeletePaymentMethodView.as_view(), name='delete_payment_method'),
     path('order-placed/', views.OrderPlacedView.as_view(), name='order_placed'),
     path('my-orders/', views.MyOrdersView.as_view(), name='my_orders'),
     path('my-returns/', MyReturnsView.as_view(), name='my_returns'),
@@ -106,9 +109,9 @@ urlpatterns = [
     path('quotations/<int:rfq_id>/comments/', RFQCommentsAPIView.as_view(), name='rfq_comments_api'),
 
     # Subscription Plan
-    path('subscriptions-plans/', SubscriptionPlanView.as_view(), name='subscription_plans'),
-    path('subscriptions/check/', CheckStripeSubscriptionView.as_view(), name='check_stripe_subscription'),
-    path('update-subscription/', UpdateSubscriptionView.as_view(), name='update_subscription'),
+    # path('subscriptions-plans/', SubscriptionPlanView.as_view(), name='subscription_plans'),
+    # path('subscriptions/check/', CheckStripeSubscriptionView.as_view(), name='check_stripe_subscription'),
+    # path('update-subscription/', UpdateSubscriptionView.as_view(), name='update_subscription'),
 
     path('post-question/', views.PostQuestionView.as_view(), name='post_question'),
 
@@ -134,6 +137,9 @@ urlpatterns = [
     path('userlogs/',UserLogsView.as_view(), name = 'user_logs'),
     path('chats/buyer/<int:room_id>/', SupplierBuyerChatView.as_view(), name='supplier_buyer_chat'),
     
+    path('subscription/', CreateSubscriptionView.as_view(), name='subscription_plans'),
+    path('cancel/', CancelSubscriptionView.as_view(), name='cancel_subscription'),
+    path('/stripe/webhook/', StripeWebhookView.as_view(), name='stripe_webhook'),
     
     
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

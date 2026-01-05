@@ -1767,32 +1767,32 @@
         </div>
 
         <!-- Related Products Section (Full width below the grid) -->
-        {% if product.category.name|lower != "conference" and product.category.name|lower != "webinar" and product.category.name|lower != "event" %}
-            {% if related_products %}
-            <div class="related-products">
-                <h2 class="text-xl font-semibold text-gray-650 dark:text-white mb-4">Related Products</h2>
-                <div class="grid">
-                    {% for related_product in related_products %}
-                    <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800 shadow-sm">
-                        <a href="{% url 'dashboard:product_detail' related_product.id %}">
-                             <div class="relative mb-3">
-            {% if related_product.main_image %}
-            <img src="{{ related_product.main_image }}" alt="{{ related_product.name }}" class="w-full h-48 object-contain rounded product-image-container" loading="lazy" 
-                 {% if related_product.is_out_of_stock %}style="opacity: 0.6;"{% endif %} />
-            {% else %}
-            <img src="{% static 'default.png' %}" alt="Default Product Image" class="w-full h-48 object-contain rounded product-image-container" loading="lazy"
-                 {% if related_product.is_out_of_stock %}style="opacity: 0.6;"{% endif %} />
-            {% endif %}
-            
-            <!-- Out of Stock Overlay -->
-            {% if related_product.is_out_of_stock %}
-            <div class="out-of-stock-overlay absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded">
-                <div class="out-of-stock-badge bg-red-500 text-white px-3 py-1 rounded font-semibold">
-                    Out of Stock
-                </div>
-            </div>
-            {% endif %}
-        </div>
+                        {% if product.category.name|lower != "conference" and product.category.name|lower != "webinar" and product.category.name|lower != "event" %}
+                            {% if related_products %}
+                            <div class="related-products">
+                                <h2 class="text-xl font-semibold text-gray-650 dark:text-white mb-4">Related Products</h2>
+                                <div class="grid">
+                                    {% for related_product in related_products %}
+                                    <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800 shadow-sm">
+                                        <a href="{% url 'dashboard:product_detail' related_product.id %}">
+                                            <div class="relative mb-3">
+                            {% if related_product.main_image %}
+                            <img src="{{ related_product.main_image }}" alt="{{ related_product.name }}" class="w-full h-48 object-contain rounded product-image-container" loading="lazy" 
+                                {% if related_product.is_out_of_stock %}style="opacity: 0.6;"{% endif %} />
+                            {% else %}
+                            <img src="{% static 'default.png' %}" alt="Default Product Image" class="w-full h-48 object-contain rounded product-image-container" loading="lazy"
+                                {% if related_product.is_out_of_stock %}style="opacity: 0.6;"{% endif %} />
+                            {% endif %}
+                            
+                            <!-- Out of Stock Overlay -->
+                            {% if related_product.is_out_of_stock %}
+                            <div class="out-of-stock-overlay absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded">
+                                <div class="out-of-stock-badge bg-red-500 text-white px-3 py-1 rounded font-semibold">
+                                    Out of Stock
+                                </div>
+                            </div>
+                            {% endif %}
+                            </div>
                             <h3 class="text-base font-semibold text-gray-650 dark:text-white truncate">{{ related_product.name }}</h3>
                             <div class="flex items-center gap-2 mt-2">
                                 {% if related_product.offer_active and related_product.offer_percentage and related_product.offer_percentage > 0 %}

@@ -279,170 +279,286 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-  const editModal = new bootstrap.Modal(document.getElementById('promotionEditModal'));
-  const deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+  document.addEventListener("DOMContentLoaded", function () {
+    const editModal = new bootstrap.Modal(document.getElementById('promotionEditModal'));
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
     const addModal = new bootstrap.Modal(document.getElementById('promotionAddModal'));
-  const alertBox = document.getElementById('alertBox');
-
-  function showAlert(msg, type = 'success') {
-    alertBox.textContent = msg;
-    alertBox.className = `alert alert-${type} mt-3`;
-    alertBox.classList.remove('d-none');
-    setTimeout(() => alertBox.classList.add('d-none'), 3000);
-  }
-
-  $('.select2').select2({ width: '100%' });
-
-
-     // ADD PROMO BUTTON
-  document.getElementById('addPromotionBtn').addEventListener('click', function () {
+    const alertBox = document.getElementById('alertBox');
+  
+    function showAlert(msg, type = 'success') {
+      alertBox.textContent = msg;
+      alertBox.className = `alert alert-${type} mt-3`;
+      alertBox.classList.remove('d-none');
+      setTimeout(() => alertBox.classList.add('d-none'), 3000);
+    }
+  
+    // Show loader on button
+    function showLoader(button) {
+      button.disabled = true;
+      button.dataset.originalText = button.innerHTML;
+      button.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Loading...';
+    }
+  
+    // Hide loader on button
+    function hideLoader(button) {
+      button.disabled = false;
+      if (button.dataset.originalText) {
+        button.innerHTML = button.dataset.originalText;
+      }
+    }
+  
+    // Clear validation errors
+    function clearErrors(form) {
+      form.querySelectorAll('.invalid-feedback').forEach(e => e.remove());
+      form.querySelectorAll('.is-invalid').forEach(e => e.classList.remove('is-invalid'));
+    }
+  
+    // Show validation error
+    function showError(input, message) {
+      input.classList.add('is-invalid');
+      const div = document.createElement('div');
+      div.className = 'invalid-feedback';
+      div.innerText = message;
+      input.parentNode.appendChild(div);
+    }
+  
+    // Validate promotion form
+    function validatePromotionForm(form) {
+      clearErrors(form);
+      let errorFound = false;
+  
+      // Required fields
+      const productType = form.querySelector('[name="product_type"]');
+      const supplier = form.querySelector('[name="supplier"]');
+      const product = form.querySelector('[name="product"]');
+      const buy = form.querySelector('[name="buy"]');
+      const get = form.querySelector('[name="get"]');
+      const startDateTime = form.querySelector('[name="start_datetime"]');
+      const endDateTime = form.querySelector('[name="end_datetime"]');
+  
+      // Product Type validation
+      if (!productType || !productType.value) {
+        showError(productType, 'Product Type is required.');
+        errorFound = true;
+      }
+      if (!supplier || !supplier.selectedOptions.length) {
+        const select2Container = $(supplier).next('.select2-container');
+        if (select2Container.length) {
+          showError(select2Container[0], 'At least one supplier is required.');
+        }
+        errorFound = true;
+      }
+      if (!product || !product.selectedOptions.length) {
+        const select2Container = $(product).next('.select2-container');
+        if (select2Container.length) {
+          showError(select2Container[0], 'At least one product is required.');
+        }
+        errorFound = true;
+      }
+      if (!buy || !buy.value || parseInt(buy.value) < 1) {
+        showError(buy, 'Buy quantity must be at least 1.');
+        errorFound = true;
+      }
+      if (!get || !get.value || parseInt(get.value) < 1) {
+        showError(get, 'Get quantity must be at least 1.');
+        errorFound = true;
+      }
+      if (!startDateTime || !startDateTime.value) {
+        showError(startDateTime, 'Start Date & Time is required.');
+        errorFound = true;
+      }
+      if (!endDateTime || !endDateTime.value) {
+        showError(endDateTime, 'End Date & Time is required.');
+        errorFound = true;
+      }
+      if (startDateTime && startDateTime.value && endDateTime && endDateTime.value) {
+        const start = new Date(startDateTime.value);
+        const end = new Date(endDateTime.value);
+        const now = new Date();
+        now.setSeconds(0, 0);
+  
+        if (start < now) {
+          showError(startDateTime, 'Start Date & Time cannot be in the past.');
+          errorFound = true;
+        }
+  
+        if (end < now) {
+          showError(endDateTime, 'End Date & Time cannot be in the past.');
+          errorFound = true;
+        }
+  
+        if (end <= start) {
+          showError(endDateTime, 'End Date & Time must be after Start Date & Time.');
+          errorFound = true;
+        }
+      }
+  
+      return !errorFound;
+    }
+  
+    $('.select2').select2({ width: '100%' });
+    document.getElementById('addPromotionBtn').addEventListener('click', function () {
       document.getElementById('addPromotionForm').reset();
-      $('.select2').val(null).trigger('change');   // Clear multiple selects
+      $('.select2').val(null).trigger('change');
+      clearErrors(document.getElementById('addPromotionForm'));
       addModal.show();
-  });
-
-  let deleteId = null;
-
-
-  // ================= ADD PROMOTION SAVE =================
-document.getElementById('saveAddPromotionBtn').addEventListener('click', function () {
-
-    const form = document.getElementById('addPromotionForm');
-
-    // basic HTML validation
-    if (!form.checkValidity()) {
-        form.reportValidity();
+    });
+  
+    let deleteId = null;
+    document.getElementById('saveAddPromotionBtn').addEventListener('click', function () {
+      const form = document.getElementById('addPromotionForm');
+      const button = this;
+      if (!validatePromotionForm(form)) {
         return;
-    }
-
-    const fd = new FormData(form);
-
-    // date validation
-    const start = new Date(fd.get('start_datetime'));
-    const end = new Date(fd.get('end_datetime'));
-
-    if (start >= end) {
-        showAlert('End date must be greater than start date', 'danger');
-        return;
-    }
-
-    // promotion period format (same as edit)
-    const fmt = d => d.toLocaleDateString('en-GB', {
+      }
+      showLoader(button);
+  
+      const fd = new FormData(form);
+      const start = new Date(fd.get('start_datetime'));
+      const end = new Date(fd.get('end_datetime'));
+  
+      const fmt = d => d.toLocaleDateString('en-GB', {
         day: '2-digit',
         month: 'short',
         year: 'numeric'
-    });
-
-    fd.append('promotion_period', `${fmt(start)} - ${fmt(end)}`);
-
-    fetch("{% url 'superuser:add_promotion' %}", {
+      });
+  
+      fd.append('promotion_period', `${fmt(start)} - ${fmt(end)}`);
+  
+      fetch("{% url 'superuser:add_promotion' %}", {
         method: 'POST',
         headers: {
-            'X-CSRFToken': '{{ csrf_token }}'
+          'X-CSRFToken': '{{ csrf_token }}'
         },
         body: fd
-    })
-    .then(res => res.json())
-    .then(res => {
+      })
+      .then(res => res.json())
+      .then(res => {
+        hideLoader(button);
         if (res.success) {
-            addModal.hide();
-            showAlert('Promotion added successfully!', 'success');
-            setTimeout(() => location.reload(), 1200);
+          addModal.hide();
+          showAlert('Promotion added successfully!', 'success');
+          setTimeout(() => location.reload(), 1200);
         } else {
-            showAlert(res.msg || 'Failed to add promotion', 'danger');
+          showAlert(res.msg || 'Failed to add promotion', 'danger');
         }
-    })
-    .catch(() => showAlert('Something went wrong', 'danger'));
-});
-
-
-  // EDIT - Fixed URL using Django url tag
-  document.querySelectorAll('.edit-promo-btn').forEach(btn => {
-    btn.addEventListener('click', function () {
-      const id = this.dataset.id;
-      document.getElementById('promoIdField').value = id;
-
-      fetch("{% url 'superuser:edit_promotion' 0 %}".replace('0', id))
-        .then(r => r.json())
-        .then(res => {
-          if (!res.success) return showAlert(res.msg || 'Not found', 'danger');
-          const d = res.data;
-
-          $('#productType').val(d.product_type);
-          $('#buyInput').val(d.buy);
-          $('#getInput').val(d.get);
-          $('#startInput').val(d.start_datetime);
-          $('#endInput').val(d.end_datetime);
-          $('#supplierSelect').val(d.supplier).trigger('change');
-          $('#productSelect').val(d.product).trigger('change');
-
-          editModal.show();
-        })
-        .catch(() => showAlert('Failed to load data', 'danger'));
+      })
+      .catch(() => {
+        hideLoader(button);
+        showAlert('Something went wrong', 'danger');
+      });
     });
-  });
-
-  // SAVE EDIT - Fixed URL
-  document.getElementById('saveEditPromotionBtn').addEventListener('click', () => {
-    const form = document.getElementById('editPromotionForm');
-    if (!validatePromotionForm(form)) return;
-
-    const id = document.getElementById('promoIdField').value;
-    const fd = new FormData(form);
-
-    const start = new Date(fd.get('start_datetime'));
-    const end = new Date(fd.get('end_datetime'));
-    const fmt = d => d.toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'});
-    fd.append('promotion_period', `${fmt(start)} - ${fmt(end)}`);
-
-    fetch("{% url 'superuser:edit_promotion' 0 %}".replace('0', id), {
-      method: 'POST',
-      headers: { 'X-CSRFToken': '{{ csrf_token }}' },
-      body: fd
-    })
-    .then(r => r.json())
-    .then(res => {
-      if (res.success) {
-        editModal.hide();
-        showAlert('Updated successfully!', 'success');
-        setTimeout(() => location.reload(), 1200);
-      } else {
-        showAlert(res.msg || 'Update failed', 'danger');
+    document.querySelectorAll('.edit-promo-btn').forEach(btn => {
+      btn.addEventListener('click', function () {
+        const id = this.dataset.id;
+        const button = this;
+        showLoader(button);
+        
+        document.getElementById('promoIdField').value = id;
+        clearErrors(document.getElementById('editPromotionForm'));
+  
+        fetch("{% url 'superuser:edit_promotion' 0 %}".replace('0', id))
+          .then(r => r.json())
+          .then(res => {
+            hideLoader(button);
+            if (!res.success) {
+              showAlert(res.msg || 'Not found', 'danger');
+              return;
+            }
+            const d = res.data;
+  
+            $('#productType').val(d.product_type);
+            $('#buyInput').val(d.buy);
+            $('#getInput').val(d.get);
+            $('#startInput').val(d.start_datetime);
+            $('#endInput').val(d.end_datetime);
+            $('#supplierSelect').val(d.supplier).trigger('change');
+            $('#productSelect').val(d.product).trigger('change');
+  
+            editModal.show();
+          })
+          .catch(() => {
+            hideLoader(button);
+            showAlert('Failed to load data', 'danger');
+          });
+      });
+    });
+  
+    // SAVE EDIT
+    document.getElementById('saveEditPromotionBtn').addEventListener('click', function () {
+      const form = document.getElementById('editPromotionForm');
+      const button = this;
+      if (!validatePromotionForm(form)) {
+        return;
       }
+      showLoader(button);
+  
+      const id = document.getElementById('promoIdField').value;
+      const fd = new FormData(form);
+  
+      const start = new Date(fd.get('start_datetime'));
+      const end = new Date(fd.get('end_datetime'));
+      const fmt = d => d.toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'});
+      fd.append('promotion_period', `${fmt(start)} - ${fmt(end)}`);
+  
+      fetch("{% url 'superuser:edit_promotion' 0 %}".replace('0', id), {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+        body: fd
+      })
+      .then(r => r.json())
+      .then(res => {
+        hideLoader(button);
+        if (res.success) {
+          editModal.hide();
+          showAlert('Updated successfully!', 'success');
+          setTimeout(() => location.reload(), 1200);
+        } else {
+          showAlert(res.msg || 'Update failed', 'danger');
+        }
+      })
+      .catch(() => {
+        hideLoader(button);
+        showAlert('Update failed', 'danger');
+      });
     });
-  });
-
-  // DELETE - Fixed URL
-  document.querySelectorAll('.delete-promo-btn').forEach(btn => {
-    btn.addEventListener('click', function (e) {
-      e.preventDefault();
-      deleteId = this.dataset.id;
-      deleteModal.show();
+  
+    // DELETE
+    document.querySelectorAll('.delete-promo-btn').forEach(btn => {
+      btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        deleteId = this.dataset.id;
+        deleteModal.show();
+      });
     });
-  });
-
-  document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
-    if (!deleteId) return;
-
-    fetch("{% url 'superuser:delete_promotion' 0 %}".replace('0', deleteId), {
-      method: 'POST',
-      headers: { 'X-CSRFToken': '{{ csrf_token }}' }
-    })
-    .then(r => r.json())
-    .then(res => {
-      deleteModal.hide();
-      if (res.success) {
-        showAlert('Deleted!', 'danger');
-        setTimeout(() => location.reload(), 1000);
-      } else {
+  
+    document.getElementById('confirmDeleteBtn').addEventListener('click', function () {
+      if (!deleteId) return;
+      
+      const button = this;
+      showLoader(button);
+        
+      fetch("{% url 'superuser:delete_promotion' 0 %}".replace('0', deleteId), {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+      })
+      .then(r => r.json())
+      .then(res => {
+        hideLoader(button);
+        deleteModal.hide();
+        if (res.success) {
+          showAlert('Deleted!', 'danger');
+          setTimeout(() => location.reload(), 1000);
+        } else {
+          showAlert('Delete failed', 'danger');
+        }
+      })
+      .catch(() => {
+        hideLoader(button);
+        deleteModal.hide();
         showAlert('Delete failed', 'danger');
-      }
+      });
     });
   });
-  function validatePromotionForm(form) {
-    return true;
-  }
-});
-</script>
+  </script>
 {% endblock %}

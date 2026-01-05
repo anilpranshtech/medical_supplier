@@ -1,340 +1,283 @@
-{% extends 'pages/base.html' %}
 {% load static %}
-{% load custom_filters %}
-
-{% block content %}
-<style>
-  /* Fallback card view for small screens */
-  @media (max-width: 767px) {
-    .desktop-pricing { display: none; }
-    .mobile-pricing { display: block; }
-  }
-  @media (min-width: 768px) {
-    .desktop-pricing { display: block; }
-    .mobile-pricing { display: none; }
-  }
-</style>
-
-<div class="kt-container-fixed max-w-full mt-5 py-5 px-4 sm:px-6 lg:px-12">
-  <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md">
-    <div class="p-6 sm:p-10 lg:p-12">
-      <div class="flex flex-col sm:flex-row items-center gap-3 w-full mb-4">
-        <h2 class="text-lg font-medium text-mono flex-1">Subscription Plans</h2>
-      </div>
-
-      {% if no_plans_message %}
-        <p class="text-center text-red-500">{{ no_plans_message }}</p>
-      {% else %}
-        <!-- Period toggle -->
-        <div class="flex justify-center mb-6">
-          <div class="inline-flex rounded-md shadow-sm" role="tablist" aria-label="Billing period switch">
-            <button id="monthlyPlan" type="button"
-              class="inline-block px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-l-lg active"
-              role="tab" aria-selected="true">
-              Monthly
-            </button>
-            <button id="annuallyPlan" type="button"
-              class="inline-block px-4 py-2 text-sm font-medium text-gray-900 bg-gray-100 border border-gray-200 rounded-r-lg"
-              role="tab" aria-selected="false">
-              Annually
-            </button>
-          </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subscription Plans</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .plan-toggle .btn.active {
+            background-color: #F8285A !important;
+            border-color: #F8285A !important;
+            color: #fff !important;
+        }
+        .plan-toggle .btn:not(.active):hover {
+            background-color: #fb84a0 !important;
+            border-color: #fb84a0 !important;
+            color: #fff !important;
+        }
+        .plan-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 30px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .plan-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .plan-card.active {
+            border-color: #F8285A;
+            background-color: #fff5f7;
+        }
+        .badge-offer {
+            background-color: #28a745;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-5">
+        <div class="row">
+            <div class="col-12 text-center mb-5">
+                <h1 class="display-4">Subscription Plans</h1>
+                <p class="lead">Choose the perfect plan for your needs</p>
+            </div>
         </div>
 
-        <!-- MOBILE: stacked card view -->
-        <div class="mobile-pricing space-y-6">
-          <!-- Buyer-retailer plans -->
-          <div class="grid grid-cols-1 gap-6">
-            {% for plan in plans %}
-              {% if plan.client_type == 'buyer' and plan.buyer_type == 'retailer' %}
-                <div class="border rounded-lg p-6 shadow-sm {% if user_subscription.plan.id == plan.id %}bg-blue-500 text-white{% else %}bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200{% endif %}">
-                  <div class="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 class="text-xl font-bold">{{ plan.name }}</h3>
-                      <div class="text-sm font-medium">{{ plan.period|title }}</div>
-                    </div>
-                    <div class="text-right">
-                      <div class="flex items-baseline justify-end">
-                        <span class="text-lg">$</span>
-                        <span class="text-3xl font-semibold">{{ plan.stripe_metadata.price|floatformat:2 }}</span>
-                      </div>
-                      {% if plan.period == 'annually' %}
-                        <div class="text-xs mt-1">
-                          ($ {{ plan.stripe_metadata.price|divide:12|floatformat:2 }}/mo)<br>
-                          <span class="inline-block mt-1 bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 text-xs font-semibold px-2 py-1 rounded">
-                            Save 20% / $ {{ plan.stripe_metadata.price|floatformat:2|multiply:0.2 }}
-                          </span>
-                        </div>
-                      {% endif %}
-                    </div>
-                  </div>
-
-                  <div class="mb-4">
-                    {% if user_subscription.plan.id == plan.id %}
-                      <button class="w-full mt-2 px-4 py-2 bg-gray-800 text-white rounded-lg font-semibold cursor-not-allowed">Current</button>
-                    {% else %}
-                      {% if user_subscription.plan.stripe_metadata.price > plan.stripe_metadata.price %}
-                        <div class="block mt-2 bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200 text-xs font-semibold px-2 py-1 rounded">
-                          You cannot downgrade<div class="mt-1">from higher package</div>
-                        </div>
-                      {% else %}
-                        <button class="btnPackage w-full mt-2 px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg font-semibold hover:bg-blue-500 hover:text-red transition-colors" data-plan-id="{{ plan.id }}">
-                          Change Plan
-                        </button>
-                      {% endif %}
-                    {% endif %}
-                  </div>
+        <!-- Promotional Banners -->
+        {% if subscription_offers %}
+            {% for offer in subscription_offers %}
+                <div class="alert alert-success text-center mb-4" role="alert">
+                    <h4>🎉 {{ offer.subscriptions_offer_name }}</h4>
+                    <p>Get {{ offer.subscriptions_offer_credits }} bonus credits! Offer ends {{ offer.subscriptions_offer_end_date|date:"M d, Y" }}</p>
                 </div>
-              {% endif %}
             {% endfor %}
-          </div>
+        {% endif %}
 
-          <!-- Platform plans -->
-          <div class="grid grid-cols-1 gap-6 mt-6">
-            {% for plan in platform_plans %}
-              <div class="border rounded-lg p-6 shadow-sm flex flex-col {% if plan.period == 'annually' %}{{ '' }}{% endif %}">
-                <div class="mb-2">
-                  <h2 class="text-lg font-semibold text-center">{{ plan.plan.name }}</h2>
+        <!-- Plan Toggle: Monthly/Annual -->
+        <div class="row justify-content-center mb-5">
+            <div class="col-12 col-md-4">
+                <div class="btn-group w-100 plan-toggle" role="group">
+                    <button type="button" class="btn btn-outline-primary active" id="monthly-btn" onclick="showPlans('monthly')">
+                        Monthly
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" id="annually-btn" onclick="showPlans('annually')">
+                        Annually
+                    </button>
                 </div>
-                <div class="flex justify-center items-start mb-2">
-                  <span class="text-lg">$</span>
-                  <span class="text-3xl font-semibold ml-1">{{ plan.stripe_metadata.price|floatformat:2 }}</span>
-                  {% if plan.period == 'monthly' %}
-                    <span class="ml-1 text-base self-end">/mo</span>
-                  {% elif plan.period == 'annually' %}
-                    <span class="ml-1 text-base self-end">/yr</span>
-                  {% endif %}
-                </div>
-                {% if plan.period == 'annually' %}
-                  <div class="text-sm font-medium mb-2 text-gray-600 dark:text-gray-300 text-center">
-                    (${{ plan.stripe_metadata.price|divide:12|floatformat:2 }}/mo equivalent)
-                  </div>
-                  <div class="text-sm font-medium mb-4 text-center">
-                    <span class="inline-block mt-2 bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 text-xs font-semibold px-2 py-1 rounded">
-                      Save 20% – ${{ plan.stripe_metadata.price|multiply:0.2|floatformat:2 }}
-                    </span>
-                  </div>
-                {% endif %}
-                <button
-                  type="button"
-                  data-plan-id="{{ plan.id }}"
-                  class="btnPackage w-full mt-4 px-4 py-2 bg-primary text-white font-medium text-sm rounded hover:bg-primary-dark focus:outline-none transition"
-                >
-                  Select Plan
-                </button>
-              </div>
-            {% endfor %}
-          </div>
-
-          <!-- Features for mobile: accordion-style -->
-          <div class="mt-8">
-            <h3 class="text-lg font-semibold mb-4">Features</h3>
-            {% for feature in features %}
-              <div class="border rounded-lg p-4 mb-4">
-                <div class="flex justify-between items-center mb-2">
-                  <div class="font-bold">{{ feature.name }}</div>
-                  <div class="text-sm text-gray-500">{{ feature.status|default:"" }}</div>
-                </div>
-                <div class="space-y-2">
-                  <!-- Buyer-retailer plan feature breakdown -->
-                  {% for plan in plans %}
-                    {% if plan.client_type == 'buyer' and plan.buyer_type == 'retailer' %}
-                      <div class="flex flex-col sm:flex-row justify-between items-start gap-2 border-t pt-2">
-                        <div class="font-medium">{{ plan.name }} ({{ plan.period }})</div>
-                        <div class="flex items-center gap-2">
-                          {% if feature in plan.features.all %}
-                            <i class="bi bi-check-circle-fill text-green-500"></i>
-                            {% if feature.cost %}
-                              <span class="inline-block bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200 text-xs font-semibold px-2 py-1 rounded">{{ feature.cost }}</span>
-                            {% endif %}
-                          {% elif feature.status == 'additional' %}
-                            <i class="bi bi-check-circle-fill text-yellow-500"></i>
-                            <span class="inline-block bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200 text-xs font-semibold px-2 py-1 rounded">{{ feature.cost }}</span>
-                          {% else %}
-                            <i class="bi bi-x-circle-fill text-red-500"></i>
-                          {% endif %}
-                        </div>
-                      </div>
-                    {% endif %}
-                  {% endfor %}
-                </div>
-              </div>
-            {% endfor %}
-          </div>
+            </div>
         </div>
 
-        <!-- DESKTOP: table view -->
-        <div class="desktop-pricing overflow-x-auto">
-          <table class="w-full text-center">
-            <thead>
-              <tr id="kt_pricing">
-                <th class="p-4">
-                  <!-- empty header for toggle already above -->
-                </th>
-                {% for plan in plans %}
-                  {% if plan.client_type == 'buyer' and plan.buyer_type == 'retailer' %}
-                  <th class="... {% if plan.stripe_metadata.plan_duration == 'Year' %}annually-plan hidden{% elif plan.stripe_metadata.plan_duration == 'Month' %}monthly-plan{% endif %}">
-
-                      <div class="min-w-[200px] rounded-lg p-6 {% if user_subscription.plan.id == plan.id %}bg-blue-500 text-white{% else %}bg-gray-50 dark:bg-gray-700{% endif %} text-gray-800 dark:text-gray-200" id="package{{ plan.id }}">
-                        <h3 class="text-xl font-bold mb-4">{{ plan.name }}</h3>
-                        <div class="flex justify-center items-start mb-2">
-                          <span class="text-lg">$</span>
-                          <span class="text-4xl font-semibold">{{ plan.stripe_metadata.price|floatformat:2 }}</span>
-                        </div>
-                      <div class="text-sm font-medium mb-2">{{ plan.stripe_metadata.plan_duration }}</div>
-
-                        {% if plan.period == 'annually' %}
-                          <div class="text-sm font-medium mb-4">
-                            ($ {{ plan.stripe_metadata.price|divide:12|floatformat:2 }}/Monthly)<br>
-                            <span class="inline-block mt-2 bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 text-xs font-semibold px-2 py-1 rounded">Save 20% / $ {{ plan.stripe_metadata.price|floatformat:2|multiply:0.2 }}</span>
-                          </div>
+        <!-- Monthly Plans -->
+        <div id="monthly-plans" class="row">
+            {% for item in monthly %}
+                <div class="col-md-4 mb-4">
+                    <div class="plan-card {% if item.plan.price_id == user_active_price_id %}active{% endif %}">
+                        {% if item.offer_applied %}
+                            <span class="badge-offer">{{ item.offer_name }}</span>
                         {% endif %}
-                        {% if user_subscription.plan.id == plan.id %}
-                          <button class="mt-4 px-4 py-2 bg-gray-800 text-white rounded-lg font-semibold cursor-not-allowed">Current</button>
+                        
+                        <h3 class="mb-3">{{ item.plan.name }}</h3>
+                        
+                        <div class="mb-3">
+                            <h2 class="d-inline">${{ item.plan.price }}</h2>
+                            <span class="text-muted">/month</span>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <strong>{{ item.effective_credits }} Credits</strong>
+                            {% if item.credit_difference > 0 %}
+                                <span class="text-success">(+{{ item.credit_difference }} bonus!)</span>
+                            {% endif %}
+                        </div>
+                        
+                        {% if item.plan.description %}
+                            <p class="text-muted">{{ item.plan.description }}</p>
+                        {% endif %}
+                        
+                        {% if item.plan.price_id == user_active_price_id %}
+                            <button class="btn btn-secondary w-100" disabled>Current Plan</button>
+                        {% elif is_canceling and item.plan.price_id == user_active_price_id %}
+                            <button class="btn btn-warning w-100" disabled>Canceling</button>
                         {% else %}
-                          {% if user_subscription.plan.stripe_metadata.price > plan.stripe_metadata.price %}
-                            <span class="block mt-4 bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200 text-xs font-semibold px-2 py-1 rounded">You cannot downgrade<div class="mt-1">from higher package</div></span>
-                          {% else %}
-                            <button class="mt-4 px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg font-semibold hover:bg-blue-500 hover:text-red transition-colors btnPackage" data-plan-id="{{ plan.id }}">Change Plan</button>
-                          {% endif %}
+                            <button class="btn btn-primary w-100 subscribe-btn" 
+                                    data-price-id="{{ item.plan.price_id }}"
+                                    data-plan-id="{{ item.plan.id }}">
+                                Subscribe Now
+                            </button>
                         {% endif %}
-                      </div>
-                    </th>
-                  {% endif %}
-                {% endfor %}
-                {% for plan in platform_plans %}
-                  <th scope="col" class="text-center align-top border-l border-gray-200 dark:border-gray-700 {{ plan.period }}-plan {% if plan.period == 'annually' %}hidden{% endif %}">
-                    <div class="flex flex-col justify-start items-center p-4">
-                      <h2 class="text-lg font-semibold mb-1 text-center">{{ plan.plan.name }}</h2>
-
-                      {% if plan.period == 'monthly' %}
-                        <div class="flex justify-center items-start mb-2">
-                          <span class="text-lg">$</span>
-                          <span class="text-4xl font-semibold">
-                            {{ plan.stripe_metadata.price|floatformat:2 }}
-                          </span>
-                          <span class="ml-1 text-base self-end">/mo</span>
-                        </div>
-                      {% elif plan.period == 'annually' %}
-                        <div class="flex justify-center items-start mb-2">
-                          <span class="text-lg">$</span>
-                          <span class="text-4xl font-semibold">
-                            {{ plan.stripe_metadata.price|floatformat:2 }}
-                          </span>
-                          <span class="ml-1 text-base self-end">/yr</span>
-                        </div>
-                        <div class="text-sm font-medium mb-2 text-gray-600 dark:text-gray-300">
-                          (${{ plan.stripe_metadata.price|divide:12|floatformat:2 }}/mo equivalent)
-                        </div>
-                        <div class="text-sm font-medium mb-4">
-                          <span class="inline-block mt-2 bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 text-xs font-semibold px-2 py-1 rounded">
-                            Save 20% – ${{ plan.stripe_metadata.price|multiply:0.2|floatformat:2 }}
-                          </span>
-                        </div>
-                      {% endif %}
-
-                      <!-- Select Plan Button -->
-                      <button
-                        type="button"
-                        data-plan-id="{{ plan.id }}"
-                        class="btnPackage w-full mt-4 px-4 py-2 bg-primary text-white font-medium text-sm rounded hover:bg-primary-dark focus:outline-none transition"
-                      >
-                        Select Plan
-                      </button>
                     </div>
-                  </th>
-                {% endfor %}
-              </tr>
-            </thead>
-            <tbody class="mt-7">
-              {% for feature in features %}
-                <tr class="border-t border-gray-200 dark:border-gray-700">
-                  <th class="text-left p-4 font-bold text-lg">{{ feature.name }}</th>
-                  {% for plan in plans %}
-                    {% if plan.client_type == 'buyer' and plan.buyer_type == 'retailer' %}
-                      <td class="{{ plan.period }}-plan {% if plan.period == 'annually' %}hidden{% endif %} text-center p-4">
-                        <div>
-                          {% if feature in plan.features.all %}
-                            <i class="bi bi-check-circle-fill text-green-500 text-2xl"></i>
-                            {% if feature.cost %}
-                              <div class="mt-2"><span class="inline-block bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200 text-xs font-semibold px-2 py-1 rounded">{{ feature.cost }}</span></div>
-                            {% endif %}
-                          {% elif feature.status == 'additional' %}
-                            <i class="bi bi-check-circle-fill text-yellow-500 text-2xl"></i>
-                            <div class="mt-2"><span class="inline-block bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200 text-xs font-semibold px-2 py-1 rounded">{{ feature.cost }}</span></div>
-                          {% else %}
-                            <i class="bi bi-x-circle-fill text-red-500 text-2xl"></i>
-                          {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Yearly Plans (hidden by default) -->
+        <div id="annually-plans" class="row d-none">
+            {% for item in yearly %}
+                <div class="col-md-4 mb-4">
+                    <div class="plan-card {% if item.plan.price_id == user_active_price_id %}active{% endif %}">
+                        {% if item.offer_applied %}
+                            <span class="badge-offer">{{ item.offer_name }}</span>
+                        {% endif %}
+                        
+                        <h3 class="mb-3">{{ item.plan.name }}</h3>
+                        
+                        <div class="mb-3">
+                            <h2 class="d-inline">${{ item.plan.price }}</h2>
+                            <span class="text-muted">/year</span>
                         </div>
-                      </td>
-                    {% endif %}
-                  {% endfor %}
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+                        
+                        <div class="mb-4">
+                            <strong>{{ item.effective_credits }} Credits</strong>
+                            {% if item.credit_difference > 0 %}
+                                <span class="text-success">(+{{ item.credit_difference }} bonus!)</span>
+                            {% endif %}
+                        </div>
+                        
+                        {% if item.plan.description %}
+                            <p class="text-muted">{{ item.plan.description }}</p>
+                        {% endif %}
+                        
+                        {% if item.plan.price_id == user_active_price_id %}
+                            <button class="btn btn-secondary w-100" disabled>Current Plan</button>
+                        {% elif is_canceling and item.plan.price_id == user_active_price_id %}
+                            <button class="btn btn-warning w-100" disabled>Canceling</button>
+                        {% else %}
+                            <button class="btn btn-primary w-100 subscribe-btn" 
+                                    data-price-id="{{ item.plan.price_id }}"
+                                    data-plan-id="{{ item.plan.id }}">
+                                Subscribe Now
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
         </div>
-      {% endif %}
-    </div>
-  </div>
 
-  <!-- Subscription Confirmation Modal -->
-  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden" id="package_modal" data-bs-backdrop="static">
-    <div class="bg-white dark:bg-gray-800 rounded-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-      <div class="p-6 border-b border-gray-200 dark:border-gray-700">
-        <h3 class="text-xl font-bold">Confirm Your Subscription Change</h3>
-      </div>
-      <div class="p-6">
-        <div>
-          <h2 class="text-lg font-semibold mb-4">Subscription Terms</h2>
-          <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">Welcome to Health_Equipment.com! Changing your subscription will update your access to our premium health equipment services. These terms govern your use of the services provided by Health Equipment LLC. Please review them carefully.</p>
-          <div class="mb-4">
-            <p class="font-semibold text-sm">1. Subscription Fees</p>
-            <p class="text-sm text-gray-600 dark:text-gray-300">By changing your subscription, you agree to pay the fees as outlined for the new plan. You authorize Health Equipment LLC (and its payment processors) to charge your selected payment method. <strong>All subscriptions are recurring and will renew automatically unless canceled.</strong> You are responsible for any applicable taxes.</p>
-          </div>
-          <div class="mb-4">
-            <p class="font-semibold text-sm">2. Cancellation Policy</p>
-            <p class="text-sm text-gray-600 dark:text-gray-300">Subscriptions are charged automatically on a recurring basis until canceled. You may cancel by logging into your account and selecting the cancellation option. A confirmation email will be sent with the expiration date. <strong>You must contact support before or on the payment due date to cancel.</strong></p>
-          </div>
-          <div class="mb-4">
-            <p class="font-semibold text-sm">3. Refunds</p>
-            <p class="text-sm text-gray-600 dark:text-gray-300">Subscriptions may include a free trial. Services are billed in advance and are non-refundable. No refunds will be issued for partial months, upgrades/downgrades, or unused months. <strong>All subscriptions are recurring and auto-renew.</strong></p>
-          </div>
-          <div class="border-t border-gray-200 dark:border-gray-700 my-6"></div>
-          <h2 class="text-lg font-semibold mb-4">Terms & Conditions</h2>
-          <p class="text-sm text-gray-600 dark:text-gray-300">Updated: 07/29/2025</p>
-          <div class="mb-4">
-            <p class="font-semibold text-sm">1. Overview</p>
-            <p class="text-sm text-gray-600 dark:text-gray-300">These Terms of Service apply to all access and use of Health Equipment LLC's services. By using our services, you agree to these terms. Please review carefully. If you do not agree, you must not use our services.</p>
-          </div>
-          <!-- Add more terms as needed, adapted from the original -->
+        <!-- Cancel Subscription Button -->
+        {% if user_active_price_id and not is_canceling %}
+        <div class="row mt-5">
+            <div class="col-12 text-center">
+                <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#cancelModal">
+                    Cancel My Subscription
+                </button>
+            </div>
         </div>
-      </div>
-      <div class="p-6 border-t border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row justify-between gap-4">
-        <div class="flex-1 mb-4">
-          <label class="flex items-start gap-2 text-sm">
-            <input type="checkbox" id="subscription_package_confirm" name="subscription_package_confirm" class="mt-1 h-4 w-4" required>
-            <span>By checking this box, you agree to change your subscription. {% if user_subscription.is_trial %}If your current subscription is in a trial period, it will end, and you will be billed according to the selected plan.{% endif %}</span>
-          </label>
-          <div class="text-red-500 text-xs mt-1 hidden" id="subscription_package_confirm_required">You must agree to the terms and conditions.</div>
-        </div>
-        <div class="flex gap-2">
-          <button type="button" id="btn_subscription_package_cancelled" class="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors">Cancel</button>
-          <button type="button" id="btn_subscription_package_confirm" class="px-4 py-2 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 transition-colors flex items-center">
-            <span class="indicator-label">Confirm Change</span>
-            <span class="indicator-progress hidden ml-2">Please wait...
-              <svg class="animate-spin h-5 w-5 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-              </svg>
-            </span>
-          </button>
-        </div>
-        <input type="hidden" id="package_modal_plan_id" name="package_id">
-      </div>
+        {% endif %}
     </div>
-  </div>
-</div>
 
-<script src="{% static 'js/subscription.js' %}"></script>
-{% endblock content %}
+    <!-- Confirmation Modal -->
+    <div class="modal fade" id="confirmModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Subscription</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="confirm-modal-body">
+                    <!-- Content loaded via JavaScript -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <form id="subscribe-form" method="POST" action="{% url 'dashboard:subscription_plans' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="price_id" id="modal-price-id">
+                        <button type="submit" class="btn btn-primary">Confirm</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cancel Subscription Modal -->
+    <div class="modal fade" id="cancelModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger">Cancel Subscription</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Your subscription will expire at the end of the current billing term.</p>
+                    <p><strong>Are you sure you want to cancel?</strong></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Keep Subscription</button>
+                    <form method="POST" action="{% url 'dashboard:cancel_subscription' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Yes, Cancel</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Toggle between monthly and annual plans
+        function showPlans(period) {
+            if (period === 'monthly') {
+                document.getElementById('monthly-plans').classList.remove('d-none');
+                document.getElementById('annually-plans').classList.add('d-none');
+                document.getElementById('monthly-btn').classList.add('active');
+                document.getElementById('annually-btn').classList.remove('active');
+            } else {
+                document.getElementById('monthly-plans').classList.add('d-none');
+                document.getElementById('annually-plans').classList.remove('d-none');
+                document.getElementById('monthly-btn').classList.remove('active');
+                document.getElementById('annually-btn').classList.add('active');
+            }
+        }
+
+        // Handle subscription button clicks
+        $(document).on('click', '.subscribe-btn', function() {
+            const button = $(this);
+            const priceId = button.data('price-id');
+            const planId = button.data('plan-id');
+            
+            button.prop('disabled', true).text('Checking...');
+            
+            $.ajax({
+                url: '{% url "dashboard:subscription_plans" %}',
+                data: { price_id: priceId },
+                headers: { "X-Requested-With": "XMLHttpRequest" },
+                success: function(response) {
+                    button.prop('disabled', false).text('Subscribe Now');
+                    
+                    if (response.status === "blocked") {
+                        $('#confirm-modal-body').html(`<p class="text-danger">${response.message}</p>`);
+                        $('#confirmModal').modal('show');
+                    } else if (response.status === "ok") {
+                        $('#modal-price-id').val(priceId);
+                        $('#confirm-modal-body').html(`<p>${response.message}</p>`);
+                        $('#confirmModal').modal('show');
+                    } else {
+                        $('#modal-price-id').val(priceId);
+                        $('#confirm-modal-body').html(`
+                            <p>${response.message}</p>
+                            ${response.active_subscriptions ? `
+                                <ul>
+                                    ${response.active_subscriptions.map(sub => 
+                                        `<li>${sub.plan_name} - $${sub.price}</li>`
+                                    ).join('')}
+                                </ul>
+                            ` : ''}
+                        `);
+                        $('#confirmModal').modal('show');
+                    }
+                },
+                error: function(xhr) {
+                    button.prop('disabled', false).text('Subscribe Now');
+                    alert(xhr.responseJSON?.message || "Error occurred. Please try again.");
+                }
+            });
+        });
+    </script>
+</body>
+</html>

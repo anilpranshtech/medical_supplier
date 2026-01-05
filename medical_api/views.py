@@ -2896,3 +2896,316 @@ class LoginHomeAPIViewSet(viewsets.ViewSet):
         }
 
         return Response(data)
+
+
+# ==================== Payment Method Views ====================
+import stripe
+import pytz
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views import View
+from django.shortcuts import redirect
+from django.contrib import messages
+from dashboard.models import UserCardsAndSubscriptions, UserBillingAddress, CustomerPayment
+
+
+class AddPaymentMethodView(LoginRequiredMixin, View):
+    template_name = "medical_api/payment_method.html"
+    login_url = 'dashboard:login'
+
+    def saveCustomerData(self, request,
+                         crd_name,
+                         crd_address1,
+                         crd_address2,
+                         crd_city,
+                         crd_state,
+                         crd_postal_code,
+                         country_name,
+                         country_code):
+        UserBillingAddress.objects.update_or_create(
+            user=request.user,
+            defaults={
+                'customer_name': crd_name,
+                'customer_address1': crd_address1,
+                'customer_address2': crd_address2,
+                'customer_city': crd_city,
+                'customer_state': crd_state,
+                'customer_postal_code': crd_postal_code,
+                'customer_country': country_name,
+                'customer_country_code': country_code
+            }
+        )
+
+    def get(self, request, *args, **kwargs):
+        # Get or create UserCardsAndSubscriptions
+        user_cards, created = UserCardsAndSubscriptions.objects.get_or_create(user=request.user)
+
+        # Get Stripe publishable key from settings
+        stripe_publishable_key = getattr(settings, 'STRIPE_PUBLISHABLE_KEY', None)
+        if not stripe_publishable_key:
+            stripe_publishable_key = getattr(settings, 'STRIPE_TEST_PUBLIC_KEY', None)
+
+        context = {
+            'countries_list': pytz.country_names.items(),
+            'STRIPE_PUBLIC_KEY': stripe_publishable_key
+        }
+
+        # Set Stripe secret key
+        stripe_secret_key = getattr(settings, 'STRIPE_SECRET_KEY', None)
+        if not stripe_secret_key:
+            stripe_secret_key = getattr(settings, 'STRIPE_TEST_SECRET_KEY', None)
+        
+        if stripe_secret_key:
+            stripe.api_key = stripe_secret_key
+
+        if user_cards.stripe_customer_id:
+            try:
+                # Fetch the customer to check default payment method
+                customer = stripe.Customer.retrieve(user_cards.stripe_customer_id)
+
+                # Try NEW API (PaymentMethods) first
+                payment_method_id = customer.get('invoice_settings', {}).get('default_payment_method')
+
+                if payment_method_id:
+                    payment_method = stripe.PaymentMethod.retrieve(payment_method_id)
+                    card = payment_method.get('card')
+
+                    context.update({
+                        'card': {
+                            'brand': card.get('brand'),
+                            'last4': card.get('last4'),
+                            'exp_month': card.get('exp_month'),
+                            'exp_year': card.get('exp_year'),
+                        }
+                    })
+                else:
+                    # Try OLD API (Sources) if no PaymentMethod found
+                    print('No PaymentMethod found, checking Sources (old API)...')
+                    cards = stripe.Customer.list_sources(
+                        user_cards.stripe_customer_id,
+                        limit=1,
+                        object='card'
+                    )
+                    if cards and cards.get('data'):
+                        card = cards['data'][0]
+                        context.update({
+                            'card': {
+                                'brand': card.get('brand'),
+                                'last4': card.get('last4'),
+                                'exp_month': card.get('exp_month'),
+                                'exp_year': card.get('exp_year'),
+                            }
+                        })
+                        print(f'Found card via Sources API: {card.get("brand")} ending in {card.get("last4")}')
+
+            except stripe.error.InvalidRequestError:
+                # If customer is invalid or deleted, reset locally
+                user_cards.stripe_customer_id = None
+                user_cards.save()
+                context.update({
+                    'error': "Your Stripe account could not be found. Please re-add your payment method."
+                })
+
+        return render(request, self.template_name, context)
+
+    def post(self, request, *args, **kwargs):
+        # Get or create UserCardsAndSubscriptions
+        user_cards, created = UserCardsAndSubscriptions.objects.get_or_create(user=request.user)
+
+        # Set Stripe secret key
+        stripe_secret_key = getattr(settings, 'STRIPE_SECRET_KEY', None)
+        if not stripe_secret_key:
+            stripe_secret_key = getattr(settings, 'STRIPE_TEST_SECRET_KEY', None)
+        
+        if not stripe_secret_key:
+            messages.error(request, 'Stripe configuration error. Please contact support.')
+            return redirect('medical_api:add_payment_method')
+        
+        stripe.api_key = stripe_secret_key
+
+        payment_method_id = request.POST.get('payment_method_id')
+        crd_name = request.POST.get('crd_name')
+        crd_address1 = request.POST.get('crd_address1')
+        crd_address2 = request.POST.get('crd_address2')
+        crd_city = request.POST.get('crd_city')
+        crd_state = request.POST.get('crd_state')
+        crd_postal_code = request.POST.get('crd_postal_code')
+        crd_country = request.POST.get('crd_country')
+        
+        if crd_country:
+            country_code, country_name = [sub for sub in pytz.country_names.items() if sub[0] == crd_country][0]
+        else:
+            country_code = None
+            country_name = None
+
+        try:
+            payment_descriptions = "Card added to payment method"
+
+            # Attach or create customer
+            if user_cards.stripe_customer_id:
+                print('CUSTOMER FOUND ---------- ')
+                stripe.PaymentMethod.attach(
+                    payment_method_id,
+                    customer=user_cards.stripe_customer_id,
+                )
+                stripe.Customer.modify(
+                    user_cards.stripe_customer_id,
+                    invoice_settings={
+                        'default_payment_method': payment_method_id,
+                    },
+                )
+                customer_id = user_cards.stripe_customer_id
+            else:
+                print('CUSTOMER NOT FOUND ---------- ')
+                customer = stripe.Customer.create(
+                    email=request.user.email,
+                    name=crd_name,
+                    address={
+                        'city': crd_city,
+                        'country': country_code,
+                        'line1': crd_address1,
+                        'line2': crd_address2,
+                        'postal_code': crd_postal_code,
+                        'state': crd_state,
+                    },
+                    payment_method=payment_method_id,
+                    invoice_settings={
+                        'default_payment_method': payment_method_id,
+                    },
+                    description=payment_descriptions
+                )
+                customer_id = customer['id']
+                user_cards.stripe_customer_id = customer_id
+
+            # Charge the user using PaymentIntent ($1 validation charge)
+            quantity = 1  # $1 charge for validation
+            payment_description = f"Card added to payment method. Charge amount: ${quantity}"
+
+            payment_intent = stripe.PaymentIntent.create(
+                amount=int(quantity * 100),  # cents
+                currency='usd',
+                customer=customer_id,
+                payment_method=payment_method_id,
+                off_session=True,
+                confirm=True,
+                description=payment_description
+            )
+
+            stripe_charge_id = payment_intent['id']
+
+            # Save Payment record
+            CustomerPayment.objects.create(
+                user=request.user,
+                stripe_charge_id=stripe_charge_id,
+                amount=quantity,
+                is_bonus=False,
+            )
+
+            # Update user cards
+            user_cards.stripe_payment_method_id = payment_method_id
+            user_cards.save()
+
+            # Save Billing Address
+            if crd_name and country_code:
+                self.saveCustomerData(
+                    request, crd_name, crd_address1, crd_address2, crd_city,
+                    crd_state, crd_postal_code, country_name, country_code
+                )
+
+            messages.success(request, 'Your Payment Method has been updated successfully.')
+            return redirect('medical_api:add_payment_method')
+
+        except stripe.error.CardError as e:
+            messages.error(request, f'Your Payment Method has Failed: {str(e)}')
+            return redirect('medical_api:add_payment_method')
+
+        except Exception as e:
+            messages.error(request, f'Your Payment Method has Failed. Error: {str(e)}')
+            return redirect('medical_api:add_payment_method')
+
+
+class DeletePaymentMethodView(LoginRequiredMixin, View):
+    login_url = 'dashboard:login'
+    
+    def post(self, request, *args, **kwargs):
+        user_cards = get_object_or_404(UserCardsAndSubscriptions, user=request.user)
+
+        # Set Stripe secret key
+        stripe_secret_key = getattr(settings, 'STRIPE_SECRET_KEY', None)
+        if not stripe_secret_key:
+            stripe_secret_key = getattr(settings, 'STRIPE_TEST_SECRET_KEY', None)
+        
+        if not stripe_secret_key:
+            messages.error(request, 'Stripe configuration error. Please contact support.')
+            return redirect('medical_api:add_payment_method')
+        
+        stripe.api_key = stripe_secret_key
+
+        if not user_cards.stripe_customer_id:
+            messages.error(request, "No payment method found to delete.")
+            return redirect('medical_api:add_payment_method')
+
+        try:
+            # Retrieve the customer
+            customer = stripe.Customer.retrieve(user_cards.stripe_customer_id)
+            
+            # Try NEW API (PaymentMethods) first
+            payment_method_id = customer.get('invoice_settings', {}).get('default_payment_method')
+
+            if payment_method_id:
+                # Detach the payment method (NEW API)
+                stripe.PaymentMethod.detach(payment_method_id)
+
+                # Clear default payment method from the customer
+                stripe.Customer.modify(
+                    user_cards.stripe_customer_id,
+                    invoice_settings={
+                        'default_payment_method': None,
+                    },
+                )
+
+                # Mark billing addresses as old with tracking info
+                address_qs = UserBillingAddress.objects.filter(user=request.user)
+                for add in address_qs:
+                    add.is_old = True
+                    add.old_card = str(payment_method_id)
+                    add.deleted_at = timezone.now()
+                    add.deleted_via_api = 'NEW_API'
+                    add.save()
+
+                # Clear from user cards
+                user_cards.stripe_payment_method_id = None
+                user_cards.save()
+
+            else:
+                # Try OLD API (Sources) if no PaymentMethod found
+                print('No PaymentMethod found, checking Sources (old API) for deletion...')
+                cards = stripe.Customer.list_sources(
+                    user_cards.stripe_customer_id,
+                    object='card'
+                )
+                if cards and cards.get('data'):
+                    for card in cards['data']:
+                        card_id = card['id']
+                        stripe.Customer.delete_source(user_cards.stripe_customer_id, card_id)
+                        
+                        # Mark billing addresses as old
+                        address_qs = UserBillingAddress.objects.filter(user=request.user)
+                        for add in address_qs:
+                            add.is_old = True
+                            add.old_card = str(card_id)
+                            add.deleted_at = timezone.now()
+                            add.deleted_via_api = 'OLD_API'
+                            add.save()
+
+                    user_cards.stripe_payment_method_id = None
+                    user_cards.save()
+
+            messages.success(request, 'Your Payment Method has been deleted successfully.')
+            return redirect('medical_api:add_payment_method')
+
+        except stripe.error.InvalidRequestError as e:
+            messages.error(request, f'Error deleting payment method: {str(e)}')
+            return redirect('medical_api:add_payment_method')
+        except Exception as e:
+            messages.error(request, f'Error deleting payment method: {str(e)}')
+            return redirect('medical_api:add_payment_method')

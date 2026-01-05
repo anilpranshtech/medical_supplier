@@ -835,6 +835,7 @@ class Payment(models.Model):
     class Meta:
         ordering = ["-created_at"]
         verbose_name = verbose_name_plural = "Payment"
+        db_table = "dashboard_payment"
 
 
 class StripePayment(models.Model):
@@ -1473,40 +1474,28 @@ class BuyXGetYPromotion(models.Model):
     product_type = models.CharField(max_length=10,choices=PRODUCT_TYPE_CHOICES)
     supplier = models.ManyToManyField('SupplierProfile', related_name='buyxgety_promotions')
     product = models.ManyToManyField('Product', related_name='buyxgety_products')
-    
     buy = models.IntegerField()
     get = models.IntegerField()
-
     promotion_period = models.CharField( max_length=100, help_text="Promotion period (e.g., 01 Nov 2025 - 30 Nov 2025)")
     created_at = models.DateTimeField(auto_now_add=True) 
-    status = models.CharField(
-        max_length=10,
-        choices=[('Active', 'Active'), ('Inactive', 'Inactive')],
-        default='Inactive'
-    )
-    
-
+    status = models.CharField(max_length=10, choices=[('Active', 'Active'), ('Inactive', 'Inactive')], default='Inactive')
     def __str__(self):
         suppliers = ", ".join(s.user.username for s in self.supplier.all())
         products = ", ".join(p.name for p in self.product.all())
         return f"{self.product_type.upper()} | Suppliers: {suppliers} | Products: {products} | Buy {self.buy} Get {self.get}"
     def save(self, *args, **kwargs):
         try:
-         
             period = self.promotion_period.split(" - ")
             if len(period) == 2:
                 start_date = timezone.datetime.strptime(period[0], "%d %b %Y").date()
                 end_date = timezone.datetime.strptime(period[1], "%d %b %Y").date()
                 now = timezone.now().date()
-
                 if start_date <= now <= end_date:
                     self.status = 'Active'
                 else:
                     self.status = 'Inactive'
         except Exception as e:
-
             self.status = 'Inactive'
-
         super().save(*args, **kwargs)
 class BuyXGiftYPromotion(models.Model):
     product_type = models.CharField(max_length=10, choices=PRODUCT_TYPE_CHOICES)
@@ -2142,6 +2131,7 @@ class ChatRoom(models.Model):
             return f"Chat: {self.buyer.username if self.buyer else 'Buyer'} - {self.supplier.username} (Product: {self.product.name if self.product else 'N/A'})"
         else:
             return f"Chat: {self.supplier.username} - {self.admin.username if self.admin else 'Admin'}"
+        
 class ChatMessage(models.Model):
     room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, related_name='messages')
     sender = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -2154,3 +2144,136 @@ class ChatMessage(models.Model):
     
     def __str__(self):
         return f"{self.sender.username}: {self.message[:50]}"
+
+
+
+
+class UserCardsAndSubscriptions(models.Model):
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True)
+    stripe_customer_id = models.CharField(max_length=255, blank=True, null=True)
+    stripe_payment_method_id = models.CharField(max_length=500, blank=True, null=True)
+    stripe_subscription_id = models.CharField(max_length=500, blank=True, null=True)    
+    active_subscription_price_id = models.CharField(max_length=255, blank=True, null=True)
+    subscription_status = models.CharField(max_length=50, blank=True, null=True)
+    subscriptions_period_start = models.DateTimeField(blank=True, null=True)
+    subscriptions_period_end = models.DateTimeField(blank=True, null=True)
+    
+
+    subscriptions_credits_number_checks = models.IntegerField(default=0, help_text="Current subscription credits")
+    subscriptions_offer_credits_number_checks = models.IntegerField(default=0, help_text="Bonus offer credits")
+    plan_duration = models.CharField(max_length=10, blank=True, null=True)
+    is_custom_subscription = models.BooleanField(default=False)
+    last_credit_reset_date = models.DateTimeField(blank=True, null=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ["-updated_at"]
+        verbose_name = verbose_name_plural ="Customer Cards And Subscriptions"
+
+
+class UserBillingAddress(models.Model):
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True)
+    customer_name = models.CharField(verbose_name="Card Holder Name", max_length=128, null=True, blank=True)
+    customer_address1 = models.CharField(max_length=255, null=True, blank=True)
+    customer_address2 = models.CharField(max_length=255, null=True, blank=True)
+    customer_city = models.CharField(max_length=128, null=True, blank=True)
+    customer_state = models.CharField(max_length=128, null=True, blank=True)
+    customer_postal_code = models.CharField(max_length=64, null=True, blank=True)
+    customer_country = models.CharField(max_length=128, null=True, blank=True)
+    customer_country_code = models.CharField(max_length=10, null=True, blank=True)
+
+    is_old = models.BooleanField(default=False)
+    old_card = models.TextField(null=True, blank=True)
+
+    is_deleted = models.BooleanField(default=False)
+    deleted_at = models.DateTimeField(null=True, blank=True, help_text="Date when card was deleted")
+    deleted_via_api = models.CharField(
+        max_length=20, 
+        null=True, 
+        blank=True,
+        choices=[
+            ('NEW_API', 'PaymentMethod (New API)'),
+            ('OLD_API', 'Source (Old API)'),
+        ],
+        help_text="Which Stripe API was used to delete the card"
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def delete(self, *args, **kwargs):
+        """Override delete method to implement soft delete"""
+        self.is_deleted = True
+        self.save()
+
+
+    def __str__(self):
+        return f"{self.user} Billing Address"
+
+    class Meta:
+        ordering = ["-updated_at"]
+        verbose_name = verbose_name_plural ="Customer Billing Address"
+
+    @property
+    def old_card_info(self):
+        try:
+            last_card = json.loads(self.old_card.replace("\'", "\""))
+            return f"{last_card['last4']}-{last_card['exp_month']}/{last_card['exp_year']}"
+        except:
+            return "Not Available"
+        
+class CustomerPayment(models.Model):
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True)
+    stripe_charge_id = models.CharField(max_length=128)
+    amount = models.IntegerField()
+    is_refunded = models.BooleanField(default=False)
+    is_bonus = models.BooleanField(default=False)
+    is_autotop = models.BooleanField(default=False)
+    is_subscription = models.BooleanField(default=False)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    is_deleted = models.BooleanField(default=False)
+    user_refund_notes = models.TextField(null=True,blank=True)
+    admin_refund_notes = models.TextField(null=True,blank=True)
+    refund_info = models.JSONField(verbose_name="Refund Info", default=dict,null=True,blank=True)
+    receipt_url = models.URLField(max_length=512, null=True, blank=True)
+    refund_pdf_url = models.URLField(max_length=512, null=True, blank=True)
+    
+    def __str__(self):
+        return f"{self.user} Payment"
+
+    class Meta:
+        # ordering = ["-timestamp"]
+        verbose_name = verbose_name_plural ="Customer Payment"
+        db_table = "dashboard_customer_payment"
+class StripeSubscriptions(models.Model):
+    """Main subscription plans available to users"""
+    
+    class PlanDuration(models.TextChoices):
+        MONTH = 'month', 'Monthly'
+        YEAR = 'year', 'Yearly'
+    
+    name = models.CharField(max_length=255, help_text="Plan name (e.g., Basic, Pro, Enterprise)")
+    price_id = models.CharField(max_length=255, unique=True, help_text="Stripe Price ID")
+    product_id = models.CharField(max_length=255, blank=True, null=True, help_text="Stripe Product ID")
+    price = models.DecimalField(max_digits=10, decimal_places=2, help_text="Price in dollars")
+    plan_duration = models.CharField(max_length=10, choices=PlanDuration.choices, default=PlanDuration.MONTH)
+    is_active = models.BooleanField(default=True)
+    description = models.TextField(blank=True, null=True)
+    features = models.JSONField(default=list, blank=True, help_text="List of features")
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['price']
+        verbose_name = "Stripe Subscription Plan"
+        verbose_name_plural = "Stripe Subscription Plans"
+    
+    def __str__(self):
+        return f"{self.name} - ${self.price}/{self.plan_duration}"
+      
+
+    
+   

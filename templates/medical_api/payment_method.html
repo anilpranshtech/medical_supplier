@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Payment Method | Medical Supplier</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        #card-errors {
+            background: #f4466c;
+            padding: 5px;
+            margin-bottom: 10px;
+            color: #fff;
+            font-weight: bold;
+            padding-left: 25px;
+            display: none;
+        }
+        .StripeElement {
+            box-sizing: border-box;
+            height: 40px;
+            padding: 10px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            background-color: white;
+            transition: border-color 150ms ease;
+        }
+        .StripeElement--focus {
+            border-color: #80bdff;
+        }
+        .StripeElement--invalid {
+            border-color: #fa755a;
+        }
+        .StripeElement--webkit-autofill {
+            background-color: #fefde5 !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5 mb-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h1 class="h4 mb-0">Add Payment Method - Secure Payment Powered by Stripe</h1>
+                    </div>
+                    <div class="card-body">
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+
+                        {% if card %}
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div class="row mb-4">
+                                    <div class="col-12">
+                                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <span class="fw-medium">Default Card:</span>
+                                                    {{ card.brand }} **** **** **** {{ card.last4 }} Exp: {{ card.exp_month }}/{{ card.exp_year }}
+                                                </div>
+                                                <div>
+                                                    <form id="paymentMethodForm" action="{% url 'medical_api:delete_payment_method' %}" method="POST">
+                                                        {% csrf_token %}
+                                                        <button class="btn btn-danger btn-sm" id="removeButton">
+                                                            Delete
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+
+                        {% if error %}
+                        <div class="alert alert-danger" role="alert">
+                            {{ error }}
+                        </div>
+                        {% endif %}
+
+                        <div class="alert alert-info" role="alert">
+                            <i class="bi bi-bell me-2"></i>
+                            <strong>Note:</strong> We charge $1 to confirm the Credit Card Details are valid. You will get credits worth $1.00.
+                        </div>
+                        <div id="card-errors" role="alert"></div>
+
+                        <form action="." method="POST" class="stripe-form" id="stripe-form">
+                            {% csrf_token %}
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="mb-3">
+                                        <label class="form-label fs-5 fw-semibold required" for="crd_name">Cardholder's Name</label>
+                                        <input class="form-control form-control-solid" type="text" required id="crd_name" name="crd_name"
+                                               placeholder="Enter Full name">
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="mb-3">
+                                        <label class="form-label fs-5 fw-semibold required" for="crd_details">Card Details</label>
+                                        <div id="card-element" class="form-control form-control-solid StripeElement StripeElement--empty"></div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="mb-3">
+                                        <label class="form-label fs-5 fw-semibold required" for="crd_address1">Address line 1</label>
+                                        <input class="form-control form-control-solid" type="text" required id="crd_address1" name="crd_address1"
+                                               placeholder="Street, PO Box, or company name">
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="mb-3">
+                                        <label class="form-label fs-5 fw-semibold" for="crd_address2">Address line 2</label>
+                                        <input class="form-control form-control-solid" type="text" id="crd_address2" name="crd_address2"
+                                               placeholder="Apartment, suite, or building">
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="mb-3">
+                                        <label class="form-label fs-5 fw-semibold required" for="crd_city">City</label>
+                                        <input class="form-control form-control-solid" type="text" required id="crd_city" name="crd_city"
+                                               placeholder="City or town">
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="mb-3">
+                                        <label class="form-label fs-5 fw-semibold required" for="crd_state">State</label>
+                                        <input class="form-control form-control-solid" type="text" required id="crd_state" name="crd_state"
+                                               placeholder="State or region">
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="mb-3">
+                                        <label class="form-label fs-5 fw-semibold required" for="crd_postal_code">ZIP / Postal Code</label>
+                                        <input class="form-control form-control-solid" type="text" required id="crd_postal_code" name="crd_postal_code"
+                                               placeholder="ZIP code">
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="mb-3">
+                                        <label class="form-label fs-5 fw-semibold required" for="crd_country">Country</label>
+                                        <select class="form-select form-select-solid" id="crd_country" name="crd_country" required>
+                                            <option value="">Select Country</option>
+                                            {% for country in countries_list %}
+                                            <option value="{{country.0}}">{{country.1}}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                {% if payment_method_id %}
+                                <input type="hidden" name="payment_method_id" value="{{payment_method_id}}">
+                                {% endif %}
+                                <div class="col-12 d-flex justify-content-center mt-4">
+                                    <button class="btn btn-primary" type="submit">
+                                        <i class="fas fa-save me-2"></i>Add Payment Method
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://js.stripe.com/v3/"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    // Isolate payment method JavaScript in its own scope
+    (function() {
+        'use strict';
+
+        console.log('Payment method script loaded');
+
+        // Check if Stripe is already initialized to avoid conflicts
+        if (typeof window.paymentMethodStripeInitialized === 'undefined') {
+            window.paymentMethodStripeInitialized = true;
+
+            var stripe = Stripe('{{STRIPE_PUBLIC_KEY}}');
+            var elements = stripe.elements();
+
+            var style = {
+                base: {
+                    color: '#32325d',
+                    fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
+                    fontSmoothing: 'antialiased',
+                    fontSize: '16px',
+                    '::placeholder': { color: '#aab7c4' }
+                },
+                invalid: { color: '#fa755a', iconColor: '#fa755a' }
+            };
+
+            var card = elements.create('card', {style: style});
+            card.mount('#card-element');
+
+            card.on('change', function(event) {
+                console.log('Card element changed:', event);
+                var displayError = document.getElementById('card-errors');
+                if (event.error) {
+                    console.error('Card error:', event.error);
+                    displayError.textContent = event.error.message;
+                    displayError.style.display = 'block';
+                } else {
+                    displayError.textContent = '';
+                    displayError.style.display = 'none';
+                }
+            });
+
+            var form = document.getElementById('stripe-form');
+            var submitButton = form ? form.querySelector('button[type="submit"]') : null;
+
+            if (form && submitButton) {
+                form.addEventListener('submit', function(event) {
+                    console.log('Payment form submitted');
+                    event.preventDefault();
+                    event.stopPropagation(); // Prevent event bubbling
+
+                    submitButton.disabled = true;
+                    submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+
+                    stripe.createPaymentMethod({
+                        type: 'card',
+                        card: card,
+                        billing_details: {
+                            name: document.getElementById('crd_name').value,
+                            address: {
+                                line1: document.getElementById('crd_address1').value,
+                                line2: document.getElementById('crd_address2').value,
+                                city: document.getElementById('crd_city').value,
+                                state: document.getElementById('crd_state').value,
+                                postal_code: document.getElementById('crd_postal_code').value,
+                                country: document.getElementById('crd_country').value,
+                            }
+                        }
+                    }).then(function(result) {
+                        console.log('createPaymentMethod result:', result);
+
+                        if (result.error) {
+                            console.error('Payment method error:', result.error);
+                            var errorElement = document.getElementById('card-errors');
+                            errorElement.textContent = result.error.message;
+                            errorElement.style.display = 'block';
+                            submitButton.disabled = false;
+                            submitButton.innerHTML = '<i class="fas fa-save me-2"></i>Add Payment Method';
+                        } else {
+                            console.log('Payment method created successfully:', result.paymentMethod.id);
+                            var hiddenInput = document.createElement('input');
+                            hiddenInput.setAttribute('type', 'hidden');
+                            hiddenInput.setAttribute('name', 'payment_method_id');
+                            hiddenInput.setAttribute('value', result.paymentMethod.id);
+                            form.appendChild(hiddenInput);
+
+                            // Submit the form
+                            form.submit();
+                        }
+                    }).catch(function(error) {
+                        console.error('Unexpected error:', error);
+                        var errorElement = document.getElementById('card-errors');
+                        errorElement.textContent = 'An unexpected error occurred. Please try again.';
+                        errorElement.style.display = 'block';
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = '<i class="fas fa-save me-2"></i>Add Payment Method';
+                    });
+                });
+            } else {
+                console.error('Stripe form or submit button not found');
+            }
+        } else {
+            console.log('Stripe already initialized, skipping re-initialization');
+        }
+    })();
+
+    // Delete confirmation script
+    document.addEventListener('DOMContentLoaded', function() {
+        var paymentMethodForm = document.querySelector("#paymentMethodForm");
+        if (paymentMethodForm) {
+            paymentMethodForm.addEventListener("submit", function(e) {
+                const removeButton = document.querySelector("#removeButton");
+                if (!confirm("Are you sure you want to delete payment method?")) {
+                    e.preventDefault();
+                }
+            });
+        }
+    });
+    </script>
+</body>
+</html>
+
