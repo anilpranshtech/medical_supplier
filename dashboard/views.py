@@ -1014,6 +1014,11 @@ class SearchResultsGridView(TemplateView):
         ).prefetch_related('images')
    
         today = date.today()
+        # ---- RFQ CHECK FOR GRID ----
+        if self.request.user.is_authenticated:
+         context['user_rfq_product_ids'] = set(RFQRequest.objects.filter(requested_by=self.request.user).values_list('product_id', flat=True))
+        else:
+         context['user_rfq_product_ids'] = set()
 
         # Handle search query
         if search_query:
@@ -1269,6 +1274,10 @@ class SearchResultsListView(TemplateView):
             )
             
         ).prefetch_related('images')
+        if self.request.user.is_authenticated:
+           context['user_rfq_product_ids'] = set( RFQRequest.objects.filter(requested_by=self.request.user).values_list('product_id', flat=True))
+        else:
+           context['user_rfq_product_ids'] = set()
 
         # Filtering + sorting
         if search_query:
@@ -1473,7 +1482,12 @@ class ProductDetailsView(TemplateView):
                 page = self.request.GET.get("qpage", 1)
                 paginator = Paginator(questions_qs, 2)
                 questions_page = paginator.get_page(page)
-
+                user_has_rfq = False
+                if user.is_authenticated:
+                    user_has_rfq = RFQRequest.objects.filter(
+                        requested_by=user,
+                        product=product
+                    ).exists()
                 context.update({
                     'product': product,
                     'other_images': other_images,
@@ -1489,6 +1503,7 @@ class ProductDetailsView(TemplateView):
                     'stock_status': stock_status,
                     'related_products': related_products,  
                     'chat_room_id': chat_room_id,
+                    'user_has_rfq': user_has_rfq
                 })
 
             except Product.DoesNotExist:
@@ -1574,18 +1589,6 @@ class ProductQuestionsView(TemplateView):
                 reviews_page_number = self.request.GET.get('rpage', 1)
                 reviews_paginator = Paginator(reviews_qs, 2) 
                 reviews_page = reviews_paginator.get_page(reviews_page_number)
-                
-                # rating_counts = {i: reviews_qs.filter(rating=i).count() for i in range(1, 6)}
-                # total_reviews = reviews_qs.count()
-                # avg_rating = reviews_qs.aggregate(avg=Avg('rating'))['avg'] or 0
-
-                # stock_status = ""
-                # if product.stock_quantity == 0:
-                #     stock_status = "Out of Stock"
-                # elif product.stock_quantity < 5:
-                #     stock_status = f"Hurry, only {product.stock_quantity} available"
-                # elif product.stock_quantity < 10:
-                #     stock_status = "Only a few available"
 
                 related_products = []
                 if product.category and product.category.name.lower() not in ['event', 'webinar', 'conference']:

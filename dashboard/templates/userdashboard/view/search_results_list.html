@@ -914,19 +914,27 @@
                 </div>
                 
                 <!-- RFQ Button (Only for authenticated users and in-stock products) -->
-                {% if request.user.is_authenticated and product.show_rfq and product.stock_status != 'out_of_stock' and product.stock_quantity > 0 %}
+                            {% if request.user.is_authenticated and product.show_rfq and product.stock_quantity > 0 %}
                 <div class="mt-2 w-full">
-                    <button class="kt-btn kt-btn-outline kt-btn-sm w-full open-rfq-modal"
-                            data-product-id="{{ product.id }}"
-                            data-product-name="{{ product.name|escape }}"
-                            data-product-price="{{ product.discounted_price|default:product.price|floatformat:2 }}"
-                            data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
-                            data-quantity="1">
-                        <i class="ki-filled ki-directbox-default text-xs mr-1"></i>
-                        RFQ
-                    </button>
+                    {% if product.id not in user_rfq_product_ids %}
+                        <button class="kt-btn kt-btn-outline kt-btn-sm w-full open-rfq-modal"
+                                data-product-id="{{ product.id }}"
+                                data-product-name="{{ product.name|escape }}"
+                                data-product-price="{{ product.discounted_price|default:product.price|floatformat:2 }}"
+                                data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
+                                data-quantity="1">
+                            <i class="ki-filled ki-directbox-default text-xs mr-1"></i>
+                            RFQ
+                        </button>
+                    {% else %}
+                        <button class="kt-btn kt-btn-outline kt-btn-sm w-full" disabled>
+                            <i class="ki-filled ki-check text-xs mr-1"></i>
+                            RFQ Sent
+                        </button>
+                    {% endif %}
                 </div>
-                {% endif %}
+            {% endif %}
+
             {% endif %}
         {% endif %}
     </div>

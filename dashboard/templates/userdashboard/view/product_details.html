@@ -1387,21 +1387,29 @@
                             {% endif %}
                         </div>
                         {% if request.user.is_authenticated %}
-                            {% if product.show_rfq or product.Both %}
+                        {% if product.show_rfq or product.Both %}
+
+                            {% if not user_has_rfq %}
                                 <button class="kt-btn kt-btn-outline kt-btn-sm ms-1 open-rfq-modal" style="min-width: 150px;"
                                         data-product-id="{{ product.id }}"
                                         data-product-name="{{ product.name }}"
                                         data-product-price="{{ product.discounted_price|default:product.price|floatformat:2 }}"
                                         data-company-name="{{ request.user.wholesalebuyerprofile.company_name|default:'' }}"
                                         data-quantity="1">
-                                        <svg width="50" height="50" viewBox="0 0 24 24">
-                                            <path d="M4 3h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2Z" fill="#fff"/>
-                                            <path d="M8 7h8M8 11h6" stroke="#2874f0" stroke-width="1.5" stroke-linecap="round"/>
-                                        </svg>
+                                    <svg width="50" height="50" viewBox="0 0 24 24">
+                                        <path d="M4 3h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2Z" fill="#fff"/>
+                                        <path d="M8 7h8M8 11h6" stroke="#2874f0" stroke-width="1.5" stroke-linecap="round"/>
+                                    </svg>
                                     RFQ 
+                                </button>
+                            {% else %}
+                                <button class="kt-btn kt-btn-outline kt-btn-sm ms-1" style="min-width: 150px;" disabled>
+                                    RFQ Sent
                                 </button>
                             {% endif %}
                         {% endif %}
+                    {% endif %}
+                    
                         {% if request.user.is_authenticated %}
                             <span class="kt-wishlist-icon cursor-pointer"
                                   data-kt-wishlist-toggle="true"

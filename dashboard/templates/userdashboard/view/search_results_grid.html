@@ -703,17 +703,25 @@
                             </div>
                 
                             {% if request.user.is_authenticated and not product.is_out_of_stock %}
-                                {% if product.show_rfq or product.Both %}
-                                <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 open-rfq-modal"
-                                        data-product-id="{{ product.id }}"
-                                        data-product-name="{{ product.name }}"
-                                        data-product-price="{{ product.price }}"
-                                        data-company-name="{{ company_name|default:'' }}"
-                                        data-quantity="1">
-                                    RFQ <i class="ki-filled ki-directbox-default text-xs"></i>
-                                </button>
-                                {% endif %}
-                            {% endif %}
+    {% if product.show_rfq or product.Both %}
+        {% if product.id not in user_rfq_product_ids %}
+            <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1 open-rfq-modal"
+                    data-product-id="{{ product.id }}"
+                    data-product-name="{{ product.name }}"
+                    data-product-price="{{ product.price }}"
+                    data-company-name="{{ company_name|default:'' }}"
+                    data-quantity="1">
+                RFQ <i class="ki-filled ki-directbox-default text-xs"></i>
+            </button>
+        {% else %}
+            <button class="kt-btn kt-btn-outline kt-btn-xs flex items-center gap-1"
+                    disabled>
+                RFQ Sent <i class="ki-filled ki-check text-xs"></i>
+            </button>
+        {% endif %}
+    {% endif %}
+{% endif %}
+
                         </div>
                     </div>
                 </div>
