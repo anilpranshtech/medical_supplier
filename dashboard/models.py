@@ -106,10 +106,6 @@ class CountryCode(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     def __str__(self):
         return f"{self.code} → {self.country.name if self.country else 'No country'}"
-
-
-
-
 class AdminUserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='adminuserprofile')
     profile_picture = models.ImageField(upload_to='avatars/', blank=True, null=True)
@@ -117,8 +113,6 @@ class AdminUserProfile(models.Model):
 
     def __str__(self):
         return f"{self.user.username}'s Profile"
-
-
 class RetailProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     profile_picture = models.ImageField(upload_to='profile_pics/', null=True, blank=True)

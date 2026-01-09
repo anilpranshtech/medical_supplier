@@ -1,0 +1,655 @@
+{% extends "pages/base.html" %}
+{% load static %}
+{% block content %}
+<style>
+    .kt-product-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 20px;
+        width: 100%;
+    }
+
+    .text-red-500 {
+        color: #ef4444 !important;
+    }
+
+    .heart-icon {
+        transition: color 0.2s ease-in-out;
+    }
+
+    .kt-select-wrapper {
+        position: relative;
+        width: 175px;
+    }
+
+    .kt-select-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        background-color: white;
+        border: 1px solid #ccc;
+        margin-top: 4px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        z-index: 105;
+    }
+
+    .kt-card {
+        width: 100%;
+        position: relative;
+        overflow: hidden;
+        background: #fff;
+        border-radius: 0;
+        border: 1px solid #e5e7eb;
+    }
+
+    .kt-card-content img {
+        max-width: 100%;
+        height: auto;
+    }
+
+    .loader {
+        display: none;
+        border: 2px solid #ffffff;
+        border-top: 2px solid transparent;
+        border-radius: 50%;
+        width: 16px;
+        height: 16px;
+        animation: spin 1s linear infinite;
+        margin-left: 8px;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .loading .loader {
+        display: inline-block;
+    }
+
+    .discount-ribbon {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: #dc2626;
+        color: white;
+        padding: 5px 10px;
+        font-size: 12px;
+        font-weight: 600;
+        z-index: 1;
+    }
+
+    .out-of-stock-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.85);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2;
+    }
+    
+    .out-of-stock-badge {
+        background: #dc2626;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+    }
+
+    .btn-disabled {
+        opacity: 0.5;
+        cursor: not-allowed !important;
+        pointer-events: none;
+    }
+
+    /* Category filter buttons */
+    .category-filter-btn {
+        padding: 0.5rem 1.5rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 0.5rem;
+        background: white;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-weight: 500;
+    }
+
+    .category-filter-btn:hover {
+        border-color: #3b82f6;
+        color: #3b82f6;
+    }
+
+    .category-filter-btn.active {
+        background: #3b82f6;
+        color: white;
+        border-color: #3b82f6;
+    }
+
+    /* Event Details Badges */
+    .event-date-badge {
+        background-color: #3b82f6;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        display: inline-block;
+        margin-top: 4px;
+    }
+    
+    .speaker-badge {
+        background-color: #10b981;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        display: inline-block;
+        margin-top: 4px;
+    }
+    
+    .venue-badge {
+        background-color: #8b5cf6;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        display: inline-block;
+        margin-top: 4px;
+    }
+    
+    .duration-badge {
+        background-color: #f59e0b;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        display: inline-block;
+        margin-top: 4px;
+    }
+    
+    .event-details-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 8px;
+    }
+
+    /* Conference Card Style */
+    .conference-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .conference-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+
+    @media (max-width: 767px) {
+        .kt-product-grid {
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        }
+        .kt-select-wrapper {
+            width: 150px;
+        }
+    }
+
+    @media (min-width: 1024px) {
+        .kt-product-grid {
+            grid-template-columns: repeat(4, 1fr);
+        }
+    }
+</style>
+
+<title>Events & Conferences - Medical Supplies</title>
+
+<div class="kt-container-fixed mt-1" style="max-width: var(--custom-container-width, 97%);">
+    <div class="flex flex-col items-stretch gap-7 mt-5 py-5">
+        
+        <!-- Page Header -->
+        <div class="mb-4">
+            <h1 class="text-3xl font-bold text-gray-800">
+                {% if category_type == 'conference' %}
+                    Conferences
+                {% elif category_type == 'event' %}
+                    Events
+                {% elif category_type == 'webinar' %}
+                    Webinars
+                {% else %}
+                    Events & Conferences
+                {% endif %}
+            </h1>
+            <p class="text-gray-600 mt-2">Explore upcoming medical conferences, webinars, and professional events</p>
+        </div>
+
+        <!-- Category Filter Buttons -->
+        <div class="flex flex-wrap gap-3 mb-4">
+            <button class="category-filter-btn {% if category_type == 'all' %}active{% endif %}" 
+                    data-category="all">
+                All ({{ category_counts.conference|add:category_counts.event|add:category_counts.webinar }})
+            </button>
+            <button class="category-filter-btn {% if category_type == 'conference' %}active{% endif %}" 
+                    data-category="conference">
+                Conferences ({{ category_counts.conference }})
+            </button>
+            <button class="category-filter-btn {% if category_type == 'event' %}active{% endif %}" 
+                    data-category="event">
+                Events ({{ category_counts.event }})
+            </button>
+            <button class="category-filter-btn {% if category_type == 'webinar' %}active{% endif %}" 
+                    data-category="webinar">
+                Webinars ({{ category_counts.webinar }})
+            </button>
+        </div>
+
+        <!-- Results Header and Sorting -->
+        <div class="flex flex-wrap items-center gap-5 justify-between mt-3">
+            <h3 id="results-header" class="text-sm text-mono font-medium">
+                {% if page_obj %}
+                    {{ page_obj.start_index }} - {{ page_obj.end_index }} of {{ total_products }} results
+                    {% if search_query %}
+                        for <span class="text-destructive">"{{ search_query }}"</span>
+                    {% endif %}
+                {% else %}
+                    0 results
+                {% endif %}
+            </h3>
+            
+            <div class="flex items-center gap-2.5">
+                <!-- Sort Dropdown -->
+                <div data-kt-select-wrapper="" class="kt-select-wrapper w-[175px] bg-background">
+                    <div data-kt-select-display="" class="kt-select-display kt-select" tabindex="0" role="button"
+                         data-selected="{% if request.GET.sort_by == '1' %}1{% elif request.GET.sort_by == '2' %}2{% else %}2{% endif %}" 
+                         aria-haspopup="listbox" aria-expanded="false">
+                        {% if request.GET.sort_by == "1" %}
+                            Price High to Low
+                        {% elif request.GET.sort_by == "2" %}
+                            Price Low to High
+                        {% elif request.GET.sort_by == "3" %}
+                            Rating High to Low
+                        {% elif request.GET.sort_by == "5" %}
+                            Newest First
+                        {% else %}
+                            Price Low to High
+                        {% endif %}
+                    </div>
+                    <div data-kt-select-dropdown="" class="kt-select-dropdown hidden" style="z-index: 105;">
+                        <ul role="listbox" class="kt-select-options">
+                            <li data-kt-select-option="" data-value="2" data-text="Price Low to High"
+                                class="kt-select-option {% if request.GET.sort_by == '2' %}selected{% endif %}" role="option">
+                                <div class="kt-select-option-text">Price Low to High</div>
+                            </li>
+                            <li data-kt-select-option="" data-value="1" data-text="Price High to Low"
+                                class="kt-select-option {% if request.GET.sort_by == '1' %}selected{% endif %}" role="option">
+                                <div class="kt-select-option-text">Price High to Low</div>
+                            </li>
+                            <li data-kt-select-option="" data-value="3" data-text="Rating High to Low"
+                                class="kt-select-option {% if request.GET.sort_by == '3' %}selected{% endif %}" role="option">
+                                <div class="kt-select-option-text">Rating High to Low</div>
+                            </li>
+                            <li data-kt-select-option="" data-value="5" data-text="Newest First"
+                                class="kt-select-option {% if request.GET.sort_by == '5' %}selected{% endif %}" role="option">
+                                <div class="kt-select-option-text">Newest First</div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Grid - Matching Homepage Style -->
+        <div class="kt-product-grid mt-2" id="product-grid">
+            {% for product in products %}
+            <div class="kt-card conference-card">
+                <div class="kt-card product-card">
+                    {% if product.offer_active and product.offer_percentage %}
+                    <div class="discount-ribbon">{{ product.offer_percentage|floatformat:0 }}% OFF</div>
+                    {% endif %}
+                    
+                    <div class="kt-card-content flex flex-col justify-between p-2.5 gap-4 h-full">
+                        <div class="mb-2.5">
+                            <!-- Image Container - Matching Homepage -->
+                            <div class="kt-card flex items-center justify-center relative w-full h-[180px] sm:h-[250px] mb-4 shadow-none"
+                                 style="background:#fff;border-radius:0;border:1px solid #ffffff;">
+                                
+                                <a href="{% url 'dashboard:product_detail' product.id %}" class="block">
+                                    <img
+                                        alt="{{ product.name|default:'Unnamed Event' }}"
+                                        class="h-[150px] sm:h-[180px] shrink-0 cursor-pointer product-thumbnail"
+                                        style="border-radius:0;"
+                                        src="{% if product.main_image %}{{ product.main_image }}{% else %}{% static 'default.png' %}{% endif %}"
+                                    />
+                                </a>
+                            </div>
+
+                            <h3 class="text-md sm:text-lg font-bold text-gray-650 truncate">
+                                {{ product.name }}
+                            </h3>
+
+                            <p class="text-xs sm:text-sm text-gray-650 mt-1 truncate">
+                                {{ product.description|default:"No description available"|truncatechars:120 }}
+                            </p>
+
+                            <!-- Event Details - Matching Homepage -->
+                            {% if product.event %}
+                                {% if product.event.conference_at %}
+                                <p class="text-xs text-green-600 mt-1">
+                                    Event Date:
+                                    <strong>{{ product.event.conference_at|date:"D, d M Y, H:i" }}</strong>
+                                </p>
+                                {% endif %}
+
+                                {% if product.event.speaker_name %}
+                                <p class="text-xs text-gray-600 mt-1">
+                                    Speaker: <strong>{{ product.event.speaker_name }}</strong>
+                                </p>
+                                {% endif %}
+
+                                {% if product.event.venue %}
+                                <p class="text-xs text-gray-600 mt-1">
+                                    Venue: <strong>{{ product.event.venue|truncatechars:30 }}</strong>
+                                </p>
+                                {% endif %}
+
+                                {% if product.event.duration %}
+                                <p class="text-xs text-gray-600 mt-1">
+                                    Duration: <strong>{{ product.event_duration }}</strong>
+                                </p>
+                                {% endif %}
+                            {% endif %}
+
+                            <!-- Event Details Badges -->
+                           
+                        </div>
+
+                        <!-- Action Buttons - Matching Homepage -->
+                        <div class="flex items-center justify-between px-2.5 pb-1">
+                            {% if request.user.is_authenticated %}
+                                {% if product.id in user_registered_event_ids %}
+                                    <button class="kt-btn kt-btn-sm"
+                                            style="background:#9ca3af;color:#fff;border-radius:0;"
+                                            disabled>
+                                        Registered
+                                    </button>
+                                {% else %}
+                                    <button class="kt-btn kt-btn-sm open-event-registration-modal"
+                                            style="background:#2563eb;color:#fff;border-radius:0;"
+                                            data-product-id="{{ product.id }}"
+                                            data-event-name="{{ product.name }}">
+                                        Register for Event
+                                    </button>
+                                {% endif %}
+                            {% else %}
+                                <button class="kt-btn kt-btn-sm show-login-modal"
+                                        style="background:#2563eb;color:#fff;border-radius:0;">
+                                    Register for Event
+                                </button>
+                            {% endif %}
+                            
+                         
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-span-4 text-center font-medium py-10">
+                <p>No events or conferences found{% if search_query %} for "{{ search_query }}"{% endif %}.</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div class="mt-10 flex justify-center w-full">
+            <ul class="inline-flex items-center -space-x-px text-sm" id="pagination">
+                {% if page_obj.has_previous %}
+                    <li>
+                        <a href="#" data-page="{{ page_obj.previous_page_number }}" class="kt-btn kt-btn-outline me-2 pagination-link">
+                            Previous
+                        </a>
+                    </li>
+                {% endif %}
+                {% for num in paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li><span class="kt-btn kt-btn-primary me-2">{{ num }}</span></li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li>
+                            <a href="#" data-page="{{ num }}" class="kt-btn kt-btn-outline me-2 pagination-link">
+                                {{ num }}
+                            </a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                {% if page_obj.has_next %}
+                    <li>
+                        <a href="#" data-page="{{ page_obj.next_page_number }}" class="kt-btn kt-btn-outline pagination-link">
+                            Next
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Event Registration Modal (Same as homepage) -->
+<div id="eventRegistrationModal" class="kt-modal hidden fixed inset-0 z-[9999] flex items-center justify-center bg-black/30 backdrop-blur-sm" data-kt-modal="true" role="dialog" aria-labelledby="eventRegistrationModalTitle" aria-modal="true">
+    <div class="kt-card w-full max-w-[600px] rounded-xl border border-border bg-background shadow-2xl transition-transform duration-300 ease-in-out transform scale-95">
+        <div class="kt-card-header px-5 py-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
+            <h2 id="eventRegistrationModalTitle" class="text-xl font-bold text-mono">Event Registration</h2>
+            <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" onclick="closeEventRegistrationModal()" aria-label="Close modal">
+                <i class="ki-filled ki-cross text-base text-gray-500 hover:text-red-500"></i>
+            </button>
+        </div>
+        <form method="POST" action="{% url 'dashboard:event_registration' %}" id="eventRegistrationForm">
+            {% csrf_token %}
+            <div class="kt-card-content flex flex-col space-y-4 p-5">
+                <input type="hidden" name="product_id" id="eventProductId">
+                <div>
+                    <label for="eventName" class="block text-sm font-medium text-gray-650 dark:text-gray-300 mb-1">Event</label>
+                    <input type="text" id="eventName" class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 bg-gray-100 dark:bg-gray-800 text-gray-650 dark:text-gray-300 cursor-not-allowed" disabled>
+                </div>
+                <div>
+                    <label for="fullName" class="block text-sm font-medium text-gray-650 dark:text-gray-300 mb-1">Full Name <span class="text-red-500">*</span></label>
+                    <input type="text" name="full_name" id="fullName" class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 focus:ring-2 focus:ring-primary focus:border-primary transition-colors" required aria-required="true">
+                    <p class="text-xs text-red-500 mt-1 hidden" id="fullNameError">Full name is required.</p>
+                </div>
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-650 dark:text-gray-300 mb-1">Email <span class="text-red-500">*</span></label>
+                    <input type="email" name="email" id="email" class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 focus:ring-2 focus:ring-primary focus:border-primary transition-colors" required aria-required="true">
+                    <p class="text-xs text-red-500 mt-1 hidden" id="emailError">Valid email is required.</p>
+                </div>
+                <div>
+                    <label for="eventMessage" class="block text-sm font-medium text-gray-650 dark:text-gray-300 mb-1">Additional Notes</label>
+                    <textarea name="message" id="eventMessage" class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2.5 focus:ring-2 focus:ring-primary focus:border-primary transition-colors" rows="4" placeholder="Add any additional details..."></textarea>
+                </div>
+            </div>
+            <div class="kt-card-footer px-5 py-4 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700">
+                <button type="button" class="kt-btn kt-btn-outline kt-btn-xs text-gray-650 hover:bg-gray-900 dark:hover:bg-gray-700" onclick="closeEventRegistrationModal()">
+                    <i class="ki-filled ki-cross"></i>Cancel
+                </button>
+                <button type="submit" class="kt-btn kt-btn-xs bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center" id="eventRegistrationSubmitBtn">
+                    <i class="ki-filled ki-check-circle"></i>Register
+                    <span class="loader"></span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// CSRF Token Helper
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+const csrftoken = getCookie('csrftoken');
+
+// Category filter buttons
+document.querySelectorAll('.category-filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const category = btn.dataset.category;
+        fetchProducts({ type: category, page: 1 });
+    });
+});
+
+// Sort dropdown
+const selectDisplay = document.querySelector('[data-kt-select-display]');
+const selectDropdown = document.querySelector('[data-kt-select-dropdown]');
+if (selectDisplay && selectDropdown) {
+    selectDisplay.addEventListener('click', () => {
+        selectDropdown.classList.toggle('hidden');
+    });
+
+    document.querySelectorAll('[data-kt-select-option]').forEach(option => {
+        option.addEventListener('click', () => {
+            const value = option.getAttribute('data-value');
+            const text = option.getAttribute('data-text');
+            selectDisplay.textContent = text;
+            selectDisplay.setAttribute('data-selected', value);
+            selectDropdown.classList.add('hidden');
+            const params = new URLSearchParams(window.location.search);
+            fetchProducts({ 
+                sort_by: value, 
+                type: params.get('type') || 'all',
+                page: 1 
+            });
+        });
+    });
+}
+
+// Pagination
+document.addEventListener('click', e => {
+    if (e.target.closest('.pagination-link')) {
+        e.preventDefault();
+        const link = e.target.closest('.pagination-link');
+        const page = link.dataset.page;
+        const params = new URLSearchParams(window.location.search);
+        fetchProducts({ 
+            page: page, 
+            sort_by: params.get('sort_by'), 
+            type: params.get('type') || 'all'
+        });
+    }
+});
+
+// Event Registration Modal Handlers (same as homepage)
+document.querySelectorAll('.open-event-registration-modal').forEach(button => {
+    button.addEventListener('click', function (e) {
+        e.preventDefault();
+        const productId = button.getAttribute('data-product-id');
+        const eventName = button.getAttribute('data-event-name');
+
+        document.getElementById('eventProductId').value = productId;
+        document.getElementById('eventName').value = eventName;
+
+        const modal = document.getElementById('eventRegistrationModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+    });
+});
+
+function closeEventRegistrationModal() {
+    const modal = document.getElementById('eventRegistrationModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    document.body.style.overflow = '';
+}
+
+// Show login modal for non-authenticated users
+document.querySelectorAll('.show-login-modal').forEach(button => {
+    button.addEventListener('click', function(e) {
+        e.preventDefault();
+        // Assuming you have a login modal function
+        openLoginModal();
+    });
+});
+
+// Fetch products function for AJAX updates
+function fetchProducts(params) {
+    const urlParams = new URLSearchParams();
+    Object.keys(params).forEach(key => {
+        if (params[key]) urlParams.set(key, params[key]);
+    });
+    const url = `{% url 'dashboard:Confarance_list' %}?${urlParams.toString()}`;
+
+    fetch(url, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(response => response.text())
+    .then(html => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const newGrid = doc.querySelector('#product-grid');
+        const newPagination = doc.querySelector('#pagination');
+        const newHeader = doc.querySelector('#results-header');
+        
+        if (newGrid) document.querySelector('#product-grid').innerHTML = newGrid.innerHTML;
+        if (newPagination) document.querySelector('#pagination').innerHTML = newPagination.innerHTML;
+        if (newHeader) document.querySelector('#results-header').innerHTML = newHeader.innerHTML;
+        
+        window.history.pushState({}, '', url);
+        
+        // Reattach event listeners for the new content
+        attachEventListeners();
+    });
+}
+
+// Function to reattach event listeners after AJAX update
+function attachEventListeners() {
+    // Reattach event registration modal handlers
+    document.querySelectorAll('.open-event-registration-modal').forEach(button => {
+        button.addEventListener('click', function (e) {
+            e.preventDefault();
+            const productId = button.getAttribute('data-product-id');
+            const eventName = button.getAttribute('data-event-name');
+
+            document.getElementById('eventProductId').value = productId;
+            document.getElementById('eventName').value = eventName;
+
+            const modal = document.getElementById('eventRegistrationModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        });
+    });
+    
+    // Reattach login modal handlers
+    document.querySelectorAll('.show-login-modal').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            openLoginModal();
+        });
+    });
+}
+
+// Initialize event listeners on page load
+document.addEventListener('DOMContentLoaded', function() {
+    attachEventListeners();
+});
+</script>
+{% endblock content %}

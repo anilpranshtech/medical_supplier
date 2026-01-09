@@ -69,6 +69,22 @@
                                         {% endif %}
                                     </div>
                                 </div>
+                                <div class="row mb-6">
+                                    <label class="col-lg-4 col-form-label fw-semibold fs-6">Start At</label>
+                                    <div class="col-lg-8 fv-row">
+                                        {{ form.start_at|add_class:"form-control form-control-lg form-control-solid" }}
+                                        {{ form.start_at.errors }}
+                                    </div>
+                                </div>
+
+                                <div class="row mb-6">
+                                    <label class="col-lg-4 col-form-label fw-semibold fs-6">End At</label>
+                                    <div class="col-lg-8 fv-row">
+                                        {{ form.end_at|add_class:"form-control form-control-lg form-control-solid" }}
+                                        {{ form.end_at.errors }}
+                                    </div>
+                                </div>
+
 
                                 <!-- Link -->
                                 <div class="row mb-6">

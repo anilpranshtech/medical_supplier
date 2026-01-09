@@ -1880,7 +1880,6 @@ class RatingView(TemplateView):
 
 class BannerListView(LoginRequiredMixin, TemplateView):
     template_name = 'superuser/banner_list.html'
-    # required_permissions = ('dashboard.view_banner')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1915,6 +1914,8 @@ class BannerListView(LoginRequiredMixin, TemplateView):
         context['order'] = order
 
         return context
+
+# ---------------- Create View ---------------- #
 class BannerCreateView(LoginRequiredMixin, View):
     def get(self, request):
         form = BannerForm()
@@ -1922,49 +1923,48 @@ class BannerCreateView(LoginRequiredMixin, View):
 
     def post(self, request):
         form = BannerForm(request.POST, request.FILES)
-
         if form.is_valid():
-            banner = form.save()
+            banner = form.save(commit=False)
+            # Schedule logic: deactivate until start_at
+            if banner.start_at and banner.start_at > timezone.now():
+                banner.is_active = False
+            banner.save()
 
             admin_log_activity(
                 request.user,
                 f"Created banner ID {banner.id}",
                 AdminActivityLog.ActionType.CREATED
             )
-
             return redirect('superuser:banner_list')
 
         return render(request, 'superuser/banner_upload.html', {'form': form})
 
-
+# ---------------- Update View ---------------- #
 class BannerUpdateView(LoginRequiredMixin, View):
     def get(self, request, pk):
         banner = get_object_or_404(Banner, pk=pk)
         form = BannerForm(instance=banner)
-        return render(request, 'superuser/banner_edit.html', {
-            'form': form,
-            'object': banner
-        })
+        return render(request, 'superuser/banner_edit.html', {'form': form, 'object': banner})
 
     def post(self, request, pk):
         banner = get_object_or_404(Banner, pk=pk)
         form = BannerForm(request.POST, request.FILES, instance=banner)
-
         if form.is_valid():
-            banner = form.save()
+            banner = form.save(commit=False)
+            if banner.start_at and banner.start_at > timezone.now():
+                banner.is_active = False
+            banner.save()
 
             admin_log_activity(
                 request.user,
                 f"Updated banner ID {banner.id}",
                 AdminActivityLog.ActionType.UPDATED
             )
-
             return redirect('superuser:banner_list')
 
-        return render(request, 'superuser/banner_edit.html', {
-            'form': form,
-            'object': banner
-        })
+        return render(request, 'superuser/banner_edit.html', {'form': form, 'object': banner})
+
+# ---------------- Delete View ---------------- #
 class BannerDeleteView(LoginRequiredMixin, PermissionRequiredMixin, View):
     permission_required = "supplier.delete_banner"
 
@@ -3818,25 +3818,44 @@ class BuyXGetYPromotionView(TemplateView):
         return context
 
 class AddPromotionView(TemplateView):
+
     def post(self, request):
-        product_type = request.POST.get('product_type')
-        supplier_ids = request.POST.getlist('supplier')
-        product_ids = request.POST.getlist('product')
-        buy = request.POST.get('buy')
-        get = request.POST.get('get')
-        promotion_period = request.POST.get('promotion_period')
-        promo = BuyXGetYPromotion.objects.create(
-            product_type=product_type,
-            buy=buy,
-            get=get,
-            promotion_period=promotion_period
-        )
+        try:
+            product_type = request.POST.get('product_type')
+            supplier_ids = request.POST.getlist('supplier')
+            product_ids = request.POST.getlist('product')
+            buy = request.POST.get('buy')
+            get = request.POST.get('get')
 
-        promo.supplier.set(supplier_ids)
-        promo.product.set(product_ids)
-        promo.save()
+            start_datetime = request.POST.get('start_datetime')
+            end_datetime = request.POST.get('end_datetime')
 
-        return JsonResponse({'success': True})
+            start_dt = datetime.fromisoformat(start_datetime)
+            end_dt = datetime.fromisoformat(end_datetime)
+
+            promo = BuyXGetYPromotion.objects.create(
+                product_type=product_type,
+                buy=buy,
+                get=get,
+                start_datetime=start_dt,
+                end_datetime=end_dt,
+            )
+
+            promo.supplier.set(supplier_ids)
+            promo.product.set(product_ids)
+            promo.save()
+
+            admin_log_activity(
+                request.user,
+                f"Created Buy {buy} Get {get} promotion (ID: {promo.id})",
+                AdminActivityLog.ActionType.CREATED
+            )
+
+            return JsonResponse({'success': True})
+
+        except Exception as e:
+            return JsonResponse({'success': False, 'msg': str(e)})
+
 class EditPromotionView(TemplateView):
     def get(self, request, pk):
         try:

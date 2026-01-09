@@ -9,18 +9,34 @@ from django.contrib.auth.models import User
 class BannerForm(forms.ModelForm):
     class Meta:
         model = Banner
-        fields = ['title', 'image', 'link', 'is_active', 'order']
+        fields = ['title', 'image', 'link', 'order', 'start_at', 'end_at', 'is_active']
+        widgets = {
+            'start_at': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+            'end_at': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+        }
 
     def clean_order(self):
         order = self.cleaned_data.get('order')
-        # Exclude the current instance (useful when editing)
         qs = Banner.objects.filter(order=order)
         if self.instance.pk:
             qs = qs.exclude(pk=self.instance.pk)
-
         if qs.exists():
-            raise forms.ValidationError(f"A banner with order {order} already exists. Please choose a different order.")
+            raise forms.ValidationError(f"A banner with order {order} already exists.")
         return order
+
+    def clean(self):
+        cleaned_data = super().clean()
+        start_at = cleaned_data.get('start_at')
+        end_at = cleaned_data.get('end_at')
+
+        if start_at and end_at and start_at >= end_at:
+            raise forms.ValidationError("End time must be after start time.")
+        if start_at:
+            cleaned_data['start_at'] = timezone.make_aware(start_at)
+        if end_at:
+            cleaned_data['end_at'] = timezone.make_aware(end_at)
+
+        return cleaned_data
 
 
 class SuperuserRFQQuotationForm(forms.ModelForm):

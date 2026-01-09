@@ -55,13 +55,11 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from utils.logs import user_login_activity as supplier_login_activity
 from utils.logs import user_failed_activity as supplier_failed_activity
 from dashboard.models import UserActivityLog
-
-# Retailer / Wholesaler logs
 from utils.userlogs import user_login_activity as buyer_login_activity
 from utils.userlogs import user_failed_activity as buyer_failed_activity
-
+from django.db.models import Sum
 logger = logging.getLogger(__name__)
-
+    
 
 class HomeView(TemplateView):
     template_name = 'dashboard/home.html'
@@ -96,10 +94,28 @@ class HomeView(TemplateView):
         categories = ProductCategory.objects.filter(
             product__last_category__isnull=False,
             product__is_active=True
+        ).prefetch_related(
+            Prefetch(
+                'productsubcategory_set',
+                queryset=ProductSubCategory.objects.prefetch_related(
+                    Prefetch(
+                        'productlastcategory_set',
+                        queryset=ProductLastCategory.objects.all()[:5], 
+                        to_attr='last_categories'
+                    )
+                ).all()[:10], 
+                to_attr='subcategories_with_last'
+            )
         ).distinct().order_by('-created_at')
+        
         context['categories'] = categories[:10] 
         context['has_more_categories'] = categories.count() > 10 
-
+        
+        # Store last category separately for second popup
+        if categories and categories.count() > 1:
+            context['last_category'] = categories.last()  
+        else:
+            context['last_category'] = None
         # ---------------- Special Offers ---------------- #
         special_offers = Product.objects.filter(
             offer_active=True,
@@ -109,11 +125,23 @@ class HomeView(TemplateView):
             is_active=True
         ).select_related('category', 'event').prefetch_related('images', 'reviews').order_by('-offer_percentage')[:3]
         context['special_offers'] = set_product_fields(special_offers)
+        # selling product
+        most_selling_products = (
+            Product.objects
+            .filter(
+                is_active=True,
+                orderitem__order__status='delivered'
+            )
+            .annotate(total_sold=Sum('orderitem__quantity'))
+            .order_by('-total_sold')[:5]
+        )
+
+        context['most_selling_products'] = set_product_fields(most_selling_products)
 
         # ---------------- New Arrivals ---------------- #
         recent_products = Product.objects.filter(
             tag='recent', is_active=True
-        ).select_related('category', 'event').prefetch_related('images', 'reviews').order_by('-created_at')[:4]
+        ).select_related('category', 'event').prefetch_related('images', 'reviews').order_by('-created_at')[:6]
         context['recent_products'] = set_product_fields(recent_products)
 
         # ---------------- Popular Medical Supplies ---------------- #
@@ -125,7 +153,7 @@ class HomeView(TemplateView):
         # ---------------- Limited-Time Deals ---------------- #
         limited_products = Product.objects.filter(
             tag='limited', is_active=True
-        ).select_related('category', 'event').prefetch_related('images', 'reviews').order_by('-created_at')[:4]
+        ).select_related('category', 'event').prefetch_related('images', 'reviews').order_by('-created_at')[:6]
         context['limited_products'] = set_product_fields(limited_products)
 
         # ---------------- Featured Products (exclude Conference, Webinar, Event) ---------------- #
@@ -136,10 +164,10 @@ class HomeView(TemplateView):
                 category__name__in=['Conference', 'Webinar', 'Event']
             ).values_list('id', flat=True)
         )
-        random_ids = random.sample(all_ids, min(len(all_ids), 6))
+        random_ids = random.sample(all_ids, min(len(all_ids), 8))
         featured_products = Product.objects.filter(
             id__in=random_ids
-        ).select_related('category', 'event').prefetch_related('images', 'reviews')
+        ).select_related('category', 'event').prefetch_related('images', 'reviews')[:8]
         context['featured_products'] = set_product_fields(featured_products)
 
         # ---------------- Conference & Webinar Events ---------------- #
@@ -205,15 +233,13 @@ class HomeView(TemplateView):
 
         # ---------------- Suppliers (Manufacturers / Distributors) ---------------- #
         active_suppliers = SupplierProfile.objects.filter(current_status='active').order_by('-id')  
-        context['suppliers'] = active_suppliers[:10]
-        context['has_more_suppliers'] = active_suppliers.count() > 10
+        context['suppliers'] = active_suppliers[:12]
+        context['has_more_suppliers'] = active_suppliers.count() > 12
 
         # ---------------- Banners ---------------- #
-        context['banners'] = Banner.objects.filter(is_active=True)
+        context['banners'] = Banner.objects.filter(is_active=True).order_by('order')
 
-        return context
-
-        
+        return context 
 class CategoryProductsView(TemplateView):
     template_name = 'userdashboard/view/category_products.html'
 
@@ -836,19 +862,34 @@ class SearchSuggestionsView(View):
     def get(self, request, *args, **kwargs):
         query = request.GET.get('q', '').strip()
         suggestions = []
+        show_all = False
 
         if query:
             query_terms = query.lower().split()
             keyword_queries = Q()
             for term in query_terms:
-                keyword_queries |= Q(keywords__icontains=term)
+                keyword_queries |= Q(keywords__icontains=term) | Q(name__icontains=term)
+            
             products = Product.objects.filter(keyword_queries).distinct()[:10]
             suggestions = [
                 {'name': product.name, 'id': product.id}
                 for product in products
             ]
+            
+            # If no products found, get all products
+            if not suggestions:
+                show_all = True
+                all_products = Product.objects.all()[:10]
+                suggestions = [
+                    {'name': product.name, 'id': product.id}
+                    for product in all_products
+                ]
 
-        return JsonResponse({'suggestions': suggestions})
+        return JsonResponse({
+            'suggestions': suggestions,
+            'query': query,
+            'show_all': show_all
+        })
 class CheckEmailView(View):
     def post(self, request):
         email = request.POST.get('email', '').strip()
@@ -5166,7 +5207,6 @@ class CreateSubscriptionView(LoginRequiredMixin, View):
                 except StripeSubscriptions.DoesNotExist:
                     current_plan = None
                 
-                current_credits = current_plan.total_credits if current_plan else 0
                 if new_amount < active_amount:
                     is_downgrade = True
                 else:
@@ -5319,3 +5359,169 @@ class CancelSubscriptionView(LoginRequiredMixin, View):
             messages.error(request, f"Error: {str(e)}")
         
         return redirect("dashboard:subscription_plans")
+class ConferenceView(TemplateView):
+    template_name = 'userdashboard/view/conference.html'
+
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            html = render_to_string(self.template_name, context, request=request)
+            return HttpResponse(html)
+        return super().get(request, *args, **kwargs)
+
+    def _add_event_details(self, page_obj):
+        """Add event details to products"""
+        if page_obj is None:
+            return
+        for product in page_obj:
+            if hasattr(product, 'event') and product.event:
+                event = product.event
+                if event.conference_at:
+                    product.event_date = event.conference_at.strftime("%D, %d %b %Y")
+                    product.event_time = event.conference_at.strftime("%I:%M %p")
+                    product.event_datetime = event.conference_at.strftime("%Y-%m-%d %H:%M:%S")
+                else:
+                    product.event_date = "Date TBA"
+                    product.event_time = ""
+                if event.duration:
+                    total_seconds = event.duration.total_seconds()
+                    hours = int(total_seconds // 3600)
+                    minutes = int((total_seconds % 3600) // 60)
+                    if hours > 0:
+                        product.event_duration = f"{hours}h {minutes}m"
+                    else:
+                        product.event_duration = f"{minutes}m"
+                else:
+                    product.event_duration = "TBA"
+                
+                product.speaker_name = event.speaker_name
+                product.conference_link = event.conference_link
+                product.venue = event.venue
+                if event.conference_at:
+                    product.formatted_date = event.conference_at.strftime("%a, %d %b %Y, %I:%M %p")
+                else:
+                    product.formatted_date = "Date To Be Announced"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        category_type = self.request.GET.get('type', 'all')
+        sort_by = self.request.GET.get('sort_by', '2')
+        page = self.request.GET.get('page', 1)
+        search_query = self.request.GET.get('q', '').strip()
+        special_category_names = ['Conference', 'Webinar', 'Event']
+        effective_price = ExpressionWrapper(
+            F('price') * (1 - Coalesce(F('offer_percentage'), 0) / 100.0),
+            output_field=DecimalField(max_digits=10, decimal_places=2)
+        )
+        products = Product.objects.annotate(
+            effective_price=Case(
+                When(offer_active=True, offer_percentage__isnull=False, then=effective_price),
+                default=F('price'),
+                output_field=DecimalField(max_digits=10, decimal_places=2)
+            ),
+            avg_rating=Coalesce(
+                Avg('reviews__rating'),
+                Value(0.0),
+                output_field=DecimalField(max_digits=3, decimal_places=1)
+            )
+        ).prefetch_related(
+            'images', 
+            'category',
+            'event' 
+        )
+        if category_type == 'all':
+            products = products.filter(
+                category__name__in=special_category_names,
+                is_active=True
+            )
+        else:
+            category_name = category_type.capitalize()
+            if category_name in special_category_names:
+                products = products.filter(
+                    category__name=category_name,
+                    is_active=True
+                )
+            else:
+                products = products.filter(
+                    category__name__in=special_category_names,
+                    is_active=True
+                )
+
+        # Apply search filter if provided
+        if search_query:
+            search_terms = search_query.lower().split()
+            query = Q()
+            for term in search_terms:
+                query |= Q(name__icontains=term) | Q(keywords__icontains=term) | Q(description__icontains=term)
+            products = products.filter(query).distinct()
+
+        # Apply sorting
+        if sort_by == '1':
+            products = products.order_by('-effective_price')
+        elif sort_by == '2':
+            products = products.order_by('effective_price')
+        elif sort_by == '3':
+            products = products.order_by('-avg_rating')
+        elif sort_by == '4':
+            products = products.order_by('avg_rating')
+        elif sort_by == '5':
+            products = products.order_by('-created_at')
+        else:
+            products = products.order_by('-created_at')
+
+        # Paginate results
+        paginator = Paginator(products, 16)
+        page_obj = paginator.get_page(page)
+        self._add_event_details(page_obj)
+        today = timezone.now().date()
+        for product in page_obj:
+            main_img = ProductImage.objects.filter(product=product, is_main=True).first()
+            product.main_image = main_img.image.url if main_img else None
+            if product.delivery_time:
+                delivery_date = today + timedelta(days=product.delivery_time)
+                product.delivery_date = delivery_date.strftime('%a, %d %b')
+            else:
+                product.delivery_date = 'N/A'
+        category_counts = {}
+        for cat_name in special_category_names:
+            count = Product.objects.filter(
+                category__name=cat_name,
+                is_active=True
+            ).count()
+            category_counts[cat_name.lower()] = count
+        special_categories = ProductCategory.objects.filter(
+            name__in=special_category_names
+        ).annotate(
+            product_count=Count('product', filter=Q(product__is_active=True))
+        ).filter(product_count__gt=0)
+        if self.request.user.is_authenticated:
+            cart_products = CartProduct.objects.filter(user=self.request.user)
+            context['user_cart_ids'] = list(cart_products.values_list('product_id', flat=True))
+            context['user_cart_quantities'] = {cp.product_id: cp.quantity for cp in cart_products}
+            context['user_wishlist_ids'] = list(
+                WishlistProduct.objects.filter(user=self.request.user).values_list('product_id', flat=True)
+            )
+            context['user_registered_event_ids'] = list(
+                EventRegistration.objects.filter(user=self.request.user).values_list('product_id', flat=True)
+            )
+        else:
+            context['user_cart_ids'] = []
+            context['user_wishlist_ids'] = []
+            context['user_registered_event_ids'] = []
+
+        # Update context
+        context.update({
+            'products': page_obj,
+            'page_obj': page_obj,
+            'paginator': paginator,
+            'total_products': paginator.count,
+            'category_type': category_type,
+            'search_query': search_query,
+            'is_search_active': bool(search_query),
+            'category_counts': category_counts,
+            'special_categories': special_categories,
+            'show_ratings': True,
+        })
+
+        logger.debug(f"Conference view context: {context.keys()}")
+        return context

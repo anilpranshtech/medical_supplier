@@ -486,7 +486,6 @@
         height: 2.8rem;
         overflow: hidden;
         display: -webkit-box;
-        -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
     }
 
@@ -515,7 +514,6 @@
         height: 3rem;
         overflow: hidden;
         display: -webkit-box;
-        -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
     }
 
@@ -950,7 +948,6 @@
         height: 2.8rem;
         overflow: hidden;
         display: -webkit-box;
-        -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
     }
 
@@ -979,7 +976,6 @@
         height: 3rem;
         overflow: hidden;
         display: -webkit-box;
-        -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
     }
 
@@ -2171,10 +2167,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 });
-
     </script>
-    
-    
 {% endblock %}
 
 
@@ -2213,111 +2206,3 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
-
-{% comment %} <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Product Question</title>
-</head>
-<body>
-    <!-- Questions & Answers Section -->
-    <div class="mt-6">
-        <div class="flex items-center justify-between mb-4">
-            <h4 class="text-lg font-semibold text-black dark:text-white">Questions & Answers</h4>
-        
-            {% if request.user.is_authenticated %}
-                <button id="openQuestionModal" class="kt-btn kt-btn-sm bg-blue-600 text-white hover:bg-blue-700">
-                    Post Your Question
-                </button>
-            {% endif %}
-        </div>
-        <div class="questions-list">
-            {% if questions %}
-                {% for q in questions %}
-                    <div class="question-item">
-                        <div class="question-badge">Q</div>
-                        <div class="question-content">
-                            <p>{{ q.text|linebreaksbr }}</p>
-                                <small>{{ q.user.username|default:"User" }} 
-                                {% if q.user_id == request.user.id %}
-                                    <span class="you-badge">You</span>
-                                {% endif %}
-                                • {{ q.created_at|date:"d M Y" }}
-                                </small>
-                    
-                                <!-- Answer Section -->
-                                {% if q.reply %}
-                                <div class="answer-section">
-                                    <div class="flex gap-4">
-                                        <div class="answer-badge">A</div>
-                                        <div class="answer-content">
-                                            <div class="answer-header">
-                                                <span>Supplier</span>
-                                                {% if q.replied_at %}
-                                                    <small>• {{ q.replied_at|date:"d M Y" }}</small>
-                                                {% endif %}
-                                            </div>
-                                            <p>{{ q.reply|linebreaksbr }}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                {% else %}
-                                <div class="mt-2">
-                                    <p class="text-gray-500 italic text-sm">
-                                        <i class="ki-solid ki-time text-gray-400 mr-1"></i>
-                                        No answer yet from the supplier.
-                                    </p>
-                                </div>
-                                {% endif %}
-                        </div>
-                    </div>
-                {% endfor %}
-
-                <!-- Pagination -->
-                {% if questions.has_other_pages %}
-                    <div class="questions-pagination">
-                        {% if questions.has_previous %}
-                            <a href="?qpage={{ questions.previous_page_number }}" class="text-blue-600 hover:underline">Previous</a>
-                        {% else %}
-                            <span class="text-gray-400">Previous</span>
-                        {% endif %}
-                        <span class="text-gray-600">
-                            Page {{ questions.number }} of {{ questions.paginator.num_pages }}
-                        </span>
-
-                        {% if questions.has_next %}
-                            <a href="?qpage={{ questions.next_page_number }}" class="text-blue-600 hover:underline">Next</a>
-                        {% else %}
-                            <span class="text-gray-400">Next</span>
-                        {% endif %}
-                    </div> {% endcomment %}
-                <!-- End of Pagination -->
-            {% comment %} {% endif %} {% endcomment %}
-
-            {% comment %} {% else %}
-                <div class="no-questions">
-                    <p class="text-sm text-gray-500">
-                        No questions yet. Be the first to ask!
-                    </p>
-                    {% if not request.user.is_authenticated %}
-                        <p class="text-sm mt-2">
-                            <a href="{% url 'dashboard:login' %}" class="text-blue-600 hover:underline">Login</a> to ask a question
-                        </p>
-                    {% endif %}
-                </div>
-            {% endif %}
-        </div>
-    </div> {% endcomment %}
-                {% comment %} </div>
-
-
-
-
-
-
-                    </div>
-                {% endif %} {% endcomment %}
-{% comment %} </body>
-</html> {% endcomment %}

@@ -290,7 +290,7 @@ class ProductsView(LoginRequiredMixin,OnboardingRequiredMixin, View):
             'page_obj': page_obj,     
             'category': categories
         })
-
+from .tasks import send_event_email_task
 
 class AddproductsView(LoginRequiredMixin, OnboardingRequiredMixin, View):
     template = 'supplier/add-product.html'
@@ -468,10 +468,7 @@ class AddproductsView(LoginRequiredMixin, OnboardingRequiredMixin, View):
                 Both=both_selected,
                 created_by=request.user
             )
-
-            # Create Event if category is event-related
             if is_event:
-                print("Creating event object...")
                 event = Event.objects.create(
                     conference_link=data.get('registration_link') or '',
                     speaker_name=data.get('webinar_name') or '',
@@ -481,7 +478,8 @@ class AddproductsView(LoginRequiredMixin, OnboardingRequiredMixin, View):
                 )
                 product.event = event
                 product.save()
-                print(f"Event created with ID: {event.id} and linked to product {product.id}")
+                send_event_email_task.delay(event.id)
+                
 
             # Handle images
             main_image = files.get('main_image')

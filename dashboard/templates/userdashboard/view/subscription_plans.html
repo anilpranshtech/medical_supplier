@@ -40,7 +40,7 @@
         }
     </style>
 </head>
-<body>
+
     <div class="container py-5">
         <div class="row">
             <div class="col-12 text-center mb-5">
@@ -108,15 +108,13 @@
                             <button class="btn btn-primary w-100 subscribe-btn" 
                                     data-price-id="{{ item.plan.price_id }}"
                                     data-plan-id="{{ item.plan.id }}">
-                                Subscribe Now
+                                Buy Now
                             </button>
                         {% endif %}
                     </div>
                 </div>
             {% endfor %}
         </div>
-
-        <!-- Yearly Plans (hidden by default) -->
         <div id="annually-plans" class="row d-none">
             {% for item in yearly %}
                 <div class="col-md-4 mb-4">

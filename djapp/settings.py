@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'ckeditor_uploader',
     'corsheaders',
     'channels',
+    'django_celery_beat'
 ]
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
@@ -394,6 +395,18 @@ EMAIL_HOST_PASSWORD = 'vwahxpixcidafwfx'
 DEFAULT_FROM_EMAIL = 'kahena.pranshtech4@gmail.com'
 # SITE_URL = 'http://localhost:8000'  
 
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Asia/Kolkata' 
+CELERY_BEAT_SCHEDULE = {
+    'update-banner-status-every-minute': {
+        'task': 'dashboard.tasks.update_banner_status',
+        'schedule': 60.0,  # every 1 minute
+    },
+}
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # React dev server

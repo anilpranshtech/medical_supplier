@@ -8,8 +8,6 @@ from .webhooks import StripeWebhookView
 app_name = 'dashboard'
 
 urlpatterns = [
-
-  
     path('login/', CustomLoginView.as_view(), name='login'),
     path('', HomeView.as_view(), name='home'),
     path('register/', RegistrationView.as_view(), name='register'),
@@ -136,7 +134,9 @@ urlpatterns = [
     #user logs
     path('userlogs/',UserLogsView.as_view(), name = 'user_logs'),
     path('chats/buyer/<int:room_id>/', SupplierBuyerChatView.as_view(), name='supplier_buyer_chat'),
-    
+    #confarance
+    path('confarance/',ConferenceView.as_view(),name = 'Confarance_list'),
+    #subscription
     path('subscription/', CreateSubscriptionView.as_view(), name='subscription_plans'),
     path('cancel/', CancelSubscriptionView.as_view(), name='cancel_subscription'),
     path('/stripe/webhook/', StripeWebhookView.as_view(), name='stripe_webhook'),
